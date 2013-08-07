@@ -76,6 +76,7 @@ import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -1209,7 +1210,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
-    protected static int[] toIntArray(Object v) {
+    @VisibleForTesting
+    static int[] toIntArray(Object v) {
         int[] result;
         if (v instanceof Iterable) {
             result = new int[Iterables.size((Iterable<?>)v)];

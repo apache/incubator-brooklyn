@@ -98,6 +98,44 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         jcl.tryObtainAndCheck(MutableMap.of(MIN_CORES, 3), checkerFor("jon", 16, 3));
     }
 
-
+    @Test
+    public void testStringListToIntArray() {
+        String listString = "[1, 2, 3, 4]";
+        int[] intArray = new int[] {1, 2, 3, 4};
+        Assert.assertEquals(JcloudsLocation.toIntArray(listString), intArray);
+    }
+    
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testMalformedStringListToIntArray() {
+        String listString = "1, 2, 3, 4";
+        JcloudsLocation.toIntArray(listString);
+    }
+    
+    @Test
+    public void testEmptyStringListToIntArray() {
+        String listString = "[]";
+        int[] intArray = new int[] {};
+        Assert.assertEquals(JcloudsLocation.toIntArray(listString), intArray);
+    }
+    
+    @Test
+    public void testIntArrayToIntArray() {
+        int[] intArray = new int[] {1, 2, 3, 4};
+        Assert.assertEquals(JcloudsLocation.toIntArray(intArray), intArray);
+    }
+    
+    @Test
+    public void testObjectArrayToIntArray() {
+        Object[] longArray = new Object[] {1, 2, 3, 4};
+        int[] intArray = new int[] {1, 2, 3, 4};
+        Assert.assertEquals(JcloudsLocation.toIntArray(longArray), intArray);
+    }
+    
+    @Test(expectedExceptions = ClassCastException.class)
+    public void testInvalidObjectArrayToIntArray() {
+        String[] stringArray = new String[] {"1", "2", "3"};
+        JcloudsLocation.toIntArray(stringArray);
+    }
+    
     // TODO more tests, where flags come in from resolver, named locations, etc
 }
