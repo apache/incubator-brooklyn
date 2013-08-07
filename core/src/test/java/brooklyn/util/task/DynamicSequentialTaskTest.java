@@ -41,7 +41,7 @@ public class DynamicSequentialTaskTest {
         
         Assert.assertEquals(messages, Lists.newArrayList());
         Assert.assertEquals(t.isBegun(), false);
-        Assert.assertEquals(Iterables.size(t.getChildrenTasks()), 1);
+        Assert.assertEquals(Iterables.size(t.getChildren()), 1);
         
         ec.submit(t);
         Assert.assertEquals(t.isSubmitted(), true);
@@ -49,7 +49,7 @@ public class DynamicSequentialTaskTest {
         long elapsed = t.getEndTimeUtc() - t.getSubmitTimeUtc();
         Assert.assertTrue(elapsed < 1000, "elapsed time should have been less than 1s but was "+
                 Time.makeTimeString(elapsed, true));
-        Assert.assertEquals(Iterables.size(t.getChildrenTasks()), 2);
+        Assert.assertEquals(Iterables.size(t.getChildren()), 2);
         Assert.assertEquals(messages.size(), 3, "expected 3 entries, but had "+messages);
         // either main or hello can be first, but world should be last 
         Assert.assertEquals(messages.get(2), "world");

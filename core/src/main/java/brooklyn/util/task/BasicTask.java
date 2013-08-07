@@ -60,7 +60,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     protected final Set<Object> tags = new LinkedHashSet<Object>();
 
     protected String blockingDetails = null;
-    protected Task blockingTask = null;
+    protected Task<?> blockingTask = null;
     Object extraStatusText = null;
 
     /**
@@ -452,10 +452,10 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		    if (this instanceof HasTaskChildren) {
 		        // list children tasks for compound tasks
 		        try {
-		            Iterable<Task> childrenTasks = ((HasTaskChildren)this).getChildrenTasks();
+		            Iterable<Task<?>> childrenTasks = ((HasTaskChildren)this).getChildren();
 		            if (childrenTasks.iterator().hasNext()) {
 		                rv += "Children:\n";
-		                for (Task child: childrenTasks) {
+		                for (Task<?> child: childrenTasks) {
 		                    rv += "  "+child+": "+child.getStatusDetail(false)+"\n";
 		                }
 		            }
@@ -529,7 +529,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public void setBlockingDetails(String blockingDetails) {
         this.blockingDetails = blockingDetails;
     }
-    public void setBlockingTask(Task blockingTask) {
+    public void setBlockingTask(Task<?> blockingTask) {
         this.blockingTask = blockingTask;
     }
     public void resetBlockingDetails() {
@@ -545,7 +545,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     }
     
     /** returns a task that this task is blocked on */
-    public Task getBlockingTask() {
+    public Task<?> getBlockingTask() {
         return blockingTask;
     }
     
@@ -587,7 +587,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     }
     
     public void setFinalizer(TaskFinalizer f) {
-        TaskFinalizer finalizer = Tasks.tag(this, TaskFinalizer.class);
+        TaskFinalizer finalizer = Tasks.tag(this, TaskFinalizer.class, false);
         if (finalizer!=null && finalizer!=f)
             throw new IllegalStateException("Cannot apply multiple finalizers");
         if (isDone())
@@ -597,7 +597,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 
     @Override
     protected void finalize() throws Throwable {
-        TaskFinalizer finalizer = Tasks.tag(this, TaskFinalizer.class);
+        TaskFinalizer finalizer = Tasks.tag(this, TaskFinalizer.class, false);
         if (finalizer==null) finalizer = WARN_IF_NOT_RUN;
         finalizer.onTaskFinalization(this);
     }

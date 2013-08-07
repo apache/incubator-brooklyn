@@ -31,7 +31,7 @@ public class ActivityResource extends AbstractBrooklynRestResource implements Ac
       if (!(t instanceof HasTaskChildren))
           return Collections.emptyList();
       return Collections2.transform(Lists.<Task<?>>newArrayList( 
-              (Iterable<Task<?>>)(Iterable<?>)((HasTaskChildren)t).getChildrenTasks() ), TaskTransformer.FROM_TASK);
+              (Iterable<Task<?>>)(Iterable<?>)((HasTaskChildren)t).getChildren() ), TaskTransformer.FROM_TASK);
   }
 
 }

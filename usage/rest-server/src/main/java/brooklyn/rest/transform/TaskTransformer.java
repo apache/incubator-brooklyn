@@ -60,7 +60,7 @@ public class TaskTransformer {
         List<LinkWithMetadata> children = Collections.emptyList();
         if (task instanceof HasTaskChildren) {
             children = new ArrayList<LinkWithMetadata>();
-            for (Object t: ((HasTaskChildren)task).getChildrenTasks()) {
+            for (Object t: ((HasTaskChildren)task).getChildren()) {
                 children.add(asLink((Task)t));
             }
         }

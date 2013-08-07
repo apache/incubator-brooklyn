@@ -6,6 +6,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.management.CanAddTask;
 import brooklyn.management.Task;
 
+import com.google.common.annotations.Beta;
+import com.google.common.base.Preconditions;
+
+@Beta // introduced in 0.6.0
 public class DynamicTasks {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicTasks.class);
@@ -51,6 +55,8 @@ public class DynamicTasks {
      * <p>
      * throws if it cannot add */
     public static <T> Task<T> addTask(Task<T> task) {
+        Preconditions.checkNotNull(task, "Task to add cannot be null");
+        
         CanAddTask adder = getTaskAdditionContext();
         if (adder!=null) 
             if (tryAddTask(adder, task)) return task;
@@ -62,7 +68,6 @@ public class DynamicTasks {
             t = t.getSubmittedByTask();
         }
         
-        if (task==null) throw new NullPointerException("Task to add cannot be null");
         if (task.isSubmitted()) throw new IllegalStateException("Task "+task+" is already submitted; cannot add elsewhere");
         
         throw new IllegalStateException("No task addition context available for adding task "+task);

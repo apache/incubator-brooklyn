@@ -27,12 +27,8 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
 
     private static final Logger log = LoggerFactory.getLogger(CompoundTask.class);
                 
-    protected T result;
-
-    @SuppressWarnings("rawtypes")
-    protected final Queue<Task> secondaryJobsAll = new ConcurrentLinkedQueue<Task>();
-    @SuppressWarnings("rawtypes")
-    protected final Queue<Task> secondaryJobsRemaining = new ConcurrentLinkedQueue<Task>();
+    protected final Queue<Task<?>> secondaryJobsAll = new ConcurrentLinkedQueue<Task<?>>();
+    protected final Queue<Task<?>> secondaryJobsRemaining = new ConcurrentLinkedQueue<Task<?>>();
     protected final AtomicBoolean primaryJobFinished = new AtomicBoolean(false);
     
     /**
@@ -65,23 +61,19 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         }
     }
     
-    @SuppressWarnings("rawtypes")
-    public Iterable<Task> getChildrenTasks() {
+    public Iterable<Task<?>> getChildren() {
         return secondaryJobsAll;
     }
     
     /** submits the indicated task for execution in the current execution context, and returns immediately */
     protected void submitBackgroundInheritingContext(Task<?> task) {
-        // TODO should get flags etc from parent task (I think)
-        // (at least some way to indicate it is a subtask?)
-//        task.setParent(Tasks.current());
-        // (or do this in addTask?)
+        BasicExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
         if (log.isTraceEnabled())
             log.trace("task {} - submitting background task {} ({})", new Object[] { 
-                Tasks.current(), task, BasicExecutionContext.getCurrentExecutionContext() });
-        Preconditions.checkNotNull(BasicExecutionContext.getCurrentExecutionContext(),
-                "Cannot submit tasks when not in the thread of a task with an execution context")
-                .submit(task);
+                Tasks.current(), task, ec });
+        Preconditions.checkNotNull(ec,
+                "Cannot submit tasks when not in the thread of a task with an execution context");
+        ec.submit(task);
     }
 
     protected class DstJob implements Callable<T> {
@@ -110,6 +102,9 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                             try {
                                 result.add(secondaryJob.get());
                             } catch (Exception e) {
+                                // secondary job queue aborts on error
+                                if (log.isDebugEnabled())
+                                    log.debug("Aborting secondary job queue for "+DynamicSequentialTask.this+" due to error in task "+secondaryJob+" ("+e+", being rethrown)");
                                 throw e;
                             }
                         }
@@ -121,6 +116,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             
             T result = (primaryJob!=null ? primaryJob.call() : null);
             synchronized (primaryJobFinished) {
+                // semaphore might be nicer here (aled notes as it is this is a little hard to read)
                 primaryJobFinished.set(true);
                 primaryJobFinished.notifyAll();
             }

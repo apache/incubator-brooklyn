@@ -29,7 +29,7 @@ public abstract class EffectorBody<T> {
     // ---- convenience method(s) for implementers of main -- see subclasses and *Tasks statics for more!
     
     protected Entity entity() {
-        return Tasks.tag(Entity.class);
+        return Tasks.tag(Tasks.current(), Entity.class, true);
     }
 
 }

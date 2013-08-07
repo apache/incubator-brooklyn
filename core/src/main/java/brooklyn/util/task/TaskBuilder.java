@@ -12,7 +12,7 @@ public class TaskBuilder<T> {
 
     String name = null;
     Callable<T> body = null;
-    List<Task<?>> children = null;
+    List<Task<?>> children = new ArrayList<Task<?>>();
     boolean dynamic = false;
     boolean parallel = false;
     
@@ -46,27 +46,24 @@ public class TaskBuilder<T> {
     }
 
     public TaskBuilder<T> add(Task<?> child) {
-        if (children==null) children = new ArrayList<Task<?>>();
         children.add(child);
         return this;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Task<T> build() {
-        if (!dynamic && (children==null || children.isEmpty()))
+        if (!dynamic && children.isEmpty())
             return new BasicTask<T>(MutableMap.of("name", name), body);
         
         if (dynamic) {
             if (parallel)
                 throw new UnsupportedOperationException("No implementation of parallel dynamic aggregate task available");
             DynamicSequentialTask<T> result = new DynamicSequentialTask<T>(MutableMap.of("name", name), body);
-            if (children!=null)
-                for (Task t: children)
-                    result.addTask(t);
+            for (Task t: children)
+                result.addTask(t);
             return result;
         }
         
-        if (children==null) children = new ArrayList<Task<?>>();
         // T must be of type List<V> for these to be valid
         if (parallel)
             return new ParallelTask(MutableMap.of("name", name), children);

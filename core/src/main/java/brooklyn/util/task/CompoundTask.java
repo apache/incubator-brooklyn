@@ -29,7 +29,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
 
     private static final Logger log = LoggerFactory.getLogger(CompoundTask.class);
                 
-    protected final List<Task> children;
+    protected final List<Task<? extends T>> children;
     protected final List<Object> result;
     
     /**
@@ -52,6 +52,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
         this(MutableMap.of("tag", "compound"), jobs);
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public CompoundTask(Map<String,?> flags, Collection<?> jobs) {
         super(flags);
         super.job = new Callable<List<T>>() {
@@ -61,12 +62,12 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
         };
         
         this.result = new ArrayList<Object>(jobs.size());
-        this.children = new ArrayList<Task>(jobs.size());
+        this.children = new ArrayList<Task<? extends T>>(jobs.size());
         for (Object job : jobs) {
             if (job instanceof Task)          { children.add((Task) job); }
-            else if (job instanceof Closure)  { children.add(new BasicTask((Closure) job)); }
-            else if (job instanceof Callable) { children.add(new BasicTask((Callable) job)); }
-            else if (job instanceof Runnable) { children.add(new BasicTask((Runnable) job)); }
+            else if (job instanceof Closure)  { children.add(new BasicTask<T>((Closure) job)); }
+            else if (job instanceof Callable) { children.add(new BasicTask<T>((Callable) job)); }
+            else if (job instanceof Runnable) { children.add(new BasicTask<T>((Runnable) job)); }
             
             else throw new IllegalArgumentException("Invalid child "+job+
                 " passed to compound task; must be Runnable, Callable, Closure or Task");
@@ -94,8 +95,13 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
         }
     }
     
-    public List<Task> getChildrenTasks() {
+    public List<Task<? extends T>> getChildrenTyped() {
         return children;
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public List<Task<?>> getChildren() {
+        return (List) getChildrenTyped();
     }
     
 }

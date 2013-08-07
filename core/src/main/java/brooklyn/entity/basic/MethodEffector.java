@@ -60,9 +60,9 @@ public class MethodEffector<T> extends AbstractEffector<T> {
 
             if (methodDescriptionAnnotation != null) {
                 if (!Strings.isEmpty(effDescription) && !effDescription.equals(effLegacyDescription)) {
-                    LOG.warn("Deprecated use of @Description on effector "+method+"; preferring @Effector annotation's description");
+                    log.warn("Deprecated use of @Description on effector "+method+"; preferring @Effector annotation's description");
                 } else {
-                    LOG.warn("Deprecated use of @Description on effector "+method);
+                    log.warn("Deprecated use of @Description on effector "+method);
                 }
             }
             description = (Strings.isEmpty(effDescription)) ? effLegacyDescription : effDescription;
@@ -87,9 +87,9 @@ public class MethodEffector<T> extends AbstractEffector<T> {
             String legacyName = (nameAnnotation != null) ? nameAnnotation.value() : null;
             if (nameAnnotation != null) {
                 if (paramName != null && paramName.equals(legacyName)) {
-                    LOG.warn("Deprecated use of @NamedParameter on parameter in effector "+method+"; preferring @EffectorParam annotation's name");
+                    log.warn("Deprecated use of @NamedParameter on parameter in effector "+method+"; preferring @EffectorParam annotation's name");
                 } else {
-                    LOG.warn("Deprecated use of @NamedParameter on parameter in effector "+method);
+                    log.warn("Deprecated use of @NamedParameter on parameter in effector "+method);
                 }
             }
             // TODO if blank, could do "param"+(i+1); would that be better?
@@ -101,9 +101,9 @@ public class MethodEffector<T> extends AbstractEffector<T> {
             String legacyDescription = (descriptionAnnotation != null) ? descriptionAnnotation.value() : null;
             if (descriptionAnnotation != null) {
                 if (paramDescription != null && !paramDescription.equals(legacyDescription)) {
-                    LOG.warn("Deprecated use of @Description on parameter in effector "+method+"; preferring @EffectorParam annotation's description");
+                    log.warn("Deprecated use of @Description on parameter in effector "+method+"; preferring @EffectorParam annotation's description");
                 } else {
-                    LOG.warn("Deprecated use of @Description on parameter in effector "+method);
+                    log.warn("Deprecated use of @Description on parameter in effector "+method);
                 }
             }
             String description = (paramDescription != null) ? paramDescription : legacyDescription;
@@ -112,9 +112,9 @@ public class MethodEffector<T> extends AbstractEffector<T> {
             String legacyDefaultValue = (dvAnnotation != null) ? dvAnnotation.value() : null;
             if (dvAnnotation != null) {
                 if (paramDefaultValue != null && !paramDefaultValue.equals(legacyDefaultValue)) {
-                    LOG.warn("Deprecated use of @DefaultValue on parameter in effector "+method+"; preferring @EffectorParam annotation's default value");
+                    log.warn("Deprecated use of @DefaultValue on parameter in effector "+method+"; preferring @EffectorParam annotation's default value");
                 } else {
-                    LOG.warn("Deprecated use of @DefaultValue on parameter in effector "+method);
+                    log.warn("Deprecated use of @DefaultValue on parameter in effector "+method);
                 }
             }
             Object defaultValue = (paramDefaultValue != null) ? 

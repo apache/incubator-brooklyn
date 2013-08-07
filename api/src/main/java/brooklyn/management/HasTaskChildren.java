@@ -1,5 +1,7 @@
 package brooklyn.management;
 
+import com.google.common.annotations.Beta;
+
 /** 
  * Interface marks tasks which have explicit children,
  * typically where the task defines the ordering of running those children tasks
@@ -11,9 +13,9 @@ package brooklyn.management;
  * In general the children mechanism is preferred as it is easier to navigate
  * (otherwise you have to scan the {@link ExecutionContext} to find tasks submitted by a task).  
  */
+@Beta // in 0.6.0
 public interface HasTaskChildren {
 
-    @SuppressWarnings("rawtypes")
-    public Iterable<Task> getChildrenTasks();
+    public Iterable<Task<?>> getChildren();
     
 }

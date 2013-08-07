@@ -13,6 +13,7 @@ import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.BasicTask;
@@ -57,8 +58,7 @@ public class EffectorTaskTest {
 
     @Test
     public void testSimpleEffector() throws Exception {
-        Entity doubler = app.addChild(EntitySpecs.spec(DoublingEntity.class));
-        Entities.manage(doubler);
+        Entity doubler = app.createAndManageChild(EntitySpecs.spec(DoublingEntity.class));
         
         Assert.assertEquals(doubler.invoke(DOUBLE, MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
     }
@@ -109,34 +109,33 @@ public class EffectorTaskTest {
     /** the composed effector should allow us to inspect its children */
     @Test
     public void testComposedEffector() throws Exception {
-        Entity txp1 = app.addChild(EntitySpecs.spec(Txp1Entity.class));
-        Entities.manage(txp1);
+        Entity txp1 = app.createAndManageChild(EntitySpecs.spec(Txp1Entity.class));
         
         Task<Integer> e = txp1.invoke(TWO_X_PLUS_ONE, MutableMap.of("numberToStartWith", 3));
         Assert.assertTrue(e instanceof DynamicSequentialTask);
         Assert.assertEquals(e.get(), (Integer)7);
-        Assert.assertEquals( Iterables.size( ((HasTaskChildren)e).getChildrenTasks() ), 2);
+        Assert.assertEquals( Iterables.size( ((HasTaskChildren)e).getChildren() ), 2);
     }
 
     
-//    // TODO dynamically added effector
-    
-//    @Test
-//    public void testSimpleEffectorDynamicallyAdded() throws Exception {
-//        Entity doubler = app.addChild(EntitySpecs.spec(TestEntity.class));
-//        Entities.manage(doubler);
-//        
-//        boolean failed = false;
-//        try {
-//            doubler.invoke(DOUBLE, MutableMap.of("numberToDouble", 3));
-//        } catch (Exception e) {
-//            failed = true;
-//        }
-//        if (!failed) Assert.fail("doubling should have failed because it is not registered on the entity");
-//        
+    @Test(enabled=false)
+    public void testSimpleEffectorDynamicallyAdded() throws Exception {
+        Entity doubler = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        
+        
+        boolean failed = false;
+        try {
+            doubler.invoke(DOUBLE, MutableMap.of("numberToDouble", 3));
+        } catch (Exception e) {
+            failed = true;
+        }
+        if (!failed) Assert.fail("doubling should have failed because it is not registered on the entity");
+        
+        // TODO add DOUBLE as a dynamic effector
 //        doubler.addEffector(DOUBLE, XXX);
-//        Assert.assertEquals(doubler.invoke(DOUBLE, MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
-//    }
-//
+        
+        Assert.assertEquals(doubler.invoke(DOUBLE, MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
+    }
+
     
 }

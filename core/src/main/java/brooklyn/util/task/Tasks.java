@@ -7,6 +7,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,19 +165,16 @@ public class Tasks {
     
     /** returns the first tag found on the given task which matches the given type, looking up the submission hierarachy if necessary */
     @SuppressWarnings("unchecked")
-    public static <T> T tag(Task<?> task, Class<T> type) {
+    public static <T> T tag(@Nullable Task<?> task, Class<T> type, boolean recurseHierarchy) {
+        // support null task to make it easier for callers to walk hierarchies
         if (task==null) return null;
         for (Object tag: task.getTags())
             if (type.isInstance(tag)) return (T)tag;
-        return tag(task.getSubmittedByTask(), type);
+        if (!recurseHierarchy) return null;
+        return tag(task.getSubmittedByTask(), type, true);
     }
     
-    /** as {@link #tag(Task, Class) but scoped to the current task (or null if no current task) */
-    public static <T> T tag(Class<T> type) {
-        return tag(current(), type);
-    }
-
-    public static boolean isAncestorCancelled(Task t) {
+    public static boolean isAncestorCancelled(Task<?> t) {
         if (t==null) return false;
         if (t.isCancelled()) return true;
         return isAncestorCancelled(t.getSubmittedByTask());
