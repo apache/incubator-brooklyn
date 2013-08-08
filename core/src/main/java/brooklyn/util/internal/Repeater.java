@@ -95,7 +95,7 @@ public class Repeater {
     /**
      * Construct a new instance of Repeater.
      *
-     * @param flags: period, timeout, description
+     * @param flags       can include period, timeout, description
      * @param description a description of the operation that will appear in debug logs.
      */
     public Repeater(Map<?,?> flags, String description) {
@@ -121,19 +121,32 @@ public class Repeater {
     }
 
     /**
-     * Set the main body of the loop.
-     *
-     * @param body a closure or other Runnable that is executed in the main body of the loop.
+     * Sets the main body of the loop to be a no-op.
+     * 
      * @return {@literal this} to aid coding in a fluent style.
      */
     public Repeater repeat() {
         return repeat(Callables.returning(null));
     }
+    
+    /**
+     * Sets the main body of the loop.
+     *
+     * @param body a closure or other Runnable that is executed in the main body of the loop.
+     * @return {@literal this} to aid coding in a fluent style.
+     */
     public Repeater repeat(Runnable body) {
         checkNotNull(body, "body must not be null");
         this.body = (body instanceof Callable) ? (Callable<?>)body : Executors.callable(body);
         return this;
     }
+    
+    /**
+     * Sets the main body of the loop.
+     *
+     * @param body a closure or other Callable that is executed in the main body of the loop.
+     * @return {@literal this} to aid coding in a fluent style.
+     */
     public Repeater repeat(Callable<?> body) {
         checkNotNull(body, "body must not be null");
         this.body = body;
@@ -170,7 +183,7 @@ public class Repeater {
 
     /**
      * @see #every(long, TimeUnit)
-	 * @depreated specify unit
+	 * @deprecated specify unit
      */
     public Repeater every(long duration) {
         return every(duration, TimeUnit.MILLISECONDS);

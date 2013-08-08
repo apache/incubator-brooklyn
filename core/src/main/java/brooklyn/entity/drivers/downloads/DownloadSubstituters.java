@@ -46,7 +46,7 @@ public class DownloadSubstituters {
      *   <li>version: the version for this entity (or of the add-on), or not included if null
      * </ul>
      * 
-     * Additional substitution keys (and values) can be defined using {@link DownloadRequirement.getProperties()}; these
+     * Additional substitution keys (and values) can be defined using {@link DownloadRequirement#getProperties()}; these
      * override the default substitutions listed above.
      */
     public static String substitute(DownloadRequirement req, String basevalue) {

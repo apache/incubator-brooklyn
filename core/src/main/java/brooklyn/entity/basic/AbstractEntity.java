@@ -70,7 +70,7 @@ import com.google.common.collect.Sets;
 /**
  * Default {@link Entity} implementation, which should be extended whenever implementing an entity.
  * <p>
- * Provides several common fields ({@link #name}, {@link #id}), and supports the core features of
+ * Provides several common fields ({@link #displayName}, {@link #id}), and supports the core features of
  * an entity such as configuration keys, attributes, subscriptions and effector invocation.
  * <p>
  * If a sub-class is creating other entities, this should be done in an overridden {@link #init()}
@@ -91,7 +91,7 @@ import com.google.common.collect.Sets;
  *       given a reference to this entity itself).
  *   <li>Call {@link #configure(Map)} and then {@link #setConfig(ConfigKey, Object)}
  *   <li>Call {@link #init()}
- *   <li>Call {@link #addPolicy()} (for any policies defined in the {@link EntitySpec})
+ *   <li>Call {@link #addPolicy(Policy)} (for any policies defined in the {@link EntitySpec})
  *   <li>Call {@link #setParent(Entity)}, if a parent is specified in the {@link EntitySpec}
  * </ol>
  * <p>
@@ -1039,7 +1039,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 
     // -------- EFFECTORS --------------
 
-    /** Convenience for finding named effector in {@link #getEffectors()} {@link Map}. */
+    /** Convenience for finding named effector in {@link EntityType#getEffectors()} {@link Map}. */
     public <T> Effector<T> getEffector(String effectorName) {
         return (Effector<T>) entityType.getEffector(effectorName);
     }

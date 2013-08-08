@@ -133,7 +133,7 @@ public class CatalogDo {
     }
     
     /** adds the given entry to the catalog, with no enrichment;
-     * callers may prefer {@link CatalogClasspathDo#addCatalogEntry(AbstractCatalogItem, Class))}
+     * callers may prefer {@link CatalogClasspathDo#addCatalogEntry(CatalogItemDtoAbstract, Class)}
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public synchronized void addEntry(CatalogItemDtoAbstract<?> entry) {

@@ -5,7 +5,7 @@ package brooklyn.util.mutex;
  * <p>
  * MutexSupport is a common implementation of this.
  * mixin code frequently delegates to this, 
- * as shown in the test case's {@link WithMutexesTest.SampleWithMutexesDelegatingMixin} class 
+ * as shown in the test case's WithMutexesTest.SampleWithMutexesDelegatingMixin class 
  **/
 public interface WithMutexes {
 
