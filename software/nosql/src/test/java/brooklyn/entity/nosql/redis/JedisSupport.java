@@ -25,21 +25,27 @@ public class JedisSupport {
      * Exercise the {@link RedisStore} using the Jedis API.
      */
     public void redisTest() throws Exception {
-        writeData(TEST_DATA);
-        String result = readData();
+        writeData("brooklyn", TEST_DATA);
+        String result = readData("brooklyn");
         assertEquals(result, TEST_DATA);
     }
-    public void writeData(String data) throws Exception {
+    
+    public void writeData(String key, String val) throws Exception {
         Jedis client = getRedisClient(redis);
-        client.set("brooklyn", data);
-        client.disconnect();
+        try {
+            client.set(key, val);
+        } finally {
+            client.disconnect();
+        }
     }
 
-    public String readData() throws Exception {
+    public String readData(String key) throws Exception {
         Jedis client = getRedisClient(redis);
-        String result = client.get("brooklyn");
-        client.disconnect();
-        return result;
+        try {
+            return client.get(key);
+        } finally {
+            client.disconnect();
+        }
     }
 
     private Jedis getRedisClient(RedisStore redis) {

@@ -16,4 +16,8 @@ import brooklyn.entity.trait.Startable;
 @Catalog(name="Redis Cluster", description="Redis is an open-source, networked, in-memory, key-value data store with optional durability", iconUrl="classpath:///redis-logo.png")
 @ImplementedBy(RedisClusterImpl.class)
 public interface RedisCluster extends Entity, Startable {
+    
+    public RedisStore getMaster();
+    
+    public DynamicCluster getSlaves();
 }
