@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import org.jclouds.abiquo.compute.options.AbiquoTemplateOptions;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.domain.ComputeMetadata;
@@ -74,12 +75,14 @@ import brooklyn.util.ssh.IptablesCommands.Protocol;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.Strings;
+import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -324,7 +327,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         final ComputeService computeService = JcloudsUtil.findComputeService(setup);
         String groupId = elvis(setup.get(GROUP_ID), new CloudMachineNamer(setup).generateNewGroupId());
         NodeMetadata node = null;
-        JcloudsSshMachineLocation machineResult = null;
+        JcloudsSshMachineLocation sshMachineLocation = null;
         
         try {
             LOG.info("Creating VM in "+setup.getDescription()+" for "+this);
@@ -352,18 +355,32 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             waitForReachable(computeService, node, initialCredentials, setup);
             
             String vmHostname = getPublicHostname(node, setup);
-            machineResult = registerJcloudsSshMachineLocation(node, vmHostname, setup);
+            sshMachineLocation = registerJcloudsSshMachineLocation(node, vmHostname, setup);
             
             // Apply same securityGroups rules to iptables, if iptables is running on the node
             String waitForSshable = setup.get(WAIT_FOR_SSHABLE);
             if (!(waitForSshable!=null && "false".equalsIgnoreCase(waitForSshable))) {
                 if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM))
-                    machineResult.execCommands("using urandom instead of random", 
+                   sshMachineLocation.execCommands("using urandom instead of random", 
                         Arrays.asList("sudo mv /dev/random /dev/random-real", "sudo ln -s /dev/urandom /dev/random"));
                 
                 if (setup.get(OPEN_IPTABLES)) {
-                    mapSecurityGroupRuleToIpTables(computeService, node, initialCredentials, "eth0", 
-                            (Iterable<Integer>) setup.get(INBOUND_PORTS));
+                   List<String> iptablesRules = createIptablesRulesForNetworkInterface("eth0", (Iterable<Integer>) setup.get(INBOUND_PORTS));
+                   sshMachineLocation.execCommands("Inserting iptables rules", iptablesRules);
+                }
+
+                if (setup.get(GENERATE_HOSTNAME)) {
+                   sshMachineLocation.execCommands("Generate hostname " + node.getName(), 
+                         Arrays.asList("sudo hostname " + node.getName(), 
+                                       "sudo bash -c \"echo 127.0.0.1   `hostname` >> /etc/hosts\"")
+                   );
+               }
+                String setupScript = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_URL);
+                if(Strings.isNonBlank(setupScript)) {
+                   String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
+                   Map<String, String> substitutions = Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString);
+                   String script = TemplateProcessor.processTemplate(setupScript, substitutions);
+                   sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
                 }
                 
             } else {
@@ -373,10 +390,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
-                customizer.customize(computeService, machineResult);
+                customizer.customize(computeService, sshMachineLocation);
             }
             
-            return machineResult;
+            return sshMachineLocation;
         } catch (Exception e) {
             if (e instanceof RunNodesException && ((RunNodesException)e).getNodeErrors().size() > 0) {
                 node = Iterables.get(((RunNodesException)e).getNodeErrors().keySet(), 0);
@@ -388,8 +405,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             LOG.debug(Throwables.getStackTraceAsString(e));
             
             if (destroyNode) {
-                if (machineResult != null) {
-                    releaseSafely(machineResult);
+                if (sshMachineLocation != null) {
+                    releaseSafely(sshMachineLocation);
                 } else {
                     releaseNodeSafely(node);
                 }
@@ -567,7 +584,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         } else {
                             LOG.info("ignoring auto_generate_floating_ips({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
-                    }})                    
+                    }}) 
+              .put(OVERRIDE_RAM, new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
+                        if (t instanceof AbiquoTemplateOptions) {
+                            ((AbiquoTemplateOptions)t).overrideRam((Integer)v);
+                        } else {
+                            LOG.info("ignoring override_ram({}) in VM creation because not supported for cloud/type ({})", v, t);
+                        }     
+              }}) 
             .build();
 
     private static boolean listedAvailableTemplatesOnNoSuchTemplate = false;
@@ -1303,5 +1328,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         } else {
             throw new IllegalArgumentException("Invalid type for Map<String,String>: "+v+" of type "+v.getClass());
         }
+    }
+    
+    private List<String> createIptablesRulesForNetworkInterface(String networkInterface, Iterable<Integer> ports) {
+       List<String> iptablesRules = Lists.newArrayList();
+       for (Integer port : ports) {
+          iptablesRules.add(IptablesCommands.insertIptablesRule(Chain.INPUT, networkInterface, Protocol.TCP, port, Policy.ACCEPT));
+       }
+       return iptablesRules;
     }
 }
