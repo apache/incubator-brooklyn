@@ -58,12 +58,15 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
      * <ul>
      * <li>count - number of localhost machines to make available
      * </ul>
-     *
-     * @param properties the properties of the new instance.
      */
     public LocalhostMachineProvisioningLocation() {
         this(Maps.newLinkedHashMap());
     }
+    /**
+     * @param properties the properties of the new instance.
+     * @deprecated since 0.6
+     * @see #LocalhostMachineProvisioningLocation()
+     */
     public LocalhostMachineProvisioningLocation(Map properties) {
         super(properties);
     }

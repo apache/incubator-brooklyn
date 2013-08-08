@@ -12,6 +12,7 @@ import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityTypes;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.mementos.EntityMemento;
@@ -24,8 +25,9 @@ import com.google.common.collect.Sets;
 /**
  * Represents the state of an entity, so that it can be reconstructed (e.g. after restarting brooklyn).
  * 
- * @see AbstractEntity.getMemento()
- * @see AbstractEntity.rebind
+ * @see AbstractEntity#getRebindSupport()
+ * @see RebindSupport#getMemento()
+ * @see RebindSupport#reconstruct(brooklyn.entity.rebind.RebindContext, brooklyn.mementos.Memento)
  * 
  * @author aled
  */

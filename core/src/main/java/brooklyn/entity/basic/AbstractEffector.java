@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * The abstract {@link Effector} implementation.
  * 
- * The concrete subclass (often anonymous) will supply the {@link #call(EntityType, Map)} implementation,
+ * The concrete subclass (often anonymous) will supply the {@link #call(Entity, Map)} implementation,
  * and the fields in the constructor.
  */
 public abstract class AbstractEffector<T> implements Effector<T> {

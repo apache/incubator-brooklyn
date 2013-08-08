@@ -70,7 +70,7 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
      * @param aggregator   Should take a collection of values and return a single, aggregate value
      * @param defaultValue
      * 
-     * @see #CustomAggregatingEnricher(Map<String,?>, AttributeSensor<S>, AttributeSensor<T> target, Function<Collection<S>, T> aggregator, S defaultValue)
+     * @see #CustomAggregatingEnricher(Map, AttributeSensor, AttributeSensor, Function, Object)
      */
     @SuppressWarnings("unchecked")
     public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<? extends S> source, AttributeSensor<T> target,

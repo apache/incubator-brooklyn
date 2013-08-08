@@ -140,7 +140,7 @@ public class ConfigBag {
     
     /** recommended to use {@link #put(ConfigKey, Object)} but there are times
      * (e.g. when copying a map) where we want to put a string key directly 
-     * @return */
+     */
     public Object putStringKey(String key, Object value) {
         if (sealed) 
             throw new IllegalStateException("Cannot insert "+key+"="+value+": this config bag has been sealed and is now immutable.");
