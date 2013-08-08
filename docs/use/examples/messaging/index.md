@@ -106,9 +106,9 @@ as follows:
 % ${BROOKLYN_HOME}/bin/brooklyn -v launch --app brooklyn.demo.StandaloneBrokerExample --location localhost
 {% endhighlight %}
 
-Now, visit the Brooklyn web console on port 8081 using credentials
-admin/password.  This allows you to view the Brooklyn entities and
-their current state for debugging.
+Now, visit the Brooklyn web console on port 8081 (for pre 0.6 releases,
+use the credentials admin/password). This allows you to view the Brooklyn 
+entities and their current state for debugging.
 
 Note that the installation may take some time, because the default
 deployment downloads the software from the official repos.  You can

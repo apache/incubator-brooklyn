@@ -18,16 +18,15 @@ import org.slf4j.LoggerFactory;
 import brooklyn.management.Task;
 
 /**
- * Instances of this class ensures that {@link Task}s it is shown execute with in-order
+ * Instances of this class ensures that {@link Task}s execute with in-order
  * single-threaded semantics.
  *
- * Tasks can be presented through {@link #onSubmit(Map)}, {@link #onStart(Map)}, and
- * {@link #onEnd(Map)} (but not necessarily all in the same thread).  The order is that in which
- * it is submitted.
+ * Tasks can be presented through {@link #submit(Callable)}. The order of execution is the
+ * sumbission order.
  * <p>
  * This implementation does so by blocking on a {@link ConcurrentLinkedQueue}, <em>after</em>
- * the task is started in a thread (and {@link Task#isStarted()} returns true), but (of course)
- * <em>before</em> the {@link Task#job} actually gets invoked.
+ * the task is started in a thread (and {@link Task#isBegun()} returns true), but (of course)
+ * <em>before</em> the {@link BasicTask#job} actually gets invoked.
  */
 public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
     private static final Logger LOG = LoggerFactory.getLogger(SingleThreadedScheduler.class);
@@ -49,8 +48,12 @@ public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
         return name!=null ? "SingleThreadedExecutor["+name+"]" : super.toString();
     }
     
-    public void injectExecutor(ExecutorService executor) { this.executor = executor; }
+    @Override
+    public void injectExecutor(ExecutorService executor) {
+        this.executor = executor;
+    }
 
+    @Override
     public synchronized <T> Future<T> submit(Callable<T> c) {
         if (running.compareAndSet(false, true)) {
             return executeNow(c);
@@ -87,7 +90,7 @@ public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
 
     private synchronized <T> Future<T> executeNow(final Callable<T> c) {
         return executor.submit(new Callable<T>() {
-            public T call() throws Exception {
+            @Override public T call() throws Exception {
                 try {
                     return c.call();
                 } finally {

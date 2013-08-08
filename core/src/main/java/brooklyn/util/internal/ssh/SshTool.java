@@ -100,8 +100,8 @@ public interface SshTool {
      * 
      * Optional properties are:
      * <ul>
-     *   <li>'out' {@link OutputStream} - see {@link PROP_OUT_STREAM}
-     *   <li>'err' {@link OutputStream} - see {@link PROP_ERR_STREAM}
+     *   <li>'out' {@link OutputStream} - see {@link #PROP_OUT_STREAM}
+     *   <li>'err' {@link OutputStream} - see {@link #PROP_ERR_STREAM}
      * </ul>
      * 
      * @return exit status of script
@@ -111,7 +111,7 @@ public interface SshTool {
     public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env);
 
     /**
-     * @see execScript(Map, List, Map)
+     * @see #execScript(Map, List, Map)
      */
     public int execScript(Map<String,?> props, List<String> commands);
 
@@ -123,9 +123,9 @@ public interface SshTool {
      *
      * Optional properties are:
      * <ul>
-     *   <li>'out' {@link OutputStream} - see {@link PROP_OUT_STREAM}
-     *   <li>'err' {@link OutputStream} - see {@link PROP_ERR_STREAM}
-     *   <li>'separator', defaulting to ";" - see {@link PROP_SEPARATOR}
+     *   <li>'out' {@link OutputStream} - see {@link #PROP_OUT_STREAM}
+     *   <li>'err' {@link OutputStream} - see {@link #PROP_ERR_STREAM}
+     *   <li>'separator', defaulting to ";" - see {@link #PROP_SEPARATOR}
      * </ul>
      * 
      * @return exit status of commands
@@ -134,7 +134,7 @@ public interface SshTool {
     public int execCommands(Map<String,?> properties, List<String> commands, Map<String,?> env);
 
     /**
-     * @see execuCommands(Map, List, Map)
+     * @see #execCommands(Map, List, Map)
      */
     public int execCommands(Map<String,?> properties, List<String> commands);
 
@@ -146,9 +146,9 @@ public interface SshTool {
      * 
      * Optional properties are:
      * <ul>
-     *   <li>'permissions' (e.g. "0644") - see {@link PROP_PERMISSIONS}
-     *   <li>'lastModificationDate' see {@link PROP_LAST_MODIFICATION_DATE}; not supported by all SshTool implementations
-     *   <li>'lastAccessDate' see {@link PROP_LAST_ACCESS_DATE}; not supported by all SshTool implementations
+     *   <li>'permissions' (e.g. "0644") - see {@link #PROP_PERMISSIONS}
+     *   <li>'lastModificationDate' see {@link #PROP_LAST_MODIFICATION_DATE}; not supported by all SshTool implementations
+     *   <li>'lastAccessDate' see {@link #PROP_LAST_ACCESS_DATE}; not supported by all SshTool implementations
      * </ul>
      * 
      * @return exit code (not supported by all SshTool implementations, sometimes just returning 0)
@@ -159,12 +159,12 @@ public interface SshTool {
      * Closes the given input stream before returning.
      * Consider using {@link KnownSizeInputStream} for efficiency when the size of the stream is known.
      * 
-     * @see copyToServer(Map, File, String)
+     * @see #copyToServer(Map, File, String)
      */
     public int copyToServer(Map<String,?> props, InputStream contents, String pathAndFileOnRemoteServer);
 
     /**
-     * @see copyToServer(Map, File, String)
+     * @see #copyToServer(Map, File, String)
      */
     public int copyToServer(Map<String,?> props, byte[] contents, String pathAndFileOnRemoteServer);
 
@@ -174,7 +174,7 @@ public interface SshTool {
      * <p>
      * Optional properties are:
      * <ul>
-     *   <li>'permissions' (e.g. "0644") - see {@link PROP_PERMISSIONS}
+     *   <li>'permissions' (e.g. "0644") - see {@link #PROP_PERMISSIONS}
      * </ul>
      *
      * @return exit code (not supported by all SshTool implementations, sometimes just returning 0)

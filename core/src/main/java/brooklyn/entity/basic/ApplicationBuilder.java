@@ -26,20 +26,23 @@ import com.google.common.annotations.Beta;
  * creating and wiring together entities in there.
  * 
  * The builder is mutable; a given instance should be used to build only a single application.
- * Once {@link manage()} has been called, the application will be built and no additional configuration
+ * Once {@link #manage()} has been called, the application will be built and no additional configuration
  * should be performed through this builder.  
  * 
  * Example (simplified) code for sub-classing is:
- * <code>
+ * <pre>
+ * {@code
  *   app = new ApplicationBuilder() {
- *       @Override public void doBuild() {
+ *       //@Override
+ *       public void doBuild() {
  *           MySqlNode db = addChild(EntitySpecs.spec(MySqlNode.class)));
  *           JBoss7Server as = addChild(EntitySpecs.spec(JBoss7Server.class)
  *                   .configure(HTTP_PORT, "8080+")
  *                   .configure(javaSysProp("brooklyn.example.db.url"), attributeWhenReady(db, MySqlNode.MYSQL_URL));
  *       }
  *   }.manage();
- * </code>
+ * }
+ * </pre>
  * 
  * @author aled
  */

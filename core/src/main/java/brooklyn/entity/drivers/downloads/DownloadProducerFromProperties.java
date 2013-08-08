@@ -72,7 +72,7 @@ import com.google.common.collect.Maps;
  * 
  * A URL can be a "template", where things of the form ${version} will be substituted for the value
  * of "version" provided for that entity. The freemarker template engine is used to convert URLs 
- * (see {@link http://freemarker.org}). For example, one could use the URL:
+ * (see <a href="http://freemarker.org>http://freemarker.org</a>). For example, one could use the URL:
  * <pre>
  * {@code
  * http://repo.acme.com/${simpletype}-${version}.${fileSuffix!tar.gz}

@@ -79,7 +79,6 @@ public class EntityManagementSupport {
     /**
      * Whether the entity's management lifecycle is complete (i.e. both "onManagementStarting" and "onManagementStarted" have
      * been called, and it is has not been unmanaged). 
-     * @return
      */
     public boolean isFullyManaged() {
         return (nonDeploymentManagementContext == null) && currentlyDeployed.get();

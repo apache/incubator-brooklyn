@@ -55,7 +55,9 @@ public class SubscriptionTracker {
         return handle;
     }
 
-    /** @see SubscriptionContext#subscribeToMembers(Entity, Sensor, SensorEventListener) */
+    /**
+     * @see SubscriptionContext#subscribeToMembers(Group, Sensor, SensorEventListener)
+     */
     public <T> SubscriptionHandle subscribeToMembers(Group parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         SubscriptionHandle handle = context.subscribeToMembers(parent, sensor, listener);
         synchronized (subscriptions) {

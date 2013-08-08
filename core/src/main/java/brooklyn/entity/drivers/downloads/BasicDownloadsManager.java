@@ -25,12 +25,11 @@ public class BasicDownloadsManager implements DownloadResolverManager {
      * The default is (in-order) to:
      * <ol>
      *   <li>Use the local repo, if any (defaulting to $HOME/.brooklyn/repository)
-     *   <li>Use brooklyn properties for any download overrides defined there (see {@link DownloadPropertiesResolver}
+     *   <li>Use brooklyn properties for any download overrides defined there (see {@link DownloadProducerFromProperties}
      *   <li>Use the entity's Attributes.DOWNLOAD_URL
      *   <li>Use the cloudsoft fallback repo
      * </ol>
      * @param config
-     * @return
      */
     public static BasicDownloadsManager newDefault(StringConfigMap config) {
         BasicDownloadsManager result = new BasicDownloadsManager();

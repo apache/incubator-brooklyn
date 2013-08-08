@@ -46,7 +46,6 @@ public class MementoFileWriter<T> {
     private final AtomicLong modCount = new AtomicLong();
     
     /**
-     * @param val
      * @param file
      * @param executor A sequential executor (e.g. SingleThreadedExecutor, or equivalent)
      * @param serializer
