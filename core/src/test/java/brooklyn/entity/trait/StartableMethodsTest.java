@@ -9,7 +9,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.FailingEntity.RecordingEventListener;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication;
@@ -39,9 +39,9 @@ public class StartableMethodsTest {
     
     @Test
     public void testStopSequentially() {
-        entity = app.createAndManageChild(EntitySpecs.spec(FailingEntity.class)
+        entity = app.createAndManageChild(EntitySpec.create(FailingEntity.class)
                 .configure(FailingEntity.LISTENER, listener));
-        entity2 = app.createAndManageChild(EntitySpecs.spec(FailingEntity.class)
+        entity2 = app.createAndManageChild(EntitySpec.create(FailingEntity.class)
                 .configure(FailingEntity.LISTENER, listener));
         app.start(ImmutableList.of(loc));
         listener.events.clear();
@@ -55,10 +55,10 @@ public class StartableMethodsTest {
     @Test
     public void testStopSequentiallyContinuesOnFailure() {
         try {
-            entity = app.createAndManageChild(EntitySpecs.spec(FailingEntity.class)
+            entity = app.createAndManageChild(EntitySpec.create(FailingEntity.class)
                     .configure(FailingEntity.FAIL_ON_STOP, true)
                     .configure(FailingEntity.LISTENER, listener));
-            entity2 = app.createAndManageChild(EntitySpecs.spec(FailingEntity.class)
+            entity2 = app.createAndManageChild(EntitySpec.create(FailingEntity.class)
                     .configure(FailingEntity.LISTENER, listener));
             app.start(ImmutableList.of(loc));
             listener.events.clear();

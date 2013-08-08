@@ -20,7 +20,7 @@ import brooklyn.entity.database.mysql.MySqlIntegrationTest;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import brooklyn.entity.database.postgresql.PostgreSqlNode;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
@@ -49,11 +49,11 @@ public class RubyRepIntegrationTest {
 
     @Test(groups = "Integration")
     public void test_localhost_mysql() throws Exception {
-        MySqlNode db1 = tapp.createAndManageChild(EntitySpecs.spec(MySqlNode.class)
+        MySqlNode db1 = tapp.createAndManageChild(EntitySpec.create(MySqlNode.class)
                 .configure("creationScriptContents", MySqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", "9111"));
 
-        MySqlNode db2 = tapp.createAndManageChild(EntitySpecs.spec(MySqlNode.class)
+        MySqlNode db2 = tapp.createAndManageChild(EntitySpec.create(MySqlNode.class)
                 .configure("creationScriptContents", MySqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", "9112"));
 
@@ -70,7 +70,7 @@ public class RubyRepIntegrationTest {
         String createTwoDbsScript = PostgreSqlIntegrationTest.CREATION_SCRIPT +
                 PostgreSqlIntegrationTest.CREATION_SCRIPT.replaceAll("CREATE USER.*", "").replaceAll(" feedback", " feedback1");
         
-        PostgreSqlNode db1 = tapp.createAndManageChild(EntitySpecs.spec(PostgreSqlNode.class)
+        PostgreSqlNode db1 = tapp.createAndManageChild(EntitySpec.create(PostgreSqlNode.class)
                 .configure("creationScriptContents", createTwoDbsScript)
                 .configure("port", "9113"));
 
@@ -80,11 +80,11 @@ public class RubyRepIntegrationTest {
 
     @Test(enabled = false, groups = "Integration") // TODO this doesn't appear to be supported by RubyRep
     public void test_localhost_postgres_mysql() throws Exception {
-        PostgreSqlNode db1 = tapp.createAndManageChild(EntitySpecs.spec(PostgreSqlNode.class)
+        PostgreSqlNode db1 = tapp.createAndManageChild(EntitySpec.create(PostgreSqlNode.class)
                 .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", "9115"));
 
-        MySqlNode db2 = tapp.createAndManageChild(EntitySpecs.spec(MySqlNode.class)
+        MySqlNode db2 = tapp.createAndManageChild(EntitySpec.create(MySqlNode.class)
                 .configure("creationScriptContents", MySqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", "9116"));
 
@@ -101,7 +101,7 @@ public class RubyRepIntegrationTest {
      * Configures rubyrep to connect to the two databases and starts the app
      */
     public static void startInLocation(TestApplication tapp, DatabaseNode db1, String dbName1, DatabaseNode db2, String dbName2, Location... locations) throws Exception {
-        tapp.createAndManageChild(EntitySpecs.spec(RubyRepNode.class)
+        tapp.createAndManageChild(EntitySpec.create(RubyRepNode.class)
                 .configure("leftDatabase", db1)
                 .configure("rightDatabase", db2)
                 .configure("leftUsername", "sqluser")

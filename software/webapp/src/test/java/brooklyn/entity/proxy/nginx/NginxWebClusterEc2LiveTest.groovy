@@ -12,7 +12,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.DynamicCluster
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -58,13 +58,13 @@ public class NginxWebClusterEc2LiveTest {
         URL war = getClass().getClassLoader().getResource("swf-booking-mvc.war")
         assertNotNull war, "Unable to locate resource $war"
         
-        cluster = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class))
+        cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 2)
                 .configure("httpPort", 8080)
                 .configure(JavaWebAppService.ROOT_WAR, war.path));
         
-        nginx = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
+        nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("cluster", cluster)
                 .configure("domain", "localhost")
                 .configure("port", 8000)

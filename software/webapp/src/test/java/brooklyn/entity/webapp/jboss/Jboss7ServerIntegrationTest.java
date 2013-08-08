@@ -2,7 +2,7 @@ package brooklyn.entity.webapp.jboss;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
@@ -76,7 +76,7 @@ public class Jboss7ServerIntegrationTest {
     
     @Test(groups = "Integration")
     public void testHttp() throws Exception {
-        final JBoss7Server server = app.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
+        final JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
                 .configure("war", warUrl.toString()));
         
         app.start(ImmutableList.of(localhostProvisioningLocation));
@@ -104,7 +104,7 @@ public class Jboss7ServerIntegrationTest {
 
     @Test(groups = {"Integration"})
     public void testHttps() throws Exception {
-        final JBoss7Server server = app.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
+        final JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
                 .configure("war", warUrl.toString())
                 .configure(JBoss7Server.ENABLED_PROTOCOLS, ImmutableList.of("https"))
                 .configure(JBoss7Server.HTTPS_SSL_CONFIG, new HttpsSslConfig().keyAlias("myname").keystorePassword("mypass").keystoreUrl(keystoreFile.getAbsolutePath())));
@@ -141,7 +141,7 @@ public class Jboss7ServerIntegrationTest {
     
     @Test(groups = {"Integration"})
     public void testHttpAndHttps() throws Exception {
-        final JBoss7Server server = app.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
+        final JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
                 .configure("war", warUrl.toString())
                 .configure(JBoss7Server.ENABLED_PROTOCOLS, ImmutableList.of("http", "https"))
                 .configure(JBoss7Server.HTTPS_SSL_CONFIG, new HttpsSslConfig().keyAlias("myname").keystorePassword("mypass").keystoreUrl(keystoreFile.getAbsolutePath())));
@@ -176,9 +176,9 @@ public class Jboss7ServerIntegrationTest {
 
     @Test(groups = {"Integration"})
     public void testUsingPortOffsets() throws Exception {
-        final JBoss7Server serverA = app.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
+        final JBoss7Server serverA = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
                 .configure("portIncrement", 100));
-        final JBoss7Server serverB = app.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
+        final JBoss7Server serverB = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
                 .configure("portIncrement", 200));
         app.start(ImmutableList.of(localhostProvisioningLocation));
 

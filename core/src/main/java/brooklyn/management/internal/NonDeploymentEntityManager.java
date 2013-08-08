@@ -6,7 +6,6 @@ import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
@@ -39,7 +38,7 @@ public class NonDeploymentEntityManager implements EntityManager {
     
     @Override
     public <T extends Entity> T createEntity(Map<?,?> config, Class<T> type) {
-        return createEntity(EntitySpecs.spec(type).configure(config));
+        return createEntity(EntitySpec.create(type).configure(config));
     }
 
     @Override

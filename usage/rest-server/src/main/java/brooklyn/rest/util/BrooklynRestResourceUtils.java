@@ -31,8 +31,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityTypes;
-import brooklyn.entity.proxying.BasicEntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
@@ -276,11 +274,11 @@ public class BrooklynRestResourceUtils {
             }
         }
         final Class<? extends Entity> clazz = tempclazz;
-        BasicEntitySpec<? extends Entity, ?> result;
+        brooklyn.entity.proxying.EntitySpec<? extends Entity> result;
         if (clazz.isInterface()) {
-            result = EntitySpecs.spec(clazz);
+            result = brooklyn.entity.proxying.EntitySpec.create(clazz);
         } else {
-            result = EntitySpecs.spec(Entity.class).impl(clazz);
+            result = brooklyn.entity.proxying.EntitySpec.create(Entity.class).impl(clazz);
         }
         if (!Strings.isEmpty(name)) result.displayName(name);
         result.configure( convertFlagsToKeys(result.getType(), config) );
@@ -291,15 +289,15 @@ public class BrooklynRestResourceUtils {
     private <T extends Entity> brooklyn.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<String,String> configO) {
         Map<String, String> config = (configO == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(configO);
         
-        BasicEntitySpec result;
+        brooklyn.entity.proxying.EntitySpec<? extends Entity> result;
         if (clazz.isInterface()) {
-            result = EntitySpecs.spec(clazz);
+            result = brooklyn.entity.proxying.EntitySpec.create(clazz);
         } else {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
             Class interfaceclazz = (Application.class.isAssignableFrom(clazz)) ? Application.class : Entity.class;
             Class<?>[] additionalInterfaceClazzes = clazz.getInterfaces();
-            result = EntitySpecs.spec(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
+            result = brooklyn.entity.proxying.EntitySpec.create(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
         }
         
         if (!Strings.isEmpty(name)) result.displayName(name);

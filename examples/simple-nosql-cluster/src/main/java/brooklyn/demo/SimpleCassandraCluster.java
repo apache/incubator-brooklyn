@@ -17,14 +17,14 @@ package brooklyn.demo;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.nosql.cassandra.CassandraCluster;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 
 /** Cassandra cluster. */
 public class SimpleCassandraCluster extends ApplicationBuilder {
 
     /** Create entities. */
     protected void doBuild() {
-        addChild(EntitySpecs.spec(CassandraCluster.class)
+        addChild(EntitySpec.create(CassandraCluster.class)
                 .configure("initialSize", "2")
                 .configure("clusterName", "Brooklyn")
                 .configure("jmxPort", "11099+")

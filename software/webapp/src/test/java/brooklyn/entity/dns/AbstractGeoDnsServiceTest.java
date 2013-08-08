@@ -19,7 +19,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicFabric;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
@@ -76,12 +76,12 @@ public class AbstractGeoDnsServiceTest {
         Entities.manage(eastParent, managementContext);
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
-        fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
-            .configure(DynamicFabric.MEMBER_SPEC, EntitySpecs.spec(TestEntity.class)));
+        fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
+            .configure(DynamicFabric.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
         
-        testEntities = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
+        testEntities = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
             .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class)));
-        geoDns = app.createAndManageChild(EntitySpecs.spec(GeoDnsTestService.class)
+        geoDns = app.createAndManageChild(EntitySpec.create(GeoDnsTestService.class)
                 .configure(GeoDnsTestService.POLL_PERIOD, 10L));
         geoDns.setTargetEntityProvider(testEntities);
     }

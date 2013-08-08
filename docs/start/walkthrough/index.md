@@ -22,8 +22,8 @@ for management:
 public class WebClusterDatabaseExample extends AbstractApplication {
     @Override
     public void init() {
-        MySqlNode mysql = addChild(EntitySpecs.spec(MySqlNode.class));
-        ControlledDynamicWebAppCluster web = addChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class));
+        MySqlNode mysql = addChild(EntitySpec.create(MySqlNode.class));
+        ControlledDynamicWebAppCluster web = addChild(EntitySpec.create(ControlledDynamicWebAppCluster.class));
     }
 }
 {% endhighlight %}
@@ -79,11 +79,11 @@ block "at the last moment" when the value is needed
 public class WebClusterDatabaseExample extends AbstractApplication {
     @Override
     public void init() {
-        MySqlNode mysql = addChild(EntitySpecs.spec(MySqlNode.class)
+        MySqlNode mysql = addChild(EntitySpec.create(MySqlNode.class)
                 .configure(MySqlNode.CREATION_SCRIPT_URL, "classpath://visitors-database-setup.sql"));
         
-        ControlledDynamicWebAppCluster web = addChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
-                .configure("memberSpec", EntitySpecs.spec(JBoss7Server.class)
+        ControlledDynamicWebAppCluster web = addChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class)
                         .configure("httpPort", "8080+")
                         .configure("war", WAR_PATH)
                         .configure(javaSysProp("brooklyn.example.db.url"), 

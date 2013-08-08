@@ -37,7 +37,7 @@ public class InternalEntityFactoryTest {
     
     @Test
     public void testCreatesEntity() throws Exception {
-        EntitySpec<TestApplication> spec = EntitySpecs.spec(TestApplication.class);
+        EntitySpec<TestApplication> spec = EntitySpec.create(TestApplication.class);
         TestApplicationImpl app = (TestApplicationImpl) factory.createEntity(spec);
         
         Entity proxy = app.getProxy();
@@ -51,7 +51,7 @@ public class InternalEntityFactoryTest {
     @Test
     public void testCreatesProxy() throws Exception {
         TestApplicationImpl app = new TestApplicationImpl();
-        EntitySpec<Application> spec = EntitySpecs.spec(Application.class).impl(TestApplicationImpl.class);
+        EntitySpec<Application> spec = EntitySpec.create(Application.class).impl(TestApplicationImpl.class);
         Application proxy = factory.createEntityProxy(spec, app);
         
         assertFalse(proxy instanceof TestApplicationImpl, "proxy="+app);
@@ -63,14 +63,14 @@ public class InternalEntityFactoryTest {
         TestEntity legacy = new TestEntityImpl();
         assertTrue(legacy.isLegacyConstruction());
         
-        TestEntity entity = factory.createEntity(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity = factory.createEntity(EntitySpec.create(TestEntity.class));
         assertFalse(entity.isLegacyConstruction());
     }
     
     @Test
     public void testCreatesProxyImplementingAdditionalInterfaces() throws Exception {
         MyApplicationImpl app = new MyApplicationImpl();
-        EntitySpec<Application> spec = EntitySpecs.spec(Application.class).impl(MyApplicationImpl.class).additionalInterfaces(MyInterface.class);
+        EntitySpec<Application> spec = EntitySpec.create(Application.class).impl(MyApplicationImpl.class).additionalInterfaces(MyInterface.class);
         Application proxy = factory.createEntityProxy(spec, app);
         
         assertFalse(proxy instanceof MyApplicationImpl, "proxy="+app);

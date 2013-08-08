@@ -8,11 +8,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +18,7 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
@@ -78,7 +74,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
     public void init() {
         StringConfigMap config = getManagementContext().getConfig();
     
-        hadoopCluster = addChild(EntitySpecs.spec(WhirrHadoopCluster.class)
+        hadoopCluster = addChild(EntitySpec.create(WhirrHadoopCluster.class)
                 .configure("size", 2)
                 .configure("memory", 2048)
                 .configure("name", "Whirr Hadoop Cluster"));
@@ -90,7 +86,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
         hadoopCluster.addRecipeLine("whirr.client-cidrs=0.0.0.0/0");
         hadoopCluster.addRecipeLine("whirr.firewall-rules=8020,8021,50010");
     
-        webCluster = addChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
+        webCluster = addChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("war", WAR_PATH)
                 .policy(AutoScalerPolicy.builder()
                         .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
@@ -98,7 +94,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
                         .metricRange(10, 100)
                         .build()));
         
-        webVms = addChild(EntitySpecs.spec(DynamicGroup.class)
+        webVms = addChild(EntitySpec.create(DynamicGroup.class)
                 .displayName("Web VMs")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(JBoss7Server.class)));
     }

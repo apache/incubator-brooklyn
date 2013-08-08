@@ -27,7 +27,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
@@ -96,7 +96,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
     @Override
     public void init() {
-        entities = addChild(EntitySpecs.spec(DynamicGroup.class)
+        entities = addChild(EntitySpec.create(DynamicGroup.class)
                 .configure("entityFilter", getConfig(ENTITY_FILTER)));
     }
 

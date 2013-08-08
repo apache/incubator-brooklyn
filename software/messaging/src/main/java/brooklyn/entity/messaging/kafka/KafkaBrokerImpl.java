@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.MessageBroker;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
@@ -65,7 +65,7 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     public Zookeeper getZookeeper() { return getConfig(ZOOKEEPER); }
 
     public KafkaTopic createTopic(Map<?, ?> properties) {
-        KafkaTopic result = addChild(EntitySpecs.spec(KafkaTopic.class).configure(properties));
+        KafkaTopic result = addChild(EntitySpec.create(KafkaTopic.class).configure(properties));
         Entities.manage(result);
         result.create();
         return result;

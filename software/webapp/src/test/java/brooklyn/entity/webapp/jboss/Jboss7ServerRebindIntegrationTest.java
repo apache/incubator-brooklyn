@@ -20,13 +20,12 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -39,8 +38,6 @@ import com.google.common.io.Files;
 public class Jboss7ServerRebindIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(Jboss7ServerRebindIntegrationTest.class);
     
-    static { TimeExtras.init(); }
-
     private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     private TestApplication origApp;
@@ -97,7 +94,7 @@ public class Jboss7ServerRebindIntegrationTest {
     @Test(groups = "Integration")
     public void testRebindsToRunningServer() throws Exception {
     	// Start an app-server, and wait for it to be fully up
-        JBoss7Server origServer = origApp.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
+        JBoss7Server origServer = origApp.createAndManageChild(EntitySpec.create(JBoss7Server.class)
                     .configure("war", warUrl.toString()));
         
         origApp.start(ImmutableList.of(localhostProvisioningLocation));

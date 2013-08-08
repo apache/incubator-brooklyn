@@ -16,7 +16,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
@@ -81,7 +80,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
      */
     @Override
     protected EntitySpec<?> getMemberSpec() {
-        return getConfig(MEMBER_SPEC, EntitySpecs.spec(CassandraNode.class));
+        return getConfig(MEMBER_SPEC, EntitySpec.create(CassandraNode.class));
     }
 
     @Override

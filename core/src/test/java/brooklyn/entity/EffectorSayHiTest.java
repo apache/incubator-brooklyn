@@ -20,8 +20,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.basic.NamedParameter;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ExecutionContext;
@@ -55,7 +54,7 @@ public class EffectorSayHiTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        e = app.createAndManageChild(EntitySpecs.spec(MyEntity.class));
+        e = app.createAndManageChild(EntitySpec.create(MyEntity.class));
         managementContext = ((EntityInternal)e).getManagementContext();
     }
 

@@ -17,14 +17,14 @@ package brooklyn.demo;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.nosql.redis.RedisCluster;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 
 /** Redis cluster. */
 public class SimpleRedisCluster extends ApplicationBuilder {
 
     /** Create entities. */
     protected void doBuild() {
-        addChild(EntitySpecs.spec(RedisCluster.class)
+        addChild(EntitySpec.create(RedisCluster.class)
                 .configure("initialSize", "2")
                 .configure("clusterName", "Brooklyn"));
     }

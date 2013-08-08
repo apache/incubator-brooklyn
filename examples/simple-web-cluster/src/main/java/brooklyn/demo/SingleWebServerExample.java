@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.launcher.BrooklynLauncher;
@@ -23,7 +24,7 @@ public class SingleWebServerExample extends AbstractApplication {
 
     @Override
     public void init() {
-        addChild(EntitySpecs.spec(JBoss7Server.class)
+        addChild(EntitySpec.create(JBoss7Server.class)
                 .configure("war", WAR_PATH)
                 .configure("httpPort", "8080+"));
     }

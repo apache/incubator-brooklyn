@@ -25,7 +25,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -109,11 +109,11 @@ public class NginxRebindIntegrationTest {
     public void testRebindsWithEmptyServerPool() throws Exception {
     	
         // Set up nginx with a server pool
-        DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class))
+        DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 0));
         
-        NginxController origNginx = origApp.createAndManageChild(EntitySpecs.spec(NginxController.class)
+        NginxController origNginx = origApp.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("serverPool", origServerPool)
                 .configure("domain", "localhost"));
         
@@ -151,11 +151,11 @@ public class NginxRebindIntegrationTest {
     public void testRebindsWithoutLosingServerPool() throws Exception {
         
         // Set up nginx with a server pool
-        DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("war", warUrl.toString()))
+        DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString()))
                 .configure("initialSize", 1));
         
-        NginxController origNginx = origApp.createAndManageChild(EntitySpecs.spec(NginxController.class)
+        NginxController origNginx = origApp.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("serverPool", origServerPool)
                 .configure("domain", "localhost"));
         
@@ -210,21 +210,21 @@ public class NginxRebindIntegrationTest {
     public void testRebindsWithoutLosingUrlMappings() throws Exception {
         
         // Set up nginx with a url-mapping
-        Group origUrlMappingsGroup = origApp.createAndManageChild(EntitySpecs.spec(BasicGroup.class)
+        Group origUrlMappingsGroup = origApp.createAndManageChild(EntitySpec.create(BasicGroup.class)
                 .configure("childrenAsMembers", true));
         
-        DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("war", warUrl.toString()))
+        DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString()))
                 .configure("initialSize", 1)); 
 
-        UrlMapping origMapping = origApp.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping origMapping = origApp.getManagementContext().getEntityManager().createEntity(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", origServerPool)
                 .configure("rewrites", ImmutableList.of(new UrlRewriteRule("/foo/(.*)", "/$1")))
                 .parent(origUrlMappingsGroup));
         Entities.manage(origMapping);
         
-        NginxController origNginx = origApp.createAndManageChild(EntitySpecs.spec(NginxController.class)
+        NginxController origNginx = origApp.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("domain", "localhost")
                 .configure("urlMappings", origUrlMappingsGroup));
 

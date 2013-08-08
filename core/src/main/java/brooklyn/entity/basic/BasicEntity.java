@@ -9,7 +9,7 @@ import brooklyn.entity.proxying.ImplementedBy;
  * {@link BasicGroup}.
  * 
  * Example usage is:
- * {@code Entity entity = getEntityManager().createEntity(EntitySpecs.spec(BasicEntity.class))}.
+ * {@code Entity entity = getEntityManager().createEntity(EntitySpec.create(BasicEntity.class))}.
  * 
  * @author aled
  */

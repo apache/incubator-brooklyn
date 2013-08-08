@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicSensorEvent;
@@ -34,7 +34,7 @@ public class TimeFractionDeltaEnricherTest {
     @BeforeMethod(alwaysRun=true)
     public void before() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        producer = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        producer = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         intSensor = Sensors.newIntegerSensor("int sensor");
         fractionSensor = Sensors.newDoubleSensor("fraction sensor");

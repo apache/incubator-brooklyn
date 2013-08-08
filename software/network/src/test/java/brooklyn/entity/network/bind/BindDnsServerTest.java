@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
@@ -54,7 +54,7 @@ public class BindDnsServerTest {
     // TODO this needs to be run on a slave VM where we can edit the resolver configuration
     @Test(groups = { "WIP", "Integration" })
     protected void testDnsEntity() throws Exception {
-        BindDnsServer dns = app.createAndManageChild(EntitySpecs.spec(BindDnsServer.class));
+        BindDnsServer dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class));
 
         app.start(ImmutableList.<Location>of(testLocation));
 

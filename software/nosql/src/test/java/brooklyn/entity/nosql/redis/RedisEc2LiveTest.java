@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
 
@@ -25,7 +25,7 @@ public class RedisEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        RedisStore redis = app.createAndManageChild(EntitySpecs.spec(RedisStore.class));
+        RedisStore redis = app.createAndManageChild(EntitySpec.create(RedisStore.class));
         app.start(ImmutableList.of(loc));
         EntityTestUtils.assertAttributeEqualsEventually(redis, RedisStore.SERVICE_UP, true);
 

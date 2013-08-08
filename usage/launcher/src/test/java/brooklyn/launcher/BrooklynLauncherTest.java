@@ -14,6 +14,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -84,7 +85,7 @@ public class BrooklynLauncherTest {
     public void testStartsAppFromBuilder() throws Exception {
         launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
-                .application(new ApplicationBuilder(EntitySpecs.spec(TestApplication.class)) {
+                .application(new ApplicationBuilder(EntitySpec.create(TestApplication.class)) {
                         @Override protected void doBuild() {
                         }})
                 .start();
@@ -97,7 +98,7 @@ public class BrooklynLauncherTest {
         launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
                 .location("localhost")
-                .application(new ApplicationBuilder(EntitySpecs.spec(TestApplication.class)) {
+                .application(new ApplicationBuilder(EntitySpec.create(TestApplication.class)) {
                         @Override protected void doBuild() {
                         }})
                 .start();

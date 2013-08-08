@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.extras.whirr.core.WhirrCluster;
 import brooklyn.launcher.BrooklynLauncher;
@@ -28,7 +29,7 @@ public class WhirrExample extends AbstractApplication {
 
     @Override
     public void init() {
-        addChild(EntitySpecs.spec(WhirrCluster.class)
+        addChild(EntitySpec.create(WhirrCluster.class)
                 .configure("recipe", RECIPE));
     }
 

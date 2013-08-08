@@ -13,7 +13,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
@@ -32,7 +32,7 @@ public class ActiveMQEc2LiveTest extends AbstractEc2LiveTest {
         String content = "01234567890123456789012345678901";
 
         // Start broker with a configured queue
-        ActiveMQBroker activeMQ = app.createAndManageChild(EntitySpecs.spec(ActiveMQBroker.class).configure("queue", queueName));
+        ActiveMQBroker activeMQ = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class).configure("queue", queueName));
         
         app.start(ImmutableList.of(loc));
         

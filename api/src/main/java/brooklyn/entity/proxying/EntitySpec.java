@@ -66,7 +66,7 @@ public class EntitySpec<T extends Entity> implements Serializable {
     /**
      * Creates a new {@link EntitySpec} instance with the given config, for an entity of the given type.
      * 
-     * This is primarily for groovy code; equivalent to {@code EntitySpecs.spec(type).configure(config)}.
+     * This is primarily for groovy code; equivalent to {@code EntitySpec.create(type).configure(config)}.
      * 
      * @param config The spec's configuration (see {@link EntitySpec#configure(Map)}).
      * @param type   An {@link Entity} interface

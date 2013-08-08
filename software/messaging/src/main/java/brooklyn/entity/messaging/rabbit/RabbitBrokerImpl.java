@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 
 import com.google.common.base.Objects.ToStringHelper;
 
@@ -56,7 +56,7 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
     }
 
     public RabbitQueue createQueue(Map properties) {
-        RabbitQueue result = addChild(EntitySpecs.spec(RabbitQueue.class).configure(properties));
+        RabbitQueue result = addChild(EntitySpec.create(RabbitQueue.class).configure(properties));
         Entities.manage(result);
         result.create();
         return result;

@@ -8,7 +8,7 @@ import java.net.URL;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
@@ -24,7 +24,7 @@ public class Jboss7ServerEc2LiveTest extends AbstractEc2LiveTest {
     
     @Override
     protected void doTest(Location loc) throws Exception {
-        final JBoss7Server server = app.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
+        final JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
                 .configure("war", warUrl.toString()));
         
         app.start(ImmutableList.of(loc));

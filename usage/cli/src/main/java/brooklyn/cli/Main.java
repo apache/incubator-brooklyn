@@ -357,13 +357,13 @@ public class Main {
                 return new ApplicationBuilder() {
                     @SuppressWarnings("unchecked")
                     @Override protected void doBuild() {
-                        addChild(EntitySpecs.spec(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
+                        addChild(EntitySpec.create(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
                     }};
             } else if (Entity.class.isAssignableFrom(clazz)) {
                 return new ApplicationBuilder() {
                     @SuppressWarnings("unchecked")
                     @Override protected void doBuild() {
-                        addChild(EntitySpecs.spec((Class<? extends Entity>)clazz));
+                        addChild(EntitySpec.create((Class<? extends Entity>)clazz));
                     }};
             } else {
                 throw new IllegalArgumentException("Application class "+clazz+" must extend one of ApplicationBuilder or AbstractApplication");

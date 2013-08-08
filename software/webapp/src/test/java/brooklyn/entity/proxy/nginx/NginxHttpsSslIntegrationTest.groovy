@@ -15,7 +15,7 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.proxy.ProxySslConfig
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -55,8 +55,8 @@ public class NginxHttpsSslIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testStartsWithGlobalSsl_withCertificateAndKeyCopy() {
-        cluster = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
-            .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class))
+        cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+            .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
             .configure("initialSize", 1)
             .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
         
@@ -64,7 +64,7 @@ public class NginxHttpsSslIntegrationTest {
                 certificateSourceUrl:CERTIFICATE_URL,
                 keySourceUrl:KEY_URL);
         
-        nginx = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
+        nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("sticky", false)
                 .configure("cluster", cluster)
                 .configure("domain", "localhost")
@@ -106,8 +106,8 @@ public class NginxHttpsSslIntegrationTest {
 
     @Test(groups = "Integration")
     public void testStartsWithGlobalSsl_withPreinstalledCertificateAndKey() {
-        cluster = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
-            .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class))
+        cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+            .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
             .configure("initialSize", 1)
             .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
         
@@ -115,7 +115,7 @@ public class NginxHttpsSslIntegrationTest {
                 certificateDestination: getFile("ssl/certs/localhost/server.crt"),
                 keyDestination: getFile("ssl/certs/localhost/server.key"));
         
-        nginx = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
+        nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("sticky", false)
                 .configure("cluster", cluster)
                 .configure("domain", "localhost")

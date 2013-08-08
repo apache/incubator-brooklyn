@@ -13,7 +13,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.SoftwareProcessEntityTest.MyService;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
@@ -50,7 +50,7 @@ public class SoftwareProcessEntityRebindTest {
     
     @Test
     public void testReleasesLocationOnStopAfterRebinding() throws Exception {
-        origE = origApp.createAndManageChild(EntitySpecs.spec(MyService.class));
+        origE = origApp.createAndManageChild(EntitySpec.create(MyService.class));
         
         MyProvisioningLocation origLoc = new MyProvisioningLocation(MutableMap.of("name", "mylocname"));
         origApp.start(ImmutableList.of(origLoc));

@@ -25,7 +25,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.PortRanges;
@@ -82,8 +82,8 @@ public class DynamicFabricTest {
     private void runWithEntitySpecWithLocations(Collection<Location> locs) {
         Collection<Location> unclaimedLocs = Lists.newArrayList(locs);
         
-        DynamicFabric fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
-            .configure("memberSpec", EntitySpecs.spec(TestEntity.class)));
+        DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
+            .configure("memberSpec", EntitySpec.create(TestEntity.class)));
         app.start(locs);
         
         assertEquals(fabric.getChildren().size(), locs.size(), Joiner.on(",").join(fabric.getChildren()));
@@ -112,10 +112,10 @@ public class DynamicFabricTest {
     private void runWithFactoryWithLocations(Collection<Location> locs) {
         Collection<Location> unclaimedLocs = Lists.newArrayList(locs);
         
-        DynamicFabric fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
+        DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
             .configure("factory", new EntityFactory<Entity>() {
                     @Override public Entity newEntity(Map flags, Entity parent) {
-                        return app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(TestEntity.class)
+                        return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class)
                                 .parent(parent)
                                 .configure(flags));
                     }}));
@@ -138,10 +138,10 @@ public class DynamicFabricTest {
     public void testNotifiesPostStartListener() throws Exception {
         final List<Entity> entitiesAdded = new CopyOnWriteArrayList<Entity>();
         
-        DynamicFabric fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
+        DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
             .configure("factory", new EntityFactory<Entity>() {
                 @Override public Entity newEntity(Map flags, Entity parent) {
-                    TestEntity result = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(TestEntity.class)
+                    TestEntity result = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class)
                             .parent(parent)
                             .configure(flags));
                     entitiesAdded.add(result);
@@ -157,15 +157,15 @@ public class DynamicFabricTest {
     @Test
     public void testSizeEnricher() throws Exception {
         Collection<Location> locs = ImmutableList.of(loc1, loc2, loc3);
-        final DynamicFabric fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
+        final DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
             .configure("factory", new EntityFactory<Entity>() {
                 @Override public Entity newEntity(Map fabricProperties, Entity parent) {
-                    return app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(DynamicCluster.class)
+                    return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(DynamicCluster.class)
                             .parent(parent) 
                             .configure("initialSize", 0)
                             .configure("factory", new EntityFactory<Entity>() {
                                 @Override public Entity newEntity(Map clusterProperties, Entity parent) { 
-                                    return app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(TestEntity.class)
+                                    return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class)
                                             .parent(parent)
                                             .configure(clusterProperties));
                                 }}));
@@ -192,12 +192,12 @@ public class DynamicFabricTest {
     @Test
     public void testDynamicFabricStartsEntitiesInParallel() throws Exception {
         final List<CountDownLatch> latches = Lists.newCopyOnWriteArrayList();
-        DynamicFabric fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
+        DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
             .configure("factory", new EntityFactory<Entity>() {
                 @Override public Entity newEntity(Map flags, Entity parent) {
                     CountDownLatch latch = new CountDownLatch(1); 
                     latches.add(latch);
-                    return app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(BlockingEntity.class)
+                    return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(BlockingEntity.class)
                             .parent(parent)
                             .configure(flags)
                             .configure(BlockingEntity.STARTUP_LATCH, latch));
@@ -251,14 +251,14 @@ public class DynamicFabricTest {
     public void testDynamicFabricStopsEntitiesInParallel() throws Exception {
         final List<CountDownLatch> shutdownLatches = Lists.newCopyOnWriteArrayList();
         final List<CountDownLatch> executingShutdownNotificationLatches = Lists.newCopyOnWriteArrayList();
-        final DynamicFabric fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
+        final DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
             .configure("factory", new EntityFactory<Entity>() {
                 @Override public Entity newEntity(Map flags, Entity parent) {
                     CountDownLatch shutdownLatch = new CountDownLatch(1); 
                     CountDownLatch executingShutdownNotificationLatch = new CountDownLatch(1); 
                     shutdownLatches.add(shutdownLatch);
                     executingShutdownNotificationLatches.add(executingShutdownNotificationLatch);
-                    return app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(BlockingEntity.class)
+                    return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(BlockingEntity.class)
                             .parent(parent)
                             .configure(flags)
                             .configure(BlockingEntity.SHUTDOWN_LATCH, shutdownLatch)
@@ -303,10 +303,10 @@ public class DynamicFabricTest {
     
     @Test
     public void testDynamicFabricDoesNotAcceptUnstartableChildren() throws Exception {
-        DynamicFabric fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
+        DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
             .configure("factory", new EntityFactory<Entity>() {
                 @Override public Entity newEntity(Map flags, Entity parent) { 
-                    return app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(BasicEntity.class)
+                    return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(BasicEntity.class)
                             .parent(parent)
                             .configure(flags));
                 }}));
@@ -328,17 +328,17 @@ public class DynamicFabricTest {
     // Thus we have "unstoppable" entities. Let's be relaxed about it, rather than blowing up.
     @Test
     public void testDynamicFabricIgnoresExtraUnstoppableChildrenOnStop() throws Exception {
-        DynamicFabric fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
+        DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
             .configure("factory", new EntityFactory<Entity>() {
                 @Override public Entity newEntity(Map flags, Entity parent) { 
-                    return app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(TestEntity.class)
+                    return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class)
                             .parent(parent)
                             .configure(flags));
                 }}));
         
         fabric.start(ImmutableList.of(loc1));
         
-        BasicEntity extraChild = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(BasicEntity.class)
+        BasicEntity extraChild = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(BasicEntity.class)
                 .parent(fabric));
         Entities.manage(extraChild);
         
@@ -349,7 +349,7 @@ public class DynamicFabricTest {
     public void testDynamicFabricPropagatesProperties() throws Exception {
 		final EntityFactory<Entity> entityFactory = new EntityFactory<Entity>() {
             @Override public Entity newEntity(Map flags, Entity parent) {
-                return app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(TestEntity.class)
+                return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class)
                         .parent(parent)
                         .configure(flags)
                         .configure("b", "avail"));
@@ -357,7 +357,7 @@ public class DynamicFabricTest {
 	
             final EntityFactory<Entity> clusterFactory = new EntityFactory<Entity>() {
             @Override public Entity newEntity(Map flags, Entity parent) {
-                return app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(DynamicCluster.class)
+                return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(DynamicCluster.class)
                         .parent(parent)
                         .configure(flags)
                         .configure("initialSize", 1)
@@ -369,7 +369,7 @@ public class DynamicFabricTest {
     //                protected Map getCustomChildFlags() { [fromCluster: "passed to base entity"] }
             }};
             
-        DynamicFabric fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
+        DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
             .configure("factory", clusterFactory)
             .configure("customChildFlags", ImmutableMap.of("fromFabric", "passed to cluster but not base entity"))
             .configure(Attributes.HTTP_PORT, PortRanges.fromInteger(1234))); // for inheritance by children (as a port range)

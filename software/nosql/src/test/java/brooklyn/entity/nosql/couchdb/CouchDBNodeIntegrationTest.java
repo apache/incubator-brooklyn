@@ -17,7 +17,7 @@ package brooklyn.entity.nosql.couchdb;
 
 import org.testng.annotations.Test;
 
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.test.EntityTestUtils;
 
@@ -35,7 +35,7 @@ public class CouchDBNodeIntegrationTest extends AbstractCouchDBNodeTest {
      */
     @Test(groups = {"Integration", "WIP"})
     public void canStartupAndShutdown() {
-        couchdb = app.createAndManageChild(EntitySpecs.spec(CouchDBNode.class)
+        couchdb = app.createAndManageChild(EntitySpec.create(CouchDBNode.class)
                 .configure("httpPort", "8000+"));
         app.start(ImmutableList.of(testLocation));
 
@@ -51,7 +51,7 @@ public class CouchDBNodeIntegrationTest extends AbstractCouchDBNodeTest {
      */
     @Test(groups = {"Integration", "WIP"})
     public void testConnection() throws Exception {
-        couchdb = app.createAndManageChild(EntitySpecs.spec(CouchDBNode.class)
+        couchdb = app.createAndManageChild(EntitySpec.create(CouchDBNode.class)
                 .configure("httpPort", "8000+"));
         app.start(ImmutableList.of(testLocation));
 

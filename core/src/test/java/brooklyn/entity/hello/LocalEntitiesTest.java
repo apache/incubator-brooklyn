@@ -25,7 +25,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.SimulatedLocation;
@@ -61,7 +61,7 @@ public class LocalEntitiesTest {
 	
     @Test
     public void testEffectorUpdatesAttributeSensor() {
-        HelloEntity h = app.createAndManageChild(EntitySpecs.spec(HelloEntity.class));
+        HelloEntity h = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
         app.start(ImmutableList.of(loc));
         
         h.setAge(5);
@@ -72,7 +72,7 @@ public class LocalEntitiesTest {
     //subscriptions get notified in separate thread
     @Test
     public void testEffectorEmitsAttributeSensor() throws Exception {
-        final HelloEntity h = app.createAndManageChild(EntitySpecs.spec(HelloEntity.class));
+        final HelloEntity h = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
         app.start(ImmutableList.of(loc));
         
         final AtomicReference<SensorEvent<?>> evt = new AtomicReference<SensorEvent<?>>();
@@ -101,7 +101,7 @@ public class LocalEntitiesTest {
     //REVIEW 1459 - new test
     @Test
     public void testEffectorEmitsTransientSensor() throws Exception {
-        HelloEntity h = app.createAndManageChild(EntitySpecs.spec(HelloEntity.class));
+        HelloEntity h = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
         app.start(ImmutableList.of(loc));
         
         final AtomicReference<SensorEvent<?>> evt = new AtomicReference<SensorEvent<?>>();
@@ -127,7 +127,7 @@ public class LocalEntitiesTest {
 
     @Test
     public void testSendMultipleInOrderThenUnsubscribe() throws Exception {
-        HelloEntity h = app.createAndManageChild(EntitySpecs.spec(HelloEntity.class));
+        HelloEntity h = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
         app.start(ImmutableList.of(loc));
 
         final List<Integer> data = Lists.newArrayList();
@@ -160,8 +160,8 @@ public class LocalEntitiesTest {
     public void testConfigSetFromAttribute() {
         app.setConfig(HelloEntity.MY_NAME, "Bob");
         
-        HelloEntity dad = app.createAndManageChild(EntitySpecs.spec(HelloEntity.class));
-        HelloEntity son = entityManager.createEntity(EntitySpecs.spec(HelloEntity.class).parent(dad));
+        HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
+        HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class).parent(dad));
         Entities.manage(son);
         
         //config is inherited
@@ -178,8 +178,8 @@ public class LocalEntitiesTest {
 	public void testConfigSetFromAttributeWhenReady() throws Exception {
 		app.setConfig(HelloEntity.MY_NAME, "Bob");
 		
-        final HelloEntity dad = app.createAndManageChild(EntitySpecs.spec(HelloEntity.class));
-        final HelloEntity son = entityManager.createEntity(EntitySpecs.spec(HelloEntity.class)
+        final HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
+        final HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class)
                 .parent(dad)
                 .configure(HelloEntity.MY_NAME, attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME
                         /* third param is closure; defaults to groovy truth (see google), but could be e.g.
@@ -230,8 +230,8 @@ public class LocalEntitiesTest {
 	public void testConfigSetFromAttributeWhenReadyTransformations() {
 		app.setConfig(HelloEntity.MY_NAME, "Bob");
 		
-        HelloEntity dad = app.createAndManageChild(EntitySpecs.spec(HelloEntity.class));
-        HelloEntity son = entityManager.createEntity(EntitySpecs.spec(HelloEntity.class)
+        HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
+        HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class)
                 .parent(dad)
                 .configure(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME), new Function<String,String>() {
                     public String apply(String input) {
@@ -248,8 +248,8 @@ public class LocalEntitiesTest {
     public void testConfigSetFromAttributeWhenReadyNullTransformations() {
         app.setConfig(HelloEntity.MY_NAME, "Bob");
         
-        HelloEntity dad = app.createAndManageChild(EntitySpecs.spec(HelloEntity.class));
-        HelloEntity son = entityManager.createEntity(EntitySpecs.spec(HelloEntity.class)
+        HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
+        HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class)
                 .parent(dad)
                 .configure(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME, (Closure)null), new Function<String,String>() {
                     public String apply(String input) {

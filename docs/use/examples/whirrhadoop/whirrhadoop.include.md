@@ -35,7 +35,7 @@ with an arbitrary size, using the ``WhirrHadoopCluster`` entity.
 public class WhirrHadoopExample extends AbstractApplication {
     @Override
     public void init() {
-        WhirrCluster cluster = addChild(EntitySpecs.spec(WhirrHadoopCluster.class)
+        WhirrCluster cluster = addChild(EntitySpec.create(WhirrHadoopCluster.class)
                 .configure("size", 2)
                 .configure("memory", 2048));
     }
@@ -73,7 +73,7 @@ public class WhirrExample extends AbstractApplication {
 
     @Override
     public void init() {
-        WhirrCluster cluster = addChild(EntitySpecs.spec(WhirrCluster.class)
+        WhirrCluster cluster = addChild(EntitySpec.create(WhirrCluster.class)
                 .configure("recipe", RECIPE));
     }
 }
