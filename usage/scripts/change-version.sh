@@ -28,10 +28,13 @@ GREP_ARGS="-r -l --exclude_dir=^\..*|\/\..* --exclude=.*\.(log|war)"
 
 # look for lines (where we can put the literal $LABEL1 in an inline comment) matching
 # ... ${CURRENT_VERSION} ... BROOKLYN_VERSION
+# Repeatedly replace, until no more occurrences of current_version.*label
 
 FILES1=`pcregrep $GREP_ARGS "${CURRENT_VERSION}.*${LABEL1}" .`
 for x in $FILES1 ; do
-  sed -i .bak "s/${CURRENT_VERSION}\(.*\)${LABEL1}/${NEW_VERSION}\1${LABEL1}/" $x
+  while grep --quiet -E "${CURRENT_VERSION}.*${LABEL1}" $x; do
+    sed -i .bak "s/${CURRENT_VERSION}\(.*\)${LABEL1}/${NEW_VERSION}\1${LABEL1}/" $x
+  done
 done
 
 echo "One-line pattern changed these files: $FILES1"
