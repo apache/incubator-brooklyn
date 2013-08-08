@@ -305,6 +305,11 @@
                     <version>2.8</version>
                     <inherited>true</inherited>
                     <configuration>
+                        <!-- disabling use because of NPE deploying to sonatype:
+                             http://stackoverflow.com/questions/888199/why-does-maven-install-fail-during-javadoc-generation
+                             http://bugs.sun.com/bugdatabase/view_bug.do;jsessionid=ac084ab7f47c4e7f1df2117cecd?bug_id=5101868
+                        -->
+                        <use>false</use>
                         <links>
                             <link>http://download.oracle.com/javaee/6/api</link>
                         </links>
