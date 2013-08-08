@@ -76,7 +76,7 @@ If this is a new machine, or you haven't used SSH before, you will need to creat
 	$ ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 	$ cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 
-(If you are using an existing key SSH that has a password, or is not located at `~/.ssh/id_rsa`, please supply the `brooklyn.localhost.private-key-file` and `brooklyn.localhost.private-key-passphrase` in your `brooklyn.properties` file.)
+(If you are using an existing key SSH that has a password, or is not located at `~/.ssh/id_rsa`, please supply the `brooklyn.localhost.privateKeyFile` and `brooklyn.localhost.privateKeyPassphrase` in your `brooklyn.properties` file.)
 
 ### 3-2-1 Go!
 
