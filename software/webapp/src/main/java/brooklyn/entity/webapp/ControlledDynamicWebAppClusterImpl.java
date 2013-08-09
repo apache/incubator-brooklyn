@@ -16,7 +16,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -63,7 +62,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         EntitySpec<? extends WebAppService> webServerSpec = getAttribute(MEMBER_SPEC);
         if (webServerFactory == null && webServerSpec == null) {
             log.debug("creating default web server spec for {}", this);
-            webServerSpec = EntitySpecs.spec(JBoss7Server.class);
+            webServerSpec = EntitySpec.create(JBoss7Server.class);
             setAttribute(MEMBER_SPEC, webServerSpec);
         }
         
@@ -75,7 +74,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         } else {
             flags = MutableMap.<String,Object>of("factory", webServerFactory);
         }
-        DynamicWebAppCluster cluster = addChild(EntitySpecs.spec(DynamicWebAppCluster.class)
+        DynamicWebAppCluster cluster = addChild(EntitySpec.create(DynamicWebAppCluster.class)
                 .configure(flags));
         if (Entities.isManaged(this)) Entities.manage(cluster);
         setAttribute(CLUSTER, cluster);
@@ -85,7 +84,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
             EntitySpec<? extends AbstractController> controllerSpec = getAttribute(CONTROLLER_SPEC);
             if (controllerSpec == null) {
                 log.debug("creating controller using default spec for {}", this);
-                controllerSpec = EntitySpecs.spec(NginxController.class);
+                controllerSpec = EntitySpec.create(NginxController.class);
                 setAttribute(CONTROLLER_SPEC, controllerSpec);
             } else {
                 log.debug("creating controller using custom spec for {}", this);

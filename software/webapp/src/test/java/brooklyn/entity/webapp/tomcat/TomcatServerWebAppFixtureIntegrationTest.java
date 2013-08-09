@@ -17,7 +17,7 @@ import org.testng.annotations.DataProvider;
 import com.google.common.collect.Lists;
 
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
@@ -32,7 +32,7 @@ public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixt
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
         TestApplication tomcatApp = newTestApplication();
-        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpecs.spec(TomcatServer.class)
+        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpec.create(TomcatServer.class)
                 .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
         
         return new JavaWebAppSoftwareProcess[][] {
@@ -62,7 +62,7 @@ public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixt
         }
         
         TestApplication tomcatApp = newTestApplication();
-        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpecs.spec(TomcatServer.class)
+        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpec.create(TomcatServer.class)
                 .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
         result.add(new Object[] {
                 tomcat,

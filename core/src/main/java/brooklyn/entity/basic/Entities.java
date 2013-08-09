@@ -588,7 +588,7 @@ public class Entities {
     /**
      * Starts managing the given (unmanaged) app, using the given management context.
      *
-     * @see startManagement(Entity)
+     * @see #startManagement(Entity)
      */
     public static ManagementContext startManagement(Application app, ManagementContext mgmt) {
         if (isManaged(app)) {
@@ -602,7 +602,7 @@ public class Entities {
      * Starts managing the given (unmanaged) app, setting the given brooklyn properties on the new
      * management context.
      *
-     * @see startManagement(Entity)
+     * @see #startManagement(Entity)
      */
     public static ManagementContext startManagement(Application app, BrooklynProperties props) {
         if (isManaged(app)) {

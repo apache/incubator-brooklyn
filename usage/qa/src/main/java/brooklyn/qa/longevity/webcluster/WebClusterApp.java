@@ -9,7 +9,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
@@ -37,7 +37,7 @@ public class WebClusterApp extends ApplicationBuilder {
         AttributeSensor<Double> averageLoad =
                 Sensors.newDoubleSensor("brooklyn.qa.averageLoad", "Average load in cluster");
 
-        NginxController nginxController = createChild(BasicEntitySpec.newInstance(NginxController.class)
+        NginxController nginxController = addChild(EntitySpec.create(NginxController.class)
                 // .configure("domain", "webclusterexample.brooklyn.local")
                 .configure("port", "8000+"));
 
@@ -49,7 +49,7 @@ public class WebClusterApp extends ApplicationBuilder {
             }
         };
 
-        ControlledDynamicWebAppCluster web = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+        ControlledDynamicWebAppCluster web = addChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .displayName("WebApp cluster")
                 .configure("controller", nginxController)
                 .configure("initialSize", 1)

@@ -101,7 +101,7 @@ public class FeedConfig<V, T, This extends FeedConfig<V,T,This>> {
         return onResult(Functions.constant(val));
     }
 
-    /** @deprecated since 0.6; use {@link #onException(Function) */
+    /** @deprecated since 0.6; use {@link #onException(Function)} */
     public This onError(Function<? super Exception,T> val) {
         return onException(val);
     }

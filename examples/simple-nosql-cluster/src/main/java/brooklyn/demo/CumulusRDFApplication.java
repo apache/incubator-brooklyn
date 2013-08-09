@@ -17,7 +17,7 @@ package brooklyn.demo;
 
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.nosql.cassandra.CassandraCluster;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
 
 /** CumulusRDF application with Cassandra cluster. */
@@ -25,10 +25,10 @@ public class CumulusRDFApplication extends AbstractApplication {
 
     /** Create entities. */
     public void init() {
-        TomcatServer tomcat = getEntityManager().createEntity(EntitySpecs.spec(TomcatServer.class)
+        TomcatServer tomcat = getEntityManager().createEntity(EntitySpec.create(TomcatServer.class)
                 .configure("war", "classpath:///cumulusrdf.war"));
 
-        CassandraCluster cassandra = getEntityManager().createEntity(EntitySpecs.spec(CassandraCluster.class)
+        CassandraCluster cassandra = getEntityManager().createEntity(EntitySpec.create(CassandraCluster.class)
                 .configure("initialSize", "4")
                 .configure("clusterName", "CumulusRDF")
                 .configure("jmxPort", "11099+")

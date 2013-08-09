@@ -13,6 +13,11 @@ import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;
 
+/**
+ * @deprecated since 0.6; use {@link EntitySpec#create(EntitySpec)}
+ * 
+ * @author aled
+ */
 public class WrappingEntitySpec<T extends Entity> extends BasicEntitySpec<T, WrappingEntitySpec<T>> {
 
     private final EntitySpec<? extends T> delegate;

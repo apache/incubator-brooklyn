@@ -1,9 +1,18 @@
 package brooklyn.event.feed.http;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
+import java.net.URI;
+
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
@@ -14,16 +23,9 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpService;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import java.net.URI;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 public class HttpFeedIntegrationTest {
 
@@ -41,7 +43,7 @@ public class HttpFeedIntegrationTest {
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }
 

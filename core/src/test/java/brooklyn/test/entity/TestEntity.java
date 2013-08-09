@@ -37,6 +37,9 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(TestEntityImpl.class)
 public interface TestEntity extends Entity, Startable, EntityLocal, EntityInternal {
 
+    /**
+     * @deprecated since 0.6; use {@link EntitySpec.create(Class)} directly
+     */
     public static class Spec<T extends TestEntity, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
 
         private static class ConcreteSpec extends Spec<TestEntity, ConcreteSpec> {

@@ -24,6 +24,7 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.ElasticJavaWebAppService;
@@ -82,7 +83,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
     public void init() {
         StringConfigMap config = getManagementContext().getConfig();
         
-        hadoopCluster = addChild(EntitySpecs.spec(WhirrHadoopCluster.class)
+        hadoopCluster = addChild(EntitySpec.create(WhirrHadoopCluster.class)
                 .configure("size", 2)
                 .configure("memory", 2048)
                 .configure("name", "Whirr Hadoop Cluster"));
@@ -91,14 +92,14 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
         // specify hadoop version (1.0.2 has a nice, smaller hadoop client jar)
         hadoopCluster.addRecipeLine("whirr.hadoop.version=1.0.2");
     
-        GeoscalingDnsService geoDns = addChild(EntitySpecs.spec(GeoscalingDnsService.class)
+        GeoscalingDnsService geoDns = addChild(EntitySpec.create(GeoscalingDnsService.class)
                 .displayName("GeoScaling DNS")
                 .configure("username", checkNotNull(config.getFirst("brooklyn.geoscaling.username"), "username"))
                 .configure("password", checkNotNull(config.getFirst("brooklyn.geoscaling.password"), "password"))
                 .configure("primaryDomainName", checkNotNull(config.getFirst("brooklyn.geoscaling.primaryDomain"), "primaryDomain"))
                 .configure("smartSubdomainName", "brooklyn"));
         
-        webFabric = addChild(EntitySpecs.spec(DynamicFabric.class)
+        webFabric = addChild(EntitySpec.create(DynamicFabric.class)
                 .displayName("Web Fabric")
                 .configure("factory", new ElasticJavaWebAppService.Factory())
                 //specify the WAR file to use
@@ -112,7 +113,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
 //                        .metricRange(10, 100)
 //                        .build()));
         
-        webVms = addChild(EntitySpecs.spec(DynamicGroup.class)
+        webVms = addChild(EntitySpec.create(DynamicGroup.class)
                 .displayName("Web VMs")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(JBoss7Server.class)));
         

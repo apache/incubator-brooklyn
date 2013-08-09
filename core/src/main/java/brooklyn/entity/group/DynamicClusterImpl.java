@@ -22,7 +22,6 @@ import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
@@ -121,7 +120,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public void start(Collection<? extends Location> locs) {
         if (isQuarantineEnabled()) {
-            Group quarantineGroup = addChild(EntitySpecs.spec(BasicGroup.class).displayName("quarantine"));
+            Group quarantineGroup = addChild(EntitySpec.create(BasicGroup.class).displayName("quarantine"));
             Entities.manage(quarantineGroup);
             setAttribute(QUARANTINE_GROUP, quarantineGroup);
         }
@@ -338,7 +337,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     protected Entity createNode(Map flags) {
         EntitySpec<?> memberSpec = getMemberSpec();
         if (memberSpec != null) {
-            return addChild(EntitySpecs.wrapSpec(memberSpec).configure(flags));
+            return addChild(EntitySpec.create(memberSpec).configure(flags));
         }
         
         EntityFactory<?> factory = getFactory();

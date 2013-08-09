@@ -12,7 +12,7 @@ import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -33,7 +33,7 @@ public class GroupPickUpEntitiesTest {
     @BeforeTest(alwaysRun=true)
     public void setup() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        group = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class));
+        group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         
         group.addPolicy(new FindUpServicesWithNameBob());
     }
@@ -48,7 +48,7 @@ public class GroupPickUpEntitiesTest {
         Assert.assertEquals(group.getMembers().size(), 0);
         EntityTestUtils.assertAttributeEquals(group, BasicGroup.GROUP_SIZE, 0);
         
-        TestEntity e1 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity e1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
         EntityTestUtils.assertAttributeEquals(group, BasicGroup.GROUP_SIZE, 0);
         
@@ -57,7 +57,7 @@ public class GroupPickUpEntitiesTest {
         
         EntityTestUtils.assertAttributeEqualsEventually(group, BasicGroup.GROUP_SIZE, 1);
         
-        TestEntity e2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity e2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
         EntityTestUtils.assertAttributeEquals(group, BasicGroup.GROUP_SIZE, 1);
         Assert.assertEquals(group.getMembers().size(), 1);

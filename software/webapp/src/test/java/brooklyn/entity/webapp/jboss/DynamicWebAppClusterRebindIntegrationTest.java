@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -29,7 +29,6 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -39,8 +38,6 @@ import com.google.common.io.Files;
 public class DynamicWebAppClusterRebindIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(DynamicWebAppClusterRebindIntegrationTest.class);
     
-    static { TimeExtras.init(); }
-
     private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     private TestApplication origApp;
@@ -97,7 +94,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
     
     @Test(groups = "Integration")
     public void testRebindsToRunningCluster() throws Exception {
-        DynamicWebAppCluster origCluster = origApp.createAndManageChild(EntitySpecs.spec(DynamicWebAppCluster.class)
+        DynamicWebAppCluster origCluster = origApp.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
                 .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
 				.configure("initialSize", 1));
     	

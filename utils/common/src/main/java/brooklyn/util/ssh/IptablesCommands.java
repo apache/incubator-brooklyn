@@ -36,7 +36,7 @@ public class IptablesCommands {
      * @return Returns the command that cleans up iptables rules.
      */
     public static String cleanUpIptablesRules() {
-        return chain(ImmutableList.of(CommonCommands.installExecutable("iptables"), sudo("iptables -F")));
+       return sudo("/sbin/iptables -F");
     }
 
     /**
@@ -67,8 +67,8 @@ public class IptablesCommands {
      */
     private static String addIptablesRule(String direction, Chain chain, String networkInterface, Protocol protocol,
             int port, Policy policy) {
-        String addIptablesRule = String.format("iptables %s %s -i %s -p %s --dport %d -j %s", direction, chain,
+        String addIptablesRule = String.format("/sbin/iptables %s %s -i %s -p %s --dport %d -j %s", direction, chain,
                 networkInterface, protocol, port, policy);
-        return chain(ImmutableList.of(CommonCommands.installExecutable("iptables"), sudo(addIptablesRule)));
+        return sudo(addIptablesRule);
     }
 }

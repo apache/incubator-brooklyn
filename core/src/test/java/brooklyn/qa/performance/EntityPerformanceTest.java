@@ -11,7 +11,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.Task;
@@ -39,7 +39,7 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
         
         entities = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
-            entities.add(app.createAndManageChild(EntitySpecs.spec(TestEntity.class)));
+            entities.add(app.createAndManageChild(EntitySpec.create(TestEntity.class)));
         }
         entity = entities.get(0);
         

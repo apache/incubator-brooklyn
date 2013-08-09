@@ -14,7 +14,7 @@ import brooklyn.entity.basic.AbstractConfigurableEntityFactory;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.EntityTestUtils;
@@ -53,9 +53,9 @@ public class DynamicWebAppFabricTest {
     @Test
     public void testRequestCountAggregation() {
         // TODO Want to use EntitySpec, but TestJavaWebAppEntity not converted (so can't call spoofRequest on an interface).
-        //      .configure(DynamicWebAppFabric.MEMBER_SPEC, EntitySpecs.spec(Entity.class).impl(TestJavaWebAppEntity.class)));
+        //      .configure(DynamicWebAppFabric.MEMBER_SPEC, EntitySpec.create(Entity.class).impl(TestJavaWebAppEntity.class)));
         
-        DynamicWebAppFabric fabric = app.createAndManageChild(EntitySpecs.spec(DynamicWebAppFabric.class)
+        DynamicWebAppFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicWebAppFabric.class)
                 .configure(DynamicWebAppFabric.FACTORY, new AbstractConfigurableEntityFactory<TestJavaWebAppEntity>() {
                     @Override public TestJavaWebAppEntity newEntity2(Map flags, Entity parent) {
                         TestJavaWebAppEntity result = new TestJavaWebAppEntity(flags, parent);
@@ -82,8 +82,8 @@ public class DynamicWebAppFabricTest {
     
     @Test
     public void testRequestCountAggregationOverClusters() {
-        DynamicWebAppFabric fabric = app.createAndManageChild(EntitySpecs.spec(DynamicWebAppFabric.class)
-                .configure(DynamicWebAppFabric.MEMBER_SPEC, EntitySpecs.spec(DynamicWebAppCluster.class)
+        DynamicWebAppFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicWebAppFabric.class)
+                .configure(DynamicWebAppFabric.MEMBER_SPEC, EntitySpec.create(DynamicWebAppCluster.class)
                         .configure("initialSize", 2)
                         .configure(DynamicWebAppCluster.FACTORY, new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class))));
 

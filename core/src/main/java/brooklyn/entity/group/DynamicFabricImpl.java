@@ -20,7 +20,6 @@ import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
@@ -194,7 +193,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     protected Entity createCluster(Location location, Map flags) {
         EntitySpec<?> memberSpec = getMemberSpec();
         if (memberSpec != null) {
-            return addChild(EntitySpecs.wrapSpec(memberSpec).configure(flags));
+            return addChild(EntitySpec.create(memberSpec).configure(flags));
         }
         
         EntityFactory<?> factory = getFactory();

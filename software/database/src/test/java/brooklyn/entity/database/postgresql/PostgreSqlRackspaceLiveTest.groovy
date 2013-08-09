@@ -6,7 +6,7 @@ import org.testng.annotations.Test
 
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.database.VogellaExampleAccess
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.jclouds.JcloudsLocation
 
@@ -61,7 +61,7 @@ public class PostgreSqlRackspaceLiveTest extends PostgreSqlIntegrationTest {
     }
     
     public void test(String osRegex) throws Exception {
-        PostgreSqlNode psql = tapp.createAndManageChild(EntitySpecs.spec(PostgreSqlNode.class)
+        PostgreSqlNode psql = tapp.createAndManageChild(EntitySpec.create(PostgreSqlNode.class)
                 .configure("creationScriptContents", CREATION_SCRIPT));
 
         brooklynProperties.put("brooklyn.jclouds.rackspace-cloudservers-uk.imageNameRegex", osRegex);

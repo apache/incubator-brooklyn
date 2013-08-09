@@ -14,6 +14,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.launcher.BrooklynLauncher;
@@ -39,14 +40,14 @@ public class GlobalWebFabricExample extends AbstractApplication {
     public void init() {
         StringConfigMap config = getManagementContext().getConfig();
         
-        GeoscalingDnsService geoDns = addChild(EntitySpecs.spec(GeoscalingDnsService.class)
+        GeoscalingDnsService geoDns = addChild(EntitySpec.create(GeoscalingDnsService.class)
                 .displayName("GeoScaling DNS")
                 .configure("username", checkNotNull(config.getFirst("brooklyn.geoscaling.username"), "username"))
                 .configure("password", checkNotNull(config.getFirst("brooklyn.geoscaling.password"), "password"))
                 .configure("primaryDomainName", checkNotNull(config.getFirst("brooklyn.geoscaling.primaryDomain"), "primaryDomain")) 
                 .configure("smartSubdomainName", "brooklyn"));
         
-        DynamicFabric webFabric = addChild(EntitySpecs.spec(DynamicFabric.class)
+        DynamicFabric webFabric = addChild(EntitySpec.create(DynamicFabric.class)
                 .displayName("Web Fabric")
                 .configure(DynamicFabric.FACTORY, new ElasticJavaWebAppService.Factory())
                 

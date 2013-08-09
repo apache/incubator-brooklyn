@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;
@@ -44,7 +44,7 @@ public class CassandraNodeLiveTest extends AbstractCassandraNodeTest {
         testLocation = app.getManagementContext().getLocationRegistry()
                 .resolve(provider + (Strings.isNonEmpty(region) ? ":" + region : ""), properties);
 
-        cassandra = app.createAndManageChild(EntitySpecs.spec(CassandraNode.class)
+        cassandra = app.createAndManageChild(EntitySpec.create(CassandraNode.class)
                 .configure("thriftPort", "9876+")
                 .configure("clusterName", "TestCluster"));
         app.start(ImmutableList.of(testLocation));

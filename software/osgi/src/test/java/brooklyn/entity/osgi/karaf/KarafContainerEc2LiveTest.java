@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.util.text.Identifiers;
@@ -19,7 +19,7 @@ public class KarafContainerEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        KarafContainer karaf = app.createAndManageChild(EntitySpecs.spec(KarafContainer.class)
+        KarafContainer karaf = app.createAndManageChild(EntitySpec.create(KarafContainer.class)
                 .configure("name", Identifiers.makeRandomId(8))
                 .configure("displayName", "Karaf Test")
                 .configure("jmxPort", "8099+")

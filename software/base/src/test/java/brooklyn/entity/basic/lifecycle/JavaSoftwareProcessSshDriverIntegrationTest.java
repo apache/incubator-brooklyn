@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
@@ -38,7 +38,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
 
     @Test(groups = "Integration")
     public void testJavaStartStopSshDriverStartsAndStopsApp() {
-        final MyEntity entity = app.createAndManageChild(EntitySpecs.spec(MyEntity.class));
+        final MyEntity entity = app.createAndManageChild(EntitySpec.create(MyEntity.class));
         app.start(ImmutableList.of(localhost));
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {

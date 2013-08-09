@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl;
 import brooklyn.location.PortRange;
@@ -62,9 +62,9 @@ public class TomcatAutoScalerPolicyTest {
         PortRange jmxP = PortRanges.fromString("32199+");
         PortRange shutdownP = PortRanges.fromString("31880+");
         
-        final DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpecs.spec(DynamicWebAppCluster.class)
+        final DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
                 .configure(DynamicWebAppCluster.INITIAL_SIZE, 1)
-                .configure(DynamicWebAppCluster.MEMBER_SPEC, EntitySpecs.spec(TomcatServer.class)
+                .configure(DynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TomcatServer.class)
                         .configure(TomcatServer.HTTP_PORT.getConfigKey(), httpPort)
                         .configure(TomcatServer.JMX_PORT.getConfigKey(), jmxP)
                         .configure(TomcatServer.SHUTDOWN_PORT, shutdownP)));

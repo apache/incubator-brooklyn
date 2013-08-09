@@ -5,7 +5,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.test.entity.TestApplication
@@ -22,7 +22,7 @@ public class TestPortSupplierLocation {
     public void setup() {
         l = new SimulatedLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        e = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        e = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start([l]);
         
         ps = new PortAttributeSensorAndConfigKey("some.port", "for testing", "1234+");

@@ -3,7 +3,6 @@ package brooklyn.policy.followthesun;
 import static org.testng.Assert.assertEquals;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -19,7 +18,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
@@ -35,7 +34,6 @@ import brooklyn.util.MutableMap;
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -72,15 +70,15 @@ public class AbstractFollowTheSunPolicyTest {
         
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        containerGroup = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
+        containerGroup = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .displayName("containerGroup")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(MockContainerEntity.class)));
         
-        itemGroup = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
+        itemGroup = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .displayName("itemGroup")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(MockItemEntity.class)));
         model = new DefaultFollowTheSunModel<Entity, Movable>("pool-model");
-        pool = app.createAndManageChild(EntitySpecs.spec(FollowTheSunPool.class));
+        pool = app.createAndManageChild(EntitySpec.create(FollowTheSunPool.class));
         pool.setContents(containerGroup, itemGroup);
         policy = new FollowTheSunPolicy(TEST_METRIC, model, FollowTheSunParameters.newDefault());
         pool.addPolicy(policy);
@@ -154,7 +152,7 @@ public class AbstractFollowTheSunPolicyTest {
     protected MockContainerEntity newAsyncContainer(TestApplication app, Location loc, String name, long delay) {
         // FIXME Is this comment true?
         // Annoyingly, can't set parent until after the threshold config has been defined.
-        MockContainerEntity container = app.createAndManageChild(EntitySpecs.spec(MockContainerEntity.class)
+        MockContainerEntity container = app.createAndManageChild(EntitySpec.create(MockContainerEntity.class)
                 .displayName(name)
                 .configure(MockContainerEntity.DELAY, delay));
         LOG.debug("Managed new container {}", container);
@@ -163,7 +161,7 @@ public class AbstractFollowTheSunPolicyTest {
     }
 
     protected static MockItemEntity newLockedItem(TestApplication app, MockContainerEntity container, String name) {
-        MockItemEntity item = app.createAndManageChild(EntitySpecs.spec(MockItemEntity.class)
+        MockItemEntity item = app.createAndManageChild(EntitySpec.create(MockItemEntity.class)
                 .displayName(name)
                 .configure(MockItemEntity.IMMOVABLE, true));
         LOG.debug("Managed new locked item {}", container);
@@ -174,7 +172,7 @@ public class AbstractFollowTheSunPolicyTest {
     }
     
     protected static MockItemEntity newItem(TestApplication app, MockContainerEntity container, String name) {
-        MockItemEntity item = app.createAndManageChild(EntitySpecs.spec(MockItemEntity.class)
+        MockItemEntity item = app.createAndManageChild(EntitySpec.create(MockItemEntity.class)
                 .displayName(name));
         LOG.debug("Managed new item {}", container);
         if (container != null) {

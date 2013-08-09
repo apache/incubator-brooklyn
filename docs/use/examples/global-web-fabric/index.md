@@ -122,7 +122,7 @@ or perhaps a `CloudFoundryJavaWebAppCluster` if deploying to a Cloud Foundry loc
 (see [brooklyn-cloudfoundry repo](https://github.com/cloudsoft/brooklyn-cloudfoundry)).
 
 {% highlight java %}
-        DynamicFabric webFabric = addChild(EntitySpecs.spec(DynamicFabric.class)
+        DynamicFabric webFabric = addChild(EntitySpec.create(DynamicFabric.class)
                 .displayName("Web Fabric")
                 .configure(DynamicFabric.FACTORY, new ElasticJavaWebAppService.Factory())
                 .configure(ElasticJavaWebAppService.ROOT_WAR, WAR_PATH));
@@ -144,7 +144,7 @@ First, however, let's make sure any load-balancer proxies (e.g. nginx) in these 
 are listening on port 80:
 
 {% highlight java %}
-        DynamicFabric webFabric = addChild(EntitySpecs.spec(DynamicFabric.class)
+        DynamicFabric webFabric = addChild(EntitySpec.create(DynamicFabric.class)
                 .displayName("Web Fabric")
                 .configure(DynamicFabric.FACTORY, new ElasticJavaWebAppService.Factory())
                 .configure(ElasticJavaWebAppService.ROOT_WAR, WAR_PATH)
@@ -161,7 +161,7 @@ from confusing us -- e.g. `brooklyn-1234.yourname.geopaas.org`.
 {% highlight java %}
         StringConfigMap config = getManagementContext().getConfig();
         
-        GeoscalingDnsService geoDns = addChild(EntitySpecs.spec(GeoscalingDnsService.class)
+        GeoscalingDnsService geoDns = addChild(EntitySpec.create(GeoscalingDnsService.class)
                 .displayName("GeoScaling DNS")
                 .configure("username", checkNotNull(config.getFirst("brooklyn.geoscaling.username"), "username"))
                 .configure("password", checkNotNull(config.getFirst("brooklyn.geoscaling.password"), "password"))
@@ -208,7 +208,8 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.location.basic.PortRanges;
 {% endhighlight %}

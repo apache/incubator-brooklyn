@@ -162,14 +162,14 @@ public class LocationSpec<T extends Location> implements Serializable {
         return Objects.toStringHelper(this).add("type", type).toString();
     }
     
-    // TODO Duplicates method in BasicEntitySpec and BasicEntityTypeRegistry
+    // TODO Duplicates method in EntitySpec and BasicEntityTypeRegistry
     private void checkIsImplementation(Class<?> val) {
         if (!Location.class.isAssignableFrom(val)) throw new IllegalStateException("Implementation "+val+" does not implement "+Location.class.getName());
         if (val.isInterface()) throw new IllegalStateException("Implementation "+val+" is an interface, but must be a non-abstract class");
         if (Modifier.isAbstract(val.getModifiers())) throw new IllegalStateException("Implementation "+val+" is abstract, but must be a non-abstract class");
     }
 
-    // TODO Duplicates method in BasicEntitySpec, BasicEntityTypeRegistry, and InternalEntityFactory.isNewStyleEntity
+    // TODO Duplicates method in EntitySpec, BasicEntityTypeRegistry, and InternalEntityFactory.isNewStyleEntity
     private void checkIsNewStyleImplementation(Class<?> implClazz) {
         try {
             implClazz.getConstructor(new Class[0]);

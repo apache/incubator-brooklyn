@@ -18,7 +18,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.BasicEntityTypeRegistry;
 import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.trait.Startable;
@@ -84,7 +83,7 @@ public class LocalEntityManager implements EntityManager {
 
     @Override
     public <T extends Entity> T createEntity(Map<?,?> config, Class<T> type) {
-        return createEntity(EntitySpecs.spec(config, type));
+        return createEntity(EntitySpec.create(config, type));
     }
 
     @Override

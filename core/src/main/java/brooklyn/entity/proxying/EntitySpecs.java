@@ -11,39 +11,29 @@ import brooklyn.util.javalang.Reflections;
  * For creating {@link EntitySpec} instances.
  * 
  * @author aled
+ * 
+ * @deprecated since 0.6; use {@link EntitySpec#create(Class)} etc
  */
 public class EntitySpecs {
 
     private EntitySpecs() {}
     
     /**
-     * Creates a new {@link EntitySpec} instance for an entity of the given type. The returned 
-     * {@link BasicEntitySpec} can then be customized.
-     * 
-     * @param type An {@link Entity} interface
+     * @deprecated use {@link EntitySpec#create(Class)} 
      */
     public static <T extends Entity> BasicEntitySpec<T,?> spec(Class<T> type) {
         return BasicEntitySpec.newInstance(type);
     }
     
     /**
-     * Creates a new {@link EntitySpec} instance for an entity of the given type. The returned 
-     * {@link BasicEntitySpec} can then be customized.
-     * 
-     * @param type An {@link Entity} interface
-     * @param implType An {@link Entity} implementation, which implements the {@code type} interface
+     * @deprecated use {@link EntitySpec#create(Class, Class)} 
      */
     public static <T extends Entity, U extends T> BasicEntitySpec<T,?> spec(Class<T> type, Class<U> implType) {
         return BasicEntitySpec.newInstance(type, implType);
     }
     
     /**
-     * Creates a new {@link EntitySpec} instance with the given config, for an entity of the given type.
-     * 
-     * This is primarily for groovy code; equivalent to {@code EntitySpecs.spec(type).configure(config)}.
-     * 
-     * @param config The spec's configuration (see {@link BasicEntitySpec#configure(Map)}).
-     * @param type   An {@link Entity} interface
+     * @deprecated use {@link EntitySpec#create(Map, Class)}
      */
     public static <T extends Entity> BasicEntitySpec<T,?> spec(Map<?,?> config, Class<T> type) {
         return EntitySpecs.spec(type).configure(config);

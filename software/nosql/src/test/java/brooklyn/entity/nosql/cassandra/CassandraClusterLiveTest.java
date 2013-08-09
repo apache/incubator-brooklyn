@@ -13,12 +13,11 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -32,10 +31,6 @@ import com.google.common.collect.Iterables;
 class CassandraClusterLiveTest {
 
     protected static final Logger log = LoggerFactory.getLogger(CassandraClusterLiveTest.class);
-
-    static {
-        TimeExtras.init();
-    }
 
     // private String provider = "rackspace-cloudservers-uk";
     private String provider = "aws-ec2:eu-west-1";
@@ -60,7 +55,7 @@ class CassandraClusterLiveTest {
      */
     @Test(groups = "Live")
     public void canStartupAndShutdown() throws Exception {
-        cluster = app.createAndManageChild(EntitySpecs.spec(CassandraCluster.class)
+        cluster = app.createAndManageChild(EntitySpec.create(CassandraCluster.class)
                 .configure("initialSize", 2)
                 .configure("clusterName", "AmazonCluster"));
         assertEquals(cluster.getCurrentSize().intValue(), 0);

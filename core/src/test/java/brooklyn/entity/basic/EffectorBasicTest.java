@@ -9,7 +9,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.Task;
@@ -64,8 +64,8 @@ public class EffectorBasicTest {
 
     @Test
     public void testInvokeEffectorStartWithTwoEntities() {
-        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
-        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start(locs);
         TestUtils.assertSetsEqual(locs, app.getLocations());
         TestUtils.assertSetsEqual(locs, entity.getLocations());

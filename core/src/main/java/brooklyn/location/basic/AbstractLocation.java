@@ -78,6 +78,13 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
 
     /**
      * Construct a new instance of an AbstractLocation.
+     */
+    public AbstractLocation() {
+        this(Maps.newLinkedHashMap());
+    }
+    
+    /**
+     * Construct a new instance of an AbstractLocation.
      *
      * The properties map recognizes the following keys:
      * <ul>
@@ -94,13 +101,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
      * <li>timeZone
      * <li>abbreviatedName
      * </ul>
-     * 
-     * @param properties
      */
-    public AbstractLocation() {
-        this(Maps.newLinkedHashMap());
-    }
-    
     public AbstractLocation(Map properties) {
         inConstruction = true;
         _legacyConstruction = !InternalLocationFactory.FactoryConstructionTracker.isConstructing();
@@ -378,7 +379,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
 
     /**
      * @deprecated since 0.6
-     * @see addChild(Location)
+     * @see #addChild(Location)
      */
     @Deprecated
     public void addChildLocation(Location child) {
@@ -417,7 +418,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
     
     /**
      * @deprecated since 0.6
-     * @see removeChild(Location)
+     * @see #removeChild(Location)
      */
     @Deprecated
     protected boolean removeChildLocation(Location child) {

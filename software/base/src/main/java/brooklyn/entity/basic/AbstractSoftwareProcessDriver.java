@@ -16,6 +16,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -156,6 +157,8 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 .putAll(extraSubstitutions)
                 .build();
 
+        return TemplateProcessor.processTemplateContents(templateContents, substitutions);
+        /*
         try {
             Configuration cfg = new Configuration();
             StringTemplateLoader templateLoader = new StringTemplateLoader();
@@ -173,8 +176,9 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             log.warn("Error creating configuration file for "+entity, e);
             throw Exceptions.propagate(e);
         }
+        */
     }
-		
+    
     protected void waitForConfigKey(ConfigKey<?> configKey) {
         Object val = entity.getConfig(configKey);
         if (val != null) log.debug("{} finished waiting for {} (value {}); continuing...", new Object[] {this, configKey, val});

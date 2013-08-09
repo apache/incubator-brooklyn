@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
 
@@ -18,7 +18,7 @@ public class CassandraNodeEc2LiveTest extends AbstractEc2LiveTest {
     protected void doTest(Location loc) throws Exception {
         log.info("Testing Cassandra on {}", loc);
 
-        CassandraNode cassandra = app.createAndManageChild(EntitySpecs.spec(CassandraNode.class)
+        CassandraNode cassandra = app.createAndManageChild(EntitySpec.create(CassandraNode.class)
                 .configure("thriftPort", "9876+")
                 .configure("clusterName", "TestCluster"));
         app.start(ImmutableList.of(loc));

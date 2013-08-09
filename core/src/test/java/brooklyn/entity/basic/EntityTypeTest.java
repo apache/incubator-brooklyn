@@ -20,7 +20,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicSensorEvent;
@@ -60,19 +60,19 @@ public class EntityTypeTest {
     
     @Test
     public void testGetName() throws Exception {
-        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         assertEquals(entity2.getEntityType().getName(), TestEntity.class.getCanonicalName());
     }
     
     @Test
     public void testGetSimpleName() throws Exception {
-        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         assertEquals(entity2.getEntityType().getSimpleName(), TestEntity.class.getSimpleName());
     }
 
     @Test
     public void testGetEffectors() throws Exception {
-        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         Set<Effector<?>> effectors = entity2.getEntityType().getEffectors();
         
         class MatchesNamePredicate implements Predicate<Effector<?>> {
@@ -91,7 +91,7 @@ public class EntityTypeTest {
 
     @Test
     public void testGetEffector() throws Exception {
-        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         Effector<?> effector = entity2.getEntityType().getEffector("myEffector");
         Effector<?> effector2 = entity2.getEntityType().getEffector("identityEffector", Object.class);
         assertEquals(effector.getName(), "myEffector");

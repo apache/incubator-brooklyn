@@ -14,7 +14,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.EntityManager;
@@ -48,7 +48,7 @@ public class EntityPreManagementTest {
     
     @Test
     public void testSetSensorBeforeManaged() {
-        TestEntity e = entityManager.createEntity(EntitySpecs.spec(TestEntity.class));
+        TestEntity e = entityManager.createEntity(EntitySpec.create(TestEntity.class));
 
         e.setAttribute(Attributes.HOSTNAME, "martian.martian");
         Assert.assertEquals(e.getAttribute(Attributes.HOSTNAME), "martian.martian");
@@ -58,7 +58,7 @@ public class EntityPreManagementTest {
     
     @Test
     public void testAddPolicyToEntityBeforeManaged() {
-        TestEntity e = entityManager.createEntity(EntitySpecs.spec(TestEntity.class));
+        TestEntity e = entityManager.createEntity(EntitySpec.create(TestEntity.class));
         final List events = new ArrayList();
         
         e.addPolicy(new AbstractPolicy() {
@@ -94,7 +94,7 @@ public class EntityPreManagementTest {
 
     @Test
     public void testAddPolicyToApplicationBeforeManaged() {
-        app = entityManager.createEntity(EntitySpecs.spec(TestApplication.class));
+        app = entityManager.createEntity(EntitySpec.create(TestApplication.class));
         final List events = new ArrayList();
         
         app.addPolicy(new AbstractPolicy() {

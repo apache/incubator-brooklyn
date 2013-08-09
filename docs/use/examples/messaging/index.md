@@ -45,7 +45,7 @@ public class StandaloneBrokerExample extends AbstractApplication {
     @Override
     public void init() {
         // Configure the Qpid broker entity
-    	QpidBroker broker = addChild(EntitySpecs.spec(QpidBroker.class)
+    	QpidBroker broker = addChild(EntitySpec.create(QpidBroker.class)
     	        .configure("amqpPort", 5672));
     }
 }
@@ -63,7 +63,7 @@ file:
         final String CUSTOM_CONFIG_PATH = "classpath://custom-config.xml";
         final String PASSWD_PATH = "classpath://passwd";
 
-    	QpidBroker broker = addChild(EntitySpecs.spec(QpidBroker.class)
+    	QpidBroker broker = addChild(EntitySpec.create(QpidBroker.class)
     	        .configure("amqpPort", 5672)
     	        .configure("amqpVersion", AmqpServer.AMQP_0_10)
     	        .configure("runtimeFiles", ImmutableMap.builder()
@@ -83,7 +83,7 @@ on startup.
         final String QPID_BDBSTORE_JAR_PATH = "classpath://qpid-bdbstore-0.14.jar";
         final String BDBSTORE_JAR_PATH = "classpath://je-5.0.34.jar";
 
-    	QpidBroker broker = addChild(EntitySpecs.spec(QpidBroker.class)
+    	QpidBroker broker = addChild(EntitySpec.create(QpidBroker.class)
     	        .configure("amqpPort", 5672)
     	        .configure("amqpVersion", AmqpServer.AMQP_0_10)
     	        .configure("runtimeFiles", ImmutableMap.builder()
@@ -106,9 +106,9 @@ as follows:
 % ${BROOKLYN_HOME}/bin/brooklyn -v launch --app brooklyn.demo.StandaloneBrokerExample --location localhost
 {% endhighlight %}
 
-Now, visit the Brooklyn web console on port 8081 using credentials
-admin/password.  This allows you to view the Brooklyn entities and
-their current state for debugging.
+Now, visit the Brooklyn web console on port 8081 (for pre 0.6 releases,
+use the credentials admin/password). This allows you to view the Brooklyn 
+entities and their current state for debugging.
 
 Note that the installation may take some time, because the default
 deployment downloads the software from the official repos.  You can

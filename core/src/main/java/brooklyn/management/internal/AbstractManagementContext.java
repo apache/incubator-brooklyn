@@ -369,7 +369,9 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         if (catalog != null) throw new IllegalStateException("Cannot set base class path for scanning after catalog has been loaded (in "+this+")");
         this.baseClassPathForScanning = urls;
     }
-    /** @See {@link #setBaseClassPathForScanning(Iterable)} */
+    /** 
+     * @see #setBaseClassPathForScanning(Iterable)
+     */
     public Iterable<URL> getBaseClassPathForScanning() {
         return baseClassPathForScanning;
     }

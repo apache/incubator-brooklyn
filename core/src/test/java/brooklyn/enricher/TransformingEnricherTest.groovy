@@ -12,7 +12,7 @@ import org.testng.annotations.Test
 import brooklyn.enricher.basic.SensorTransformingEnricher
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation
@@ -36,7 +36,7 @@ public class TransformingEnricherTest {
     @BeforeMethod()
     public void before() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        producer = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        producer = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         intSensorA = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.a");
         target = new BasicAttributeSensor<Long>(Long.class, "long.sensor.target");
         

@@ -4,7 +4,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
@@ -50,10 +50,10 @@ public class MongoDBReplicaSetIntegrationTest {
      */
     private MongoDBReplicaSet makeAndStartReplicaSet(final Integer size, String testDescription) {
         // Sets secondaryPreferred so we can read from slaves.
-        final MongoDBReplicaSet replicaSet = app.createAndManageChild(EntitySpecs.spec(MongoDBReplicaSet.class)
+        final MongoDBReplicaSet replicaSet = app.createAndManageChild(EntitySpec.create(MongoDBReplicaSet.class)
                 .configure(DynamicCluster.INITIAL_SIZE, size)
                 .configure("replicaSetName", "test-rs-"+testDescription)
-                .configure("memberSpec", EntitySpecs.spec(MongoDBServer.class)
+                .configure("memberSpec", EntitySpec.create(MongoDBServer.class)
                         .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf")
                         .configure("port", "27017+")));
         app.start(localhostMachineProvisioningLocation);

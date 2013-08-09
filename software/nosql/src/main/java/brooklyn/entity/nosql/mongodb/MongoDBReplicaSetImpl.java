@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
@@ -104,7 +103,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
 
     @Override
     protected EntitySpec<?> getMemberSpec() {
-        return getConfig(MEMBER_SPEC, BasicEntitySpec.newInstance(MongoDBServer.class));
+        return getConfig(MEMBER_SPEC, EntitySpec.create(MongoDBServer.class));
     }
 
     /**
@@ -158,6 +157,10 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             return super.resize(desired);
         if (desired % 2 == 0)
             LOG.info("Ignored request to resize replica set {} to even number of members", getReplicaSetName());
+        if (desired < MIN_MEMBERS)
+            LOG.info("Ignored request to resize replica set {} to because smaller than min size of {}", getReplicaSetName(), MIN_MEMBERS);
+        if (desired > MAX_MEMBERS)
+            LOG.info("Ignored request to resize replica set {} to because larger than max size of {}", getReplicaSetName(), MAX_MEMBERS);
         return getCurrentSize();
     }
 

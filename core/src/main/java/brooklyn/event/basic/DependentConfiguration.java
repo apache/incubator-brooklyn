@@ -58,7 +58,11 @@ public class DependentConfiguration {
     //not instantiable, only a static helper
     private DependentConfiguration() {}
 
-    /** @see #attributeWhenReady(Entity, AttributeSensor, Predicate); default readiness (if no third argument) is Groovy truth */
+    /**
+     * Default readiness is Groovy truth.
+     * 
+     * @see #attributeWhenReady(Entity, AttributeSensor, Predicate)
+     */
     public static <T> Task<T> attributeWhenReady(Entity source, AttributeSensor<T> sensor) {
         return attributeWhenReady(source, sensor, GroovyJavaMethods.truthPredicate());
     }

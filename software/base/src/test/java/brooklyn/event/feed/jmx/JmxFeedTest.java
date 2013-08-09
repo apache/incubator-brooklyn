@@ -36,7 +36,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -105,7 +105,7 @@ public class JmxFeedTest {
         
         // Create an entity and configure it with the above JMX service
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class).impl(TestEntityWithJmx.class));
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).impl(TestEntityWithJmx.class));
         app.start(ImmutableList.of(new SimulatedLocation()));
 
         jmxHelper = new JmxHelper(entity);

@@ -15,7 +15,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
@@ -44,9 +44,9 @@ public class DynamicGroupTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        group = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class));
-        e1 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
-        e2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        group = app.createAndManageChild(EntitySpec.create(DynamicGroup.class));
+        e1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        e2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
     }
     
     @AfterMethod(alwaysRun=true)
@@ -234,7 +234,7 @@ public class DynamicGroupTest {
             } as SensorEventListener);
 
         for (i in 1..NUM_CYCLES) {
-            TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+            TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
             executeUntilSucceeds {
                 entitiesNotified.contains(entity);
             }
@@ -300,7 +300,7 @@ public class DynamicGroupTest {
         Entities.manage(group2);
         
         for (int i = 0; i < NUM_CYCLES; i++) {
-            TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+            TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
             Entities.unmanage(entity);
         }
 
@@ -323,7 +323,7 @@ public class DynamicGroupTest {
         final CountDownLatch rescanLatch = new CountDownLatch(1);
         final CountDownLatch entityAddedLatch = new CountDownLatch(1);
         
-        final TestEntity e3 = app.createChild(EntitySpecs.spec(TestEntity.class));
+        final TestEntity e3 = app.createChild(EntitySpec.create(TestEntity.class));
         Predicate filter = Predicates.equalTo(e3);
         
         DynamicGroup group2 = new DynamicGroupImpl() {

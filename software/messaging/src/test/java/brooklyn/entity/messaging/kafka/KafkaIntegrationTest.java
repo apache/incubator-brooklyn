@@ -28,7 +28,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.messaging.activemq.ActiveMQBroker;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -66,7 +66,7 @@ public class KafkaIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testZookeeper() {
-        final KafkaZookeeper zookeeper = app.createAndManageChild(EntitySpecs.spec(KafkaZookeeper.class));
+        final KafkaZookeeper zookeeper = app.createAndManageChild(EntitySpec.create(KafkaZookeeper.class));
 
         zookeeper.start(ImmutableList.of(testLocation));
         Asserts.succeedsEventually(MutableMap.of("timeout", 60000l), new Callable<Void>() {
@@ -86,8 +86,8 @@ public class KafkaIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testBrokerPlusZookeeper() {
-        final KafkaZookeeper zookeeper = app.createAndManageChild(EntitySpecs.spec(KafkaZookeeper.class));
-        final KafkaBroker broker = app.createAndManageChild(EntitySpecs.spec(KafkaBroker.class).configure(KafkaBroker.ZOOKEEPER, zookeeper));
+        final KafkaZookeeper zookeeper = app.createAndManageChild(EntitySpec.create(KafkaZookeeper.class));
+        final KafkaBroker broker = app.createAndManageChild(EntitySpec.create(KafkaBroker.class).configure(KafkaBroker.ZOOKEEPER, zookeeper));
 
         zookeeper.start(ImmutableList.of(testLocation));
         Asserts.succeedsEventually(MutableMap.of("timeout", 60000l), new Callable<Void>() {
@@ -121,7 +121,7 @@ public class KafkaIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testTwoBrokerCluster() {
-        final KafkaCluster cluster = app.createAndManageChild(EntitySpecs.spec(KafkaCluster.class)
+        final KafkaCluster cluster = app.createAndManageChild(EntitySpec.create(KafkaCluster.class)
                 .configure(KafkaCluster.INITIAL_SIZE, 2));
 
         cluster.start(ImmutableList.of(testLocation));

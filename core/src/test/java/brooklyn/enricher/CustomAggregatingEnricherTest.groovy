@@ -11,7 +11,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.BasicGroup
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation
@@ -37,7 +37,7 @@ class CustomAggregatingEnricherTest {
     @BeforeMethod(alwaysRun=true)
     public void before() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        producer = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        producer = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
         target = new BasicAttributeSensor<Integer>(Long.class, "target sensor")
         
@@ -86,9 +86,9 @@ class CustomAggregatingEnricherTest {
     @Test
     public void testMultipleProducersSum() {
         List<TestEntity> producers = [
-                app.createAndManageChild(EntitySpecs.spec(TestEntity.class)), 
-                app.createAndManageChild(EntitySpecs.spec(TestEntity.class)),
-                app.createAndManageChild(EntitySpecs.spec(TestEntity.class))
+                app.createAndManageChild(EntitySpec.create(TestEntity.class)), 
+                app.createAndManageChild(EntitySpec.create(TestEntity.class)),
+                app.createAndManageChild(EntitySpec.create(TestEntity.class))
                 ]
         CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>newSummingEnricher(
             intSensor, target, producers:producers)
@@ -107,7 +107,7 @@ class CustomAggregatingEnricherTest {
     @Test
     public void testAveragingEnricherWhenNoSensorValuesYet() {
         List<TestEntity> producers = [ 
-                app.createAndManageChild(EntitySpecs.spec(TestEntity.class))
+                app.createAndManageChild(EntitySpec.create(TestEntity.class))
                 ]
         CustomAggregatingEnricher<Double> cae = CustomAggregatingEnricher.<Double>newAveragingEnricher(
                 intSensor, new BasicAttributeSensor<Double>(Double.class, "target sensor"), producers:producers)
@@ -118,7 +118,7 @@ class CustomAggregatingEnricherTest {
     @Test
     public void testAveragingEnricherWhenNullSensorValue() {
         List<TestEntity> producers = [
-                app.createAndManageChild(EntitySpecs.spec(TestEntity.class))
+                app.createAndManageChild(EntitySpec.create(TestEntity.class))
                 ]
         CustomAggregatingEnricher<Double> cae = CustomAggregatingEnricher.<Double>newAveragingEnricher(
                 intSensor, new BasicAttributeSensor<Double>(Double.class, "target sensor"), producers:producers)
@@ -131,9 +131,9 @@ class CustomAggregatingEnricherTest {
     @Test
     public void testMultipleProducersAverage() {
         List<TestEntity> producers = [
-                app.createAndManageChild(EntitySpecs.spec(TestEntity.class)), 
-                app.createAndManageChild(EntitySpecs.spec(TestEntity.class)),
-                app.createAndManageChild(EntitySpecs.spec(TestEntity.class))
+                app.createAndManageChild(EntitySpec.create(TestEntity.class)), 
+                app.createAndManageChild(EntitySpec.create(TestEntity.class)),
+                app.createAndManageChild(EntitySpec.create(TestEntity.class))
                 ]
         CustomAggregatingEnricher<Double> cae = CustomAggregatingEnricher.<Double>newAveragingEnricher(
                 intSensor, new BasicAttributeSensor<Double>(Double.class, "target sensor"), producers:producers)
@@ -157,8 +157,8 @@ class CustomAggregatingEnricherTest {
     
     @Test
     public void testAddingAndRemovingProducers() {
-        TestEntity p1 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)); 
-        TestEntity p2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity p1 = app.createAndManageChild(EntitySpec.create(TestEntity.class)); 
+        TestEntity p2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>newSummingEnricher(
                 intSensor, target, producers:[p1])
@@ -182,9 +182,9 @@ class CustomAggregatingEnricherTest {
     @Test
     public void testAggregatesNewMembersOfGroup() {
         try {
-            BasicGroup group = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class));
-            TestEntity p1 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class))
-            TestEntity p2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class))
+            BasicGroup group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
+            TestEntity p1 = app.createAndManageChild(EntitySpec.create(TestEntity.class))
+            TestEntity p2 = app.createAndManageChild(EntitySpec.create(TestEntity.class))
             log.debug("created $group and the entities it will contain $p1 $p2")
 
             CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>newSummingEnricher(intSensor, target, allMembers:true)
@@ -224,9 +224,9 @@ class CustomAggregatingEnricherTest {
     
     @Test
     public void testAggregatesExistingMembersOfGroup() {
-        BasicGroup group = app.addChild(EntitySpecs.spec(BasicGroup.class));
-        TestEntity p1 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(TestEntity.class).parent(group)); 
-        TestEntity p2 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(TestEntity.class).parent(group)); 
+        BasicGroup group = app.addChild(EntitySpec.create(BasicGroup.class));
+        TestEntity p1 = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class).parent(group)); 
+        TestEntity p2 = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class).parent(group)); 
         group.addMember(p1)
         group.addMember(p2)
         p1.setAttribute(intSensor, 1)
@@ -250,10 +250,10 @@ class CustomAggregatingEnricherTest {
     
     @Test
     public void testAppliesFilterWhenAggregatingMembersOfGroup() {
-        BasicGroup group = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class));
-        TestEntity p1 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
-        TestEntity p2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
-        TestEntity p3 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        BasicGroup group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
+        TestEntity p1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        TestEntity p2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        TestEntity p3 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         group.addMember(p1)
         group.addMember(p2)
         p1.setAttribute(intSensor, 1)
@@ -273,7 +273,7 @@ class CustomAggregatingEnricherTest {
     
     @Test
     public void testCustomAggregatingFunction() {
-        TestEntity p1 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)); 
+        TestEntity p1 = app.createAndManageChild(EntitySpec.create(TestEntity.class)); 
         Function<Collection<Integer>,Integer> aggregator = { Collection c -> 
             int result = 0; c.each { result += it*it }; return result;
         } as Function

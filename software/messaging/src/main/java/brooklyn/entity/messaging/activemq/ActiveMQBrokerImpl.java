@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.jms.JMSBrokerImpl;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 
@@ -46,7 +46,7 @@ public class ActiveMQBrokerImpl extends JMSBrokerImpl<ActiveMQQueue, ActiveMQTop
 
     @Override
 	public ActiveMQQueue createQueue(Map properties) {
-		ActiveMQQueue result = addChild(EntitySpecs.spec(ActiveMQQueue.class).configure(properties));
+		ActiveMQQueue result = addChild(EntitySpec.create(ActiveMQQueue.class).configure(properties));
         Entities.manage(result);
         result.create();
         return result;
@@ -54,7 +54,7 @@ public class ActiveMQBrokerImpl extends JMSBrokerImpl<ActiveMQQueue, ActiveMQTop
 
     @Override
 	public ActiveMQTopic createTopic(Map properties) {
-		ActiveMQTopic result = addChild(EntitySpecs.spec(ActiveMQTopic.class).configure(properties));
+		ActiveMQTopic result = addChild(EntitySpec.create(ActiveMQTopic.class).configure(properties));
         Entities.manage(result);
         result.create();
         return result;

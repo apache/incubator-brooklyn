@@ -13,7 +13,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -38,7 +38,7 @@ public class AutoScalerPolicyMetricTest {
     @BeforeMethod()
     public void before() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        tc = app.createAndManageChild(EntitySpecs.spec(TestCluster.class)
+        tc = app.createAndManageChild(EntitySpec.create(TestCluster.class)
                 .configure("initialSize", 1));
     }
     
@@ -228,7 +228,7 @@ public class AutoScalerPolicyMetricTest {
     
     @Test
     public void testSubscribesToMetricOnSpecifiedEntity() {
-        TestEntity entityWithMetric = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entityWithMetric = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         tc.resize(1);
         

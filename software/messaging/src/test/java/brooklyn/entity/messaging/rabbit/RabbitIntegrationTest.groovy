@@ -14,7 +14,7 @@ import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.messaging.MessageBroker
 import brooklyn.entity.messaging.amqp.AmqpExchange
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -68,7 +68,7 @@ public class RabbitIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        rabbit = app.createAndManageChild(EntitySpecs.spec(RabbitBroker.class));
+        rabbit = app.createAndManageChild(EntitySpec.create(RabbitBroker.class));
         rabbit.start([ testLocation ])
         executeUntilSucceedsWithShutdown(rabbit) {
             assertTrue rabbit.getAttribute(Startable.SERVICE_UP)
@@ -81,7 +81,7 @@ public class RabbitIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testClientConnection() {
-        rabbit = app.createAndManageChild(EntitySpecs.spec(RabbitBroker.class));
+        rabbit = app.createAndManageChild(EntitySpec.create(RabbitBroker.class));
         rabbit.start([ testLocation ])
         executeUntilSucceeds {
             assertTrue rabbit.getAttribute(Startable.SERVICE_UP)

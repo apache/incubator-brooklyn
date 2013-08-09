@@ -27,7 +27,6 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -65,7 +64,7 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
             EntitySpec<KafkaZookeeper> zookeeperSpec = getAttribute(ZOOKEEPER_SPEC);
             if (zookeeperSpec == null) {
                 log.debug("creating zookeeper using default spec for {}", this);
-                zookeeperSpec = EntitySpecs.spec(KafkaZookeeper.class);
+                zookeeperSpec = EntitySpec.create(KafkaZookeeper.class);
                 setAttribute(ZOOKEEPER_SPEC, zookeeperSpec);
             } else {
                 log.debug("creating zookeeper using custom spec for {}", this);
@@ -79,13 +78,13 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
         EntitySpec<KafkaBroker> brokerSpec = getAttribute(BROKER_SPEC);
         if (brokerSpec == null) {
             log.debug("creating default broker spec for {}", this);
-            brokerSpec = EntitySpecs.spec(KafkaBroker.class);
+            brokerSpec = EntitySpec.create(KafkaBroker.class);
             setAttribute(BROKER_SPEC, brokerSpec);
         }
         // Relies on initialSize being inherited by DynamicCluster, because key id is identical
         // We add the zookeeper configuration to the KafkaBroker specification here
-        DynamicCluster cluster = addChild(EntitySpecs.spec(DynamicCluster.class)
-                .configure("memberSpec", EntitySpecs.wrapSpec(brokerSpec).configure(KafkaBroker.ZOOKEEPER, zookeeper)));
+        DynamicCluster cluster = addChild(EntitySpec.create(DynamicCluster.class)
+                .configure("memberSpec", EntitySpec.create(brokerSpec).configure(KafkaBroker.ZOOKEEPER, zookeeper)));
         if (Entities.isManaged(this)) Entities.manage(cluster);
         setAttribute(CLUSTER, cluster);
     }

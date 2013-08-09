@@ -20,7 +20,7 @@ import java.util.Map;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.util.collections.MutableMap;
@@ -55,7 +55,7 @@ public class CouchDBNodeLiveTest extends AbstractCouchDBNodeTest {
         testLocation = app.getManagementContext().getLocationRegistry()
                 .resolve(provider + (Strings.isNonEmpty(region) ? ":" + region : ""), properties);
 
-        couchdb = app.createAndManageChild(EntitySpecs.spec(CouchDBNode.class)
+        couchdb = app.createAndManageChild(EntitySpec.create(CouchDBNode.class)
                 .configure("httpPort", "12345+")
                 .configure("clusterName", "TestCluster"));
         app.start(ImmutableList.of(testLocation));

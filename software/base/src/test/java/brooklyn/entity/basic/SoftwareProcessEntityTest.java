@@ -13,7 +13,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
@@ -53,7 +53,7 @@ public class SoftwareProcessEntityTest {
 
     @Test
     public void testProcessTemplateWithExtraSubstitutions() throws Exception {
-        MyService entity = app.createAndManageChild(EntitySpecs.spec(MyService.class));
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
         Entities.manage(entity);
         entity.start(ImmutableList.of(loc));
         SimulatedDriver driver = (SimulatedDriver) entity.getDriver();
@@ -64,7 +64,7 @@ public class SoftwareProcessEntityTest {
 
     @Test
     public void testBasicSoftwareProcessEntityLifecycle() throws Exception {
-        MyService entity = app.createAndManageChild(EntitySpecs.spec(MyService.class));
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
         entity.start(ImmutableList.of(loc));
         SimulatedDriver d = (SimulatedDriver) entity.getDriver();
         Assert.assertTrue(d.isRunning());
@@ -75,7 +75,7 @@ public class SoftwareProcessEntityTest {
     
     @Test
     public void testShutdownIsIdempotent() throws Exception {
-        MyService entity = app.createAndManageChild(EntitySpecs.spec(MyService.class));
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
         entity.start(ImmutableList.of(loc));
         entity.stop();
         

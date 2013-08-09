@@ -6,7 +6,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
@@ -37,8 +37,8 @@ public class CloudMachineNamerTest {
 
     @Test
     public void testGenerateGroupIdWithEntity() {
-        TestApplication app = ApplicationBuilder.newManagedApp(EntitySpecs.spec(TestApplication.class).displayName("TistApp"));
-        TestEntity child = app.createAndManageChild(EntitySpecs.spec(TestEntity.class).displayName("TestEnt"));
+        TestApplication app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"));
+        TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("TestEnt"));
         try {
 
             ConfigBag cfg = new ConfigBag()
