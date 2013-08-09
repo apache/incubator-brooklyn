@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import brooklyn.management.Task;
+import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
 
@@ -14,7 +15,11 @@ public class TaskBuilder<T> {
     String name = null;
     Callable<T> body = null;
     List<Task<?>> children = new ArrayList<Task<?>>();
-    boolean dynamic = true;
+    /** whether task that is built has been explicitly specified to be a dynamic task 
+     * (ie a Task which is also a {@link TaskQueueingContext}
+     * whereby new tasks can be added after creation */
+    Boolean dynamicSet = null;
+    /** whether task that is built should be parallel; cannot (currently) also be dynamic */
     boolean parallel = false;
     
     public static <T> TaskBuilder<T> builder() {
@@ -27,7 +32,7 @@ public class TaskBuilder<T> {
     }
     
     public TaskBuilder<T> dynamic(boolean dynamic) {
-        this.dynamic = dynamic;
+        this.dynamicSet = dynamic;
         return this;
     }
     
@@ -53,13 +58,18 @@ public class TaskBuilder<T> {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Task<T> build() {
-        if (!dynamic && children.isEmpty())
-            return new BasicTask<T>(MutableMap.of("name", name), body);
+        MutableMap<String, String> flags = MutableMap.of();
+        if (name!=null) flags.add("name", name);
         
-        if (dynamic) {
+        if (dynamicSet==Boolean.FALSE && children.isEmpty())
+            return new BasicTask<T>(flags, body);
+        
+        // prefer dynamic set unless (a) user has said not dynamic, or (b) it's parallel (since there is no dynamic parallel yet)
+        // dynamic has better cancel (will interrupt the thread) and callers can submit tasks flexibly
+        if (dynamicSet==Boolean.TRUE || (dynamicSet==null && !parallel)) {
             if (parallel)
                 throw new UnsupportedOperationException("No implementation of parallel dynamic aggregate task available");
-            DynamicSequentialTask<T> result = new DynamicSequentialTask<T>(MutableMap.of("name", name), body);
+            DynamicSequentialTask<T> result = new DynamicSequentialTask<T>(flags, body);
             for (Task t: children)
                 result.queue(t);
             return result;
@@ -67,9 +77,9 @@ public class TaskBuilder<T> {
         
         // T must be of type List<V> for these to be valid
         if (parallel)
-            return new ParallelTask(MutableMap.of("name", name), children);
+            return new ParallelTask(flags, children);
         else
-            return new SequentialTask(MutableMap.of("name", name), children);
+            return new SequentialTask(flags, children);
     }
     
 }

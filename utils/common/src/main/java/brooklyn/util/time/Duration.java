@@ -8,6 +8,7 @@ import com.google.common.base.Preconditions;
 /** simple class determines a length of time */
 public class Duration implements Comparable<Duration> {
 
+    public static final Duration ZERO = of(0, null);
     public static final Duration ONE_SECOND = of(1, TimeUnit.SECONDS);
     public static final Duration FIVE_SECONDS = of(5, TimeUnit.SECONDS);
     public static final Duration TEN_SECONDS = of(10, TimeUnit.SECONDS);
@@ -56,12 +57,42 @@ public class Duration implements Comparable<Duration> {
         return ((Long)toMilliseconds()).hashCode();
     }
 
+    /** converts to the given {@link TimeUnit}, using {@link TimeUnit#convert(long, TimeUnit)} which rounds _down_
+     * (so 1 nanosecond converted to milliseconds gives 0 milliseconds, and -1 ns gives -1 ms) */
     public long toUnit(TimeUnit unit) {
         return unit.convert(nanos, TimeUnit.NANOSECONDS);
     }
-    
+
+    /** as {@link #toUnit(TimeUnit)} but rounding away from zero,
+     * so 1 ns converted to ms gives 1 ms, and -1 ns gives 1ms */
+    public long toUnitRoundingAway(TimeUnit unit) {
+        long result = unit.convert(nanos, TimeUnit.NANOSECONDS);
+        long check = TimeUnit.NANOSECONDS.convert(result, unit);
+        if (check!=nanos) {
+            result += (nanos>0 ? 1 : -1);
+        }
+        return result;
+    }
+
+    /** as {@link #toUnit(TimeUnit)} but rounding away from zero,
+     * so 1 ns converted to ms gives 0 ms, and -1 ns gives 0ms */
+    public long toUnitRoundingToZero(TimeUnit unit) {
+        long result = unit.convert(nanos, TimeUnit.NANOSECONDS);
+        long check = TimeUnit.NANOSECONDS.convert(result, unit);
+        if (check!=nanos) {
+            result += (nanos>0 ? -1 : 1);
+        }
+        return result;
+    }
+
     public long toMilliseconds() {
         return toUnit(TimeUnit.MILLISECONDS);
+    }
+    
+    /** as {@link #toMilliseconds()} but rounding away from zero (so 1 nanosecond gets rounded to 1 millisecond);
+     * see {@link #toUnitRoundingAway(TimeUnit)} */
+    public long toMillisecondsRoundingAway() {
+        return toUnitRoundingAway(TimeUnit.MILLISECONDS);
     }
     
     public long toNanoseconds() {

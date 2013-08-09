@@ -37,6 +37,7 @@ import brooklyn.util.text.Identifiers;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
@@ -342,11 +343,12 @@ public class BasicExecutionManager implements ExecutionManager {
         
         beforeSubmit(flags, task);
         
-        if (((BasicTask)task).job==null) 
+        if (((BasicTask<T>)task).job==null) 
             throw new NullPointerException("Task "+task+" submitted with with null job: job must be supplied.");
         
-        Callable job = new Callable() { public Object call() {
-            Object result = null;
+        Callable<T> job = new Callable<T>() { public T call() {
+          try {
+            T result = null;
             Throwable error = null;
             String oldThreadName = Thread.currentThread().getName();
             try {
@@ -357,7 +359,7 @@ public class BasicExecutionManager implements ExecutionManager {
                 }
                 beforeStart(flags, task);
                 if (!task.isCancelled()) {
-                    result = ((BasicTask)task).job.call();
+                    result = ((BasicTask<T>)task).job.call();
                 } else throw new CancellationException();
             } catch(Throwable e) {
                 error = e;
@@ -368,31 +370,51 @@ public class BasicExecutionManager implements ExecutionManager {
                 afterEnd(flags, task);
             }
             if (error!=null) {
-                log.warn("Error while running task "+task+" (rethrowing): "+error.getMessage(), error);
+                if (log.isDebugEnabled()) {
+                    // debug only here, because we rethrow
+                    log.debug("Exception running task "+task+" (rethrowing): "+error.getMessage(), error);
+                    if (log.isTraceEnabled())
+                        log.trace("Trace for exception running task "+task+" (rethrowing): "+error.getMessage(), error);
+                }
                 throw Throwables.propagate(error);
             }
             return result;
+          } finally {
+              ((BasicTask<?>)task).runListeners();
+          }
         }};
-        ((BasicTask)task).initExecutionManager(this);
+        ((BasicTask<T>)task).initExecutionManager(this);
         
         // If there's a scheduler then use that; otherwise execute it directly
         Set<TaskScheduler> schedulers = null;
-        for (Object tago: ((BasicTask)task).tags) {
+        for (Object tago: ((BasicTask<?>)task).tags) {
             TaskScheduler scheduler = getTaskSchedulerForTag(tago);
             if (scheduler!=null) {
-                if (schedulers==null) schedulers = new LinkedHashSet(2);
+                if (schedulers==null) schedulers = new LinkedHashSet<TaskScheduler>(2);
                 schedulers.add(scheduler);
             }
         }
-        Future future;
+        Future<T> future;
         if (schedulers!=null && !schedulers.isEmpty()) {
 			if (schedulers.size()>1) log.warn("multiple schedulers detected, using only the first, for "+task+": "+schedulers);
             future = schedulers.iterator().next().submit(job);
         } else {
             future = runner.submit(job);
         }
+        // on completion, listeners get triggered above; here, below we ensure they get triggered on cancel
+        // (and we make sure the same ExecutionList is used in the future as in the task)
+        ListenableFuture<T> listenableFuture = new ListenableForwardingFuture<T>(future, ((BasicTask<T>)task).listeners) {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                boolean result = false;
+                if (!task.isCancelled()) result |= task.cancel(mayInterruptIfRunning);
+                result |= super.cancel(mayInterruptIfRunning);
+                ((BasicTask<?>)task).runListeners();
+                return result;
+            }
+        };
 
-        ((BasicTask)task).initResult(future);
+        ((BasicTask<T>)task).initResult(listenableFuture);
         return task;
     }
     

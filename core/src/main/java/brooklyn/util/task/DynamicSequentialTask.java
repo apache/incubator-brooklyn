@@ -32,6 +32,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     protected final Object jobTransitionLock = new Object();
     protected volatile boolean primaryStarted = false;
     protected volatile boolean primaryFinished = false;
+    protected Thread primaryThread;
     
     /**
      * Constructs a new compound task containing the specified units of work.
@@ -62,6 +63,21 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             jobTransitionLock.notifyAll();
         }
     }
+
+    @Override
+    public synchronized boolean cancel(boolean mayInterruptIfRunning) {
+        if (isDone()) return false;
+        log.trace("cancelling {}", this);
+        boolean cancel = super.cancel(mayInterruptIfRunning);
+        for (Task<?> t: secondaryJobsAll)
+            cancel |= t.cancel(mayInterruptIfRunning);
+        if (primaryThread!=null) {
+            log.trace("cancelling {} - interrupting", this);
+            primaryThread.interrupt();
+            cancel = true;
+        }
+        return cancel;
+    }
     
     public Iterable<Task<?>> getChildren() {
         return secondaryJobsAll;
@@ -85,10 +101,12 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             this.primaryJob = mainJob;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public T call() throws Exception {
             synchronized (jobTransitionLock) {
                 primaryStarted = true;
+                primaryThread = Thread.currentThread();
                 for (Task<?> t: secondaryJobsAll)
                     ((BasicTask<?>)t).markQueued();
             }
@@ -112,6 +130,8 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                                 // secondary job queue aborts on error
                                 if (log.isDebugEnabled())
                                     log.debug("Aborting secondary job queue for "+DynamicSequentialTask.this+" due to error in task "+secondaryJob+" ("+e+", being rethrown)");
+                                for (Task<?> t: secondaryJobsRemaining)
+                                    t.cancel(false);
                                 throw e;
                             }
                         }
@@ -121,13 +141,26 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             });
             submitBackgroundInheritingContext(secondaryJobMaster);
             
-            T result = (primaryJob!=null ? primaryJob.call() : null);
-            synchronized (jobTransitionLock) {
-                // semaphore might be nicer here (aled notes as it is this is a little hard to read)
-                primaryFinished = true;
-                jobTransitionLock.notifyAll();
+            T result = null;
+            try {
+                log.trace("calling primary job for {}", this);
+                if (primaryJob!=null) result = primaryJob.call();
+            } finally {
+                log.trace("cleaning up for {}", this);
+                synchronized (jobTransitionLock) {
+                    // semaphore might be nicer here (aled notes as it is this is a little hard to read)
+                    primaryThread = null;
+                    primaryFinished = true;
+                    jobTransitionLock.notifyAll();
+                }
+                if (!isCancelled() && !secondaryJobMaster.isDone()) {
+                    log.trace("waiting for secondaries for {}", this);
+                    List<Object> result2 = secondaryJobMaster.get();
+                    try {
+                        if (primaryJob==null) result = (T)result2;
+                    } catch (Exception e) { /* ignore class cast exception; result will just be null */ }
+                }
             }
-            secondaryJobMaster.get();
             return result;
         }
     }

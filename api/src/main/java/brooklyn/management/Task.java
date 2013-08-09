@@ -2,7 +2,13 @@ package brooklyn.management;
 
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
+
+import com.google.common.util.concurrent.ListenableFuture;
+
+import brooklyn.util.time.Duration;
 
 /**
  * Represents a unit of work for execution.
@@ -12,7 +18,7 @@ import java.util.concurrent.Future;
  * ExecutionContext, in which case it will be returned, or it may be created by submission
  * of a {@link Runnable} or {@link Callable} and thereafter it can be treated just like a {@link Future}.
  */
-public interface Task<T> extends TaskStub, Future<T> {
+public interface Task<T> extends TaskStub, ListenableFuture<T> {
     public Set<Object> getTags();
     /** if {@link #isSubmitted()} returns the time when the task was submitted; or -1 otherwise */
     public long getSubmitTimeUtc();
@@ -59,11 +65,17 @@ public interface Task<T> extends TaskStub, Future<T> {
 
     /**
      * Causes calling thread to block until the task is ended.
-     *
+     * <p>
      * Either normally or by cancellation or error, but without throwing error on cancellation or error.
      * (Errors are logged at debug.)
      */
     public void blockUntilEnded();
+
+    /**
+     * As {@link #blockUntilEnded()}, but returning after the given timeout;
+     * true if the task has ended and false otherwise
+     */
+    public boolean blockUntilEnded(Duration timeout);
 
     public String getStatusSummary();
 
@@ -73,8 +85,15 @@ public interface Task<T> extends TaskStub, Future<T> {
      * Plain-text format, with new-lines (and sometimes extra info) if multiline enabled.
      */
     public String getStatusDetail(boolean multiline);
+
+    /** As {@link #get(long, java.util.concurrent.TimeUnit)} */
+    public T get(Duration duration) throws InterruptedException, ExecutionException, TimeoutException;
     
-    /** As get, but propagating checked exceptions as unchecked for convenience. */
+    /** As {@link #get()}, but propagating checked exceptions as unchecked for convenience. */
     public T getUnchecked();
-    
+
+    /** As {@link #get()}, but propagating checked exceptions as unchecked for convenience
+     * (including a {@link TimeoutException} if the duration expires) */
+    public T getUnchecked(Duration duration);
+
 }

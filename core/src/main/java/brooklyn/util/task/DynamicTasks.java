@@ -89,6 +89,7 @@ public class DynamicTasks {
     
     /** submits the given task if needed, and gets the result (unchecked) 
      * only permitted in a queueing context (ie a DST main job) */
+    // things get really confusing if you try to queueInTaskHierarchy -- easy to cause deadlocks!
     public static <T> T get(Task<T> t) {
         return queueIfNeeded(t).getUnchecked();
     }

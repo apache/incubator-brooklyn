@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -31,9 +32,12 @@ import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.ExecutionList;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * The basic concrete implementation of a {@link Task} to be executed.
@@ -63,6 +67,8 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     protected Task<?> blockingTask = null;
     Object extraStatusText = null;
 
+    ExecutionList listeners = new ExecutionList();
+    
     /**
      * Constructor needed to prevent confusion in groovy stubs when looking for default constructor,
      *
@@ -152,7 +158,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         this.em = em;
     }
     
-    synchronized void initResult(Future result) {
+    synchronized void initResult(ListenableFuture<T> result) {
         if (this.result != null) 
             throw new IllegalStateException("task "+this+" is being given a result twice");
         this.result = result;
@@ -203,8 +209,10 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public synchronized boolean cancel(boolean mayInterruptIfRunning) {
         if (isDone()) return false;
         boolean cancel = true;
-        if (GroovyJavaMethods.truth(result)) { cancel = result.cancel(mayInterruptIfRunning); }
         cancelled = true;
+        if (result!=null) { 
+            cancel = result.cancel(mayInterruptIfRunning);
+        }
         notifyAll();
         return cancel;
     }
@@ -235,6 +243,8 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         }
     }
 
+    // future value --------------------
+
     public T get() throws InterruptedException, ExecutionException {
         try {
             if (!isDone())
@@ -249,61 +259,102 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public T getUnchecked() {
         try {
             return get();
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
     }
         
-    // future value --------------------
-
     public synchronized void blockUntilStarted() {
+        blockUntilStarted(null);
+    }
+    protected synchronized boolean blockUntilStarted(Duration timeout) {
+        Long endTime = timeout==null ? null : System.currentTimeMillis() + timeout.toMillisecondsRoundingAway();
         while (true) {
             if (cancelled) throw new CancellationException();
             if (result==null)
                 try {
-                    wait();
+                    if (timeout==null) {
+                        wait();
+                    } else {
+                        long remaining = endTime - System.currentTimeMillis();
+                        if (remaining>0)
+                            wait(remaining);
+                        else
+                            return false;
+                    }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     Throwables.propagate(e);
                 }
-            if (result!=null) return;
+            if (result!=null) return true;
         }
     }
 
     public void blockUntilEnded() {
-        try { blockUntilStarted(); } catch (Throwable t) {
+        blockUntilEnded(null);
+    }
+    public boolean blockUntilEnded(Duration timeout) {
+        Long endTime = timeout==null ? null : System.currentTimeMillis() + timeout.toMillisecondsRoundingAway();
+        try { 
+            boolean started = blockUntilStarted(timeout);
+            if (!started) return false;
+            if (timeout==null) {
+                result.get();
+            } else {
+                long remaining = endTime - System.currentTimeMillis();
+                if (remaining>0)
+                    result.get(remaining, TimeUnit.MILLISECONDS);
+            }
+            return isDone();
+        } catch (Throwable t) {
             if (log.isDebugEnabled())
                 log.debug("call from "+Thread.currentThread()+" blocking until "+this+" finishes ended with error: "+t);
             /* contract is just to log errors at debug, otherwise do nothing */
-            return; 
-        }
-        try { result.get(); } catch (Throwable t) {
-            if (log.isDebugEnabled())
-                log.debug("call from "+Thread.currentThread()+" blocking until "+this+" finishes ended with error: "+t);
-            /* contract is just to log errors at debug, otherwise do nothing */
-            return; 
+            return isDone(); 
         }
     }
 
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        return get(new Duration(timeout, unit));
+    }
+    
+    public T get(Duration duration) throws InterruptedException, ExecutionException, TimeoutException {
         long start = System.currentTimeMillis();
-        long milliseconds = TimeUnit.MILLISECONDS.convert(timeout, unit);
-        long end  = start + milliseconds;
-        while (end > System.currentTimeMillis()) {
+        Long end  = duration==null ? null : start + duration.toMillisecondsRoundingAway();
+        while (end==null || end > System.currentTimeMillis()) {
             if (cancelled) throw new CancellationException();
-            if (result == null) wait(end - System.currentTimeMillis());
+            if (result == null) {
+                synchronized (this) {
+                    long remaining = end - System.currentTimeMillis();
+                    if (result==null && remaining>0)
+                        wait(remaining);
+                }
+            }
             if (result != null) break;
         }
-        long remaining = end -  System.currentTimeMillis();
-        if (remaining > 0) {
+        Long remaining = end==null ? null : end -  System.currentTimeMillis();
+        if (isDone()) {
+            return result.get(1, TimeUnit.MILLISECONDS);
+        } else if (remaining == null) {
+            return result.get();
+        } else if (remaining > 0) {
             return result.get(remaining, TimeUnit.MILLISECONDS);
         } else {
             throw new TimeoutException();
         }
     }
 
+    @Override
+    public T getUnchecked(Duration duration) {
+        try {
+            return get(duration);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    // ------------------ status ---------------------------
+    
     /**
      * Returns a brief status string
      *
@@ -618,6 +669,15 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         TaskFinalizer finalizer = Tasks.tag(this, TaskFinalizer.class, false);
         if (finalizer==null) finalizer = WARN_IF_NOT_RUN;
         finalizer.onTaskFinalization(this);
+    }
+    
+    @Override
+    public void addListener(Runnable listener, Executor executor) {
+        listeners.add(listener, executor);
+    }
+    
+    void runListeners() {
+        listeners.execute();
     }
     
 }

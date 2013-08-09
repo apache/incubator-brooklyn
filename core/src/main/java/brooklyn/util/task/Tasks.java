@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionContext;
+import brooklyn.management.HasTask;
 import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.flags.TypeCoercions;
@@ -21,7 +22,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class Tasks {
-
     
     private static final Logger log = LoggerFactory.getLogger(Tasks.class);
     
@@ -164,6 +164,51 @@ public class Tasks {
         return TaskBuilder.<T>builder();
     }
     
+    private static Task<?>[] asTasks(HasTask<?> ...tasks) {
+        Task<?>[] result = new Task<?>[tasks.length];
+        for (int i=0; i<tasks.length; i++)
+            result[i] = tasks[i].getTask();
+        return result;
+    }
+    
+    public static Task<List<?>> parallel(HasTask<?> ...tasks) {
+        return parallel(asTasks(tasks));
+    }
+    
+    public static Task<List<?>> parallel(String name, HasTask<?> ...tasks) {
+        return parallel(name, asTasks(tasks));
+    }
+    
+    public static Task<List<?>> parallel(Task<?> ...tasks) {
+        return parallel("parallelised tasks", tasks);
+    }
+    
+    public static Task<List<?>> parallel(String name, Task<?> ...tasks) {
+        TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().name(name).parallel(true);
+        for (Task<?> task: tasks)
+            tb.add(task);
+        return tb.build();
+    }
+
+    public static Task<List<?>> sequential(HasTask<?> ...tasks) {
+        return sequential(asTasks(tasks));
+    }
+    
+    public static Task<List<?>> sequential(String name, HasTask<?> ...tasks) {
+        return sequential(name, asTasks(tasks));
+    }
+    
+    public static Task<List<?>> sequential(Task<?> ...tasks) {
+        return sequential("sequential tasks", tasks);
+    }
+    
+    public static Task<List<?>> sequential(String name, Task<?> ...tasks) {
+        TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().name(name).parallel(false);
+        for (Task<?> task: tasks)
+            tb.add(task);
+        return tb.build();
+    }
+
     /** returns the first tag found on the given task which matches the given type, looking up the submission hierarachy if necessary */
     @SuppressWarnings("unchecked")
     public static <T> T tag(@Nullable Task<?> task, Class<T> type, boolean recurseHierarchy) {

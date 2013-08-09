@@ -228,7 +228,7 @@ public class Time {
 	
 	/** as {@link #sleep(long)} */
     public static void sleep(Duration duration) {
-        Time.sleep(duration.toMilliseconds());
+        Time.sleep(duration.toMillisecondsRoundingAway());
     }    
 
 	/**
