@@ -158,6 +158,10 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             return super.resize(desired);
         if (desired % 2 == 0)
             LOG.info("Ignored request to resize replica set {} to even number of members", getReplicaSetName());
+        if (desired < MIN_MEMBERS)
+            LOG.info("Ignored request to resize replica set {} to because smaller than min size of {}", getReplicaSetName(), MIN_MEMBERS);
+        if (desired > MAX_MEMBERS)
+            LOG.info("Ignored request to resize replica set {} to because larger than max size of {}", getReplicaSetName(), MAX_MEMBERS);
         return getCurrentSize();
     }
 

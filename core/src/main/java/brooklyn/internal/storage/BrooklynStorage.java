@@ -19,7 +19,6 @@ public interface BrooklynStorage {
      * the reference.
      * 
      * @param id
-     * @return
      */
     <T> Reference<T> getReference(String id);
 
@@ -56,7 +55,6 @@ public interface BrooklynStorage {
      *   extensive serialization library where you can plug in all kinds of serialization mechanisms.
      * 
      * @param id
-     * @return
      */
     @Beta
     <T> Reference<List<T>> getNonConcurrentList(String id);
@@ -72,7 +70,6 @@ public interface BrooklynStorage {
      * contents.
      * 
      * @param id
-     * @return
      */
     <K,V> ConcurrentMap<K,V> getMap(String id);
 

@@ -208,8 +208,8 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     }
 
     /** used to record a key which overwrites another; only needed at disambiguation time 
-     * if a class declares a key and an equivalent one (often inherited) which overwrites it;
-     * see {@link brooklyn.entity.basic.ConfigEntityInheritanceTest}, and uses of this class, for more explanation.
+     * if a class declares a key and an equivalent one (often inherited) which overwrites it.
+     * See brooklyn.entity.basic.ConfigEntityInheritanceTest, and uses of this class, for more explanation.
      */
     public static class BasicConfigKeyOverwriting<T> extends BasicConfigKey<T> {
         private static final long serialVersionUID = -3458116971918128018L;

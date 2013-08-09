@@ -1,6 +1,8 @@
 package brooklyn.event.basic;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.event.Sensor;
 
 /**
  * A {@link Sensor} describing an attribute that can be configured with a default value.

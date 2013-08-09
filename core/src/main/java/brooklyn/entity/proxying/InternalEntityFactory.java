@@ -70,7 +70,6 @@ public class InternalEntityFactory {
      * That means it is an entity with a no-arg constructor, and where there is a mapped for an entity type interface.
      * @param managementContext
      * @param clazz
-     * @return
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static boolean isNewStyleEntity(ManagementContext managementContext, Class<?> clazz) {

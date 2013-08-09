@@ -140,6 +140,10 @@ public class JmxHelper {
 
     public JmxHelper(EntityLocal entity) {
         this(toConnectorUrl(entity), entity, entity.getAttribute(Attributes.JMX_USER), entity.getAttribute(Attributes.JMX_PASSWORD));
+        
+        if (entity.getAttribute(UsesJmx.JMX_URL) == null) {
+            entity.setAttribute(UsesJmx.JMX_URL, url);
+        }
     }
     
     // TODO split this in to two classes, one for entities, and one entity-neutral

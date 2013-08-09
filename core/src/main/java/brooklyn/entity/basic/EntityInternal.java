@@ -29,7 +29,7 @@ public interface EntityInternal extends Entity {
 
     /**
      * 
-     * Like {@link setAttribute(AttributeSensor, T)}, except does not publish an attribute-change event.
+     * Like {@link EntityLocal#setAttribute(AttributeSensor, Object)}, except does not publish an attribute-change event.
      */
     <T> T setAttributeWithoutPublishing(AttributeSensor<T> sensor, T val);
 

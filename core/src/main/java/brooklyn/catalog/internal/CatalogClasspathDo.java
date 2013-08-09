@@ -213,7 +213,7 @@ public class CatalogClasspathDo {
     }
     
     /** augments the given item with annotations and class data for the given class, then adds to catalog 
-     * @return */
+     */
     public CatalogItem<?> addCatalogEntry(CatalogItemDtoAbstract<?> item, Class<?> c) {
         Catalog annotations = c.getAnnotation(Catalog.class);
         item.type = c.getName();

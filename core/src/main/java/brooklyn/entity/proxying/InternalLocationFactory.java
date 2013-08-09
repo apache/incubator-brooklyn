@@ -59,7 +59,6 @@ public class InternalLocationFactory {
      * 
      * @param managementContext
      * @param clazz
-     * @return
      */
     public static boolean isNewStyleLocation(ManagementContext managementContext, Class<?> clazz) {
         try {

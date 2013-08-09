@@ -166,9 +166,9 @@ public class PortForwardManager {
     }
     
     /** records a location and private port against a publicIp and public port,
-     * to support {@link #lookup(Location, int);
+     * to support {@link #lookup(Location, int)};
      * superfluous if {@link #acquirePublicPort(String, Location, int)} was used;
-     * but strongly recommended if {@link #acquirePublicPort(String, int)} was used
+     * but strongly recommended if {@link #acquirePublicPortExplicit(String, int)} was used
      * e.g. if the location is not known ahead of time)
      */
     public synchronized void associate(String publicIpId, int publicPort, Location l, int privatePort) {

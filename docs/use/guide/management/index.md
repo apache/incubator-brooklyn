@@ -77,6 +77,7 @@ usage: brooklyn [(-q | --quiet)] [(-v | --verbose)] <command> [<args>]
 
 The most commonly used brooklyn commands are:
     help     Display help information about brooklyn
+    info     Display information about brooklyn
     launch   Starts a brooklyn application. Note that a BROOKLYN_CLASSPATH environment variable needs to be set up beforehand to point to the user application classpath.
 
 See 'brooklyn help <command>' for more information on a specific command.
