@@ -19,7 +19,7 @@ public class ContextTasks {
             throw new IllegalStateException("Can only dynamically add a task when inside certain suitable tasks " +
             		"(trying to add "+task+" to "+current+")");
         }
-        ((DynamicSequentialTask<?>)current).addTask(task);
+        ((DynamicSequentialTask<?>)current).queue(task);
         return task;
     }
     

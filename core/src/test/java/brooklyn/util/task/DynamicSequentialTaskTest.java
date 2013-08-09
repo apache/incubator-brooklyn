@@ -37,7 +37,7 @@ public class DynamicSequentialTaskTest {
         };
         DynamicSequentialTask<String> t = new DynamicSequentialTask<String>(mainJob);
         // this should be added before anything added when the task is invoked
-        t.addTask(sayTask("hello"));
+        t.queue(sayTask("hello"));
         
         Assert.assertEquals(messages, Lists.newArrayList());
         Assert.assertEquals(t.isBegun(), false);

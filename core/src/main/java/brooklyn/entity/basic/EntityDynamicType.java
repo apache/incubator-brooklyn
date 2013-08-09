@@ -22,13 +22,15 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
+import brooklyn.entity.basic.Effectors.EffectorBodyTaskFactory;
+import brooklyn.entity.basic.Effectors.EffectorTaskFactory;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.text.Strings;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
@@ -119,6 +121,8 @@ public class EntityDynamicType {
         return entityClass;
     }
     
+    // --------------------------------------------------
+    
     /**
      * @return the effector with the given name, or null if not found
      */
@@ -128,13 +132,36 @@ public class EntityDynamicType {
     
     /**
      * Effectors available on this entity.
-     *
-     * NB no work has been done supporting changing this after initialization,
-     * but the idea of these so-called "dynamic effectors" has been discussed and it might be supported in future...
      */
     public Map<String,Effector<?>> getEffectors() {
         return Collections.unmodifiableMap(effectors);
     }
+    
+    /**
+     * Adds the given {@link Effector} to this entity.
+     */
+    @Beta
+    public void addEffector(Effector<?> newEffector) {
+        Effector<?> oldEffector = effectors.put(newEffector.getName(), newEffector);
+        snapshotValid.set(false);
+        if (oldEffector!=null)
+            entity.emit(AbstractEntity.EFFECTOR_CHANGED, newEffector.getName());
+        else
+            entity.emit(AbstractEntity.EFFECTOR_ADDED, newEffector.getName());
+    }
+
+    /** Adds an effector with an explicit body */
+    @Beta
+    public <T> void addEffector(Effector<T> effector, EffectorTaskFactory<T> body) {
+        addEffector(new EffectorAndBody<T>(effector, body));
+    }
+    /** Adds an effector with an explicit body */
+    @Beta
+    public <T> void addEffector(Effector<T> effector, EffectorBody<T> body) {
+        addEffector(effector, new EffectorBodyTaskFactory<T>(body));
+    }
+
+    // --------------------------------------------------
     
     /**
      * Sensors available on this entity.
@@ -148,13 +175,6 @@ public class EntityDynamicType {
      */
     public Sensor<?> getSensor(String sensorName) {
         return sensors.get(sensorName);
-    }
-
-    /**
-     * ConfigKeys available on this entity.
-     */
-    public Map<String,ConfigKey<?>> getConfigKeys() {
-        return Collections.unmodifiableMap(value(configKeys));
     }
 
     /**
@@ -206,6 +226,17 @@ public class EntityDynamicType {
         return (removeSensor(sensor.getName()) != null);
     }
     
+    // --------------------------------------------------
+    
+    // --------------------------------------------------
+    
+    /**
+     * ConfigKeys available on this entity.
+     */
+    public Map<String,ConfigKey<?>> getConfigKeys() {
+        return Collections.unmodifiableMap(value(configKeys));
+    }
+
     /**
      * ConfigKeys available on this entity.
      */

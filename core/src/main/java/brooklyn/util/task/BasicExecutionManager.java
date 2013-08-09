@@ -395,7 +395,7 @@ public class BasicExecutionManager implements ExecutionManager {
         ((BasicTask)task).initResult(future);
         return task;
     }
-
+    
     @SuppressWarnings("deprecation")
     protected void beforeSubmit(Map flags, Task<?> task) {
         incompleteTaskCount.incrementAndGet();

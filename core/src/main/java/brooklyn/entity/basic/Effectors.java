@@ -8,7 +8,7 @@ import java.util.concurrent.Callable;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
-import brooklyn.management.CanAddTask;
+import brooklyn.management.TaskQueueingContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.config.ConfigBag;
@@ -40,15 +40,10 @@ public class Effectors {
                         @Override
                         public T call() throws Exception {
                             try {
-                                DynamicTasks.setTaskAdditionContext(new CanAddTask() {
-                                    @Override
-                                    public void addTask(Task<?> t) {
-                                        dst[0].addTask(t);
-                                    }
-                                });
+                                DynamicTasks.setTaskQueueingContext(dst[0]);
                                 return effectorBody.main(parameters);
                             } finally {
-                                DynamicTasks.removeTaskAdditionContext();
+                                DynamicTasks.removeTaskQueueingContext();
                             }
                         }
                     });
@@ -66,7 +61,7 @@ public class Effectors {
         private Class<T> returnType;
         private String effectorName;
         private String description;
-        private List<ParameterType<?>> parameters = null;
+        private List<ParameterType<?>> parameters = new ArrayList<ParameterType<?>>();
         private EffectorTaskFactory<T> impl;
         
         private EffectorTaskBuilder(Class<T> returnType, String effectorName) {
@@ -84,8 +79,6 @@ public class Effectors {
             return parameter(paramType, paramName, paramDescription, null);                
         }
         public <V> EffectorTaskBuilder<T> parameter(Class<V> paramType, String paramName, String paramDescription, V defaultValue) {
-            if (parameters==null) 
-                parameters = new ArrayList<ParameterType<?>>();
             parameters.add(new BasicParameterType<V>(paramName, paramType, paramDescription, defaultValue));
             return this;                
         }
@@ -97,10 +90,18 @@ public class Effectors {
             this.impl = new EffectorBodyTaskFactory<T>(effectorBody);
             return this;
         }
+        /** returns the effector, with an implementation (required); @see {@link #buildAbstract()} */
         public Effector<T> build() {
-             Preconditions.checkNotNull(impl, "Cannot create task {} with no impl", effectorName);
+             Preconditions.checkNotNull(impl, "Cannot create effector {} with no impl", effectorName);
              return new EffectorAndBody<T>(effectorName, returnType, parameters, description, impl);
         }
+        
+        /** returns an abstract effector, where the body will be defined later/elsewhere 
+         * (impl must not be set) */
+        public Effector<T> buildAbstract() {
+            Preconditions.checkArgument(impl==null, "Cannot create abstract effector {} as an impl is defined", effectorName);
+            return new EffectorBase<T>(effectorName, returnType, parameters, description);
+       }
     }
 
     public static <T> EffectorTaskBuilder<T> effector(Class<T> returnType, String effectorName) {
@@ -112,9 +113,12 @@ public class Effectors {
         if (eff instanceof EffectorWithBody) {
             return ((EffectorWithBody<T>)eff).getBody().newTask(entity, eff, ConfigBag.newInstance().putAll(parameters));
         }
+        @SuppressWarnings("unchecked")
+        Effector<T> eff2 = (Effector<T>) ((EntityInternal)entity).getEffector(eff.getName());
+        if (eff2 instanceof EffectorWithBody) {
+            return ((EffectorWithBody<T>)eff2).getBody().newTask(entity, eff2, ConfigBag.newInstance().putAll(parameters));
+        }
         
-        // TODO in future we may wish to support looking up the implementation on the entity, 
-        // cf sensors, and/or on the static/effectors registered, cf config default value
         throw new UnsupportedOperationException("No implementation registered for effector "+eff+" on "+entity);
     }    
 

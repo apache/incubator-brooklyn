@@ -2,7 +2,6 @@ package brooklyn.test.entity;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -14,7 +13,7 @@ import brooklyn.event.basic.Sensors;
  */
 //TODO Don't want to extend EntityLocal/EntityInternal, but tests want to call things like app.setAttribute
 @ImplementedBy(TestApplicationImpl.class)
-public interface TestApplication extends StartableApplication, EntityLocal, EntityInternal {
+public interface TestApplication extends StartableApplication, EntityInternal {
 
     public static final AttributeSensor<String> MY_ATTRIBUTE = Sensors.newStringSensor("test.myattribute", "Test attribute sensor");
 
@@ -41,4 +40,5 @@ public interface TestApplication extends StartableApplication, EntityLocal, Enti
      */
     @Deprecated
     public <T extends Entity> T manage(T entity);
+    
 }

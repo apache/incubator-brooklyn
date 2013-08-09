@@ -103,14 +103,21 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class);
     static { BrooklynLanguageExtensions.init(); }
     
-    public static BasicNotificationSensor<Sensor> SENSOR_ADDED = new BasicNotificationSensor<Sensor>(Sensor.class,
+    public static final BasicNotificationSensor<Sensor> SENSOR_ADDED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.added", "Sensor dynamically added to entity");
-    public static BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
+    public static final BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.removed", "Sensor dynamically removed from entity");
 
-    public static BasicNotificationSensor<PolicyDescriptor> POLICY_ADDED = new BasicNotificationSensor<PolicyDescriptor>(PolicyDescriptor.class,
+    public static final BasicNotificationSensor<String> EFFECTOR_ADDED = new BasicNotificationSensor<String>(String.class,
+            "entity.effector.added", "Effector dynamically added to entity");
+    public static final BasicNotificationSensor<String> EFFECTOR_REMOVED = new BasicNotificationSensor<String>(String.class,
+            "entity.effector.removed", "Effector dynamically removed from entity");
+    public static final BasicNotificationSensor<String> EFFECTOR_CHANGED = new BasicNotificationSensor<String>(String.class,
+            "entity.effector.changed", "Effector dynamically changed on entity");
+
+    public static final BasicNotificationSensor<PolicyDescriptor> POLICY_ADDED = new BasicNotificationSensor<PolicyDescriptor>(PolicyDescriptor.class,
             "entity.policy.added", "Policy dynamically added to entity");
-    public static BasicNotificationSensor<PolicyDescriptor> POLICY_REMOVED = new BasicNotificationSensor<PolicyDescriptor>(PolicyDescriptor.class,
+    public static final BasicNotificationSensor<PolicyDescriptor> POLICY_REMOVED = new BasicNotificationSensor<PolicyDescriptor>(PolicyDescriptor.class,
             "entity.policy.removed", "Policy dynamically removed from entity");
 
     @SetFromFlag(value="id")
@@ -443,7 +450,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         } catch (IllegalArgumentException e) {
             String typeName = getClass().getCanonicalName();
             if (typeName == null) typeName = getClass().getName();
-            LOG.warn("Entity type interface not found for entity "+this+"; instead using "+typeName+" as entity type name");
+            LOG.debug("Entity type interface not found for entity "+this+"; instead using "+typeName+" as entity type name");
             return typeName;
         }
     }
@@ -629,7 +636,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         return entityType.getSnapshot();
     }
 
-    /** returns the dynamic type corresponding to the type of this entity instance */
+    @Override
     public EntityDynamicType getMutableEntityType() {
         return entityType;
     }
@@ -731,6 +738,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         return result;
     }
 
+    @Override
     public void removeAttribute(AttributeSensor<?> attribute) {
         attributesInternal.remove(attribute);
         entityType.removeSensor(attribute);
@@ -1040,8 +1048,8 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     // -------- EFFECTORS --------------
 
     /** Convenience for finding named effector in {@link EntityType#getEffectors()} {@link Map}. */
-    public <T> Effector<T> getEffector(String effectorName) {
-        return (Effector<T>) entityType.getEffector(effectorName);
+    public Effector<?> getEffector(String effectorName) {
+        return entityType.getEffector(effectorName);
     }
 
     /** Invoke an {@link Effector} directly. */

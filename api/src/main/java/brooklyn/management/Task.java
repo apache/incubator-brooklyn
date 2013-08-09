@@ -14,8 +14,13 @@ import java.util.concurrent.Future;
  */
 public interface Task<T> extends TaskStub, Future<T> {
     public Set<Object> getTags();
+    /** if {@link #isSubmitted()} returns the time when the task was submitted; or -1 otherwise */
     public long getSubmitTimeUtc();
+    /** if {@link #isBegun()} returns the time when the task was starts;
+     * guaranteed to be >= {@link #getSubmitTimeUtc()} > 0 if started, or -1 otherwise */
     public long getStartTimeUtc();
+    /** if {@link #isDone()} (for any reason) returns the time when the task ended;
+     * guaranteed to be >= {@link #getStartTimeUtc()} > 0 if ended, or -1 otherwise */
     public long getEndTimeUtc();
     public String getDisplayName();
     public String getDescription();

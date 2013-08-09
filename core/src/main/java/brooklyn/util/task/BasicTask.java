@@ -132,6 +132,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
      * Tests should catch most things, but be careful if you change any of the above semantics.
      */
 
+    protected long queuedTimeUtc = -1;
     protected long submitTimeUtc = -1;
     protected long startTimeUtc = -1;
     protected long endTimeUtc = -1;
@@ -161,6 +162,9 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     // metadata accessors ------------
 
     public Set<Object> getTags() { return Collections.unmodifiableSet(new LinkedHashSet(tags)); }
+    /** if the job is queued for submission (e.g. by another task) it can indicate that fact (and time) here;
+     * note tasks can (and often are) submitted without any queueing, in which case this value may be -1 */
+    public long getQueuedTimeUtc() { return queuedTimeUtc; }
     public long getSubmitTimeUtc() { return submitTimeUtc; }
     public long getStartTimeUtc() { return startTimeUtc; }
     public long getEndTimeUtc() { return endTimeUtc; }
@@ -173,12 +177,26 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 
     // basic fields --------------------
 
+    public boolean isQueuedOrSubmitted() {
+        return (queuedTimeUtc >= 0) || isSubmitted();
+    }
+
+    public boolean isQueuedAndNotSubmitted() {
+        return (queuedTimeUtc >= 0) && (!isSubmitted());
+    }
+
     public boolean isSubmitted() {
         return submitTimeUtc >= 0;
     }
 
     public boolean isBegun() {
         return startTimeUtc >= 0;
+    }
+
+    /** marks the task as queued for execution */
+    protected void markQueued() {
+        if (queuedTimeUtc<0)
+            queuedTimeUtc = System.currentTimeMillis();
     }
 
     public synchronized boolean cancel() { return cancel(true); }

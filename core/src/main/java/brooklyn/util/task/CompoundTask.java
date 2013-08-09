@@ -72,6 +72,8 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
             else throw new IllegalArgumentException("Invalid child "+job+
                 " passed to compound task; must be Runnable, Callable, Closure or Task");
         }
+        for (Task<?> t: getChildren())
+            ((BasicTask<?>)t).markQueued();
     }
 
     /** return value needs to be specified by subclass; subclass should also setBlockingDetails 

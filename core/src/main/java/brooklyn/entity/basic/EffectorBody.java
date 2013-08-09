@@ -1,7 +1,10 @@
 package brooklyn.entity.basic;
 
 import brooklyn.entity.Entity;
+import brooklyn.management.HasTask;
+import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.task.DynamicSequentialTask;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
@@ -20,16 +23,54 @@ public abstract class EffectorBody<T> {
      */
     public abstract T main(ConfigBag parameters);
     
-    // TODO could support an 'init' method which is done at creation,
+    // NB: we could also support an 'init' method which is done at creation,
     // as a place where implementers can describe the structure of the task before it executes
     // (and init gets invoked in EffectorBodyTaskFactory.newTask _before_ the task is submitted and main is called)
-
     
     
-    // ---- convenience method(s) for implementers of main -- see subclasses and *Tasks statics for more!
+    // ---- convenience method(s) for implementers of main -- see subclasses and *Tasks statics for more
     
     protected Entity entity() {
         return Tasks.tag(Tasks.current(), Entity.class, true);
+    }
+    
+    protected <U,V extends Task<U>> V queue(V task) {
+        return DynamicTasks.queue(task);
+    }
+
+    protected <U,V extends HasTask<U>> V queue(V taskHaver) {
+        DynamicTasks.queue(taskHaver.getTask());
+        return taskHaver;
+    }
+
+    protected <U,V extends Task<U>> void queue(V task1, V task2, V ...tasks) {
+        DynamicTasks.queue(task1);
+        DynamicTasks.queue(task2);
+        for (V task: tasks)
+            DynamicTasks.queue(task);
+    }
+
+    protected <U,V extends HasTask<U>> void queue(V taskHaver1, V taskHaver2, V ...taskHavers) {
+        DynamicTasks.queue(taskHaver1.getTask());
+        DynamicTasks.queue(taskHaver2.getTask());
+        for (V taskHaver: taskHavers)
+            DynamicTasks.queue(taskHaver.getTask());
+    }
+
+    /** Returns the last task queued in this context, or null if none */
+    protected Task<?> last() {
+        return DynamicTasks.getTaskQueuingContext().last();
+    }
+    
+    /** Returns the result of the last task queued in this context, coerced to the given type */
+    protected <V> V last(Class<V> type) {
+        Task<?> last = last();
+        if (last==null)
+            throw new IllegalStateException("No last task available (in "+DynamicTasks.getTaskQueuingContext()+")");
+        if (!Tasks.isQueuedOrSubmitted(last))
+            throw new IllegalStateException("Last task "+last+" has not been queued or submitted; will not block on its result");
+        
+        return TypeCoercions.coerce(last.getUnchecked(), type);
     }
 
 }

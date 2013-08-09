@@ -8,12 +8,13 @@ import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
 
+/** Convenience for creating tasks; note that DynamicSequentialTask is the default */
 public class TaskBuilder<T> {
 
     String name = null;
     Callable<T> body = null;
     List<Task<?>> children = new ArrayList<Task<?>>();
-    boolean dynamic = false;
+    boolean dynamic = true;
     boolean parallel = false;
     
     public static <T> TaskBuilder<T> builder() {
@@ -60,7 +61,7 @@ public class TaskBuilder<T> {
                 throw new UnsupportedOperationException("No implementation of parallel dynamic aggregate task available");
             DynamicSequentialTask<T> result = new DynamicSequentialTask<T>(MutableMap.of("name", name), body);
             for (Task t: children)
-                result.addTask(t);
+                result.queue(t);
             return result;
         }
         

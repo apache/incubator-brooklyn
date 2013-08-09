@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
+import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.collect.Lists;
@@ -179,4 +180,25 @@ public class Tasks {
         if (t.isCancelled()) return true;
         return isAncestorCancelled(t.getSubmittedByTask());
     }
+
+    public static boolean isQueuedOrSubmitted(Task<?> task) {
+        return ((BasicTask<?>)task).isQueuedOrSubmitted();
+    }
+    
+    /** tries to add the given task in the given addition context,
+     * returns true if it could, false if it could not (doesn't throw anything) */
+    public static boolean tryQueueing(TaskQueueingContext adder, Task<?> task) {
+        if (task==null || isQueuedOrSubmitted(task))
+            return false;
+        try {
+            adder.queue(task);
+            return true;
+        } catch (Exception e) {
+            if (log.isDebugEnabled())
+                log.debug("Could not add task "+task+" at "+adder+": "+e);
+            return false;
+        }        
+    }
+    
+
 }
