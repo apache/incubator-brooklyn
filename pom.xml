@@ -99,7 +99,7 @@
         <gson.version>2.2.2</gson.version>
         <jsr305.version>2.0.1</jsr305.version>
         <ivy.version>2.2.0</ivy.version>
-        <jclouds.version>1.6.0</jclouds.version>
+        <jclouds.version>1.6.1-incubating</jclouds.version>
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.46</bouncycastle.version>
         <sshj.version>0.8.1</sshj.version>
@@ -201,13 +201,13 @@
                 <version>${testng.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.jclouds</groupId>
+                <groupId>org.apache.jclouds</groupId>
                 <artifactId>jclouds-allcompute</artifactId>
                 <version>${jclouds.version}</version>
                 <type>jar</type>
             </dependency>
             <dependency>
-                <groupId>org.jclouds.driver</groupId>
+                <groupId>org.apache.jclouds.driver</groupId>
                 <artifactId>jclouds-sshj</artifactId>
                 <version>${jclouds.version}</version>
                 <type>jar</type>
