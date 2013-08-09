@@ -19,14 +19,14 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -70,13 +70,13 @@ public class AbstractLoadBalancingPolicyTest {
         model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model");
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        containerGroup = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
+        containerGroup = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .displayName("containerGroup")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(MockContainerEntity.class)));
-        itemGroup = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
+        itemGroup = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .displayName("itemGroup")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(MockItemEntity.class)));
-        pool = app.createAndManageChild(EntitySpecs.spec(BalanceableWorkerPool.class));
+        pool = app.createAndManageChild(EntitySpec.create(BalanceableWorkerPool.class));
         pool.setContents(containerGroup, itemGroup);
         policy = new LoadBalancingPolicy(MutableMap.of(), TEST_METRIC, model);
         pool.addPolicy(policy);
@@ -169,7 +169,7 @@ public class AbstractLoadBalancingPolicyTest {
      * Creates a new container that will take "delay" millis to complete its start-up.
      */
     protected MockContainerEntity newAsyncContainer(TestApplication app, String name, double lowThreshold, double highThreshold, long delay) {
-        MockContainerEntity container = app.createAndManageChild(EntitySpecs.spec(MockContainerEntity.class)
+        MockContainerEntity container = app.createAndManageChild(EntitySpec.create(MockContainerEntity.class)
                 .displayName(name)
                 .configure(MockContainerEntity.DELAY, delay)
                 .configure(LOW_THRESHOLD_CONFIG_KEY, lowThreshold)
@@ -180,7 +180,7 @@ public class AbstractLoadBalancingPolicyTest {
     }
     
     protected static MockItemEntity newItem(TestApplication app, MockContainerEntity container, String name, double workrate) {
-        MockItemEntity item = app.createAndManageChild(EntitySpecs.spec(MockItemEntity.class)
+        MockItemEntity item = app.createAndManageChild(EntitySpec.create(MockItemEntity.class)
                 .displayName(name));
         LOG.debug("Managing new item {} on container {}", item, container);
         Entities.manage(item);
@@ -190,7 +190,7 @@ public class AbstractLoadBalancingPolicyTest {
     }
     
     protected static MockItemEntity newLockedItem(TestApplication app, MockContainerEntity container, String name, double workrate) {
-        MockItemEntity item = app.createAndManageChild(EntitySpecs.spec(MockItemEntity.class)
+        MockItemEntity item = app.createAndManageChild(EntitySpec.create(MockItemEntity.class)
                 .displayName(name)
                 .configure(Movable.IMMOVABLE, true));
         LOG.debug("Managed new item {} on container {}", item, container);

@@ -13,7 +13,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication;
@@ -34,7 +34,7 @@ public class DownloadSubstitutersTest {
     public void setUp() throws Exception {
         loc = new SimulatedLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         driver = new MyEntityDriver(entity, loc);
     }
     

@@ -20,7 +20,7 @@ import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
@@ -42,8 +42,8 @@ public class EffectorMetadataTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        e1 = app.createAndManageChild(EntitySpecs.spec(MyAnnotatedEntity.class));
-        e2 = app.createAndManageChild(EntitySpecs.spec(MyOverridingEntity.class));
+        e1 = app.createAndManageChild(EntitySpec.create(MyAnnotatedEntity.class));
+        e2 = app.createAndManageChild(EntitySpec.create(MyOverridingEntity.class));
     }
 
     @AfterMethod(alwaysRun=true)

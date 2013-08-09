@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
@@ -71,7 +71,7 @@ public class BindDnsServerLiveTest {
         if (provider.contains("ec2")) properties.put("user", "ec2-user");
         testLocation = app.getManagementContext().getLocationRegistry().resolve(provider, properties);
 
-        BindDnsServer dns = app.createAndManageChild(EntitySpecs.spec(BindDnsServer.class));
+        BindDnsServer dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class));
         dns.start(ImmutableList.of(testLocation));
 
         EntityTestUtils.assertAttributeEqualsEventually(dns, BindDnsServer.SERVICE_UP, true);

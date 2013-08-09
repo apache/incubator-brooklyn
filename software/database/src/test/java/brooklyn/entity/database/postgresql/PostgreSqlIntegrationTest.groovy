@@ -10,7 +10,7 @@ import brooklyn.config.BrooklynProperties
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalManagementContext
@@ -69,7 +69,7 @@ INSERT INTO COMMENTS values (1, 'lars', 'myemail@gmail.com','http://www.vogella.
 
     @Test(groups = ["Integration"])
     public void test_localhost() throws Exception {
-        PostgreSqlNode pgsql = tapp.createAndManageChild(EntitySpecs.spec(PostgreSqlNode.class)
+        PostgreSqlNode pgsql = tapp.createAndManageChild(EntitySpec.create(PostgreSqlNode.class)
                 .configure("creationScriptContents", CREATION_SCRIPT)
                 .configure("port", "9111"));
 

@@ -4,7 +4,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.location.basic.PortRanges;
@@ -15,11 +15,11 @@ public class JbossServerWebAppFixtureIntegrationTest extends AbstractWebAppFixtu
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
         TestApplication jboss6App = newTestApplication();
-        JBoss6Server jboss6 = jboss6App.createAndManageChild(EntitySpecs.spec(JBoss6Server.class)
+        JBoss6Server jboss6 = jboss6App.createAndManageChild(EntitySpec.create(JBoss6Server.class)
                 .configure(JBoss6Server.PORT_INCREMENT, PORT_INCREMENT));
         
         TestApplication jboss7App = newTestApplication();
-        JBoss7Server jboss7 = jboss7App.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
+        JBoss7Server jboss7 = jboss7App.createAndManageChild(EntitySpec.create(JBoss7Server.class)
                 .configure(JBoss7Server.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
         
         return new JavaWebAppSoftwareProcess[][] {
@@ -51,7 +51,7 @@ public class JbossServerWebAppFixtureIntegrationTest extends AbstractWebAppFixtu
 //        }
 //        
 //        TestApplication tomcatApp = newTestApplication();
-//        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpecs.spec(TomcatServer.class)
+//        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpec.create(TomcatServer.class)
 //                .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
 //        result.add(new Object[] {
 //                tomcat,

@@ -37,6 +37,8 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(ControlledDynamicWebAppClusterImpl.class)
 public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resizable, ElasticJavaWebAppService {
 
+    /** @deprecated since v0.6.0; use {@link EntitySpec#create(Class)} as well */
+    @Deprecated
     public static class Spec<T extends ControlledDynamicWebAppCluster, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
 
         private static class ConcreteSpec extends Spec<ControlledDynamicWebAppCluster, ConcreteSpec> {

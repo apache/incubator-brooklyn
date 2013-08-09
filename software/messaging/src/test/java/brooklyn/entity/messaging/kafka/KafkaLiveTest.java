@@ -22,7 +22,7 @@ import java.util.concurrent.Callable;
 
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
@@ -37,7 +37,7 @@ public class KafkaLiveTest extends AbstractEc2LiveTest {
      */
     @Override
     protected void doTest(Location loc) throws Exception {
-        final KafkaCluster cluster = app.createAndManageChild(EntitySpecs.spec(KafkaCluster.class)
+        final KafkaCluster cluster = app.createAndManageChild(EntitySpec.create(KafkaCluster.class)
                 .configure("startTimeout", 300) // 5 minutes
                 .configure("initialSize", 2));
         app.start(ImmutableList.of(loc));

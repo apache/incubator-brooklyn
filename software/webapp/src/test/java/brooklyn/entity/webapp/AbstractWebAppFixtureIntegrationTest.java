@@ -33,7 +33,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.tomcat.TomcatServer;

@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.SubscriptionManager
@@ -36,7 +36,7 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
         
         entities = []
         for (int i = 0; i < 10; i++) {
-            entities += app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+            entities += app.createAndManageChild(EntitySpec.create(TestEntity.class));
         }
         entity = entities[0]
         app.start([loc])

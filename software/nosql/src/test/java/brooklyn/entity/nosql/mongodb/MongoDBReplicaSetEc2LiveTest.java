@@ -6,7 +6,7 @@ package brooklyn.entity.nosql.mongodb;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import com.google.common.collect.ImmutableList;
@@ -33,10 +33,10 @@ public class MongoDBReplicaSetEc2LiveTest extends AbstractEc2LiveTest {
      */
     @Override
     protected void doTest(Location loc) throws Exception {
-        final MongoDBReplicaSet replicaSet = app.createAndManageChild(EntitySpecs.spec(MongoDBReplicaSet.class)
+        final MongoDBReplicaSet replicaSet = app.createAndManageChild(EntitySpec.create(MongoDBReplicaSet.class)
                 .configure(DynamicCluster.INITIAL_SIZE, REPLICA_SET_SIZE)
                 .configure("replicaSetName", "mongodb-live-test-replica-set")
-                .configure("memberSpec", EntitySpecs.spec(MongoDBServer.class)
+                .configure("memberSpec", EntitySpec.create(MongoDBServer.class)
                         .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf")
                         .configure("port", "27017+")));
 

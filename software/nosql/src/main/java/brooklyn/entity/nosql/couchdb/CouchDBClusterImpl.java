@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 
@@ -42,7 +41,7 @@ public class CouchDBClusterImpl extends DynamicClusterImpl implements CouchDBClu
      */
     @Override
     protected EntitySpec<?> getMemberSpec() {
-        return getConfig(MEMBER_SPEC, EntitySpecs.spec(CouchDBNode.class));
+        return getConfig(MEMBER_SPEC, EntitySpec.create(CouchDBNode.class));
     }
 
     @Override

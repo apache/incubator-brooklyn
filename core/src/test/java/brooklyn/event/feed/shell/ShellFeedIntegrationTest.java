@@ -12,17 +12,17 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.function.FunctionFeedTest;
 import brooklyn.event.feed.ssh.SshPollValue;
 import brooklyn.event.feed.ssh.SshValueFunctions;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.test.Asserts;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +44,7 @@ public class ShellFeedIntegrationTest {
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }
 

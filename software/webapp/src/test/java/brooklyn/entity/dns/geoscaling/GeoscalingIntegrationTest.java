@@ -15,7 +15,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.location.geo.HostGeoLookup;
@@ -66,12 +66,12 @@ public class GeoscalingIntegrationTest {
         geoLookupImpl = BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getValue();
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        target = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        target = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
-        group = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
+        group = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class)));
         
-        geoDns = app.createAndManageChild(EntitySpecs.spec(GeoscalingDnsService.class)
+        geoDns = app.createAndManageChild(EntitySpec.create(GeoscalingDnsService.class)
                 .displayName("Geo-DNS")
                 .configure("username", "cloudsoft")
                 .configure("password", "cl0uds0ft")

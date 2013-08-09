@@ -24,7 +24,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -99,10 +99,10 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     
     @Test(groups = {"Integration"})
     public void testRebindsToRunningCluster() throws Exception {
-        NginxController origNginx = origApp.createAndManageChild(EntitySpecs.spec(NginxController.class).configure("domain", "localhost"));
+        NginxController origNginx = origApp.createAndManageChild(EntitySpec.create(NginxController.class).configure("domain", "localhost"));
 
-        origApp.createAndManageChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
-    			.configure("memberSpec", EntitySpecs.spec(JBoss7Server.class).configure("war", warUrl.toString()))
+        origApp.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+    			.configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString()))
     			.configure("initialSize", 1)
 		        .configure("controller", origNginx));
     	

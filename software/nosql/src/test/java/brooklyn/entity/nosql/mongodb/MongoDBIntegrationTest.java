@@ -9,7 +9,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
@@ -36,7 +36,7 @@ public class MongoDBIntegrationTest {
 
     @Test(groups = "Integration")
     public void testCanStartAndStop() throws Exception {
-        MongoDBServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDBServer.class)
+        MongoDBServer entity = app.createAndManageChild(EntitySpec.create(MongoDBServer.class)
                 .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
 
@@ -47,7 +47,7 @@ public class MongoDBIntegrationTest {
 
     @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStop" })
     public void testCanReadAndWrite() throws Exception {
-        MongoDBServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDBServer.class)
+        MongoDBServer entity = app.createAndManageChild(EntitySpec.create(MongoDBServer.class)
                 .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
 
@@ -58,7 +58,7 @@ public class MongoDBIntegrationTest {
 
     @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStop" })
     public void testPollInsertCountSensor() throws Exception {
-        MongoDBServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDBServer.class)
+        MongoDBServer entity = app.createAndManageChild(EntitySpec.create(MongoDBServer.class)
                 .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);

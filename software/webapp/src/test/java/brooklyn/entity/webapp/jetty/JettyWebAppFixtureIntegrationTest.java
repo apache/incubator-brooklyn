@@ -4,7 +4,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.location.basic.PortRanges;
@@ -15,7 +15,7 @@ public class JettyWebAppFixtureIntegrationTest extends AbstractWebAppFixtureInte
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
         TestApplication jettyApp = newTestApplication();
-        Jetty6Server jetty = jettyApp.createAndManageChild(EntitySpecs.spec(Jetty6Server.class)
+        Jetty6Server jetty = jettyApp.createAndManageChild(EntitySpec.create(Jetty6Server.class)
                 .configure(Jetty6Server.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
         
         return new JavaWebAppSoftwareProcess[][] {

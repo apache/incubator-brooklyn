@@ -5,7 +5,7 @@ package brooklyn.entity.nosql.cassandra;
 
 import org.testng.annotations.Test;
 
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.test.EntityTestUtils;
 
@@ -23,7 +23,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        cassandra = app.createAndManageChild(EntitySpecs.spec(CassandraNode.class));
+        cassandra = app.createAndManageChild(EntitySpec.create(CassandraNode.class));
         app.start(ImmutableList.of(testLocation));
 
         EntityTestUtils.assertAttributeEqualsEventually(cassandra, Startable.SERVICE_UP, true);
@@ -38,7 +38,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithCustomJmx() {
-        cassandra = app.createAndManageChild(EntitySpecs.spec(CassandraNode.class)
+        cassandra = app.createAndManageChild(EntitySpec.create(CassandraNode.class)
                 .configure("jmxPort", "11099+")
                 .configure("rmiServerPort", "19001+"));
         app.start(ImmutableList.of(testLocation));
@@ -55,7 +55,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
      */
     @Test(groups = "Integration")
     public void testConnection() throws Exception {
-        cassandra = app.createAndManageChild(EntitySpecs.spec(CassandraNode.class)
+        cassandra = app.createAndManageChild(EntitySpec.create(CassandraNode.class)
                 .configure("thriftPort", "9876+"));
         app.start(ImmutableList.of(testLocation));
 

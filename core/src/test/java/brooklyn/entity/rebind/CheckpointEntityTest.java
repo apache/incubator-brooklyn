@@ -18,7 +18,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
@@ -43,8 +43,8 @@ public class CheckpointEntityTest {
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = ApplicationBuilder.newManagedApp(EntitySpecs.spec(TestApplication.class), managementContext);
-        origE = origApp.createAndManageChild(EntitySpecs.spec(MyEntity.class).configure("myconfig", "myval"));
+        origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), managementContext);
+        origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).configure("myconfig", "myval"));
     }
 
     @AfterMethod
@@ -66,7 +66,7 @@ public class CheckpointEntityTest {
     
     @Test
     public void testAutoCheckpointsOnManageDynamicEntity() throws Exception {
-        final MyEntity origE2 = origApp.createAndManageChild(EntitySpecs.spec(MyEntity.class).configure("myconfig", "myval2"));
+        final MyEntity origE2 = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).configure("myconfig", "myval2"));
         Entities.manage(origE2);
         
         TestApplication newApp = rebind();

@@ -15,12 +15,12 @@ import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicates;
@@ -46,13 +46,13 @@ public class BalanceableWorkerPoolTest {
         loc = new SimulatedLocation(MutableMap.of("name", "loc"));
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        containerGroup = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
+        containerGroup = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .displayName("containerGroup")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(MockContainerEntity.class)));
-        itemGroup = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
+        itemGroup = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .displayName("itemGroup")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(MockItemEntity.class)));
-        pool = app.createAndManageChild(EntitySpecs.spec(BalanceableWorkerPool.class));
+        pool = app.createAndManageChild(EntitySpec.create(BalanceableWorkerPool.class));
         pool.setContents(containerGroup, itemGroup);
         
         app.start(ImmutableList.of(loc));
@@ -75,9 +75,9 @@ public class BalanceableWorkerPoolTest {
     
     @Test
     public void testDefaultResizeCallsResizeOnContainerGroup() {
-        LocallyResizableGroup resizable = app.createAndManageChild(EntitySpecs.spec(LocallyResizableGroup.class));
+        LocallyResizableGroup resizable = app.createAndManageChild(EntitySpec.create(LocallyResizableGroup.class));
         
-        BalanceableWorkerPool pool2 = app.createAndManageChild(EntitySpecs.spec(BalanceableWorkerPool.class));
+        BalanceableWorkerPool pool2 = app.createAndManageChild(EntitySpec.create(BalanceableWorkerPool.class));
         pool2.setContents(resizable, itemGroup);
         Entities.manage(pool2);
         
@@ -87,7 +87,7 @@ public class BalanceableWorkerPoolTest {
     
     @Test
     public void testCustomResizableCalledWhenResizing() {
-        LocallyResizableGroup resizable = app.createAndManageChild(EntitySpecs.spec(LocallyResizableGroup.class));
+        LocallyResizableGroup resizable = app.createAndManageChild(EntitySpec.create(LocallyResizableGroup.class));
         
         pool.setResizable(resizable);
         

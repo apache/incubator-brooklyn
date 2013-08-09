@@ -1,7 +1,7 @@
 package brooklyn.entity.nosql.mongodb;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
 import com.google.common.collect.ImmutableList;
@@ -19,7 +19,7 @@ public class MongoDBEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        MongoDBServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDBServer.class)
+        MongoDBServer entity = app.createAndManageChild(EntitySpec.create(MongoDBServer.class)
                 .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(loc));
 

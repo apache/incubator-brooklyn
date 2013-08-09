@@ -15,7 +15,7 @@ import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.ExplicitEffector
 import brooklyn.entity.basic.MethodEffector
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.proxying.ImplementedBy
 import brooklyn.entity.trait.Startable
 import brooklyn.management.ManagementContext
@@ -37,7 +37,7 @@ public class EffectorSayHiGroovyTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        e = app.createAndManageChild(EntitySpecs.spec(MyEntity.class));
+        e = app.createAndManageChild(EntitySpec.create(MyEntity.class));
     }
 
     @AfterMethod(alwaysRun=true)

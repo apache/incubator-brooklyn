@@ -7,7 +7,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.test.entity.TestApplication;
 
 public class WhirrClusterTest {
@@ -18,7 +18,7 @@ public class WhirrClusterTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        entity = app.createAndManageChild(EntitySpecs.spec(WhirrCluster.class));
+        entity = app.createAndManageChild(EntitySpec.create(WhirrCluster.class));
     }
     
     @AfterMethod(alwaysRun=true)

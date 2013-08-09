@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigMapTest.MyOtherEntity;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;
 import brooklyn.test.entity.TestApplication;
@@ -44,16 +44,16 @@ public class ConfigEntityInheritanceTest {
 
     @Test
     public void testConfigKeysIncludesHasConfigKeys() throws Exception {
-        checkKeys(app.addChild(EntitySpecs.spec(MyOtherEntity.class)), 1);
+        checkKeys(app.addChild(EntitySpec.create(MyOtherEntity.class)), 1);
     }
     
     @Test
     public void testConfigKeysIncludesHasConfigKeysInheritsOverwritten() throws Exception {
-        checkKeys(app.addChild(EntitySpecs.spec(MyOtherEntityOverwriting.class)), 2);
+        checkKeys(app.addChild(EntitySpec.create(MyOtherEntityOverwriting.class)), 2);
     }
     @Test
     public void testConfigKeysIncludesHasConfigKeysInheritsOverwrittenThenInherited() throws Exception {
-        checkKeys(app.addChild(EntitySpecs.spec(MyOtherEntityOverwritingThenInheriting.class)), 2);
+        checkKeys(app.addChild(EntitySpec.create(MyOtherEntityOverwritingThenInheriting.class)), 2);
     }
     
     public static class MyOtherEntityOverwriting extends MyOtherEntity {
@@ -68,27 +68,27 @@ public class ConfigEntityInheritanceTest {
     
     @Test
     public void testConfigKeysHere() throws Exception {
-        checkKeys(app.addChild(EntitySpecs.spec(MyEntityHere.class)), 3);
+        checkKeys(app.addChild(EntitySpec.create(MyEntityHere.class)), 3);
     }
     @Test
     public void testConfigKeysSub() throws Exception {
-        checkKeys(app.addChild(EntitySpecs.spec(MySubEntityHere.class)), 4);
+        checkKeys(app.addChild(EntitySpec.create(MySubEntityHere.class)), 4);
     }
     @Test
     public void testConfigKeysSubExtended() throws Exception {
-        checkKeys(app.addChild(EntitySpecs.spec(MySubEntityHere.class)), 4);
+        checkKeys(app.addChild(EntitySpec.create(MySubEntityHere.class)), 4);
     }
     @Test
     public void testConfigKeysSubInheriting() throws Exception {
-        checkKeys(app.addChild(EntitySpecs.spec(MySubEntityHereInheriting.class)), 4);
+        checkKeys(app.addChild(EntitySpec.create(MySubEntityHereInheriting.class)), 4);
     }
     @Test
     public void testConfigKeysHereSubRight() throws Exception {
-        checkKeys(app.addChild(EntitySpecs.spec(MySubEntityHereLeft.class)), 4);
+        checkKeys(app.addChild(EntitySpec.create(MySubEntityHereLeft.class)), 4);
     }
     @Test
     public void testConfigKeysSubLeft() throws Exception {
-        checkKeys(app.addChild(EntitySpecs.spec(MySubEntityHereRight.class)), 4);
+        checkKeys(app.addChild(EntitySpec.create(MySubEntityHereRight.class)), 4);
     }
     @Test
     public void testConfigKeysExtAndImplIntTwoRight() throws Exception {
@@ -96,7 +96,7 @@ public class ConfigEntityInheritanceTest {
         // the right-side interface normally dominates, but not when it is transitive
         // (although we shouldn't rely on order in any case;
         // new routines check whether one config key extends another and if so it takes the extending one)
-        checkKeys(app.addChild(EntitySpecs.spec(MyEntityHereExtendingAndImplementingInterfaceImplementingTwoRight.class)), 4);
+        checkKeys(app.addChild(EntitySpec.create(MyEntityHereExtendingAndImplementingInterfaceImplementingTwoRight.class)), 4);
     }
 
     public interface MyInterfaceDeclaring {

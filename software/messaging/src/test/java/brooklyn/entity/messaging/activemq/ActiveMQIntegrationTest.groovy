@@ -22,7 +22,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -57,7 +57,7 @@ public class ActiveMQIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        activeMQ = app.createAndManageChild(EntitySpecs.spec(ActiveMQBroker.class));
+        activeMQ = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class));
 
         activeMQ.start([ testLocation ])
         executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
@@ -72,7 +72,7 @@ public class ActiveMQIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithCustomJmx() {
-        activeMQ = app.createAndManageChild(EntitySpecs.spec(ActiveMQBroker.class)
+        activeMQ = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class)
                 .configure("jmxPort", "11099+"));
        
         app.start([ testLocation ])
@@ -94,7 +94,7 @@ public class ActiveMQIntegrationTest {
         // Start broker with a configured queue
         // FIXME Not yet using app.createAndManageChild because later in test do activeMQ.queueNames,
         // which is not on interface
-        activeMQ = app.createAndManageChild(EntitySpecs.spec(ActiveMQBroker.class)
+        activeMQ = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class)
             .configure("queue", queueName));
         
         activeMQ.start([ testLocation ])

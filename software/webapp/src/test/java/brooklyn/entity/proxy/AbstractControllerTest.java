@@ -28,7 +28,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.driver.MockSshDriver;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
@@ -75,7 +75,7 @@ public class AbstractControllerTest {
         updates = new CopyOnWriteArrayList<Collection<String>>();
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        cluster = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
+        cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 0)
                 .configure("factory", new ClusteredEntity.Factory()));
         

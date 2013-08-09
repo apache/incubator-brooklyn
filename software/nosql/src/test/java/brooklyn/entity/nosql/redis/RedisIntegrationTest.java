@@ -6,7 +6,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -40,7 +40,7 @@ public class RedisIntegrationTest {
      */
     @Test(groups = { "Integration" })
     public void canStartupAndShutdown() throws Exception {
-        redis = app.createAndManageChild(EntitySpecs.spec(RedisStore.class));
+        redis = app.createAndManageChild(EntitySpec.create(RedisStore.class));
         app.start(ImmutableList.of(loc));
 
         EntityTestUtils.assertAttributeEqualsEventually(redis, Startable.SERVICE_UP, true);
@@ -55,7 +55,7 @@ public class RedisIntegrationTest {
      */
     @Test(groups = { "Integration" })
     public void testRedisConnection() throws Exception {
-        redis = app.createAndManageChild(EntitySpecs.spec(RedisStore.class));
+        redis = app.createAndManageChild(EntitySpec.create(RedisStore.class));
         app.start(ImmutableList.of(loc));
 
         EntityTestUtils.assertAttributeEqualsEventually(redis, Startable.SERVICE_UP, true);

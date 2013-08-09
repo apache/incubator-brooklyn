@@ -18,7 +18,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.StubAppServer;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -53,11 +53,11 @@ public class NginxLightIntegrationTest {
     @Test(groups = {"Integration", "WIP"})
     public void testNginxTargetsMatchesClusterMembers() {
         EntityFactory<StubAppServer> serverFactory = new BasicConfigurableEntityFactory<StubAppServer>(StubAppServer.class);
-        final DynamicCluster cluster = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
+        final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 2)
                 .configure("factory", serverFactory));
                 
-        nginx = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
+        nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("serverPool", cluster)
                 .configure("domain", "localhost"));
         

@@ -23,7 +23,7 @@ import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.nginx.UrlMapping;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -61,11 +61,11 @@ public class UrlMappingTest {
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         
         EntityFactory<StubAppServer> serverFactory = new BasicConfigurableEntityFactory<StubAppServer>(StubAppServer.class);
-        cluster = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
+        cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", initialClusterSize)
                 .configure("factory", serverFactory));
 
-        urlMapping = app.createAndManageChild(EntitySpecs.spec(UrlMapping.class)
+        urlMapping = app.createAndManageChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost")
                 .configure("target", cluster));
 

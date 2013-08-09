@@ -23,6 +23,7 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
@@ -95,14 +96,14 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     @Override
     public void init() {
         MySqlNode mysql = addChild(
-                EntitySpecs.spec(MySqlNode.class)
+                EntitySpec.create(MySqlNode.class)
                         .configure(MySqlNode.CREATION_SCRIPT_URL, Entities.getRequiredUrlConfig(this, DB_SETUP_SQL_URL)));
 
         ControlledDynamicWebAppCluster web = addChild(
-                EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
+                EntitySpec.create(ControlledDynamicWebAppCluster.class)
                         .configure(WebAppService.HTTP_PORT, PortRanges.fromString("8080+"))
                         // to specify a diferrent appserver:
-//                        .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpecs.spec(TomcatServer.class))
+//                        .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TomcatServer.class))
                         .configure(JavaWebAppService.ROOT_WAR, Entities.getRequiredUrlConfig(this, WAR_PATH))
                         .configure(JavaEntityMethods.javaSysProp("brooklyn.example.db.url"), 
                                 formatString("jdbc:%s%s?user=%s\\&password=%s", 

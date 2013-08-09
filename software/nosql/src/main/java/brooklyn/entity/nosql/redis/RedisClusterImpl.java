@@ -6,7 +6,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 
@@ -30,12 +30,12 @@ public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
     
     @Override
     public void start(Collection<? extends Location> locations) {
-        master = addChild(EntitySpecs.spec(RedisStore.class));
+        master = addChild(EntitySpec.create(RedisStore.class));
         Entities.manage(master);
         master.start(locations);
 
-        slaves = addChild(EntitySpecs.spec(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(RedisSlave.class).configure(RedisSlave.MASTER, master)));
+        slaves = addChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(RedisSlave.class).configure(RedisSlave.MASTER, master)));
         slaves.start(locations);
 
         setAttribute(Startable.SERVICE_UP, calculateServiceUp());

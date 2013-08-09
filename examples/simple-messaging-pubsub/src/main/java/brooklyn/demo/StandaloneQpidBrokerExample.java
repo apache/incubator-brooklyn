@@ -6,6 +6,7 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.entity.messaging.qpid.QpidBroker;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.util.CommandLineUtil;
@@ -26,7 +27,7 @@ public class StandaloneQpidBrokerExample extends AbstractApplication {
     @Override
     public void init() {
         // Configure the Qpid broker entity
-    	QpidBroker broker = addChild(EntitySpecs.spec(QpidBroker.class)
+    	QpidBroker broker = addChild(EntitySpec.create(QpidBroker.class)
     	        .configure("amqpPort", 5672)
     	        .configure("amqpVersion", AmqpServer.AMQP_0_10)
     	        .configure("runtimeFiles", ImmutableMap.builder()

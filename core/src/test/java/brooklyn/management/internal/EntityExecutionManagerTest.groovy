@@ -15,7 +15,7 @@ import brooklyn.config.BrooklynProperties
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.management.Task
 import brooklyn.test.TestUtils
@@ -48,7 +48,7 @@ class EntityExecutionManagerTest {
     @Test
     public void testGetTasksOfEntity() throws Exception {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        e = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        e = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         CountDownLatch latch = new CountDownLatch(1)
         Task task = e.executionContext.submit( [tag : ManagementContextInternal.NON_TRANSIENT_TASK_TAG], { latch.countDown() } )
@@ -61,7 +61,7 @@ class EntityExecutionManagerTest {
     @Test
     public void testUnmanagedEntityCanBeGcedEvenIfPreviouslyTagged() throws Exception {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        e = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        e = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         String eId = e.getId();
         
         e.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of()).get();
@@ -93,7 +93,7 @@ class EntityExecutionManagerTest {
         for (int i = 0; i < 1000; i++) {
             try {
                 LOG.debug("testUnmanagedEntityGcedOnUnmanageEvenIfEffectorInvoked: iteration="+i);
-                TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+                TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
                 entity.setAttribute(byteArrayAttrib, new BigObject(10*1000*1000));
                 entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of()).get();
                 Entities.destroy(entity);
@@ -116,7 +116,7 @@ class EntityExecutionManagerTest {
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASKS_PER_TAG, 2);
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class, Entities.newManagementContext(brooklynProperties));
-        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         for (int i = 0; i < 1000; i++) {
             try {
@@ -140,7 +140,7 @@ class EntityExecutionManagerTest {
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASKS_PER_TAG, 2);
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class, Entities.newManagementContext(brooklynProperties));
-        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         List<Task<?>> tasks = Lists.newArrayList();
         
@@ -172,7 +172,7 @@ class EntityExecutionManagerTest {
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASK_AGE, maxTaskAge);
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class, Entities.newManagementContext(brooklynProperties));
-        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         Stopwatch stopwatch = new Stopwatch().start();
         Task<?> oldTask = entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of());

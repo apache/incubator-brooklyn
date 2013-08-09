@@ -10,11 +10,11 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -34,14 +34,14 @@ public class ItemsInContainersGroupTest {
         loc = new SimulatedLocation(MutableMap.of("name", "loc"));
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        containerGroup = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
+        containerGroup = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .displayName("containerGroup")
                 .configure(DynamicGroup.ENTITY_FILTER, new Predicate<Entity>() {
                     public boolean apply(Entity input) {
                         return input instanceof MockContainerEntity && 
                                 input.getConfig(MockContainerEntity.MOCK_MEMBERSHIP) == "ingroup";
                     }}));
-        itemGroup = app.createAndManageChild(EntitySpecs.spec(ItemsInContainersGroup.class)
+        itemGroup = app.createAndManageChild(EntitySpec.create(ItemsInContainersGroup.class)
                 .displayName("itemGroup"));
         itemGroup.setContainers(containerGroup);
         
@@ -62,7 +62,7 @@ public class ItemsInContainersGroupTest {
         itemGroup.stop();
         Entities.unmanage(itemGroup);
         
-        itemGroup = app.createAndManageChild(EntitySpecs.spec(ItemsInContainersGroup.class)
+        itemGroup = app.createAndManageChild(EntitySpec.create(ItemsInContainersGroup.class)
                 .displayName("itemGroupWithDispName2")
                 .configure(ItemsInContainersGroup.ITEM_FILTER, new Predicate<Entity>() {
                     public boolean apply(Entity input) {
@@ -140,7 +140,7 @@ public class ItemsInContainersGroupTest {
     }   
      
     private MockContainerEntity newContainer(TestApplication app, String name, String membership) {
-        MockContainerEntity container = app.createAndManageChild(EntitySpecs.spec(MockContainerEntity.class)
+        MockContainerEntity container = app.createAndManageChild(EntitySpec.create(MockContainerEntity.class)
                         .displayName(name)
                         .configure(MockContainerEntity.MOCK_MEMBERSHIP, membership));
         container.start(ImmutableList.of(loc));
@@ -148,7 +148,7 @@ public class ItemsInContainersGroupTest {
     }
     
     private static MockItemEntity newItem(TestApplication app, MockContainerEntity container, String name) {
-        MockItemEntity item = app.createAndManageChild(EntitySpecs.spec(MockItemEntity.class)
+        MockItemEntity item = app.createAndManageChild(EntitySpec.create(MockItemEntity.class)
                 .displayName(name));
         item.move(container);
         return item;

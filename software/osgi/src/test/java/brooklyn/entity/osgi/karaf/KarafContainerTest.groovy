@@ -12,7 +12,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -41,7 +41,7 @@ public class KarafContainerTest {
     // registered so we are never able to connect to them over jmx.
     @Test(groups = ["Integration", "WIP"])
     public void canStartupAndShutdown() {
-        karaf = app.createAndManageChild(EntitySpecs.spec(KarafContainer.class)
+        karaf = app.createAndManageChild(EntitySpec.create(KarafContainer.class)
                 .configure("name", Identifiers.makeRandomId(8))
                 .configure("displayName", "Karaf Test")
                 .configure("jmxPort", "8099+")
@@ -63,7 +63,7 @@ public class KarafContainerTest {
     // registered so we are never able to connect to them over jmx.
     @Test(groups = ["Integration", "WIP"])
     public void testCanInstallAndUninstallBundle() {
-        karaf = app.createAndManageChild(EntitySpecs.spec(KarafContainer.class)
+        karaf = app.createAndManageChild(EntitySpec.create(KarafContainer.class)
             .configure("name", Identifiers.makeRandomId(8))
             .configure("displayName", "Karaf Test")
             .configure("jmxPort", "8099+")

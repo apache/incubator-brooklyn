@@ -31,8 +31,8 @@ public class EntityManagerTest {
 
     @Test
     public void testCreateEntityUsingSpec() {
-        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
-        TestEntity child = entity.addChild(EntitySpecs.spec(TestEntity.class).displayName("mychildname"));
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        TestEntity child = entity.addChild(EntitySpec.create(TestEntity.class).displayName("mychildname"));
         assertTrue(child instanceof EntityProxy, "child="+child);
         assertFalse(child instanceof TestEntityImpl, "child="+child);
         assertTrue(entity.getChildren().contains(child), "child="+child+"; children="+entity.getChildren());
@@ -41,8 +41,8 @@ public class EntityManagerTest {
     
     @Test
     public void testCreateEntityUsingMapAndType() {
-        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
-        TestEntity child = entity.addChild(EntitySpecs.spec(MutableMap.of("displayName", "mychildname"), TestEntity.class));
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        TestEntity child = entity.addChild(EntitySpec.create(MutableMap.of("displayName", "mychildname"), TestEntity.class));
         assertTrue(child instanceof EntityProxy, "child="+child);
         assertFalse(child instanceof TestEntityImpl, "child="+child);
         assertTrue(entity.getChildren().contains(child), "child="+child+"; children="+entity.getChildren());

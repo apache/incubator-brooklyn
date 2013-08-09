@@ -11,7 +11,7 @@ import brooklyn.config.BrooklynProperties
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalManagementContext
@@ -81,7 +81,7 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
     @Test(groups = ["Integration"])
     public void test_localhost() throws Exception {
         String dataDir = "/tmp/mysql-data-" + Strings.makeRandomId(8);
-        MySqlNode mysql = tapp.createAndManageChild(EntitySpecs.spec(MySqlNode.class)
+        MySqlNode mysql = tapp.createAndManageChild(EntitySpec.create(MySqlNode.class)
                 .configure(MySqlNode.MYSQL_SERVER_CONF, MutableMap.of("skip-name-resolve",""))
                 .configure("creationScriptContents", CREATION_SCRIPT)
                 .configure("dataDir", dataDir));

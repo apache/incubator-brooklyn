@@ -23,7 +23,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.test.entity.TestApplication;
@@ -52,7 +52,7 @@ public class AutoScalerPolicyTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        cluster = app.createAndManageChild(EntitySpecs.spec(TestCluster.class).configure(TestCluster.INITIAL_SIZE, 1));
+        cluster = app.createAndManageChild(EntitySpec.create(TestCluster.class).configure(TestCluster.INITIAL_SIZE, 1));
         resizable = new LocallyResizableEntity(cluster, cluster);
         Entities.manage(resizable);
         policy = new AutoScalerPolicy();

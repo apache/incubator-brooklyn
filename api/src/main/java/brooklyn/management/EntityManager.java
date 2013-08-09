@@ -30,7 +30,7 @@ public interface EntityManager {
     
     /**
      * Convenience (particularly for groovy code) to create an entity.
-     * Equivalent to {@code createEntity(EntitySpecs.spec(type).configure(config))}
+     * Equivalent to {@code createEntity(EntitySpec.create(type).configure(config))}
      * 
      * @see createEntity(EntitySpec)
      */

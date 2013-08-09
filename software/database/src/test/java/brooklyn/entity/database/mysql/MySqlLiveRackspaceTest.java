@@ -3,7 +3,7 @@ package brooklyn.entity.database.mysql;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.database.VogellaExampleAccess;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.jclouds.JcloudsLocation;
 
@@ -60,7 +60,7 @@ public class MySqlLiveRackspaceTest extends MySqlIntegrationTest {
     }
 
     public void test(String osRegex) throws Exception {
-        MySqlNode mysql = tapp.createAndManageChild(EntitySpecs.spec(MySqlNode.class)
+        MySqlNode mysql = tapp.createAndManageChild(EntitySpec.create(MySqlNode.class)
                 .configure("creationScriptContents", CREATION_SCRIPT));
 
         brooklynProperties.put("brooklyn.jclouds.rackspace-cloudservers-uk.image-name-regex", osRegex);

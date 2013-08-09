@@ -26,8 +26,7 @@ import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityTypes;
-import brooklyn.entity.proxying.BasicEntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
@@ -177,15 +176,15 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
     private <T extends Entity> brooklyn.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<String,String> configO) {
         Map<String, String> config = (configO == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(configO);
         
-        BasicEntitySpec result;
+        EntitySpec result;
         if (clazz.isInterface()) {
-            result = EntitySpecs.spec(clazz);
+            result = EntitySpec.create(clazz);
         } else {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
             Class interfaceclazz = (Application.class.isAssignableFrom(clazz)) ? Application.class : Entity.class;
             Class<?>[] additionalInterfaceClazzes = clazz.getInterfaces();
-            result = EntitySpecs.spec(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
+            result = EntitySpec.create(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
         }
         
         if (!Strings.isEmpty(name)) result.displayName(name);

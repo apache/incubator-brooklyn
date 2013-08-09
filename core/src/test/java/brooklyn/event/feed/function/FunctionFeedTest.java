@@ -2,7 +2,6 @@ package brooklyn.event.feed.function;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -11,8 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Functions;
-import com.google.common.base.Predicates;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -20,19 +17,21 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.test.Asserts;
 
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Callables;
 
@@ -50,7 +49,7 @@ public class FunctionFeedTest {
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }
 

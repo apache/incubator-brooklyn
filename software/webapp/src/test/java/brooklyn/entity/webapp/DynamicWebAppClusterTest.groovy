@@ -12,7 +12,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.EntityTestUtils
@@ -48,7 +48,7 @@ public class DynamicWebAppClusterTest {
 
     @Test
     public void testRequestCountAggregation() {
-        DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpecs.spec(DynamicWebAppCluster.class)
+        DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
                 .configure("initialSize", 2)
                 .configure("factory", { properties -> new TestJavaWebAppEntity(properties) }));
         
@@ -68,7 +68,7 @@ public class DynamicWebAppClusterTest {
     
     @Test
     public void testSetsServiceUpIfMemberIsUp() throws Exception {
-        DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpecs.spec(DynamicWebAppCluster.class)
+        DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
             .configure("initialSize", 1)
             .configure("factory", { properties -> new TestJavaWebAppEntity(properties) }));
     

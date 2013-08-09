@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
@@ -104,7 +103,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
 
     @Override
     protected EntitySpec<?> getMemberSpec() {
-        return getConfig(MEMBER_SPEC, BasicEntitySpec.newInstance(MongoDBServer.class));
+        return getConfig(MEMBER_SPEC, EntitySpec.create(MongoDBServer.class));
     }
 
     /**

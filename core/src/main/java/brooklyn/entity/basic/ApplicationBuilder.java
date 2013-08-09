@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.management.EntityManager;
@@ -35,8 +34,8 @@ import com.google.common.annotations.Beta;
  *   app = new ApplicationBuilder() {
  *       //@Override
  *       public void doBuild() {
- *           MySqlNode db = addChild(EntitySpecs.spec(MySqlNode.class)));
- *           JBoss7Server as = addChild(EntitySpecs.spec(JBoss7Server.class)
+ *           MySqlNode db = addChild(EntitySpec.create(MySqlNode.class)));
+ *           JBoss7Server as = addChild(EntitySpec.create(JBoss7Server.class)
  *                   .configure(HTTP_PORT, "8080+")
  *                   .configure(javaSysProp("brooklyn.example.db.url"), attributeWhenReady(db, MySqlNode.MYSQL_URL));
  *       }
@@ -85,22 +84,22 @@ public abstract class ApplicationBuilder {
     /**
      * @deprecated since 0.5.0-rc.1 (added in 0.5.0-M2)
      */
-    public static <T extends StartableApplication> BasicEntitySpec<StartableApplication, ?> newAppSpec(Class<? extends T> type) {
+    public static <T extends StartableApplication> EntitySpec<StartableApplication> newAppSpec(Class<? extends T> type) {
         return EntitySpecs.appSpec(type);
     }
 
     protected volatile boolean managed = false;
     protected final AtomicBoolean inManage = new AtomicBoolean(false);
-    private BasicEntitySpec<? extends StartableApplication, ?> appSpec;
+    private EntitySpec<? extends StartableApplication> appSpec;
     private ManagementContext managementContext;
     private StartableApplication app;
     
     public ApplicationBuilder() {
-        this.appSpec = EntitySpecs.spec(BasicApplication.class);
+        this.appSpec = EntitySpec.create(BasicApplication.class);
     }
 
     public ApplicationBuilder(EntitySpec<? extends StartableApplication> appSpec) {
-        this.appSpec = EntitySpecs.wrapSpec(appSpec);
+        this.appSpec = EntitySpec.create(appSpec);
     }
 
     public final ApplicationBuilder appDisplayName(String val) {
@@ -165,7 +164,7 @@ public abstract class ApplicationBuilder {
     
     protected final <T extends Entity> T addChild(Map<?,?> config, Class<T> type) {
         checkDuringManage();
-        EntitySpec<T> spec = EntitySpecs.spec(type).configure(config);
+        EntitySpec<T> spec = EntitySpec.create(type).configure(config);
         return addChild(createEntity(spec));
     }
     

@@ -5,7 +5,7 @@ import java.util.List;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.messaging.kafka.KafkaCluster;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.util.CommandLineUtil;
 
@@ -18,7 +18,7 @@ public class KafkaClusterExample extends ApplicationBuilder {
 
     /** Configure the application. */
     protected void doBuild() {
-        addChild(EntitySpecs.spec(KafkaCluster.class)
+        addChild(EntitySpec.create(KafkaCluster.class)
                 .configure("startTimeout", 300) // 5 minutes
                 .configure("initialSize", 2));
         // TODO set application display name?

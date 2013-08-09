@@ -22,7 +22,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.LoadBalancerCluster;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -63,11 +62,11 @@ public class NginxClusterIntegrationTest {
         localhostProvisioningLoc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        urlMappings = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class)
+        urlMappings = app.createAndManageChild(EntitySpec.create(BasicGroup.class)
                 .configure("childrenAsMembers", true));
         entityManager = app.getManagementContext().getEntityManager();
         
-        nginxSpec = EntitySpecs.spec(NginxController.class);
+        nginxSpec = EntitySpec.create(NginxController.class);
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
@@ -77,7 +76,7 @@ public class NginxClusterIntegrationTest {
 
     @Test(groups = "Integration")
     public void testCreatesNginxInstancesAndResizes() {
-        loadBalancerCluster = app.createAndManageChild(EntitySpecs.spec(LoadBalancerCluster.class)
+        loadBalancerCluster = app.createAndManageChild(EntitySpec.create(LoadBalancerCluster.class)
                 .configure(LoadBalancerCluster.MEMBER_SPEC, nginxSpec)
                 .configure("initialSize", 1)
                 .configure(NginxController.DOMAIN_NAME, "localhost"));
@@ -96,12 +95,12 @@ public class NginxClusterIntegrationTest {
     
     @Test(groups = "Integration")
     public void testNginxInstancesConfiguredWithServerPool() {
-        DynamicCluster serverPool = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class))
+        DynamicCluster serverPool = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.ROOT_WAR, war.getPath()));
         
-        loadBalancerCluster = app.createAndManageChild(EntitySpecs.spec(LoadBalancerCluster.class)
+        loadBalancerCluster = app.createAndManageChild(EntitySpec.create(LoadBalancerCluster.class)
                 .configure("serverPool", serverPool)
                 .configure(LoadBalancerCluster.MEMBER_SPEC, nginxSpec)
                 .configure("initialSize", 1)
@@ -118,19 +117,19 @@ public class NginxClusterIntegrationTest {
 
     @Test(groups = "Integration")
     public void testNginxInstancesConfiguredWithUrlMappings() {
-        DynamicCluster c1 = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class))
+        DynamicCluster c1 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(war.getPath())));
 
-        UrlMapping urlMapping = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping urlMapping = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost")
                 .configure("path", "/hello-world($|/.*)")
                 .configure("target", c1)
                 .parent(urlMappings));
         Entities.manage(urlMapping);
         
-        loadBalancerCluster = app.createAndManageChild(EntitySpecs.spec(LoadBalancerCluster.class)
+        loadBalancerCluster = app.createAndManageChild(EntitySpec.create(LoadBalancerCluster.class)
                 .configure("urlMappings", urlMappings)
                 .configure(LoadBalancerCluster.MEMBER_SPEC, nginxSpec)
                 .configure("initialSize", 1));
@@ -146,7 +145,7 @@ public class NginxClusterIntegrationTest {
 
     @Test(groups = "Integration")
     public void testClusterIsUpIffHasChildLoadBalancer() {
-        loadBalancerCluster = app.createAndManageChild(EntitySpecs.spec(LoadBalancerCluster.class)
+        loadBalancerCluster = app.createAndManageChild(EntitySpec.create(LoadBalancerCluster.class)
                 .configure(LoadBalancerCluster.MEMBER_SPEC, nginxSpec)
                 .configure("initialSize", 0)
                 .configure(NginxController.DOMAIN_NAME, "localhost"));
@@ -164,7 +163,7 @@ public class NginxClusterIntegrationTest {
     // Warning: test is a little brittle for if a previous run leaves something on these required ports
     @Test(groups = "Integration")
     public void testConfiguresNginxInstancesWithInheritedPortConfig() {
-        loadBalancerCluster = app.createAndManageChild(EntitySpecs.spec(LoadBalancerCluster.class)
+        loadBalancerCluster = app.createAndManageChild(EntitySpec.create(LoadBalancerCluster.class)
                 .configure(LoadBalancerCluster.MEMBER_SPEC, nginxSpec)
                 .configure("initialSize", 1)
                 .configure(NginxController.DOMAIN_NAME, "localhost")

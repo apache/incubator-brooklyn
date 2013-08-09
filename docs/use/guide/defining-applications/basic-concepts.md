@@ -71,7 +71,7 @@ There is also an ``entity.setConfig(KEY, VALUE)`` method.
 
 Additionally, many common configuration parameters are available as "flags" which can be supplied as Strings when constructing
 then entity, in the form
-``EntitySpecs.spec˙(MyEntity.class).configure("config1", "value1").configure("config2", "value2")``. 
+``EntitySpec.create˙(MyEntity.class).configure("config1", "value1").configure("config2", "value2")``. 
 
 Documentation of the flags available for individual entities can normally be found in the javadocs. 
 The ``@SetFromFlag`` annotations on ``ConfigKey`` static field definitions

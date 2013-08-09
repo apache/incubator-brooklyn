@@ -30,7 +30,7 @@ public class SingleWebServerExample extends AbstractApplication {
 
     @Override
     public void init() {
-        addChild(EntitySpecs.spec(JBoss7Server.class)
+        addChild(EntitySpec.create(JBoss7Server.class)
                 .configure("war", WAR_PATH)
                 .configure("httpPort", 8080));
     }
@@ -87,11 +87,11 @@ public class WebClusterDatabaseExample extends AbstractApplication {
 
     @Override
     public void init() {
-        MySqlNode mysql = addChild(EntitySpecs.spec(MySqlNode.class)
+        MySqlNode mysql = addChild(EntitySpec.create(MySqlNode.class)
                 .configure("creationScriptUrl", DB_SETUP_SQL_URL));
         
-        ControlledDynamicWebAppCluster web = addChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
-                .configure("memberSpec", EntitySpecs.spec(JBoss7Server.class)
+        ControlledDynamicWebAppCluster web = addChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class)
                         .configure("httpPort", "8080+")
                         .configure("war", WAR_PATH)
                         .configure(javaSysProp("brooklyn.example.db.url"), 

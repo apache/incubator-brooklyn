@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.messaging.jms.JMSBrokerImpl;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
@@ -65,14 +65,14 @@ public class QpidBrokerImpl extends JMSBrokerImpl<QpidQueue, QpidTopic> implemen
     }
     
     public QpidQueue createQueue(Map properties) {
-        QpidQueue result = addChild(EntitySpecs.spec(QpidQueue.class).configure(properties));
+        QpidQueue result = addChild(EntitySpec.create(QpidQueue.class).configure(properties));
         Entities.manage(result);
         result.create();
         return result;
     }
 
     public QpidTopic createTopic(Map properties) {
-        QpidTopic result = addChild(EntitySpecs.spec(QpidTopic.class).configure(properties));
+        QpidTopic result = addChild(EntitySpec.create(QpidTopic.class).configure(properties));
         Entities.manage(result);
         result.create();
         return result;
