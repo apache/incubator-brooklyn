@@ -40,6 +40,8 @@ import com.google.common.collect.Sets;
  */
 public class EntitySpec<T extends Entity> implements Serializable {
 
+    private static final long serialVersionUID = -2247153452919128990L;
+    
     private static final Logger log = LoggerFactory.getLogger(EntitySpec.class);
 
     /**

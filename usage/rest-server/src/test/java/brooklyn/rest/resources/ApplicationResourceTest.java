@@ -103,6 +103,8 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     waitForApplicationToBeRunning(response.getLocation());
   }
 
+  @Test(dependsOnMethods = {"testDeleteApplication"})
+  // this must happen after we've deleted the main applicaiton, as testLocatedLocations assumes a single location
   public void testDeployApplicationImpl() throws Exception {
     ApplicationSpec spec = ApplicationSpec.builder()
             .type(RestMockApp.class.getCanonicalName())
@@ -215,6 +217,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     Set<ApplicationSummary> applications = client().resource("/v1/applications")
         .get(new GenericType<Set<ApplicationSummary>>() {
         });
+    log.info("Applications are: "+applications);
     for (ApplicationSummary app: applications) {
         if (simpleSpec.getName().equals(app.getSpec().getName())) return;
     }
@@ -355,6 +358,9 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   @SuppressWarnings({ "rawtypes" })
   @Test(dependsOnMethods = "testDeployApplication")
   public void testLocatedLocation() {
+      log.info("starting testLocatedLocations");
+      testListApplications();
+      
     Location l = getManagementContext().getApplications().iterator().next().getLocations().iterator().next();
     if (!l.hasConfig(LocationConfigKeys.LATITUDE, false)) {
         log.info("Supplying fake locations for localhost because could not be autodetected");
@@ -363,12 +369,12 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     Map result = client().resource("/v1/locations/usage/LocatedLocations")
         .get(Map.class);
     log.info("LOCATIONS: "+result);
-    assertEquals(result.size(), 1);
+    Assert.assertEquals(result.size(), 1);
     Map details = (Map) result.values().iterator().next();
     assertEquals(details.get("leafEntityCount"), 1);
   }
 
-  @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes"})
+  @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes","testLocatedLocation"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
     int size = getManagementContext().getApplications().size();
     ClientResponse response = client().resource("/v1/applications/simple-app")

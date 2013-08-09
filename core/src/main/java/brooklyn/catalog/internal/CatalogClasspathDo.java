@@ -157,9 +157,15 @@ public class CatalogClasspathDo {
                     }
                 }
             } else if (scanMode==CatalogScanningModes.TYPES) {
-                Iterable<Class<? extends Entity>> entities = this.excludeInvalidClasses(scanner.getSubTypesOf(Entity.class));
+                Iterable<Class<?>> entities = this.excludeInvalidClasses(
+                        Iterables.concat(scanner.getSubTypesOf(Entity.class),
+                                // not sure why we have to look for sub-types of Application, 
+                                // they should be picked up as sub-types of Entity, but in maven builds (only!)
+                                // they are not -- i presume a bug in scanner
+                                scanner.getSubTypesOf(Application.class), 
+                                scanner.getSubTypesOf(ApplicationBuilder.class)));
                 for (Class<?> c: entities) {
-                    if (Application.class.isAssignableFrom(c)) {
+                    if (Application.class.isAssignableFrom(c) || ApplicationBuilder.class.isAssignableFrom(c)) {
                         addCatalogEntry(new CatalogTemplateItemDto(), c);
                         countApps++;
                     } else {
