@@ -30,6 +30,7 @@
             <artifactId>whirr-core</artifactId>
             <version>${whirr.version}</version>
             <exclusions>
+              <!-- exclude the versions whirr pulls in, in favour of our versions -->
               <exclusion>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
@@ -61,17 +62,41 @@
               <exclusion>
                 <groupId>org.jclouds.driver</groupId>
                 <artifactId>jclouds-netty</artifactId>
-              </exclusion>             
+              </exclusion>
+              <exclusion>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.jclouds.driver</groupId>
+                <artifactId>jclouds-enterprise</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.jclouds.driver</groupId>
+                <artifactId>jclouds-sshj</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.jclouds.driver</groupId>
+                <artifactId>jclouds-jsch</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.jclouds.driver</groupId>
+                <artifactId>jclouds-slf4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.jclouds</groupId>
+                <artifactId>jclouds-allcompute</artifactId>
+              </exclusion>
             </exclusions>
         </dependency>
 
         <dependency>
-            <groupId>org.jclouds.driver</groupId>
+            <groupId>org.apache.jclouds.driver</groupId>
             <artifactId>jclouds-joda</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jclouds.driver</groupId>
+            <groupId>org.apache.jclouds.driver</groupId>
             <artifactId>jclouds-netty</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
