@@ -111,7 +111,7 @@ public class MementoFileWriter<T> {
             if (System.currentTimeMillis() > maxEndtime) {
                 throw new TimeoutException("Timeout waiting for pending complete of rebind-periodic-delta, after "+Time.makeTimeString(timeout, unit));
             }
-            Thread.sleep(1);
+            Thread.sleep(10);
         }
     }
 
