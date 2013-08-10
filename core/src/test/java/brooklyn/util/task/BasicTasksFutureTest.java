@@ -51,13 +51,11 @@ public class BasicTasksFutureTest {
         if (ex != null) ex.shutdownNow();
     }
 
-    /** 
-     * We do a whole bunch in one test which runs as a normal (non-integration) test,
-     * because a delay is needed, but to keep delays in normal tests to a minimum!
-     */
     @Test
     public void testBlockAndGetWithTimeoutsAndListenableFuture() throws InterruptedException {
-        Task<String> t = sleep(Duration.millis(500), "x");
+        // 100ms should be enough to ensure x finishes, at least in some runs
+        // (test should pass even if no delay, but a delay causes a different code path sometimes)
+        Task<String> t = sleep(Duration.millis(100), "x");
         
         Assert.assertFalse(t.blockUntilEnded(Duration.millis(1)));
         Assert.assertFalse(t.blockUntilEnded(Duration.ZERO));
@@ -89,7 +87,7 @@ public class BasicTasksFutureTest {
             
         synchronized (data) {
             // now let it finish
-            Assert.assertTrue(t.blockUntilEnded(Duration.FIVE_SECONDS));
+            Assert.assertTrue(t.blockUntilEnded(Duration.TEN_SECONDS));
 
             Assert.assertEquals(t.getUnchecked(Duration.millis(1)), "x");
             Assert.assertEquals(t.getUnchecked(Duration.ZERO), "x");
@@ -149,14 +147,17 @@ public class BasicTasksFutureTest {
 
     @Test
     public void testCancelAfterStartTriggersListenableFuture() throws Exception {
-        doTestCancelImmediateTriggersListenableFuture(Duration.millis(50));
+        doTestCancelTriggersListenableFuture(Duration.millis(50));
     }
     @Test
     public void testCancelImmediateTriggersListenableFuture() throws Exception {
-        doTestCancelImmediateTriggersListenableFuture(Duration.ZERO);
+        // if cancel fires after submit but before it passes to the executor,
+        // that needs handling separately; this doesn't guarantee this code path,
+        // but it happens sometimes (and it should be handled)
+        doTestCancelTriggersListenableFuture(Duration.ZERO);
     }
-    public void doTestCancelImmediateTriggersListenableFuture(Duration delay) throws Exception {
-        Task<String> t = sleep(Duration.millis(1000), "x");
+    public void doTestCancelTriggersListenableFuture(Duration delay) throws Exception {
+        Task<String> t = sleep(Duration.TEN_SECONDS, "x");
         addFutureListener(t, "before");
 
         Stopwatch watch = new Stopwatch().start();
@@ -165,7 +166,8 @@ public class BasicTasksFutureTest {
         addFutureListener(t, "during");
 
         log.info("test cancelling "+t+" ("+t.getClass()+") after "+delay);
-        // NB: two different code paths for notifying futures depending whether task is started 
+        // NB: two different code paths (callers to this method) for notifying futures 
+        // depending whether task is started 
         Time.sleep(delay);
 
         synchronized (data) {
@@ -186,10 +188,10 @@ public class BasicTasksFutureTest {
             Assert.fail("should have thrown CancellationException");
         } catch (CancellationException e) { /* expected */ }
         
-        Assert.assertTrue(watch.elapsed(TimeUnit.MILLISECONDS) < 500, 
-            Time.makeTimeStringRounded(watch.elapsed(TimeUnit.MILLISECONDS))+" is too long; should have cancelled < 500ms");
+        Assert.assertTrue(watch.elapsed(TimeUnit.MILLISECONDS) < Duration.FIVE_SECONDS.toMilliseconds(), 
+            Time.makeTimeStringRounded(watch.elapsed(TimeUnit.MILLISECONDS))+" is too long; should have cancelled very quickly");
         
-        Assert.assertTrue(cancelled.tryAcquire(500, TimeUnit.MILLISECONDS));
+        Assert.assertTrue(cancelled.tryAcquire(5, TimeUnit.SECONDS));
     }
 
 }
