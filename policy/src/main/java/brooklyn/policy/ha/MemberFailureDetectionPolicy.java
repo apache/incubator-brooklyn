@@ -45,6 +45,10 @@ import com.google.common.collect.Maps;
  */
 public class MemberFailureDetectionPolicy extends AbstractPolicy {
 
+    // TODO Remove duplication between this and ServiceFailureDetection.
+    // This could be re-written to use the latter. Or we could even deprecate
+    // this in favour of the latter.
+    
     private static final Logger LOG = LoggerFactory.getLogger(MemberFailureDetectionPolicy.class);
 
     @SetFromFlag(defaultVal="true")

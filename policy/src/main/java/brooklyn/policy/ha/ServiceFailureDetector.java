@@ -14,9 +14,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.policy.ha.HASensors;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
-import brooklyn.policy.ha.MemberFailureDetectionPolicy;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Time;
@@ -29,6 +27,10 @@ import com.google.common.base.Objects;
  */
 public class ServiceFailureDetector extends AbstractPolicy {
 
+    // TODO Remove duplication between this and MemberFailureDetectionPolicy.
+    // The latter could be re-written to use this. Or could even be deprecated
+    // in favour of this.
+    
     private static final Logger LOG = LoggerFactory.getLogger(ServiceFailureDetector.class);
 
     public static final BasicNotificationSensor<FailureDescriptor> ENTITY_FAILED = HASensors.ENTITY_FAILED;
@@ -142,7 +144,7 @@ public class ServiceFailureDetector extends AbstractPolicy {
         if (currentFailureStartTime.get()!=null) {
             if (healthy) {
                 LOG.info("{} health-check for {}, component recovered (from failure at {}): {}", 
-                        new Object[] {this, entity, Time.makeTimeString(System.currentTimeMillis() - currentFailureStartTime.get()), description});
+                        new Object[] {this, entity, Time.makeTimeStringRounded(System.currentTimeMillis() - currentFailureStartTime.get()), description});
                 if (weSetItOnFire) {
                     if (status == Lifecycle.ON_FIRE)
                         entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
@@ -158,7 +160,7 @@ public class ServiceFailureDetector extends AbstractPolicy {
         } else if (failed) {
             LOG.info("{} health-check for {}, component failed: {}", new Object[] {this, entity, description});
             currentFailureStartTime.set(System.currentTimeMillis());
-            if (useServiceStateRunning && setOnFireOnFailure) {
+            if (useServiceStateRunning && setOnFireOnFailure && status != Lifecycle.ON_FIRE) {
                 weSetItOnFire = true;
                 entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
             }

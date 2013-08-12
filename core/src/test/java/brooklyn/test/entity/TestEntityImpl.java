@@ -1,6 +1,8 @@
 package brooklyn.test.entity;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -14,6 +16,8 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
 
+import com.google.common.collect.Lists;
+
 /**
  * Mock entity for testing.
  */
@@ -24,7 +28,8 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
 	protected AtomicInteger counter = new AtomicInteger(0);
 	protected Map<?,?> constructorProperties;
 	protected Map<?,?> configureProperties;
-
+    protected List<String> callHistory = Collections.synchronizedList(Lists.<String>newArrayList());
+    
     public TestEntityImpl() {
         super();
     }
@@ -52,11 +57,13 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     @Override
     public void myEffector() {
         if (LOG.isTraceEnabled()) LOG.trace("In myEffector for {}", this);
+        callHistory.add("myEffector");
     }
     
     @Override
     public Object identityEffector(Object arg) {
         if (LOG.isTraceEnabled()) LOG.trace("In identityEffector for {}", this);
+        callHistory.add("identityEffector");
         return arg;
     }
     
@@ -94,6 +101,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     @Override
     public void start(Collection<? extends Location> locs) {
         LOG.trace("Starting {}", this);
+        callHistory.add("start");
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         counter.incrementAndGet();
         addLocations(locs);
@@ -103,6 +111,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     @Override
     public void stop() { 
         LOG.trace("Stopping {}", this);
+        callHistory.add("stop");
         setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
         counter.decrementAndGet();
         setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
@@ -110,7 +119,8 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
 
     @Override
     public void restart() {
-        throw new UnsupportedOperationException();
+        LOG.trace("Restarting {}", this);
+        callHistory.add("restart");
     }
     
     /**
@@ -134,6 +144,9 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         String id = getId();
         return getEntityType().getSimpleName()+"["+id.substring(Math.max(0, id.length()-8))+"]";
     }
-    
-    // TODO add more mock methods
+
+    @Override
+    public List<String> getCallHistory() {
+        return callHistory;
+    }
 }

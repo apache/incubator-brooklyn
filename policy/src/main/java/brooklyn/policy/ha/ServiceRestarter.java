@@ -94,7 +94,7 @@ public class ServiceRestarter extends AbstractPolicy {
         Long last = lastFailureTime.getAndSet(current);
         long elapsed = last==null ? -1 : current-last;
         if (elapsed>=0 && elapsed <= failOnRecurringFailuresInThisDuration) {
-            onRestartFailed("Restart failure (failed again after "+Time.makeTimeString(elapsed)+") at "+entity+": "+event.getValue());
+            onRestartFailed("Restart failure (failed again after "+Time.makeTimeStringRounded(elapsed)+") at "+entity+": "+event.getValue());
             return;
         }
         try {

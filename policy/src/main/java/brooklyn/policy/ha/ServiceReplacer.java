@@ -1,5 +1,8 @@
 package brooklyn.policy.ha;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -18,11 +21,9 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
-
-import com.google.common.base.Preconditions;
 
 /** attaches to a DynamicCluster and replaces a failed member in response to HASensors.ENTITY_FAILED or other sensor;
  * if this fails, it sets the Cluster state to on-fire */
@@ -32,13 +33,10 @@ public class ServiceReplacer extends AbstractPolicy {
 
     // TODO if there are multiple failures perhaps we should abort quickly
     
-    @SuppressWarnings("rawtypes")
-    public static final ConfigKey<Sensor> FAILURE_SENSOR_TO_MONITOR = new BasicConfigKey<Sensor>(Sensor.class, "failureSensorToMonitor"); 
-    
     /** monitors this sensor, by default ENTITY_RESTART_FAILED */
-    // FIXME shouldn't set flags set in constructor ?  that might get overwritten by this value
-    @SetFromFlag
-    private Sensor<?> failureSensorToMonitor = ServiceRestarter.ENTITY_RESTART_FAILED;
+    @SetFromFlag("failureSensorToMonitor")
+    @SuppressWarnings("rawtypes")
+    public static final ConfigKey<Sensor> FAILURE_SENSOR_TO_MONITOR = new BasicConfigKey<Sensor>(Sensor.class, "failureSensorToMonitor", "", ServiceRestarter.ENTITY_RESTART_FAILED); 
     
     public ServiceReplacer() {
         this(new ConfigBag());
@@ -59,7 +57,8 @@ public class ServiceReplacer extends AbstractPolicy {
 
     @Override
     public void setEntity(EntityLocal entity) {
-        Preconditions.checkArgument(entity instanceof DynamicCluster, "Replacer must take a DynamicCluster, not "+entity);
+        checkArgument(entity instanceof DynamicCluster, "Replacer must take a DynamicCluster, not "+entity);
+        Sensor<?> failureSensorToMonitor = checkNotNull(getConfig(FAILURE_SENSOR_TO_MONITOR), "failureSensorToMonitor");
         
         super.setEntity(entity);
 
