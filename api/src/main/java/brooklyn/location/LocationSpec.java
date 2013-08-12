@@ -36,12 +36,28 @@ public class LocationSpec<T extends Location> implements Serializable {
 
 
     /**
+     * @deprecated since 0.6 (added 0.6.0-M1); use {@link #create(Class)}
+     */
+    @Deprecated
+    public static <T extends Location> LocationSpec<T> spec(Class<T> type) {
+        return create(type);
+    }
+
+    /**
+     * @deprecated since 0.6 (added 0.6.0-M1); use {@link #create(Map, Class)}
+     */
+    @Deprecated
+    public static <T extends Location> LocationSpec<T> spec(Map<?,?> config, Class<T> type) {
+        return create(config, type);
+    }
+
+    /**
      * Creates a new {@link LocationSpec} instance for a location of the given type. The returned 
      * {@link LocationSpec} can then be customized.
      * 
      * @param type A {@link Location} class
      */
-    public static <T extends Location> LocationSpec<T> spec(Class<T> type) {
+    public static <T extends Location> LocationSpec<T> create(Class<T> type) {
         return new LocationSpec<T>(type);
     }
     
@@ -53,8 +69,8 @@ public class LocationSpec<T extends Location> implements Serializable {
      * @param config The spec's configuration (see {@link LocationSpec#configure(Map)}).
      * @param type   A {@link Location} class
      */
-    public static <T extends Location> LocationSpec<T> spec(Map<?,?> config, Class<T> type) {
-        return LocationSpec.spec(type).configure(config);
+    public static <T extends Location> LocationSpec<T> create(Map<?,?> config, Class<T> type) {
+        return LocationSpec.create(type).configure(config);
     }
     
     private final Class<T> type;
