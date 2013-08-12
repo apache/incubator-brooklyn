@@ -64,7 +64,7 @@ public class LocationSpec<T extends Location> implements Serializable {
     /**
      * Creates a new {@link LocationSpec} instance with the given config, for a location of the given type.
      * 
-     * This is primarily for groovy code; equivalent to {@code LocationSpec.spec(type).configure(config)}.
+     * This is primarily for groovy code; equivalent to {@code LocationSpec.create(type).configure(config)}.
      * 
      * @param config The spec's configuration (see {@link LocationSpec#configure(Map)}).
      * @param type   A {@link Location} class

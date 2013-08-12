@@ -149,7 +149,7 @@ public class JcloudsByonLocationResolver implements LocationResolver {
 
         log.debug("Created Jclouds BYON location "+name+": "+machines);
         
-        return managementContext.getLocationManager().createLocation(LocationSpec.spec(FixedListMachineProvisioningLocation.class)
+        return managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
                 .configure(flags));
     }
     

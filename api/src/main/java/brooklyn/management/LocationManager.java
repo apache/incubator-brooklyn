@@ -20,7 +20,7 @@ public interface LocationManager {
     
     /**
      * Convenience (particularly for groovy code) to create a location.
-     * Equivalent to {@code createLocation(LocationSpec.spec(type).configure(config))}
+     * Equivalent to {@code createLocation(LocationSpec.create(type).configure(config))}
      * 
      * @see createLocation(LocationSpec)
      */

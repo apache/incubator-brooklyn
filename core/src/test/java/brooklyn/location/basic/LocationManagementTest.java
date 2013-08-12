@@ -40,7 +40,7 @@ public class LocationManagementTest {
 
     @Test
     public void testCreateLocationUsingSpec() {
-        SshMachineLocation loc = locationManager.createLocation(LocationSpec.spec(SshMachineLocation.class)
+        SshMachineLocation loc = locationManager.createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", "1.2.3.4"));
         
         assertEquals(loc.getAddress().getHostAddress(), "1.2.3.4");
