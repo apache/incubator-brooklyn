@@ -168,7 +168,6 @@ public class JcloudsLoginLiveTest {
                 .configure("address", machine.getAddress())
                 .configure("user", machine.getUser())
                 .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
-        
         assertSshable(machineUsingKey);
         
         SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
@@ -190,7 +189,6 @@ public class JcloudsLoginLiveTest {
                 .configure("address", machine.getAddress())
                 .configure("user", machine.getUser())
                 .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
-        
         assertSshable(machineUsingKey);
         
         SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
@@ -213,6 +211,56 @@ public class JcloudsLoginLiveTest {
         
         machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", imageId));
         assertSshable(machine);
+        
+        SshMachineLocation machineUsingSshKey = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+                .configure("address", machine.getAddress())
+                .configure("user", "root")
+                .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
+        assertSshable(machineUsingSshKey);
+    }
+    
+    @Test(groups = {"Live"})
+    protected void testAwsEc2WhenNoUserSoUsesRootLoginUser() throws Exception {
+        // Image: {id=us-east-1/ami-5e008437, providerId=ami-5e008437, name=RightImage_Ubuntu_10.04_x64_v5.8.8.3, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=10.04, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, version=5.8.8.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
+        // Uses "root" as loginUser
+        String imageId = "us-east-1/ami-5e008437";
+        
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "");
+        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
+        
+        machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", imageId));
+        assertSshable(machine);
+        
+        SshMachineLocation machineUsingSshKey = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+                .configure("address", machine.getAddress())
+                .configure("user", "root")
+                .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
+        assertSshable(machineUsingSshKey);
+    }
+    
+    // In JcloudsLocation.NON_ADDABLE_USERS, "ec2-user" is treated special and is not added!
+    // That's very bad for if someone is running brooklyn on a new AWS VM, and just installs brooklyn+runs as the default ec2-user.
+    @Test(groups = {"Live"})
+    protected void testAwsEc2SpecifyingSpecialUser() throws Exception {
+        // Image: {id=us-east-1/ami-5e008437, providerId=ami-5e008437, name=RightImage_Ubuntu_10.04_x64_v5.8.8.3, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=10.04, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, version=5.8.8.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
+        // Uses "root" as loginUser
+        String imageId = "us-east-1/ami-5e008437";
+        
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "ec2-user");
+        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
+        
+        machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", imageId));
+        assertSshable(machine);
+        
+        SshMachineLocation machineUsingSshKey = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+                .configure("address", machine.getAddress())
+                .configure("user", "ec2-user")
+                .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
+        assertSshable(machineUsingSshKey);
     }
     
     private JcloudsSshMachineLocation createEc2Machine(Map<String,? extends Object> conf) throws Exception {
