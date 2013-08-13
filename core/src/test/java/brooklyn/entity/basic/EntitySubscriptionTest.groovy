@@ -1,4 +1,6 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.basic
+
+import brooklyn.management.internal.LocalManagementContext;
 
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
@@ -57,6 +59,7 @@ public class EntitySubscriptionTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
         if (app != null) Entities.destroyAll(app.getManagementContext());
+        LocalManagementContext.terminateAll();
     }
     
     @Test

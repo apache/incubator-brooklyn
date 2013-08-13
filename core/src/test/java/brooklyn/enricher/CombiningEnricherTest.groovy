@@ -1,5 +1,6 @@
-package brooklyn.enricher;
+package brooklyn.enricher
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.Assert
@@ -29,6 +30,11 @@ class CombiningEnricherTest {
     TestEntity producer;
     AttributeSensor<Integer> intSensorA, intSensorB, intSensorC;
     AttributeSensor<Long> target;
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
+    }
 
     @BeforeMethod(alwaysRun=true)
     public void before() {

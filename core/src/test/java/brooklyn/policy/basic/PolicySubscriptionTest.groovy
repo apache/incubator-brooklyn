@@ -1,4 +1,7 @@
-package brooklyn.policy.basic;
+package brooklyn.policy.basic
+
+import brooklyn.management.internal.LocalManagementContext
+import org.testng.annotations.AfterMethod;
 
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
@@ -43,7 +46,12 @@ public class PolicySubscriptionTest {
         entity.addPolicy(policy);
         app.start([loc])
     }
-    
+
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        LocalManagementContext.terminateAll();
+    }
+
     @Test
     public void testSubscriptionReceivesEvents() {
         policy.subscribe(entity, TestEntity.SEQUENCE, listener);

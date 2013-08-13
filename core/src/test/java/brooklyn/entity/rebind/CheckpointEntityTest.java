@@ -8,6 +8,7 @@ import java.util.Collections;
 
 import javax.annotation.Nullable;
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -47,9 +48,10 @@ public class CheckpointEntityTest {
         origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).configure("myconfig", "myval"));
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+        LocalManagementContext.terminateAll();
     }
 
     @Test

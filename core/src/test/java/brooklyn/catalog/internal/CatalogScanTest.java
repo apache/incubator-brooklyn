@@ -29,7 +29,7 @@ public class CatalogScanTest {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown(){
-        if(managementContext!=null)managementContext.terminate();
+        LocalManagementContext.terminateAll();
     }
 
     private synchronized void loadFullCatalog() {
@@ -56,7 +56,7 @@ public class CatalogScanTest {
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(),
                 "data:,"+URLEncoder.encode("<catalog><classpath scan=\"annotations\"/></catalog>"));
-        managementContext = new LocalManagementContext(props);
+        LocalManagementContext managementContext = new LocalManagementContext(props);
         annotsCatalog = managementContext.getCatalog();
         log.info("ENTITIES loaded with annotation: "+annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
     }

@@ -1,5 +1,7 @@
 package brooklyn.enricher
 
+import brooklyn.management.internal.LocalManagementContext
+
 import static org.testng.Assert.*
 
 import org.slf4j.Logger
@@ -33,6 +35,11 @@ class CustomAggregatingEnricherTest {
     
     AttributeSensor<Integer> intSensor
     AttributeSensor<Integer> target
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
+    }
 
     @BeforeMethod(alwaysRun=true)
     public void before() {

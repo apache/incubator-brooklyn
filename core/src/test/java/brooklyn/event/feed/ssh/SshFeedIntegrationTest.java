@@ -2,6 +2,7 @@ package brooklyn.event.feed.ssh;
 
 import static org.testng.Assert.assertTrue;
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -49,6 +50,7 @@ public class SshFeedIntegrationTest {
         if (feed != null) feed.stop();
         if (app != null) Entities.destroyAll(app.getManagementContext());
         if (loc != null) Closeables.closeQuietly(loc);
+        LocalManagementContext.terminateAll();
     }
     
     @Test(groups="Integration")

@@ -1,4 +1,6 @@
-package brooklyn.enricher;
+package brooklyn.enricher
+
+import brooklyn.management.internal.LocalManagementContext;
 
 import java.util.concurrent.Callable
 
@@ -46,6 +48,7 @@ public class TransformingEnricherTest {
     @AfterMethod(alwaysRun=true)
     public void after() {
         if (app!=null) Entities.destroyAll(app.getManagementContext());
+        LocalManagementContext.terminateAll();
     }
     
     @Test

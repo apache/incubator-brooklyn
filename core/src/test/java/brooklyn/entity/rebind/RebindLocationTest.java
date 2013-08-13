@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -46,9 +47,10 @@ public class RebindLocationTest {
         origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+        LocalManagementContext.terminateAll();
     }
     
     @Test

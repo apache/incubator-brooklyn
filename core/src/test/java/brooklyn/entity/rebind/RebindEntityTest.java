@@ -82,6 +82,7 @@ public class RebindEntityTest {
     public void tearDown() throws Exception {
         if (managementContext != null) managementContext.terminate();
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+        LocalManagementContext.terminateAll();
     }
 
     @Test

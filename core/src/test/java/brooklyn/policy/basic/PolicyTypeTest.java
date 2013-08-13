@@ -2,6 +2,7 @@ package brooklyn.policy.basic;
 
 import static org.testng.Assert.assertEquals;
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -21,6 +22,7 @@ public class PolicyTypeTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
+        LocalManagementContext.terminateAll();
     }
     
     @Test

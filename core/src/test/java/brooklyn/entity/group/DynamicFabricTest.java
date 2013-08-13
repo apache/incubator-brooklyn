@@ -13,6 +13,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -50,12 +51,12 @@ public class DynamicFabricTest {
     private static final Logger log = LoggerFactory.getLogger(DynamicFabricTest.class);
 
     private static final int TIMEOUT_MS = 5*1000;
-    
+
     private TestApplication app;
     private Location loc1;
     private Location loc2;
     private Location loc3;
-    
+
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         loc1 = new SimulatedLocation();
@@ -67,8 +68,9 @@ public class DynamicFabricTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
+        LocalManagementContext.terminateAll();
     }
-    
+
     @Test
     public void testDynamicFabricUsesMemberSpecToCreateAndStartEntityWhenGivenSingleLocation() throws Exception {
         runWithEntitySpecWithLocations(ImmutableList.of(loc1));
@@ -78,18 +80,18 @@ public class DynamicFabricTest {
     public void testDynamicFabricUsesMemberSpecToCreateAndStartsEntityWhenGivenManyLocations() throws Exception {
         runWithEntitySpecWithLocations(ImmutableList.of(loc1,loc2,loc3));
     }
-    
+
     private void runWithEntitySpecWithLocations(Collection<Location> locs) {
         Collection<Location> unclaimedLocs = Lists.newArrayList(locs);
         
         DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
             .configure("memberSpec", EntitySpec.create(TestEntity.class)));
         app.start(locs);
-        
+
         assertEquals(fabric.getChildren().size(), locs.size(), Joiner.on(",").join(fabric.getChildren()));
         assertEquals(fabric.getMembers().size(), locs.size(), "members="+fabric.getMembers());
         assertEquals(ImmutableSet.copyOf(fabric.getMembers()), ImmutableSet.copyOf(fabric.getChildren()), "members="+fabric.getMembers()+"; children="+fabric.getChildren());
-        
+
         for (Entity it : fabric.getChildren()) {
             TestEntity child = (TestEntity) it;
             assertEquals(child.getCounter().get(), 1);
@@ -98,7 +100,7 @@ public class DynamicFabricTest {
         }
         assertTrue(unclaimedLocs.isEmpty(), Joiner.on(",").join(unclaimedLocs));
     }
-    
+
     @Test
     public void testDynamicFabricCreatesAndStartsEntityWhenGivenSingleLocation() throws Exception {
         runWithFactoryWithLocations(ImmutableList.of(loc1));
@@ -108,7 +110,7 @@ public class DynamicFabricTest {
     public void testDynamicFabricCreatesAndStartsEntityWhenGivenManyLocations() throws Exception {
         runWithFactoryWithLocations(ImmutableList.of(loc1, loc2, loc3));
     }
-    
+
     private void runWithFactoryWithLocations(Collection<Location> locs) {
         Collection<Location> unclaimedLocs = Lists.newArrayList(locs);
         
@@ -120,11 +122,11 @@ public class DynamicFabricTest {
                                 .configure(flags));
                     }}));
         app.start(locs);
-        
+
         assertEquals(fabric.getChildren().size(), locs.size(), Joiner.on(",").join(fabric.getChildren()));
         assertEquals(fabric.getMembers().size(), locs.size(), "members="+fabric.getMembers());
         assertEquals(ImmutableSet.copyOf(fabric.getMembers()), ImmutableSet.copyOf(fabric.getChildren()), "members="+fabric.getMembers()+"; children="+fabric.getChildren());
-        
+
         for (Entity it : fabric.getChildren()) {
             TestEntity child = (TestEntity) it;
             assertEquals(child.getCounter().get(), 1);
@@ -133,7 +135,7 @@ public class DynamicFabricTest {
         }
         assertTrue(unclaimedLocs.isEmpty(), Joiner.on(",").join(unclaimedLocs));
     }
-    
+
     @Test
     public void testNotifiesPostStartListener() throws Exception {
         final List<Entity> entitiesAdded = new CopyOnWriteArrayList<Entity>();
@@ -147,13 +149,13 @@ public class DynamicFabricTest {
                     entitiesAdded.add(result);
                     return result;
                 }}));
-        
+
         app.start(ImmutableList.of(loc1, loc2));
-        
+
         assertEquals(entitiesAdded.size(), 2);
         assertEquals(ImmutableSet.copyOf(entitiesAdded), ImmutableSet.copyOf(fabric.getChildren()));
     }
-    
+
     @Test
     public void testSizeEnricher() throws Exception {
         Collection<Location> locs = ImmutableList.of(loc1, loc2, loc3);
@@ -171,31 +173,31 @@ public class DynamicFabricTest {
                                 }}));
                 }}));
         app.start(locs);
-        
+
         final AtomicInteger i = new AtomicInteger();
         final AtomicInteger total = new AtomicInteger();
-        
+
         assertEquals(fabric.getChildren().size(), locs.size(), Joiner.on(",").join(fabric.getChildren()));
         for (Entity it : fabric.getChildren()) {
             Cluster child = (Cluster) it;
             total.addAndGet(i.incrementAndGet());
             child.resize(i.get());
         }
-        
+
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 assertEquals(fabric.getAttribute(DynamicFabric.FABRIC_SIZE), (Integer) total.get());
                 assertEquals(fabric.getFabricSize(), (Integer) total.get());
             }});
     }
-    
+
     @Test
     public void testDynamicFabricStartsEntitiesInParallel() throws Exception {
         final List<CountDownLatch> latches = Lists.newCopyOnWriteArrayList();
         DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
             .configure("factory", new EntityFactory<Entity>() {
                 @Override public Entity newEntity(Map flags, Entity parent) {
-                    CountDownLatch latch = new CountDownLatch(1); 
+                    CountDownLatch latch = new CountDownLatch(1);
                     latches.add(latch);
                     return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(BlockingEntity.class)
                             .parent(parent)
@@ -203,7 +205,7 @@ public class DynamicFabricTest {
                             .configure(BlockingEntity.STARTUP_LATCH, latch));
                 }}));
         final Collection<Location> locs = ImmutableList.of(loc1, loc2);
-        
+
         final Task<?> task = fabric.invoke(Startable.START, ImmutableMap.of("locations", locs));
 
         new Repeater("Wait until each task is executing")
@@ -217,11 +219,11 @@ public class DynamicFabricTest {
                 .run();
 
         assertFalse(task.isDone());
-        
+
         for (CountDownLatch latch : latches) {
             latch.countDown();
         }
-               
+
         new Repeater("Wait until complete")
                 .repeat()
                 .every(100, TimeUnit.MILLISECONDS)
@@ -233,7 +235,7 @@ public class DynamicFabricTest {
                 .run();
 
         assertEquals(fabric.getChildren().size(), locs.size(), Joiner.on(",").join(fabric.getChildren()));
-                
+
         for (Entity it : fabric.getChildren()) {
             assertEquals(((TestEntity)it).getCounter().get(), 1);
         }
@@ -246,7 +248,7 @@ public class DynamicFabricTest {
             testDynamicFabricStopsEntitiesInParallel();
         }
     }
-    
+
     @Test
     public void testDynamicFabricStopsEntitiesInParallel() throws Exception {
         final List<CountDownLatch> shutdownLatches = Lists.newCopyOnWriteArrayList();
@@ -254,8 +256,8 @@ public class DynamicFabricTest {
         final DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
             .configure("factory", new EntityFactory<Entity>() {
                 @Override public Entity newEntity(Map flags, Entity parent) {
-                    CountDownLatch shutdownLatch = new CountDownLatch(1); 
-                    CountDownLatch executingShutdownNotificationLatch = new CountDownLatch(1); 
+                    CountDownLatch shutdownLatch = new CountDownLatch(1);
+                    CountDownLatch executingShutdownNotificationLatch = new CountDownLatch(1);
                     shutdownLatches.add(shutdownLatch);
                     executingShutdownNotificationLatches.add(executingShutdownNotificationLatch);
                     return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(BlockingEntity.class)
@@ -265,15 +267,15 @@ public class DynamicFabricTest {
                             .configure(BlockingEntity.EXECUTING_SHUTDOWN_NOTIFICATION_LATCH, executingShutdownNotificationLatch));
                 }}));
         Collection<Location> locs = ImmutableList.of(loc1, loc2);
-        
+
         // Start the fabric (and check we have the required num things to concurrently stop)
         fabric.start(locs);
-        
+
         assertEquals(shutdownLatches.size(), locs.size());
         assertEquals(executingShutdownNotificationLatches.size(), locs.size());
         assertEquals(fabric.getChildren().size(), locs.size());
         Collection<Entity> children = fabric.getChildren();
-        
+
         // On stop, expect each child to get as far as blocking on its latch
         final Task<?> task = fabric.invoke(Startable.STOP, ImmutableMap.<String,Object>of());
 
@@ -281,12 +283,12 @@ public class DynamicFabricTest {
             assertTrue(it.await(10*1000, TimeUnit.MILLISECONDS));
         }
         assertFalse(task.isDone());
-        
+
         // When we release the latches, expect shutdown to complete
         for (CountDownLatch latch : shutdownLatches) {
             latch.countDown();
         }
-        
+
         Asserts.succeedsEventually(MutableMap.of("timeout", 10*1000), new Runnable() {
             public void run() {
                 assertTrue(task.isDone());
@@ -300,7 +302,7 @@ public class DynamicFabricTest {
                 }
             }});
     }
-    
+
     @Test
     public void testDynamicFabricDoesNotAcceptUnstartableChildren() throws Exception {
         DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
@@ -310,7 +312,7 @@ public class DynamicFabricTest {
                             .parent(parent)
                             .configure(flags));
                 }}));
-        
+
         try {
             fabric.start(ImmutableList.of(loc1));
             assertEquals(fabric.getChildren().size(), 1);
@@ -323,7 +325,7 @@ public class DynamicFabricTest {
             }
         }
     }
-    
+
     // For follow-the-sun, a valid pattern is to associate the FollowTheSunModel as a child of the dynamic-fabric.
     // Thus we have "unstoppable" entities. Let's be relaxed about it, rather than blowing up.
     @Test
@@ -335,16 +337,16 @@ public class DynamicFabricTest {
                             .parent(parent)
                             .configure(flags));
                 }}));
-        
+
         fabric.start(ImmutableList.of(loc1));
         
         BasicEntity extraChild = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(BasicEntity.class)
                 .parent(fabric));
         Entities.manage(extraChild);
-        
+
         fabric.stop();
     }
-    
+
 	@Test
     public void testDynamicFabricPropagatesProperties() throws Exception {
 		final EntityFactory<Entity> entityFactory = new EntityFactory<Entity>() {
@@ -354,7 +356,7 @@ public class DynamicFabricTest {
                         .configure(flags)
                         .configure("b", "avail"));
             }};
-	
+
             final EntityFactory<Entity> clusterFactory = new EntityFactory<Entity>() {
             @Override public Entity newEntity(Map flags, Entity parent) {
                 return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(DynamicCluster.class)
@@ -373,9 +375,9 @@ public class DynamicFabricTest {
             .configure("factory", clusterFactory)
             .configure("customChildFlags", ImmutableMap.of("fromFabric", "passed to cluster but not base entity"))
             .configure(Attributes.HTTP_PORT, PortRanges.fromInteger(1234))); // for inheritance by children (as a port range)
-        
+
 		app.start(ImmutableList.of(loc1));
-        
+
 		assertEquals(fabric.getChildren().size(), 1);
 		assertEquals(getChild(fabric, 0).getChildren().size(), 1);
 		assertEquals(getGrandchild(fabric, 0, 0).getConfig(Attributes.HTTP_PORT.getConfigKey()), PortRanges.fromInteger(1234));
@@ -383,7 +385,7 @@ public class DynamicFabricTest {
 		assertEquals(((TestEntity)getGrandchild(fabric, 0, 0)).getConfigureProperties().get("b"), "avail");
 		assertEquals(((TestEntity)getGrandchild(fabric, 0, 0)).getConfigureProperties().get("fromCluster"), "passed to base entity");
 		assertEquals(((TestEntity)getGrandchild(fabric, 0, 0)).getConfigureProperties().get("fromFabric"), null);
-        
+
         ((DynamicCluster)getChild(fabric, 0)).resize(2);
         assertEquals(getChild(fabric, 0).getChildren().size(), 2);
         assertEquals(getGrandchild(fabric, 0, 1).getConfig(Attributes.HTTP_PORT.getConfigKey()), PortRanges.fromInteger(1234));
@@ -392,12 +394,12 @@ public class DynamicFabricTest {
         assertEquals(((TestEntity)getGrandchild(fabric, 0, 1)).getConfigureProperties().get("fromCluster"), "passed to base entity");
         assertEquals(((TestEntity)getGrandchild(fabric, 0, 1)).getConfigureProperties().get("fromFabric"), null);
 	}
-	
+
 	private Entity getGrandchild(Entity entity, int childIndex, int grandchildIndex) {
         Entity child = getChild(entity, childIndex);
         return Iterables.get(child.getChildren(), grandchildIndex);
 	}
-	
+
     private Entity getChild(Entity entity, int childIndex) {
         return Iterables.get(entity.getChildren(), childIndex);
     }

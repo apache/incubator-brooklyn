@@ -1,5 +1,7 @@
 package brooklyn.entity
 
+import brooklyn.management.internal.LocalManagementContext
+
 import static org.testng.Assert.*
 
 import org.slf4j.Logger
@@ -43,6 +45,7 @@ public class EffectorSayHiGroovyTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
         if (app != null) Entities.destroyAll(app.getManagementContext());
+        LocalManagementContext.terminateAll();
     }
 
     @Test

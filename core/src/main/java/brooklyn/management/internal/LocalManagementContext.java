@@ -44,7 +44,11 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     public static void terminateAll(){
         for(LocalManagementContext context:INSTANCES){
-            context.terminate();
+            try{
+                context.terminate();
+            }catch(Throwable t){
+                log.warn("Failed to terminate management context",t);
+            }
         }
     }
 
@@ -52,7 +56,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     private SubscriptionManager subscriptions;
     private LocalEntityManager entityManager;
     private final LocalLocationManager locationManager;
-    
+
     private final String shortid = Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5);
     private final String tostring = "LocalManagementContext("+shortid+")";
 
@@ -91,7 +95,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         }
         INSTANCES.add(this);
     }
-    
+
     public void prePreManage(Entity entity) {
         getEntityManager().prePreManage(entity);
     }
@@ -104,7 +108,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     public synchronized Collection<Application> getApplications() {
         return getEntityManager().getApplications();
     }
-    
+
     @Override
     public void addEntitySetListener(CollectionChangeListener<Entity> listener) {
         getEntityManager().addEntitySetListener(listener);
@@ -114,16 +118,16 @@ public class LocalManagementContext extends AbstractManagementContext {
     public void removeEntitySetListener(CollectionChangeListener<Entity> listener) {
         getEntityManager().removeEntitySetListener(listener);
     }
-    
+
     @Override
     protected void manageIfNecessary(Entity entity, Object context) {
         getEntityManager().manageIfNecessary(entity, context);
     }
-    
+
     @Override
     public synchronized LocalEntityManager getEntityManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
-        
+
         if (entityManager == null) {
             entityManager = new LocalEntityManager(this);
         }
@@ -139,7 +143,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     public synchronized  SubscriptionManager getSubscriptionManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
-        
+
         if (subscriptions == null) {
             subscriptions = new LocalSubscriptionManager(getExecutionManager());
         }
@@ -149,14 +153,14 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     public synchronized ExecutionManager getExecutionManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
-        
+
         if (execution == null) {
             execution = new BasicExecutionManager(shortid);
             gc = new BrooklynGarbageCollector(configMap, execution);
         }
         return execution;
     }
-    
+
     @Override
     public void terminate() {
         INSTANCES.remove(this);
@@ -165,12 +169,12 @@ public class LocalManagementContext extends AbstractManagementContext {
         if (gc != null) gc.shutdownNow();
         instanceCount.decrementAndGet();
     }
-    
+
     @Override
     protected void finalize() {
         terminate();
     }
-    
+
     @Override
     public <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c) {
 		manageIfNecessary(entity, elvis(Arrays.asList(flags.get("displayName"), flags.get("description"), flags, c)));

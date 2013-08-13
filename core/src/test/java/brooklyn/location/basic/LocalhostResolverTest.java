@@ -21,10 +21,10 @@ public class LocalhostResolverTest {
     public void setUp() throws Exception {
         managementContext = new LocalManagementContext();
     }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (managementContext != null) managementContext.terminate();
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
     }
 
     @Test

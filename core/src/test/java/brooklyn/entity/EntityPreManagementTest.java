@@ -3,6 +3,7 @@ package brooklyn.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -44,6 +45,7 @@ public class EntityPreManagementTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroy(app);
+        LocalManagementContext.terminateAll();
     }
     
     @Test

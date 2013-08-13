@@ -1,5 +1,7 @@
 package brooklyn.entity.basic
 
+import brooklyn.management.internal.LocalManagementContext
+
 import static org.testng.Assert.*
 
 import java.util.concurrent.Callable
@@ -53,6 +55,7 @@ public class ConfigMapTest {
     public void tearDown() throws Exception {
         Entities.destroyAll(app.getManagementContext());
         if (executor != null) executor.shutdownNow();
+        LocalManagementContext.terminateAll();
     }
 
     @Test

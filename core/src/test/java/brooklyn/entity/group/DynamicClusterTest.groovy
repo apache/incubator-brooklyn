@@ -1,5 +1,8 @@
 package brooklyn.entity.group
 
+import brooklyn.management.internal.LocalManagementContext
+import org.testng.annotations.AfterMethod
+
 import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
@@ -34,22 +37,28 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 
+
 class DynamicClusterTest {
 
     private static final int TIMEOUT_MS = 2000
-        
+
     static { TimeExtras.init() }
-    
+
     TestApplication app
     SimulatedLocation loc
     SimulatedLocation loc2
     Random random = new Random()
-    
+
     @BeforeMethod
     public void setUp() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         loc = new SimulatedLocation()
         loc2 = new SimulatedLocation()
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
     }
 
     @Test
@@ -156,7 +165,7 @@ class DynamicClusterTest {
     public void currentSizePropertyReflectsActualClusterSize() {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("factory", { properties -> return new TestEntityImpl(properties) }));
-        
+
         assertEquals cluster.currentSize, 0
 
         cluster.start([loc])
@@ -174,7 +183,7 @@ class DynamicClusterTest {
         assertEquals newSize, cluster.currentSize
         assertEquals newSize, cluster.members.size()
         assertEquals newSize, cluster.getAttribute(Changeable.GROUP_SIZE)
-        
+
         newSize = cluster.resize(0)
         assertEquals newSize, 0
         assertEquals newSize, cluster.currentSize
@@ -187,7 +196,7 @@ class DynamicClusterTest {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("factory", { properties -> return new TestEntityImpl(properties) })
                 .configure("initialSize", 2));
-        
+
         cluster.start([loc])
         assertEquals cluster.currentSize, 2
         assertEquals cluster.members.size(), 2
@@ -211,7 +220,7 @@ class DynamicClusterTest {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("factory", newEntity)
                 .configure("initialSize", 1));
-        
+
         cluster.start(locations)
 
         assertNotNull entity.stashedLocations
@@ -225,7 +234,7 @@ class DynamicClusterTest {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("factory", { properties -> entity = new TestEntityImpl(properties) })
                 .configure("initialSize", 1));
-        
+
         cluster.start([loc])
         assertEquals cluster.currentSize, 1
         assertEquals entity.counter.get(), 1
@@ -244,13 +253,13 @@ class DynamicClusterTest {
                     Map flags, Entity cluster -> 
                     Thread.sleep(STARTUP_TIME_MS); numStarted.incrementAndGet(); new TestEntityImpl(flags, cluster)
                 }));
-        
+
         assertEquals cluster.currentSize, 0
         cluster.start([loc])
 
         ExecutorService executor = Executors.newCachedThreadPool()
         List<Throwable> throwables = new CopyOnWriteArrayList<Throwable>()
-        
+
         try {
             for (int i in 1..10) {
                 executor.submit( {
@@ -261,7 +270,7 @@ class DynamicClusterTest {
                     }
                 })
             }
-            
+
             executor.shutdown()
             assertTrue(executor.awaitTermination(10*STARTUP_TIME_MS+OVERHEAD_MS, TimeUnit.MILLISECONDS))
             if (throwables.size() > 0) throw throwables.get(0)
@@ -279,13 +288,13 @@ class DynamicClusterTest {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("factory", { properties -> entity = new TestEntityImpl(properties) })
                 .configure("initialSize", 1));
-        
+
         cluster.start([loc])
         assertEquals entity.counter.get(), 1
         cluster.stop()
         assertEquals entity.counter.get(), 0
     }
-    
+
     /**
      * This tests the fix for ENGR-1826.
      */
@@ -295,11 +304,11 @@ class DynamicClusterTest {
         final AtomicInteger counter = new AtomicInteger(0)
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 0)
-                .configure("factory", { properties -> 
+                .configure("factory", { properties ->
                     int num = counter.incrementAndGet();
-                    return new FailingEntity(properties, (num==failNum)) 
+                    return new FailingEntity(properties, (num==failNum))
                 }));
-        
+
         cluster.start([loc])
         cluster.resize(3)
         assertEquals(cluster.currentSize, 2)
@@ -308,7 +317,7 @@ class DynamicClusterTest {
             assertFalse(((FailingEntity)it).failOnStart)
         }
     }
-    
+
     @Test
     public void testInitialQuorumSizeSufficientForStartup() {
         final int failNum = 1;
@@ -320,7 +329,7 @@ class DynamicClusterTest {
                     int num = counter.incrementAndGet();
                     return new FailingEntity(properties, (num==failNum))
                 }));
-        
+
         cluster.start([loc])
         assertEquals(cluster.getCurrentSize(), 1)
         assertEquals(cluster.getChildren().size(), 1)
@@ -328,7 +337,7 @@ class DynamicClusterTest {
             assertFalse(((FailingEntity)child).failOnStart)
         }
     }
-    
+
     @Test
     public void testInitialQuorumSizeDeafultsToInitialSize() throws Exception {
         final int failNum = 1;
@@ -339,7 +348,7 @@ class DynamicClusterTest {
                     int num = counter.incrementAndGet();
                     return new FailingEntity(properties, (num==failNum))
                 }));
-        
+
         try {
             cluster.start([loc])
         } catch (Exception e) {
@@ -356,7 +365,7 @@ class DynamicClusterTest {
             assertFalse(((FailingEntity)child).failOnStart)
         }
     }
-    
+
     @Test
     public void testCanQuarantineFailedEntities() {
         final int failNum = 2
@@ -364,11 +373,11 @@ class DynamicClusterTest {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("quarantineFailedEntities", true)
                 .configure("initialSize", 0)
-                .configure("factory", { properties -> 
+                .configure("factory", { properties ->
                     int num = counter.incrementAndGet();
-                    return new FailingEntity(properties, (num==failNum)) 
+                    return new FailingEntity(properties, (num==failNum))
                 }));
-        
+
         cluster.start([loc])
         cluster.resize(3)
         assertEquals(cluster.currentSize, 2)
@@ -377,13 +386,13 @@ class DynamicClusterTest {
         cluster.members.each {
             assertFalse(((FailingEntity)it).failOnStart)
         }
-        
+
         assertEquals(cluster.getAttribute(DynamicCluster.QUARANTINE_GROUP).members.size(), 1)
         cluster.getAttribute(DynamicCluster.QUARANTINE_GROUP).members.each {
             assertTrue(((FailingEntity)it).failOnStart)
         }
     }
-    
+
     @Test
     public void defaultRemovalStrategyShutsDownNewestFirstWhenResizing() {
         TestEntity entity
@@ -391,61 +400,61 @@ class DynamicClusterTest {
         final List<Entity> creationOrder = []
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 0)
-                .configure("factory", { properties -> 
+                .configure("factory", { properties ->
                     Entity result = new TestEntityImpl(properties)
                     creationOrder << result
                     return result
                 }));
-        
+
         cluster.start([loc])
         cluster.resize(1)
         cluster.resize(2)
         assertEquals(cluster.currentSize, 2)
         assertEquals(ImmutableSet.copyOf(cluster.getChildren()), ImmutableSet.copyOf(creationOrder), "actual="+cluster.getChildren())
-        
+
         // Now stop one
         cluster.resize(1)
         assertEquals(cluster.currentSize, 1)
         assertEquals(ImmutableList.copyOf(cluster.getChildren()), creationOrder.subList(0, 1))
     }
-        
+
     @Test
     public void resizeLoggedAsEffectorCall() {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("factory", { properties -> return new TestEntityImpl(properties) }));
-        
+
         app.start([loc])
         cluster.resize(1)
-        
+
         Set<Task> tasks = app.getManagementContext().getExecutionManager().getTasksWithAllTags([cluster,"EFFECTOR"])
         assertEquals(tasks.size(), 2)
         assertTrue(Iterables.get(tasks, 0).getDescription().contains("start"))
         assertTrue(Iterables.get(tasks, 1).getDescription().contains("resize"))
     }
-    
+
     @Test
     public void testStoppedChildIsRemoveFromGroup() {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure("factory", { properties -> return new TestEntityImpl(properties) }));
-        
+
         cluster.start([loc])
-        
+
         TestEntity child = cluster.children.get(0)
         child.stop()
         Entities.unmanage(child)
-        
+
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(cluster.children.size(), 0)
             assertEquals(cluster.currentSize, 0)
             assertEquals(cluster.members.size(), 0)
         }
     }
-    
+
     @Test
     public void testPluggableRemovalStrategyIsUsed() {
         List<Entity> removedEntities = []
-        
+
         Closure removalStrategy = { Collection<Entity> contenders ->
             Entity choice = Iterables.get(contenders, random.nextInt(contenders.size()))
             removedEntities.add(choice)
@@ -455,10 +464,10 @@ class DynamicClusterTest {
                 .configure("factory", { properties -> return new TestEntityImpl(properties) })
                 .configure("initialSize", 10)
                 .configure("removalStrategy", removalStrategy));
-        
+
         cluster.start([loc])
         Set origMembers = cluster.members as Set
-        
+
         for (int i = 10; i >= 0; i--) {
             cluster.resize(i)
             assertEquals(cluster.getAttribute(Changeable.GROUP_SIZE), i)
@@ -466,11 +475,11 @@ class DynamicClusterTest {
             assertEquals(ImmutableSet.copyOf(Iterables.concat(cluster.members, removedEntities)), origMembers)
         }
     }
-    
+
     @Test
     public void testPluggableRemovalStrategyCanBeSetAfterConstruction() {
         List<Entity> removedEntities = []
-        
+
         Closure removalStrategy = { Collection<Entity> contenders ->
             Entity choice = Iterables.get(contenders, random.nextInt(contenders.size()))
             removedEntities.add(choice)
@@ -479,12 +488,12 @@ class DynamicClusterTest {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("factory", { properties -> return new TestEntityImpl(properties) })
                 .configure("initialSize", 10));
-        
+
         cluster.start([loc])
         Set origMembers = cluster.members as Set
 
         cluster.setRemovalStrategy(removalStrategy)
-        
+
         for (int i = 10; i >= 0; i--) {
             cluster.resize(i)
             assertEquals(cluster.getAttribute(Changeable.GROUP_SIZE), i)
@@ -500,12 +509,12 @@ class DynamicClusterTest {
         
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 0)
-                .configure("factory", { properties -> 
+                .configure("factory", { properties ->
                         executingLatch.countDown()
                         continuationLatch.await()
                         return new TestEntityImpl(properties)
                     }));
-        
+
         cluster.start([loc])
 
         Thread thread = new Thread( { cluster.resize(1) })
@@ -513,15 +522,15 @@ class DynamicClusterTest {
             // wait for resize to be executing
             thread.start()
             executingLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            
+
             // ensure can still call methods on group, to query/update membership
             assertEquals(cluster.getMembers(), [])
             assertEquals(cluster.getCurrentSize(), 0)
             assertFalse(cluster.hasMember(cluster))
             cluster.addMember(cluster)
             assertTrue(cluster.removeMember(cluster))
-            
-            // allow the resize to complete            
+
+            // allow the resize to complete
             continuationLatch.countDown()
             thread.join(TIMEOUT_MS)
             assertFalse(thread.isAlive())
@@ -529,19 +538,19 @@ class DynamicClusterTest {
             thread.interrupt()
         }
     }
-    
+
     @Test
     public void testReplacesMember() {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure("factory", { properties -> return new TestEntityImpl(properties) }));
-        
+
         cluster.start([loc])
         Entity member = Iterables.get(cluster.members, 0);
-        
+
         String replacementId = cluster.replaceMember(member.getId());
         Entity replacement = cluster.getManagementContext().getEntityManager().getEntity(replacementId);
-        
+
         assertEquals(cluster.members.size(), 1)
         assertFalse(cluster.members.contains(member))
         assertFalse(cluster.children.contains(member))
@@ -549,16 +558,16 @@ class DynamicClusterTest {
         assertTrue(cluster.members.contains(replacement), "replacement="+replacement+"; members="+cluster.members);
         assertTrue(cluster.children.contains(replacement), "replacement="+replacement+"; children="+cluster.children);
     }
-    
+
     @Test
     public void testReplaceMemberThrowsIfMemberIdDoesNotResolve() {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure("factory", { properties -> return new TestEntityImpl(properties) }));
-        
+
         cluster.start([loc])
         Entity member = Iterables.get(cluster.members, 0);
-        
+
         try {
             cluster.replaceMember("wrong.id");
             fail();
@@ -566,19 +575,19 @@ class DynamicClusterTest {
             if (Exceptions.getFirstThrowableOfType(e, NoSuchElementException.class) == null) throw e;
             if (!Exceptions.getFirstThrowableOfType(e, NoSuchElementException.class).getMessage().contains("entity wrong.id cannot be resolved")) throw e;
         }
-        
+
         assertEquals(cluster.members as Set, ImmutableSet.of(member));
     }
-    
+
     @Test
     public void testReplaceMemberThrowsIfNotMember() {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure("factory", { properties -> return new TestEntityImpl(properties) }));
-        
+
         cluster.start([loc])
         Entity member = Iterables.get(cluster.members, 0);
-        
+
         try {
             cluster.replaceMember(app.getId());
             fail();
@@ -586,10 +595,10 @@ class DynamicClusterTest {
             if (Exceptions.getFirstThrowableOfType(e, NoSuchElementException.class) == null) throw e;
             if (!Exceptions.getFirstThrowableOfType(e, NoSuchElementException.class).getMessage().contains("is not a member")) throw e;
         }
-        
+
         assertEquals(cluster.members as Set, ImmutableSet.of(member));
     }
-    
+
     @Test
     public void testReplaceMemberFailsIfCantProvisionReplacement() {
         final int failNum = 2
@@ -597,12 +606,12 @@ class DynamicClusterTest {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("factory", { properties -> 
                     int num = counter.incrementAndGet();
-                    return new FailingEntity(properties, (num==failNum)) 
+                    return new FailingEntity(properties, (num==failNum))
                 }));
-        
+
         cluster.start([loc])
         Entity member = Iterables.get(cluster.members, 0);
-        
+
         try {
             cluster.replaceMember(member.getId());
             fail();
@@ -612,21 +621,21 @@ class DynamicClusterTest {
         }
         assertEquals(cluster.members as Set, ImmutableSet.of(member));
     }
-    
+
     @Test
     public void testReplaceMemberRemovesAndThowsIfFailToStopOld() {
         final int failNum = 1
         final AtomicInteger counter = new AtomicInteger(0)
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
-                .configure("factory", { properties -> 
+                .configure("factory", { properties ->
                     int num = counter.incrementAndGet();
-                    return new FailingEntity(properties, false, (num==failNum), IllegalStateException.class) 
+                    return new FailingEntity(properties, false, (num==failNum), IllegalStateException.class)
                 }));
-        
+
         cluster.start([loc])
         Entity member = Iterables.get(cluster.members, 0);
-        
+
         try {
             cluster.replaceMember(member.getId());
             fail();
@@ -637,7 +646,7 @@ class DynamicClusterTest {
         assertFalse(Entities.isManaged(member));
         assertEquals(cluster.members.size(), 1);
     }
-    
+
     private Throwable unwrapException(Throwable e) {
         if (e instanceof ExecutionException) {
             return unwrapException(e.cause)

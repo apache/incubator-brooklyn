@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.management.internal.LocalManagementContext;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -34,7 +36,12 @@ public class MementoTransformerTest {
         rebindContext.registerLocation(location.getId(), location);
         rebindContext.registerEntity(entity.getId(), entity);
     }
-    
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
+    }
+
     @Test
     public void testTransformLocation() throws Exception {
         assertTransformsLocationIds(location, Location.class);

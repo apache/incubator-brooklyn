@@ -7,6 +7,8 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
+
+import brooklyn.management.internal.LocalManagementContext;
 import groovy.lang.Closure;
 
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
@@ -58,7 +61,12 @@ public class LocalEntitiesTest {
 	    app = ApplicationBuilder.newManagedApp(TestApplication.class);
 	    entityManager = app.getManagementContext().getEntityManager();
 	}
-	
+
+    @AfterMethod
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
+    }
+
     @Test
     public void testEffectorUpdatesAttributeSensor() {
         HelloEntity h = app.createAndManageChild(EntitySpec.create(HelloEntity.class));

@@ -31,6 +31,7 @@ public class LocalhostLocationResolverTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (managementContext != null) managementContext.terminate();
+        LocalManagementContext.terminateAll();
     }
     
     @Test

@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
+import brooklyn.management.internal.LocalManagementContext;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -44,7 +46,12 @@ public class EntityConfigMapUsageTest {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         locs = ImmutableList.of(new SimulatedLocation());
     }
-    
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
+    }
+
     @Test
     public void testConfigPassedInAtConstructionIsAvailable() throws Exception {
         TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)

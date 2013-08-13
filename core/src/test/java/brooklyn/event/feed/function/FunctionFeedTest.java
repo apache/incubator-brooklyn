@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -57,6 +58,7 @@ public class FunctionFeedTest {
     public void tearDown() throws Exception {
         if (feed != null) feed.stop();
         if (app != null) Entities.destroyAll(app.getManagementContext());
+        LocalManagementContext.terminateAll();
     }
     
     @Test

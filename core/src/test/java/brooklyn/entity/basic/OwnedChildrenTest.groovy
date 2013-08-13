@@ -1,5 +1,8 @@
 package brooklyn.entity.basic
 
+import brooklyn.management.internal.LocalManagementContext
+import org.testng.annotations.AfterMethod
+
 import static org.testng.Assert.*
 
 import org.testng.annotations.BeforeMethod
@@ -16,7 +19,12 @@ public class OwnedChildrenTest {
     public void setUp() {
         app = new AbstractApplication() {}
     }
-    
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
+    }
+
     // Tests that the deprecated "owner" still works
     @Test
     public void testSetOwnerInConstructorMap() {

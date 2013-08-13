@@ -8,6 +8,8 @@ import static org.testng.Assert.assertTrue;
 import java.util.Collections;
 import java.util.Map;
 
+import brooklyn.management.internal.LocalManagementContext;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
@@ -28,6 +30,11 @@ public class AbstractLocationTest {
         public ConcreteLocation(Map properties) {
             super(properties);
         }
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
     }
 
     @Test

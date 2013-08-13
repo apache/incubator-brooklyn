@@ -1,4 +1,6 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.basic
+
+import brooklyn.management.internal.LocalManagementContext;
 
 import static org.testng.Assert.assertEquals
 
@@ -34,6 +36,7 @@ public class AttributeMapTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
         if (app != null) Entities.destroyAll(app.getManagementContext());
+        LocalManagementContext.terminateAll();
     }
     
     // See ENGR-2111

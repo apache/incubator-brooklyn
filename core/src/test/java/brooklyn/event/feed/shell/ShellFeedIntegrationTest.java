@@ -5,6 +5,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -53,6 +54,7 @@ public class ShellFeedIntegrationTest {
         if (feed != null) feed.stop();
         if (app != null) Entities.destroyAll(app.getManagementContext());
         if (loc != null) Closeables.closeQuietly(loc);
+        LocalManagementContext.terminateAll();
     }
     
     @Test(groups="Integration")

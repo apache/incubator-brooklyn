@@ -1,4 +1,7 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.basic
+
+import brooklyn.management.internal.LocalManagementContext
+import org.testng.annotations.AfterMethod;
 
 import static org.testng.Assert.*
 
@@ -18,7 +21,12 @@ public class AttributeTest {
     public void setUp() throws Exception {
         e = new TestEntityImpl();
     }
-    
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
+    }
+
     @Test
     public void canGetAndSetAttribute() {
         e.setAttribute(COLOR, "red")

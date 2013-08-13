@@ -9,6 +9,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -38,6 +39,11 @@ public class LocalSubscriptionManagerTest {
     public void setup() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
     }
 
     private void manage(Entity ...entities) {

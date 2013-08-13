@@ -1,6 +1,8 @@
-package brooklyn.location.basic;
+package brooklyn.location.basic
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.testng.Assert
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -27,7 +29,12 @@ public class TestPortSupplierLocation {
         
         ps = new PortAttributeSensorAndConfigKey("some.port", "for testing", "1234+");
     }
-    
+
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        LocalManagementContext.terminateAll();
+    }
+
     @Test
     public void testObtainsPort() {
         ConfigToAttributes.apply(e, ps);

@@ -2,6 +2,7 @@ package brooklyn.entity.basic;
 
 import java.util.List;
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ public class EffectorBasicTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroy(app);
+        LocalManagementContext.terminateAll();
     }
     
     @Test

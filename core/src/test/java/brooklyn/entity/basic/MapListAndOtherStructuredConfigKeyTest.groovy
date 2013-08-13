@@ -1,4 +1,6 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.basic
+
+import brooklyn.management.internal.LocalManagementContext;
 
 import static org.testng.Assert.*
 
@@ -37,6 +39,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroy(app);
+        LocalManagementContext.terminateAll();
     }
     
     @Test    

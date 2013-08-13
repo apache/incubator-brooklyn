@@ -1,10 +1,5 @@
 package brooklyn.entity.group;
 
-import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
-
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.ApplicationBuilder;
@@ -21,28 +16,39 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.javalang.Boxing;
-
 import com.google.common.base.Objects;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
-/** tests that a group's membership gets updated using subscriptions */
+/**
+ * tests that a group's membership gets updated using subscriptions
+ */
 public class GroupPickUpEntitiesTest {
 
     private TestApplication app;
     private BasicGroup group;
 
-    @BeforeTest(alwaysRun=true)
-    public void setup() {
+    @BeforeTest(alwaysRun = true)
+    public void setup() throws Exception{
+        Thread.sleep(10000);
+
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         
         group.addPolicy(new FindUpServicesWithNameBob());
     }
 
-    @AfterTest(alwaysRun=true)
+    @AfterTest(alwaysRun = true)
     public void teardown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        try {
+            if (app != null) Entities.destroyAll(app.getManagementContext());
+        } catch (Exception e) {
+
+        }
     }
-    
+
     @Test
     public void testGroupFindsElement() {
         Assert.assertEquals(group.getMembers().size(), 0);
@@ -51,10 +57,10 @@ public class GroupPickUpEntitiesTest {
         TestEntity e1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
         EntityTestUtils.assertAttributeEquals(group, BasicGroup.GROUP_SIZE, 0);
-        
+
         e1.setAttribute(Startable.SERVICE_UP, true);
         e1.setAttribute(TestEntity.NAME, "bob");
-        
+
         EntityTestUtils.assertAttributeEqualsEventually(group, BasicGroup.GROUP_SIZE, 1);
         
         TestEntity e2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
@@ -62,23 +68,25 @@ public class GroupPickUpEntitiesTest {
         EntityTestUtils.assertAttributeEquals(group, BasicGroup.GROUP_SIZE, 1);
         Assert.assertEquals(group.getMembers().size(), 1);
         Assert.assertTrue(group.getMembers().contains(e1));
-        
+
         e2.setAttribute(Startable.SERVICE_UP, true);
         e2.setAttribute(TestEntity.NAME, "fred");
 
         EntityTestUtils.assertAttributeEquals(group, BasicGroup.GROUP_SIZE, 1);
-        
+
         e2.setAttribute(TestEntity.NAME, "BOB");
         EntityTestUtils.assertAttributeEqualsEventually(group, BasicGroup.GROUP_SIZE, 2);
     }
 
 
-    /** sets the membership of a group to be all up services; 
+    /**
+     * sets the membership of a group to be all up services;
      * callers can subclass and override {@link #checkMembership(Entity)} to add additional membership constraints,
-     * and optionally {@link #init()} to apply additional subscriptions */
+     * and optionally {@link #init()} to apply additional subscriptions
+     */
     public static class FindUpServices extends AbstractPolicy {
-        
-        @SuppressWarnings({ "rawtypes" })
+
+        @SuppressWarnings({"rawtypes"})
         protected final SensorEventListener handler = new SensorEventListener() {
             @Override
             public void onEvent(SensorEvent event) {
@@ -91,7 +99,7 @@ public class GroupPickUpEntitiesTest {
             assert entity instanceof Group;
             super.setEntity(entity);
             init();
-            for (Entity e: ((EntityInternal)entity).getManagementContext().getEntityManager().getEntities()) {
+            for (Entity e : ((EntityInternal) entity).getManagementContext().getEntityManager().getEntities()) {
                 if (Objects.equal(e.getApplicationId(), entity.getApplicationId()))
                     updateMembership(e);
             }
@@ -103,9 +111,9 @@ public class GroupPickUpEntitiesTest {
         }
 
         protected Group getGroup() {
-            return (Group)entity;
+            return (Group) entity;
         }
-        
+
         protected void updateMembership(Entity e) {
             boolean isMember = checkMembership(e);
             if (isMember) getGroup().addMember(e);
@@ -119,9 +127,9 @@ public class GroupPickUpEntitiesTest {
         }
     }
 
-    
+
     public static class FindUpServicesWithNameBob extends FindUpServices {
-        
+
         @SuppressWarnings("unchecked")
         protected void init() {
             super.init();
@@ -134,5 +142,5 @@ public class GroupPickUpEntitiesTest {
             return true;
         }
     }
-    
+
 }

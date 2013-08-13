@@ -3,6 +3,7 @@ package brooklyn.location.basic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
@@ -14,15 +15,19 @@ public class LocationRegistryTest {
     
     private static final Logger log = LoggerFactory.getLogger(LocationRegistryTest.class);
     
-    private LocalManagementContext mgmt;
     private LocationDefinition locdef;
-    
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        LocalManagementContext.terminateAll();
+    }
+
     @Test
     public void testNamedLocationsPropertyDefinedLocations() {
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
         properties.put("brooklyn.location.named.foo", "byon:(hosts=\"root@192.168.1.{1,2,3,4}\")");
         properties.put("brooklyn.location.named.foo.privateKeyFile", "~/.ssh/foo.id_rsa");
-        mgmt = new LocalManagementContext(properties);
+        LocalManagementContext mgmt = new LocalManagementContext(properties);
         log.info("foo properties gave defined locations: "+mgmt.getLocationRegistry().getDefinedLocations());
         locdef = mgmt.getLocationRegistry().getDefinedLocationByName("foo");
         Assert.assertNotNull(locdef, "Expected 'foo' location; but had "+mgmt.getLocationRegistry().getDefinedLocations());
@@ -31,6 +36,12 @@ public class LocationRegistryTest {
     
     @Test(dependsOnMethods="testNamedLocationsPropertyDefinedLocations")
     public void testResolvesByNamedAndId() {
+        BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
+        properties.put("brooklyn.location.named.foo", "byon:(hosts=\"root@192.168.1.{1,2,3,4}\")");
+        properties.put("brooklyn.location.named.foo.privateKeyFile", "~/.ssh/foo.id_rsa");
+        LocalManagementContext mgmt = new LocalManagementContext(properties);
+
+        locdef = mgmt.getLocationRegistry().getDefinedLocationByName("foo");
         log.info("testResovlesBy has defined locations: "+mgmt.getLocationRegistry().getDefinedLocations());
         
         Location l = mgmt.getLocationRegistry().resolve("named:foo");
