@@ -1,15 +1,15 @@
 package brooklyn.location.basic
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxying.EntitySpec
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
-import brooklyn.event.feed.ConfigToAttributes;
+import brooklyn.event.feed.ConfigToAttributes
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
@@ -32,7 +32,7 @@ public class TestPortSupplierLocation {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        LocalManagementContext.terminateAll();
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

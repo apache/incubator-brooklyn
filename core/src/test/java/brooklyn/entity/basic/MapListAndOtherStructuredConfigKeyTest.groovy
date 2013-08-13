@@ -1,7 +1,5 @@
 package brooklyn.entity.basic
 
-import brooklyn.management.internal.LocalManagementContext;
-
 import static org.testng.Assert.*
 
 import java.util.concurrent.Callable
@@ -38,8 +36,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroy(app);
-        LocalManagementContext.terminateAll();
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test    

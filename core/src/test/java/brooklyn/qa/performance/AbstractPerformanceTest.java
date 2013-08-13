@@ -4,7 +4,6 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.concurrent.TimeUnit;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -60,7 +59,6 @@ public class AbstractPerformanceTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
         if (app != null) Entities.destroyAll(app.getManagementContext());
-        LocalManagementContext.terminateAll();
     }
     
     protected void measureAndAssert(String prefix, int numIterations, double minRatePerSec, Runnable r) {

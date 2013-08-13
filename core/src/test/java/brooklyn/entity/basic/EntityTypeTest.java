@@ -14,7 +14,6 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -57,7 +56,6 @@ public class EntityTypeTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
-        LocalManagementContext.terminateAll();
     }
     
     @Test

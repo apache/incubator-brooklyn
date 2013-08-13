@@ -8,7 +8,6 @@ import java.util.Collections;
 
 import javax.annotation.Nullable;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -35,28 +34,30 @@ public class CheckpointEntityTest {
     private static final Logger LOG = LoggerFactory.getLogger(CheckpointEntityTest.class);
 
     private ClassLoader classLoader = getClass().getClassLoader();
-    private ManagementContext managementContext;
+    private ManagementContext origManagementContext;
     private File mementoDir;
     private TestApplication origApp;
+    private TestApplication newApp;
     private MyEntity origE;
     
     @BeforeMethod
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
-        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), managementContext);
+        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
+        origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), origManagementContext);
         origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).configure("myconfig", "myval"));
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
+        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
+        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
-        LocalManagementContext.terminateAll();
     }
 
     @Test
     public void testAutoCheckpointsOnManageApp() throws Exception {
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         // Assert has expected entities and config
@@ -71,7 +72,7 @@ public class CheckpointEntityTest {
         final MyEntity origE2 = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).configure("myconfig", "myval2"));
         Entities.manage(origE2);
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntity newE2 = (MyEntity) Iterables.find(newApp.getChildren(), new Predicate<Entity>() {
                 @Override public boolean apply(@Nullable Entity input) {
                     return origE2.getId().equals(input.getId());
@@ -87,7 +88,7 @@ public class CheckpointEntityTest {
     public void testAutoCheckpointsOnUnmanageEntity() throws Exception {
         Entities.unmanage(origE);
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         
         // Assert does not container unmanaged entity
         assertEquals(ImmutableList.copyOf(newApp.getChildren()), Collections.emptyList());
@@ -100,7 +101,7 @@ public class CheckpointEntityTest {
         origE.setAttribute(MyEntity.MY_SENSOR, "mysensorval");
         
         // Assert persisted the modified config/attributes
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "mynewval");

@@ -4,18 +4,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
 
 public class CatalogDtoTest {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogDtoTest.class);
 
+    private LocalManagementContext managementContext;
+    
+    @BeforeMethod(alwaysRun = true)
+    public void setUp() throws Exception {
+        managementContext = new LocalManagementContext();
+    }
+    
     @AfterMethod(alwaysRun = true)
-    public void tearDown(){
-        LocalManagementContext.terminateAll();
+    public void tearDown() throws Exception {
+        if (managementContext != null) Entities.destroyAll(managementContext);
     }
 
     @Test
@@ -23,6 +32,7 @@ public class CatalogDtoTest {
         CatalogDto root = buildHadoopsExample();
         checkHadoopsExample(root);
     }
+    
     @Test
     public void testCatalogSerializeAndLookup() {
         CatalogDto root = buildHadoopsExample();
@@ -37,7 +47,7 @@ public class CatalogDtoTest {
 
     protected void checkHadoopsExample(CatalogDto root) {
         Assert.assertEquals(root.catalogs.size(), 4);
-        CatalogDo loader = new CatalogDo(root).load( new LocalManagementContext(), null);
+        CatalogDo loader = new CatalogDo(root).load(managementContext, null);
         
         CatalogItemDo<?> worker = loader.getCache().get("io.brooklyn.mapr.m3.WorkerNode");
         Assert.assertNotNull(worker);

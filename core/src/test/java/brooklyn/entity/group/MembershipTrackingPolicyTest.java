@@ -6,7 +6,6 @@ import static org.testng.Assert.fail;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -56,8 +55,7 @@ public class MembershipTrackingPolicyTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app != null) Entities.destroy(app);
-        LocalManagementContext.terminateAll();
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     private TestEntity createAndManageChildOf(Entity parent) {

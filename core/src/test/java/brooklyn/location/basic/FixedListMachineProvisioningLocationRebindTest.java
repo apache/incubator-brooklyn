@@ -7,12 +7,12 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
@@ -28,14 +28,15 @@ public class FixedListMachineProvisioningLocationRebindTest {
 
     private FixedListMachineProvisioningLocation<SshMachineLocation> origLoc;
     private ClassLoader classLoader = getClass().getClassLoader();
-    private ManagementContext managementContext;
+    private ManagementContext origManagementContext;
     private TestApplication origApp;
+    private TestApplication newApp;
     private File mementoDir;
     
     @BeforeMethod
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
-        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
+        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         
     	origLoc = new FixedListMachineProvisioningLocation.Builder()
     			.addAddresses("localhost", "127.0.0.1")
@@ -44,19 +45,20 @@ public class FixedListMachineProvisioningLocationRebindTest {
     			.keyData("myKeyData")
     			.keyPassphrase("myKeyPassphrase")
     			.build();
-        origApp = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
+        origApp = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
     	origApp.start(ImmutableList.of(origLoc));
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
+        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
+        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
-        LocalManagementContext.terminateAll();
     }
     
     @Test
     public void testRebindPreservesConfig() throws Exception {
-    	TestApplication newApp = rebind();
+    	newApp = rebind();
     	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
     	
     	assertEquals(newLoc.getId(), origLoc.getId());
@@ -70,7 +72,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
 
     @Test
     public void testRebindParentRelationship() throws Exception {
-    	TestApplication newApp = rebind();
+    	newApp = rebind();
     	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
     	
     	assertLocationIdsEqual(newLoc.getChildren(), origLoc.getChildren());
@@ -83,7 +85,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
     	SshMachineLocation inuseMachine = origLoc.obtain();
     	origApp.setAttribute(TestApplication.SERVICE_UP, true); // to force persist, and thus avoid race
     	
-    	TestApplication newApp = rebind();
+    	newApp = rebind();
     	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
     	
     	assertLocationIdsEqual(newLoc.getInUse(), origLoc.getInUse());

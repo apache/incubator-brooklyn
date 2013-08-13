@@ -1,6 +1,5 @@
 package brooklyn.enricher
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.Assert
@@ -18,8 +17,9 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
-import brooklyn.util.collections.MutableMap;
-class CombiningEnricherTest {
+import brooklyn.util.collections.MutableMap
+
+public class CombiningEnricherTest {
 
     public static final Logger log = LoggerFactory.getLogger(CombiningEnricherTest.class);
             
@@ -31,13 +31,8 @@ class CombiningEnricherTest {
     AttributeSensor<Integer> intSensorA, intSensorB, intSensorC;
     AttributeSensor<Long> target;
 
-    @AfterMethod(alwaysRun = true)
-    public void tearDown(){
-        LocalManagementContext.terminateAll();
-    }
-
     @BeforeMethod(alwaysRun=true)
-    public void before() {
+    public void setUp() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         producer = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         intSensorA = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.a");
@@ -49,7 +44,7 @@ class CombiningEnricherTest {
     }
     
     @AfterMethod(alwaysRun=true)
-    public void after() {
+    public void tearDown() {
         if (app!=null) Entities.destroyAll(app.getManagementContext());
     }
     

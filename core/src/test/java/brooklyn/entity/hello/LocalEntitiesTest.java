@@ -7,8 +7,6 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
-
-import brooklyn.management.internal.LocalManagementContext;
 import groovy.lang.Closure;
 
 import java.util.List;
@@ -64,7 +62,7 @@ public class LocalEntitiesTest {
 
     @AfterMethod
     public void tearDown(){
-        LocalManagementContext.terminateAll();
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

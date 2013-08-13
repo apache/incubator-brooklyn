@@ -5,7 +5,6 @@ import static org.testng.Assert.fail;
 
 import java.util.Map;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -42,7 +41,6 @@ public class DownloadSubstitutersTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
-        LocalManagementContext.terminateAll();
     }
 
     @Test

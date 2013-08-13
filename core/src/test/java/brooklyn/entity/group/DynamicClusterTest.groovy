@@ -1,8 +1,5 @@
 package brooklyn.entity.group
 
-import brooklyn.management.internal.LocalManagementContext
-import org.testng.annotations.AfterMethod
-
 import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
@@ -13,6 +10,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -58,7 +56,7 @@ class DynamicClusterTest {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown(){
-        LocalManagementContext.terminateAll();
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

@@ -1,7 +1,5 @@
 package brooklyn.entity.basic
 
-import brooklyn.management.internal.LocalManagementContext;
-
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
@@ -54,7 +52,6 @@ public class DynamicGroupTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
-        LocalManagementContext.terminateAll();
     }
     
     @Test

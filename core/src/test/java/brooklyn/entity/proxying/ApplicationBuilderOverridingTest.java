@@ -13,7 +13,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -27,6 +26,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.exceptions.Exceptions;
@@ -39,19 +39,22 @@ public class ApplicationBuilderOverridingTest {
 
     private static final long TIMEOUT_MS = 10*1000;
     
+    private ManagementContext spareManagementContext;
     private Application app;
     private ExecutorService executor;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        spareManagementContext = Entities.newManagementContext();
         executor = Executors.newCachedThreadPool();
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
         app = null;
-        LocalManagementContext.terminateAll();
+        if (spareManagementContext != null) Entities.destroyAll(spareManagementContext);
+        spareManagementContext = null;
     }
 
     @Test
@@ -75,12 +78,11 @@ public class ApplicationBuilderOverridingTest {
 
     @Test
     public void testUsesSuppliedManagementContext() {
-        ManagementContext managementContext = Entities.newManagementContext();
         app = new ApplicationBuilder() {
             @Override public void doBuild() {}
-        }.manage(managementContext);
+        }.manage(spareManagementContext);
         
-        assertEquals(app.getManagementContext(), managementContext);
+        assertEquals(app.getManagementContext(), spareManagementContext);
     }
 
     @Test
@@ -112,11 +114,16 @@ public class ApplicationBuilderOverridingTest {
 
     @Test(expectedExceptions=IllegalStateException.class)
     public void testRentrantCallToManageForbidden() {
-        app = new ApplicationBuilder() {
-            @Override public void doBuild() {
-                manage();
-            }
-        }.manage();
+        ManagementContext secondManagementContext = new LocalManagementContext();
+        try {
+            app = new ApplicationBuilder() {
+                @Override public void doBuild() {
+                    manage(spareManagementContext);
+                }
+            }.manage(secondManagementContext);
+        } finally {
+            Entities.destroyAll(secondManagementContext);
+        }
     }
 
     @Test(expectedExceptions=IllegalStateException.class)
@@ -125,8 +132,9 @@ public class ApplicationBuilderOverridingTest {
             @Override public void doBuild() {
             }
         };
-        appBuilder.manage();
-        appBuilder.manage();
+        app = appBuilder.manage();
+        
+        appBuilder.manage(spareManagementContext);
     }
 
     @Test(expectedExceptions=IllegalStateException.class)
@@ -135,7 +143,7 @@ public class ApplicationBuilderOverridingTest {
             @Override public void doBuild() {
             }
         };
-        appBuilder.manage();
+        app = appBuilder.manage();
         appBuilder.configure(ImmutableMap.of());
     }
 
@@ -145,7 +153,7 @@ public class ApplicationBuilderOverridingTest {
             @Override public void doBuild() {
             }
         };
-        appBuilder.manage();
+        app = appBuilder.manage(spareManagementContext);
         appBuilder.appDisplayName("myname");
     }
 
@@ -170,8 +178,9 @@ public class ApplicationBuilderOverridingTest {
         });
         
         inbuildLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        
         try {
-            builder.manage();
+            app = builder.manage(spareManagementContext);
             fail();
         } catch (IllegalStateException e) {
             // expected

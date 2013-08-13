@@ -3,7 +3,6 @@ package brooklyn.entity.trait;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -36,7 +35,6 @@ public class StartableMethodsTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
         if (app != null) Entities.destroyAll(app.getManagementContext());
-        LocalManagementContext.terminateAll();
     }
     
     @Test

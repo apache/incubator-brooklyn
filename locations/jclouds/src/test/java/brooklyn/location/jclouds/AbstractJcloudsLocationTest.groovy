@@ -11,7 +11,6 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.management.ManagementContext
 import brooklyn.util.internal.ssh.sshj.SshjTool
 
@@ -78,6 +77,8 @@ public abstract class AbstractJcloudsLocationTest {
             throw exceptions.get(0)
         }
         machines.clear()
+        
+        if (ctx != null) Entities.destroyAll(ctx);
     }
 
     @Test(dataProvider="fromImageId")

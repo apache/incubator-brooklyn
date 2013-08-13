@@ -3,6 +3,7 @@ package brooklyn.entity.brooklyn
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -32,6 +33,11 @@ class BrooklynMetricsTest {
         Entities.manage(brooklynMetrics);
     }
     
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroyAll(app.getManagementContext());
+    }
+
     @Test
     public void testInitialBrooklynMetrics() {
         app.start([loc])

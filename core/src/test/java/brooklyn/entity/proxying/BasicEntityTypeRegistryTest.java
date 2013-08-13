@@ -3,7 +3,6 @@ package brooklyn.entity.proxying;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -22,7 +21,7 @@ public class BasicEntityTypeRegistryTest {
 
     @AfterMethod
     public void tearDown(){
-        LocalManagementContext.terminateAll();
+        // nothing to tear down; no management context created
     }
 
     @Test

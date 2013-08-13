@@ -43,7 +43,7 @@ public class LocalSubscriptionManagerTest {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown(){
-        LocalManagementContext.terminateAll();
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     private void manage(Entity ...entities) {

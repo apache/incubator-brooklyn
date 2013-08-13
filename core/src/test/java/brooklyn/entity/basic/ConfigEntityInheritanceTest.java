@@ -1,6 +1,5 @@
 package brooklyn.entity.basic;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -35,8 +34,7 @@ public class ConfigEntityInheritanceTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        Entities.destroyAll(((EntityInternal)app).getManagementContext());
-        LocalManagementContext.terminateAll();
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     protected void checkKeys(Entity entity2, Integer value) {

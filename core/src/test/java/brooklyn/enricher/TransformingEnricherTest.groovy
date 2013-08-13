@@ -1,7 +1,5 @@
 package brooklyn.enricher
 
-import brooklyn.management.internal.LocalManagementContext;
-
 import java.util.concurrent.Callable
 
 import org.slf4j.Logger
@@ -21,7 +19,7 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
-import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableMap
 
 public class TransformingEnricherTest {
 
@@ -48,7 +46,6 @@ public class TransformingEnricherTest {
     @AfterMethod(alwaysRun=true)
     public void after() {
         if (app!=null) Entities.destroyAll(app.getManagementContext());
-        LocalManagementContext.terminateAll();
     }
     
     @Test

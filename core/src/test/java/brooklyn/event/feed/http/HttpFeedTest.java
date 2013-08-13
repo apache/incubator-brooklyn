@@ -6,7 +6,6 @@ import static org.testng.Assert.assertTrue;
 import java.net.URL;
 import java.util.concurrent.Callable;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -72,7 +71,6 @@ public class HttpFeedTest {
         if (server != null) server.shutdown();
         if (app != null) Entities.destroyAll(app.getManagementContext());
         feed = null;
-        LocalManagementContext.terminateAll();
     }
     
     @Test

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -38,8 +37,8 @@ public class MementoTransformerTest {
     }
 
     @AfterMethod(alwaysRun = true)
-    public void tearDown(){
-        LocalManagementContext.terminateAll();
+    public void tearDown() {
+        // nothing to tear down; no management context created
     }
 
     @Test

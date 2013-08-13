@@ -1,16 +1,25 @@
 package brooklyn.management.internal;
 
-import brooklyn.util.collections.MutableList;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import com.google.common.collect.ImmutableSet;
 
+/**
+ * Tests the {@link LocalManagementContext#terminateAll()} and {@link LocalManagementContext#getInstances()} behaviour.
+ * Note this test must NEVER be run in parallel with other tests, as it will terminate the ManagementContext of those
+ * other tests.
+ * 
+ * @author pveentjer
+ */
 public class LocalManagementContextInstancesTest {
 
     @AfterMethod(alwaysRun = true)
-    public void beforeMethod(){
+    public void setUp() {
         LocalManagementContext.terminateAll();
     }
 
@@ -25,18 +34,19 @@ public class LocalManagementContextInstancesTest {
         LocalManagementContext context2 = new LocalManagementContext();
         LocalManagementContext context3 = new LocalManagementContext();
 
-        assertEquals(LocalManagementContext.getInstances(), MutableList.of(context1, context2, context3));
+        assertEquals(LocalManagementContext.getInstances(), ImmutableSet.of(context1, context2, context3));
     }
 
     @Test
     public void terminateAll(){
         LocalManagementContext context1 = new LocalManagementContext();
         LocalManagementContext context2 = new LocalManagementContext();
-        LocalManagementContext context3 = new LocalManagementContext();
 
         LocalManagementContext.terminateAll();
 
         assertTrue(LocalManagementContext.getInstances().isEmpty());
+        assertFalse(context1.isRunning());
+        assertFalse(context2.isRunning());
     }
 
     @Test
@@ -47,6 +57,6 @@ public class LocalManagementContextInstancesTest {
 
         context2.terminate();
 
-        assertEquals(LocalManagementContext.getInstances(), MutableList.of(context1, context3));
+        assertEquals(LocalManagementContext.getInstances(), ImmutableSet.of(context1, context3));
     }
 }

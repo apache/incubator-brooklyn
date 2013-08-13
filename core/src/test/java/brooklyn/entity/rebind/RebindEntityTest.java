@@ -67,27 +67,30 @@ public class RebindEntityTest {
     private static final long TIMEOUT_MS = 10*1000;
     
     private ClassLoader classLoader = getClass().getClassLoader();
-    private LocalManagementContext managementContext;
+    private LocalManagementContext origManagementContext;
     private TestApplication origApp;
+    private TestApplication newApp;
+    private LocalManagementContext newManagementContext;
     private File mementoDir;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
-        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), managementContext);
+        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
+        origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), origManagementContext);
     }
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (managementContext != null) managementContext.terminate();
+        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
+        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
+        if (newManagementContext != null) Entities.destroyAll(newManagementContext);
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
-        LocalManagementContext.terminateAll();
     }
 
     @Test
     public void testRestoresSimpleApp() throws Exception {
-        TestApplication newApp = rebind();
+        newApp = rebind();
         assertNotSame(newApp, origApp);
         assertEquals(newApp.getId(), origApp.getId());
     }
@@ -97,7 +100,7 @@ public class RebindEntityTest {
         TestEntity origE = origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
         TestEntity origE2 = origE.createAndManageChild(EntitySpec.create(TestEntity.class));
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
 
         // Assert has expected config/fields
         assertEquals(newApp.getId(), origApp.getId());
@@ -124,7 +127,7 @@ public class RebindEntityTest {
         origG.addMember(origE);
         origG.addMember(origE2);
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         
         BasicGroup newG = (BasicGroup) Iterables.find(newApp.getChildren(), Predicates.instanceOf(BasicGroup.class));
         Iterable<Entity> newEs = Iterables.filter(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
@@ -135,7 +138,7 @@ public class RebindEntityTest {
     public void testRestoresEntityConfig() throws Exception {
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).configure("myconfig", "myval"));
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myval");
     }
@@ -147,7 +150,7 @@ public class RebindEntityTest {
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
         origE.setAttribute(myCustomAttribute, "myval");
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         assertEquals(newE.getAttribute(myCustomAttribute), "myval");
     }
@@ -157,7 +160,7 @@ public class RebindEntityTest {
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).displayName("mydisplayname"));
         String eId = origE.getId();
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         assertEquals(newE.getId(), eId);
         assertEquals(newE.getDisplayName(), "mydisplayname");
@@ -167,7 +170,7 @@ public class RebindEntityTest {
     public void testCanCustomizeRebind() throws Exception {
         MyEntity2 origE = origApp.createAndManageChild(EntitySpec.create(MyEntity2.class).configure("myfield", "myval"));
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         
         MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity2.class));
         assertEquals(newE.getMyfield(), "myval");
@@ -177,7 +180,7 @@ public class RebindEntityTest {
     public void testRebindsSubscriptions() throws Exception {
         MyEntity2 origE = origApp.createAndManageChild(EntitySpec.create(MyEntity2.class).configure("subscribe", true));
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity2.class));
         
         newApp.setAttribute(TestApplication.MY_ATTRIBUTE, "mysensorval");
@@ -191,7 +194,7 @@ public class RebindEntityTest {
                 .configure("entityRef", origOtherE));
         origE.setAttribute(MyEntityReffingOthers.ENTITY_REF_SENSOR, origOtherE);
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntityReffingOthers newE = (MyEntityReffingOthers) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntityReffingOthers.class));
         MyEntity newOtherE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
@@ -207,7 +210,7 @@ public class RebindEntityTest {
         origE.setAttribute(MyEntityReffingOthers.LOCATION_REF_SENSOR, origLoc);
         origApp.start(ImmutableList.of(origLoc));
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntityReffingOthers newE = (MyEntityReffingOthers) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntityReffingOthers.class));
         MyLocation newLoc = (MyLocation) Iterables.getOnlyElement(newApp.getLocations());
         
@@ -225,7 +228,7 @@ public class RebindEntityTest {
         // Serialize and rebind, but don't yet manage the app
         RebindTestUtils.waitForPersisted(origApp);
         RebindTestUtils.checkCurrentMementoSerializable(origApp);
-        final LocalManagementContext newManagementContext = new LocalManagementContext();
+        newManagementContext = new LocalManagementContext();
         Thread thread = new Thread() {
             public void run() {
                 try {
@@ -276,7 +279,7 @@ public class RebindEntityTest {
         // Serialize and rebind, but don't yet manage the app
         RebindTestUtils.waitForPersisted(origApp);
         RebindTestUtils.checkCurrentMementoSerializable(origApp);
-        final LocalManagementContext newManagementContext = new LocalManagementContext();
+        newManagementContext = new LocalManagementContext();
         Thread thread = new Thread() {
             public void run() {
                 try {
@@ -338,7 +341,7 @@ public class RebindEntityTest {
                 .configure(TestEntity.CONF_LIST_PLAIN, ImmutableList.of("val1", "val2"))
                 .configure(TestEntity.CONF_MAP_PLAIN, ImmutableMap.of("akey", "aval")));
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
 
         assertEquals(newE.getConfig(TestEntity.CONF_LIST_PLAIN), ImmutableList.of("val1", "val2"));
@@ -351,7 +354,7 @@ public class RebindEntityTest {
                 .configure(TestEntity.CONF_LIST_THING.subKey(), "val1")
                 .configure(TestEntity.CONF_LIST_THING.subKey(), "val2"));
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
 
         //assertEquals(newE.getConfig(TestEntity.CONF_LIST_THING), ImmutableList.of("val1", "val2"));
@@ -364,7 +367,7 @@ public class RebindEntityTest {
                 .configure(TestEntity.CONF_SET_THING.subKey(), "val1")
                 .configure(TestEntity.CONF_SET_THING.subKey(), "val2"));
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
 
         assertEquals(newE.getConfig(TestEntity.CONF_SET_THING), ImmutableSet.of("val1", "val2"));
@@ -376,7 +379,7 @@ public class RebindEntityTest {
                 .configure(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
                 .configure(TestEntity.CONF_MAP_THING.subKey("bkey"), "bval"));
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
 
         assertEquals(newE.getConfig(TestEntity.CONF_MAP_THING), ImmutableMap.of("akey", "aval", "bkey", "bval"));
@@ -388,7 +391,7 @@ public class RebindEntityTest {
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
 
         // rebind: inherited config is preserved
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myValInSuper");
@@ -409,7 +412,7 @@ public class RebindEntityTest {
         assertNull(origE.getConfig(MyEntity.MY_CONFIG));
         assertEquals(origE.getConfig(MyEntity.MY_CONFIG, "mydefault"), "mydefault");
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertNull(newE.getConfig(MyEntity.MY_CONFIG));
@@ -423,7 +426,7 @@ public class RebindEntityTest {
 
         assertNull(origE.getAttribute(MyEntity.MY_SENSOR));
 
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertNull(newE.getAttribute(MyEntity.MY_SENSOR));

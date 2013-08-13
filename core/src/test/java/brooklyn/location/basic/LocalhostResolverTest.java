@@ -10,6 +10,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
 
@@ -24,7 +25,7 @@ public class LocalhostResolverTest {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown(){
-        LocalManagementContext.terminateAll();
+        if (managementContext != null) Entities.destroyAll(managementContext);
     }
 
     @Test

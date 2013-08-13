@@ -18,7 +18,6 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpService;
@@ -53,7 +52,6 @@ public class HttpFeedIntegrationTest {
         if (feed != null) feed.stop();
         if (httpService != null) httpService.shutdown();
         if (app != null) Entities.destroyAll(app.getManagementContext());
-        LocalManagementContext.terminateAll();
     }
 
     @Test(groups = {"Integration"})
