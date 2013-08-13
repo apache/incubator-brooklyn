@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.BrooklynCatalog;
@@ -21,8 +22,16 @@ import com.google.common.collect.Iterables;
 public class CatalogScanTest {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogScanTest.class);
+
     private BrooklynCatalog defaultCatalog, annotsCatalog, fullCatalog;
     
+    private LocalManagementContext managementContext;
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        if(managementContext!=null)managementContext.terminate();
+    }
+
     private synchronized void loadFullCatalog() {
         if (fullCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
@@ -36,7 +45,8 @@ public class CatalogScanTest {
         if (defaultCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), "");
-        defaultCatalog = new LocalManagementContext(props).getCatalog();        
+        managementContext = new LocalManagementContext(props);
+        defaultCatalog = managementContext.getCatalog();        
         log.info("ENTITIES loaded for DEFAULT: "+defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
     }
     
@@ -44,9 +54,10 @@ public class CatalogScanTest {
     private synchronized void loadAnnotationsOnlyCatalog() {
         if (annotsCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
-        props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), 
+        props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(),
                 "data:,"+URLEncoder.encode("<catalog><classpath scan=\"annotations\"/></catalog>"));
-        annotsCatalog = new LocalManagementContext(props).getCatalog();        
+        managementContext = new LocalManagementContext(props);
+        annotsCatalog = managementContext.getCatalog();
         log.info("ENTITIES loaded with annotation: "+annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
     }
     
