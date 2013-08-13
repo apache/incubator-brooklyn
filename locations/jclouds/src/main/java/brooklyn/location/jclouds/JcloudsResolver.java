@@ -191,7 +191,7 @@ public class JcloudsResolver implements LocationResolver {
             jcloudsProperties.put(JcloudsLocationConfig.CLOUD_ENDPOINT.getName(), regionName);
         }
         
-        return managementContext.getLocationManager().createLocation(LocationSpec.spec(JcloudsLocation.class)
+        return managementContext.getLocationManager().createLocation(LocationSpec.create(JcloudsLocation.class)
                 .configure(jcloudsProperties));
     }
 

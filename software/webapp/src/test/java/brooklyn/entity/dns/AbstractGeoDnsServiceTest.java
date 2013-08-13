@@ -92,21 +92,21 @@ public class AbstractGeoDnsServiceTest {
     }
 
     private SimulatedLocation newSimulatedLocation(String name, double lat, double lon) {
-        return managementContext.getLocationManager().createLocation(LocationSpec.spec(SimulatedLocation.class)
+        return managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class)
                 .displayName(name)
                 .configure("latitude", lat)
                 .configure("longitude", lon));
     }
     
     private Location newSshMachineLocation(String name, String address, Location parent) {
-        return managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+        return managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .parent(parent)
                 .displayName(name)
                 .configure("address", address));
     }
     
     private Location newSshMachineLocation(String name, String address, Location parent, double lat, double lon) {
-        return managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+        return managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .parent(parent)
                 .displayName(name)
                 .configure("address", address)

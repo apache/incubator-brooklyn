@@ -164,14 +164,14 @@ public class JcloudsLoginLiveTest {
         machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
         assertSshable(machine);
         
-        SshMachineLocation machineUsingKey = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+        SshMachineLocation machineUsingKey = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", machine.getAddress())
                 .configure("user", machine.getUser())
                 .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
         
         assertSshable(machineUsingKey);
         
-        SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+        SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", machine.getAddress())
                 .configure("user", machine.getUser())
                 .configure(SshMachineLocation.PASSWORD, "mypassword"));
@@ -186,14 +186,14 @@ public class JcloudsLoginLiveTest {
         machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
         assertSshable(machine);
         
-        SshMachineLocation machineUsingKey = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+        SshMachineLocation machineUsingKey = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", machine.getAddress())
                 .configure("user", machine.getUser())
                 .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
         
         assertSshable(machineUsingKey);
         
-        SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+        SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", machine.getAddress())
                 .configure("user", machine.getUser())
                 .configure(SshMachineLocation.PASSWORD, "mypassword"));

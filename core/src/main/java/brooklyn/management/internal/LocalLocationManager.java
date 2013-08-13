@@ -48,7 +48,7 @@ public class LocalLocationManager implements LocationManager {
 
     @Override
     public <T extends Location> T createLocation(Map<?,?> config, Class<T> type) {
-        return createLocation(LocationSpec.spec(config, type));
+        return createLocation(LocationSpec.create(config, type));
     }
 
     @Override
