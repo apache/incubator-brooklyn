@@ -32,7 +32,7 @@ public class BasicTasksFutureTest {
     private BasicExecutionContext ec;
     private Map<Object,Object> data;
     private ExecutorService ex;
-    private Semaphore cancelled;
+    private Semaphore cancelledWhileSleeping;
 
     @BeforeMethod
     public void setUp() {
@@ -42,7 +42,7 @@ public class BasicTasksFutureTest {
 //        assertTrue em.allTasks.isEmpty()
         data = Collections.synchronizedMap(new LinkedHashMap<Object,Object>());
         data.clear();
-        cancelled = new Semaphore(0);
+        cancelledWhileSleeping = new Semaphore(0);
     }
     
     @AfterMethod(alwaysRun=true)
@@ -136,7 +136,7 @@ public class BasicTasksFutureTest {
                     Time.sleep(time); 
                 } catch (Exception e) {
                     log.info("cancelled before returning "+result);
-                    cancelled.release();
+                    cancelledWhileSleeping.release();
                     throw Exceptions.propagate(e);
                 }
                 log.info("task returning "+result);
@@ -190,8 +190,10 @@ public class BasicTasksFutureTest {
         
         Assert.assertTrue(watch.elapsed(TimeUnit.MILLISECONDS) < Duration.FIVE_SECONDS.toMilliseconds(), 
             Time.makeTimeStringRounded(watch.elapsed(TimeUnit.MILLISECONDS))+" is too long; should have cancelled very quickly");
-        
-        Assert.assertTrue(cancelled.tryAcquire(5, TimeUnit.SECONDS));
+
+        if (t.isBegun())
+            // if the task is begun, this should get released
+            Assert.assertTrue(cancelledWhileSleeping.tryAcquire(5, TimeUnit.SECONDS));
     }
 
 }
