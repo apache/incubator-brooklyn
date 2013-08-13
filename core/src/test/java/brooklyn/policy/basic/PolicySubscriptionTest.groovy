@@ -1,14 +1,16 @@
-package brooklyn.policy.basic;
+package brooklyn.policy.basic
 
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
 
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxying.EntitySpec
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
@@ -43,7 +45,12 @@ public class PolicySubscriptionTest {
         entity.addPolicy(policy);
         app.start([loc])
     }
-    
+
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroyAll(app.getManagementContext());
+    }
+
     @Test
     public void testSubscriptionReceivesEvents() {
         policy.subscribe(entity, TestEntity.SEQUENCE, listener);

@@ -35,8 +35,9 @@ class DeltaEnrichersTests {
         deltaSensor = new BasicAttributeSensor<Double>(Double.class, "delta sensor")
     }
 
-    @AfterMethod
-    public void after() {
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

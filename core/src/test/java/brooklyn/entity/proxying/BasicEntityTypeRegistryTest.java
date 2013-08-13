@@ -3,6 +3,7 @@ package brooklyn.entity.proxying;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -17,7 +18,12 @@ public class BasicEntityTypeRegistryTest {
     public void setUp() {
         registry = new BasicEntityTypeRegistry();
     }
-    
+
+    @AfterMethod
+    public void tearDown(){
+        // nothing to tear down; no management context created
+    }
+
     @Test
     public void testRegisterAllowsOverridingKey() {
         registry.registerImplementation(MyEntity.class, MyEntityImpl.class);

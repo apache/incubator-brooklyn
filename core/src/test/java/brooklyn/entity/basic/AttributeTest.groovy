@@ -1,7 +1,8 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.basic
 
 import static org.testng.Assert.*
 
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -18,7 +19,12 @@ public class AttributeTest {
     public void setUp() throws Exception {
         e = new TestEntityImpl();
     }
-    
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        // nothing to tear down; entity was not managed (i.e. had no management context)
+    }
+
     @Test
     public void canGetAndSetAttribute() {
         e.setAttribute(COLOR, "red")

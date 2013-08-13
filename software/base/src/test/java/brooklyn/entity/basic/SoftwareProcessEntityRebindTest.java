@@ -31,22 +31,29 @@ import com.google.common.io.Files;
 public class SoftwareProcessEntityRebindTest {
 
     private ClassLoader classLoader = getClass().getClassLoader();
-    private ManagementContext managementContext;
+    private ManagementContext origManagementContext;
     private TestApplication origApp;
+    private TestApplication newApp;
+    private ManagementContext newManagementContext;
     private MyService origE;
     private File mementoDir;
     
     @BeforeMethod
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
-        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
-        origApp = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
+        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
+        origApp = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
+        if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
+        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
+        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
+        if (newManagementContext != null) Entities.destroyAll(newManagementContext);
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
+    
     
     @Test
     public void testReleasesLocationOnStopAfterRebinding() throws Exception {
@@ -56,7 +63,7 @@ public class SoftwareProcessEntityRebindTest {
         origApp.start(ImmutableList.of(origLoc));
         assertEquals(origLoc.inUseCount.get(), 1);
         
-        TestApplication newApp = (TestApplication) rebind();
+        newApp = (TestApplication) rebind();
         MyProvisioningLocation newLoc = (MyProvisioningLocation) Iterables.getOnlyElement(newApp.getLocations());
         assertEquals(newLoc.inUseCount.get(), 1);
         
@@ -66,7 +73,9 @@ public class SoftwareProcessEntityRebindTest {
 
     private TestApplication rebind() throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
-        return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+        TestApplication result = (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+        newManagementContext = result.getManagementContext();
+        return result;
     }
     
     public static class MyProvisioningLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation> {

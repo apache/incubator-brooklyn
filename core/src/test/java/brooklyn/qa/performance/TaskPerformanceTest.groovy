@@ -1,5 +1,8 @@
 package brooklyn.qa.performance
 
+import brooklyn.management.internal.LocalManagementContext
+import org.testng.annotations.AfterMethod
+
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
@@ -32,8 +35,9 @@ public class TaskPerformanceTest extends AbstractPerformanceTest {
         
         executionManager = app.managementContext.executionManager
     }
-    
+
     public static final int numIterations = 200000;
+
     @Test(groups=["Integration", "Acceptance"])
     public void testExecuteSimplestRunnable() {
         double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;

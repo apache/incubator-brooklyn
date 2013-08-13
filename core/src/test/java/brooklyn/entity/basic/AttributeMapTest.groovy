@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.basic
 
 import static org.testng.Assert.assertEquals
 
