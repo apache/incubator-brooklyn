@@ -18,16 +18,18 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.base.Preconditions;
 
-public class SshTask implements HasTask<Object> {
-    final SshMachineLocation machine;
+// this use of generics to get the right task type depending on subsequent builder methods is hideous,
+// but seems to work; only thing is you can't instantiate SshTask directly, it must be a subclass
+public class SshTask<T extends SshTask<T,?>,RET> implements HasTask<RET> {
     final SshJob job;
     final List<String> commands;
+    SshMachineLocation machine;
     Task<Object> task;
     
     // config data
     String summary;
     
-    public static enum ScriptReturnType { EXIT_CODE, STDOUT, STDERR }
+    public static enum ScriptReturnType { EXIT_CODE, STDOUT_STRING, STDOUT_BYTES, STDERR_STRING, STDERR_BYTES }
     ScriptReturnType returnType = ScriptReturnType.EXIT_CODE;
     
     boolean runAsScript = false;
@@ -40,50 +42,74 @@ public class SshTask implements HasTask<Object> {
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     Integer exitCode = null;
     
-    public SshTask(SshMachineLocation machine, String ...commands) {
-        this.machine = machine;
+    /** constructor where machine will be added later */
+    public SshTask(String ...commands) {
         this.commands = Arrays.asList(commands);
         this.job = newJob();
     }
 
-    public SshTask requiringExitCodeZero() {
+    /** convenience constructor to supply machine immediately */
+    public SshTask(SshMachineLocation machine, String ...commands) {
+        this(commands);
+        machine(machine);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected T self() { return (T)this; }
+
+    protected void checkStillMutable() {
+        Preconditions.checkState(task==null, "Cannot modify SshTask after task is gotten");
+    }
+    
+    public T machine(SshMachineLocation machine) {
+        checkStillMutable();
+        this.machine = machine;
+        return self();
+    }
+
+    public SshMachineLocation getMachine() {
+        return machine;
+    }
+        
+    public T requiringExitCodeZero() {
         requireExitCodeZero = true;
-        return this;
+        return self();
     }
     
-    public SshTask requiringZeroAndReturningStdout() {
+    @SuppressWarnings({ "unchecked" })
+    public SshTask<?,String> requiringZeroAndReturningStdout() {
         requiringExitCodeZero();
-        return returning(ScriptReturnType.STDOUT);
+        return (SshTask<?,String>)returning(ScriptReturnType.STDOUT_STRING);
     }
 
-    public SshTask returning(ScriptReturnType type) {
+    public SshTask<?,?> returning(ScriptReturnType type) {
         returnType = Preconditions.checkNotNull(type);
-        return this;
+        return self();
     }
 
-    public SshTask runningAsCommand() {
+    public T runningAsCommand() {
         runAsScript = false;
-        return this;
+        return self();
     }
 
-    public SshTask runningAsScript() {
+    public T runningAsScript() {
         runAsScript = true;
-        return this;
+        return self();
     }
 
-    public SshTask runningAsRoot() {
+    public T runningAsRoot() {
         runAsRoot = true;
-        return this;
+        return self();
     }
     
-    public SshTask environmentVariable(String key, String val) {
+    public T environmentVariable(String key, String val) {
         shellEnvironment.put(key, val);
-        return this;
+        return self();
     }
 
-    public SshTask environmentVariables(Map<String,String> vars) {
+    public T environmentVariables(Map<String,String> vars) {
         shellEnvironment.putAll(vars);
-        return this;
+        return self();
     }
 
     public Integer getExitCode() {
@@ -98,18 +124,19 @@ public class SshTask implements HasTask<Object> {
         return stderr.toByteArray();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public synchronized Task<Object> getTask() {
+    public synchronized Task<RET> getTask() {
         if (task==null) 
             task = TaskBuilder.builder().dynamic(false).name("ssh: "+getSummary()).body(job).build();
-        return task;
+        return (Task<RET>) task;
     }
     
     public void summary(String summary) {
-        Preconditions.checkState(task==null, "Cannot set summary after task is gotten");
+        checkStillMutable();
         this.summary = summary;
     }
-    
+
     public String getSummary() {
         if (summary!=null) return summary;
         return Strings.join(commands, " ; ");
@@ -122,6 +149,8 @@ public class SshTask implements HasTask<Object> {
     public class SshJob implements Callable<Object> {
         @Override
         public Object call() throws Exception {
+            Preconditions.checkNotNull(getMachine(), "machine");
+            
             ConfigBag config = ConfigBag.newInstance();
             if (stdout!=null) config.put(SshTool.PROP_OUT_STREAM, stdout);
             if (stderr!=null) config.put(SshTool.PROP_ERR_STREAM, stderr);
@@ -130,18 +159,40 @@ public class SshTask implements HasTask<Object> {
                 config.put(SshTool.PROP_RUN_AS_ROOT, true);
 
             if (runAsScript)
-                exitCode = machine.execScript(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
+                exitCode = getMachine().execScript(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
             else
-                exitCode = machine.execCommands(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
+                exitCode = getMachine().execCommands(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
             
             if (requireExitCodeZero && exitCode!=0)
                 throw new IllegalStateException("Ssh job ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary());
             
-            if (returnType==ScriptReturnType.STDOUT) return stdout.toByteArray();
-            if (returnType==ScriptReturnType.STDERR) return stderr.toByteArray();
+            if (returnType==ScriptReturnType.STDOUT_STRING) return stdout.toString();
+            if (returnType==ScriptReturnType.STDOUT_BYTES) return stdout.toByteArray();
+            if (returnType==ScriptReturnType.STDERR_STRING) return stderr.toString();
+            if (returnType==ScriptReturnType.STDERR_BYTES) return stderr.toByteArray();
             if (returnType==ScriptReturnType.EXIT_CODE) return exitCode;
 
             throw new IllegalStateException("Unknown return type for ssh job "+getSummary()+": "+returnType);
+        }
+    }
+    
+    /** the "Plain" class exists purely so we can massage return types for callers' convenience */
+    public static class SshTaskPlain<RET> extends SshTask<SshTaskPlain<RET>,RET> {
+        /** constructor where machine will be added later */
+        public SshTaskPlain(String ...commands) {
+            super(commands);
+        }
+
+        /** convenience constructor to supply machine immediately */
+        public SshTaskPlain(SshMachineLocation machine, String ...commands) {
+            this(commands);
+            machine(machine);
+        }
+        
+        @SuppressWarnings("unchecked")
+        @Override
+        public SshTaskPlain<String> requiringZeroAndReturningStdout() {
+            return (SshTaskPlain<String>) super.requiringZeroAndReturningStdout();
         }
     }
 }

@@ -10,6 +10,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Effector;
+import brooklyn.entity.basic.SshEffectorTasks.SshEffectorBody;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
@@ -41,7 +42,7 @@ public class SoftwareEffectorTest {
         mgmt = null;
     }
 
-    public static final Effector<String> GET_REMOTE_DATE = Effectors.effector(String.class, "getRemoteDate")
+    public static final Effector<String> GET_REMOTE_DATE_1 = Effectors.effector(String.class, "getRemoteDate")
             .description("retrieves the date from the remote machine")
             .impl(new SshEffectorBody<String>() {
                 public String main(ConfigBag parameters) {
@@ -50,12 +51,25 @@ public class SoftwareEffectorTest {
                 }
             })
             .build();
-    
+
+    public static final Effector<String> GET_REMOTE_DATE_2 = Effectors.effector(GET_REMOTE_DATE_1)
+            // use date 100 years in future to confirm implementation is different
+            .description("retrieves a date in the future from the remote machine")
+            .impl(SshEffectorTasks.ssh("date -v+100y").requiringZeroAndReturningStdout())
+            .build();
+
     @Test(groups="Integration")
-    public void testSshDateEffector() {
-        Task<String> call = Entities.invokeEffector(app, app, GET_REMOTE_DATE);
-        log.info("ssh date gives: "+call.getUnchecked());
+    public void testSshDateEffector1() {
+        Task<String> call = Entities.invokeEffector(app, app, GET_REMOTE_DATE_1);
+        log.info("ssh date 1 gives: "+call.getUnchecked());
         Assert.assertTrue(call.getUnchecked().indexOf("20") >= 0);
+    }
+
+    @Test(groups="Integration")
+    public void testSshDateEffector2() {
+        Task<String> call = Entities.invokeEffector(app, app, GET_REMOTE_DATE_2);
+        log.info("ssh date 2 gives: "+call.getUnchecked());
+        Assert.assertTrue(call.getUnchecked().indexOf("21") >= 0);
     }
 
     public static final String COMMAND_THAT_DOES_NOT_EXIST = "blah_blah_blah_command_DOES_NOT_EXIST";
@@ -75,7 +89,7 @@ public class SoftwareEffectorTest {
         
     @Test(groups="Integration")
     public void testBadExitCodeCaughtAndStdErrAvailable() {
-        final SshTask[] sshTasks = new SshTask[1];
+        final SshTask<?,?>[] sshTasks = new SshTask[1];
         
         Task<Void> call = Entities.invokeEffector(app, app, Effectors.effector(Void.class, "badExitCode")
                 .impl(new SshEffectorBody<Void>() {

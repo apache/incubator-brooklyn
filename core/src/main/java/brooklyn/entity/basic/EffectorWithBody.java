@@ -1,7 +1,7 @@
 package brooklyn.entity.basic;
 
 import brooklyn.entity.Effector;
-import brooklyn.entity.basic.Effectors.EffectorTaskFactory;
+import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 
 public interface EffectorWithBody<T> extends Effector<T> {
 

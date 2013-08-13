@@ -4,7 +4,7 @@ import java.util.List;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.ParameterType;
-import brooklyn.entity.basic.Effectors.EffectorTaskFactory;
+import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 
 public class EffectorAndBody<T> extends EffectorBase<T> implements EffectorWithBody<T> {
 

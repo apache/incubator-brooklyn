@@ -1,5 +1,7 @@
 package brooklyn.entity.basic;
 
+import com.google.common.annotations.Beta;
+
 import brooklyn.entity.Entity;
 import brooklyn.management.HasTask;
 import brooklyn.management.Task;
@@ -11,7 +13,8 @@ import brooklyn.util.task.Tasks;
 
 /** Typical implementations override {@link #main(ConfigBag)} to do the work of the effector
  * <p>
- *   */
+ **/
+@Beta // should we choose between this approach and the EffectorTasks approach ?
 public abstract class EffectorBody<T> {
     /** Does the work of the effector, either in place, or (better) by building up
      * subtasks, which can by added using {@link DynamicTasks} methods
@@ -34,6 +37,7 @@ public abstract class EffectorBody<T> {
         return Tasks.tag(Tasks.current(), Entity.class, true);
     }
     
+    // messy generics used to transparently invoke right queueing method
     protected <U,V extends Task<U>> V queue(V task) {
         return DynamicTasks.queue(task);
     }

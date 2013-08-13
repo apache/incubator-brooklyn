@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
-import brooklyn.entity.basic.Effectors.EffectorTaskFactory;
+import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 import brooklyn.management.Task;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.config.ConfigBag;

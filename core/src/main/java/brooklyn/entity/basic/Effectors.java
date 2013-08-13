@@ -3,96 +3,58 @@ package brooklyn.entity.basic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
-import brooklyn.management.TaskQueueingContext;
+import brooklyn.entity.basic.EffectorTasks.EffectorBodyTaskFactory;
+import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 import brooklyn.management.Task;
-import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.task.DynamicSequentialTask;
-import brooklyn.util.task.DynamicTasks;
 
 import com.google.common.base.Preconditions;
 
 public class Effectors {
     
-    public interface EffectorTaskFactory<T> {
-        public abstract Task<T> newTask(Entity entity, Effector<T> effector, ConfigBag parameters);
-    }
-
-    public static class EffectorBodyTaskFactory<T> implements EffectorTaskFactory<T> {
-        private final EffectorBody<T> effectorBody;
-        public EffectorBodyTaskFactory(EffectorBody<T> effectorBody) {
-            this.effectorBody = effectorBody;
-        }
-        
-        @SuppressWarnings("unchecked")
-        public Task<T> newTask(Entity entity, brooklyn.entity.Effector<T> effector, final ConfigBag parameters) {
-            @SuppressWarnings("rawtypes")
-            final DynamicSequentialTask[] dst = new DynamicSequentialTask[1];
-
-            dst[0] = new DynamicSequentialTask<T>(
-                    getFlagsForTaskInvocationAt(entity, effector), 
-                    new Callable<T>() {
-                        @Override
-                        public T call() throws Exception {
-                            try {
-                                DynamicTasks.setTaskQueueingContext(dst[0]);
-                                return effectorBody.main(parameters);
-                            } finally {
-                                DynamicTasks.removeTaskQueueingContext();
-                            }
-                        }
-                    });
-            return (DynamicSequentialTask<T>)dst[0];
-        }
-        
-        /** subclasses may override to add additional flags, but they should include the flags returned here 
-         * unless there is very good reason not to; default impl returns a MutableMap */
-        protected Map<Object,Object> getFlagsForTaskInvocationAt(Entity entity, Effector<?> effector) {
-            return EffectorUtils.getTaskFlagsForEffectorInvocation(entity, effector);
-        }
-    }
-    
-    public static class EffectorTaskBuilder<T> {
+    public static class EffectorBuilder<T> {
         private Class<T> returnType;
         private String effectorName;
         private String description;
         private List<ParameterType<?>> parameters = new ArrayList<ParameterType<?>>();
         private EffectorTaskFactory<T> impl;
         
-        private EffectorTaskBuilder(Class<T> returnType, String effectorName) {
+        private EffectorBuilder(Class<T> returnType, String effectorName) {
             this.returnType = returnType;
             this.effectorName = effectorName;
         }
-        public EffectorTaskBuilder<T> description(String description) {
+        public EffectorBuilder<T> description(String description) {
             this.description = description;
             return this;                
         }
-        public EffectorTaskBuilder<T> parameter(Class<?> paramType, String paramName) {
+        public EffectorBuilder<T> parameter(Class<?> paramType, String paramName) {
             return parameter(paramType, paramName, null, null);
         }
-        public EffectorTaskBuilder<T> parameter(Class<?> paramType, String paramName, String paramDescription) {
+        public EffectorBuilder<T> parameter(Class<?> paramType, String paramName, String paramDescription) {
             return parameter(paramType, paramName, paramDescription, null);                
         }
-        public <V> EffectorTaskBuilder<T> parameter(Class<V> paramType, String paramName, String paramDescription, V defaultValue) {
-            parameters.add(new BasicParameterType<V>(paramName, paramType, paramDescription, defaultValue));
-            return this;                
+        public <V> EffectorBuilder<T> parameter(Class<V> paramType, String paramName, String paramDescription, V defaultValue) {
+            return parameter(new BasicParameterType<V>(paramName, paramType, paramDescription, defaultValue));
         }
-        public EffectorTaskBuilder<T> impl(EffectorTaskFactory<T> taskFactory) {
+        public EffectorBuilder<T> parameter(ParameterType<?> p) {
+            parameters.add(p);
+            return this;
+        }
+        public EffectorBuilder<T> impl(EffectorTaskFactory<T> taskFactory) {
             this.impl = taskFactory;
             return this;
         }
-        public EffectorTaskBuilder<T> impl(EffectorBody<T> effectorBody) {
+        public EffectorBuilder<T> impl(EffectorBody<T> effectorBody) {
             this.impl = new EffectorBodyTaskFactory<T>(effectorBody);
             return this;
         }
         /** returns the effector, with an implementation (required); @see {@link #buildAbstract()} */
         public Effector<T> build() {
-             Preconditions.checkNotNull(impl, "Cannot create effector {} with no impl", effectorName);
+             Preconditions.checkNotNull(impl, "Cannot create effector {} with no impl (did you forget impl? or did you mean to buildAbstract?)", effectorName);
              return new EffectorAndBody<T>(effectorName, returnType, parameters, description, impl);
         }
         
@@ -101,11 +63,23 @@ public class Effectors {
         public Effector<T> buildAbstract() {
             Preconditions.checkArgument(impl==null, "Cannot create abstract effector {} as an impl is defined", effectorName);
             return new EffectorBase<T>(effectorName, returnType, parameters, description);
-       }
+        }
     }
 
-    public static <T> EffectorTaskBuilder<T> effector(Class<T> returnType, String effectorName) {
-        return new EffectorTaskBuilder<T>(returnType, effectorName);
+    /** creates a new effector builder with the given name and return type */
+    public static <T> EffectorBuilder<T> effector(Class<T> returnType, String effectorName) {
+        return new EffectorBuilder<T>(returnType, effectorName);
+    }
+
+    /** creates a new effector builder to _override_ the given effector */
+    public static <T> EffectorBuilder<T> effector(Effector<T> base) {
+        EffectorBuilder<T> builder = new EffectorBuilder<T>(base.getReturnType(), base.getName());
+        for (ParameterType<?> p: base.getParameters())
+            builder.parameter(p);
+        builder.description(base.getDescription());
+        if (builder instanceof EffectorWithBody)
+            builder.impl(((EffectorWithBody<T>) base).getBody());
+        return builder;
     }
 
     /** returns an unsubmitted task which invokes the given effector */

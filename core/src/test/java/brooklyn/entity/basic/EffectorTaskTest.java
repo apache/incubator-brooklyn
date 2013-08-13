@@ -9,6 +9,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
@@ -38,7 +39,7 @@ public class EffectorTaskTest {
 
     // ----------- syntax 1 -- effector with body in a class
     
-    public static final Effector<Integer> DOUBLE = Effectors.effector(Integer.class, "double")
+    public static final Effector<Integer> DOUBLE_1 = Effectors.effector(Integer.class, "double")
             .description("doubles the given number")
             .parameter(Integer.class, "numberToDouble")
             .impl(new EffectorBody<Integer>() {
@@ -54,18 +55,59 @@ public class EffectorTaskTest {
 
     public static class DoublingEntity extends AbstractEntity {
         private static final long serialVersionUID = -3006794991232529824L;
-        public static final Effector<Integer> DOUBLE = EffectorTaskTest.DOUBLE;
+        public static final Effector<Integer> DOUBLE = EffectorTaskTest.DOUBLE_1;
     }
 
     @Test
-    public void testSimpleEffector() throws Exception {
+    public void testSyntaxOneDouble1() throws Exception {
+        // just use "dynamic" support of effector
+        Assert.assertEquals(app.invoke(DOUBLE_1, MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
+    }
+    
+    @Test
+    // also assert it works when the entity is defined on an entity
+    public void testSimpleEffectorOnEntity() throws Exception {
         Entity doubler = app.createAndManageChild(EntitySpec.create(Entity.class, DoublingEntity.class));
         
-        Assert.assertEquals(doubler.invoke(DOUBLE, MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
+        Assert.assertEquals(doubler.invoke(DOUBLE_1, MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
     }
 
+    @Test
+    // also assert it works when an abstract effector name is passed in to the entity
+    public void testSimpleEffectorNameMatching() throws Exception {
+        Entity doubler = app.createAndManageChild(EntitySpec.create(Entity.class, DoublingEntity.class));
+        
+        Assert.assertEquals(doubler.invoke(Effectors.effector(Integer.class, "double").buildAbstract(), MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
+    }
+
+
+    // ----------- syntax 2 -- effector with body built with fluent API
     
-    // ----------------- syntax 2 -- an effector using subtasks
+    public static EffectorTaskFactory<Integer> times(final EffectorTaskFactory<Integer> x, final int y) {
+        return new EffectorTaskFactory<Integer>() {
+            @Override
+            public Task<Integer> newTask(final Entity entity, final Effector<Integer> effector, final ConfigBag parameters) {
+                return TaskBuilder.<Integer>builder().name("times").body(new Callable<Integer>() { public Integer call() { 
+                    return DynamicTasks.get( x.newTask(entity, effector, parameters) )*y; 
+                } }).build();
+            }
+        };
+    }
+
+    public static final Effector<Integer> DOUBLE_2 = Effectors.effector(Integer.class, "double")
+            .description("doubles the given number")
+            .parameter(Integer.class, "numberToDouble")
+            .impl(times(EffectorTasks.parameter(Integer.class, "numberToDouble"), 2))
+            .build();
+
+    @Test
+    public void testSyntaxTwoDouble2() throws Exception {
+        Assert.assertEquals(app.invoke(DOUBLE_2, MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
+    }
+
+    // TEST parameter task missing
+    
+    // ----------------- syntax for more complex -- an effector using subtasks
     
     public static Task<Integer> add(final int x, final int y) {
         return TaskBuilder.<Integer>builder().name("add").body(new Callable<Integer>() { public Integer call() { return x+y; } }).build();
@@ -117,6 +159,8 @@ public class EffectorTaskTest {
             })
             .build();
 
+    // TODO a chaining style approach
+    
     public static class Txp1Entity extends AbstractEntity {
         private static final long serialVersionUID = 6732818057132953567L;
         public static final Effector<Integer> TWO_X_P_1 = EffectorTaskTest.TWO_X_PLUS_ONE;
@@ -152,7 +196,7 @@ public class EffectorTaskTest {
     public void testEffectorWithBodyWorksEvenIfNotOnEntity() throws Exception {
         Entity doubler = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
-        Assert.assertEquals(doubler.invoke(DOUBLE, MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
+        Assert.assertEquals(doubler.invoke(DOUBLE_1, MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
     }
 
     public static final Effector<Integer> DOUBLE_BODYLESS = Effectors.effector(Integer.class, "double")
@@ -199,7 +243,7 @@ public class EffectorTaskTest {
         EntityInternal doubler = (EntityInternal) app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         // add it
-        doubler.getMutableEntityType().addEffector(DOUBLE);
+        doubler.getMutableEntityType().addEffector(DOUBLE_1);
 
         // invoke it, but using something with equivalent name (and signature -- though only name is used currently)
         // ensures that the call picks up the body by looking in the actual entity

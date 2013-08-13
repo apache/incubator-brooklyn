@@ -6,7 +6,7 @@ import java.util.List;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.ParameterType;
-import brooklyn.entity.basic.Effectors.EffectorTaskFactory;
+import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
