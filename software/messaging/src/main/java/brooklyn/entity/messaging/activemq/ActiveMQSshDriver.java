@@ -3,16 +3,20 @@ package brooklyn.entity.messaging.activemq;
 import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.BrooklynVersion;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 import brooklyn.util.net.Networking;
+import brooklyn.util.ssh.CommonCommands;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -83,6 +87,46 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
         String configFileContents = processTemplate(getTemplateConfigurationUrl());
         String destinationConfigFile = format("%s/conf/activemq.xml", getRunDir());
         getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
+
+        // Copy JMX agent Jar to server
+        // TODO do this based on config property in UsesJmx
+        getMachine().copyTo(new ResourceUtils(this).getResourceFromUrl(getJmxRmiAgentJarUrl()), getJmxRmiAgentJarDestinationFilePath());
+    }
+
+    public String getJmxRmiAgentJarBasename() {
+        return "brooklyn-jmxrmi-agent-" + BrooklynVersion.get() + ".jar";
+    }
+
+    public String getJmxRmiAgentJarUrl() {
+        return "classpath://" + getJmxRmiAgentJarBasename();
+    }
+
+    public String getJmxRmiAgentJarDestinationFilePath() {
+        return getRunDir() + "/" + getJmxRmiAgentJarBasename();
+    }
+
+    @Override
+    protected Map<String, ?> getJmxJavaSystemProperties() {
+        MutableMap<String, ?> opts = MutableMap.copyOf(super.getJmxJavaSystemProperties());
+        if (opts != null && opts.size() > 0) {
+            opts.remove("com.sun.management.jmxremote.port");
+        }
+        return opts;
+    }
+
+    /**
+     * Return any JVM arguments required, other than the -D defines returned by {@link #getJmxJavaSystemProperties()}
+     */
+    protected List<String> getJmxJavaConfigOptions() {
+        List<String> result = new ArrayList<String>();
+        // TODO do this based on config property in UsesJmx
+        String jmxOpt = String.format("-javaagent:%s -D%s=%d -D%s=%d -Djava.rmi.server.hostname=%s",
+                getJmxRmiAgentJarDestinationFilePath(),
+                JmxRmiAgent.JMX_SERVER_PORT_PROPERTY, getJmxPort(),
+                JmxRmiAgent.RMI_REGISTRY_PORT_PROPERTY, getRmiServerPort(),
+                getHostname());
+        result.add(jmxOpt);
+        return result;
     }
 
     @Override
@@ -112,15 +156,14 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
         newScript(ImmutableMap.of("usePidFile", getPidFile()), KILLING).execute();
     }
 
+    @Override
     public Map<String, String> getShellEnvironment() {
         Map<String,String> orig = super.getShellEnvironment();
-        String hostname = getMachine().getAddress().getHostName();
         return MutableMap.<String,String>builder()
                 .putAll(orig)
                 .put("ACTIVEMQ_HOME", getRunDir())
                 .put("ACTIVEMQ_PIDFILE", getPidFile())
                 .put("ACTIVEMQ_OPTS", orig.get("JAVA_OPTS") != null ? orig.get("JAVA_OPTS") : "")
-                .put("ACTIVEMQ_SUNJMX_CONTROL", String.format("--jmxurl service:jmx:rmi://%s:%s/jndi/rmi://%s:%s/jmxrmi", hostname, getRmiServerPort(), hostname, getJmxPort()))
                 .put("JAVA_OPTS", "")
                 .build();
     }

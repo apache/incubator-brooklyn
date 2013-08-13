@@ -97,4 +97,6 @@ public interface TestEntity extends Entity, Startable, EntityLocal, EntityIntern
     public <T extends Entity> T createChild(EntitySpec<T> spec);
 
     public <T extends Entity> T createAndManageChild(EntitySpec<T> spec);
+    
+    public List<String> getCallHistory();
 }
