@@ -36,7 +36,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(LocalManagementContext.class);
 
-    public static final List<LocalManagementContext> INSTANCES = new CopyOnWriteArrayList<LocalManagementContext>();
+    private static final List<LocalManagementContext> INSTANCES = new CopyOnWriteArrayList<LocalManagementContext>();
 
     public static List<LocalManagementContext> getInstances(){
         return new LinkedList<LocalManagementContext>(INSTANCES);

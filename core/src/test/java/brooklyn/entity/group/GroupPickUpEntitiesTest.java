@@ -11,6 +11,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -18,9 +19,7 @@ import brooklyn.test.entity.TestEntity;
 import brooklyn.util.javalang.Boxing;
 import com.google.common.base.Objects;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 /**
  * tests that a group's membership gets updated using subscriptions
@@ -30,23 +29,18 @@ public class GroupPickUpEntitiesTest {
     private TestApplication app;
     private BasicGroup group;
 
-    @BeforeTest(alwaysRun = true)
+    @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception{
-        Thread.sleep(10000);
-
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         
         group.addPolicy(new FindUpServicesWithNameBob());
     }
 
-    @AfterTest(alwaysRun = true)
+    @AfterMethod(alwaysRun = true)
     public void teardown() {
-        try {
-            if (app != null) Entities.destroyAll(app.getManagementContext());
-        } catch (Exception e) {
-
-        }
+        if (app != null) Entities.destroyAll(app.getManagementContext());
+        LocalManagementContext.terminateAll();
     }
 
     @Test
