@@ -110,4 +110,9 @@ public class TimeTest {
         Assert.assertNull(Time.dropMilliseconds(null));
     }
 
+    public void testMakeStringExactZero() { check(0, "0"); }
+    public void testMakeStringExactNegative() { check(-1, "-1ms"); }
+    public void testMakeStringRoundedZero() { checkR(0, "0"); }
+    public void testMakeStringRoundedNegative() { checkR(-1, "-1ms"); }
+    
 }

@@ -99,6 +99,9 @@ public class Time {
 	}
     /** @see #makeTimeString(long, boolean) */
 	public static String makeTimeStringNano(long tn, boolean round) {
+	    if (tn<0) return "-"+makeTimeStringNano(-tn, round);
+	    if (tn==0) return "0";
+	    
 		long tnm = tn % 1000000;
 		long t = tn/1000000;
 		String result = "";
