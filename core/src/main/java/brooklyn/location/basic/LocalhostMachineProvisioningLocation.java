@@ -126,7 +126,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             }
             
             if (isManaged()) {
-                addChild(LocationSpec.spec(LocalhostMachine.class).configure(flags));
+                addChild(LocationSpec.create(LocalhostMachine.class).configure(flags));
             } else {
                 addChild(new LocalhostMachine(flags)); // TODO legacy way
             }

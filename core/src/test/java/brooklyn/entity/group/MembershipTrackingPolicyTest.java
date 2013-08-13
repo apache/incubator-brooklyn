@@ -31,13 +31,13 @@ import com.google.common.collect.ImmutableSet;
 public class MembershipTrackingPolicyTest {
 
     private static final long TIMEOUT_MS = 10*1000;
-    
+
     SimulatedLocation loc;
     EntityManager entityManager;
     TestApplication app;
     private BasicGroup group;
     private RecordingMembershipTrackingPolicy policy;
-    
+
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new SimulatedLocation();
@@ -49,28 +49,28 @@ public class MembershipTrackingPolicyTest {
         policy = new RecordingMembershipTrackingPolicy(MutableMap.of("group", group));
         group.addPolicy(policy);
         policy.setGroup(group);
-        
+
         app.start(ImmutableList.of(loc));
     }
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
-    
+
     private TestEntity createAndManageChildOf(Entity parent) {
         EntityManager entityManager = app.getManagementContext().getEntityManager();
         TestEntity result = entityManager.createEntity(EntitySpec.create(TestEntity.class).parent(parent));
         Entities.manage(result);
         return result;
     }
-    
+
     @Test
     public void testNotifiedOfMemberAddedAndRemoved() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
-        
+
         assertRecordsEventually(Record.newAdded(e1));
-        
+
         e1.clearParent();
         assertRecordsEventually(Record.newAdded(e1), Record.newRemoved(e1));
     }
@@ -78,36 +78,36 @@ public class MembershipTrackingPolicyTest {
     @Test
     public void testNotifiedOfMemberChanged() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
-        
+
         e1.setAttribute(Startable.SERVICE_UP, true);
-        
+
         assertRecordsEventually(Record.newAdded(e1), Record.newChanged(e1));
     }
 
     @Test
     public void testNotNotifiedWhenPolicySuspended() throws Exception {
         policy.suspend();
-        
+
         TestEntity e1 = createAndManageChildOf(group);
-        
+
         assertRecordsContinually(new Record[0]);
     }
 
     @Test
     public void testNotifiedOfEverythingWhenPolicyResumed() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
-        
+
         assertRecordsEventually(Record.newAdded(e1));
-        
+
         policy.suspend();
-        
+
         TestEntity e2 = createAndManageChildOf(group);
         assertRecordsContinually(Record.newAdded(e1));
-        
+
         policy.resume();
-        
-        // Order of members set is non-deterministic, so could get [e1,e1,e2] or [e1,e2,e1] 
-        assertRecordsEventually(policy, ImmutableList.of(Record.newAdded(e1), Record.newAdded(e1), Record.newAdded(e2)), 
+
+        // Order of members set is non-deterministic, so could get [e1,e1,e2] or [e1,e2,e1]
+        assertRecordsEventually(policy, ImmutableList.of(Record.newAdded(e1), Record.newAdded(e1), Record.newAdded(e2)),
                 ImmutableList.of(Record.newAdded(e1), Record.newAdded(e2), Record.newAdded(e1)));
     }
 
@@ -115,7 +115,7 @@ public class MembershipTrackingPolicyTest {
     public void testNotifiedOfSubsequentChangesWhenPolicyResumed() throws Exception {
         policy.suspend();
         policy.resume();
-        
+
         TestEntity e1 = createAndManageChildOf(group);
         assertRecordsEventually(Record.newAdded(e1));
     }
@@ -129,18 +129,18 @@ public class MembershipTrackingPolicyTest {
         policy2.setGroup(group);
 
         e1.setAttribute(TestEntity.NAME, "myname");
-        
+
         assertRecordsEventually(policy2, Record.newAdded(e1), Record.newChanged(e1));
     }
 
     private void assertRecordsEventually(final Record... expected) {
         assertRecordsEventually(policy, expected);
     }
-    
+
     private void assertRecordsEventually(final RecordingMembershipTrackingPolicy policy, final Record... expected) {
         assertRecordsEventually(policy, ImmutableList.copyOf(expected));
     }
-    
+
     private void assertRecordsEventually(final RecordingMembershipTrackingPolicy policy, final List<Record>... validExpecteds) {
         TestUtils.assertEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
@@ -150,17 +150,17 @@ public class MembershipTrackingPolicyTest {
                 fail("actual="+policy.records+"; valid: "+validExpecteds);
             }});
     }
-    
+
     private void assertRecordsContinually(final Record... expected) {
         TestUtils.assertSucceedsContinually(ImmutableMap.of("timeout", 100), new Runnable() {
             public void run() {
                 assertEquals(policy.records, ImmutableList.copyOf(expected), "actual="+policy.records);
             }});
     }
-    
+
     static class RecordingMembershipTrackingPolicy extends AbstractMembershipTrackingPolicy {
         final List<Record> records = new CopyOnWriteArrayList<Record>();
-        
+
         public RecordingMembershipTrackingPolicy(MutableMap<String, ?> flags) {
             super(flags);
         }
@@ -177,11 +177,11 @@ public class MembershipTrackingPolicyTest {
             records.add(Record.newRemoved(member));
         }
     }
-    
+
     static class Record {
         final String action;
         final Entity member;
-        
+
         static Record newChanged(Entity member) {
             return new Record("change", member);
         }

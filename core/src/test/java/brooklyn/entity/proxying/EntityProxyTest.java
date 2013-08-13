@@ -44,8 +44,7 @@ public class EntityProxyTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app != null) Entities.destroy(app);
-        if (managementContext instanceof ManagementContextInternal) ((ManagementContextInternal)managementContext).terminate();
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

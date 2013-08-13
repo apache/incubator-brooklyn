@@ -35,7 +35,7 @@ class CustomAggregatingEnricherTest {
     AttributeSensor<Integer> target
 
     @BeforeMethod(alwaysRun=true)
-    public void before() {
+    public void setUp() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         producer = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
@@ -45,8 +45,8 @@ class CustomAggregatingEnricherTest {
     }
     
     @AfterMethod(alwaysRun=true)
-    public void after() {
-        app?.stop()
+    public void tearDown() {
+        if (app!=null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test

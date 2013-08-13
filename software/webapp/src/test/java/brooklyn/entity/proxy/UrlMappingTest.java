@@ -71,7 +71,7 @@ public class UrlMappingTest {
 
         app.start( ImmutableList.of(
                 managementContext.getLocationManager().createLocation(
-                        LocationSpec.spec(LocalhostMachineProvisioningLocation.class))
+                        LocationSpec.create(LocalhostMachineProvisioningLocation.class))
                 ));
         log.info("app's location managed: "+managementContext.getLocationManager().isManaged(Iterables.getOnlyElement(app.getLocations())));
         log.info("clusters's location managed: "+managementContext.getLocationManager().isManaged(Iterables.getOnlyElement(cluster.getLocations())));

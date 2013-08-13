@@ -871,7 +871,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     });
         
         if (isManaged()) {
-            return getManagementContext().getLocationManager().createLocation(LocationSpec.spec(JcloudsSshMachineLocation.class)
+            return getManagementContext().getLocationManager().createLocation(LocationSpec.create(JcloudsSshMachineLocation.class)
                             .configure("address", vmHostname) 
                             .configure("displayName", vmHostname)
                             .configure("user", getUser(setup))

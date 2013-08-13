@@ -1,4 +1,4 @@
-package brooklyn.enricher;
+package brooklyn.enricher
 
 import java.util.concurrent.Callable
 
@@ -19,7 +19,7 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
-import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableMap
 
 public class TransformingEnricherTest {
 

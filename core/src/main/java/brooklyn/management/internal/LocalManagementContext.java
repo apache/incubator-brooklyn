@@ -5,7 +5,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
@@ -15,8 +18,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEffector;
-import brooklyn.entity.basic.EffectorWithBody;
 import brooklyn.entity.basic.Effectors;
 import brooklyn.internal.storage.BrooklynStorageFactory;
 import brooklyn.location.Location;
@@ -24,28 +25,58 @@ import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * A local implementation of the {@link ManagementContext} API.
  */
 public class LocalManagementContext extends AbstractManagementContext {
-    @SuppressWarnings("unused")
+    
     private static final Logger log = LoggerFactory.getLogger(LocalManagementContext.class);
 
+    private static final Set<LocalManagementContext> INSTANCES = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<LocalManagementContext, Boolean>()));
+
+    @VisibleForTesting
+    static Set<LocalManagementContext> getInstances() {
+        synchronized (INSTANCES) {
+            return ImmutableSet.copyOf(INSTANCES);
+        }
+    }
+
+    // Note also called reflectively by BrooklynLeakListener
+    public static void logAll(Logger logger){
+        for (LocalManagementContext context : getInstances()) {
+            logger.warn("Management Context running, creation stacktrace:\n" + Throwables.getStackTraceAsString(context.constructionStackTrace));
+        }
+    }
+
+    
+    // Note also called reflectively by BrooklynLeakListener
+    public static void terminateAll() {
+        for (LocalManagementContext context : getInstances()) {
+            try {
+                context.terminate();
+            }catch (Throwable t) {
+                log.warn("Failed to terminate management context", t);
+            }
+        }
+    }
 
     private BasicExecutionManager execution;
     private SubscriptionManager subscriptions;
     private LocalEntityManager entityManager;
     private final LocalLocationManager locationManager;
-    
+
     private final String shortid = Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5);
     private final String tostring = "LocalManagementContext("+shortid+")";
 
+    private final Throwable constructionStackTrace = new Exception("for construction stacktrace").fillInStackTrace();
+    
     /**
      * Creates a LocalManagement with default BrooklynProperties.
      */
@@ -70,8 +101,10 @@ public class LocalManagementContext extends AbstractManagementContext {
         super(brooklynProperties,storageFactory);
         configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
         this.locationManager = new LocalLocationManager(this);
+
+        INSTANCES.add(this);
     }
-    
+
     public void prePreManage(Entity entity) {
         getEntityManager().prePreManage(entity);
     }
@@ -84,7 +117,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     public synchronized Collection<Application> getApplications() {
         return getEntityManager().getApplications();
     }
-    
+
     @Override
     public void addEntitySetListener(CollectionChangeListener<Entity> listener) {
         getEntityManager().addEntitySetListener(listener);
@@ -94,16 +127,16 @@ public class LocalManagementContext extends AbstractManagementContext {
     public void removeEntitySetListener(CollectionChangeListener<Entity> listener) {
         getEntityManager().removeEntitySetListener(listener);
     }
-    
+
     @Override
     protected void manageIfNecessary(Entity entity, Object context) {
         getEntityManager().manageIfNecessary(entity, context);
     }
-    
+
     @Override
     public synchronized LocalEntityManager getEntityManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
-        
+
         if (entityManager == null) {
             entityManager = new LocalEntityManager(this);
         }
@@ -119,7 +152,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     public synchronized  SubscriptionManager getSubscriptionManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
-        
+
         if (subscriptions == null) {
             subscriptions = new LocalSubscriptionManager(getExecutionManager());
         }
@@ -129,26 +162,27 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     public synchronized ExecutionManager getExecutionManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
-        
+
         if (execution == null) {
             execution = new BasicExecutionManager(shortid);
             gc = new BrooklynGarbageCollector(configMap, execution);
         }
         return execution;
     }
-    
+
     @Override
     public void terminate() {
+        INSTANCES.remove(this);
         super.terminate();
         if (execution != null) execution.shutdownNow();
         if (gc != null) gc.shutdownNow();
     }
-    
+
     @Override
     protected void finalize() {
         terminate();
     }
-    
+
     @Override
     public <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c) {
 		manageIfNecessary(entity, elvis(Arrays.asList(flags.get("displayName"), flags.get("description"), flags, c)));
@@ -157,7 +191,7 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     
     @Override
-    protected <T> Task<T> runAtEntity(final Entity entity, final Effector<T> eff, final Map parameters) {
+    protected <T> Task<T> runAtEntity(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {
         manageIfNecessary(entity, eff);
         return getExecutionContext(entity).submit(Effectors.invocation(entity, eff, parameters));
     }

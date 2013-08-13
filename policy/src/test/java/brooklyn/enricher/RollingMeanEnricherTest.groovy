@@ -26,7 +26,7 @@ class RollingMeanEnricherTest {
     
     RollingMeanEnricher<Integer> averager
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void before() {
         app = new AbstractApplication() {}
         producer = new AbstractEntity(app) {}
@@ -41,8 +41,9 @@ class RollingMeanEnricherTest {
         producer.addEnricher(averager)
     }
 
-    @AfterMethod
-    public void after() {
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

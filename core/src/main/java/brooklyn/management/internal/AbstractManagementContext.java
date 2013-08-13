@@ -1,5 +1,7 @@
 package brooklyn.management.internal;
 
+import static java.lang.String.format;
+
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.Collection;
@@ -10,8 +12,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
-import brooklyn.internal.storage.BrooklynStorageFactory;
-import brooklyn.internal.storage.impl.inmemory.InMemoryBrooklynStorageFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEffector;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.BasicEntityDriverManager;
 import brooklyn.entity.drivers.EntityDriverManager;
@@ -32,6 +31,8 @@ import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.internal.storage.BrooklynStorage;
+import brooklyn.internal.storage.BrooklynStorageFactory;
+import brooklyn.internal.storage.impl.inmemory.InMemoryBrooklynStorageFactory;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
@@ -48,8 +49,6 @@ import brooklyn.util.text.Strings;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 
-import static java.lang.String.format;
-
 public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
 
@@ -59,7 +58,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             clazzName = InMemoryBrooklynStorageFactory.class.getName();
         }
 
-        Class clazz;
+        Class<?> clazz;
         try{
             //todo: which classloader should we use?
             clazz = LocalManagementContext.class.getClassLoader().loadClass(clazzName);

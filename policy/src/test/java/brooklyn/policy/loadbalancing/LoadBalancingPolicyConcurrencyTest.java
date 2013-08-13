@@ -30,12 +30,14 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
     private ScheduledExecutorService scheduledExecutor;
 
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void before() {
         scheduledExecutor = Executors.newScheduledThreadPool(10);
         super.before();
     }
     
     @AfterMethod(alwaysRun=true)
+    @Override
     public void after() {
         if (scheduledExecutor != null) scheduledExecutor.shutdownNow();
         super.after();

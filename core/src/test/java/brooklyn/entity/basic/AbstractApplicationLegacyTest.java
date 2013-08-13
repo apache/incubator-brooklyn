@@ -38,6 +38,7 @@ public class AbstractApplicationLegacyTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
+        if (managementContext != null) Entities.destroyAll(managementContext);
     }
     
     // App and its children will be implicitly managed on first effector call on app

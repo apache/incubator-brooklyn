@@ -140,7 +140,7 @@ public class ByonLocationResolver implements LocationResolver {
 
         log.debug("Created BYON location "+name+": "+machines);
 
-        return managementContext.getLocationManager().createLocation(LocationSpec.spec(FixedListMachineProvisioningLocation.class)
+        return managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
                 .configure(flags));
     }
     

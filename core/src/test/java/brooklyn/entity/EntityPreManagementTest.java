@@ -43,7 +43,7 @@ public class EntityPreManagementTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroy(app);
+        if (managementContext != null) Entities.destroyAll(managementContext);
     }
     
     @Test

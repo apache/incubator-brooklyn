@@ -119,7 +119,7 @@ public class LocalhostResolver implements LocationResolver {
             }
         }
         
-        return managementContext.getLocationManager().createLocation(LocationSpec.spec(LocalhostMachineProvisioningLocation.class)
+        return managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
                 .configure(flags));
     }
 

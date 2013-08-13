@@ -47,6 +47,7 @@ public class CliTest {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class);
 
     private ExecutorService executor;
+    private StartableApplication app;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -56,6 +57,7 @@ public class CliTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (executor != null) executor.shutdownNow();
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test
@@ -79,7 +81,7 @@ public class CliTest {
         Object appBuilder = loadApplicationFromClasspathOrParse(entityName);
         assertTrue(appBuilder instanceof ApplicationBuilder, "app="+appBuilder);
         
-        StartableApplication app = ((ApplicationBuilder)appBuilder).manage();
+        app = ((ApplicationBuilder)appBuilder).manage();
         Collection<Entity> entities = app.getChildren();
         assertEquals(entities.size(), 1, "entities="+entities);
         assertTrue(Iterables.getOnlyElement(entities) instanceof ExampleEntity, "entities="+entities);
@@ -93,7 +95,7 @@ public class CliTest {
         Object appBuilder = loadApplicationFromClasspathOrParse(entityName);
         assertTrue(appBuilder instanceof ApplicationBuilder, "app="+appBuilder);
         
-        StartableApplication app = ((ApplicationBuilder)appBuilder).manage();
+        app = ((ApplicationBuilder)appBuilder).manage();
         Collection<Entity> entities = app.getChildren();
         assertEquals(entities.size(), 1, "entities="+entities);
         assertEquals(Iterables.getOnlyElement(entities).getEntityType().getName(), ExampleEntity.class.getCanonicalName(), "entities="+entities);
@@ -149,12 +151,16 @@ public class CliTest {
     public void testStopAllApplications() throws Exception {
         LaunchCommand launchCommand = new Main.LaunchCommand();
         ExampleApp app = new ExampleApp();
-        Entities.startManagement(app);
-        app.start(ImmutableList.of(new SimulatedLocation()));
-        assertTrue(app.running);
-        
-        launchCommand.stopAllApps(ImmutableList.of(app));
-        assertFalse(app.running);
+        try {
+            Entities.startManagement(app);
+            app.start(ImmutableList.of(new SimulatedLocation()));
+            assertTrue(app.running);
+            
+            launchCommand.stopAllApps(ImmutableList.of(app));
+            assertFalse(app.running);
+        } finally {
+            Entities.destroyAll(app.getManagementContext());
+        }
     }
     
     @Test

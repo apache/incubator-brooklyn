@@ -34,7 +34,7 @@ public class ConfigEntityInheritanceTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        Entities.destroyAll(((EntityInternal)app).getManagementContext());
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     protected void checkKeys(Entity entity2, Integer value) {

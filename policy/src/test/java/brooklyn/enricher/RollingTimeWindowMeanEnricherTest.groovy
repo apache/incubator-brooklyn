@@ -45,8 +45,9 @@ class RollingTimeWindowMeanEnricherTest {
         producer.addEnricher(averager)
     }
 
-    @AfterMethod
-    public void after() {
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

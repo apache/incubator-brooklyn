@@ -1,10 +1,12 @@
 package brooklyn.catalog.internal;
 
 import java.net.URLEncoder;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.BrooklynCatalog;
@@ -13,22 +15,41 @@ import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.MyCatalogItems.MySillyAppTemplate;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
+import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class CatalogScanTest {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogScanTest.class);
+
     private BrooklynCatalog defaultCatalog, annotsCatalog, fullCatalog;
+    
+    private List<LocalManagementContext> managementContexts = Lists.newCopyOnWriteArrayList();
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        for (LocalManagementContext managementContext : managementContexts) {
+            Entities.destroyAll(managementContext);
+        }
+        managementContexts.clear();
+    }
+    
+    private LocalManagementContext newManagementContext(BrooklynProperties props) {
+        LocalManagementContext result = new LocalManagementContext(props);
+        managementContexts.add(result);
+        return result;
+    }
     
     private synchronized void loadFullCatalog() {
         if (fullCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), 
                 "data:,"+URLEncoder.encode("<catalog><classpath scan=\"types\"/></catalog>"));
-        fullCatalog = new LocalManagementContext(props).getCatalog();        
+        fullCatalog = newManagementContext(props).getCatalog();        
         log.info("ENTITIES loaded for FULL: "+fullCatalog.getCatalogItems(Predicates.alwaysTrue()));
     }
     
@@ -36,7 +57,8 @@ public class CatalogScanTest {
         if (defaultCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), "");
-        defaultCatalog = new LocalManagementContext(props).getCatalog();        
+        LocalManagementContext managementContext = newManagementContext(props);
+        defaultCatalog = managementContext.getCatalog();        
         log.info("ENTITIES loaded for DEFAULT: "+defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
     }
     
@@ -44,9 +66,10 @@ public class CatalogScanTest {
     private synchronized void loadAnnotationsOnlyCatalog() {
         if (annotsCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
-        props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), 
+        props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(),
                 "data:,"+URLEncoder.encode("<catalog><classpath scan=\"annotations\"/></catalog>"));
-        annotsCatalog = new LocalManagementContext(props).getCatalog();        
+        LocalManagementContext managementContext = newManagementContext(props);
+        annotsCatalog = managementContext.getCatalog();
         log.info("ENTITIES loaded with annotation: "+annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
     }
     
