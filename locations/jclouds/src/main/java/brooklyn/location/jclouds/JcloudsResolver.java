@@ -162,7 +162,7 @@ public class JcloudsResolver implements LocationResolver {
     @SuppressWarnings("unchecked")
     protected JcloudsLocation newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
         JcloudsSpecParser details = JcloudsSpecParser.parse(spec, false);
-        String locationName = (String) locationFlags.get("name");
+        String namedLocation = (String) locationFlags.get("name");
 
         boolean isProvider = details.isProvider();
         String providerOrApi = details.providerOrApi;
@@ -180,7 +180,7 @@ public class JcloudsResolver implements LocationResolver {
         // TODO Should revisit the locationFlags: where are these actually used? Reason accepting properties without
         //      full prefix is that the map's context is explicitly this location, rather than being generic properties.
         Map allProperties = getAllProperties(registry, properties);
-        Map jcloudsProperties = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties(providerOrApi, regionName, locationName, allProperties);
+        Map jcloudsProperties = new JcloudsPropertiesFromBrooklynProperties().getJcloudsProperties(providerOrApi, regionName, namedLocation, allProperties);
         jcloudsProperties.putAll(locationFlags);
         
         if (isProvider) {

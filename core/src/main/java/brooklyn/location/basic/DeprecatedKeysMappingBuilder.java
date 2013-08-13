@@ -34,6 +34,11 @@ public class DeprecatedKeysMappingBuilder {
         return this;
     }
     
+    public DeprecatedKeysMappingBuilder putAll(Map<String,String> vals) {
+        builder.putAll(vals);
+        return this;
+    }
+
     public Map<String,String> build() {
         return builder.build();
     }

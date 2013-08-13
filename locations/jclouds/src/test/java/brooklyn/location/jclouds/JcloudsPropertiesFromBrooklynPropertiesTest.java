@@ -3,6 +3,7 @@ package brooklyn.location.jclouds;
 import java.util.Map;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Maps;
@@ -40,9 +41,16 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
         return map;
     }
     
+    private JcloudsPropertiesFromBrooklynProperties parser;
+
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        parser = new JcloudsPropertiesFromBrooklynProperties();
+    }
+    
     @Test
     public void testProviderOrApiProperties() {
-        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", null, null, sampleProviderOrApiProps());
+        Map<String, Object> map = parser.getJcloudsProperties("FooServers", null, null, sampleProviderOrApiProps());
         Assert.assertEquals(map.get("identity"), "bob");
         Assert.assertEquals(map.get("credential"), "s3cr3t");
         Assert.assertEquals(map.get("provider"), "FooServers");
@@ -50,7 +58,7 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
 
     @Test
     public void testNamedProperties() {
-        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", null, "cloudfirst", sampleNamedProps());
+        Map<String, Object> map = parser.getJcloudsProperties("FooServers", null, "cloudfirst", sampleNamedProps());
         Assert.assertEquals(map.get("provider"), "openstack-nova");
         Assert.assertEquals(map.get("identity"), "myId");
         Assert.assertEquals(map.get("credential"), "password");
@@ -63,7 +71,7 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
         Map<String, Object> allProperties = Maps.newHashMap();
         allProperties.putAll(sampleProviderOrApiProps());
         allProperties.putAll(sampleNamedProps());
-        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", null, "cloudfirst", allProperties);
+        Map<String, Object> map = parser.getJcloudsProperties("FooServers", null, "cloudfirst", allProperties);
         Assert.assertEquals(map.get("provider"), "openstack-nova");
         Assert.assertEquals(map.get("identity"), "myId");
         Assert.assertEquals(map.get("credential"), "password");
