@@ -794,7 +794,7 @@
                             <properties>
                                 <property>
                                     <name>listener</name>
-                                    <value>brooklyn.test.LoggingVerboseReporter</value>
+                                    <value>brooklyn.test.LoggingVerboseReporter,brooklyn.test.BrooklynLeakListener</value>
                                 </property>
                             </properties>
                             <enableAssertions>true</enableAssertions>
