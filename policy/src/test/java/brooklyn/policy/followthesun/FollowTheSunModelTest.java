@@ -4,9 +4,11 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.policy.loadbalancing.MockContainerEntity;
@@ -34,6 +36,11 @@ public class FollowTheSunModelTest {
         model = new DefaultFollowTheSunModel<MockContainerEntity, MockItemEntity>("myname");
     }
     
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        // noting to tear down; no management context created
+    }
+
     @Test
     public void testSimpleAddAndRemove() throws Exception {
         model.onContainerAdded(container1, loc1);

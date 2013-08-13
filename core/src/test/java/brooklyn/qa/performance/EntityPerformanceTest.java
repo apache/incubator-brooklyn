@@ -5,8 +5,10 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import brooklyn.management.internal.LocalManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -45,8 +47,8 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
         
         app.start(ImmutableList.of(loc));
     }
-    
-    protected int numIterations() {
+
+     protected int numIterations() {
         return 1000;
     }
     

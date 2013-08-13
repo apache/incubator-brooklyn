@@ -1,7 +1,13 @@
 package brooklyn.launcher;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.management.internal.LocalManagementContext;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -11,15 +17,15 @@ import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.util.HashMap;
-import java.util.Map;
+import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.basic.Entities;
+import brooklyn.management.internal.LocalManagementContext;
+
+import com.google.common.collect.Lists;
 
 public class BrooklynWebServerTest {
 
@@ -27,14 +33,30 @@ public class BrooklynWebServerTest {
 
     private BrooklynProperties brooklynProperties;
 
+    private List<LocalManagementContext> managementContexts = Lists.newCopyOnWriteArrayList();
+    
     @BeforeMethod
     public void setUp(){
         brooklynProperties = BrooklynProperties.Factory.newDefault();
     }
 
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        for (LocalManagementContext managementContext : managementContexts) {
+            Entities.destroyAll(managementContext);
+        }
+        managementContexts.clear();
+    }
+    
+    private LocalManagementContext newManagementContext(BrooklynProperties brooklynProperties) {
+        LocalManagementContext result = new LocalManagementContext(brooklynProperties);
+        managementContexts.add(result);
+        return result;
+    }
+    
     @Test
     public void verifyHttp() throws Exception {
-        BrooklynWebServer webServer = new BrooklynWebServer(new LocalManagementContext(brooklynProperties));
+        BrooklynWebServer webServer = new BrooklynWebServer(newManagementContext(brooklynProperties));
         try {
             webServer.start();
     
@@ -65,14 +87,14 @@ public class BrooklynWebServerTest {
     }
 
     private BrooklynWebServer buildWebServer() throws Exception {
-        Map flags = new HashMap();
+        Map<String,Object> flags = new HashMap<String,Object>();
         flags.put("httpsEnabled", true);
         flags.put("keystorePath", getFile("server.ks"));
         flags.put("keystorePassword", "password");
         flags.put("truststorePath", getFile("server.ts"));
         flags.put("trustStorePassword", "password");
 
-        BrooklynWebServer webServer = new BrooklynWebServer(flags, new LocalManagementContext(brooklynProperties));
+        BrooklynWebServer webServer = new BrooklynWebServer(flags, newManagementContext(brooklynProperties));
         webServer.start();
         return webServer;
     }

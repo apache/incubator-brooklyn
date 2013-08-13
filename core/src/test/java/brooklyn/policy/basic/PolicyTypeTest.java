@@ -21,6 +21,7 @@ public class PolicyTypeTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
+        // nothing to tear down; no management context not started
     }
     
     @Test

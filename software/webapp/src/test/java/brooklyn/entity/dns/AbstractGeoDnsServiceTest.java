@@ -87,8 +87,8 @@ public class AbstractGeoDnsServiceTest {
     }
 
     @AfterMethod(alwaysRun=true)
-    public void shutdown() {
-        if (app != null) Entities.destroy(app);
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     private SimulatedLocation newSimulatedLocation(String name, double lat, double lon) {

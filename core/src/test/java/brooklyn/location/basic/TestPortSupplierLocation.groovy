@@ -1,13 +1,15 @@
-package brooklyn.location.basic;
+package brooklyn.location.basic
 
 import org.testng.Assert
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxying.EntitySpec
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
-import brooklyn.event.feed.ConfigToAttributes;
+import brooklyn.event.feed.ConfigToAttributes
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
@@ -27,7 +29,12 @@ public class TestPortSupplierLocation {
         
         ps = new PortAttributeSensorAndConfigKey("some.port", "for testing", "1234+");
     }
-    
+
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroyAll(app.getManagementContext());
+    }
+
     @Test
     public void testObtainsPort() {
         ConfigToAttributes.apply(e, ps);

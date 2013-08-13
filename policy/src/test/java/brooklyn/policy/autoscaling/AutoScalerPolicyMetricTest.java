@@ -9,10 +9,12 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
@@ -35,13 +37,18 @@ public class AutoScalerPolicyMetricTest {
     TestApplication app;
     TestCluster tc;
     
-    @BeforeMethod()
+    @BeforeMethod(alwaysRun=true)
     public void before() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         tc = app.createAndManageChild(EntitySpec.create(TestCluster.class)
                 .configure("initialSize", 1));
     }
     
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroyAll(app.getManagementContext());
+    }
+
     @Test
     public void testIncrementsSizeIffUpperBoundExceeded() {
         tc.resize(1);

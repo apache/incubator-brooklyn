@@ -33,11 +33,6 @@ import com.google.common.collect.Lists;
 
 public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
     
-    @BeforeMethod(alwaysRun=true) 
-    public void before() throws Exception {
-        super.before();
-    }
-    
     @Test
     public void testPolicyUpdatesModel() {
         final MockContainerEntity containerA = newContainer(app, loc1, "A");

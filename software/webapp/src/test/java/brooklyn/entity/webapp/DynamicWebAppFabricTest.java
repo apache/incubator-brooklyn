@@ -47,7 +47,7 @@ public class DynamicWebAppFabricTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

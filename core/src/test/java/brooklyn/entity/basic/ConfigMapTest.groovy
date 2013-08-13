@@ -51,7 +51,7 @@ public class ConfigMapTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        Entities.destroyAll(app.getManagementContext());
+        if (app != null) Entities.destroyAll(app.getManagementContext());
         if (executor != null) executor.shutdownNow();
     }
 

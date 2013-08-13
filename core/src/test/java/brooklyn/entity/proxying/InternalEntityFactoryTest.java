@@ -32,7 +32,7 @@ public class InternalEntityFactoryTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (managementContext != null) managementContext.terminate();
+        if (managementContext != null) Entities.destroyAll(managementContext);
     }
     
     @Test

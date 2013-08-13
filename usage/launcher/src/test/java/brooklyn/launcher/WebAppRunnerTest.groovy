@@ -5,14 +5,18 @@ import static org.testng.Assert.*
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.Test
 
 import brooklyn.config.BrooklynProperties
+import brooklyn.entity.basic.Entities
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.test.HttpTestUtils
 import brooklyn.util.internal.TimeExtras
-import brooklyn.util.net.Networking;
+import brooklyn.util.net.Networking
 import brooklyn.util.time.Duration
+
+import com.google.common.collect.Lists
 
 
 /**
@@ -26,7 +30,23 @@ public class WebAppRunnerTest {
     private static Duration TIMEOUT_MS;
     static { TIMEOUT_MS = Duration.THIRTY_SECONDS; }
     
-    public static BrooklynWebServer createWebServer(Map properties) {
+    List<LocalManagementContext> managementContexts = Lists.newCopyOnWriteArrayList();
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        for (LocalManagementContext managementContext : managementContexts) {
+            Entities.destroyAll(managementContext);
+        }
+        managementContexts.clear();
+    }
+    
+    LocalManagementContext newManagementContext(BrooklynProperties brooklynProperties) {
+        LocalManagementContext result = new LocalManagementContext(brooklynProperties);
+        managementContexts.add(result);
+        return result;
+    }
+    
+    BrooklynWebServer createWebServer(Map properties) {
         Map bigProps = [:] + properties;
         Map attributes = bigProps.attributes
         if (attributes==null) {
@@ -39,10 +59,11 @@ public class WebAppRunnerTest {
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.putAll(bigProps);
         brooklynProperties.put("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider")
-        return new BrooklynWebServer(bigProps, new LocalManagementContext(brooklynProperties));
+        return new BrooklynWebServer(bigProps, newManagementContext(brooklynProperties));
     }
+    
     /** @deprecated since 0.4.0. user createWebServer, or better, use BrooklynLauncher.newLauncher() */
-    public static BrooklynWebServer createLauncher(Map properties) {
+    BrooklynWebServer createLauncher(Map properties) {
         return createWebServer(properties);        
     }
     

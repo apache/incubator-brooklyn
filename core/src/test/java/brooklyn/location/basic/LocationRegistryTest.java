@@ -3,9 +3,11 @@ package brooklyn.location.basic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.management.internal.LocalManagementContext;
@@ -16,7 +18,12 @@ public class LocationRegistryTest {
     
     private LocalManagementContext mgmt;
     private LocationDefinition locdef;
-    
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        if (mgmt != null) Entities.destroyAll(mgmt);
+    }
+
     @Test
     public void testNamedLocationsPropertyDefinedLocations() {
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
@@ -31,6 +38,12 @@ public class LocationRegistryTest {
     
     @Test(dependsOnMethods="testNamedLocationsPropertyDefinedLocations")
     public void testResolvesByNamedAndId() {
+        BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
+        properties.put("brooklyn.location.named.foo", "byon:(hosts=\"root@192.168.1.{1,2,3,4}\")");
+        properties.put("brooklyn.location.named.foo.privateKeyFile", "~/.ssh/foo.id_rsa");
+        mgmt = new LocalManagementContext(properties);
+
+        locdef = mgmt.getLocationRegistry().getDefinedLocationByName("foo");
         log.info("testResovlesBy has defined locations: "+mgmt.getLocationRegistry().getDefinedLocations());
         
         Location l = mgmt.getLocationRegistry().resolve("named:foo");
@@ -52,7 +65,7 @@ public class LocationRegistryTest {
 
     @Test
     public void testSetupForTesting() {
-        LocalManagementContext mgmt = new LocalManagementContext();
+        mgmt = new LocalManagementContext();
         BasicLocationRegistry.setupLocationRegistryForTesting(mgmt);
         Assert.assertNotNull(mgmt.getLocationRegistry().getDefinedLocationByName("localhost"));
     }
@@ -61,7 +74,7 @@ public class LocationRegistryTest {
     public void testCircularReference() {
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
         properties.put("brooklyn.location.named.bar", "named:bar");
-        LocalManagementContext mgmt = new LocalManagementContext(properties);
+        mgmt = new LocalManagementContext(properties);
         log.info("bar properties gave defined locations: "+mgmt.getLocationRegistry().getDefinedLocations());
         boolean resolved = false;
         try {
