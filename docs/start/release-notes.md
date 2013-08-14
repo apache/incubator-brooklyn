@@ -26,7 +26,7 @@ For more information, please checkout [http://brooklyncentral.github.io](http://
  
 ### New Features
 
-The major changes between 0.5 and 0.6.0 (including any and all previous 0.6.0 milestone releases) are:
+The major changes between 0.5 and 0.6.0 (including any and all previous 0.6.x releases) are:
 
 1. Locations are now constructed using a LocationSpec, rather than calling the constructor directly. This improvement is required to allow the Brooklyn management plane to track locations and persist their state.
 
@@ -79,5 +79,5 @@ Some additional code has been deprecated - users are strongly encouraged to upda
 
 ## Previous Release Notes
 
-[http://brooklyncentral.github.io/v/0.5.0/start/release-notes.html](0.5.0) 
+[0.5.0](http://brooklyncentral.github.io/v/0.5.0/start/release-notes.html) 
 
