@@ -17,12 +17,13 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
@@ -319,10 +320,17 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
     
     @Override
-    public void start() {
-        installJava();
-        installJmxSupport();
-        super.start();
+    public void queueStartTasks() {
+        new DynamicTasks.AutoQueueVoid("install java") { protected void main() { 
+            installJava(); }};
+            
+        if (isJmxEnabled() && isJmxSslEnabled()) {
+            new DynamicTasks.AutoQueueVoid("install jmx") { protected void main() { 
+                installJmxSupport();
+            }}; 
+        }
+        
+        super.queueStartTasks();
     }
 
 }

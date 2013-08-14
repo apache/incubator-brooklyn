@@ -2,11 +2,8 @@ package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -15,14 +12,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.collect.ImmutableMap;
-
-import freemarker.cache.StringTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
 
 /**
  * An abstract implementation of the {@link SoftwareProcessDriver}.
@@ -61,17 +54,30 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      * @see #stop()
      */
 	@Override
-	public void start() {
-        waitForConfigKey(ConfigKeys.INSTALL_LATCH);
-		install();
+	public void queueStartTasks() {
+        new DynamicTasks.AutoQueueVoid("install") { protected void main() { 
+            waitForConfigKey(ConfigKeys.INSTALL_LATCH);
+            install();
+        }};
         
-        waitForConfigKey(ConfigKeys.CUSTOMIZE_LATCH);
-		customize();
+        new DynamicTasks.AutoQueueVoid("customize") { protected void main() { 
+            waitForConfigKey(ConfigKeys.CUSTOMIZE_LATCH);
+            customize();
+        }};
         
-        waitForConfigKey(ConfigKeys.LAUNCH_LATCH);
-		launch();
+        new DynamicTasks.AutoQueueVoid("launch") { protected void main() { 
+            waitForConfigKey(ConfigKeys.LAUNCH_LATCH);
+            launch();
+        }};
         
-        postLaunch();  
+        new DynamicTasks.AutoQueueVoid("post-launch") { protected void main() { 
+            postLaunch();
+        }};
+	}
+	
+	/** @deprecated in 0.6.0 use startTask */ @Deprecated
+	public final Void start() {
+	    throw new IllegalStateException("This method is deprecated and must not be called");
 	}
 
 	@Override

@@ -1,7 +1,5 @@
 package brooklyn.entity.basic;
 
-import java.util.Collection;
-
 import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.entity.trait.Startable;
 
@@ -33,9 +31,9 @@ public interface SoftwareProcessDriver extends EntityDriver {
     void rebind();
 
     /**
-     * @see Startable#start(Collection)
+     * Queues tasks for starting
      */
-    void start();
+    void queueStartTasks();
 
     /**
      * @see Startable#stop()

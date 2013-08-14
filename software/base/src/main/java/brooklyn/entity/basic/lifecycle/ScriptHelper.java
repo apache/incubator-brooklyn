@@ -18,6 +18,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Predicate;
@@ -193,6 +194,15 @@ public class ScriptHelper {
     }
     
     public int execute() {
+        if (DynamicTasks.getTaskQueuingContext()!=null) {
+            return new DynamicTasks.AutoQueue<Integer>("ssh ("+summary+")") { protected Integer main() {
+                return executeInternal();
+            }}.get(); 
+        } else {
+            return executeInternal();
+        }
+    }
+    public int executeInternal() {
         if (!executionCheck.apply(this)) {
             return 0;
         }

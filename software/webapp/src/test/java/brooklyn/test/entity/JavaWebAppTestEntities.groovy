@@ -3,19 +3,22 @@ package brooklyn.test.entity
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.Effector
 import brooklyn.entity.Entity
-import brooklyn.location.Location
-
-import brooklyn.util.flags.SetFromFlag
+import brooklyn.entity.basic.EffectorAndBody
+import brooklyn.entity.basic.MethodEffector
+import brooklyn.entity.basic.SoftwareProcessImpl
 import brooklyn.entity.java.VanillaJavaApp
-
 import brooklyn.entity.webapp.WebAppServiceConstants
+import brooklyn.location.Location
+import brooklyn.util.flags.SetFromFlag
 
 /**
  * Mock web application server entity for testing.
  */
 public class TestJavaWebAppEntity extends VanillaJavaApp {
 	protected static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntity)
+    public static final Effector<Void> START = new EffectorAndBody<Void>(SoftwareProcessImpl.START, new MethodEffector(TestJavaWebAppEntity.class, "customStart").getBody());
 
     public TestJavaWebAppEntity(Map properties=[:], Entity parent=null) {
         super(properties, parent)
@@ -27,8 +30,8 @@ public class TestJavaWebAppEntity extends VanillaJavaApp {
 
 	public void waitForHttpPort() { }
 
-    @Override
-	public void start(Collection<? extends Location> loc) {
+    
+	public void customStart(Collection<? extends Location> loc) {
         LOG.trace "Starting {}", this
     }
 

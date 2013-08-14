@@ -14,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
+import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
@@ -29,19 +31,25 @@ import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.Repeater;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Functions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
 
 /**
  * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
@@ -176,15 +184,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     protected void postRebind() {
     }
     
-    protected void callStartHooks() {
-        preStart();
-        driver.start();
-        postDriverStart();
-        connectSensors();
-        waitForServiceUp();
-        postStart();
-    }
-    
     protected void callRebindHooks() {
         connectSensors();
         waitForServiceUp();
@@ -267,38 +266,136 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 
     @Override
-	public void start(Collection<? extends Location> locations) {
-        checkNotNull(locations, "locations");
-		setAttribute(SERVICE_STATE, Lifecycle.STARTING);
-        try {
-    		startInLocation(locations);
-    		
-    		if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) 
-                setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
-        } catch (Throwable t) {
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
-            throw Exceptions.propagate(t);
-        }
-	}
-
-    protected void startInLocation(Collection<? extends Location> locations) {
-        if (locations.isEmpty()) locations = getLocations();
-        if (locations.size() != 1 || Iterables.getOnlyElement(locations)==null)
-            throw new IllegalArgumentException("Expected one non-null location when starting "+this+", but given "+locations);
-            
-        startInLocation( Iterables.getOnlyElement(locations) );
+	public final void start(Collection<? extends Location> locations) {
+        invoke(START, ConfigBag.newInstance().configure(SoftwareProcessStartEffectorTask.LOCATIONS, locations).getAllConfig()).getUnchecked();
     }
+    
+    public static final Effector<Void> START = Effectors.effector(Startable.START).
+            impl(new SoftwareProcessStartEffectorTask()).build();
+    
+    public static class SoftwareProcessStartEffectorTask extends EffectorBody<Void> {
+        @SuppressWarnings("serial")
+        public static final ConfigKey<Collection<? extends Location>> LOCATIONS =
+                ConfigKeys.newConfigKey(new TypeToken<Collection<? extends Location>>() {}, "locations", 
+                "locations where the entity should be started");
+        private Collection<? extends Location> locations;
 
-    protected void startInLocation(Location location) {
-        if (location instanceof MachineProvisioningLocation) {
-            startInLocation((MachineProvisioningLocation<? extends MachineLocation>)location);
-        } else if (location instanceof MachineLocation) {
-            startInLocation((MachineLocation)location);
-        } else {
-            throw new IllegalArgumentException("Unsupported location "+location+", when starting "+this);
+        @Override
+        public Void main(ConfigBag parameters) {
+            locations = parameters.get(LOCATIONS);
+            checkNotNull(locations, "locations");
+            entity().setAttribute(SERVICE_STATE, Lifecycle.STARTING);
+            try {
+                startInLocations(locations);
+                if (entity().getAttribute(SERVICE_STATE) == Lifecycle.STARTING) 
+                    entity().setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+            } catch (Throwable t) {
+                entity().setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+                throw Exceptions.propagate(t);
+            }
+            return null;
         }
-    }
+        
+        protected void startInLocations(Collection<? extends Location> locations) {
+            if (locations.isEmpty()) locations = entity().getLocations();
+            if (locations.size() != 1 || Iterables.getOnlyElement(locations)==null)
+                throw new IllegalArgumentException("Expected one non-null location when starting "+this+", but given "+locations);
+                
+            startInLocation( Iterables.getOnlyElement(locations) );
+        }
 
+        protected void startInLocation(Location location) {
+            if (location instanceof MachineProvisioningLocation) {
+                Task<MachineLocation> machineTask = provision((MachineProvisioningLocation<? extends MachineLocation>)location);
+                startInMachineLocation(Tasks.supplier(machineTask));
+            } else if (location instanceof MachineLocation) {
+                startInMachineLocation(Suppliers.ofInstance((MachineLocation)location));
+            } else {
+                throw new IllegalArgumentException("Unsupported location "+location+", when starting "+this);
+            }
+        }
+
+        protected final Task<MachineLocation> provision(final MachineProvisioningLocation<?> location) {
+            return DynamicTasks.queue(Tasks.<MachineLocation>builder().name("provisioning (in "+location.getDisplayName()+")").body(
+                    new Callable<MachineLocation>() {
+                        public MachineLocation call() throws Exception {
+                            final Map<String,Object> flags = ((SoftwareProcessImpl)entity()).obtainProvisioningFlags(location);
+                            if (!(location instanceof LocalhostMachineProvisioningLocation))
+                                log.info("Starting {}, obtaining a new location instance in {} with ports {}", new Object[] {this, location, flags.get("inboundPorts")});
+                            entity().setAttribute(PROVISIONING_LOCATION, location);
+                            MachineLocation machine;
+                            try {
+                                machine = Tasks.withBlockingDetails("Provisioning machine in "+location, new Callable<MachineLocation>() {
+                                    public MachineLocation call() throws NoMachinesAvailableException {
+                                        return location.obtain(flags);
+                                    }});
+                                if (machine == null) throw new NoMachinesAvailableException("Failed to obtain machine in "+location.toString());
+                            } catch (Exception e) {
+                                throw Exceptions.propagate(e);
+                            }
+                            
+                            if (log.isDebugEnabled())
+                                log.debug("While starting {}, obtained new location instance {}", this, 
+                                        (machine instanceof SshMachineLocation ? 
+                                                machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getAllConfig()) 
+                                                : machine));
+                            if (!(location instanceof LocalhostMachineProvisioningLocation))
+                                log.info("While starting {}, obtained a new location instance {}, now preparing process there", this, machine);
+                            return machine;
+                        }
+                    }).build());
+        }
+        
+        protected void startInMachineLocation(final Supplier<MachineLocation> machineS) {
+            new DynamicTasks.AutoQueueVoid("pre-start") { protected void main() { 
+                MachineLocation machine = machineS.get();
+                log.info("Starting {} on machine {}", this, machine);
+                ((SoftwareProcessImpl)entity()).addLocations(ImmutableList.of((Location)machine));
+
+                ((SoftwareProcessImpl)entity()).initDriver(machine);
+
+                // Note: must only apply config-sensors after adding to locations and creating driver; 
+                // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
+                ConfigToAttributes.apply(entity());
+
+                if (entity().getAttribute(HOSTNAME)==null)
+                    entity().setAttribute(HOSTNAME, machine.getAddress().getHostName());
+                if (entity().getAttribute(ADDRESS)==null)
+                    entity().setAttribute(ADDRESS, machine.getAddress().getHostAddress());
+
+                // Opportunity to block startup until other dependent components are available
+                Object val = entity().getConfig(START_LATCH);
+                if (val != null) log.debug("{} finished waiting for start-latch; continuing...", this, val);
+                ((SoftwareProcessImpl)entity()).preStart(); 
+            }};
+            new DynamicTasks.AutoQueueVoid("start (in driver)") { protected void main() { 
+                ((SoftwareProcessImpl)entity()).driver.queueStartTasks();
+            }};
+            new DynamicTasks.AutoQueueVoid("post-start") { protected void main() {
+                ((SoftwareProcessImpl)entity()).postDriverStart();
+                ((SoftwareProcessImpl)entity()).connectSensors();
+                ((SoftwareProcessImpl)entity()).waitForServiceUp();
+                ((SoftwareProcessImpl)entity()).postStart();
+            }};
+        }
+     
+    }
+    
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessStartEffectorTask} */
+    protected final void startInLocation(Collection<? extends Location> locations) {}
+
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessStartEffectorTask} */
+    protected final void startInLocation(Location location) {}
+
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessStartEffectorTask} */
+	protected final void startInLocation(final MachineProvisioningLocation<?> location) {}
+	
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessStartEffectorTask} */
+    protected final void startInLocation(MachineLocation machine) {}
+
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessStartEffectorTask} */
+    protected final void callStartHooks() {}
+    
     protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {
         Map<String,Object> result = Maps.newLinkedHashMap(location.getProvisioningFlags(ImmutableList.of(getClass().getName())));
         result.putAll(getConfig(PROVISIONING_PROPERTIES));
@@ -317,32 +414,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         return obtainProvisioningFlags(location);
     }
     
-	protected void startInLocation(final MachineProvisioningLocation<?> location) {
-		final Map<String,Object> flags = obtainProvisioningFlags(location);
-        if (!(location instanceof LocalhostMachineProvisioningLocation))
-            log.info("Starting {}, obtaining a new location instance in {} with ports {}", new Object[] {this, location, flags.get("inboundPorts")});
-		setAttribute(PROVISIONING_LOCATION, location);
-        MachineLocation machine;
-        try {
-            machine = Tasks.withBlockingDetails("Provisioning machine in "+location, new Callable<MachineLocation>() {
-                public MachineLocation call() throws NoMachinesAvailableException {
-                    return location.obtain(flags);
-                }});
-            if (machine == null) throw new NoMachinesAvailableException("Failed to obtain machine in "+location.toString());
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-        
-		if (log.isDebugEnabled())
-		    log.debug("While starting {}, obtained new location instance {}", this, 
-		            (machine instanceof SshMachineLocation ? 
-		                    machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getAllConfig()) 
-		                    : machine));
-        if (!(location instanceof LocalhostMachineProvisioningLocation))
-            log.info("While starting {}, obtained a new location instance {}, now preparing process there", this, machine);
-        
-		startInLocation(machine);
-	}
 
     /** returns the ports that this entity wants to use;
      * default implementation returns 22 plus first value for each PortAttributeSensorAndConfigKey config key PortRange.
@@ -373,28 +444,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         if (hostname == null)
             throw new IllegalStateException("Cannot find hostname for "+this+" at location "+where);
         return hostname;
-	}
-
-    protected void startInLocation(MachineLocation machine) {
-        log.info("Starting {} on machine {}", this, machine);
-        addLocations(ImmutableList.of((Location)machine));
-        
-        initDriver(machine);
-        
-        // Note: must only apply config-sensors after adding to locations and creating driver; 
-        // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
-        ConfigToAttributes.apply(this);
-        
-        if (getAttribute(HOSTNAME)==null)
-            setAttribute(HOSTNAME, machine.getAddress().getHostName());
-        if (getAttribute(ADDRESS)==null)
-            setAttribute(ADDRESS, machine.getAddress().getHostAddress());
-
-        // Opportunity to block startup until other dependent components are available
-        Object val = getConfig(START_LATCH);
-        if (val != null) log.debug("{} finished waiting for start-latch; continuing...", this, val);
-
-        callStartHooks();
 	}
 
     private void initDriver(MachineLocation machine) {
