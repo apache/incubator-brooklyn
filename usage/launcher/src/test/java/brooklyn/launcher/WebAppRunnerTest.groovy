@@ -59,6 +59,7 @@ public class WebAppRunnerTest {
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.putAll(bigProps);
         brooklynProperties.put("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider")
+        brooklynProperties.put("brooklyn.webconsole.security.https.required","false");
         return new BrooklynWebServer(bigProps, newManagementContext(brooklynProperties));
     }
     
