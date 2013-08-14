@@ -42,8 +42,7 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
                 .add(CommonCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .add(format("cd redis-%s", getVersion()))
-                .add("make distclean")
-                .add("make")
+                .add("make clean && make")
                 .build();
 
         newScript(INSTALLING)
