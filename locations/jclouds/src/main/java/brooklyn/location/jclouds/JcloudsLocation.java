@@ -124,7 +124,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     /** these userNames are known to be the preferred/required logins in some common/default images 
      *  where root@ is not allowed to log in */
     public static final List<String> ROOT_ALIASES = ImmutableList.of("ubuntu", "ec2-user");
-    public static final List<String> NON_ADDABLE_USERS = ImmutableList.<String>builder().add(ROOT_USERNAME).addAll(ROOT_ALIASES).build();
+    public static final List<String> COMMON_USER_NAMES_TO_TRY = ImmutableList.<String>builder().add(ROOT_USERNAME).addAll(ROOT_ALIASES).add("admin").build();
     
     private static final Pattern LIST_PATTERN = Pattern.compile("^\\[(.*)\\]$");
     private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d*$");
@@ -684,32 +684,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     LOG.warn("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+" (rethrowing): "+e);
                     if (!listedAvailableTemplatesOnNoSuchTemplate) {
                         listedAvailableTemplatesOnNoSuchTemplate = true;
-                        LOG.info("Loading available images at "+this+" for reference...");
-                        ConfigBag m1 = ConfigBag.newInstanceCopying(config);
-                        if (m1.containsKey(IMAGE_ID)) {
-                            // if caller specified an image ID, remove that, but don't apply default filters
-                            m1.remove(IMAGE_ID);
-                            // TODO use key
-                            m1.putStringKey("anyOwner", true);
-                        }
-                        ComputeService computeServiceLessRestrictive = JcloudsUtil.findComputeService(m1);
-                        Set<? extends Image> imgs = computeServiceLessRestrictive.listImages();
-                        LOG.info(""+imgs.size()+" available images at "+this);
-                        for (Image img: imgs) {
-                            LOG.info(" Image: "+img);
-                        }
-                        
-                        Set<? extends Hardware> profiles = computeServiceLessRestrictive.listHardwareProfiles();
-                        LOG.info(""+profiles.size()+" available profiles at "+this);
-                        for (Hardware profile: profiles) {
-                            LOG.info(" Profile: "+profile);
-                        }
-
-                        Set<? extends org.jclouds.domain.Location> assignableLocations = computeServiceLessRestrictive.listAssignableLocations();
-                        LOG.info(""+assignableLocations.size()+" available locations at "+this);
-                        for (org.jclouds.domain.Location assignableLocation: assignableLocations) {
-                            LOG.info(" Location: "+assignableLocation);
-                        }
+                        logAvailableTemplates(config);
                     }
                 }
             } catch (Exception e2) {
@@ -728,6 +703,35 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         
         return template;
+    }
+    
+    protected void logAvailableTemplates(ConfigBag config) {
+        LOG.info("Loading available images at "+this+" for reference...");
+        ConfigBag m1 = ConfigBag.newInstanceCopying(config);
+        if (m1.containsKey(IMAGE_ID)) {
+            // if caller specified an image ID, remove that, but don't apply default filters
+            m1.remove(IMAGE_ID);
+            // TODO use key
+            m1.putStringKey("anyOwner", true);
+        }
+        ComputeService computeServiceLessRestrictive = JcloudsUtil.findComputeService(m1);
+        Set<? extends Image> imgs = computeServiceLessRestrictive.listImages();
+        LOG.info(""+imgs.size()+" available images at "+this);
+        for (Image img: imgs) {
+            LOG.info(" Image: "+img);
+        }
+        
+        Set<? extends Hardware> profiles = computeServiceLessRestrictive.listHardwareProfiles();
+        LOG.info(""+profiles.size()+" available profiles at "+this);
+        for (Hardware profile: profiles) {
+            LOG.info(" Profile: "+profile);
+        }
+
+        Set<? extends org.jclouds.domain.Location> assignableLocations = computeServiceLessRestrictive.listAssignableLocations();
+        LOG.info(""+assignableLocations.size()+" available locations at "+this);
+        for (org.jclouds.domain.Location assignableLocation: assignableLocations) {
+            LOG.info(" Location: "+assignableLocation);
+        }
     }
     
     // Setup the user
@@ -749,17 +753,37 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String password = truth(explicitPassword) ? explicitPassword : Identifiers.makeRandomId(12);
         List<Statement> statements = Lists.newArrayList();
         
-        // TODO For dontCreateUser, should we support specifying a user that we know will already
-        // exist on the image?
-        
         if (!truth(user) || user.equals(loginUser) || truth(dontCreateUser)) {
+            if (truth(dontCreateUser) && truth(user) && !user.equals(loginUser)) {
+                // TODO For dontCreateUser, we only want to treat it special if user was explicitly supplied
+                // (rather than it just being the default config key value). If user was explicit, then should
+                // set the password + authorize the key for that user. Presumably the caller knows that this
+                // user pre-exists on the given VM image.
+                LOG.info("Not creating user {}, and not setting its password or authorizing keys (temporarily using loginUser {})", user, loginUser);
+            }
+            
+            // For subsequent ssh'ing, we'll be using the loginUser
+            if (!truth(user)) {
+                config.put(USER, loginUser);
+            }
+            
             // Using loginUser; setup the publicKey/password so can login as expected
             if (password != null) {
-                // FIXME This would break things on clouds like Rackspace, I think, where jclouds 
-                // thinks it's getting to set the password (or to get the provider-supplied password).
-                
-                //statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), loginUser, password));
-                //result = ???;
+                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), loginUser, password));
+                result = LoginCredentials.builder().user(loginUser).password(password).build();
+            }
+            if (publicKeyData!=null) {
+                template.getOptions().authorizePublicKey(publicKeyData);
+                if (privateKeyData != null) {
+                    result = LoginCredentials.builder().user(loginUser).privateKey(privateKeyData).build();
+                }
+            }
+
+        } else if (truth(dontCreateUser)) {
+            // Expect user to already exist; setup the publicKey/password so can login as expected
+            if (password != null) {
+                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), user, password));
+                result = LoginCredentials.builder().user(user).password(password).build();
             }
             if (publicKeyData!=null) {
                 template.getOptions().authorizePublicKey(publicKeyData);
@@ -1145,7 +1169,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             usersTried.add(getUser(setup));
         }
         
-        for (String u: NON_ADDABLE_USERS) {
+        for (String u: COMMON_USER_NAMES_TO_TRY) {
             setup.put(USER, u);
             if (setHostname(setup, metadata, false)) {
                 LOG.warn("Auto-detected user at "+metadata+" as "+getUser(setup)+" (failed to connect using: "+usersTried+")");

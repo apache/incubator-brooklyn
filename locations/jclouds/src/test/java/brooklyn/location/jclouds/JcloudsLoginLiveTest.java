@@ -23,6 +23,7 @@ import brooklyn.util.collections.MutableMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Closeables;
 
 /**
  * Tests different login options for ssh keys, passwords, etc.
@@ -48,7 +49,10 @@ public class JcloudsLoginLiveTest {
     public static final String RACKSPACE_PROVIDER = "rackspace-cloudservers-uk";
     public static final String RACKSPACE_LOCATION_SPEC = "jclouds:" + RACKSPACE_PROVIDER;
     
+    // Image: {id=LON/c52a0ca6-c1f2-4cd1-b7d6-afbcd1ebda22, providerId=c52a0ca6-c1f2-4cd1-b7d6-afbcd1ebda22, name=CentOS 6.0, location={scope=ZONE, id=LON, description=LON, parent=rackspace-cloudservers-uk, iso3166Codes=[GB-SLG]}, os={family=centos, name=CentOS 6.0, version=6.0, description=CentOS 6.0, is64Bit=true}, description=CentOS 6.0, status=AVAILABLE, loginUser=root, userMetadata={os_distro=centos, com.rackspace__1__visible_core=1, com.rackspace__1__build_rackconnect=1, com.rackspace__1__options=0, image_type=base, cache_in_nova=True, com.rackspace__1__source=kickstart, org.openstack__1__os_distro=org.centos, com.rackspace__1__release_build_date=2013-07-25_18-56-29, auto_disk_config=True, com.rackspace__1__release_version=5, os_type=linux, com.rackspace__1__visible_rackconnect=1, com.rackspace__1__release_id=210, com.rackspace__1__visible_managed=0, com.rackspace__1__build_core=1, org.openstack__1__os_version=6.0, org.openstack__1__architecture=x64, com.rackspace__1__build_managed=0}}
     public static final String RACKSPACE_CENTOS_IMAGE_NAME_REGEX = "CentOS 6.0";
+    
+    // Image: {id=LON/29fe3e2b-f119-4715-927b-763e99ebe23e, providerId=29fe3e2b-f119-4715-927b-763e99ebe23e, name=Debian 6.06 (Squeeze), location={scope=ZONE, id=LON, description=LON, parent=rackspace-cloudservers-uk, iso3166Codes=[GB-SLG]}, os={family=debian, name=Debian 6.06 (Squeeze), version=6.0, description=Debian 6.06 (Squeeze), is64Bit=true}, description=Debian 6.06 (Squeeze), status=AVAILABLE, loginUser=root, userMetadata={os_distro=debian, com.rackspace__1__visible_core=1, com.rackspace__1__build_rackconnect=1, com.rackspace__1__options=0, image_type=base, cache_in_nova=True, com.rackspace__1__source=kickstart, org.openstack__1__os_distro=org.debian, com.rackspace__1__release_build_date=2013-08-06_13-05-36, auto_disk_config=True, com.rackspace__1__release_version=4, os_type=linux, com.rackspace__1__visible_rackconnect=1, com.rackspace__1__release_id=300, com.rackspace__1__visible_managed=0, com.rackspace__1__build_core=1, org.openstack__1__os_version=6.06, org.openstack__1__architecture=x64, com.rackspace__1__build_managed=0}}
     public static final String RACKSPACE_DEBIAN_IMAGE_NAME_REGEX = "Debian 6";
     
     protected BrooklynProperties brooklynProperties;
@@ -100,29 +104,51 @@ public class JcloudsLoginLiveTest {
 
     @Test(groups = {"Live"})
     protected void testAwsEc2SpecifyingJustPrivateSshKeyInDeprecatedForm() throws Exception {
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "myname");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.LEGACY_PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         
         machine = createEc2Machine(ImmutableMap.<String,Object>of());
         assertSshable(machine);
+        
+        assertSshable(ImmutableMap.builder()
+                .put("address", machine.getAddress())
+                .put("user", "myname")
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .build());
     }
     
     @Test(groups = {"Live"})
     protected void testAwsEc2SpecifyingPrivateAndPublicSshKeyInDeprecatedForm() throws Exception {
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "myname");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.LEGACY_PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.LEGACY_PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         
         machine = createEc2Machine(ImmutableMap.<String,Object>of());
         assertSshable(machine);
+        
+        assertSshable(ImmutableMap.builder()
+                .put("address", machine.getAddress())
+                .put("user", "myname")
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .build());
     }
-    
+
+    // Uses default key files
     @Test(groups = {"Live"})
     protected void testAwsEc2SpecifyingNoKeyFiles() throws Exception {
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "myname");
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         
         machine = createEc2Machine(ImmutableMap.<String,Object>of());
         assertSshable(machine);
+        
+        assertSshable(ImmutableMap.builder()
+                .put("address", machine.getAddress())
+                .put("user", "myname")
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .build());
     }
     
     @Test(groups = {"Live"})
@@ -130,25 +156,35 @@ public class JcloudsLoginLiveTest {
         try {
             moveSshKeyFiles();
             
+            brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "myname");
             brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
             jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(RACKSPACE_LOCATION_SPEC);
             
             machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
             assertSshable(machine);
+            
+            assertSshable(ImmutableMap.builder()
+                    .put("address", machine.getAddress())
+                    .put("user", "myname")
+                    .put(SshMachineLocation.PASSWORD, "mypassword")
+                    .build());
         } finally {
             restoreSshKeyFiles();
         }
     }
 
+    // Generates and uses a random password
     @Test(groups = {"Live"})
     protected void testSpecifyingNothingAndNoDefaultKeyFilesExist() throws Exception {
         try {
             moveSshKeyFiles();
             
+            brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "myname");
             jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(RACKSPACE_LOCATION_SPEC);
             
             machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
             assertSshable(machine);
+            assertEquals(machine.getUser(), "myname");
         } finally {
             restoreSshKeyFiles();
         }
@@ -156,6 +192,7 @@ public class JcloudsLoginLiveTest {
 
     @Test(groups = {"Live"})
     protected void testSpecifyingPasswordAndSshKeysPrefersKeys() throws Exception {
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "myname");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
@@ -164,38 +201,62 @@ public class JcloudsLoginLiveTest {
         machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
         assertSshable(machine);
         
-        SshMachineLocation machineUsingKey = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
-                .configure("address", machine.getAddress())
-                .configure("user", machine.getUser())
-                .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
-        assertSshable(machineUsingKey);
+        assertSshable(ImmutableMap.builder()
+                .put("address", machine.getAddress())
+                .put("user", "myname")
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .build());
         
-        SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
-                .configure("address", machine.getAddress())
-                .configure("user", machine.getUser())
-                .configure(SshMachineLocation.PASSWORD, "mypassword"));
-        assertSshable(machineUsingPassword);
+        assertSshable(ImmutableMap.builder()
+                .put("address", machine.getAddress())
+                .put("user", "myname")
+                .put(SshMachineLocation.PASSWORD, "mypassword")
+                .build());
     }
 
     @Test(groups = {"Live"})
     protected void testSpecifyingPasswordWhenDefaultSshKeysExistPrefersKeys() throws Exception {
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "myname");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(RACKSPACE_LOCATION_SPEC);
         
         machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
         assertSshable(machine);
         
-        SshMachineLocation machineUsingKey = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
-                .configure("address", machine.getAddress())
-                .configure("user", machine.getUser())
-                .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
-        assertSshable(machineUsingKey);
+        assertSshable(ImmutableMap.builder()
+                .put("address", machine.getAddress())
+                .put("user", "myname")
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .build());
         
-        SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
-                .configure("address", machine.getAddress())
-                .configure("user", machine.getUser())
-                .configure(SshMachineLocation.PASSWORD, "mypassword"));
-        assertSshable(machineUsingPassword);
+        assertSshable(ImmutableMap.builder()
+                .put("address", machine.getAddress())
+                .put("user", "myname")
+                .put(SshMachineLocation.PASSWORD, "mypassword")
+                .build());
+    }
+
+    // user "root" matches the loginUser=root
+    @Test(groups = {"Live"})
+    protected void testSpecifyingPasswordWhenNoDefaultKeyFilesExistWithRootUser() throws Exception {
+        try {
+            moveSshKeyFiles();
+            
+            brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "root");
+            brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
+            jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(RACKSPACE_LOCATION_SPEC);
+            
+            machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
+            assertSshable(machine);
+            
+            assertSshable(ImmutableMap.builder()
+                    .put("address", machine.getAddress())
+                    .put("user", "root")
+                    .put(SshMachineLocation.PASSWORD, "mypassword")
+                    .build());
+        } finally {
+            restoreSshKeyFiles();
+        }
     }
 
     @Test(groups = {"Live"})
@@ -204,63 +265,63 @@ public class JcloudsLoginLiveTest {
         // Uses "root" as loginUser
         String imageId = "us-east-1/ami-5e008437";
         
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "root");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
-        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "root");
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         
         machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", imageId));
         assertSshable(machine);
         
-        SshMachineLocation machineUsingSshKey = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
-                .configure("address", machine.getAddress())
-                .configure("user", "root")
-                .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
-        assertSshable(machineUsingSshKey);
+        assertSshable(ImmutableMap.builder()
+                .put("address", machine.getAddress())
+                .put("user", "root")
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .build());
     }
     
     @Test(groups = {"Live"})
-    protected void testAwsEc2WhenNoUserSoUsesRootLoginUser() throws Exception {
+    protected void testAwsEc2WhenBlankUserSoUsesRootLoginUser() throws Exception {
         // Image: {id=us-east-1/ami-5e008437, providerId=ami-5e008437, name=RightImage_Ubuntu_10.04_x64_v5.8.8.3, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=10.04, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, version=5.8.8.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
         // Uses "root" as loginUser
         String imageId = "us-east-1/ami-5e008437";
         
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
-        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "");
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         
         machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", imageId));
         assertSshable(machine);
         
-        SshMachineLocation machineUsingSshKey = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
-                .configure("address", machine.getAddress())
-                .configure("user", "root")
-                .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
-        assertSshable(machineUsingSshKey);
+        assertSshable(ImmutableMap.builder()
+                .put("address", machine.getAddress())
+                .put("user", "root")
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .build());
     }
     
-    // In JcloudsLocation.NON_ADDABLE_USERS, "ec2-user" is treated special and is not added!
-    // That's very bad for if someone is running brooklyn on a new AWS VM, and just installs brooklyn+runs as the default ec2-user.
+    // In JcloudsLocation.NON_ADDABLE_USERS, "ec2-user" was treated special and was not added!
+    // That was very bad for if someone is running brooklyn on a new AWS VM, and just installs brooklyn+runs as the default ec2-user.
     @Test(groups = {"Live"})
     protected void testAwsEc2SpecifyingSpecialUser() throws Exception {
         // Image: {id=us-east-1/ami-5e008437, providerId=ami-5e008437, name=RightImage_Ubuntu_10.04_x64_v5.8.8.3, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=10.04, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, version=5.8.8.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
         // Uses "root" as loginUser
         String imageId = "us-east-1/ami-5e008437";
         
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "ec2-user");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
-        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "ec2-user");
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         
         machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", imageId));
         assertSshable(machine);
         
-        SshMachineLocation machineUsingSshKey = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
-                .configure("address", machine.getAddress())
-                .configure("user", "ec2-user")
-                .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
-        assertSshable(machineUsingSshKey);
+        assertSshable(ImmutableMap.builder()
+                .put("address", machine.getAddress())
+                .put("user", "ec2-user")
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .build());
     }
     
     private JcloudsSshMachineLocation createEc2Machine(Map<String,? extends Object> conf) throws Exception {
@@ -286,6 +347,16 @@ public class JcloudsLoginLiveTest {
     private void assertSshable(SshMachineLocation machine) {
         int result = machine.execScript("simplecommand", ImmutableList.of("true"));
         assertEquals(result, 0);
+    }
+    
+    private void assertSshable(Map<?,?> machineConfig) {
+        SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                .configure(machineConfig));
+        try {
+            assertSshable(machineUsingPassword);
+        } finally {
+            Closeables.closeQuietly(machineUsingPassword);
+        }
     }
     
     private void moveSshKeyFiles() throws Exception {
