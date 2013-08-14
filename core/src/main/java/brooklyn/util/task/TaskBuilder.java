@@ -59,7 +59,7 @@ public class TaskBuilder<T> {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Task<T> build() {
         MutableMap<String, String> flags = MutableMap.of();
-        if (name!=null) flags.add("name", name);
+        if (name!=null) flags.add("displayName", name);
         
         if (dynamicSet==Boolean.FALSE && children.isEmpty())
             return new BasicTask<T>(flags, body);

@@ -1,22 +1,23 @@
 package brooklyn.rest.resources;
 
-import brooklyn.entity.Entity;
-import brooklyn.management.Task;
-import brooklyn.rest.api.EntityApi;
-import brooklyn.rest.transform.EntityTransformer;
-import brooklyn.rest.transform.TaskTransformer;
-import brooklyn.rest.util.WebResourceUtils;
-import brooklyn.rest.domain.EntitySummary;
-import brooklyn.rest.domain.TaskSummary;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
+import static com.google.common.collect.Iterables.transform;
 
 import java.util.List;
 import java.util.Set;
 
-import static com.google.common.collect.Iterables.transform;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.management.Task;
+import brooklyn.rest.api.EntityApi;
+import brooklyn.rest.domain.EntitySummary;
+import brooklyn.rest.domain.TaskSummary;
+import brooklyn.rest.transform.EntityTransformer;
+import brooklyn.rest.transform.TaskTransformer;
+import brooklyn.rest.util.WebResourceUtils;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 
 public class EntityResource extends AbstractBrooklynRestResource implements EntityApi {
 
@@ -50,7 +51,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   @Override
   public Iterable<TaskSummary> listTasks(String applicationId, String entityId) {
       Entity entity = brooklyn().getEntity(applicationId, entityId);
-      Set<Task<?>> tasks = mgmt().getExecutionManager().getTasksWithTag(entity);
+      Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(mgmt().getExecutionManager(), entity);
       return Collections2.transform(tasks, TaskTransformer.FROM_TASK);
   }
 

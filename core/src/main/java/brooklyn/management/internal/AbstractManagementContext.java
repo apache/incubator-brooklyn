@@ -23,6 +23,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.BasicEntityDriverManager;
 import brooklyn.entity.drivers.EntityDriverManager;
@@ -40,7 +41,6 @@ import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.Tasks;
@@ -163,7 +163,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     public ExecutionContext getExecutionContext(Entity e) {
         // BEC is a thin wrapper around EM so fine to create a new one here
-        return new BasicExecutionContext(MutableMap.of("tag", e), getExecutionManager());
+        return new BasicExecutionContext(MutableMap.of("tag", BrooklynTasks.tagForContextEntity(e)), getExecutionManager());
     }
     
     public SubscriptionContext getSubscriptionContext(Entity e) {
@@ -237,15 +237,10 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException {
         try {
             Task<?> current = Tasks.current();
-            if (current == null || !current.getTags().contains(entity) || !isManagedLocally(entity)) {
+            if (current == null || !entity.equals(BrooklynTasks.getContextEntity(current)) || !isManagedLocally(entity)) {
                 manageIfNecessary(entity, eff.getName());
                 // Wrap in a task if we aren't already in a task that is tagged with this entity
-                Task<T> task = runAtEntity(
-                        MutableMap.builder()
-                                .put("description", "invoking "+eff.getName()+" on "+entity+" ("+entity.getDisplayName()+")")
-                                .put("displayName", eff.getName())
-                                .put("tags", MutableList.of(EFFECTOR_TAG))
-                                .build(), 
+                Task<T> task = runAtEntity( EffectorUtils.getTaskFlagsForEffectorInvocation(entity, eff),
                         entity, 
                         new Callable<T>() {
                             public T call() {

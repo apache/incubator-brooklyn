@@ -1,8 +1,5 @@
 package brooklyn.entity.basic;
 
-import com.google.common.annotations.Beta;
-
-import brooklyn.entity.Entity;
 import brooklyn.management.HasTask;
 import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
@@ -10,6 +7,8 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.task.DynamicSequentialTask;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+
+import com.google.common.annotations.Beta;
 
 /** Typical implementations override {@link #main(ConfigBag)} to do the work of the effector
  * <p>
@@ -33,8 +32,8 @@ public abstract class EffectorBody<T> {
     
     // ---- convenience method(s) for implementers of main -- see subclasses and *Tasks statics for more
     
-    protected Entity entity() {
-        return Tasks.tag(Tasks.current(), Entity.class, true);
+    protected EntityLocal entity() {
+        return (EntityLocal) BrooklynTasks.getTargetOrContextEntity(Tasks.current());
     }
     
     // messy generics used to transparently invoke right queueing method

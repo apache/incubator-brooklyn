@@ -15,6 +15,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.management.EntityManager;
@@ -68,7 +69,8 @@ public class EntityProxyTest {
         assertEquals(result, "abc");
         
         Set<Task<?>> tasks = managementContext.getExecutionManager().getTasksWithAllTags(
-                ImmutableList.of(ManagementContextInternal.EFFECTOR_TAG, entity));
+                ImmutableList.of(ManagementContextInternal.EFFECTOR_TAG, 
+                BrooklynTasks.tagForContextEntity(entity)));
         Task<?> task = Iterables.get(tasks, 0);
         assertEquals(tasks.size(), 1, "tasks="+tasks);
         assertTrue(task.getDescription().contains("identityEffector"));

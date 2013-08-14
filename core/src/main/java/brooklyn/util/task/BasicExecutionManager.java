@@ -35,6 +35,7 @@ import brooklyn.management.Task;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -206,9 +207,7 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     private Set<Task> getMutableTasksWithTag(Object tag) {
-        if (tag == null) {
-            System.out.println("argph, null");
-        }
+        Preconditions.checkNotNull(tag);
         tasksByTag.putIfAbsent(tag, Collections.synchronizedSet(new LinkedHashSet<Task>()));
         return tasksByTag.get(tag);
     }

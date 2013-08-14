@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.rest.domain.LinkWithMetadata;
@@ -39,8 +40,7 @@ public class TaskTransformer {
     public static TaskSummary taskSummary(Task task) {
       try {
         Preconditions.checkNotNull(task);
-        // 'ported' from groovy web console TaskSummary.groovy , not sure if always works as intended
-        Entity entity = (Entity) Iterables.tryFind(task.getTags(), Predicates.instanceOf(Entity.class)).orNull();
+        Entity entity = BrooklynTasks.getContextEntity(task);
         String entityId;
         String entityDisplayName;
         URI entityLink;
@@ -92,7 +92,7 @@ public class TaskTransformer {
         MutableMap<String,Object> data = new MutableMap<String,Object>();
         data.put("id", t.getId());
         data.put("taskName", t.getDisplayName());
-        Entity entity = (Entity) Iterables.tryFind(t.getTags(), Predicates.instanceOf(Entity.class)).orNull();
+        Entity entity = BrooklynTasks.getContextEntity(t);
         if (entity!=null) data.put("entityDisplayName", entity.getDisplayName());
         return new LinkWithMetadata("/v1/activities/"+t.getId(), data);
     }

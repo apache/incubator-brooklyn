@@ -110,7 +110,10 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                 for (Task<?> t: secondaryJobsAll)
                     ((BasicTask<?>)t).markQueued();
             }
-            Task<List<Object>> secondaryJobMaster = new BasicTask<List<Object>>(new Callable<List<Object>>() {
+            // TODO overkill having a thread/task for this, but it works (room for optimization...)
+            Task<List<Object>> secondaryJobMaster = Tasks.<List<Object>>builder().dynamic(false)
+                    .name("DST manager (internal)")
+                    .body(new Callable<List<Object>>() {
                 @Override
                 public List<Object> call() throws Exception {
                     List<Object> result = new ArrayList<Object>();
@@ -138,7 +141,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                     }
                     return result;
                 }
-            });
+            }).build();
             submitBackgroundInheritingContext(secondaryJobMaster);
             
             T result = null;

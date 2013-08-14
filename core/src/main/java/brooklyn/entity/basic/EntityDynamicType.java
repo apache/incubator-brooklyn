@@ -275,7 +275,7 @@ public class EntityDynamicType {
                     Effector<?> eff = (Effector<?>) f.get(optionalEntity);
                     Effector<?> overwritten = result.put(eff.getName(), eff);
                     Field overwrittenFieldSource = fieldSources.put(eff.getName(), f);
-                    if (overwritten!=null && !Effectors.sameEffector(overwritten, eff)) {
+                    if (overwritten!=null && !Effectors.sameInstance(overwritten, eff)) {
                         LOG.debug("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
                                 eff.getName(), (optionalEntity != null ? optionalEntity : clazz), eff, f, overwritten, 
                                 overwrittenFieldSource});
@@ -295,8 +295,9 @@ public class EntityDynamicType {
                     Effector<?> eff = MethodEffector.create(m);
                     Effector<?> overwritten = result.get(eff.getName());
                     
-                    if (overwritten instanceof EffectorWithBody) {
-                        // ignore - prefer what is set in a static field
+                    if ((overwritten instanceof EffectorWithBody) && !(overwritten instanceof MethodEffector<?>)) {
+                        // don't let annotations on methods override a static, unless that static is a MethodEffector
+                        // TODO not perfect, but approx right; we should clarify whether we prefer statics or methods
                     } else {
                         result.put(eff.getName(), eff);
                         Method overwrittenMethodSource = methodSources.put(eff.getName(), m);

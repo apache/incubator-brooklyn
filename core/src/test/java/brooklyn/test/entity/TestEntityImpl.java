@@ -139,11 +139,11 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         return child;
     }
     
-    @Override
-    public String toString() {
-        String id = getId();
-        return getEntityType().getSimpleName()+"["+id.substring(Math.max(0, id.length()-8))+"]";
-    }
+//    @Override
+//    public String toString() {
+//        String id = getId();
+//        return getEntityType().getSimpleName()+"["+id.substring(Math.max(0, id.length()-8))+"]";
+//    }
 
     @Override
     public List<String> getCallHistory() {

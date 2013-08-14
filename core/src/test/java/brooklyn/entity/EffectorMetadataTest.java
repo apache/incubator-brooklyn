@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -17,6 +18,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.basic.DefaultValue;
 import brooklyn.entity.basic.Description;
+import brooklyn.entity.basic.Effectors;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
@@ -67,7 +69,7 @@ public class EffectorMetadataTest {
     @Test
     public void testEffectorMetaDataFromNewAnnotationsWithConstant() {
         Effector<?> effector = findEffector(e1, "effWithNewAnnotation");
-        assertEquals(effector, MyAnnotatedEntity.EFF_WITH_NEW_ANNOTATION);
+        Assert.assertTrue(Effectors.sameSignature(effector, MyAnnotatedEntity.EFF_WITH_NEW_ANNOTATION));
         assertEquals(effector.getName(), "effWithNewAnnotation");
         assertEquals(effector.getDescription(), "my effector description");
         assertEquals(effector.getReturnType(), String.class);

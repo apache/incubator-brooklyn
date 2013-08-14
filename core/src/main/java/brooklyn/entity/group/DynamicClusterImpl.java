@@ -5,7 +5,6 @@ import groovy.lang.Closure;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
@@ -294,7 +293,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             } catch (InterruptedException e) {
                 throw Exceptions.propagate(e);
             } catch (Throwable t) {
-                logger.error("Cluster "+this+" failed to start entity "+entity+" (removing): "+t, t);
+                logger.error("Cluster "+this+" failed to start entity "+entity+" (removing): "+t);
+                logger.debug("Trace for: Cluster "+this+" failed to start entity "+entity+" (removing): "+t, t);
                 errors.put(entity, unwrapException(t));
             }
         }

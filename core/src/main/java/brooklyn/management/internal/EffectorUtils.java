@@ -20,6 +20,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicParameterType;
+import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableList;
@@ -304,7 +305,8 @@ public class EffectorUtils {
         return MutableMap.builder()
                 .put("description", "Invoking effector "+effector.getName()+" on "+entity.getDisplayName())
                 .put("displayName", effector.getName())
-                .put("tags", MutableList.of(ManagementContextInternal.EFFECTOR_TAG))
+                .put("tags", MutableList.of(ManagementContextInternal.EFFECTOR_TAG, 
+                        BrooklynTasks.tagForTargetEntity(entity)))
                 .build();
     }
 

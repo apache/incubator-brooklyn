@@ -18,6 +18,7 @@ import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.flags.TypeCoercions;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -243,6 +244,15 @@ public class Tasks {
                 log.debug("Could not add task "+task+" at "+adder+": "+e);
             return false;
         }        
+    }
+    
+    public static <T> Supplier<T> supplier(final Task<T> task) {
+        return new Supplier<T>() {
+            @Override
+            public T get() {
+                return task.getUnchecked();
+            }
+        };
     }
     
 

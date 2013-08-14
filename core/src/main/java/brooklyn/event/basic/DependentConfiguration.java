@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
@@ -128,7 +129,7 @@ public class DependentConfiguration {
         if (ready.apply(value)) return value;
         BasicTask current = (BasicTask) Tasks.current();
         if (current == null) throw new IllegalStateException("Should only be invoked in a running task");
-        Entity entity = (Entity)Iterables.find(current.getTags(), Predicates.instanceOf(Entity.class));
+        Entity entity = BrooklynTasks.getTargetOrContextEntity(current);
         if (entity == null) throw new IllegalStateException("Should only be invoked in a running task with an entity tag; "+
                 current+" has no entity tag ("+current.getStatusDetail(false)+")");
         final AtomicReference<T> data = new AtomicReference<T>();

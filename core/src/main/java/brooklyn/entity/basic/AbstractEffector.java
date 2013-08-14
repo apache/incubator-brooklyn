@@ -55,9 +55,8 @@ public abstract class AbstractEffector<T> extends EffectorBase<T> implements Eff
             public Task<T> newTask(final Entity entity, final Effector<T> effector, final ConfigBag parameters) {
                 return new BasicTask<T>(
                         getFlagsForTaskInvocationAt(entity),
-                        new Callable<T>() {
+                new Callable<T>() {
                     public T call() {
-                        assert effector == AbstractEffector.this;
                         return AbstractEffector.this.call(parameters.getAllConfig(), entity);
                     }
                 });

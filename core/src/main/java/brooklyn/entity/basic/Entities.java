@@ -24,6 +24,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.BrooklynTasks.WrappedEntity;
 import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.trait.Startable;
@@ -44,6 +45,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ParallelTask;
 
 import com.google.common.base.Supplier;
@@ -105,7 +107,8 @@ public class Entities {
         ParallelTask<T> invoke = new ParallelTask<T>(
                 MutableMap.of(
                         "displayName", effector.getName()+" (parallel)",
-                        "description", "Invoking effector \""+effector.getName()+"\" on "+tasks.size()+(tasks.size() == 1 ? " entity" : " entities")),
+                        "description", "Invoking effector \""+effector.getName()+"\" on "+tasks.size()+(tasks.size() == 1 ? " entity" : " entities"),
+                        "tag", BrooklynTasks.tagForCallerEntity(callingEntity)),
                 tasks);
         ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(invoke);
         return invoke;
@@ -135,7 +138,10 @@ public class Entities {
     public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
         Task<T> t = Effectors.invocation(entityToCall, effector, parameters);
-        ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(t);
+        // we pass to callingEntity for consistency above, but in exec-context it should be
+        // re-dispatched to targetEntity
+        ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(
+                MutableMap.of("tag", BrooklynTasks.tagForCallerEntity(callingEntity)), t);
         return t;
     }
     @SuppressWarnings("unchecked")
@@ -493,8 +499,8 @@ public class Entities {
     /** stops, destroys, and unmanages all apps in the given context,
      * and then terminates the management context */
     public static void destroyAll(ManagementContext mgmt) {
-        log.debug("destroying all apps in "+mgmt+": "+mgmt.getApplications());
         if (!mgmt.isRunning()) return;
+        log.debug("destroying all apps in "+mgmt+": "+mgmt.getApplications());
         for (Application app: mgmt.getApplications()) {
             log.debug("destroying app "+app+" (managed? "+isManaged(app)+"; mgmt is "+mgmt+")");
             destroy(app);

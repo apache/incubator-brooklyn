@@ -92,7 +92,8 @@ public class Effectors {
     public static <T> Task<T> invocation(Entity entity, Effector<T> eff, @SuppressWarnings("rawtypes") Map parameters) {
         @SuppressWarnings("unchecked")
         Effector<T> eff2 = (Effector<T>) ((EntityInternal)entity).getEffector(eff.getName());
-        log.info("invoking "+eff+"/"+
+        if (log.isTraceEnabled())
+            log.trace("invoking "+eff+"/"+
                 (eff instanceof EffectorWithBody<?> ? ((EffectorWithBody<?>)eff).getBody() : "bodyless")+
                 " on entity " + entity+" "+
                 (eff2==eff ? "" : " (actually "+eff2+"/"+
@@ -123,7 +124,9 @@ public class Effectors {
                 Objects.equal(e1.getReturnType(), e2.getReturnType());
     }
     
-    public static boolean sameEffector(Effector<?> e1, Effector<?> e2) {
+    // TODO sameSignatureAndBody
+    
+    public static boolean sameInstance(Effector<?> e1, Effector<?> e2) {
         return e1 == e2;
     }
 
