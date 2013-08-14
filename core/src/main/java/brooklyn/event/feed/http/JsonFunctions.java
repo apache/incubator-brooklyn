@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.List;
 
 import com.google.common.base.Function;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -36,6 +37,16 @@ public class JsonFunctions {
         };
     }
 
+    public static Function<JsonElement, JsonElement> walk(String elements) {
+        Iterable<String> iterable = Splitter.on('.').split(elements);
+        return walk(iterable);
+    }
+
+    public static Function<JsonElement, JsonElement> walk(Iterable<String> elements) {
+        String[] array = Lists.newArrayList(elements).toArray(new String[0]);
+        return walk(array);
+    }
+
     public static Function<JsonElement, JsonElement> walk(final String... elements) {
         return new Function<JsonElement, JsonElement>() {
             @Override public JsonElement apply(JsonElement input) {
@@ -48,6 +59,7 @@ public class JsonFunctions {
         };
     }
     
+    @SuppressWarnings("unchecked")
     public static <T> Function<JsonElement, T> cast(final Class<T> expected) {
         return new Function<JsonElement, T>() {
             @Override public T apply(JsonElement input) {
