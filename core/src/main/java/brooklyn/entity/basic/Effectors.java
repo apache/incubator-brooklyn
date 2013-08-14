@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
@@ -12,9 +15,12 @@ import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 public class Effectors {
+
+    private static final Logger log = LoggerFactory.getLogger(Effectors.class);
     
     public static class EffectorBuilder<T> {
         private Class<T> returnType;
@@ -84,16 +90,41 @@ public class Effectors {
 
     /** returns an unsubmitted task which invokes the given effector */
     public static <T> Task<T> invocation(Entity entity, Effector<T> eff, @SuppressWarnings("rawtypes") Map parameters) {
-        if (eff instanceof EffectorWithBody) {
-            return ((EffectorWithBody<T>)eff).getBody().newTask(entity, eff, ConfigBag.newInstance().putAll(parameters));
-        }
         @SuppressWarnings("unchecked")
         Effector<T> eff2 = (Effector<T>) ((EntityInternal)entity).getEffector(eff.getName());
-        if (eff2 instanceof EffectorWithBody) {
-            return ((EffectorWithBody<T>)eff2).getBody().newTask(entity, eff2, ConfigBag.newInstance().putAll(parameters));
+        log.info("invoking "+eff+"/"+
+                (eff instanceof EffectorWithBody<?> ? ((EffectorWithBody<?>)eff).getBody() : "bodyless")+
+                " on entity " + entity+" "+
+                (eff2==eff ? "" : " (actually "+eff2+"/"+
+                        (eff2 instanceof EffectorWithBody<?> ? ((EffectorWithBody<?>)eff2).getBody() : "bodyless")+")"));
+        if (eff2!=null) {
+            if (eff2!=eff) {
+                if (eff2 instanceof EffectorWithBody) {
+                    log.debug("Replacing invocation of {} on {} with {} which is the impl defined at that entity", new Object[] { eff, entity, eff2 });
+                    return ((EffectorWithBody<T>)eff2).getBody().newTask(entity, eff2, ConfigBag.newInstance().putAll(parameters));
+                } else {
+                    log.warn("Effector {} defined on {} has no body; invoking caller-supplied {} instead", new Object[] { eff2, entity, eff });
+                }
+            } else {
+                log.debug("Effector {} does not exist on {}; attempting to invoke anyway", new Object[] { eff, entity });
+            }
+        }
+        
+        if (eff instanceof EffectorWithBody) {
+            return ((EffectorWithBody<T>)eff).getBody().newTask(entity, eff, ConfigBag.newInstance().putAll(parameters));
         }
         
         throw new UnsupportedOperationException("No implementation registered for effector "+eff+" on "+entity);
     }    
+
+    public static boolean sameSignature(Effector<?> e1, Effector<?> e2) {
+        return Objects.equal(e1.getName(), e2.getName()) &&
+                Objects.equal(e1.getParameters(), e2.getParameters()) &&
+                Objects.equal(e1.getReturnType(), e2.getReturnType());
+    }
+    
+    public static boolean sameEffector(Effector<?> e1, Effector<?> e2) {
+        return e1 == e2;
+    }
 
 }

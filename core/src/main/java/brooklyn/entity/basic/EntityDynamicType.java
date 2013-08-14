@@ -264,6 +264,7 @@ public class EntityDynamicType {
             Map<String,Effector<?>> result = Maps.newLinkedHashMap();
             Map<String,Field> fieldSources = Maps.newLinkedHashMap();
             Map<String,Method> methodSources = Maps.newLinkedHashMap();
+            
             for (Field f : Reflections.findPublicFieldsOrderedBySuper(clazz)) {
                 if (Effector.class.isAssignableFrom(f.getType())) {
                     if (!Modifier.isStatic(f.getModifiers())) {
@@ -274,8 +275,8 @@ public class EntityDynamicType {
                     Effector<?> eff = (Effector<?>) f.get(optionalEntity);
                     Effector<?> overwritten = result.put(eff.getName(), eff);
                     Field overwrittenFieldSource = fieldSources.put(eff.getName(), f);
-                    if (overwritten!=null && !overwritten.equals(eff)) {
-                        LOG.warn("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
+                    if (overwritten!=null && !Effectors.sameEffector(overwritten, eff)) {
+                        LOG.debug("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
                                 eff.getName(), (optionalEntity != null ? optionalEntity : clazz), eff, f, overwritten, 
                                 overwrittenFieldSource});
                     }
@@ -292,11 +293,15 @@ public class EntityDynamicType {
                     }
 
                     Effector<?> eff = MethodEffector.create(m);
-                    Effector<?> overwritten = result.put(eff.getName(), eff);
-                    Method overwrittenMethodSource = methodSources.put(eff.getName(), m);
-                    Field overwrittenFieldSource = fieldSources.remove(eff.getName());
-                    if (overwritten != null && !overwritten.equals(eff)) {
-                        LOG.warn("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
+                    Effector<?> overwritten = result.get(eff.getName());
+                    
+                    if (overwritten instanceof EffectorWithBody) {
+                        // ignore - prefer what is set in a static field
+                    } else {
+                        result.put(eff.getName(), eff);
+                        Method overwrittenMethodSource = methodSources.put(eff.getName(), m);
+                        Field overwrittenFieldSource = fieldSources.remove(eff.getName());
+                        LOG.debug("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
                                 eff.getName(), (optionalEntity != null ? optionalEntity : clazz), eff, m, overwritten, 
                                 (overwrittenMethodSource != null ? overwrittenMethodSource : overwrittenFieldSource)});
                     }

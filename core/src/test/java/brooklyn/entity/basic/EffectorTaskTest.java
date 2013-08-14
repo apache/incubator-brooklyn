@@ -257,4 +257,19 @@ public class EffectorTaskTest {
         Assert.assertNull( doubler.getEffector("double") );
    }
     
+    // --- overriding by using statics ---------
+
+    @SuppressWarnings("serial")
+    public static class BadDoublingEntity extends DoublingEntity {
+        public static final Effector<Integer> DOUBLE = Effectors.effector(DoublingEntity.DOUBLE).
+                impl( ((EffectorWithBody<Integer>)TWO_X_PLUS_ONE).getBody() ).build();
+    }
+
+    @Test
+    // also assert it works when the entity is defined on an entity
+    public void testOverriddenEffectorOnEntity() throws Exception {
+        Entity doubler = app.createAndManageChild(EntitySpec.create(Entity.class, BadDoublingEntity.class));
+        
+        Assert.assertEquals(doubler.invoke(DoublingEntity.DOUBLE, MutableMap.of("numberToDouble", 3, "numberToStartWith", 3)).get(), (Integer)7);
+    }
 }

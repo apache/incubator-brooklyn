@@ -4,18 +4,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Effector;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 
 /** concrete implementation of Effector interface, 
  * but not (at this level of the hirarchy) defining an implementation 
  * (see {@link EffectorTaskFactory} and {@link EffectorWithBody}) */
 public class EffectorBase<T> implements Effector<T> {
 
+    private static final Logger log = LoggerFactory.getLogger(EffectorBase.class);
+    
     private static final long serialVersionUID = -4153962199078384835L;
     
     private final String name;
@@ -68,18 +72,4 @@ public class EffectorBase<T> implements Effector<T> {
         return name+"["+Joiner.on(",").join(parameterNames)+"]";
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(name, description, parameters, returnType);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return (obj instanceof Effector) &&
-                Objects.equal(name, ((Effector<?>)obj).getName()) &&
-                Objects.equal(description, ((Effector<?>)obj).getDescription()) &&
-                Objects.equal(parameters, ((Effector<?>)obj).getParameters()) &&
-                Objects.equal(returnType, ((Effector<?>)obj).getReturnType());
-    }
-    
 }
