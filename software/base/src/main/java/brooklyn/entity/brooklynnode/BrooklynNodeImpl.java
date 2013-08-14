@@ -63,8 +63,14 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         
         // TODO what sensors should we poll?
         ConfigToAttributes.apply(this);
-        
-        String host = getAttribute(HOSTNAME);
+
+        String host;
+        if (getAttribute(NO_WEB_CONSOLE_AUTHENTICATION)) {
+            host = "localhost"; // Because of --noConsoleSecurity option
+        } else {
+            host = getAttribute(HOSTNAME);
+        }
+
         URI webConsoleUri;
         if (isHttpProtocolEnabled("http")) {
             int port = getConfig(PORT_MAPPER).apply(getAttribute(HTTP_PORT));
