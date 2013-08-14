@@ -58,7 +58,8 @@ define([
                      }, { 
                         "bVisible": false, 
                         "aTargets": [ 0 ] 
-                     } ]            
+                     } ],
+                "aaSorting":[]  // default not sorted (server-side order)
             });
 
             this.$('#activities-submitted-table').html(_.template(ActivityTableHtml))
@@ -76,7 +77,8 @@ define([
                      }, { 
                         "bVisible": false, 
                         "aTargets": [ 0 ] 
-                     } ]            
+                     } ],
+                "aaSorting":[]  // default not sorted (server-side order)
             });
         
             ViewUtils.attachToggler(this.$el)
@@ -119,11 +121,11 @@ define([
             this.updateField('tags')
             
             var submitTimeUtc = this.updateFieldWith('submitTimeUtc',
-                function(v) { return moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).fromNow()+"</i>" })
+                function(v) { return v <= 0 ? "-" : moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).fromNow()+"</i>" })
             var startTimeUtc = this.updateFieldWith('startTimeUtc',
-                function(v) { return moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).fromNow()+"</i>" })
+                function(v) { return v <= 0 ? "-" : moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).fromNow()+"</i>" })
             this.updateFieldWith('endTimeUtc',
-                function(v) { return moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).from(startTimeUtc, true)+" later</i>" })
+                function(v) { return v <= 0 ? "-" : moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).from(startTimeUtc, true)+" later</i>" })
 
             ViewUtils.updateTextareaWithData($(".task-json .for-textarea", this.$el), 
                 FormatJSON(this.task.toJSON()), false, 150, 400)
@@ -170,9 +172,9 @@ define([
             var children = this.children
             ViewUtils.updateMyDataTable(this.childrenTable, children, function(task, index) {
                 return [ task.get("id"),
-                         (task.get("entityId")!=that.task.get("entityId") ? task.get("entityDisplayName") + ": " : "") + 
+                         (task.get("entityId") && task.get("entityId")!=that.task.get("entityId") ? task.get("entityDisplayName") + ": " : "") + 
                          task.get("displayName"),
-                         moment(task.get("submitTimeUtc")).calendar(),
+                         task.get("submitTimeUtc") <= 0 ? "-" : moment(task.get("submitTimeUtc")).calendar(),
                          task.get("currentStatus")
                     ]; 
                 });
@@ -201,9 +203,9 @@ define([
             }
             ViewUtils.updateMyDataTable(this.subtasksTable, subtasks, function(task, index) {
                 return [ task.get("id"),
-                         (task.get("entityId")!=that.task.get("entityId") ? task.get("entityDisplayName") + ": " : "") + 
+                         (task.get("entityId") && task.get("entityId")!=that.task.get("entityId") ? task.get("entityDisplayName") + ": " : "") + 
                          task.get("displayName"),
-                         moment(task.get("submitTimeUtc")).calendar(),
+                         task.get("submitTimeUtc") <= 0 ? "-" : moment(task.get("submitTimeUtc")).calendar(),
                          task.get("currentStatus")
                     ]; 
                 });
@@ -226,13 +228,15 @@ define([
         },
         updateFieldWith: function(field, f) {
             var v = this.task.get(field)
-            if (v) {
+            if (v !== undefined && v != null) {
                 $('.updateField-'+field, this.$el).html( f(v) );
                 $('.ifField-'+field, this.$el).show();
-                return v
             } else {
+                // blank if there is no value
+                $('.updateField-'+field, this.$el).html( '' );;
                 $('.ifField-'+field, this.$el).hide();
             }
+            return v
         },
         childrenRowClick:function(evt) {
             var that = this;
