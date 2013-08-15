@@ -634,6 +634,7 @@
                 <module>usage/test-support</module>
                 <module>core</module>
                 <module>policy</module>
+                <module>storage/hazelcast</module>
             </modules>
         </profile>
         <profile>
