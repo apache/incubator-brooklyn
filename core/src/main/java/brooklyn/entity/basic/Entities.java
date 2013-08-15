@@ -31,6 +31,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.LocationManager;
@@ -43,15 +44,18 @@ import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ParallelTask;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Convenience methods for working with entities.
@@ -598,6 +602,30 @@ public class Entities {
         };
     }
 
+    
+    public static <T> Supplier<T> attributeSupplier(final EntityAndAttribute<T> tuple) {
+        return Entities.attributeSupplier(tuple.getEntity(), tuple.getAttribute());
+    }
+
+    public static <T> Supplier<T> attributeSupplierWhenReady(final EntityAndAttribute<T> tuple) {
+        return attributeSupplierWhenReady(tuple.getEntity(), tuple.getAttribute());
+    }
+    
+    @SuppressWarnings({ "unchecked", "serial" })
+    public static <T> Supplier<T> attributeSupplierWhenReady(final Entity entity, final AttributeSensor<T> sensor) {
+        final Task<T> task = DependentConfiguration.attributeWhenReady(entity, sensor);
+        return new Supplier<T>() {
+            @Override public T get() {
+                try {
+                    TypeToken<T> type = new TypeToken<T>(sensor.getType()) {};
+                    return Tasks.resolveValue(task, (Class<T>) type.getRawType(), ((EntityInternal) entity).getExecutionContext(), "attributeSupplierWhenReady");
+                } catch (Exception e) {
+                    throw Exceptions.propagate(e);
+                }
+            }
+        };
+    }
+    
     /**
      * Registers the given location (and all its children) with the management context. 
      * @throws IllegalStateException if the parent location is not already managed
