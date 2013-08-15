@@ -111,7 +111,7 @@
         <freemarker.version>2.3.19</freemarker.version>
         <osgi-core.version>4.3.0</osgi-core.version>
         <commons-io.version>2.4</commons-io.version>
-        <hazelcast.version>3.0-SNAPSHOT</hazelcast.version>
+        <hazelcast.version>3.0</hazelcast.version>
      
         <includedTestGroups />
         <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
