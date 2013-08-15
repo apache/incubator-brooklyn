@@ -9,8 +9,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +19,15 @@ import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.Effectors;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.collect.Lists;
@@ -201,10 +203,9 @@ public class EffectorUtils {
     }
 
     /**
-     * Invokes the effector so that its progress is tracked.
+     * Invokes a method effector so that its progress is tracked. For internal use only, when we know the effector is backed by a method which is local.
      */
-    public static <T> T invokeEffector(Entity entity, Effector<T> eff, Object[] args) {
-        String id = entity.getId();
+    public static <T> T invokeMethodEffector(Entity entity, Effector<T> eff, Object[] args) {
         String name = eff.getName();
         
         try {
@@ -222,16 +223,28 @@ public class EffectorUtils {
             } finally {
                 mgmtSupport.getEntityChangeListener().onEffectorCompleted(eff);
             }
-        } catch (CancellationException ce) {
-            log.info("Execution of effector {} on entity {} was cancelled", name, id);
-            throw ce;
-        } catch (ExecutionException ee) {
-            log.info("Execution of effector {} on entity {} failed with {}", new Object[] {name, id, ee});
-            // Exceptions thrown in Futures are wrapped
-            // FIXME Shouldn't pretend exception came from this thread?! Should we remove this unwrapping?
-            if (ee.getCause() != null) throw Exceptions.propagate(ee.getCause());
-            else throw Exceptions.propagate(ee);
+        } catch (Exception e) {
+            handleEffectorException(entity, eff, e);
+            // (won't return below)
+            return null;
         }
+    }
+    
+    /**
+     * Invokes the effector so that its progress is tracked.
+     * @deprecated since 0.6.0 this method name is misleading; it only works for MethodEffectors tightly tied to a method;
+     * most callers should use
+     * {@link Entities#invokeEffector(brooklyn.entity.basic.EntityLocal, Entity, Effector, Map)} to invoke or 
+     * {@link Effectors#invocation(Entity, Effector, Map)} to just create (an uninvoked) task; 
+     * or for low level usage possibly {@link ManagementContextInternal#invokeEffector(Entity, Effector, Map)}
+     */
+    public static <T> T invokeEffector(Entity entity, Effector<T> eff, Object[] args) {
+        return invokeMethodEffector(entity, eff, args);
+    }
+    
+    public static void handleEffectorException(Entity entity, Effector<?> effector, Throwable throwable) {
+        log.warn("Error invoking "+effector.getName()+" at "+entity+": "+Exceptions.collapseText(throwable));
+        throw new PropagatedRuntimeException("Error invoking "+effector.getName()+" at "+entity, throwable);
     }
 
     /**
@@ -239,6 +252,8 @@ public class EffectorUtils {
      * 
      * If the given method is not defined as an effector, then a warning will be logged and the
      * method will be invoked directly.
+     * 
+     * @deprecated since 0.6.0; not used, prefer passing an effector and a map of arguments
      */
     public static Object invokeEffector(AbstractEntity entity, Method method, Object[] args) {
         Effector<?> effector = findEffectorMatching(entity, method);
@@ -251,7 +266,7 @@ public class EffectorUtils {
                 throw Exceptions.propagate(e);
             }
         } else {
-            return invokeEffector(entity, effector, args);
+            return invokeMethodEffector(entity, effector, args);
         }
     }
  

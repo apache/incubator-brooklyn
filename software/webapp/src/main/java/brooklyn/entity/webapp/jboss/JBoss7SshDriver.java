@@ -144,7 +144,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         Preconditions.checkState(!Strings.isNullOrEmpty(getManagementUsername()), "User for management realm required");
         String managementPassword = getManagementPassword();
         if (Strings.isNullOrEmpty(managementPassword)) {
-            LOG.warn("No password given for "+JBoss7Server.MANAGEMENT_PASSWORD.getName()+". Using a random string instead.");
+            LOG.debug(this+" has no password specified for "+JBoss7Server.MANAGEMENT_PASSWORD.getName()+"; using a random string");
             entity.setConfig(JBoss7Server.MANAGEMENT_PASSWORD, UUID.randomUUID().toString());
         }
         String hashedPassword = hashPassword(getManagementUsername(), getManagementPassword(), MANAGEMENT_REALM);

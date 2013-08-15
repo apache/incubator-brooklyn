@@ -91,9 +91,12 @@ public class TaskTransformer {
         if (t==null) return null;
         MutableMap<String,Object> data = new MutableMap<String,Object>();
         data.put("id", t.getId());
-        data.put("taskName", t.getDisplayName());
+        if (t.getDisplayName()!=null) data.put("taskName", t.getDisplayName());
         Entity entity = BrooklynTasks.getContextEntity(t);
-        if (entity!=null) data.put("entityDisplayName", entity.getDisplayName());
+        if (entity!=null) {
+            data.put("entityId", entity.getId());
+            if (entity.getDisplayName()!=null) data.put("entityDisplayName", entity.getDisplayName());
+        }
         return new LinkWithMetadata("/v1/activities/"+t.getId(), data);
     }
 

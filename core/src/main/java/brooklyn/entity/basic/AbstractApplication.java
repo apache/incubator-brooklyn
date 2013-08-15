@@ -108,7 +108,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
             postStart(locations);
         } catch (Exception e) {
             setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
-            log.warn("Error starting application " + this + " (rethrowing): "+e);
+            // no need to log here; the effector invocation should do that
             throw Exceptions.propagate(e);
         }
 

@@ -16,6 +16,8 @@ import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.PropagatedRuntimeException;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -146,23 +148,27 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             
             T result = null;
             try {
-                log.trace("calling primary job for {}", this);
-                if (primaryJob!=null) result = primaryJob.call();
-            } finally {
-                log.trace("cleaning up for {}", this);
-                synchronized (jobTransitionLock) {
-                    // semaphore might be nicer here (aled notes as it is this is a little hard to read)
-                    primaryThread = null;
-                    primaryFinished = true;
-                    jobTransitionLock.notifyAll();
+                try {
+                    log.trace("calling primary job for {}", this);
+                    if (primaryJob!=null) result = primaryJob.call();
+                } finally {
+                    log.trace("cleaning up for {}", this);
+                    synchronized (jobTransitionLock) {
+                        // semaphore might be nicer here (aled notes as it is this is a little hard to read)
+                        primaryThread = null;
+                        primaryFinished = true;
+                        jobTransitionLock.notifyAll();
+                    }
+                    if (!isCancelled() && !secondaryJobMaster.isDone()) {
+                        log.trace("waiting for secondaries for {}", this);
+                        List<Object> result2 = secondaryJobMaster.get();
+                        try {
+                            if (primaryJob==null) result = (T)result2;
+                        } catch (Exception e) { /* ignore class cast exception; result will just be null */ }
+                    }
                 }
-                if (!isCancelled() && !secondaryJobMaster.isDone()) {
-                    log.trace("waiting for secondaries for {}", this);
-                    List<Object> result2 = secondaryJobMaster.get();
-                    try {
-                        if (primaryJob==null) result = (T)result2;
-                    } catch (Exception e) { /* ignore class cast exception; result will just be null */ }
-                }
+            } catch (Throwable t) {
+                handleException(t);
             }
             return result;
         }
@@ -171,6 +177,15 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     @Override
     public List<Task<?>> getQueue() {
         return ImmutableList.copyOf(secondaryJobsAll);
+    }
+
+    public void handleException(Throwable throwable) throws Exception {
+        if (throwable instanceof Exception) {
+            if (throwable instanceof InterruptedException)
+                throw new RuntimeInterruptedException((InterruptedException) throwable);
+            throw (Exception)throwable;
+        }
+        throw new PropagatedRuntimeException(throwable);
     }
 
     @Override

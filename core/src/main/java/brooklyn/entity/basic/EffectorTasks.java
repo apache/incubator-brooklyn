@@ -15,6 +15,8 @@ import brooklyn.entity.ParameterType;
 import brooklyn.management.Task;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.task.DynamicSequentialTask;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskBuilder;
@@ -37,7 +39,7 @@ public class EffectorTasks {
         }
         
         @SuppressWarnings("unchecked")
-        public Task<T> newTask(Entity entity, brooklyn.entity.Effector<T> effector, final ConfigBag parameters) {
+        public Task<T> newTask(final Entity entity, final brooklyn.entity.Effector<T> effector, final ConfigBag parameters) {
             @SuppressWarnings("rawtypes")
             final DynamicSequentialTask[] dst = new DynamicSequentialTask[1];
 
@@ -53,7 +55,12 @@ public class EffectorTasks {
                                 DynamicTasks.removeTaskQueueingContext();
                             }
                         }
-                    });
+                    }) {
+                        @Override
+                        public void handleException(Throwable throwable) throws Exception {
+                            EffectorUtils.handleEffectorException(entity, effector, throwable);
+                        }
+                    };
             return (DynamicSequentialTask<T>)dst[0];
         }
         

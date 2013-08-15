@@ -245,7 +245,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         waitForServiceUp(duration.toMilliseconds(), TimeUnit.MILLISECONDS);
     }
     public void waitForServiceUp(long duration, TimeUnit units) {
-        if (!Repeater.create(ImmutableMap.of("timeout", units.toMillis(duration), "description", "Waiting for SERVICE_UP on "+this))
+        String description = "Waiting for SERVICE_UP on "+this;
+        Tasks.setBlockingDetails(description);
+        if (!Repeater.create(ImmutableMap.of("timeout", units.toMillis(duration), "description", description))
                 .rethrowException().repeat().every(1, TimeUnit.SECONDS)
                 .until(new Callable<Boolean>() {
                     public Boolean call() {
@@ -254,6 +256,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                 .run()) {
             throw new IllegalStateException("Timeout waiting for SERVICE_UP from "+this);
         }
+        Tasks.resetBlockingDetails();
         log.debug("Detected SERVICE_UP for software {}", this);
     }
 
@@ -286,7 +289,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             checkNotNull(locations, "locations");
             entity().setAttribute(SERVICE_STATE, Lifecycle.STARTING);
             try {
-                startInLocations(locations);
+                startInLocationsAsync(locations);
+                last().get();
                 if (entity().getAttribute(SERVICE_STATE) == Lifecycle.STARTING) 
                     entity().setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
             } catch (Throwable t) {
@@ -296,27 +300,27 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             return null;
         }
         
-        protected void startInLocations(Collection<? extends Location> locations) {
+        protected void startInLocationsAsync(Collection<? extends Location> locations) {
             if (locations.isEmpty()) locations = entity().getLocations();
             if (locations.size() != 1 || Iterables.getOnlyElement(locations)==null)
                 throw new IllegalArgumentException("Expected one non-null location when starting "+this+", but given "+locations);
                 
-            startInLocation( Iterables.getOnlyElement(locations) );
+            startInLocationAsync( Iterables.getOnlyElement(locations) );
         }
 
-        protected void startInLocation(Location location) {
+        protected void startInLocationAsync(Location location) {
             if (location instanceof MachineProvisioningLocation) {
-                Task<MachineLocation> machineTask = provision((MachineProvisioningLocation<? extends MachineLocation>)location);
-                startInMachineLocation(Tasks.supplier(machineTask));
+                Task<MachineLocation> machineTask = provisionAsync((MachineProvisioningLocation<? extends MachineLocation>)location);
+                startInMachineLocationAsync(Tasks.supplier(machineTask));
             } else if (location instanceof MachineLocation) {
-                startInMachineLocation(Suppliers.ofInstance((MachineLocation)location));
+                startInMachineLocationAsync(Suppliers.ofInstance((MachineLocation)location));
             } else {
                 throw new IllegalArgumentException("Unsupported location "+location+", when starting "+this);
             }
         }
 
-        protected final Task<MachineLocation> provision(final MachineProvisioningLocation<?> location) {
-            return DynamicTasks.queue(Tasks.<MachineLocation>builder().name("provisioning (in "+location.getDisplayName()+")").body(
+        protected final Task<MachineLocation> provisionAsync(final MachineProvisioningLocation<?> location) {
+            return DynamicTasks.queue(Tasks.<MachineLocation>builder().name("provisioning ("+location.getDisplayName()+")").body(
                     new Callable<MachineLocation>() {
                         public MachineLocation call() throws Exception {
                             final Map<String,Object> flags = ((SoftwareProcessImpl)entity()).obtainProvisioningFlags(location);
@@ -346,7 +350,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                     }).build());
         }
         
-        protected void startInMachineLocation(final Supplier<MachineLocation> machineS) {
+        protected void startInMachineLocationAsync(final Supplier<MachineLocation> machineS) {
             new DynamicTasks.AutoQueueVoid("pre-start") { protected void main() { 
                 MachineLocation machine = machineS.get();
                 log.info("Starting {} on machine {}", this, machine);
@@ -368,7 +372,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                 if (val != null) log.debug("{} finished waiting for start-latch; continuing...", this, val);
                 ((SoftwareProcessImpl)entity()).preStart(); 
             }};
-            new DynamicTasks.AutoQueueVoid("start (in driver)") { protected void main() { 
+            new DynamicTasks.AutoQueueVoid("start - invoking driver") { protected void main() { 
                 ((SoftwareProcessImpl)entity()).driver.queueStartTasks();
             }};
             new DynamicTasks.AutoQueueVoid("post-start") { protected void main() {

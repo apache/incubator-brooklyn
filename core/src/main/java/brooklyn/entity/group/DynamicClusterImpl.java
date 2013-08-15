@@ -293,7 +293,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             } catch (InterruptedException e) {
                 throw Exceptions.propagate(e);
             } catch (Throwable t) {
-                logger.error("Cluster "+this+" failed to start entity "+entity+" (removing): "+t);
+                Throwable interesting = Exceptions.getFirstInteresting(t);
+                logger.error("Cluster "+this+" failed to start entity "+entity+" (removing): "+interesting, interesting);
                 logger.debug("Trace for: Cluster "+this+" failed to start entity "+entity+" (removing): "+t, t);
                 errors.put(entity, unwrapException(t));
             }

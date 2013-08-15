@@ -24,9 +24,18 @@ public class DynamicTasks {
         taskQueueingContext.set(newTaskQC);
     }
     
-    public static TaskQueueingContext getTaskQueuingContext() {
+    public static TaskQueueingContext getThreadTaskQueuingContext() {
         return taskQueueingContext.get();
     }
+    
+    public static TaskQueueingContext getTaskQueuingContext() {
+        TaskQueueingContext adder = getThreadTaskQueuingContext();
+        if (adder!=null) return adder;
+        Task<?> t = Tasks.current();
+        if (t instanceof TaskQueueingContext) return (TaskQueueingContext) t;
+        return null;
+    }
+
     
     public static void removeTaskQueueingContext() {
         taskQueueingContext.remove();
@@ -76,10 +85,6 @@ public class DynamicTasks {
         Preconditions.checkNotNull(task, "Task to queue cannot be null");
         Preconditions.checkState(!Tasks.isQueuedOrSubmitted(task), "Task to queue must not yet be submitted: %s", task);
         TaskQueueingContext adder = getTaskQueuingContext();
-        if (adder==null) {
-            Task<?> t = Tasks.current();
-            if (t instanceof TaskQueueingContext) adder = (TaskQueueingContext) t;
-        }
         Preconditions.checkNotNull(adder, "Task %s cannot be queued here; no queueing context available", task);
         adder.queue(task);
         return task;

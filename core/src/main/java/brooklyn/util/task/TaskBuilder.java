@@ -65,7 +65,8 @@ public class TaskBuilder<T> {
             return new BasicTask<T>(flags, body);
         
         // prefer dynamic set unless (a) user has said not dynamic, or (b) it's parallel (since there is no dynamic parallel yet)
-        // dynamic has better cancel (will interrupt the thread) and callers can submit tasks flexibly
+        // dynamic has better cancel (will interrupt the thread) and callers can submit tasks flexibly;
+        // however dynamic uses an extra thread and task and is noisy for contexts which don't need it
         if (dynamicSet==Boolean.TRUE || (dynamicSet==null && !parallel)) {
             if (parallel)
                 throw new UnsupportedOperationException("No implementation of parallel dynamic aggregate task available");

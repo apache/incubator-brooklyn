@@ -21,10 +21,12 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Effectors;
 import brooklyn.internal.storage.BrooklynStorageFactory;
 import brooklyn.location.Location;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
+import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.text.Identifiers;
 
@@ -193,7 +195,13 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     protected <T> Task<T> runAtEntity(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {
         manageIfNecessary(entity, eff);
-        return getExecutionContext(entity).submit(Effectors.invocation(entity, eff, parameters));
+        // prefer to submit this from the current execution context so it sets up correct cross-context chaining
+        ExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
+        if (ec == null) {
+            log.debug("Top-level effector invocation: {} on {}", eff, entity);
+            ec = getExecutionContext(entity);
+        }
+        return ec.submit(Effectors.invocation(entity, eff, parameters));
     }
 
     @Override

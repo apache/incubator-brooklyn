@@ -324,7 +324,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         new DynamicTasks.AutoQueueVoid("install java") { protected void main() { 
             installJava(); }};
             
-        if (isJmxEnabled() && isJmxSslEnabled()) {
+        if (isJmxEnabled()) {
             new DynamicTasks.AutoQueueVoid("install jmx") { protected void main() { 
                 installJmxSupport();
             }}; 

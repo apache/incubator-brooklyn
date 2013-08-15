@@ -10,19 +10,28 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
+import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 
 /**
  * A means of executing tasks against an ExecutionManager with a given bucket/set of tags pre-defined
  * (so that it can look like an {@link Executor} and also supply {@link ExecutorService#submit(Callable)}
  */
 public class BasicExecutionContext extends AbstractExecutionContext {
+    
+    private static final Logger log = LoggerFactory.getLogger(BasicExecutionContext.class);
+    
     static final ThreadLocal<BasicExecutionContext> perThreadExecutionContext = new ThreadLocal<BasicExecutionContext>();
     
     public static BasicExecutionContext getCurrentExecutionContext() { return perThreadExecutionContext.get(); }
@@ -55,24 +64,56 @@ public class BasicExecutionContext extends AbstractExecutionContext {
     
     /** returns tasks started by this context (or tasks which have all the tags on this object) */
     public Set<Task<?>> getTasks() { return executionManager.getTasksWithAllTags((Set<?>)tags); }
-
-    //these conform with ExecutorService but we do not want to expose shutdown etc here
      
     @SuppressWarnings({ "deprecation", "unchecked", "rawtypes" })
     @Override
-    protected <T> Task<T> submitInternal(Map properties, Object task) {
+    protected <T> Task<T> submitInternal(Map properties, final Object task) {
         if (properties.get("tags")==null) properties.put("tags", new ArrayList()); 
-        Collection localTags = (Collection)properties.get("tags");
-        localTags.addAll(tags);
+        Collection taskTags = (Collection)properties.get("tags");
         
-        // FIXME this is brooklyn-specific logic, should be moved to a BrooklynExecContext subclass;
-        // the issue is that we want to ensure that cross-entity calls switch contexts;
-        // previously it was all very messy how that was happened (and it didn't really)
-        if (task instanceof Task<?>) localTags.addAll( ((Task<?>)task).getTags() ); 
-        Entity target = BrooklynTasks.getWrappedEntityOfType(localTags, BrooklynTasks.TARGET_ENTITY);
-        if (target!=null && !tags.contains(BrooklynTasks.tagForContextEntity(target)) && task instanceof Task<?>) {
-            return ((EntityInternal)target).getExecutionContext().submit((Task<T>)task);
+        // FIXME some of this is brooklyn-specific logic, should be moved to a BrooklynExecContext subclass;
+        // the issue is that we want to ensure that cross-entity calls switch execution contexts;
+        // previously it was all very messy how that was handled (and it didn't really handle it in many cases)
+        if (task instanceof Task<?>) taskTags.addAll( ((Task<?>)task).getTags() ); 
+        Entity target = BrooklynTasks.getWrappedEntityOfType(taskTags, BrooklynTasks.TARGET_ENTITY);
+        if (target!=null && !tags.contains(BrooklynTasks.tagForContextEntity(target))) {
+            // task is switching execution context boundaries
+            final ExecutionContext tc = ((EntityInternal)target).getExecutionContext();
+            if (task instanceof Task<?>) {
+                final Task<T> t = (Task<T>)task;
+                if (!Tasks.isQueuedOrSubmitted(t) && (!(Tasks.current() instanceof HasTaskChildren) || 
+                        !Iterables.contains( ((HasTaskChildren)Tasks.current()).getChildren(), t ))) {
+                    // this task is switching execution context boundaries _and_ it is not a child and not yet queued,
+                    // so wrap it in a task running in this context to keep a reference to the child
+                    // (this matters when we are navigating in the GUI; without it we lose the reference to the child 
+                    // when browsing in the context of the parent)
+                    return submit(Tasks.<T>builder().name("Cross-context execution: "+t.getDescription()).dynamic(true).body(new Callable<T>() {
+                        public T call() { 
+                            return DynamicTasks.get(t); }
+                    }).build());
+                } else {
+                    // if we are already tracked by parent, just submit it 
+                    return tc.submit(t);
+                }
+            } else {
+                // as above, but here we are definitely not a child (what we are submitting isn't even a task)
+                // (will only come here if properties defines tags including a target entity, which probably never happens) 
+                submit(Tasks.<T>builder().name("Cross-context execution").dynamic(true).body(new Callable<T>() {
+                    public T call() {
+                        if (task instanceof Callable) {
+                            DynamicTasks.queue( Tasks.<T>builder().dynamic(false).body((Callable<T>)task).build() );
+                        } else if (task instanceof Runnable) {
+                            DynamicTasks.queue( Tasks.builder().dynamic(false).body((Runnable)task).build() );
+                        } else {
+                            throw new IllegalArgumentException("Unhandled task type: "+task+"; type="+(task!=null ? task.getClass() : "null"));
+                        }
+                        return (T)DynamicTasks.getTaskQueuingContext().last();
+                    }
+                }).build());
+            }
         }
+        
+        taskTags.addAll(tags);
         
         final Object startCallback = properties.get("newTaskStartCallback");
         properties.put("newTaskStartCallback", new Function<Object,Void>() {
@@ -99,4 +140,9 @@ public class BasicExecutionContext extends AbstractExecutionContext {
     private void registerPerThreadExecutionContext() { perThreadExecutionContext.set(this); }
 
     private void clearPerThreadExecutionContext() { perThreadExecutionContext.remove(); }
+    
+    @Override
+    public String toString() {
+        return super.toString()+"("+tags+")";
+    }
 }
