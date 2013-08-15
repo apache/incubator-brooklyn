@@ -33,17 +33,17 @@ public class BasicTasksFutureTest {
     private Map<Object,Object> data;
     private ExecutorService ex;
     private Semaphore started;
+    private Semaphore waitInTask;
     private Semaphore cancelledWhileSleeping;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
         em = new BasicExecutionManager("mycontext");
         ec = new BasicExecutionContext(em);
         ex = Executors.newCachedThreadPool();
-//        assertTrue em.allTasks.isEmpty()
         data = Collections.synchronizedMap(new LinkedHashMap<Object,Object>());
-        data.clear();
         started = new Semaphore(0);
+        waitInTask = new Semaphore(0);
         cancelledWhileSleeping = new Semaphore(0);
     }
     
@@ -55,9 +55,7 @@ public class BasicTasksFutureTest {
 
     @Test
     public void testBlockAndGetWithTimeoutsAndListenableFuture() throws InterruptedException {
-        // 100ms should be enough to ensure x finishes, at least in some runs
-        // (test should pass even if no delay, but a delay causes a different code path sometimes)
-        Task<String> t = sleep(Duration.millis(100), "x");
+        Task<String> t = waitForSemaphore(Duration.FIVE_SECONDS, true, "x");
         
         Assert.assertFalse(t.blockUntilEnded(Duration.millis(1)));
         Assert.assertFalse(t.blockUntilEnded(Duration.ZERO));
@@ -89,6 +87,7 @@ public class BasicTasksFutureTest {
             
         synchronized (data) {
             // now let it finish
+            waitInTask.release();
             Assert.assertTrue(t.blockUntilEnded(Duration.TEN_SECONDS));
 
             Assert.assertEquals(t.getUnchecked(Duration.millis(1)), "x");
@@ -130,13 +129,18 @@ public class BasicTasksFutureTest {
         Assert.fail("did not get data for '"+key+"' in time");
     }
 
-    private <T> Task<T> sleep(final Duration time, final T result) {
+    private <T> Task<T> waitForSemaphore(final Duration time, final boolean requireSemaphore, final T result) {
         return Tasks.<T>builder().body(new Callable<T>() {
             public T call() { 
                 try {
                     started.release();
-                    log.info("sleeping "+time+" before returning "+result);
-                    Time.sleep(time); 
+                    log.info("waiting up to "+time+" to acquire before returning "+result);
+                    if (!waitInTask.tryAcquire(time.toMilliseconds(), TimeUnit.MILLISECONDS)) {
+                        log.info("did not get semaphore");
+                        if (requireSemaphore) Assert.fail("task did not get semaphore");
+                    } else {
+                        log.info("got semaphore");
+                    }
                 } catch (Exception e) {
                     log.info("cancelled before returning "+result);
                     cancelledWhileSleeping.release();
@@ -160,7 +164,7 @@ public class BasicTasksFutureTest {
         doTestCancelTriggersListenableFuture(Duration.ZERO);
     }
     public void doTestCancelTriggersListenableFuture(Duration delay) throws Exception {
-        Task<String> t = sleep(Duration.TEN_SECONDS, "x");
+        Task<String> t = waitForSemaphore(Duration.TEN_SECONDS, true, "x");
         addFutureListener(t, "before");
 
         Stopwatch watch = new Stopwatch().start();
