@@ -2,6 +2,8 @@ package brooklyn.rest.resources;
 
 import java.util.Collections;
 
+import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTasks.WrappedStream;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.rest.api.ActivityApi;
@@ -33,4 +35,14 @@ public class ActivityResource extends AbstractBrooklynRestResource implements Ac
               TaskTransformer.FROM_TASK);
   }
 
+  public String stream(String taskId, String streamId) {
+      Task<?> t = mgmt().getExecutionManager().getTask(taskId);
+      if (t==null)
+          throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
+      WrappedStream stream = BrooklynTasks.stream(t, streamId);
+      if (stream==null)
+          throw WebResourceUtils.notFound("Cannot find stream '%s' in task '%s'", streamId, taskId);
+      return stream.streamContents.get();
+  }
+  
 }

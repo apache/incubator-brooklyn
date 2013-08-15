@@ -13,7 +13,6 @@ import java.util.Set;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.jclouds.compute.domain.ImageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -27,7 +26,6 @@ import brooklyn.rest.testing.BrooklynRestResourceTest;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.WebResource;
 
 public class CatalogResourceTest extends BrooklynRestResourceTest {
 

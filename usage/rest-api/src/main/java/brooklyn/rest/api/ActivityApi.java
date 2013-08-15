@@ -36,4 +36,15 @@ public interface ActivityApi {
   public Iterable<TaskSummary> children(
           @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId);
 
+  @GET
+  @Path("/{task}/stream/{streamId}")
+  @ApiOperation(value = "Return the contents of the given stream")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Could not find task or stream")
+  })
+  public String stream(
+          @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId,
+          @ApiParam(value = "Stream ID", required = true) @PathParam("streamId") String streamId);
+
+
 }

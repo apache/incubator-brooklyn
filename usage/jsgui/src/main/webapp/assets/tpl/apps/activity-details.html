@@ -18,6 +18,8 @@
 </div>
 <div class="activity-details-section activity-status">
     <span class="updateField-currentStatus"/>
+    <span class="ifField-blockingDetails">- <span class="updateField-blockingDetails"/></span>
+    <span class="ifField-blockingTask"> (<span class="updateField-blockingTask"/>)</span>
 </div>
 
   <div class="toggler-region task-detail">
@@ -40,12 +42,11 @@
     <div class="ifField-endTimeUtc"><span class="activity-label">Finished:</span>
         <span class="updateField-endTimeUtc"/></div>
 </div>
-<div class="ifField-tags">
-  <div class="activity-details-section activity-tags">
-    <span class="activity-label">Tags:</span> 
-        <span class="updateField-tags"/>
-  </div>
-</div>
+<table class="ifField-tags activity-details-section activity-tags"><tr>
+    <!-- tags use table because the formatting (divs in a row top aligned) when there are a lot of tags is painful with divs -->
+    <td class="activity-label">Tags:</td> 
+        <td class="updateField-tags"></td>
+</tr></table>
 <div class="ifField-submittedByTask">
   <div class="activity-details-section activity-tags">
     <span class="activity-label">Submitted by:</span> 
@@ -56,7 +57,15 @@
     </div>
   </div>
     
-
+  <div class="toggler-region tasks-streams ifField-streams">
+    <div class="toggler-header">
+      <div class="toggler-icon icon-chevron-down"></div>
+      <div><b>Available Streams</b></div>
+    </div>
+    <div class="activity-details-section updateField-streams">
+    </div>
+  </div>
+    
   <div class="toggler-region tasks-children">
     <div class="toggler-header">
       <div class="toggler-icon icon-chevron-down"></div>
@@ -68,26 +77,26 @@
     </div>
   </div>
     
-  <div class="toggler-region task-detail">
-    <div class="toggler-header">
-      <div class="toggler-icon icon-chevron-down"></div>
-      <div><b>Detailed Status</b></div>
+  <div class="toggler-region tasks-submitted">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>Background Tasks</b></div>
     </div>
-    <div class="activity-details-section activity-detailStatus">
-     <div class="for-textarea">
-      <textarea id="detailStatus-textrea" readonly="readonly" style="width: 100%;"></textarea>
-     </div>
+    <div class="activity-details-section activity-tasks-submitted hide">
+      <div id="activities-submitted-table" class="table-scroll-wrapper">
+      </div>
     </div>
   </div>
     
-  <div class="toggler-region tasks-submitted">
-    <div class="toggler-header">
-      <div class="toggler-icon icon-chevron-down"></div>
-      <div><b>Background Tasks</b></div>
+  <div class="toggler-region task-detail">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>Detailed Status</b></div>
     </div>
-    <div class="activity-details-section activity-tasks-submitted">
-      <div id="activities-submitted-table" class="table-scroll-wrapper">
-      </div>
+    <div class="activity-details-section activity-detailStatus hide">
+     <div class="for-textarea">
+      <textarea id="detailStatus-textrea" readonly="readonly" style="width: 100%;"></textarea>
+     </div>
     </div>
   </div>
         

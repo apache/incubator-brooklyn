@@ -118,7 +118,11 @@ define([
             this.updateField('id')
             this.updateField('description')
             this.updateField('currentStatus')
-            this.updateField('tags')
+            this.updateField('blockingDetails')
+            this.updateFieldWith('blockingTask',
+                function(v) { return "<a class='showDrillDownSubmittedByAnchor handy' link='"+_.escape(v.link)+"'>"+
+                    that.displayTextForLinkedTask(v)+"</a>" })
+            this.updateFieldWith('tags', function(tags) { return _.escape(tags.join(", ")) })
             
             var submitTimeUtc = this.updateFieldWith('submitTimeUtc',
                 function(v) { return v <= 0 ? "-" : moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).fromNow()+"</i>" })
@@ -132,6 +136,25 @@ define([
 
             ViewUtils.updateTextareaWithData($(".task-detail .for-textarea", this.$el), 
                 this.task.get('detailedStatus'), false, 30, 100)
+
+            this.updateFieldWith('streams',
+                function(v) {
+                    log("streams")
+                    log(v)
+                    log(v == {})
+                    var result = "";
+                    for (si in v) {
+                        var sv = v[si];
+                        result += "<div class='activity-stream-div'>"+
+                                  "<span class='activity-label'>"+
+                                    _.escape(si)+
+                                  "</span><span>"+
+                                      "<a href='"+sv.link+"'</a>download</a>"+
+                                      (sv.metadata["sizeText"] ? " ("+_.escape(sv.metadata["sizeText"])+")" : "")+
+                                  "</span></div>";
+                    }
+                    return result; 
+                })
 
             this.updateFieldWith('submittedByTask',
                 function(v) { return "<a class='showDrillDownSubmittedByAnchor handy' link='"+_.escape(v.link)+"'>"+
@@ -228,7 +251,8 @@ define([
         },
         updateFieldWith: function(field, f) {
             var v = this.task.get(field)
-            if (v !== undefined && v != null) {
+            if (v !== undefined && v != null && 
+                    (typeof v !== "object" || _.size(v) > 0)) {
                 $('.updateField-'+field, this.$el).html( f(v) );
                 $('.ifField-'+field, this.$el).show();
             } else {

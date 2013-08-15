@@ -19,11 +19,11 @@ define([
         selectedRow:null,
         activityDetailsPanel:null,
         events:{
-            "click .activity-table tr":"rowClick",
-            'click .refresh':'refreshNow',
-            'click .toggleAutoRefresh':'toggleAutoRefresh',
-            'click .showDrillDown':'showDrillDown',
-            'click .toggleFullDetail':'toggleFullDetail'
+            "click #activities-root .activity-table tr":"rowClick",
+            'click #activities-root .refresh':'refreshNow',
+            'click #activities-root .toggleAutoRefresh':'toggleAutoRefresh',
+            'click #activities-root .showDrillDown':'showDrillDown',
+            'click #activities-root .toggleFullDetail':'toggleFullDetail'
         },
         initialize:function () {
             this.$el.html(this.template({ }));
@@ -114,6 +114,12 @@ define([
             if (id==null)
                 // is the details row, ignore click here
                 return;
+
+            this.showDrillDownTask(id);
+            return;
+            // below this line in this function (and much of the other functions here)
+            // would replace the above to show an in-line short-form view of the task;
+            // drill-down is more useful however, i think
 
             $(table).find("tr").removeClass("selected");
             
