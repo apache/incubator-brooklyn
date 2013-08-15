@@ -25,8 +25,6 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(SameServerEntityImpl.class)
 public interface SameServerEntity extends Entity, Startable {
 
-    ConfigKey<String> TEMPLATE_ID = ConfigKeys.newStringConfigKey("hcc.templateId", "", null);
-
     @SetFromFlag("provisioningProperties")
     ConfigKey<Map<String,Object>> PROVISIONING_PROPERTIES = new BasicConfigKey(
             Map.class, "provisioning.properties", 

@@ -93,11 +93,6 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
         result.putAll(Maps.newLinkedHashMap(location.getProvisioningFlags(ImmutableList.of(getEntityType().getName()))));
         result.putAll(getConfig(PROVISIONING_PROPERTIES));
         
-        String imageId = getConfig(TEMPLATE_ID);
-        if (imageId != null) {
-            result.put("imageId", imageId);
-        }
-        
         for (Entity child : getChildren()) {
             result.putAll(Maps.newLinkedHashMap(location.getProvisioningFlags(ImmutableList.of(child.getEntityType().getName()))));
             result.putAll(child.getConfig(PROVISIONING_PROPERTIES));
