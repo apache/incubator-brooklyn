@@ -24,7 +24,7 @@ import com.google.common.collect.Maps;
  **/
 public class LocationPropertiesFromBrooklynProperties {
 
-    public static final Logger LOG = LoggerFactory.getLogger(LocationPropertiesFromBrooklynProperties.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LocationPropertiesFromBrooklynProperties.class);
 
     @SuppressWarnings("deprecation")
     protected static final Map<String, String> DEPRECATED_KEYS_MAPPING = new DeprecatedKeysMappingBuilder(LOG)
@@ -49,7 +49,7 @@ public class LocationPropertiesFromBrooklynProperties {
      * <p>
      * Converts deprecated hyphenated properties to the non-deprecated camelCase format. 
      */
-    public Map<String, Object> getLocationProperties(String provider, String namedLocation, Map<String, ? extends Object> properties) {
+    public Map<String, Object> getLocationProperties(String provider, String namedLocation, Map<String, ?> properties) {
         if (Strings.isNullOrEmpty(namedLocation) && Strings.isNullOrEmpty(provider)) {
             throw new IllegalArgumentException("Neither cloud provider/API nor location name have been specified correctly");
         }
@@ -60,7 +60,7 @@ public class LocationPropertiesFromBrooklynProperties {
             String namedProvider = getNamedProvider(namedLocation, properties);
             if (!Strings.isNullOrEmpty(provider)) {
                 if (!provider.equals(namedProvider)) throw new IllegalStateException("Conflicting configuration: provider="+provider+"; namedLocation="+namedLocation+"; namedProvider="+namedProvider);
-            } else if (Strings.isNullOrEmpty(namedLocation)) {
+            } else if (Strings.isNullOrEmpty(namedProvider)) {
                 throw new IllegalStateException("Missing configuration: no named provider for named location "+namedLocation);
             }
             provider = namedProvider;
@@ -83,7 +83,7 @@ public class LocationPropertiesFromBrooklynProperties {
      * Gets the named provider (e.g. if using a property like {@code brooklyn.location.named.myfavourite=localhost}, then
      * {@code getNamedProvider("myfavourite", properties)} will return {@code "localhost"}).
      */
-    protected String getNamedProvider(String namedLocation, Map<String, ? extends Object> properties) {
+    protected String getNamedProvider(String namedLocation, Map<String, ?> properties) {
         String key = String.format("brooklyn.location.named.%s", namedLocation);
         return (String) properties.get(key);
     }
@@ -96,7 +96,7 @@ public class LocationPropertiesFromBrooklynProperties {
      * 
      * Strips off the prefix in the returned map.
      */
-    protected Map<String, Object> getGenericLocationSingleWordProperties(Map<String, ? extends Object> properties) {
+    protected Map<String, Object> getGenericLocationSingleWordProperties(Map<String, ?> properties) {
         return getMatchingSingleWordProperties("brooklyn.location.", properties);
     }
 
@@ -104,7 +104,7 @@ public class LocationPropertiesFromBrooklynProperties {
      * Gets all properties that start with {@code "brooklyn.location."+scopeSuffix+"."}, stripping off
      * the prefix in the returned map.
      */
-    protected Map<String, Object> getScopedLocationProperties(String scopeSuffix, Map<String, ? extends Object> properties) {
+    protected Map<String, Object> getScopedLocationProperties(String scopeSuffix, Map<String, ?> properties) {
         checkArgument(!scopeSuffix.startsWith("."), "scopeSuffix \"%s\" should not start with \".\"", scopeSuffix);
         checkArgument(!scopeSuffix.endsWith("."), "scopeSuffix \"%s\" should not end with \".\"", scopeSuffix);
         String prefix = String.format("brooklyn.location.%s.", scopeSuffix);
@@ -115,7 +115,7 @@ public class LocationPropertiesFromBrooklynProperties {
      * Gets all properties that start with the given {@code fullPrefix}, stripping off
      * the prefix in the returned map.
      */
-    protected Map<String, Object> getMatchingProperties(String fullPrefix, Map<String, ? extends Object> properties) {
+    protected Map<String, Object> getMatchingProperties(String fullPrefix, Map<String, ?> properties) {
         return ConfigUtils.filterForPrefixAndStrip(properties, fullPrefix).asMapWithStringKeys();
     }
 
@@ -126,7 +126,7 @@ public class LocationPropertiesFromBrooklynProperties {
      * 
      * @see #getMatchingProperties(String, Map)
      */
-    protected Map<String, Object> getMatchingProperties(String fullPreferredPrefix, String fullDeprecatedPrefix, Map<String, ? extends Object> properties) {
+    protected Map<String, Object> getMatchingProperties(String fullPreferredPrefix, String fullDeprecatedPrefix, Map<String, ?> properties) {
         Map<String, Object> deprecatedResults = getMatchingProperties(fullDeprecatedPrefix, properties);
         Map<String, Object> results = getMatchingProperties(fullPreferredPrefix, properties);
         
@@ -149,7 +149,7 @@ public class LocationPropertiesFromBrooklynProperties {
      * We do this special (sub-optimal!) filtering because we want sub-scoped things 
      * (e.g. could want brooklyn.location.privateKeyFile, but not brooklyn.location.named.*). 
      */
-    protected Map<String, Object> getMatchingSingleWordProperties(String fullPrefix, Map<String, ? extends Object> properties) {
+    protected Map<String, Object> getMatchingSingleWordProperties(String fullPrefix, Map<String, ?> properties) {
         BrooklynProperties filteredProperties = ConfigUtils.filterForPrefixAndStrip(properties, fullPrefix);
         return ConfigUtils.filterFor(filteredProperties, Predicates.not(Predicates.containsPattern("\\."))).asMapWithStringKeys();
     }
@@ -161,7 +161,7 @@ public class LocationPropertiesFromBrooklynProperties {
      * 
      * @see #getMatchingSingleWordProperties(String, Map)
      */
-    protected Map<String, Object> getMatchingSingleWordProperties(String fullPreferredPrefix, String fullDeprecatedPrefix, Map<String, ? extends Object> properties) {
+    protected Map<String, Object> getMatchingSingleWordProperties(String fullPreferredPrefix, String fullDeprecatedPrefix, Map<String, ?> properties) {
         Map<String, Object> deprecatedResults = getMatchingSingleWordProperties(fullDeprecatedPrefix, properties);
         Map<String, Object> results = getMatchingSingleWordProperties(fullPreferredPrefix, properties);
         
@@ -176,13 +176,13 @@ public class LocationPropertiesFromBrooklynProperties {
         }
     }
 
-    protected Map<String, Object> getNamedLocationProperties(String locationName, Map<String, ? extends Object> properties) {
+    protected Map<String, Object> getNamedLocationProperties(String locationName, Map<String, ?> properties) {
         checkArgument(!Strings.isNullOrEmpty(locationName), "locationName should not be blank");
         String prefix = String.format("brooklyn.location.named.%s.", locationName);
         return ConfigUtils.filterForPrefixAndStrip(properties, prefix).asMapWithStringKeys();
     }
 
-    protected Map<String, Object> transformDeprecated(Map<String, ? extends Object> properties) {
+    protected Map<String, Object> transformDeprecated(Map<String, ?> properties) {
         Map<String,Object> result = Maps.newLinkedHashMap();
         Map<String, String> deprecatedKeysMapping = getDeprecatedKeysMapping();
         

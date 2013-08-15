@@ -19,10 +19,10 @@ public class LocalhostPropertiesFromBrooklynProperties extends LocationPropertie
     // TODO Once delete support for deprecated "location.localhost.*" then can get rid of this class, and use
     // LocationPropertiesFromBrooklynProperties directly
     
-    public static final Logger LOG = LoggerFactory.getLogger(LocalhostPropertiesFromBrooklynProperties.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LocalhostPropertiesFromBrooklynProperties.class);
 
     @Override
-    public Map<String, Object> getLocationProperties(String provider, String namedLocation, Map<String, ? extends Object> properties) {
+    public Map<String, Object> getLocationProperties(String provider, String namedLocation, Map<String, ?> properties) {
         if (Strings.isNullOrEmpty(namedLocation) && Strings.isNullOrEmpty(provider)) {
             throw new IllegalArgumentException("Neither cloud provider/API nor location name have been specified correctly");
         }
@@ -33,7 +33,7 @@ public class LocalhostPropertiesFromBrooklynProperties extends LocationPropertie
             String namedProvider = getNamedProvider(namedLocation, properties);
             if (!Strings.isNullOrEmpty(provider)) {
                 if (!provider.equals(namedProvider)) throw new IllegalStateException("Conflicting configuration: provider="+provider+"; namedLocation="+namedLocation+"; namedProvider="+namedProvider);
-            } else if (Strings.isNullOrEmpty(namedLocation)) {
+            } else if (Strings.isNullOrEmpty(namedProvider)) {
                 throw new IllegalStateException("Missing configuration: no named provider for named location "+namedLocation);
             }
             provider = namedProvider;

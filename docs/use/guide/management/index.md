@@ -38,10 +38,10 @@ Default properties are described in the Javadoc and code of the class ``Brooklyn
 but some of the most common ones are:
  
 {% highlight properties %}
-brooklyn.jclouds.aws-ec2.identity=AKA50M30N3S1DFR0MAW55
-brooklyn.jclouds.aws-ec2.credential=aT0Ps3cr3tC0D3wh1chAW5w1llG1V3y0uTOus333
-brooklyn.jclouds.aws-ec2.privateKeyFile=~/path/to/id_rsa       # use specified key (default is ~/.ssh/id_rsa)
-brooklyn.jclouds.aws-ec2.publicKeyFile=~/path/to/id_rsa.pub    # (optional, inferred from previous if omitted)
+brooklyn.location.jclouds.aws-ec2.identity=AKA50M30N3S1DFR0MAW55
+brooklyn.location.jclouds.aws-ec2.credential=aT0Ps3cr3tC0D3wh1chAW5w1llG1V3y0uTOus333
+brooklyn.location.jclouds.aws-ec2.privateKeyFile=~/path/to/id_rsa       # use specified key (default is ~/.ssh/id_rsa)
+brooklyn.location.jclouds.aws-ec2.publicKeyFile=~/path/to/id_rsa.pub    # (optional, inferred from previous if omitted)
 {% endhighlight %} 
 
 These can be specified as a shell environment variable or as a Java system property,

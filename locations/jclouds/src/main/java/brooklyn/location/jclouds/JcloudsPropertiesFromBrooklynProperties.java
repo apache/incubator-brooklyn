@@ -40,7 +40,7 @@ import com.google.common.collect.Maps;
  **/
 public class JcloudsPropertiesFromBrooklynProperties extends LocationPropertiesFromBrooklynProperties {
 
-    public static final Logger LOG = LoggerFactory.getLogger(JcloudsPropertiesFromBrooklynProperties.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JcloudsPropertiesFromBrooklynProperties.class);
 
     @SuppressWarnings("deprecation")
     private static final Map<String, String> DEPRECATED_JCLOUDS_KEYS_MAPPING = new DeprecatedKeysMappingBuilder(LOG)
@@ -52,14 +52,14 @@ public class JcloudsPropertiesFromBrooklynProperties extends LocationPropertiesF
             .build();
 
     @Override
-    public Map<String, Object> getLocationProperties(String provider, String namedLocation, Map<String, ? extends Object> properties) {
+    public Map<String, Object> getLocationProperties(String provider, String namedLocation, Map<String, ?> properties) {
         throw new UnsupportedOperationException("Instead use getJcloudsProperties(String,String,String,Map)");
     }
     
     /**
      * @see LocationPropertiesFromBrooklynProperties#getLocationProperties(String, String, Map)
      */
-    public Map<String, Object> getJcloudsProperties(String providerOrApi, String regionName, String namedLocation, Map<String, ? extends Object> properties) {
+    public Map<String, Object> getJcloudsProperties(String providerOrApi, String regionName, String namedLocation, Map<String, ?> properties) {
         if(Strings.isNullOrEmpty(namedLocation) && Strings.isNullOrEmpty(providerOrApi)) {
             throw new IllegalArgumentException("Neither cloud provider/API nor location name have been specified correctly");
         }
@@ -83,7 +83,7 @@ public class JcloudsPropertiesFromBrooklynProperties extends LocationPropertiesF
         return jcloudsProperties;
     }
 
-    protected String getProviderName(String providerOrApi, String locationName, Map<String, ? extends Object> properties) {
+    protected String getProviderName(String providerOrApi, String locationName, Map<String, ?> properties) {
         String provider = providerOrApi;
         if (!Strings.isNullOrEmpty(locationName)) {
             String providerDefinition = (String) properties.get(String.format("brooklyn.location.named.%s", locationName));
@@ -97,14 +97,14 @@ public class JcloudsPropertiesFromBrooklynProperties extends LocationPropertiesF
         return Iterables.get(Splitter.on(":").split(definition), 1);
     }
 
-    protected Map<String, Object> getGenericJcloudsSingleWordProperties(String providerOrApi, Map<String, ? extends Object> properties) {
+    protected Map<String, Object> getGenericJcloudsSingleWordProperties(String providerOrApi, Map<String, ?> properties) {
         if (Strings.isNullOrEmpty(providerOrApi)) return Maps.newHashMap();
         String deprecatedPrefix = "brooklyn.jclouds.";
         String preferredPrefix = "brooklyn.location.jclouds.";
         return getMatchingSingleWordProperties(preferredPrefix, deprecatedPrefix, properties);
     }
 
-    protected Map<String, Object> getProviderOrApiJcloudsProperties(String providerOrApi, Map<String, ? extends Object> properties) {
+    protected Map<String, Object> getProviderOrApiJcloudsProperties(String providerOrApi, Map<String, ?> properties) {
         if (Strings.isNullOrEmpty(providerOrApi)) return Maps.newHashMap();
         String preferredPrefix = String.format("brooklyn.location.jclouds.%s.", providerOrApi);
         String deprecatedPrefix = String.format("brooklyn.jclouds.%s.", providerOrApi);
@@ -112,7 +112,7 @@ public class JcloudsPropertiesFromBrooklynProperties extends LocationPropertiesF
         return getMatchingProperties(preferredPrefix, deprecatedPrefix, properties);
     }
 
-    protected Map<String, Object> getRegionJcloudsProperties(String providerOrApi, String regionName, Map<String, ? extends Object> properties) {
+    protected Map<String, Object> getRegionJcloudsProperties(String providerOrApi, String regionName, Map<String, ?> properties) {
         if (Strings.isNullOrEmpty(providerOrApi) || Strings.isNullOrEmpty(regionName)) return Maps.newHashMap();
         String preferredPrefix = String.format("brooklyn.location.jclouds.%s@%s.", providerOrApi, regionName);
         String deprecatedPrefix = String.format("brooklyn.jclouds.%s@%s.", providerOrApi, regionName);
@@ -120,7 +120,7 @@ public class JcloudsPropertiesFromBrooklynProperties extends LocationPropertiesF
         return getMatchingProperties(preferredPrefix, deprecatedPrefix, properties);
     }
 
-    protected Map<String, Object> getNamedJcloudsProperties(String locationName, Map<String, ? extends Object> properties) {
+    protected Map<String, Object> getNamedJcloudsProperties(String locationName, Map<String, ?> properties) {
         if(locationName == null) return Maps.newHashMap();
         String prefix = String.format("brooklyn.location.named.%s.", locationName);
         return ConfigUtils.filterForPrefixAndStrip(properties, prefix).asMapWithStringKeys();

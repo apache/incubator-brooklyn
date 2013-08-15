@@ -12,7 +12,7 @@ toc: ../toc.json
 
 *Workaround*: Choose an image that does have sudo (see [wiki.debian.org/Cloud/AmazonEC2Image](http://wiki.debian.org/Cloud/AmazonEC2Image)).
 
-*Fix*: is [Pull #600](https://github.com/brooklyncentral/brooklyn/pull/600); you may also want to run with `brooklyn.jclouds.aws-ec2.user=root` if subsequent commands give permission errors.
+*Fix*: is [Pull #600](https://github.com/brooklyncentral/brooklyn/pull/600); you may also want to run with `brooklyn.location.jclouds.aws-ec2.user=root` if subsequent commands give permission errors.
 
 *Versions Affected*: 0.5.0-M2
 
