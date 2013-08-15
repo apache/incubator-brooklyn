@@ -4,10 +4,12 @@ import static java.lang.String.format;
 import groovy.lang.Closure;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
@@ -15,10 +17,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Predicate;
@@ -41,6 +47,7 @@ public class ScriptHelper {
     
     protected boolean gatherOutput = false;
     protected ByteArrayOutputStream stdout, stderr;
+    protected Task<Integer> task;
 
     public ScriptHelper(ScriptRunner runner, String summary) {
         this.runner = runner;
@@ -193,11 +200,54 @@ public class ScriptHelper {
         return this;
     }
     
+    /** creates a task which will execute this script; note this can only be run once per instance of this class */
+    public synchronized Task<Integer> newTask() {
+        if (task!=null) throw new IllegalStateException("task can only be generated once");
+        TaskBuilder<Integer> tb = Tasks.<Integer>builder().name("ssh: "+summary).body(
+                new Callable<Integer>() {
+                    public Integer call() throws Exception {
+                        return executeInternal();
+                    }
+                });
+        
+        try {
+            ByteArrayOutputStream stdin = new ByteArrayOutputStream();
+            for (String line: getLines()) {
+                stdin.write(line.getBytes());
+                stdin.write("\n".getBytes());
+            }
+            tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDIN, stdin));
+        } catch (IOException e) {
+            log.warn("Error registering stream "+BrooklynTasks.STREAM_STDIN+" on "+tb+": "+e, e);
+        }
+        if (gatherOutput) {
+            stdout = new ByteArrayOutputStream();
+            tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDOUT, stdout));
+            stderr = new ByteArrayOutputStream();
+            tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDERR, stderr));
+        }
+        task = tb.build();
+        return task;
+    }
+    
+    /** returns the task, if it has been constructed, or null; use {@link #newTask()} to build 
+     * (if it is null and you need a task) */
+    public Task<Integer> peekTask() {
+        return task;
+    }
+        
+    public Task<Integer> queue() {
+        try {
+            return DynamicTasks.queue(newTask());
+        } catch (Throwable e) {
+            log.warn("Failed to queue script task "+peekTask()+" in "+this+" (rethrowing):"+e);
+            throw Exceptions.propagate(e);
+        }
+    }
+    
     public int execute() {
         if (DynamicTasks.getTaskQueuingContext()!=null) {
-            return new DynamicTasks.AutoQueue<Integer>("ssh ("+summary+")") { protected Integer main() {
-                return executeInternal();
-            }}.get(); 
+            return queue().getUnchecked();
         } else {
             return executeInternal();
         }

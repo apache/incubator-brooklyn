@@ -3,6 +3,7 @@
  */
 package brooklyn.util.text;
 
+import java.io.ByteArrayOutputStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Map;
@@ -14,6 +15,7 @@ import brooklyn.util.time.Time;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
 
 public class Strings {
 
@@ -580,6 +582,15 @@ public class Strings {
      * (e.g. as message to {@link Preconditions} to skip concatenation when not needed) */
     public static FormattedString format(String pattern, Object... args) {
         return new FormattedString(pattern, args);
+    }
+
+    public static Supplier<String> toStringSupplier(final Object src) {
+        return new Supplier<String>() {
+            @Override
+            public String get() {
+                return Strings.toString(src);
+            }
+        };
     }
 
 }

@@ -1,7 +1,9 @@
 package brooklyn.util.task;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import brooklyn.management.Task;
@@ -15,6 +17,7 @@ public class TaskBuilder<T> {
     String name = null;
     Callable<T> body = null;
     List<Task<?>> children = new ArrayList<Task<?>>();
+    Set<Object> tags = new LinkedHashSet<Object>();
     /** whether task that is built has been explicitly specified to be a dynamic task 
      * (ie a Task which is also a {@link TaskQueueingContext}
      * whereby new tasks can be added after creation */
@@ -51,15 +54,24 @@ public class TaskBuilder<T> {
         return this;
     }
 
+    /** adds a child to the given task; the semantics of how the child are executed is set using
+     * {@link #dynamic(boolean)} and {@link #parallel(boolean)} */
     public TaskBuilder<T> add(Task<?> child) {
         children.add(child);
         return this;
     }
 
+    /** adds a tag to the given task */
+    public TaskBuilder<T> tag(Object tag) {
+        tags.add(tag);
+        return this;
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Task<T> build() {
-        MutableMap<String, String> flags = MutableMap.of();
+        MutableMap<String, Object> flags = MutableMap.of();
         if (name!=null) flags.add("displayName", name);
+        if (!tags.isEmpty()) flags.add("tags", tags);
         
         if (dynamicSet==Boolean.FALSE && children.isEmpty())
             return new BasicTask<T>(flags, body);
@@ -82,5 +94,9 @@ public class TaskBuilder<T> {
         else
             return new SequentialTask(flags, children);
     }
-    
+
+    @Override
+    public String toString() {
+        return super.toString()+"["+name+"]";
+    }
 }

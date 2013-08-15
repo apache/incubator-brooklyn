@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,11 +12,19 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Throwables;
-
+import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTasks.WrappedStream;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.internal.Repeater;
+import brooklyn.util.task.BasicExecutionContext;
+import brooklyn.util.task.BasicExecutionManager;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
+
+import com.google.common.base.Throwables;
 
 @Test
 public class ScriptHelperTest {
@@ -57,7 +66,7 @@ public class ScriptHelperTest {
                 } catch (NoMachinesAvailableException e) {
                     throw Throwables.propagate(e);
                 }
-            }        
+            }
         };
     };
 
@@ -103,18 +112,7 @@ public class ScriptHelperTest {
         Assert.assertEquals(1, result);
     }
 
-
-    // TODO ALEX it would be cool to use well-known tokens to streamline output from scripts
-    // but i'm not seeing any simple way to do that,
-    // either for supplying better error messages, or selecting output we show somewhere else.
-    // eventually we might have a process log which would let us dial up/down and step through executions
-    
-    // specific motivation atm is nginx failures, and ssh localhost failures.
-    // i am putting better errors in those relevant (targeted) code, when they fail, 
-    // **they** provide lots of user help.  not ideal but better than a lot of code
-    // which we're not sure we're going to want
-    
-    // TODO another motivation (deferred for now) is saying when downloads fail, as that is quite a common case
+    // TODO a good way to indicate when downloads fail, as that is quite a common case
     // but i think we need quite a bit of scaffolding to detect that problem (without inspecting logs) ...
 
     @Test(groups = "Integration")
@@ -154,5 +152,81 @@ public class ScriptHelperTest {
         } catch (Exception e) { /* expected */ }
         if (succeededWhenShouldNotHave) Assert.fail("Should have failed");
     }
+
+    @Test(groups = "Integration")
+    public void testStreamsInTask() {
+        final ScriptHelper script = new ScriptHelper(newLocalhostRunner(), "mock").
+                body.append("echo `echo foo``echo bar`", "grep absent-text badfile_which_does_not_exist_blaahblahasdewq").
+                gatherOutput();
+        Assert.assertNull(script.peekTask());
+        Task<Integer> task = script.newTask();
+        Assert.assertTrue(BrooklynTasks.streams(task).size() >= 3, "Expected at least 3 streams: "+BrooklynTasks.streams(task));
+        Assert.assertFalse(Tasks.isQueuedOrSubmitted(task));
+        WrappedStream in = BrooklynTasks.stream(task, BrooklynTasks.STREAM_STDIN);
+        Assert.assertNotNull(in);
+        Assert.assertTrue(in.streamContents.get().contains("echo foo"), "Expected 'echo foo' but had: "+in.streamContents.get());
+        Assert.assertTrue(in.streamSize.get() > 0);
+        Assert.assertNotNull(script.peekTask());
+    }
+
+    @Test(groups = "Integration")
+    public void testAutoQueueAndRuntimeStreamsInTask() {
+        final ScriptHelper script = new ScriptHelper(newLocalhostRunner(), "mock").
+                body.append("echo `echo foo``echo bar`", "grep absent-text badfile_which_does_not_exist_blaahblahasdewq").
+                gatherOutput();
+        Task<Integer> submitter = Tasks.<Integer>builder().body(new Callable<Integer>() {
+            public Integer call() {
+                int result = script.execute();
+                return result;
+            } 
+        }).build();
+        BasicExecutionManager em = new BasicExecutionManager("tests");
+        BasicExecutionContext ec = new BasicExecutionContext(em);
+        try {
+            Assert.assertNull(script.peekTask());
+            ec.submit(submitter);
+            // soon there should be a task which is submitted
+            Assert.assertTrue(Repeater.create("get script").every(Duration.millis(10)).limitTimeTo(Duration.FIVE_SECONDS).until(new Callable<Boolean>() {
+                public Boolean call() { 
+                    return (script.peekTask() != null) && Tasks.isQueuedOrSubmitted(script.peekTask());
+                }
+            }).run());
+            Task<Integer> task = script.peekTask();
+            Assert.assertTrue(BrooklynTasks.streams(task).size() >= 3, "Expected at least 3 streams: "+BrooklynTasks.streams(task));
+            // stdin should be populated
+            WrappedStream in = BrooklynTasks.stream(task, BrooklynTasks.STREAM_STDIN);
+            Assert.assertNotNull(in);
+            Assert.assertTrue(in.streamContents.get().contains("echo foo"), "Expected 'echo foo' but had: "+in.streamContents.get());
+            Assert.assertTrue(in.streamSize.get() > 0);
+            
+            // out and err should exist
+            WrappedStream out = BrooklynTasks.stream(task, BrooklynTasks.STREAM_STDOUT);
+            WrappedStream err = BrooklynTasks.stream(task, BrooklynTasks.STREAM_STDERR);
+            Assert.assertNotNull(out);
+            Assert.assertNotNull(err);
+            
+            // it should soon finish, with exit code
+            Integer result = task.getUnchecked(Duration.TEN_SECONDS);
+            Assert.assertNotNull(result);
+            Assert.assertTrue(result > 0, "Expected non-zero exit code: "+result);
+            // and should contain foobar in stdout
+            if (!script.getResultStdout().contains("foobar"))
+                Assert.fail("Script STDOUT does not contain expected text 'foobar'.\n"+script.getResultStdout()+
+                        "\nSTDERR:\n"+script.getResultStderr());
+            if (!out.streamContents.get().contains("foobar"))
+                Assert.fail("Task STDOUT does not contain expected text 'foobar'.\n"+out.streamContents.get()+
+                        "\nSTDERR:\n"+script.getResultStderr());
+            // and "No such file or directory" in stderr
+            if (!script.getResultStderr().contains("No such file or directory"))
+                Assert.fail("Script STDERR does not contain expected text 'No such ...'.\n"+script.getResultStdout()+
+                        "\nSTDERR:\n"+script.getResultStderr());
+            if (!err.streamContents.get().contains("No such file or directory"))
+                Assert.fail("Task STDERR does not contain expected text 'No such...'.\n"+out.streamContents.get()+
+                        "\nSTDERR:\n"+script.getResultStderr());
+        } finally {
+            em.shutdownNow();
+        }
+    }
+
 
 }

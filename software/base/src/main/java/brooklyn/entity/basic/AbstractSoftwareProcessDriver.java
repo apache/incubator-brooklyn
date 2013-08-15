@@ -54,7 +54,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      * @see #stop()
      */
 	@Override
-	public void queueStartTasks() {
+	public void startAsync() {
         new DynamicTasks.AutoQueueVoid("install") { protected void main() { 
             waitForConfigKey(ConfigKeys.INSTALL_LATCH);
             install();

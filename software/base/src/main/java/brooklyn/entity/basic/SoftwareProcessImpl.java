@@ -372,8 +372,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                 if (val != null) log.debug("{} finished waiting for start-latch; continuing...", this, val);
                 ((SoftwareProcessImpl)entity()).preStart(); 
             }};
-            new DynamicTasks.AutoQueueVoid("start - invoking driver") { protected void main() { 
-                ((SoftwareProcessImpl)entity()).driver.queueStartTasks();
+            new DynamicTasks.AutoQueueVoid("start") { protected void main() { 
+                ((SoftwareProcessImpl)entity()).driver.startAsync();
             }};
             new DynamicTasks.AutoQueueVoid("post-start") { protected void main() {
                 ((SoftwareProcessImpl)entity()).postDriverStart();

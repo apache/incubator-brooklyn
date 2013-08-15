@@ -19,7 +19,6 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /** Represents a task whose run() method can create other tasks
@@ -91,8 +90,15 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         if (log.isTraceEnabled())
             log.trace("task {} - submitting background task {} ({})", new Object[] { 
                 Tasks.current(), task, ec });
-        Preconditions.checkNotNull(ec,
-                "Cannot submit tasks when not in the thread of a task with an execution context");
+        if (ec==null) {
+            String message = Tasks.current()!=null ?
+                    // user forgot ExecContext:
+                        "Task "+this+" submitting background task requires an ExecutionContext (an ExecutionManager is not enough): submitting "+task+" in "+Tasks.current()
+                    : // should not happen:
+                        "Cannot submit tasks inside DST when not in a task : submitting "+task+" in "+this;
+            log.warn(message+" (rethrowing)");
+            throw new IllegalStateException(message);
+        }
         ec.submit(task);
     }
 

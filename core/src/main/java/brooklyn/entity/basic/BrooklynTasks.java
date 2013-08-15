@@ -1,6 +1,8 @@
 package brooklyn.entity.basic;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -9,10 +11,15 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableSet;
 
 /** Provides utilities for making Tasks easier to work with in Brooklyn.
  * Main thing at present is to supply (and find) wrapped entities for tasks to understand the
@@ -24,11 +31,13 @@ import com.google.common.base.Preconditions;
 public class BrooklynTasks {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynTasks.WrappedEntity.class);
+
+    // ------------- entity tags -------------------------
     
     public static class WrappedEntity {
         public final String wrappingType;
         public final Entity entity;
-        public WrappedEntity(String wrappingType, Entity entity) {
+        protected WrappedEntity(String wrappingType, Entity entity) {
             Preconditions.checkNotNull(wrappingType);
             Preconditions.checkNotNull(entity);
             this.wrappingType = wrappingType;
@@ -98,4 +107,68 @@ public class BrooklynTasks {
         return em.getTasksWithTag(tagForContextEntity(e));
     }
 
+    // ------------- stream tags -------------------------
+
+    public static class WrappedStream {
+        public final String streamType;
+        public final Supplier<String> streamContents;
+        public final Supplier<Integer> streamSize;
+        protected WrappedStream(String streamType, Supplier<String> streamContents, Supplier<Integer> streamSize) {
+            Preconditions.checkNotNull(streamType);
+            Preconditions.checkNotNull(streamContents);
+            this.streamType = streamType;
+            this.streamContents = streamContents;
+            this.streamSize = streamSize != null ? streamSize : Suppliers.<Integer>ofInstance(null);
+        }
+        protected WrappedStream(String streamType, ByteArrayOutputStream stream) {
+            Preconditions.checkNotNull(streamType);
+            Preconditions.checkNotNull(stream);
+            this.streamType = streamType;
+            this.streamContents = Strings.toStringSupplier(stream);
+            this.streamSize = Streams.sizeSupplier(stream);
+        }
+        @Override
+        public String toString() {
+            return "Stream["+streamType+"/"+Strings.makeSizeString(streamSize.get())+"]";
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(streamContents, streamType);
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof WrappedStream)) return false;
+            return 
+                Objects.equal(streamContents, ((WrappedStream)obj).streamContents) &&
+                Objects.equal(streamType, ((WrappedStream)obj).streamType);
+        }
+    }
+    
+    public static final String STREAM_STDIN = "stdin";
+    public static final String STREAM_STDOUT = "stdout";
+    public static final String STREAM_STDERR = "stderr";
+    
+    /** creates a tag suitable for marking a stream available on a task */
+    public static WrappedStream tagForStream(String streamType, ByteArrayOutputStream stream) {
+        return new WrappedStream(streamType, stream);
+    }
+
+    /** returns the set of tags indicating the streams available on a task */
+    public static Set<WrappedStream> streams(Task<?> task) {
+        Set<WrappedStream> result = new LinkedHashSet<BrooklynTasks.WrappedStream>();
+        for (Object tag: task.getTags()) {
+            if (tag instanceof WrappedStream) {
+                result.add((WrappedStream)tag);
+            }
+        }
+        return ImmutableSet.copyOf(result);
+    }
+
+    /** returns the tag for the indicated stream, or null */
+    public static WrappedStream stream(Task<?> task, String streamType) {
+        for (Object tag: task.getTags())
+            if ((tag instanceof WrappedStream) && ((WrappedStream)tag).streamType.equals(streamType))
+                return (WrappedStream)tag;
+        return null;
+    }
 }

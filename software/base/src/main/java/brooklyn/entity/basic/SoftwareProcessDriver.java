@@ -33,7 +33,7 @@ public interface SoftwareProcessDriver extends EntityDriver {
     /**
      * Queues tasks for starting
      */
-    void queueStartTasks();
+    void startAsync();
 
     /**
      * @see Startable#stop()

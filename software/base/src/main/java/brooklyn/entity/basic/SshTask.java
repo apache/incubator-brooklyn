@@ -12,6 +12,7 @@ import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
@@ -117,18 +118,26 @@ public class SshTask<T extends SshTask<T,?>,RET> implements HasTask<RET> {
     }
     
     public byte[] getStdout() {
+        if (stdout==null) return null;
         return stdout.toByteArray();
     }
     
     public byte[] getStderr() {
+        if (stderr==null) return null;
         return stderr.toByteArray();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public synchronized Task<RET> getTask() {
-        if (task==null) 
-            task = TaskBuilder.builder().dynamic(false).name("ssh: "+getSummary()).body(job).build();
+        if (task==null) {
+            TaskBuilder<Object> tb = TaskBuilder.builder().dynamic(false).name("ssh: "+getSummary()).body(job);
+            tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDIN, 
+                    Streams.byteArrayOfString(Strings.join(commands, "\n"))));
+            if (stdout!=null) tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDOUT, stdout));
+            if (stderr!=null) tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDERR, stderr));
+            task = tb.build();
+        }
         return (Task<RET>) task;
     }
     

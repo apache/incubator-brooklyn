@@ -3,6 +3,7 @@ package brooklyn.util.stream;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.InputSupplier;
 
@@ -40,4 +43,25 @@ public class Streams {
             throw Exceptions.propagate(ioe);
         }
     }
+
+    public static Supplier<Integer> sizeSupplier(final ByteArrayOutputStream src) {
+        Preconditions.checkNotNull(src);
+        return new Supplier<Integer>() {
+            @Override
+            public Integer get() {
+                return src.size();
+            }
+        };
+    }
+
+    public static ByteArrayOutputStream byteArrayOfString(String in) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        try {
+            stream.write(in.getBytes());
+        } catch (IOException e) {
+            throw Exceptions.propagate(e);
+        }
+        return stream;
+    }
+
 }

@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.management.HasTask;
 import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.exceptions.Exceptions;
@@ -82,12 +83,17 @@ public class DynamicTasks {
     }
 
     public static <U,V extends Task<U>> V queue(V task) {
-        Preconditions.checkNotNull(task, "Task to queue cannot be null");
-        Preconditions.checkState(!Tasks.isQueuedOrSubmitted(task), "Task to queue must not yet be submitted: %s", task);
-        TaskQueueingContext adder = getTaskQueuingContext();
-        Preconditions.checkNotNull(adder, "Task %s cannot be queued here; no queueing context available", task);
-        adder.queue(task);
-        return task;
+        try {
+            Preconditions.checkNotNull(task, "Task to queue cannot be null");
+            Preconditions.checkState(!Tasks.isQueuedOrSubmitted(task), "Task to queue must not yet be submitted: %s", task);
+            TaskQueueingContext adder = getTaskQueuingContext();
+            Preconditions.checkNotNull(adder, "Task %s cannot be queued here; no queueing context available", task);
+            adder.queue(task);
+            return task;
+        } catch (Throwable e) {
+            log.warn("Error queueing "+task+" (rethrowing): "+e);
+            throw Exceptions.propagate(e);
+        }
     }
 
     public static <T> Task<T> queueIfNeeded(Task<T> task) {
@@ -103,7 +109,7 @@ public class DynamicTasks {
         return queueIfNeeded(t).getUnchecked();
     }
 
-    public abstract static class AutoQueue<T> implements Supplier<T> {
+    public abstract static class AutoQueue<T> implements Supplier<T>, HasTask<T> {
         final Task<T> task;
         public AutoQueue(final String name) {
             task = DynamicTasks.queue(Tasks.<T>builder().name(name).body(
@@ -118,6 +124,9 @@ public class DynamicTasks {
             try {
                 return task.get();
             } catch (Exception e) { throw Exceptions.propagate(e); }
+        }
+        public Task<T> getTask() {
+            return task;
         }
     }
 
