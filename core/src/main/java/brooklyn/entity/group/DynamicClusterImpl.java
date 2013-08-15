@@ -346,8 +346,10 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
         EntityFactory<?> factoryToUse = (factory instanceof EntityFactoryForLocation) ? ((EntityFactoryForLocation)factory).newFactoryForLocation(getLocation()) : factory;
         Entity entity = factoryToUse.newEntity(flags, this);
-        if (entity==null) 
+        if (entity==null) {
             throw new IllegalStateException("EntityFactory factory routine returned null entity, in "+this);
+        }
+        if (entity.getParent()==null) entity.setParent(this);
         
         return entity;
     }

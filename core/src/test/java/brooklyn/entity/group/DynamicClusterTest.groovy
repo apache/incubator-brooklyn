@@ -205,8 +205,8 @@ class DynamicClusterTest {
     public void clusterLocationIsPassedOnToEntityStart() {
         Collection<Location> locations = [ loc ]
         TestEntity entity
-        def newEntity = { properties ->
-            entity = new TestEntityImpl(parent:app) {
+        def newEntity = { properties, cluster ->
+            entity = new TestEntityImpl(parent:cluster) {
 	            List<Location> stashedLocations = null
 	            @Override
 	            void start(Collection<? extends Location> loc) {
