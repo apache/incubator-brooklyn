@@ -38,6 +38,7 @@ import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
+import org.jclouds.compute.functions.Sha512Crypt;
 import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.domain.Credentials;
 import org.jclouds.domain.LoginCredentials;
@@ -45,8 +46,11 @@ import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
 import org.jclouds.rest.AuthorizationException;
 import org.jclouds.scriptbuilder.domain.Statement;
+import org.jclouds.scriptbuilder.domain.StatementList;
 import org.jclouds.scriptbuilder.domain.Statements;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
+import org.jclouds.scriptbuilder.statements.login.ReplaceShadowPasswordEntry;
+import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +124,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     /** these userNames are known to be the preferred/required logins in some common/default images 
      *  where root@ is not allowed to log in */
     public static final List<String> ROOT_ALIASES = ImmutableList.of("ubuntu", "ec2-user");
-    public static final List<String> NON_ADDABLE_USERS = ImmutableList.<String>builder().add(ROOT_USERNAME).addAll(ROOT_ALIASES).build();
+    public static final List<String> COMMON_USER_NAMES_TO_TRY = ImmutableList.<String>builder().add(ROOT_USERNAME).addAll(ROOT_ALIASES).add("admin").build();
     
     private static final Pattern LIST_PATTERN = Pattern.compile("^\\[(.*)\\]$");
     private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d*$");
@@ -207,7 +211,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     public String getUser(ConfigBag config) {
-        return LocationConfigUtils.getConfigCheckingDeprecatedAlternatives(getConfigBag(), 
+        return LocationConfigUtils.getConfigCheckingDeprecatedAlternatives(config, 
                 USER, JCLOUDS_KEY_USERNAME);
     }
     
@@ -333,6 +337,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             LOG.info("Creating VM in "+setup.getDescription()+" for "+this);
 
             Template template = buildTemplate(computeService, setup);
+            LoginCredentials initialCredentials = initUserTemplateOptions(template, setup);
+            for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
+                customizer.customize(computeService, template.getOptions());
+            }
+            LOG.debug("jclouds using template {} / options {} to provision machine in {}", new Object[] {
+                    template, template.getOptions(), setup.getDescription()});
 
             if (!setup.getUnusedConfig().isEmpty())
                 LOG.debug("NOTE: unused flags passed to obtain VM in "+setup.getDescription()+": "+
@@ -344,7 +354,18 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (node == null)
                 throw new IllegalStateException("No nodes returned by jclouds create-nodes in " + setup.getDescription());
 
-            LoginCredentials initialCredentials = extractVmCredentials(setup, node, template);
+            LoginCredentials customCredentials = setup.get(CUSTOM_CREDENTIALS);
+            if (customCredentials != null) {
+                initialCredentials = customCredentials;
+                //set userName and other data, from these credentials
+                Object oldUsername = setup.put(USER, customCredentials.getUser());
+                LOG.debug("node {} username {} / {} (customCredentials)", new Object[] { node, customCredentials.getUser(), oldUsername });
+                if (truth(customCredentials.getPassword())) setup.put(PASSWORD, customCredentials.getPassword());
+                if (truth(customCredentials.getPrivateKey())) setup.put(PRIVATE_KEY_DATA, customCredentials.getPrivateKey());
+            }
+            if (initialCredentials == null) {
+                initialCredentials = extractVmCredentials(setup, node);
+            }
             if (initialCredentials != null) {
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(initialCredentials).build();
             } else {
@@ -663,32 +684,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     LOG.warn("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+" (rethrowing): "+e);
                     if (!listedAvailableTemplatesOnNoSuchTemplate) {
                         listedAvailableTemplatesOnNoSuchTemplate = true;
-                        LOG.info("Loading available images at "+this+" for reference...");
-                        ConfigBag m1 = ConfigBag.newInstanceCopying(config);
-                        if (m1.containsKey(IMAGE_ID)) {
-                            // if caller specified an image ID, remove that, but don't apply default filters
-                            m1.remove(IMAGE_ID);
-                            // TODO use key
-                            m1.putStringKey("anyOwner", true);
-                        }
-                        ComputeService computeServiceLessRestrictive = JcloudsUtil.findComputeService(m1);
-                        Set<? extends Image> imgs = computeServiceLessRestrictive.listImages();
-                        LOG.info(""+imgs.size()+" available images at "+this);
-                        for (Image img: imgs) {
-                            LOG.info(" Image: "+img);
-                        }
-                        
-                        Set<? extends Hardware> profiles = computeServiceLessRestrictive.listHardwareProfiles();
-                        LOG.info(""+profiles.size()+" available profiles at "+this);
-                        for (Hardware profile: profiles) {
-                            LOG.info(" Profile: "+profile);
-                        }
-
-                        Set<? extends org.jclouds.domain.Location> assignableLocations = computeServiceLessRestrictive.listAssignableLocations();
-                        LOG.info(""+assignableLocations.size()+" available locations at "+this);
-                        for (org.jclouds.domain.Location assignableLocation: assignableLocations) {
-                            LOG.info(" Location: "+assignableLocation);
-                        }
+                        logAvailableTemplates(config);
                     }
                 }
             } catch (Exception e2) {
@@ -706,24 +702,117 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 code.apply(options, config, config.get(key));
         }
         
-        // Setup the user
+        return template;
+    }
+    
+    protected void logAvailableTemplates(ConfigBag config) {
+        LOG.info("Loading available images at "+this+" for reference...");
+        ConfigBag m1 = ConfigBag.newInstanceCopying(config);
+        if (m1.containsKey(IMAGE_ID)) {
+            // if caller specified an image ID, remove that, but don't apply default filters
+            m1.remove(IMAGE_ID);
+            // TODO use key
+            m1.putStringKey("anyOwner", true);
+        }
+        ComputeService computeServiceLessRestrictive = JcloudsUtil.findComputeService(m1);
+        Set<? extends Image> imgs = computeServiceLessRestrictive.listImages();
+        LOG.info(""+imgs.size()+" available images at "+this);
+        for (Image img: imgs) {
+            LOG.info(" Image: "+img);
+        }
         
+        Set<? extends Hardware> profiles = computeServiceLessRestrictive.listHardwareProfiles();
+        LOG.info(""+profiles.size()+" available profiles at "+this);
+        for (Hardware profile: profiles) {
+            LOG.info(" Profile: "+profile);
+        }
+
+        Set<? extends org.jclouds.domain.Location> assignableLocations = computeServiceLessRestrictive.listAssignableLocations();
+        LOG.info(""+assignableLocations.size()+" available locations at "+this);
+        for (org.jclouds.domain.Location assignableLocation: assignableLocations) {
+            LOG.info(" Location: "+assignableLocation);
+        }
+    }
+    
+    // Setup the user
+    protected LoginCredentials initUserTemplateOptions(Template template, ConfigBag config) {
         //NB: we ignore private key here because, by default we probably should not be installing it remotely;
         //also, it may not be valid for first login (it is created before login e.g. on amazon, so valid there;
         //but not elsewhere, e.g. on rackspace).
+        
+        LoginCredentials result = null;
+        TemplateOptions options = template.getOptions();
+        Image image = template.getImage();
         String user = getUser(config);
-        String loginUser = config.get(LOGIN_USER);
+        String explicitLoginUser = config.get(LOGIN_USER);
+        String loginUser = truth(explicitLoginUser) ? explicitLoginUser : (image.getDefaultCredentials() != null) ? image.getDefaultCredentials().identity : null;
         Boolean dontCreateUser = config.get(DONT_CREATE_USER);
         String publicKeyData = LocationConfigUtils.getPublicKeyData(config);
+        String privateKeyData = LocationConfigUtils.getPrivateKeyData(config);
         String explicitPassword = config.get(PASSWORD);
         String password = truth(explicitPassword) ? explicitPassword : Identifiers.makeRandomId(12);
+        List<Statement> statements = Lists.newArrayList();
         
-        if (truth(user) && !NON_ADDABLE_USERS.contains(user) && 
-                !user.equals(loginUser) && !truth(dontCreateUser)) {
-            // create the user, if it's not the login user and not a known root-level user
-            // by default we now give these users sudo privileges.
-            // if you want something else, that can be specified manually, 
-            // e.g. using jclouds UserAdd.Builder, with RunScriptOnNode, or template.options.runScript(xxx)
+        if (!truth(user) || user.equals(loginUser) || truth(dontCreateUser)) {
+            if (truth(dontCreateUser) && truth(user) && !user.equals(loginUser)) {
+                // TODO For dontCreateUser, we only want to treat it special if user was explicitly supplied
+                // (rather than it just being the default config key value). If user was explicit, then should
+                // set the password + authorize the key for that user. Presumably the caller knows that this
+                // user pre-exists on the given VM image.
+                LOG.info("Not creating user {}, and not setting its password or authorizing keys (temporarily using loginUser {})", user, loginUser);
+            }
+            
+            // For subsequent ssh'ing, we'll be using the loginUser
+            if (!truth(user)) {
+                config.put(USER, loginUser);
+            }
+            
+            // Using loginUser; setup the publicKey/password so can login as expected
+            if (password != null) {
+                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), loginUser, password));
+                result = LoginCredentials.builder().user(loginUser).password(password).build();
+            }
+            if (publicKeyData!=null) {
+                template.getOptions().authorizePublicKey(publicKeyData);
+                if (privateKeyData != null) {
+                    result = LoginCredentials.builder().user(loginUser).privateKey(privateKeyData).build();
+                }
+            }
+
+        } else if (truth(dontCreateUser)) {
+            // Expect user to already exist; setup the publicKey/password so can login as expected
+            if (password != null) {
+                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), user, password));
+                result = LoginCredentials.builder().user(user).password(password).build();
+            }
+            if (publicKeyData!=null) {
+                template.getOptions().authorizePublicKey(publicKeyData);
+                if (privateKeyData != null) {
+                    result = LoginCredentials.builder().user(loginUser).privateKey(privateKeyData).build();
+                }
+            }
+
+            // For subsequent ssh'ing, we'll be using the loginUser
+            if (!truth(user)) {
+                config.put(USER, loginUser);
+            }
+            
+        } else if (user.equals(ROOT_USERNAME)) {
+            // Authorizes the public-key and sets password for the root user, so can login as expected
+            if (password != null) {
+                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), ROOT_USERNAME, password));
+                result = LoginCredentials.builder().user(user).password(password).build();
+            }
+            if (publicKeyData!=null) {
+                statements.add(new AuthorizeRSAPublicKeys("~"+ROOT_USERNAME+"/.ssh", ImmutableList.of(publicKeyData)));
+                result = LoginCredentials.builder().user(user).privateKey(privateKeyData).build();
+            }
+            
+        } else {
+            // Create the user
+            // By default we now give these users sudo privileges.
+            // If you want something else, that can be specified manually, 
+            // e.g. using jclouds UserAdd.Builder, with RunScriptOnNode, or template.options.runScript(xxx).
             // (if that is a common use case, we could expose a property here)
             // note AdminAccess requires _all_ fields set, due to http://code.google.com/p/jclouds/issues/detail?id=1095
             AdminAccess.Builder adminBuilder = AdminAccess.builder()
@@ -755,19 +844,19 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             
             options.runScript(adminBuilder.build());
             
-        } else if (truth(publicKeyData)) {
-            // don't create the user, but authorize the public key for the default user
-            options.authorizePublicKey(publicKeyData);
+            if (privateKeyData != null) {
+                // assume have uploaded corresponding .pub file
+                result = LoginCredentials.builder().user(user).privateKey(privateKeyData).build();
+            } else {
+                result = LoginCredentials.builder().user(user).password(password).build();
+            }
         }
         
-        // Finally, apply any optional app-specific customization.
-        for (JcloudsLocationCustomizer customizer : getCustomizers(config)) {
-            customizer.customize(computeService, options);
+        if (statements.size() > 0) {
+            options.runScript(new StatementList(statements));
         }
         
-        LOG.debug("jclouds using template {} / options {} to provision machine in {}", new Object[] {
-                template, options, config.getDescription()});
-        return template;
+        return result;
     }
 
     // TODO we really need a better way to decide which images are preferred
@@ -969,26 +1058,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     // ------------ support methods --------------------
 
     /**
-     * In order of preference:
-     * <ol>
-     *   <li>Explicit LoginCredentials supplied in configuration
-     *   <li>AdminAccess set up through jclouds (see {@link #buildTemplate(ComputeService, ConfigBag)})
-     *   <li>Credentials obtained directly from the jclouds node
-     * </ol>
+     * Extracts the user that jclouds tells us about (i.e. from the jclouds node).
      */
-    protected LoginCredentials extractVmCredentials(ConfigBag setup, NodeMetadata node, Template template) {
-        LoginCredentials customCredentials = setup.get(CUSTOM_CREDENTIALS);
-        
-        if (customCredentials!=null) {
-            //set userName and other data, from these credentials
-            Object oldUsername = setup.put(USER, customCredentials.getUser());
-            LOG.debug("node {} username {} / {} (customCredentials)", new Object[] { node, customCredentials.getUser(), oldUsername });
-            if (truth(customCredentials.getPassword())) setup.put(PASSWORD, customCredentials.getPassword());
-            if (truth(customCredentials.getPrivateKey())) setup.put(PRIVATE_KEY_DATA, customCredentials.getPrivateKey());
-            return customCredentials;
-        }
-
-        AdminAccess adminAccess = (template.getOptions().getRunScript() instanceof AdminAccess) ? (AdminAccess)template.getOptions().getRunScript() : null;
+    protected LoginCredentials extractVmCredentials(ConfigBag setup, NodeMetadata node) {
         String user = getUser(setup);
         String localPrivateKeyData = LocationConfigUtils.getPrivateKeyData(setup);
         String localPassword = setup.get(PASSWORD);
@@ -996,29 +1068,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         LOG.debug("node {} username {} / {} (jclouds)", new Object[] { node, user, nodeCredentials.getUser() });
         
-        if (adminAccess != null) {
-            Credentials adminCredentials = adminAccess.getAdminCredentials();
-            if (user == null || !user.equals(adminCredentials.identity)) {
-                LOG.warn("User mismatch in admin-access for node {}, config {}; admin {}; using user from configuration; may fail subsequently", 
-                        new Object[] {node, user, adminCredentials.identity});
-            }
-            
-            if (localPrivateKeyData != null) {
-                // will rely on that; should have uploaded corresponding .pub file
-                return LoginCredentials.builder().user(user).privateKey(localPrivateKeyData).build();
-            } else {
-                String password = localPassword;
-                if (truth(localPassword) && !localPassword.equals(adminAccess.getAdminPassword())) {
-                    LOG.warn("Password mismatch in configuration and admin-access for node {}, user {}; using password from configuration; may fail subsequently", node, user);
-                } else if (!truth(password)) {
-                    password = adminAccess.getAdminPassword();
-                    setup.put(PASSWORD, password);
-                }
-                
-                return LoginCredentials.builder().user(user).password(password).build();
-            }
-        }
-
         if (truth(nodeCredentials.getUser())) {
             if (user==null) {
                 setup.put(USER, user = nodeCredentials.getUser());
@@ -1120,7 +1169,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             usersTried.add(getUser(setup));
         }
         
-        for (String u: NON_ADDABLE_USERS) {
+        for (String u: COMMON_USER_NAMES_TO_TRY) {
             setup.put(USER, u);
             if (setHostname(setup, metadata, false)) {
                 LOG.warn("Auto-detected user at "+metadata+" as "+getUser(setup)+" (failed to connect using: "+usersTried+")");
