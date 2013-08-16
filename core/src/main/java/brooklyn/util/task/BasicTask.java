@@ -32,9 +32,11 @@ import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ExecutionList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -54,9 +56,10 @@ import com.google.common.util.concurrent.ListenableFuture;
  *
  * @see BasicTaskStub
  */
-public class BasicTask<T> extends BasicTaskStub implements Task<T> {
+public class BasicTask<T> implements Task<T> {
     protected static final Logger log = LoggerFactory.getLogger(BasicTask.class);
 
+    private String id = Identifiers.makeRandomId(8);
     protected Callable<T> job;
     public final String displayName;
     public final String description;
@@ -102,6 +105,22 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public BasicTask(Map flags, Runnable job) { this(flags, GroovyJavaMethods.<T>callableFromRunnable(job)); }
     public BasicTask(Closure<T> job) { this(GroovyJavaMethods.callableFromClosure(job)); }
     public BasicTask(Map flags, Closure<T> job) { this(flags, GroovyJavaMethods.callableFromClosure(job)); }
+
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Task)
+            return ((Task<?>)obj).getId().equals(getId());
+        return false;
+    }
 
     @Override
     public String toString() { 
@@ -268,7 +287,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         blockUntilStarted(null);
     }
     protected synchronized boolean blockUntilStarted(Duration timeout) {
-        Long endTime = timeout==null ? null : System.currentTimeMillis() + timeout.toMillisecondsRoundingAway();
+        Long endTime = timeout==null ? null : System.currentTimeMillis() + timeout.toMillisecondsRoundingUp();
         while (true) {
             if (cancelled) throw new CancellationException();
             if (result==null)
@@ -294,7 +313,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         blockUntilEnded(null);
     }
     public boolean blockUntilEnded(Duration timeout) {
-        Long endTime = timeout==null ? null : System.currentTimeMillis() + timeout.toMillisecondsRoundingAway();
+        Long endTime = timeout==null ? null : System.currentTimeMillis() + timeout.toMillisecondsRoundingUp();
         try { 
             boolean started = blockUntilStarted(timeout);
             if (!started) return false;
@@ -320,7 +339,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     
     public T get(Duration duration) throws InterruptedException, ExecutionException, TimeoutException {
         long start = System.currentTimeMillis();
-        Long end  = duration==null ? null : start + duration.toMillisecondsRoundingAway();
+        Long end  = duration==null ? null : start + duration.toMillisecondsRoundingUp();
         while (end==null || end > System.currentTimeMillis()) {
             if (cancelled) throw new CancellationException();
             if (result == null) {

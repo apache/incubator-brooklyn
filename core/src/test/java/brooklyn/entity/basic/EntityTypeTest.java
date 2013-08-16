@@ -31,7 +31,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.util.collections.CollectionGuavas;
+import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableSet;
 
 import com.google.common.base.Predicate;
@@ -197,11 +197,11 @@ public class EntityTypeTest {
                 MutableSet.builder().addAll(DEFAULT_SENSORS).remove(SENSOR_ADDED).remove(POLICY_ADDED).build().toImmutable());
         
         TestUtils.assertEventually(
-                CollectionGuavas.size(listener.events), 
+                CollectionFunctionals.sizeSupplier(listener.events), 
                 Predicates.equalTo(2));
         TestUtils.assertEventually(
                 Suppliers.ofInstance(listener.events), 
-                CollectionGuavas.equalsUnordered(
+                CollectionFunctionals.equalsSetOf(
                         new BasicSensorEvent(SENSOR_REMOVED, entity, SENSOR_ADDED),
                         new BasicSensorEvent(SENSOR_REMOVED, entity, POLICY_ADDED)
                     ));

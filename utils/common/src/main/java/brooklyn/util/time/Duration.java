@@ -1,6 +1,8 @@
 package brooklyn.util.time;
 
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Preconditions;
@@ -63,26 +65,19 @@ public class Duration implements Comparable<Duration> {
         return unit.convert(nanos, TimeUnit.NANOSECONDS);
     }
 
-    /** as {@link #toUnit(TimeUnit)} but rounding away from zero,
-     * so 1 ns converted to ms gives 1 ms, and -1 ns gives 1ms */
-    public long toUnitRoundingAway(TimeUnit unit) {
+    /** as {@link #toUnit(TimeUnit)} but rounding as indicated
+     * (rather than always taking the floor which is TimeUnit's default behaviour) */
+    public long toUnit(TimeUnit unit, RoundingMode rounding) {
         long result = unit.convert(nanos, TimeUnit.NANOSECONDS);
         long check = TimeUnit.NANOSECONDS.convert(result, unit);
-        if (check!=nanos) {
-            result += (nanos>0 ? 1 : -1);
-        }
-        return result;
+        if (check==nanos || rounding==null || rounding==RoundingMode.UNNECESSARY) return result;
+        return new BigDecimal(nanos).divide(new BigDecimal(unit.toNanos(1)), rounding).longValue();
     }
 
     /** as {@link #toUnit(TimeUnit)} but rounding away from zero,
-     * so 1 ns converted to ms gives 0 ms, and -1 ns gives 0ms */
-    public long toUnitRoundingToZero(TimeUnit unit) {
-        long result = unit.convert(nanos, TimeUnit.NANOSECONDS);
-        long check = TimeUnit.NANOSECONDS.convert(result, unit);
-        if (check!=nanos) {
-            result += (nanos>0 ? -1 : 1);
-        }
-        return result;
+     * so 1 ns converted to ms gives 1 ms, and -1 ns gives 1ms */
+    public long toUnitRoundingUp(TimeUnit unit) {
+        return toUnit(unit, RoundingMode.UP);
     }
 
     public long toMilliseconds() {
@@ -90,9 +85,10 @@ public class Duration implements Comparable<Duration> {
     }
     
     /** as {@link #toMilliseconds()} but rounding away from zero (so 1 nanosecond gets rounded to 1 millisecond);
-     * see {@link #toUnitRoundingAway(TimeUnit)} */
-    public long toMillisecondsRoundingAway() {
-        return toUnitRoundingAway(TimeUnit.MILLISECONDS);
+     * see {@link #toUnitRoundingUp(TimeUnit)}; provided as a convenience on top of {@link #toUnit(TimeUnit, RoundingMode)}
+     * as this is a common case (when you want to make sure you wait at least a certain amount of time) */
+    public long toMillisecondsRoundingUp() {
+        return toUnitRoundingUp(TimeUnit.MILLISECONDS);
     }
     
     public long toNanoseconds() {

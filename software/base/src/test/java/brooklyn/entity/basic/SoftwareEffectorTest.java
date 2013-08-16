@@ -9,6 +9,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Throwables;
+
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.SshEffectorTasks.SshEffectorBody;
 import brooklyn.location.LocationSpec;
@@ -31,7 +33,7 @@ public class SoftwareEffectorTest {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         mgmt = app.getManagementContext();
         
-        LocalhostMachineProvisioningLocation lhc = mgmt.getLocationManager().createLocation(LocationSpec.spec(LocalhostMachineProvisioningLocation.class));
+        LocalhostMachineProvisioningLocation lhc = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
         SshMachineLocation lh = lhc.obtain();
         app.start(Arrays.asList(lh));
     }
@@ -74,7 +76,7 @@ public class SoftwareEffectorTest {
 
     public static final String COMMAND_THAT_DOES_NOT_EXIST = "blah_blah_blah_command_DOES_NOT_EXIST";
     
-    @Test(groups="Integration", expectedExceptions=Exception.class)
+    @Test(groups="Integration")
     public void testBadExitCodeCaught() {
         Task<Void> call = Entities.invokeEffector(app, app, Effectors.effector(Void.class, "badExitCode")
                 .impl(new SshEffectorBody<Void>() {
@@ -83,8 +85,17 @@ public class SoftwareEffectorTest {
                         return null;
                     }
                 }).build() );
-        call.getUnchecked();
-        log.error("ERROR: should have failed earlier in this test, instead got successful task result "+call.getUnchecked()+" from "+call);
+        try {
+            Object result = call.getUnchecked();
+            Assert.fail("ERROR: should have failed earlier in this test, instead got successful task result "+result+" from "+call);
+        } catch (Exception e) {
+            Throwable root = Throwables.getRootCause(e);
+            if (!(root instanceof IllegalStateException)) Assert.fail("Should have failed with IAE, but got: "+root);
+            if (root.getMessage()==null || root.getMessage().indexOf("exit code")<=0) 
+                Assert.fail("Should have failed with 'exit code' message, but got: "+root);
+            // test passed
+            return;
+        }
     }
         
     @Test(groups="Integration")

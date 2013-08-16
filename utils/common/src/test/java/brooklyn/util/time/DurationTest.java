@@ -49,15 +49,15 @@ public class DurationTest {
     }
 
     public void testRoundUp() {
-        Assert.assertEquals(Duration.nanos(1).toMillisecondsRoundingAway(), 1); 
+        Assert.assertEquals(Duration.nanos(1).toMillisecondsRoundingUp(), 1); 
     }
 
     public void testRoundZero() {
-        Assert.assertEquals(Duration.ZERO.toMillisecondsRoundingAway(), 0); 
+        Assert.assertEquals(Duration.ZERO.toMillisecondsRoundingUp(), 0); 
     }
 
     public void testRoundUpNegative() {
-        Assert.assertEquals(Duration.nanos(-1).toMillisecondsRoundingAway(), -1); 
+        Assert.assertEquals(Duration.nanos(-1).toMillisecondsRoundingUp(), -1); 
     }
 
     public void testNotRounding() {
@@ -65,7 +65,7 @@ public class DurationTest {
     }
 
     public void testNotRoundingNegative() {
-        Assert.assertEquals(Duration.nanos(-1).toMillisecondsRoundingAway(), -1);
+        Assert.assertEquals(Duration.nanos(-1).toMillisecondsRoundingUp(), -1);
     }
 
 }

@@ -18,7 +18,10 @@ import brooklyn.util.time.Duration;
  * ExecutionContext, in which case it will be returned, or it may be created by submission
  * of a {@link Runnable} or {@link Callable} and thereafter it can be treated just like a {@link Future}.
  */
-public interface Task<T> extends TaskStub, ListenableFuture<T> {
+public interface Task<T> extends ListenableFuture<T> {
+    
+    public String getId();
+    
     public Set<Object> getTags();
     /** if {@link #isSubmitted()} returns the time when the task was submitted; or -1 otherwise */
     public long getSubmitTimeUtc();

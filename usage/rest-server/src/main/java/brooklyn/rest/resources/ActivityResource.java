@@ -22,7 +22,6 @@ public class ActivityResource extends AbstractBrooklynRestResource implements Ac
       return TaskTransformer.FROM_TASK.apply(t);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Iterable<TaskSummary> children(String taskId) {
       Task<?> t = mgmt().getExecutionManager().getTask(taskId);
@@ -30,8 +29,8 @@ public class ActivityResource extends AbstractBrooklynRestResource implements Ac
           throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
       if (!(t instanceof HasTaskChildren))
           return Collections.emptyList();
-      return Collections2.transform(Lists.<Task<?>>newArrayList( 
-              (Iterable<Task<?>>)(Iterable<?>)((HasTaskChildren)t).getChildren() ), TaskTransformer.FROM_TASK);
+      return Collections2.transform(Lists.newArrayList(((HasTaskChildren)t).getChildren()), 
+              TaskTransformer.FROM_TASK);
   }
 
 }

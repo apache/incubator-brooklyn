@@ -11,9 +11,9 @@ import com.google.common.collect.Sets;
 
 /** things which it seems should be in guava, but i can't find 
  * @author alex */
-public class CollectionGuavas {
+public class CollectionFunctionals {
 
-    public static Supplier<Integer> size(final Iterable<?> collection) {
+    public static Supplier<Integer> sizeSupplier(final Iterable<?> collection) {
         return new Supplier<Integer>() {
             @Override
             public Integer get() {
@@ -24,7 +24,7 @@ public class CollectionGuavas {
     
     /** default guava Equals predicate will reflect order of target, and will fail when matching against a list;
      * this treats them both as sets */
-    public static Predicate<Iterable<?>> equalsUnordered(Object... target) {
+    public static Predicate<Iterable<?>> equalsSetOf(Object... target) {
         return equalsSet(Arrays.asList(target));
     }
     public static Predicate<Iterable<?>> equalsSet(final Iterable<?> target) {

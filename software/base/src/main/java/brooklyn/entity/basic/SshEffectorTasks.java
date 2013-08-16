@@ -9,8 +9,11 @@ import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;
 
+/** convenience classes and methods for working with ssh */
+@Beta // added in 0.6.0
 public class SshEffectorTasks {
 
     /** like {@link EffectorBody} but providing conveniences when in a {@link SoftwareProcess}

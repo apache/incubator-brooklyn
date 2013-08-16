@@ -9,6 +9,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
@@ -28,7 +29,8 @@ import com.google.common.collect.Iterables;
 
 public class TaskTransformer {
 
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(TaskTransformer.class);
+    @SuppressWarnings("unused")
+    private static final Logger log = LoggerFactory.getLogger(TaskTransformer.class);
 
     public static final Function<Task<?>, TaskSummary> FROM_TASK = new Function<Task<?>, TaskSummary>() {
         @Override
@@ -37,7 +39,7 @@ public class TaskTransformer {
         }
     };
 
-    public static TaskSummary taskSummary(Task task) {
+    public static TaskSummary taskSummary(Task<?> task) {
       try {
         Preconditions.checkNotNull(task);
         Entity entity = BrooklynTasks.getContextEntity(task);
@@ -60,8 +62,8 @@ public class TaskTransformer {
         List<LinkWithMetadata> children = Collections.emptyList();
         if (task instanceof HasTaskChildren) {
             children = new ArrayList<LinkWithMetadata>();
-            for (Object t: ((HasTaskChildren)task).getChildren()) {
-                children.add(asLink((Task)t));
+            for (Task<?> t: ((HasTaskChildren)task).getChildren()) {
+                children.add(asLink(t));
             }
         }
         
@@ -82,12 +84,12 @@ public class TaskTransformer {
       }
     }
 
-    public static Long ifPositive(Long time) {
+    private static Long ifPositive(Long time) {
         if (time==null || time<=0) return null;
         return time;
     }
 
-    public static LinkWithMetadata asLink(Task t) {
+    public static LinkWithMetadata asLink(Task<?> t) {
         if (t==null) return null;
         MutableMap<String,Object> data = new MutableMap<String,Object>();
         data.put("id", t.getId());

@@ -57,7 +57,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
 
   @Override
   public TaskSummary getTask(final String application, final String entityToken, String taskId) {
-      // deprecate in favour of ActivityApi.get ?
+      // TODO deprecate in favour of ActivityApi.get ?
       Task<?> t = mgmt().getExecutionManager().getTask(taskId);
       if (t==null)
           throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);

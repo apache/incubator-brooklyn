@@ -13,7 +13,7 @@ import com.google.common.annotations.Beta;
 /** Typical implementations override {@link #main(ConfigBag)} to do the work of the effector
  * <p>
  **/
-@Beta // should we choose between this approach and the EffectorTasks approach ?
+@Beta // added in 0.6.0 - should we choose between this approach and the EffectorTasks approach ?
 public abstract class EffectorBody<T> {
     /** Does the work of the effector, either in place, or (better) by building up
      * subtasks, which can by added using {@link DynamicTasks} methods

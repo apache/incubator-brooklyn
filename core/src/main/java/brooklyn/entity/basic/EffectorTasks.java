@@ -3,6 +3,11 @@ package brooklyn.entity.basic;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.Beta;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -15,8 +20,12 @@ import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 
+@Beta // added in 0.6.0
 public class EffectorTasks {
 
+    @SuppressWarnings("unused")
+    private static final Logger log = LoggerFactory.getLogger(EffectorTasks.class);
+    
     public interface EffectorTaskFactory<T> {
         public abstract Task<T> newTask(Entity entity, Effector<T> effector, ConfigBag parameters);
     }

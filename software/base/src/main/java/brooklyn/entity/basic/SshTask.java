@@ -21,26 +21,26 @@ import com.google.common.base.Preconditions;
 // this use of generics to get the right task type depending on subsequent builder methods is hideous,
 // but seems to work; only thing is you can't instantiate SshTask directly, it must be a subclass
 public class SshTask<T extends SshTask<T,?>,RET> implements HasTask<RET> {
-    final SshJob job;
-    final List<String> commands;
-    SshMachineLocation machine;
-    Task<Object> task;
+    private final SshJob job;
+    private final List<String> commands;
+    private SshMachineLocation machine;
+    private Task<Object> task;
     
     // config data
-    String summary;
+    private String summary;
     
     public static enum ScriptReturnType { EXIT_CODE, STDOUT_STRING, STDOUT_BYTES, STDERR_STRING, STDERR_BYTES }
-    ScriptReturnType returnType = ScriptReturnType.EXIT_CODE;
+    private ScriptReturnType returnType = ScriptReturnType.EXIT_CODE;
     
-    boolean runAsScript = false;
-    boolean runAsRoot = false;
-    boolean requireExitCodeZero = false;
-    Map<String,String> shellEnvironment = new MutableMap<String, String>();
+    private boolean runAsScript = false;
+    private boolean runAsRoot = false;
+    private boolean requireExitCodeZero = false;
+    private Map<String,String> shellEnvironment = new MutableMap<String, String>();
 
     // execution details
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-    Integer exitCode = null;
+    private ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    private ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    private Integer exitCode = null;
     
     /** constructor where machine will be added later */
     public SshTask(String ...commands) {
@@ -87,17 +87,17 @@ public class SshTask<T extends SshTask<T,?>,RET> implements HasTask<RET> {
         return self();
     }
 
-    public T runningAsCommand() {
+    public T runAsCommand() {
         runAsScript = false;
         return self();
     }
 
-    public T runningAsScript() {
+    public T runAsScript() {
         runAsScript = true;
         return self();
     }
 
-    public T runningAsRoot() {
+    public T runAsRoot() {
         runAsRoot = true;
         return self();
     }
@@ -166,11 +166,13 @@ public class SshTask<T extends SshTask<T,?>,RET> implements HasTask<RET> {
             if (requireExitCodeZero && exitCode!=0)
                 throw new IllegalStateException("Ssh job ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary());
             
-            if (returnType==ScriptReturnType.STDOUT_STRING) return stdout.toString();
-            if (returnType==ScriptReturnType.STDOUT_BYTES) return stdout.toByteArray();
-            if (returnType==ScriptReturnType.STDERR_STRING) return stderr.toString();
-            if (returnType==ScriptReturnType.STDERR_BYTES) return stderr.toByteArray();
-            if (returnType==ScriptReturnType.EXIT_CODE) return exitCode;
+            switch (returnType) {
+            case STDOUT_STRING: return stdout.toString();
+            case STDOUT_BYTES: return stdout.toByteArray();
+            case STDERR_STRING: return stderr.toString();
+            case STDERR_BYTES: return stderr.toByteArray();
+            case EXIT_CODE: return exitCode;
+            }
 
             throw new IllegalStateException("Unknown return type for ssh job "+getSummary()+": "+returnType);
         }

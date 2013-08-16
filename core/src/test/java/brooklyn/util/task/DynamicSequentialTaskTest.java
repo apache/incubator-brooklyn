@@ -86,7 +86,7 @@ public class DynamicSequentialTaskTest {
                 log.info("will say "+message+" after "+duration);
                 if (duration!=null && duration.toMilliseconds()>0) {
                     try {
-                        Thread.sleep(duration.toMillisecondsRoundingAway());
+                        Thread.sleep(duration.toMillisecondsRoundingUp());
                     } catch (InterruptedException e) {
                         cancellations.release();
                         throw Exceptions.propagate(e);
