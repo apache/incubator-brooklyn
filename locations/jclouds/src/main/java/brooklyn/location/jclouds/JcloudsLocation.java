@@ -381,22 +381,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // Apply same securityGroups rules to iptables, if iptables is running on the node
             String waitForSshable = setup.get(WAIT_FOR_SSHABLE);
             if (!(waitForSshable!=null && "false".equalsIgnoreCase(waitForSshable))) {
-                if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM))
-                   sshMachineLocation.execCommands("using urandom instead of random", 
-                        Arrays.asList("sudo mv /dev/random /dev/random-real", "sudo ln -s /dev/urandom /dev/random"));
-                
-                if (setup.get(OPEN_IPTABLES)) {
-                   List<String> iptablesRules = createIptablesRulesForNetworkInterface("eth0", (Iterable<Integer>) setup.get(INBOUND_PORTS));
-                   sshMachineLocation.execCommands("Inserting iptables rules", iptablesRules);
-                }
-
-                if (setup.get(GENERATE_HOSTNAME)) {
-                   sshMachineLocation.execCommands("Generate hostname " + node.getName(), 
-                         Arrays.asList("sudo hostname " + node.getName(), 
-                                       "sudo bash -c \"echo 127.0.0.1   `hostname` >> /etc/hosts\"")
-                   );
-               }
-                String setupScript = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_URL);
+               String setupScript = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_URL);
                 if(Strings.isNonBlank(setupScript)) {
                    String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
                    Map<String, String> substitutions = Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString);
@@ -404,6 +389,25 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                    sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
                 }
                 
+                if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM))
+                   sshMachineLocation.execCommands("using urandom instead of random", 
+                        Arrays.asList("sudo mv /dev/random /dev/random-real", "sudo ln -s /dev/urandom /dev/random"));
+
+                
+                if (setup.get(GENERATE_HOSTNAME)) {
+                   sshMachineLocation.execCommands("Generate hostname " + node.getName(), 
+                         Arrays.asList("sudo hostname " + node.getName(),
+                                       "sudo sed -i \"s/HOSTNAME=.*/HOSTNAME=" + node.getName() + "/g\" /etc/sysconfig/network",
+                                       "sudo bash -c \"echo 127.0.0.1   `hostname` >> /etc/hosts\"")
+                   );
+               }
+
+                if (setup.get(OPEN_IPTABLES)) {
+                   List<String> iptablesRules = createIptablesRulesForNetworkInterface((Iterable<Integer>) setup.get(INBOUND_PORTS));
+                   iptablesRules.add(IptablesCommands.saveIptablesRules());
+                   sshMachineLocation.execCommands("Inserting iptables rules", iptablesRules);
+                   sshMachineLocation.execCommands("List iptables rules", ImmutableList.of(IptablesCommands.listIptablesRule()));
+                }
             } else {
                 // Otherwise would break CloudStack, where port-forwarding means that jclouds opinion 
                 // of using port 22 is wrong.
@@ -1385,10 +1389,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
     
-    private List<String> createIptablesRulesForNetworkInterface(String networkInterface, Iterable<Integer> ports) {
+    private List<String> createIptablesRulesForNetworkInterface(Iterable<Integer> ports) {
        List<String> iptablesRules = Lists.newArrayList();
        for (Integer port : ports) {
-          iptablesRules.add(IptablesCommands.insertIptablesRule(Chain.INPUT, networkInterface, Protocol.TCP, port, Policy.ACCEPT));
+          iptablesRules.add(IptablesCommands.insertIptablesRule(Chain.INPUT, Protocol.TCP, port, Policy.ACCEPT));
        }
        return iptablesRules;
     }
