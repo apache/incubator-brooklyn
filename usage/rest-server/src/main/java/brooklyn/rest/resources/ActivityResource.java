@@ -1,35 +1,36 @@
 package brooklyn.rest.resources;
 
-import brooklyn.entity.Entity;
+import java.util.Collections;
+
+import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.rest.api.ActivityApi;
-import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.domain.TaskSummary;
+import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.WebResourceUtils;
-import com.google.common.collect.Collections2;
 
-import java.util.Set;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 
 public class ActivityResource extends AbstractBrooklynRestResource implements ActivityApi {
 
-    @Override
-    public Iterable<TaskSummary> list(String applicationId, String entityId) {
-      Entity entity = brooklyn().getEntity(applicationId, entityId);
-      Set<Task<?>> tasks = mgmt().getExecutionManager().getTasksWithTag(entity);
-      return Collections2.transform(tasks, TaskTransformer.FROM_TASK);
-  }
-
   @Override
-  public TaskSummary get( final String application, final String entityToken, String taskId
-  ) {
-//      final EntityLocal entity = brooklyn().getEntity(application, entityToken);
-      // no entity checking done/needed
-      // (should API be refactored to be a top-level?)
-      
+  public TaskSummary get(String taskId) {
       Task<?> t = mgmt().getExecutionManager().getTask(taskId);
       if (t==null)
           throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
       return TaskTransformer.FROM_TASK.apply(t);
+  }
+
+  @Override
+  public Iterable<TaskSummary> children(String taskId) {
+      Task<?> t = mgmt().getExecutionManager().getTask(taskId);
+      if (t==null)
+          throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
+      if (!(t instanceof HasTaskChildren))
+          return Collections.emptyList();
+      return Collections2.transform(Lists.newArrayList(((HasTaskChildren)t).getChildren()), 
+              TaskTransformer.FROM_TASK);
   }
 
 }

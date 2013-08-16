@@ -16,7 +16,9 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Effectors;
 import brooklyn.internal.storage.BrooklynStorageFactory;
 import brooklyn.location.Location;
 import brooklyn.management.ExecutionManager;
@@ -185,6 +187,13 @@ public class LocalManagementContext extends AbstractManagementContext {
     public <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c) {
 		manageIfNecessary(entity, elvis(Arrays.asList(flags.get("displayName"), flags.get("description"), flags, c)));
         return getExecutionContext(entity).submit(flags, c);
+    }
+
+    
+    @Override
+    protected <T> Task<T> runAtEntity(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {
+        manageIfNecessary(entity, eff);
+        return getExecutionContext(entity).submit(Effectors.invocation(entity, eff, parameters));
     }
 
     @Override

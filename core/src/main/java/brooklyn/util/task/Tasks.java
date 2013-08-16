@@ -7,18 +7,22 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionContext;
+import brooklyn.management.HasTask;
 import brooklyn.management.Task;
+import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.flags.TypeCoercions;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class Tasks {
-
     
     private static final Logger log = LoggerFactory.getLogger(Tasks.class);
     
@@ -26,9 +30,24 @@ public class Tasks {
      * typically invoked prior to a wait, for transparency to a user;
      * then invoked with 'null' just after the wait */
     public static void setBlockingDetails(String description) {
-        Task current = current();
+        Task<?> current = current();
         if (current instanceof BasicTask)
-            ((BasicTask)current).setBlockingDetails(description); 
+            ((BasicTask<?>)current).setBlockingDetails(description); 
+    }
+    public static void resetBlockingDetails() {
+        Task<?> current = current();
+        if (current instanceof BasicTask)
+            ((BasicTask<?>)current).resetBlockingDetails(); 
+    }
+    public static void setBlockingTask(Task<?> blocker) {
+        Task<?> current = current();
+        if (current instanceof BasicTask)
+            ((BasicTask<?>)current).setBlockingTask(blocker); 
+    }
+    public static void resetBlockingTask() {
+        Task<?> current = current();
+        if (current instanceof BasicTask)
+            ((BasicTask<?>)current).resetBlockingTask(); 
     }
     
     /** convenience for setting "blocking details" on any task where the current thread is running,
@@ -137,9 +156,104 @@ public class Tasks {
      * the extra status is presented in Task.getStatusDetails(true)
      */
     public static void setExtraStatusDetails(String notes) {
-        Task current = current();
+        Task<?> current = current();
         if (current instanceof BasicTask)
-            ((BasicTask)current).setExtraStatusText(notes); 
+            ((BasicTask<?>)current).setExtraStatusText(notes); 
     }
+
+    public static <T> TaskBuilder<T> builder() {
+        return TaskBuilder.<T>builder();
+    }
+    
+    private static Task<?>[] asTasks(HasTask<?> ...tasks) {
+        Task<?>[] result = new Task<?>[tasks.length];
+        for (int i=0; i<tasks.length; i++)
+            result[i] = tasks[i].getTask();
+        return result;
+    }
+    
+    public static Task<List<?>> parallel(HasTask<?> ...tasks) {
+        return parallel(asTasks(tasks));
+    }
+    
+    public static Task<List<?>> parallel(String name, HasTask<?> ...tasks) {
+        return parallel(name, asTasks(tasks));
+    }
+    
+    public static Task<List<?>> parallel(Task<?> ...tasks) {
+        return parallel("parallelised tasks", tasks);
+    }
+    
+    public static Task<List<?>> parallel(String name, Task<?> ...tasks) {
+        TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().name(name).parallel(true);
+        for (Task<?> task: tasks)
+            tb.add(task);
+        return tb.build();
+    }
+
+    public static Task<List<?>> sequential(HasTask<?> ...tasks) {
+        return sequential(asTasks(tasks));
+    }
+    
+    public static Task<List<?>> sequential(String name, HasTask<?> ...tasks) {
+        return sequential(name, asTasks(tasks));
+    }
+    
+    public static Task<List<?>> sequential(Task<?> ...tasks) {
+        return sequential("sequential tasks", tasks);
+    }
+    
+    public static Task<List<?>> sequential(String name, Task<?> ...tasks) {
+        TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().name(name).parallel(false);
+        for (Task<?> task: tasks)
+            tb.add(task);
+        return tb.build();
+    }
+
+    /** returns the first tag found on the given task which matches the given type, looking up the submission hierarachy if necessary */
+    @SuppressWarnings("unchecked")
+    public static <T> T tag(@Nullable Task<?> task, Class<T> type, boolean recurseHierarchy) {
+        // support null task to make it easier for callers to walk hierarchies
+        if (task==null) return null;
+        for (Object tag: task.getTags())
+            if (type.isInstance(tag)) return (T)tag;
+        if (!recurseHierarchy) return null;
+        return tag(task.getSubmittedByTask(), type, true);
+    }
+    
+    public static boolean isAncestorCancelled(Task<?> t) {
+        if (t==null) return false;
+        if (t.isCancelled()) return true;
+        return isAncestorCancelled(t.getSubmittedByTask());
+    }
+
+    public static boolean isQueuedOrSubmitted(Task<?> task) {
+        return ((BasicTask<?>)task).isQueuedOrSubmitted();
+    }
+    
+    /** tries to add the given task in the given addition context,
+     * returns true if it could, false if it could not (doesn't throw anything) */
+    public static boolean tryQueueing(TaskQueueingContext adder, Task<?> task) {
+        if (task==null || isQueuedOrSubmitted(task))
+            return false;
+        try {
+            adder.queue(task);
+            return true;
+        } catch (Exception e) {
+            if (log.isDebugEnabled())
+                log.debug("Could not add task "+task+" at "+adder+": "+e);
+            return false;
+        }        
+    }
+    
+    public static <T> Supplier<T> supplier(final Task<T> task) {
+        return new Supplier<T>() {
+            @Override
+            public T get() {
+                return task.getUnchecked();
+            }
+        };
+    }
+    
 
 }

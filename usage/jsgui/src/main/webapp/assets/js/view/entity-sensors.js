@@ -43,7 +43,10 @@ define([
                                      "mRender": function ( data, type, row ) {
                                          // name (column 1) should have tooltip title
                                          var actions = that.getSensorActions(data.name);
-                                         var context = _.extend(data, {href: actions.json});
+                                         // if data.description or .type is absent we get an error in html rendering (js)
+                                         // unless we set it explicitly (there is probably a nicer way to do this however?)
+                                         var context = _.extend(data, {href: actions.json, 
+                                             description: data['description'], type: data['type']});
                                          return sensorNameHtml(context);
                                      },
                                      "aTargets": [ 1 ]

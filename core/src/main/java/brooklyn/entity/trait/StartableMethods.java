@@ -30,7 +30,7 @@ public class StartableMethods {
         Iterable<Entity> startables = filterStartableManagedEntities(e.getChildren());
 
         if (!Iterables.isEmpty(startables)) {
-	        Entities.invokeEffectorList(e, startables, Startable.START, MutableMap.of("locations", locations)).getUnchecked();
+	        Entities.invokeEffector(e, startables, Startable.START, MutableMap.of("locations", locations)).getUnchecked();
         }
 	}
 	
@@ -40,7 +40,7 @@ public class StartableMethods {
         Iterable<Entity> startables = filterStartableManagedEntities(e.getChildren());
 		
 		if (!Iterables.isEmpty(startables)) {
-			Entities.invokeEffectorList(e, startables, Startable.STOP).getUnchecked();
+			Entities.invokeEffector(e, startables, Startable.STOP).getUnchecked();
 		}
         if (log.isDebugEnabled()) log.debug("Stopped entity "+e);
 	}
@@ -51,7 +51,7 @@ public class StartableMethods {
         Iterable<Entity> startables = filterStartableManagedEntities(e.getChildren());
         
         if (!Iterables.isEmpty(startables)) {
-            Entities.invokeEffectorList(e, startables, Startable.RESTART).getUnchecked();
+            Entities.invokeEffector(e, startables, Startable.RESTART).getUnchecked();
         }
         if (log.isDebugEnabled()) log.debug("Restarted entity "+e);
     }

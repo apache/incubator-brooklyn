@@ -457,6 +457,20 @@ public class Reflections {
 	    
 	    return null;
 	}
+	
+	/** whereas Class.getInterfaces() only returns interfaces directly implemented by a class,
+	 * this walks the inheritance hierarchy to include interfaces implemented by superclass/ancestors;
+	 * (note it does not include superinterfaces)
+	 */
+	public static Set<Class<?>> getInterfacesIncludingClassAncestors(Class<?> clazz) {
+	    Set<Class<?>> result = new LinkedHashSet<Class<?>>();
+	    while (clazz!=null) {
+	        for (Class<?> iface: clazz.getInterfaces())
+	            result.add(iface);
+	        clazz = clazz.getSuperclass();
+	    }
+	    return result;
+	}
 
     public static Method findMethod(Class<?> clazz, String name, Class<?>... parameterTypes) throws NoSuchMethodException {
         if (clazz == null || name == null) {

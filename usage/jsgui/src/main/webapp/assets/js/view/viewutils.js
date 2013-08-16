@@ -39,15 +39,15 @@ define([
         },
         addRefreshButton: function($table) {
             this.myDataTableToolbarAddHtml($table,
-                '<i class="refresh table-toolbar-icon icon-refresh handy smallpadside" rel="tooltip" title="Reload content immediately"></i>');
+                '<i class="refresh table-toolbar-icon bootstrap-glyph icon-refresh handy smallpadside" rel="tooltip" title="Reload content immediately"></i>');
         },
         addFilterEmptyButton: function($table) {
             this.myDataTableToolbarAddHtml($table,
-                '<i class="filterEmpty table-toolbar-icon icon-eye-open handy bottom smallpadside" rel="tooltip" title="Show/hide empty records"></i>');
+                '<i class="filterEmpty table-toolbar-icon bootstrap-glyph icon-eye-open handy bottom smallpadside" rel="tooltip" title="Show/hide empty records"></i>');
         },
         addAutoRefreshButton: function($table) {
             this.myDataTableToolbarAddHtml($table,
-                '<i class="toggleAutoRefresh table-toolbar-icon icon-pause handy smallpadside" rel="tooltip" title="Toggle auto-refresh"></i>');
+                '<i class="toggleAutoRefresh table-toolbar-icon bootstrap-glyph icon-pause handy smallpadside" rel="tooltip" title="Toggle auto-refresh"></i>');
         },
         /* fnConvertData takes the entries in collection (value, optionalKeyOrIndex) and returns a list
          * whose first element is the ID (hidden first column of table)
@@ -106,7 +106,7 @@ define([
 //                log("adding "+newDisplayData[prop])
                 table.fnAddData( newDisplayData[prop] )
             }
-            table.fnAdjustColumnSizing();
+//            table.fnAdjustColumnSizing();
             table.fnStandingRedraw();
         },
         toggleFilterEmpty: function($table, column) {
@@ -131,7 +131,9 @@ define([
             $togglers.click(this.onTogglerClick);
         },
         onTogglerClick: function(event) {
-            var root = $(event.currentTarget).closest(".toggler-header");
+            ViewUtils.onTogglerClickElement($(event.currentTarget).closest(".toggler-header"));
+        },
+        onTogglerClickElement: function(root) {
             root.toggleClass("user-hidden");
             $(".toggler-icon", root).toggleClass("icon-chevron-left").toggleClass("icon-chevron-down");
             var next = root.next();
@@ -151,15 +153,23 @@ define([
                 $ta.val("");
             }
             if (show) {
-                $div.show(100);
-                $ta.css("height", minPx);
-                // scrollHeight prop works sometimes (e.g. groovy page) but not others (e.g. summary)
-                var height = $ta.prop("scrollHeight");
+                ViewUtils.setHeightAutomatically($ta, minPx, maxPx, false)
+                if (alwaysShow) { $div.show(100); }
+            } else {
+                $div.hide();
+            }
+        },
+        setHeightAutomatically: function($ta, minPx, maxPx, deferred) {
+            var height = $ta.prop("scrollHeight");
+            if ($ta.css("padding-top")) height -= parseInt($ta.css("padding-top"), 10)
+            if ($ta.css("padding-bottom")) height -= parseInt($ta.css("padding-bottom"), 10)
+//            log("scroll height "+height+" - old real height "+$ta.css("height"))
+            if (height==0 && !deferred) {
+                _.defer(function() { ViewUtils.setHeightAutomatically($ta, minPx, maxPx, true) })
+            } else {
                 height = Math.min(height, maxPx);
                 height = Math.max(height, minPx);
                 $ta.css("height", height);
-            } else {
-                $div.hide();
             }
         },
         each: function(collection, fn) {
@@ -171,6 +181,11 @@ define([
                 // try underscore
                 return _.each(collection, fn);
             }
+        },
+        // makes tooltips appear as white-on-black-bubbles rather than boring black-on-yellow-boxes
+        // but NB if the html is updated the tooltip can remain visible until page refresh
+        processTooltips: function($el) {
+            $el.find('*[rel="tooltip"]').tooltip();
         }
     };
     return ViewUtils;

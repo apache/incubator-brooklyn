@@ -1,23 +1,19 @@
-<div class="activity-row-details<% if (!updateOnly) { %> hide<% } %>">
+<div class="opened-row-details <% if (!updateOnly) { %> hide<% } %>">
 <% if (task == null) { %> <i>No information available</i> <% } else { %>
-  <div style="float: right;" class="toolbar-row">
-    <!--  <a class="handy icon-book toggleLog"></a> -->
-    <i class="handy icon-folder-open toggleFullDetail"></i>
-  </div>
-  <div><b><i><%= task.description %></i></b></div>
   <div>
-    <% if (task.startTimeUtc) { %>started <%= task.startTimeUtc %><% 
-        if (task.submitTimeUtc != task.startTimeUtc) { %> (submitted <%= task.submitTimeUtc %>)<% } 
-        if (task.endTimeUtc) { %>, finished <%= task.endTimeUtc %> 
-        <% } else { %>, in progress
-        <% } %>
-    <% } else { %>
-       submitted <%= task.submitTimeUtc %>, waiting
-    <% } %>
-    <% if (task.tags) { %>
-        <br/>
-        tags: <%= task.tags %>
-    <% } %>
+    <div class="expansion-header">
+      <div style="float: right;" class="toolbar-row">
+        <!--  <a class="handy icon-book toggleLog"></a> -->
+        <a href="<%= link %>"><i class="handy icon-file showJson" rel="tooltip" title="JSON direct link"></i></a>
+        <i class="handy icon-inbox toggleFullDetail" rel="tooltip" title="Show even more detail"></i>
+        <i class="handy icon-chevron-right showDrillDown" rel="tooltip" title="Drill into sub-tasks"></i>
+      </div>
+      <b><i><span class="task-description"><%= task.description %></span></i></b>
+    </div>
+    <div class="expansion-main">
+    </div>
+    <div class="expansion-footer">
+    </div>
   </div>
 <% } %>
 </div>

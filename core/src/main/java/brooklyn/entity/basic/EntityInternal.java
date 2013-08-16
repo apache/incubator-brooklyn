@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
+import brooklyn.entity.Effector;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;
@@ -19,7 +19,7 @@ import com.google.common.annotations.Beta;
  * for the brooklyn framework only).
  */
 @Beta
-public interface EntityInternal extends Entity {
+public interface EntityInternal extends EntityLocal {
     
     void addLocations(Collection<? extends Location> locations);
 
@@ -44,6 +44,9 @@ public interface EntityInternal extends Entity {
     @Beta
     public Map<AttributeSensor, Object> getAllAttributes();
 
+    @Beta
+    public void removeAttribute(AttributeSensor<?> attribute);
+    
     @Beta
     public void refreshInheritedConfig();
 
@@ -83,4 +86,13 @@ public interface EntityInternal extends Entity {
     ExecutionContext getExecutionContext();
     
     SubscriptionContext getSubscriptionContext();
+    
+    /** returns the dynamic type corresponding to the type of this entity instance */
+    @Beta
+    EntityDynamicType getMutableEntityType();
+
+    /** returns the effector registered against a given name */
+    @Beta
+    Effector<?> getEffector(String effectorName);
+    
 }

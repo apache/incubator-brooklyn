@@ -13,14 +13,13 @@ import java.lang.management.ThreadInfo;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -29,11 +28,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionManager;
+import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Identifiers;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.ExecutionList;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * The basic concrete implementation of a {@link Task} to be executed.
@@ -50,18 +56,22 @@ import com.google.common.base.Throwables;
  *
  * @see BasicTaskStub
  */
-public class BasicTask<T> extends BasicTaskStub implements Task<T> {
+public class BasicTask<T> implements Task<T> {
     protected static final Logger log = LoggerFactory.getLogger(BasicTask.class);
 
+    private String id = Identifiers.makeRandomId(8);
     protected Callable<T> job;
     public final String displayName;
     public final String description;
 
-    protected final Set tags = new LinkedHashSet();
+    protected final Set<Object> tags = new LinkedHashSet<Object>();
 
     protected String blockingDetails = null;
+    protected Task<?> blockingTask = null;
     Object extraStatusText = null;
 
+    ExecutionList listeners = new ExecutionList();
+    
     /**
      * Constructor needed to prevent confusion in groovy stubs when looking for default constructor,
      *
@@ -95,6 +105,22 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public BasicTask(Map flags, Runnable job) { this(flags, GroovyJavaMethods.<T>callableFromRunnable(job)); }
     public BasicTask(Closure<T> job) { this(GroovyJavaMethods.callableFromClosure(job)); }
     public BasicTask(Map flags, Closure<T> job) { this(flags, GroovyJavaMethods.callableFromClosure(job)); }
+
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Task)
+            return ((Task<?>)obj).getId().equals(getId());
+        return false;
+    }
 
     @Override
     public String toString() { 
@@ -131,6 +157,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
      * Tests should catch most things, but be careful if you change any of the above semantics.
      */
 
+    protected long queuedTimeUtc = -1;
     protected long submitTimeUtc = -1;
     protected long startTimeUtc = -1;
     protected long endTimeUtc = -1;
@@ -150,7 +177,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         this.em = em;
     }
     
-    synchronized void initResult(Future result) {
+    synchronized void initResult(ListenableFuture<T> result) {
         if (this.result != null) 
             throw new IllegalStateException("task "+this+" is being given a result twice");
         this.result = result;
@@ -160,6 +187,9 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     // metadata accessors ------------
 
     public Set<Object> getTags() { return Collections.unmodifiableSet(new LinkedHashSet(tags)); }
+    /** if the job is queued for submission (e.g. by another task) it can indicate that fact (and time) here;
+     * note tasks can (and often are) submitted without any queueing, in which case this value may be -1 */
+    public long getQueuedTimeUtc() { return queuedTimeUtc; }
     public long getSubmitTimeUtc() { return submitTimeUtc; }
     public long getStartTimeUtc() { return startTimeUtc; }
     public long getEndTimeUtc() { return endTimeUtc; }
@@ -172,6 +202,14 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 
     // basic fields --------------------
 
+    public boolean isQueuedOrSubmitted() {
+        return (queuedTimeUtc >= 0) || isSubmitted();
+    }
+
+    public boolean isQueuedAndNotSubmitted() {
+        return (queuedTimeUtc >= 0) && (!isSubmitted());
+    }
+
     public boolean isSubmitted() {
         return submitTimeUtc >= 0;
     }
@@ -180,12 +218,20 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         return startTimeUtc >= 0;
     }
 
+    /** marks the task as queued for execution */
+    protected void markQueued() {
+        if (queuedTimeUtc<0)
+            queuedTimeUtc = System.currentTimeMillis();
+    }
+
     public synchronized boolean cancel() { return cancel(true); }
     public synchronized boolean cancel(boolean mayInterruptIfRunning) {
         if (isDone()) return false;
         boolean cancel = true;
-        if (GroovyJavaMethods.truth(result)) { cancel = result.cancel(mayInterruptIfRunning); }
         cancelled = true;
+        if (result!=null) { 
+            cancel = result.cancel(mayInterruptIfRunning);
+        }
         notifyAll();
         return cancel;
     }
@@ -216,69 +262,118 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         }
     }
 
+    // future value --------------------
+
     public T get() throws InterruptedException, ExecutionException {
-        blockUntilStarted();
-        return result.get();
+        try {
+            if (!isDone())
+                Tasks.setBlockingTask(this);
+            blockUntilStarted();
+            return result.get();
+        } finally {
+            Tasks.resetBlockingTask();
+        }
     }
 
     public T getUnchecked() {
         try {
             return get();
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
     }
         
-    // future value --------------------
-
     public synchronized void blockUntilStarted() {
+        blockUntilStarted(null);
+    }
+    protected synchronized boolean blockUntilStarted(Duration timeout) {
+        Long endTime = timeout==null ? null : System.currentTimeMillis() + timeout.toMillisecondsRoundingUp();
         while (true) {
             if (cancelled) throw new CancellationException();
             if (result==null)
                 try {
-                    wait();
+                    if (timeout==null) {
+                        wait();
+                    } else {
+                        long remaining = endTime - System.currentTimeMillis();
+                        if (remaining>0)
+                            wait(remaining);
+                        else
+                            return false;
+                    }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     Throwables.propagate(e);
                 }
-            if (result!=null) return;
+            if (result!=null) return true;
         }
     }
 
     public void blockUntilEnded() {
-        try { blockUntilStarted(); } catch (Throwable t) {
+        blockUntilEnded(null);
+    }
+    public boolean blockUntilEnded(Duration timeout) {
+        Long endTime = timeout==null ? null : System.currentTimeMillis() + timeout.toMillisecondsRoundingUp();
+        try { 
+            boolean started = blockUntilStarted(timeout);
+            if (!started) return false;
+            if (timeout==null) {
+                result.get();
+            } else {
+                long remaining = endTime - System.currentTimeMillis();
+                if (remaining>0)
+                    result.get(remaining, TimeUnit.MILLISECONDS);
+            }
+            return isDone();
+        } catch (Throwable t) {
             if (log.isDebugEnabled())
                 log.debug("call from "+Thread.currentThread()+" blocking until "+this+" finishes ended with error: "+t);
             /* contract is just to log errors at debug, otherwise do nothing */
-            return; 
-        }
-        try { result.get(); } catch (Throwable t) {
-            if (log.isDebugEnabled())
-                log.debug("call from "+Thread.currentThread()+" blocking until "+this+" finishes ended with error: "+t);
-            /* contract is just to log errors at debug, otherwise do nothing */
-            return; 
+            return isDone(); 
         }
     }
 
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        return get(new Duration(timeout, unit));
+    }
+    
+    public T get(Duration duration) throws InterruptedException, ExecutionException, TimeoutException {
         long start = System.currentTimeMillis();
-        long milliseconds = TimeUnit.MILLISECONDS.convert(timeout, unit);
-        long end  = start + milliseconds;
-        while (end > System.currentTimeMillis()) {
+        Long end  = duration==null ? null : start + duration.toMillisecondsRoundingUp();
+        while (end==null || end > System.currentTimeMillis()) {
             if (cancelled) throw new CancellationException();
-            if (result == null) wait(end - System.currentTimeMillis());
+            if (result == null) {
+                synchronized (this) {
+                    long remaining = end - System.currentTimeMillis();
+                    if (result==null && remaining>0)
+                        wait(remaining);
+                }
+            }
             if (result != null) break;
         }
-        long remaining = end -  System.currentTimeMillis();
-        if (remaining > 0) {
+        Long remaining = end==null ? null : end -  System.currentTimeMillis();
+        if (isDone()) {
+            return result.get(1, TimeUnit.MILLISECONDS);
+        } else if (remaining == null) {
+            return result.get();
+        } else if (remaining > 0) {
             return result.get(remaining, TimeUnit.MILLISECONDS);
         } else {
             throw new TimeoutException();
         }
     }
 
+    @Override
+    public T getUnchecked(Duration duration) {
+        try {
+            return get(duration);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    // ------------------ status ---------------------------
+    
     /**
      * Returns a brief status string
      *
@@ -321,14 +416,14 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
             rv = "Submitted for execution";
             if (verbosity>0) {
                 long elapsed = System.currentTimeMillis() - submitTimeUtc;
-                rv += " "+elapsed+" ms ago";
+                rv += " "+Time.makeTimeStringRoundedSince(elapsed)+" ago";
             }
             if (verbosity >= 2 && getExtraStatusText()!=null) {
                 rv += "\n\n"+getExtraStatusText();
             }
         } else if (isDone()) {
             long elapsed = endTimeUtc - submitTimeUtc;
-            String duration = ""+elapsed+" ms";
+            String duration = Time.makeTimeStringRounded(elapsed);
             rv = "Ended ";
             if (isCancelled()) {
                 rv += "by cancellation";
@@ -415,14 +510,22 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		if (getThread()==null)
 			//thread might have moved on to a new task; if so, recompute (it should now say "done")
 			return getStatusString(verbosity);
-		
-		if (verbosity >= 1 && GroovyJavaMethods.truth(blockingDetails)) {
-		    if (verbosity==1)
-		        // short status string will just show blocking details
-		        return blockingDetails;
-		    //otherwise show the blocking details, then a new line, then additional information
-		    rv = blockingDetails + "\n\n";
-		}
+        
+        if (verbosity >= 1 && GroovyJavaMethods.truth(blockingDetails)) {
+            if (verbosity==1)
+                // short status string will just show blocking details
+                return blockingDetails;
+            //otherwise show the blocking details, then a new line, then additional information
+            rv = blockingDetails + "\n\n";
+        }
+        
+        if (verbosity >= 1 && GroovyJavaMethods.truth(blockingTask)) {
+            if (verbosity==1)
+                // short status string will just show blocking details
+                return "Waiting on "+blockingTask;
+            //otherwise show the blocking details, then a new line, then additional information
+            rv = "Waiting on "+blockingTask + "\n\n";
+        }
 
 		if (verbosity>=2) {
             if (getExtraStatusText()!=null) {
@@ -434,13 +537,13 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		        rv += "Submitted by "+submittedByTask+"\n";
 		    }
 
-		    if (this instanceof CompoundTask) {
+		    if (this instanceof HasTaskChildren) {
 		        // list children tasks for compound tasks
 		        try {
-		            List<Task> childrenTasks = ((CompoundTask)this).getChildrenTasks();
-		            if (!childrenTasks.isEmpty()) {
+		            Iterable<Task<?>> childrenTasks = ((HasTaskChildren)this).getChildren();
+		            if (childrenTasks.iterator().hasNext()) {
 		                rv += "Children:\n";
-		                for (Task child: childrenTasks) {
+		                for (Task<?> child: childrenTasks) {
 		                    rv += "  "+child+": "+child.getStatusDetail(false)+"\n";
 		                }
 		            }
@@ -514,9 +617,24 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public void setBlockingDetails(String blockingDetails) {
         this.blockingDetails = blockingDetails;
     }
-    
+    public void setBlockingTask(Task<?> blockingTask) {
+        this.blockingTask = blockingTask;
+    }
+    public void resetBlockingDetails() {
+        this.blockingDetails = null;
+    }
+    public void resetBlockingTask() {
+        this.blockingTask = null;
+    }
+
+    /** returns a textual message giving details while the task is blocked */
     public String getBlockingDetails() {
         return blockingDetails;
+    }
+    
+    /** returns a task that this task is blocked on */
+    public Task<?> getBlockingTask() {
+        return blockingTask;
     }
     
     public void setExtraStatusText(Object extraStatus) {
@@ -524,6 +642,61 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     }
     public Object getExtraStatusText() {
         return extraStatusText;
+    }
+
+    // ---- add a way to warn if task is not run
+    
+    public interface TaskFinalizer {
+        public void onTaskFinalization(Task<?> t);
+    }
+
+    public static final TaskFinalizer WARN_IF_NOT_RUN = new TaskFinalizer() {
+        @Override
+        public void onTaskFinalization(Task<?> t) {
+            if (!t.isDone()) {
+                // shouldn't happen
+                log.warn("Task "+this+" is being finalized before completion");
+                return;
+            }
+            if (!Tasks.isAncestorCancelled(t) && !t.isSubmitted()) {
+                log.warn("Task "+this+" was never submitted; did the code forget to run it?");
+            }
+        }
+    };
+
+    public static final TaskFinalizer NO_OP = new TaskFinalizer() {
+        @Override
+        public void onTaskFinalization(Task<?> t) {
+        }
+    };
+    
+    public void ignoreIfNotRun() {
+        setFinalizer(NO_OP);
+    }
+    
+    public void setFinalizer(TaskFinalizer f) {
+        TaskFinalizer finalizer = Tasks.tag(this, TaskFinalizer.class, false);
+        if (finalizer!=null && finalizer!=f)
+            throw new IllegalStateException("Cannot apply multiple finalizers");
+        if (isDone())
+            throw new IllegalStateException("Finalizer cannot be set on task "+this+" after it is finished");
+        tags.add(f);
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        TaskFinalizer finalizer = Tasks.tag(this, TaskFinalizer.class, false);
+        if (finalizer==null) finalizer = WARN_IF_NOT_RUN;
+        finalizer.onTaskFinalization(this);
+    }
+    
+    @Override
+    public void addListener(Runnable listener, Executor executor) {
+        listeners.add(listener, executor);
+    }
+    
+    void runListeners() {
+        listeners.execute();
     }
     
 }

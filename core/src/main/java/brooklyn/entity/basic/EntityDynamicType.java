@@ -22,13 +22,15 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
+import brooklyn.entity.basic.EffectorTasks.EffectorBodyTaskFactory;
+import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.text.Strings;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
@@ -119,6 +121,8 @@ public class EntityDynamicType {
         return entityClass;
     }
     
+    // --------------------------------------------------
+    
     /**
      * @return the effector with the given name, or null if not found
      */
@@ -128,13 +132,36 @@ public class EntityDynamicType {
     
     /**
      * Effectors available on this entity.
-     *
-     * NB no work has been done supporting changing this after initialization,
-     * but the idea of these so-called "dynamic effectors" has been discussed and it might be supported in future...
      */
     public Map<String,Effector<?>> getEffectors() {
         return Collections.unmodifiableMap(effectors);
     }
+    
+    /**
+     * Adds the given {@link Effector} to this entity.
+     */
+    @Beta
+    public void addEffector(Effector<?> newEffector) {
+        Effector<?> oldEffector = effectors.put(newEffector.getName(), newEffector);
+        snapshotValid.set(false);
+        if (oldEffector!=null)
+            entity.emit(AbstractEntity.EFFECTOR_CHANGED, newEffector.getName());
+        else
+            entity.emit(AbstractEntity.EFFECTOR_ADDED, newEffector.getName());
+    }
+
+    /** Adds an effector with an explicit body */
+    @Beta
+    public <T> void addEffector(Effector<T> effector, EffectorTaskFactory<T> body) {
+        addEffector(new EffectorAndBody<T>(effector, body));
+    }
+    /** Adds an effector with an explicit body */
+    @Beta
+    public <T> void addEffector(Effector<T> effector, EffectorBody<T> body) {
+        addEffector(effector, new EffectorBodyTaskFactory<T>(body));
+    }
+
+    // --------------------------------------------------
     
     /**
      * Sensors available on this entity.
@@ -148,13 +175,6 @@ public class EntityDynamicType {
      */
     public Sensor<?> getSensor(String sensorName) {
         return sensors.get(sensorName);
-    }
-
-    /**
-     * ConfigKeys available on this entity.
-     */
-    public Map<String,ConfigKey<?>> getConfigKeys() {
-        return Collections.unmodifiableMap(value(configKeys));
     }
 
     /**
@@ -206,6 +226,17 @@ public class EntityDynamicType {
         return (removeSensor(sensor.getName()) != null);
     }
     
+    // --------------------------------------------------
+    
+    // --------------------------------------------------
+    
+    /**
+     * ConfigKeys available on this entity.
+     */
+    public Map<String,ConfigKey<?>> getConfigKeys() {
+        return Collections.unmodifiableMap(value(configKeys));
+    }
+
     /**
      * ConfigKeys available on this entity.
      */
@@ -233,6 +264,7 @@ public class EntityDynamicType {
             Map<String,Effector<?>> result = Maps.newLinkedHashMap();
             Map<String,Field> fieldSources = Maps.newLinkedHashMap();
             Map<String,Method> methodSources = Maps.newLinkedHashMap();
+            
             for (Field f : Reflections.findPublicFieldsOrderedBySuper(clazz)) {
                 if (Effector.class.isAssignableFrom(f.getType())) {
                     if (!Modifier.isStatic(f.getModifiers())) {
@@ -243,8 +275,8 @@ public class EntityDynamicType {
                     Effector<?> eff = (Effector<?>) f.get(optionalEntity);
                     Effector<?> overwritten = result.put(eff.getName(), eff);
                     Field overwrittenFieldSource = fieldSources.put(eff.getName(), f);
-                    if (overwritten!=null && !overwritten.equals(eff)) {
-                        LOG.warn("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
+                    if (overwritten!=null && !Effectors.sameInstance(overwritten, eff)) {
+                        LOG.debug("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
                                 eff.getName(), (optionalEntity != null ? optionalEntity : clazz), eff, f, overwritten, 
                                 overwrittenFieldSource});
                     }
@@ -261,11 +293,16 @@ public class EntityDynamicType {
                     }
 
                     Effector<?> eff = MethodEffector.create(m);
-                    Effector<?> overwritten = result.put(eff.getName(), eff);
-                    Method overwrittenMethodSource = methodSources.put(eff.getName(), m);
-                    Field overwrittenFieldSource = fieldSources.remove(eff.getName());
-                    if (overwritten != null && !overwritten.equals(eff)) {
-                        LOG.warn("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
+                    Effector<?> overwritten = result.get(eff.getName());
+                    
+                    if ((overwritten instanceof EffectorWithBody) && !(overwritten instanceof MethodEffector<?>)) {
+                        // don't let annotations on methods override a static, unless that static is a MethodEffector
+                        // TODO not perfect, but approx right; we should clarify whether we prefer statics or methods
+                    } else {
+                        result.put(eff.getName(), eff);
+                        Method overwrittenMethodSource = methodSources.put(eff.getName(), m);
+                        Field overwrittenFieldSource = fieldSources.remove(eff.getName());
+                        LOG.debug("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
                                 eff.getName(), (optionalEntity != null ? optionalEntity : clazz), eff, m, overwritten, 
                                 (overwrittenMethodSource != null ? overwrittenMethodSource : overwrittenFieldSource)});
                     }

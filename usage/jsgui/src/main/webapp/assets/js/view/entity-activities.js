@@ -3,9 +3,13 @@
  */
 define([
     "underscore", "jquery", "backbone", "brooklyn-utils", "view/viewutils",
-    "text!tpl/apps/activities.html", "text!tpl/apps/activity-row-details.html", "text!tpl/apps/activity-full-details.html", 
-    "bootstrap", "formatJson", "jquery-datatables", "datatables-extensions"
-], function (_, $, Backbone, Util, ViewUtils, ActivitiesHtml, ActivityRowDetailsHtml, ActivityFullDetailsHtml) {
+    "view/activity-details",
+    "text!tpl/apps/activities.html", "text!tpl/apps/activity-table.html", 
+    "text!tpl/apps/activity-row-details.html", "text!tpl/apps/activity-row-details-main.html",
+    "text!tpl/apps/activity-full-details.html", 
+    "bootstrap", "formatJson", "jquery-datatables", "datatables-extensions", "moment"
+], function (_, $, Backbone, Util, ViewUtils, ActivityDetailsView, 
+    ActivitiesHtml, ActivityTableHtml, ActivityRowDetailsHtml, ActivityRowDetailsMainHtml, ActivityFullDetailsHtml) {
 
     var ActivitiesView = Backbone.View.extend({
         template:_.template(ActivitiesHtml),
@@ -13,17 +17,20 @@ define([
         refreshActive:true,
         selectedId:null,
         selectedRow:null,
+        activityDetailsPanel:null,
         events:{
-            "click #activities-table tr":"rowClick",
+            "click .activity-table tr":"rowClick",
             'click .refresh':'refreshNow',
             'click .toggleAutoRefresh':'toggleAutoRefresh',
+            'click .showDrillDown':'showDrillDown',
             'click .toggleFullDetail':'toggleFullDetail'
         },
         initialize:function () {
             this.$el.html(this.template({ }));
+            this.$('#activities-root').html(_.template(ActivityTableHtml))
             $.ajaxSetup({ async:false });
             var that = this,
-                $table = that.$('#activities-table');
+                $table = that.$('#activities-root .activity-table');
             that.collection.url = that.model.getLinkByName("activities");
             that.table = ViewUtils.myDataTable($table, {
                 "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
@@ -38,15 +45,6 @@ define([
                                      "aTargets": [ 1, 2, 3 ]
                                  },
                                  { "bVisible": false,  "aTargets": [ 0 ] }
-                                 // or could use a chevron
-//                                 {
-//                                     "mRender": function ( data, type, row ) {
-//                                         return '<i class="activity-expander icon-chevron-right handy"></i>'
-//                                     },
-//                                     "bSortable": false,
-//                                     "sWidth": "20px",
-//                                     "aTargets": [ 0 ]
-//                                 }
                              ]            
             });
             
@@ -64,6 +62,10 @@ define([
         refreshNow: function() {
             this.collection.fetch({reset: true});
         },
+        render:function () {
+            this.updateActivitiesNow(this);
+            return this;
+        },
         beforeClose:function () {
             this.collection.off("reset", this.render);
         },
@@ -73,49 +75,54 @@ define([
         enableAutoRefresh: function(isEnabled) {
             this.refreshActive = isEnabled
         },
-        render:function () {
+        refreshNow: function() {
+            this.collection.fetch();
+            this.table.fnAdjustColumnSizing();
+        },
+        updateActivitiesNow: function() {
             var that = this;
-            if (that.table == null || this.collection.length==0) {
+            if (this.table == null || this.collection.length==0) {
                 // nothing to do
             } else {
-                ViewUtils.updateMyDataTable(that.table, that.collection, function(task, index) {
-                    return [ 
-                                  // columns are: id, name, when submitted, status         
-                                  task.get("id"),
-                                  task.get("displayName"),
-                                  task.get("submitTimeUtc"),
-                                  task.get("currentStatus")
-                              ];
-                    //also have:
-//                  startTimeUtc:task.get("startTimeUtc"),
-//                  endTimeUtc:task.get("endTimeUtc"),
-//                  entityDisplayName:task.get("entityDisplayName")
-                })
+                var topLevelTasks = []
+                for (taskI in this.collection.models) {
+                    var task = this.collection.models[taskI]
+                    var submitter = task.get("submittedByTask")
+                    if ((submitter==null) ||
+                        (submitter!=null && this.collection.get(submitter.metadata.id)==null)
+                    ) {                        
+                        topLevelTasks.push(task)
+                    }
+                }
+                ViewUtils.updateMyDataTable(that.table, topLevelTasks, function(task, index) {
+                    return [ task.get("id"),
+                             task.get("displayName"),
+                             moment(task.get("submitTimeUtc")).calendar(),
+                             task.get("currentStatus")
+                    ]; 
+                });
                 this.showDetailRow(true);
             }
             return this;
         },
         rowClick:function(evt) {
-            
-//            $(this).toggleClass('icon-chevron-down icon-chevron-right')
-//            var open = $(this).hasClass('icon-chevron-down')
-            
             var that = this;
             var row = $(evt.currentTarget).closest("tr");
+            var table = $(evt.currentTarget).closest(".activity-table");
             var id = row.attr("id");
             
             if (id==null)
                 // is the details row, ignore click here
                 return;
-            
-            $("#activities-table tr").removeClass("selected");
+
+            $(table).find("tr").removeClass("selected");
             
             if (this.selectedRow!=null) {
                 var r = this.selectedRow;
                 // slide it up, then close once it is hidden (else it vanishes suddenly)
                 // the slide effect isn't just cool, it helps keep rows in a visually consistent place
                 // (so that it doesn't just jump when you click, if a row above it was previously selected)
-                $('tr[#'+id+'] .activity-row-details').slideUp(50, "swing", function() { 
+                $('tr[#'+id+'] .opened-row-details').slideUp(300, function() { 
                     that.table.fnClose(r);
                 })
             }
@@ -124,7 +131,7 @@ define([
                 // deselected
                 this.selectedRow = null;
                 this.selectedId = null;
-                this.showFullActivity(null);
+                this.hideFullActivity(id);
             } else {
                 row.addClass("selected");
                 this.selectedRow = row[0];
@@ -133,37 +140,95 @@ define([
                 this.showDetailRow(false);
             }
         },
-        
         showDetailRow: function(updateOnly) {
-            var id = this.selectedId;
+//            // auto-drill-down -- useful for testing
+//            if (this.selectedId==null) {
+//                log("auto-selecting")
+//                this.selectedId = this.collection.models[0].get('id')
+//                this.showDrillDownTask(this.selectedId)
+//            }
+            
+            var id = this.selectedId,
+                that = this;
             if (id==null) return;
             var task = this.collection.get(id);
             if (task==null) return;
-            var html = _.template(ActivityRowDetailsHtml, { task: task==null ? null : task.attributes, updateOnly: updateOnly })
-            $('tr#'+id).next().find('.row-expansion').html(html)
-            $('tr#'+id).next().find('.row-expansion .activity-row-details').slideDown(50);
+            if (!updateOnly) {
+                var html = _.template(ActivityRowDetailsHtml, { 
+                    task: task==null ? null : task.attributes,
+                    link: that.model.getLinkByName("activities")+"/"+id,
+                    updateOnly: updateOnly 
+                })
+                $('tr#'+id).next().find('td.row-expansion').html(html)
+                $('tr#'+id).next().find('td.row-expansion').attr('id', id)
+            } else {
+                // just update
+                $('tr#'+id).next().find('.task-description').html(Util.prep(task.attributes.description))
+            }
+            
+            var html = _.template(ActivityRowDetailsMainHtml, { 
+                task: task==null ? null : task.attributes,
+                link: that.model.getLinkByName("activities")+"/"+id,
+                updateOnly: updateOnly 
+            })
+            $('tr#'+id).next().find('.expansion-main').html(html)
+            
+            
+            if (!updateOnly) {
+                $('tr#'+id).next().find('.row-expansion .opened-row-details').hide()
+                $('tr#'+id).next().find('.row-expansion .opened-row-details').slideDown(300)
+            }
         },
-        toggleFullDetail: function() {
+        toggleFullDetail: function(evt) {
             var i = $('.toggleFullDetail');
+            var id = i.closest("td.row-expansion").attr('id')
             i.toggleClass('active')
             if (i.hasClass('active'))
-                this.showFullActivity()
+                this.showFullActivity(id)
             else
-                this.hideFullActivity()
+                this.hideFullActivity(id)
         },
-        showFullActivity: function() {
-            var id = this.selectedId
+        showFullActivity: function(id) {
+            id = this.selectedId
+            var $details = $("td.row-expansion#"+id+" .expansion-footer");
             var task = this.collection.get(id);
-            if (task==null) {
-                this.hideFullActivity();
-                return;
-            }
             var html = _.template(ActivityFullDetailsHtml, { task: task });
-            $("#activity-details").html(html);
-            $("#activity-details").slideDown(100);
+            $details.html(html);
+            $details.slideDown(100);
+            _.defer(function() { ViewUtils.setHeightAutomatically($('textarea',$details), 30, 200) })
         },
-        hideFullActivity: function() {
-            $("#activity-details").slideUp(100);
+        hideFullActivity: function(id) {
+            id = this.selectedId
+            var $details = $("td.row-expansion#"+id+" .expansion-footer");
+            $details.slideUp(100);
+        },
+        showDrillDown: function(event) {
+            this.showDrillDownTask($(event.currentTarget).closest("td.row-expansion").attr("id"));
+        },
+        showDrillDownTask: function(taskId) {    
+            this.activityDetailsPanel = new ActivityDetailsView({
+                task: this.collection.get(taskId),
+                collection: this.collection,
+                breadcrumbs: ''
+            })
+            var $t = this.$('#activities-root')
+            $t2 = $t.after('<div>').next()
+            $t2.addClass('slide-panel')
+            
+            $t2.html(this.activityDetailsPanel.render().el)
+
+            $t.animate({
+                    left: -600
+                }, 300, function() { 
+                    $t.hide() 
+                });
+
+            $t2.show().css({
+                    left: 600
+                    , top: 0
+                }).animate({
+                    left: 0
+                }, 300);
         }
     });
 

@@ -36,4 +36,10 @@ public interface ExecutionContext extends Executor {
     <T> Task<T> submit(Map<?, ?> properties, Callable<T> callable);
 
     <T> Task<T> submit(Task<T> task);
+    
+    /**
+     * See {@link ExecutionManager#submit(Map, Task)} for properties that can be passed in.
+     */
+    public <T> Task<T> submit(Map<?, ?> properties, Task<T> task);
+
 }

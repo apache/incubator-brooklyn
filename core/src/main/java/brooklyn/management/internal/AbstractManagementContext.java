@@ -1,5 +1,7 @@
 package brooklyn.management.internal;
 
+import static java.lang.String.format;
+
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.Collection;
@@ -10,8 +12,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
-import brooklyn.internal.storage.BrooklynStorageFactory;
-import brooklyn.internal.storage.impl.inmemory.InMemoryBrooklynStorageFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEffector;
+import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.BasicEntityDriverManager;
 import brooklyn.entity.drivers.EntityDriverManager;
@@ -32,6 +32,8 @@ import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.internal.storage.BrooklynStorage;
+import brooklyn.internal.storage.BrooklynStorageFactory;
+import brooklyn.internal.storage.impl.inmemory.InMemoryBrooklynStorageFactory;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
@@ -39,7 +41,6 @@ import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.Tasks;
@@ -47,8 +48,6 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
-
-import static java.lang.String.format;
 
 public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
@@ -59,7 +58,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             clazzName = InMemoryBrooklynStorageFactory.class.getName();
         }
 
-        Class clazz;
+        Class<?> clazz;
         try{
             //todo: which classloader should we use?
             clazz = LocalManagementContext.class.getClassLoader().loadClass(clazzName);
@@ -162,11 +161,13 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return totalEffectorInvocationCount.get();
     }
     
-    public ExecutionContext getExecutionContext(Entity e) { 
-        return new BasicExecutionContext(MutableMap.of("tag", e), getExecutionManager());
+    public ExecutionContext getExecutionContext(Entity e) {
+        // BEC is a thin wrapper around EM so fine to create a new one here
+        return new BasicExecutionContext(MutableMap.of("tag", BrooklynTasks.tagForContextEntity(e)), getExecutionManager());
     }
     
     public SubscriptionContext getSubscriptionContext(Entity e) {
+        // BSC is a thin wrapper around SM so fine to create a new one here
         return new BasicSubscriptionContext(getSubscriptionManager(), e);
     }
 
@@ -218,19 +219,9 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected abstract void manageIfNecessary(Entity entity, Object context);
 
     public <T> Task<T> invokeEffector(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {
-        return runAtEntity(
-                MutableMap.builder()
-                        .put("description", "invoking "+eff.getName()+" on "+entity+" ("+entity.getDisplayName()+")")
-                        .put("displayName", eff.getName())
-                        .put("tags", MutableList.of(EFFECTOR_TAG))
-                        .build(), 
-                entity, 
-                new Callable<T>() {
-                    public T call() {
-                        return ((AbstractEffector<T>)eff).call(entity, parameters);
-                    }});
+        return runAtEntity(entity, eff, parameters);
     }
-
+    
     protected <T> T invokeEffectorMethodLocal(Entity entity, Effector<T> eff, Object args) {
         assert isManagedLocally(entity) : "cannot invoke effector method at "+this+" because it is not managed here";
         totalEffectorInvocationCount.incrementAndGet();
@@ -246,15 +237,10 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException {
         try {
             Task<?> current = Tasks.current();
-            if (current == null || !current.getTags().contains(entity) || !isManagedLocally(entity)) {
+            if (current == null || !entity.equals(BrooklynTasks.getContextEntity(current)) || !isManagedLocally(entity)) {
                 manageIfNecessary(entity, eff.getName());
                 // Wrap in a task if we aren't already in a task that is tagged with this entity
-                Task<T> task = runAtEntity(
-                        MutableMap.builder()
-                                .put("description", "invoking "+eff.getName()+" on "+entity+" ("+entity.getDisplayName()+")")
-                                .put("displayName", eff.getName())
-                                .put("tags", MutableList.of(EFFECTOR_TAG))
-                                .build(), 
+                Task<T> task = runAtEntity( EffectorUtils.getTaskFlagsForEffectorInvocation(entity, eff),
                         entity, 
                         new Callable<T>() {
                             public T call() {
@@ -279,8 +265,14 @@ public abstract class AbstractManagementContext implements ManagementContextInte
      *
      * Returns the actual task (if it is local) or a proxy task (if it is remote);
      * if management for the entity has not yet started this may start it.
+     * 
+     * @deprecated since 0.6.0 use effectors (or support {@link #runAtEntity(Entity, Task)} if something else is needed);
+     * (Callable with Map flags is too open-ended, bothersome to support, and not used much) 
      */
+    @Deprecated
     public abstract <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c);
+
+    protected abstract <T> Task<T> runAtEntity(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters);
 
     public abstract void addEntitySetListener(CollectionChangeListener<Entity> listener);
 

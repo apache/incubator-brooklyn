@@ -10,12 +10,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
-import brooklyn.management.ExecutionContext;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Maps;
 
 /**
  * A means of executing tasks against an ExecutionManager with a given bucket/set of tags pre-defined
@@ -53,7 +54,7 @@ public class BasicExecutionContext extends AbstractExecutionContext {
     }
     
     /** returns tasks started by this context (or tasks which have all the tags on this object) */
-    public Set<Task<?>> getTasks() { return executionManager.getTasksWithAllTags((Set)tags); }
+    public Set<Task<?>> getTasks() { return executionManager.getTasksWithAllTags((Set<?>)tags); }
 
     //these conform with ExecutorService but we do not want to expose shutdown etc here
      
@@ -61,7 +62,17 @@ public class BasicExecutionContext extends AbstractExecutionContext {
     @Override
     protected <T> Task<T> submitInternal(Map properties, Object task) {
         if (properties.get("tags")==null) properties.put("tags", new ArrayList()); 
-        ((Collection)properties.get("tags")).addAll(tags);
+        Collection localTags = (Collection)properties.get("tags");
+        localTags.addAll(tags);
+        
+        // FIXME this is brooklyn-specific logic, should be moved to a BrooklynExecContext subclass;
+        // the issue is that we want to ensure that cross-entity calls switch contexts;
+        // previously it was all very messy how that was happened (and it didn't really)
+        if (task instanceof Task<?>) localTags.addAll( ((Task<?>)task).getTags() ); 
+        Entity target = BrooklynTasks.getWrappedEntityOfType(localTags, BrooklynTasks.TARGET_ENTITY);
+        if (target!=null && !tags.contains(BrooklynTasks.tagForContextEntity(target)) && task instanceof Task<?>) {
+            return ((EntityInternal)target).getExecutionContext().submit((Task<T>)task);
+        }
         
         final Object startCallback = properties.get("newTaskStartCallback");
         properties.put("newTaskStartCallback", new Function<Object,Void>() {

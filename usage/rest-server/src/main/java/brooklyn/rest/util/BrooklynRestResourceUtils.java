@@ -43,6 +43,7 @@ import brooklyn.rest.domain.EntitySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;
 
@@ -251,7 +252,7 @@ public class BrooklynRestResourceUtils {
         };
 
         ArrayList<Location> locations = Lists.newArrayList(transform(spec.getLocations(), buildLocationFromId));
-        return Entities.invokeEffectorWithMap((EntityLocal)app, app, Startable.START,
+        return Entities.invokeEffector((EntityLocal)app, app, Startable.START,
                 MutableMap.of("locations", locations));
     }
 
@@ -296,7 +297,7 @@ public class BrooklynRestResourceUtils {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
             Class interfaceclazz = (Application.class.isAssignableFrom(clazz)) ? Application.class : Entity.class;
-            Class<?>[] additionalInterfaceClazzes = clazz.getInterfaces();
+            Set<Class<?>> additionalInterfaceClazzes = Reflections.getInterfacesIncludingClassAncestors(clazz);
             result = brooklyn.entity.proxying.EntitySpec.create(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
         }
         
@@ -323,7 +324,10 @@ public class BrooklynRestResourceUtils {
     }
     
     public Task<?> destroy(final Application application) {
-        return mgmt.getExecutionManager().submit(new Runnable() {
+        return mgmt.getExecutionManager().submit(
+                MutableMap.of("displayName", "destroying "+application,
+                        "description", "REST call to destroy application "+application.getDisplayName()+" ("+application+")"),
+                new Runnable() {
             @Override
             public void run() {
                 ((EntityInternal)application).destroy();

@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 
@@ -24,7 +25,7 @@ import brooklyn.util.collections.MutableMap;
  * This class holds the collection of child tasks, but subclasses have the responsibility of executing them in a
  * sensible manner by implementing the abstract {@link #runJobs} method.
  */
-public abstract class CompoundTask<T> extends BasicTask<List<T>> {
+public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasTaskChildren {
 
     private static final Logger log = LoggerFactory.getLogger(CompoundTask.class);
                 
@@ -51,6 +52,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> {
         this(MutableMap.of("tag", "compound"), jobs);
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public CompoundTask(Map<String,?> flags, Collection<?> jobs) {
         super(flags);
         super.job = new Callable<List<T>>() {
@@ -63,13 +65,15 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> {
         this.children = new ArrayList<Task<? extends T>>(jobs.size());
         for (Object job : jobs) {
             if (job instanceof Task)          { children.add((Task) job); }
-            else if (job instanceof Closure)  { children.add(new BasicTask((Closure) job)); }
-            else if (job instanceof Callable) { children.add(new BasicTask((Callable) job)); }
-            else if (job instanceof Runnable) { children.add(new BasicTask((Runnable) job)); }
+            else if (job instanceof Closure)  { children.add(new BasicTask<T>((Closure) job)); }
+            else if (job instanceof Callable) { children.add(new BasicTask<T>((Callable) job)); }
+            else if (job instanceof Runnable) { children.add(new BasicTask<T>((Runnable) job)); }
             
             else throw new IllegalArgumentException("Invalid child "+job+
                 " passed to compound task; must be Runnable, Callable, Closure or Task");
         }
+        for (Task<?> t: getChildren())
+            ((BasicTask<?>)t).markQueued();
     }
 
     /** return value needs to be specified by subclass; subclass should also setBlockingDetails 
@@ -93,8 +97,13 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> {
         }
     }
     
-    protected List<Task<? extends T>> getChildrenTasks() {
+    public List<Task<? extends T>> getChildrenTyped() {
         return children;
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public List<Task<?>> getChildren() {
+        return (List) getChildrenTyped();
     }
     
 }

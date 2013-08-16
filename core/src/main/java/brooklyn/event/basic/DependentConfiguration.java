@@ -2,18 +2,23 @@ package brooklyn.event.basic;
 
 import groovy.lang.Closure;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
@@ -73,7 +78,7 @@ public class DependentConfiguration {
      */
     public static <T> Task<T> attributeWhenReady(final Entity source, final AttributeSensor<T> sensor, final Predicate<? super T> ready) {
         return new BasicTask<T>(
-                MutableMap.of("tag", "attributeWhenReady", "displayName", "retrieving "+source+" "+sensor), 
+                MutableMap.of("tag", "attributeWhenReady", "displayName", "retrieving sensor "+sensor.getName()+" from "+source.getDisplayName()), 
                 new Callable<T>() {
                     public T call() {
                         return waitInTaskForAttributeReady(source, sensor, ready);
@@ -124,7 +129,7 @@ public class DependentConfiguration {
         if (ready.apply(value)) return value;
         BasicTask current = (BasicTask) Tasks.current();
         if (current == null) throw new IllegalStateException("Should only be invoked in a running task");
-        Entity entity = (Entity)Iterables.find(current.getTags(), Predicates.instanceOf(Entity.class));
+        Entity entity = BrooklynTasks.getTargetOrContextEntity(current);
         if (entity == null) throw new IllegalStateException("Should only be invoked in a running task with an entity tag; "+
                 current+" has no entity tag ("+current.getStatusDetail(false)+")");
         final AtomicReference<T> data = new AtomicReference<T>();
@@ -138,9 +143,9 @@ public class DependentConfiguration {
                 }});
             value = source.getAttribute(sensor);
             while (!ready.apply(value)) {
-                current.setBlockingDetails("Waiting for notification from subscription on "+source+" "+sensor);
+                current.setBlockingDetails("Waiting for ready from "+source+" "+sensor+" (subscription)");
                 semaphore.acquire();
-                current.setBlockingDetails(null);
+                current.resetBlockingDetails();
                 value = data.get();
             }
             if (LOG.isDebugEnabled()) LOG.debug("Attribute-ready for {} in entity {}", sensor, source);
@@ -172,33 +177,57 @@ public class DependentConfiguration {
      * the value that is used for the configuration
      */
     public static <U,T> Task<T> transform(final Task<U> task, final Function<U,T> transformer) {
-        return new BasicTask<T>(new Callable<T>() {
+        return transform(MutableMap.of("displayName", "transforming "+task), task, transformer);
+    }
+ 
+    /** @see #transform(Task, Function) */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static <U,T> Task<T> transform(Task<U> task, Closure transformer) {
+        return transform(task, GroovyJavaMethods.functionFromClosure(transformer));
+    }
+    
+    /** @see #transform(Task, Function) */
+    public static <U,T> Task<T> transform(final Map flags, final Task<U> task, final Function<U,T> transformer) {
+        return new BasicTask<T>(flags, new Callable<T>() {
             public T call() throws Exception {
                 if (!task.isSubmitted()) {
                     BasicExecutionContext.getCurrentExecutionContext().submit(task);
                 } 
                 return transformer.apply(task.get());
-            }});
+            }});        
     }
- 
-    /** @see #transform(Task, Function) */
-    public static <U,T> Task<T> transform(Task<U> task, Closure transformer) {
-        return transform(task, GroovyJavaMethods.functionFromClosure(transformer));
-    }
-    
+     
     /** Returns a task which waits for multiple other tasks (submitting if necessary)
      * and performs arbitrary computation over the List of results.
      * @see #transform(Task, Function) but note argument order is reversed (counterintuitive) to allow for varargs */
     public static <U,T> Task<T> transformMultiple(Function<List<U>,T> transformer, Task<U> ...tasks) {
-        return transform(new ParallelTask(tasks), transformer);
+        return transformMultiple(MutableMap.of("displayName", "transforming multiple"), transformer, tasks);
     }
 
-    /** Returns a task which waits for multiple other tasks (submitting if necessary)
-     * and performs arbitrary computation over the List of results.
-     * @see #transform(Task, Function) but note argument order is reversed (counterintuitive) to allow for varargs */
+    /** @see #transformMultiple(Function, Task...) */
     public static <U,T> Task<T> transformMultiple(Closure transformer, Task<U> ...tasks) {
-        return transform(new ParallelTask(tasks), transformer);
+        return transformMultiple(GroovyJavaMethods.functionFromClosure(transformer), tasks);
     }
+
+    /** @see #transformMultiple(Function, Task...) */
+    public static <U,T> Task<T> transformMultiple(Map flags, Closure transformer, Task<U> ...tasks) {
+        return transformMultiple(flags, GroovyJavaMethods.functionFromClosure(transformer), tasks);
+    }
+    
+    /** @see #transformMultiple(Function, Task...) */
+    public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, Task<U> ...tasks) {
+        if (tasks.length==1) {
+            return transform(flags, tasks[0], new Function<U,T>() {
+                @Override @Nullable
+                public T apply(@Nullable U input) {
+                    return transformer.apply(Arrays.asList(input));
+                }
+                
+            });
+        }
+        return transform(flags, new ParallelTask(tasks), transformer);
+    }
+
 
     /** Method which returns a Future containing a string formatted using String.format,
      * where the arguments can be normal objects or tasks;

@@ -12,6 +12,7 @@ import brooklyn.entity.annotation.EffectorParam
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.BasicParameterType
+import brooklyn.entity.basic.BrooklynTasks
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.ExplicitEffector
 import brooklyn.entity.basic.MethodEffector
@@ -109,7 +110,8 @@ public class EffectorSayHiGroovyTest {
 
         ManagementContext managementContext = e.getManagementContext()
 
-        Set<Task> tasks = managementContext.getExecutionManager().getTasksWithAllTags([e,"EFFECTOR"])
+        Set<Task> tasks = managementContext.getExecutionManager().getTasksWithAllTags([
+            BrooklynTasks.tagForContextEntity(e),"EFFECTOR"])
         assertEquals(tasks.size(), 1)
         assertTrue(tasks.iterator().next().getDescription().contains("sayHi2"))
     }

@@ -336,6 +336,12 @@ public class TypeCoercions {
                 return input.toString();
             }
         });
+        registerAdapter(byte[].class, String.class, new Function<byte[],String>() {
+            @Override
+            public String apply(byte[] input) {
+                return new String(input);
+            }
+        });
         registerAdapter(Collection.class, Set.class, new Function<Collection,Set>() {
             @Override
             public Set apply(Collection input) {

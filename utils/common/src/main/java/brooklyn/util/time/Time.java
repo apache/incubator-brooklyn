@@ -69,6 +69,10 @@ public class Time {
         return makeTimeString(t, true);
     }
     /** @see #makeTimeString(long, boolean) */
+    public static String makeTimeStringRoundedSince(long utc) {
+        return makeTimeString(System.currentTimeMillis() - utc, true);
+    }
+    /** @see #makeTimeString(long, boolean) */
     public static String makeTimeStringExact(Duration d) {
         return makeTimeStringNanoExact(d.toNanoseconds());
     }
@@ -95,6 +99,9 @@ public class Time {
 	}
     /** @see #makeTimeString(long, boolean) */
 	public static String makeTimeStringNano(long tn, boolean round) {
+	    if (tn<0) return "-"+makeTimeStringNano(-tn, round);
+	    if (tn==0) return "0";
+	    
 		long tnm = tn % 1000000;
 		long t = tn/1000000;
 		String result = "";
@@ -224,7 +231,7 @@ public class Time {
 	
 	/** as {@link #sleep(long)} */
     public static void sleep(Duration duration) {
-        Time.sleep(duration.toMilliseconds());
+        Time.sleep(duration.toMillisecondsRoundingUp());
     }    
 
 	/**

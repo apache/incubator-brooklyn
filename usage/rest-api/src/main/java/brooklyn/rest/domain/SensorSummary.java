@@ -6,15 +6,11 @@ import java.util.Map;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 
 public class SensorSummary {
 
-    private static final Logger log = LoggerFactory.getLogger(SensorSummary.class);
-    
   private final String name;
   private final String type;
   @JsonSerialize(include=Inclusion.NON_NULL)

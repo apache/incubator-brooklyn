@@ -22,7 +22,6 @@ public interface ScriptApi {
     public static final String USER_DATA_MAP_SESSION_ATTRIBUTE = "brooklyn.script.groovy.user.data";
     public static final String USER_LAST_VALUE_SESSION_ATTRIBUTE = "brooklyn.script.groovy.user.last";
     
-    @SuppressWarnings("rawtypes")
     @POST
     @Path("/groovy")
     @Consumes("application/text")

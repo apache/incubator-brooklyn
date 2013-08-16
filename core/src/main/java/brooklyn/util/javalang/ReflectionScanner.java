@@ -67,7 +67,7 @@ public class ReflectionScanner extends Reflections {
         return classLoaderToSearch==null ? new ClassLoader[0] : new ClassLoader[] { classLoaderToSearch };
     }
 
-    /** overrides super so as not to log rather than throw exception if a class cannot be loaded */
+    /** overrides super so as to log rather than throw exception if a class cannot be loaded */
     @Override
     @SuppressWarnings("unchecked")
     public <T> Set<Class<? extends T>> getSubTypesOf(final Class<T> type) {

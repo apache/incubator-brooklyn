@@ -184,7 +184,7 @@ public class EffectorConcatenateTest {
 
                     // Expect spawned task to be have been tagged with entity
                     ExecutionManager em = e.getManagementContext().getExecutionManager();
-                    Task<?> subtask = Iterables.find(em.getTasksWithTag(e), new Predicate<Task<?>>() {
+                    Task<?> subtask = Iterables.find(BrooklynTasks.getTasksInEntityContext(em, e), new Predicate<Task<?>>() {
                         public boolean apply(Task<?> input) {
                             return "SpawnedChildName".equals(input.getDisplayName());
                         }
