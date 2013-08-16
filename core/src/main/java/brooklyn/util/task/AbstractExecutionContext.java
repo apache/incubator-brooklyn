@@ -3,11 +3,12 @@ package brooklyn.util.task;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import com.google.common.collect.Maps;
-
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
+import brooklyn.management.HasTask;
 import brooklyn.management.Task;
+
+import com.google.common.collect.Maps;
 
 public abstract class AbstractExecutionContext implements ExecutionContext {
 
@@ -31,7 +32,10 @@ public abstract class AbstractExecutionContext implements ExecutionContext {
  
     /** @see #submit(Map, Runnable) */
     public <T> Task<T> submit(Task<T> task) { return submitInternal(Maps.newLinkedHashMap(), task); }
-    
+
+    /** @see #submit(Map, Runnable) */
+    public <T> Task<T> submit(HasTask<T> task) { return submitInternal(Maps.newLinkedHashMap(), task.getTask()); }
+
     /** @see #submit(Map, Runnable) */
     public <T> Task<T> submit(Map<?, ?> properties, Task<T> task) { return submitInternal(properties, task); }
 

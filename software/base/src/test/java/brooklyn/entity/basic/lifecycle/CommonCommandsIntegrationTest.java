@@ -1,20 +1,29 @@
 package brooklyn.entity.basic.lifecycle;
 
+import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
-import static java.lang.String.format;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.SshTasks;
+import brooklyn.entity.basic.SshTasks.SshTask;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.Task;
+import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets;
@@ -24,6 +33,9 @@ import com.google.common.io.Files;
 
 public class CommonCommandsIntegrationTest {
 
+    private ManagementContext mgmt;
+    private BasicExecutionContext exec;
+    
     private File destFile;
     private File sourceNonExistantFile = new File("/this/does/not/exist");
     private File sourceFile1;
@@ -41,6 +53,9 @@ public class CommonCommandsIntegrationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        mgmt = Entities.newManagementContext();
+        exec = new BasicExecutionContext(mgmt.getExecutionManager());
+        
         destFile = java.io.File.createTempFile("commoncommands-test-dest", "txt");
         
         sourceNonExistantFile = new File("/this/does/not/exist");
@@ -60,8 +75,8 @@ public class CommonCommandsIntegrationTest {
         localRepoEntityFile = new File(localRepoEntityBasePath, localRepoFilename);
         localRepoEntityBasePath.mkdirs();
         Files.write("mylocal1".getBytes(), localRepoEntityFile);
-        
-        loc = new LocalhostMachineProvisioningLocation().obtain();
+
+        loc = mgmt.getLocationManager().createLocation(LocalhostMachineProvisioningLocation.spec()).obtain();
     }
     
     @AfterMethod(alwaysRun=true)
@@ -72,6 +87,7 @@ public class CommonCommandsIntegrationTest {
         if (localRepoEntityFile != null) localRepoEntityFile.delete();
         if (localRepoEntityBasePath != null) localRepoBasePath.delete();
         if (loc != null) loc.close();
+        if (mgmt != null) Entities.destroyAll(mgmt);
     }
     
     @Test(groups="Integration")
@@ -186,4 +202,17 @@ public class CommonCommandsIntegrationTest {
         assertNotEquals(exitcode, 0);
         assertEquals(Files.readLines(destFile, Charsets.UTF_8), ImmutableList.of());
     }
+    
+    @Test(groups="Integration")
+    public void testDownloadToStdout() throws Exception {
+        SshTask<String> t = SshTasks.newInstance(
+                "cd "+destFile.getParentFile().getAbsolutePath(),
+                CommonCommands.downloadToStdout(Arrays.asList(sourceFileUrl1))+" | sed s/my/your/")
+            .machine(loc)
+            .requiringZeroAndReturningStdout();
+
+        String result = exec.submit(t).get();
+        assertTrue(result.trim().equals("yoursource1"), "Wrong contents of stdout download: "+result);
+    }
+
 }

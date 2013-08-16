@@ -10,7 +10,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.location.AddressableLocation;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.OsDetails;
@@ -19,7 +18,6 @@ import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.net.Networking;
@@ -75,6 +73,10 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     }
     public LocalhostMachineProvisioningLocation(String name, int count) {
         this(MutableMap.of("name", name, "count", count));
+    }
+    
+    public static LocationSpec<LocalhostMachineProvisioningLocation> spec() {
+        return LocationSpec.create(LocalhostMachineProvisioningLocation.class);
     }
     
     public void configure(Map flags) {

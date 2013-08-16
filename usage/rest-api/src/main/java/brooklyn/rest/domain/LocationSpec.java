@@ -12,6 +12,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
+// FIXME change name, due to confusion with brooklyn.location.LocationSpec
 public class LocationSpec {
 
   private final String name;

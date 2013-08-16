@@ -9,10 +9,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Throwables;
-
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.SshEffectorTasks.SshEffectorBody;
+import brooklyn.entity.basic.SshTasks.SshTask;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
@@ -20,6 +19,8 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.config.ConfigBag;
+
+import com.google.common.base.Throwables;
 
 public class SoftwareEffectorTest {
 
@@ -102,7 +103,7 @@ public class SoftwareEffectorTest {
         
     @Test(groups="Integration")
     public void testBadExitCodeCaughtAndStdErrAvailable() {
-        final SshTask<?,?>[] sshTasks = new SshTask[1];
+        final SshTask<?>[] sshTasks = new SshTask[1];
         
         Task<Void> call = Entities.invokeEffector(app, app, Effectors.effector(Void.class, "badExitCode")
                 .impl(new SshEffectorBody<Void>() {

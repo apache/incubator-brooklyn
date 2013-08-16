@@ -186,8 +186,9 @@ public class CommonCommands {
 
     /** 
      * @see downloadUrlAs(Map, String, String, String)
-     * @deprecated Use {@link downloadUrlAs(List<String>, String)}, and rely on {@link DownloadResolverManager} to include the local-repo
+     * @deprecated since 0.5.0 - Use {@link downloadUrlAs(List<String>, String)}, and rely on {@link DownloadResolverManager} to include the local-repo
      */
+    @Deprecated
     public static List<String> downloadUrlAs(String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
         return downloadUrlAs(new HashMap(), url, entityVersionPath, pathlessFilenameToSaveAs);
     }
@@ -203,7 +204,7 @@ public class CommonCommands {
      * <p/>
      * Ideally use a blobstore staging area.
      * 
-     * @deprecated Use {@link downloadUrlAs(List, String)}, and rely on {@link DownloadResolverManager} to include the local-repo
+     * @deprecated since 0.5.0 - Use {@link downloadUrlAs(List, String)}, and rely on {@link DownloadResolverManager} to include the local-repo
      */
     @Deprecated
     public static List<String> downloadUrlAs(Map flags, String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
@@ -220,7 +221,7 @@ public class CommonCommands {
     }
     
     /**
-     * Returns command to download the URL, saving as the given file. Will try each URL in turn until one is successful
+     * Returns commands to download the URL, saving as the given file. Will try each URL in turn until one is successful
      * (see `curl -f` documentation).
      */
     public static List<String> downloadUrlAs(List<String> urls, String saveAs) {
@@ -228,7 +229,21 @@ public class CommonCommands {
     }
 
     /**
-     * Same as {@link downloadUrlAs(List, String)}, except does not install curl, and does not exit on failure.
+     * Returns command to download the URL, sending the output to stdout --
+     * suitable for redirect by appending " | tar xvf".
+     * Will try each URL in turn until one is successful
+     */
+    public static String downloadToStdout(List<String> urls) {
+        return "( " + INSTALL_CURL + " > /dev/null ) && ( "+simpleDownloadUrlAs(urls, null) + " || exit 9 )";
+    }
+    /** as {@link #downloadToStdout(List)} but varargs for convenience */
+    public static String downloadToStdout(String ...urls) {
+        return downloadToStdout(Arrays.asList(urls));
+    }
+
+    /**
+     * Same as {@link downloadUrlAs(List, String)}, except does not install curl, and does not exit on failure,
+     * and if saveAs is null it downloads it so stdout.
      */
     public static String simpleDownloadUrlAs(List<String> urls, String saveAs) {
         if (urls.isEmpty()) throw new IllegalArgumentException("No URLs supplied to download "+saveAs);
@@ -238,7 +253,9 @@ public class CommonCommands {
         for (String url : urls) {
             if (!firsturl) command.append(" || ");
             firsturl = false;
-            command.append(format("curl -f -L \"%s\" -o %s", url, saveAs));
+            command.append(format("curl -f -L \"%s\"", url));
+            if (saveAs!=null)
+                command.append(format(" -o %s", saveAs));
         }
         
         return command.toString();

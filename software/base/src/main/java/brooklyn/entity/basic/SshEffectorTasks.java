@@ -3,7 +3,8 @@ package brooklyn.entity.basic;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
-import brooklyn.entity.basic.SshTask.SshTaskPlain;
+import brooklyn.entity.basic.SshTasks.AbstractSshTask;
+import brooklyn.entity.basic.SshTasks.SshTask;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
@@ -26,14 +27,16 @@ public class SshEffectorTasks {
         }
 
         /** convenience for generating an {@link SshTask} which can be further customised if desired, and then (it must be explicitly) queued */
-        public SshTaskPlain<Integer> ssh(String ...commands) {
-            return new SshTaskPlain<Integer>(machine(), commands);
+        public SshTask<Integer> ssh(String ...commands) {
+            return new SshTask<Integer>(machine(), commands);
         }
 
         // TODO scp, install, etc
     }
 
-    public static class SshEffectorTask<RET> extends SshTask<SshEffectorTask<RET>,RET> implements EffectorTaskFactory<RET> {
+    /** variant of {@link SshTask} which fulfills the {@link EffectorTaskFactory} signature so can be used directly as an impl for an effector,
+     * also injects the machine automatically */
+    public static class SshEffectorTask<RET> extends AbstractSshTask<SshEffectorTask<RET>,RET> implements EffectorTaskFactory<RET> {
 
         public SshEffectorTask(String ...commands) {
             super(commands);
