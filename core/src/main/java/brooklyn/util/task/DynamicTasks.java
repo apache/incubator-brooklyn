@@ -1,5 +1,6 @@
 package brooklyn.util.task;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
@@ -149,54 +150,23 @@ public class DynamicTasks {
         }
     }
 
-    // TODO use or remove very soon!
-//    /** creates a TaskQueueingContext inside the given task if necessary, returning whether it was necessary
-//     * <p>
-//     * for use in legacy tasks where we want to use the new queueing features
-//     * <p>
-//     * in some cases the default behaviour may be to block on any queued task, 
-//     * as subsequent activities might assume the task has completed, depending on the code being migrated
-//     * <p>
-//     * @deprecated since 0.6.0-m1 intended for migration purposes
-//     */
-//    @Beta // for use in migration only
-//    @Deprecated
-//    public static boolean installTaskQueueingContextForBasicTask(final boolean blocking) {
-//        if (getTaskQueuingContext()!=null) return false;
-//        // TODO clear the task queueing context when the task ends!!!
-//        // if that's even possible ????!!?!?
-//        setTaskQueueingContext(new TaskQueueingContext() {
-//            List<Task<?>> list = new ArrayList<Task<?>>();
-//            @Override
-//            public void queue(Task<?> t) {
-//                Preconditions.checkState(!Tasks.isQueuedOrSubmitted(t), "Task %s is already queued or submitted; cannot queue.", t);
-//                Preconditions.checkNotNull(Tasks.current(), "Can only use a TaskQueueingContext inside a task; cannot queue %s here.", t);
-//                if (BasicExecutionContext.getCurrentExecutionContext() == null) {
-//                    ExecutionManager em = ((TaskInternal<?>)Tasks.current()).getExecutionManager();
-//                    if (em!=null) {
-//                        log.warn("Discouraged submission of compound task ({}) from {} without execution context; using execution manager", t, Tasks.current());
-//                        em.submit(t);
-//                    } else {
-//                        throw new IllegalStateException("Cannot queue task ("+t+") inside "+Tasks.current()+" as there is no task context");
-//                    }
-//                } else {
-//                    BasicExecutionContext.getCurrentExecutionContext().submit(t);
-//                }
-//                if (blocking) t.blockUntilEnded();
-//            }
-//            
-//            @Override
-//            public Task<?> last() {
-//                if (list.isEmpty()) return null;
-//                return list.get(list.size()-1);
-//            }
-//            
-//            @Override
-//            public List<Task<?>> getQueue() {
-//                return ImmutableList.copyOf(list);
-//            }
-//        });
-//        return true;
-//    }
+    /** Waits for the last task queued in this context to complete;
+     * it does throw if there is a problem.
+     * <p>
+     * Preferred over {@link #last()}.get() because this waits on all tasks, 
+     * in sequentially (so that blocking information is always accurate) */
+    public static Task<?> waitForLast() {
+        TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
+        Preconditions.checkNotNull(qc, "Cannot wait when their is no queueing context");
+        List<Task<?>> q = qc.getQueue();
+        Task<?> last = null;
+        do {
+            for (Task<?> t: q) {
+                last = t;
+                last.getUnchecked();
+            }
+        } while (last!=qc.last());
+        return last;
+    }
 
 }

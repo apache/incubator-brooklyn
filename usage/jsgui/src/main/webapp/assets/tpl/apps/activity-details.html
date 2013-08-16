@@ -2,7 +2,7 @@
     <div>
      <div style="float: left;"><i class="backDrillDown icon-chevron-left handy" rel="tooltip" title="Back up one level" style="margin-top: 3px;"></i>&nbsp;</div>
      <div style="margin-bottom: 6px;">
-      <span style="font-weight: 400;" class="ifField-entityDisplayName"><span class="updateField-entityDisplayName"/>:</span>
+      <span style="font-weight: 400;" class="ifField-entityDisplayName hide"><span class="updateField-entityDisplayName"/>:</span>
       <div style="display: inline-block;" class="updateField-displayName">Loading...</div>
      </div>
      <% for (crumb in breadcrumbs) { %>
@@ -18,8 +18,8 @@
 </div>
 <div class="activity-details-section activity-status">
     <span class="updateField-currentStatus"/>
-    <span class="ifField-blockingDetails">- <span class="updateField-blockingDetails"/></span>
-    <span class="ifField-blockingTask"> (<span class="updateField-blockingTask"/>)</span>
+    <span class="ifField-blockingDetails hide">- <span class="updateField-blockingDetails"/></span>
+    <span class="ifField-blockingTask hide"> (blocked on <span class="updateField-blockingTask"/>)</span>
 </div>
 
   <div class="toggler-region task-detail">
@@ -42,11 +42,6 @@
     <div class="ifField-endTimeUtc"><span class="activity-label">Finished:</span>
         <span class="updateField-endTimeUtc"/></div>
 </div>
-<table class="ifField-tags activity-details-section activity-tags"><tr>
-    <!-- tags use table because the formatting (divs in a row top aligned) when there are a lot of tags is painful with divs -->
-    <td class="activity-label">Tags:</td> 
-        <td class="updateField-tags"></td>
-</tr></table>
 <div class="ifField-submittedByTask">
   <div class="activity-details-section activity-tags">
     <span class="activity-label">Submitted by:</span> 
@@ -87,7 +82,17 @@
       </div>
     </div>
   </div>
-    
+
+  <div class="ifField-tags toggler-region task-tags">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>Tags</b></div>
+    </div>
+    <div class="activity-details-section activity-tags hide">
+        <span class="updateField-tags"></span>
+    </div>
+  </div>
+
   <div class="toggler-region task-detail">
     <div class="toggler-header user-hidden">
       <div class="toggler-icon icon-chevron-left"></div>

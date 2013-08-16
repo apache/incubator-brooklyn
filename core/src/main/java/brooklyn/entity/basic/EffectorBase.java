@@ -18,6 +18,7 @@ import com.google.common.base.Joiner;
  * (see {@link EffectorTaskFactory} and {@link EffectorWithBody}) */
 public class EffectorBase<T> implements Effector<T> {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(EffectorBase.class);
     
     private static final long serialVersionUID = -4153962199078384835L;
@@ -32,9 +33,6 @@ public class EffectorBase<T> implements Effector<T> {
         this.returnType = returnType;
         this.parameters = Collections.unmodifiableList(parameters);
         this.description = description;
-        
-        //FIXME Is this needed? What does it do?
-        //setMetaClass(DefaultGroovyMethods.getMetaClass(getClass()));
     }
 
     @Override

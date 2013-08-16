@@ -29,6 +29,7 @@ define([
             "click #activities-children-table .activity-table tr":"childrenRowClick",
             "click #activities-submitted-table .activity-table tr":"submittedRowClick",
             'click .showDrillDownSubmittedByAnchor':'showDrillDownSubmittedByAnchor',
+            'click .showDrillDownBlockerOfAnchor':'showDrillDownBlockerOfAnchor',
             'click .backDrillDown':'backDrillDown'
         },
         // requires taskLink or task; breadcrumbs is optional
@@ -120,8 +121,9 @@ define([
             this.updateField('currentStatus')
             this.updateField('blockingDetails')
             this.updateFieldWith('blockingTask',
-                function(v) { return "<a class='showDrillDownSubmittedByAnchor handy' link='"+_.escape(v.link)+"'>"+
-                    that.displayTextForLinkedTask(v)+"</a>" })
+                function(v) { 
+                    return "<a class='showDrillDownBlockerOfAnchor handy' link='"+_.escape(v.link)+"'>"+
+                        that.displayTextForLinkedTask(v)+"</a>" })
             this.updateFieldWith('tags', function(tags) { return _.escape(tags.join(", ")) })
             
             var submitTimeUtc = this.updateFieldWith('submitTimeUtc',
@@ -139,9 +141,6 @@ define([
 
             this.updateFieldWith('streams',
                 function(v) {
-                    log("streams")
-                    log(v)
-                    log(v == {})
                     var result = "";
                     for (si in v) {
                         var sv = v[si];
@@ -213,13 +212,18 @@ define([
                 $('.toggler-region.tasks-submitted', this.$el).hide();
                 return;
             }
+            if (this.task==null) {
+                log("task not yet available")
+                return;
+            } 
+            
             // find tasks submitted by this one which aren't included as children
             // this uses collections -- which is everything in the current execution context
             var subtasks = []
             for (taskI in this.collection.models) {
                 var task = this.collection.models[taskI]
                 var submittedBy = task.get("submittedByTask")
-                if (submittedBy!=null && submittedBy.metadata.id == this.task.id &&
+                if (submittedBy!=null && submittedBy.metadata!=null && submittedBy.metadata["id"] == this.task.id &&
                         this.children.get(task.id)==null) {
                     subtasks.push(task)
                 }
@@ -281,6 +285,10 @@ define([
         showDrillDownSubmittedByAnchor: function(from) {
             var link = $(from.target).closest('a').attr("link")
             this.showDrillDownTask("submitter of", link)
+        },
+        showDrillDownBlockerOfAnchor: function(from) {
+            var link = $(from.target).closest('a').attr("link")
+            this.showDrillDownTask("blocker of", link)
         },
         showDrillDownTask: function(relation, newTaskLink, newTask) {
             log("activities deeper drill down - "+newTaskLink)

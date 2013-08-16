@@ -1,10 +1,10 @@
 package brooklyn.entity.database.mysql;
 
-import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.ok;
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.ssh.CommonCommands.downloadUrlAs;
+import static brooklyn.util.ssh.CommonCommands.installPackage;
+import static brooklyn.util.ssh.CommonCommands.ok;
 import static java.lang.String.format;
 
 import java.io.InputStreamReader;
@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails.OsVersions;
@@ -85,7 +86,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public void install() {
         //mysql-${version}-${driver.osTag}.tar.gz
         
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(
+        DownloadResolver resolver = ((EntityInternal)entity).getManagementContext().getEntityDownloadsManager().newDownloader(
                 this, ImmutableMap.of("filename", getInstallFilename()));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();

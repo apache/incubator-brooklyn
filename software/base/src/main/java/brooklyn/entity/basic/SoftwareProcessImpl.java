@@ -290,7 +290,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             entity().setAttribute(SERVICE_STATE, Lifecycle.STARTING);
             try {
                 startInLocationsAsync(locations);
-                last().get();
+                waitForLast();
                 if (entity().getAttribute(SERVICE_STATE) == Lifecycle.STARTING) 
                     entity().setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
             } catch (Throwable t) {

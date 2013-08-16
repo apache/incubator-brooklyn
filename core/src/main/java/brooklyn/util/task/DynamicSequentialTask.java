@@ -167,6 +167,8 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                     }
                     if (!isCancelled() && !secondaryJobMaster.isDone()) {
                         log.trace("waiting for secondaries for {}", this);
+                        // wait on tasks sequentially so that blocking information is more interesting
+                        DynamicTasks.waitForLast();
                         List<Object> result2 = secondaryJobMaster.get();
                         try {
                             if (primaryJob==null) result = (T)result2;

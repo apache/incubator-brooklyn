@@ -60,14 +60,20 @@ public abstract class EffectorBody<T> {
             DynamicTasks.queue(taskHaver.getTask());
     }
 
-    /** Returns the last task queued in this context, or null if none */
+    /** Returns the last task queued in this context, or null if none. Does not wait,
+     * and no guarantee the task is submitted. */
     protected Task<?> last() {
         return DynamicTasks.getTaskQueuingContext().last();
     }
-    
+
+    /** see {@link DynamicTasks#waitForLast()} */
+    protected Task<?> waitForLast() {
+        return DynamicTasks.waitForLast();
+    }
+
     /** Returns the result of the last task queued in this context, coerced to the given type */
     protected <V> V last(Class<V> type) {
-        Task<?> last = last();
+        Task<?> last = waitForLast();
         if (last==null)
             throw new IllegalStateException("No last task available (in "+DynamicTasks.getTaskQueuingContext()+")");
         if (!Tasks.isQueuedOrSubmitted(last))
