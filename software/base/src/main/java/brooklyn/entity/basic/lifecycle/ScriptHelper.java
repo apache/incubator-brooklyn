@@ -18,15 +18,17 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
+import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 
@@ -235,14 +237,13 @@ public class ScriptHelper {
     public Task<Integer> peekTask() {
         return task;
     }
-        
+
+    /** queues the task for execution if we are in a {@link TaskQueueingContext} (e.g. EffectorTaskFactory); 
+     * or if we aren't in a queueing context, it will submit the task (assuming there is an {@link ExecutionContext}
+     * _and_ block until completion, throwing on error */
+    @Beta
     public Task<Integer> queue() {
-        try {
-            return DynamicTasks.queue(newTask());
-        } catch (Throwable e) {
-            log.warn("Failed to queue script task "+peekTask()+" in "+this+" (rethrowing):"+e);
-            throw Exceptions.propagate(e);
-        }
+        return DynamicTasks.queueIfPossible(newTask()).orSubmitAndBlock().getTask();
     }
     
     public int execute() {
@@ -252,6 +253,7 @@ public class ScriptHelper {
             return executeInternal();
         }
     }
+    
     public int executeInternal() {
         if (!executionCheck.apply(this)) {
             return 0;

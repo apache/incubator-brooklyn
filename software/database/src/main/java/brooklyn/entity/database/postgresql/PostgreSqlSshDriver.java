@@ -1,16 +1,14 @@
 package brooklyn.entity.database.postgresql;
 
-import static brooklyn.entity.basic.lifecycle.CommonCommands.alternatives;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.dontRequireTtyForSudo;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.file;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.sudo;
-import static java.lang.String.format;
+import static brooklyn.util.ssh.CommonCommands.alternatives;
+import static brooklyn.util.ssh.CommonCommands.dontRequireTtyForSudo;
+import static brooklyn.util.ssh.CommonCommands.file;
+import static brooklyn.util.ssh.CommonCommands.installPackage;
+import static brooklyn.util.ssh.CommonCommands.sudo;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.Collection;
 
 import javax.annotation.Nullable;
 
@@ -18,9 +16,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.SshTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Urls;
+import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -53,45 +57,61 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
     }
 
     @Override
-    public void install() {        
+    public void install() {
+        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), true)).orSubmitAndBlock();
+        
         // Check we can actually find a usable pg_ctl
-        Collection<String> pgbinlocator = ImmutableList.copyOf(Iterables.transform(pgctlLocations, new Function<String, String>() {
-            @Override
-            public String apply(@Nullable String s) {
-                return "test -f " + s + "pg_ctl";
-            }
-        }));
+        MutableList<String> findOrInstall = MutableList.<String>of()
+                .append("which pg_ctl")
+                .appendAll(Iterables.transform(pgctlLocations, StringFunctions.formatter("test -f %s pg_ctl")))
+                .append(installPackage(ImmutableMap.of(
+                        "yum", "postgresql postgresql-server", 
+                        "apt", "postgresql", 
+                        "port", "postgresql91 postgresql91-server"
+                    ), "postgresql"))
+                .append(CommonCommands.warn("WARNING: failed to find or install postgresql binaries"));
+        
         // Link to correct binaries folder (different versions of pg_ctl and psql don't always play well together)
-        Collection<String> pgctlLinker = ImmutableList.copyOf(Iterables.transform(pgctlLocations, new Function<String, String>() {
-            @Override
-            public String apply(@Nullable String s) {
-                return file(s + "pg_ctl", "ln -s " + s + " bin");
-            }
-        }));
+        MutableList<String> linkFromHere = MutableList.<String>of()
+                .append(linkToCommandIfItExists("pg_ctl", "bin/"))
+                .appendAll(Iterables.transform(pgctlLocations, linkingToFileIfItExistsInDirectory("pg_ctl", "bin/")))
+                .append(CommonCommands.warn("WARNING: failed to find postgresql binaries for linking; aborting"))
+                .append("exit 9");
 
         // TODO tied to version 9.1 for port installs
         newScript(INSTALLING).body.append(
                 dontRequireTtyForSudo(),
-                alternatives(pgbinlocator,
-                        installPackage(ImmutableMap.of("yum", "postgresql postgresql-server", "port", "postgresql91 postgresql91-server"), "postgresql")),
-                alternatives(pgctlLinker, "echo \"WARNING: failed to locate postgresql binaries, will likely fail subsequently\""))
-                .failOnNonZeroResultCode().execute();
+                alternatives(findOrInstall),
+                alternatives(linkFromHere))
+                .failOnNonZeroResultCode().queue();
     }
 
-    public static String sudoAsUserAppendCommandOutputToFile(String user, String commandWhoseOutputToWrite, String file) {
-        return format("( %s | sudo -E -n -u %s -s -- tee -a %s )",
-                commandWhoseOutputToWrite, user, file);
+    private static Function<String, String> linkingToFileIfItExistsInDirectory(final String filename, final String linkToMake) {
+        return new Function<String, String>() {
+            public String apply(@Nullable String s) {
+                return linkToFileIfItExists(Urls.mergePaths(s, filename), linkToMake);
+            }
+        };
+    }
+    private static String linkToFileIfItExists(final String path, final String linkToMake) {
+        return file(path, "ln -s " + path + " "+linkToMake);
+    }
+    private static String linkToCommandIfItExists(final String command, final String linkToMake) {
+        return CommonCommands.exists(command, "ln -s `which " + command + "` "+linkToMake);
     }
 
     public static String sudoAsUser(String user, String command) {
-        if (command == null) return null;
-        return format("( sudo -E -n -u %s -s -- %s )", user, command);
+        return CommonCommands.sudoAsUser(user, command);
     }
-
+    
+    public static String sudoAsUserAppendCommandOutputToFile(String user, String commandWhoseOutputToWrite, String file) {
+        return CommonCommands.executeCommandThenAsUserTeeOutputToFile(commandWhoseOutputToWrite, user, file);
+    }
+    
     @Override
     public void customize() {
         // Some OSes start postgres during package installation
-        newScript(CUSTOMIZING).body.append(sudoAsUser("postgres", "/etc/init.d/postgresql stop")).execute();
+        newScript(CUSTOMIZING).body.append(sudoAsUser("postgres", "/etc/init.d/postgresql stop")).queue();
         newScript(CUSTOMIZING).body.append(
                 sudo("mkdir -p " + getDataDir()),
                 sudo("chown postgres:postgres " + getDataDir()),
@@ -104,6 +124,8 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
                 sudoAsUserAppendCommandOutputToFile("postgres", "echo \"host    all         all         0.0.0.0/0             md5\"", getDataDir() + "/pg_hba.conf")
         ).failOnNonZeroResultCode().execute();
 
+        // execute above (to wait for commands to complete before customizing)
+        
         customizeUserCreationScript();
 
         /*

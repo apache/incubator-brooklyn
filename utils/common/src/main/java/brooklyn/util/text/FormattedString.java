@@ -1,6 +1,7 @@
 package brooklyn.util.text;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 
 /** wraps a call to {@link String#format(String, Object...)} in a toString, i.e. using %s syntax,
  * useful for places where we want deferred evaluation 
@@ -21,5 +22,8 @@ public class FormattedString {
     }
     public Object[] getArgs() {
         return args;
+    }
+    public Supplier<String> supplier() {
+        return Strings.toStringSupplier(this);
     }
 }

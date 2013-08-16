@@ -43,12 +43,78 @@ public class DynamicTasks {
         taskQueueingContext.remove();
     }
 
+    public static class TaskQueueingResult<T> implements HasTask<T> {
+        private final Task<T> task;
+        private final boolean wasQueued;
+        
+        private TaskQueueingResult(Task<T> task, boolean wasQueued) {
+            this.task = task;
+            this.wasQueued = wasQueued;
+        }
+        public Task<T> getTask() {
+            return task;
+        }
+        /** returns true if the task was queued */
+        public boolean wasQueued() {
+            return wasQueued;
+        }
+        /** returns true if the task either is currently queued or has been submitted */
+        public boolean isQueuedOrSubmitted() {
+            return wasQueued || Tasks.isQueuedOrSubmitted(task);
+        }
+        private boolean orSubmitInternal() {
+            if (!wasQueued()) {
+                if (isQueuedOrSubmitted()) {
+                    log.warn("Redundant call to execute "+getTask()+"; skipping");
+                    return false;
+                } else {
+                    BasicExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
+                    if (ec==null)
+                        throw new IllegalStateException("Cannot execute "+getTask()+" without an execution context; ensure caller is in an ExecutionContext");
+                    ec.submit(getTask());
+                    return true;
+                }
+            } else {
+                return false;
+            }
+        }
+        /** causes the task to be submitted (asynchronously) if it hasn't already been */
+        public TaskQueueingResult<T> orSubmitAsync() {
+            orSubmitInternal();
+            return this;
+        }
+        /** causes the task to be submitted *synchronously* if it hasn't already been submitted;
+         * useful in contexts such as libraries where callers may be either on a legacy call path 
+         * (which assumes all commands complete immediately)
+         *  */
+        public TaskQueueingResult<T> orSubmitAndBlock() {
+            if (orSubmitInternal()) task.getUnchecked();
+            return this;
+        }
+        /** blocks for the task to be completed
+         * <p>
+         * needed in any context where subsequent commands assume the task has completed.
+         * not needed in a context where the task is simply being built up and queued.
+         * <p>
+         * throws if there are any errors
+         */
+        public void andWaitForSuccess() {
+            task.getUnchecked();
+        }
+    }
+    
     /** tries to add the task to the current addition context if there is one, otherwise does nothing */
-    public static <T> Task<T> queueIfPossible(Task<T> task) {
+    public static <T> TaskQueueingResult<T> queueIfPossible(Task<T> task) {
         TaskQueueingContext adder = getTaskQueuingContext();
+        boolean result = false;
         if (adder!=null)
-            Tasks.tryQueueing(adder, task);
-        return task;
+            result = Tasks.tryQueueing(adder, task);
+        return new TaskQueueingResult<T>(task, result);
+    }
+
+    /** @see #queueIfPossible(Task) */
+    public static <T> TaskQueueingResult<T> queueIfPossible(HasTask<T> task) {
+        return queueIfPossible(task.getTask());
     }
     
     /** adds the given task to the nearest task addition context,

@@ -100,10 +100,12 @@ public class StringEscapes {
             }
         }
 
-        public static String escapeLiteralForDoubleQuotedBash(String arg) {
+        /** performs replacements on a string so that it can be legally inserted into a double-quoted bash context 
+         * (without the surrounding double quotes; see also {@link #wrapBash(String)}) */
+        public static String escapeLiteralForDoubleQuotedBash(String unquotedInputToBeEscaped) {
             StringBuilder out = new StringBuilder();
             try {
-                escapeLiteralForDoubleQuotedBash(arg, out);
+                escapeLiteralForDoubleQuotedBash(unquotedInputToBeEscaped, out);
             } catch (IOException e) {
                 // shouldn't happen for StringBuilder
                 throw Throwables.propagate(e);
@@ -112,8 +114,8 @@ public class StringEscapes {
         }
 
         /** transforms e.g. [ "-Dname=Bob Johnson", "-Dnet.worth=$100" ]  to 
-         * string which _renders_ as "-Dname=Bob Johnson" "-Dnet.worth=\$100"
-         * so it gets picked up as 2 params in java
+         * a java string "\"-Dname=Bob Johnson\" \"-Dnet.worth=\$100\"" --
+         * which can be inserted into a bash command where it will be picked up as 2 params
          */
         public static String doubleQuoteLiteralsForBash(String... args) {
             StringBuilder result = new StringBuilder();

@@ -703,6 +703,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @Override
     public OsDetails getOsDetails() {
         // TODO ssh and find out what we need to know, or use jclouds...
+        // on many linuxes /etc/issue will tell you the OS; 
+        // also try `uname -a`, looking for Darwin on OS X ... 
         return BasicOsDetails.Factory.ANONYMOUS_LINUX;
     }
 

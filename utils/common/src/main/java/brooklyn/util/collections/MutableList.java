@@ -114,4 +114,15 @@ public class MutableList<V> extends ArrayList<V> {
             return ImmutableList.copyOf(result);
         }
     }
+    
+    public MutableList<V> append(V ...items) {
+        for (V item: items) add(item);
+        return this;
+    }
+
+    public MutableList<V> appendAll(Iterable<? extends V> items) {
+        for (V item: items) add(item);
+        return this;
+    }
+
 }

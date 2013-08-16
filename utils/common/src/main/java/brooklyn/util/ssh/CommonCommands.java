@@ -5,12 +5,13 @@ import static java.lang.String.format;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.text.StringEscapes.BashStringEscapes;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 
@@ -66,31 +67,45 @@ public class CommonCommands {
         return format("( if test \"$UID\" -eq 0; then ( %s ); else sudo -E -n -S -- %s; fi )", command, command);
     }
 
+    /** sudo to a given user and run the indicated command*/
+    public static String sudoAsUser(String user, String command) {
+        if (command == null) return null;
+        return format("( sudo -E -n -u %s -s -- %s )", user, command);
+    }
+
+    /** executes a command, then as user tees the output to the given file. 
+     * useful e.g. for appending to a file which is only writable by root or a priveleged user. */
+    public static String executeCommandThenAsUserTeeOutputToFile(String commandWhoseOutputToWrite, String user, String file) {
+        return format("( %s | sudo -E -n -u %s -s -- tee -a %s )",
+                commandWhoseOutputToWrite, user, file);
+    }
+
+
     /** some machines require a tty for sudo; brooklyn by default does not use a tty
      * (so that it can get separate error+stdout streams); you can enable a tty as an
      * option to every ssh command, or you can do it once and 
      * modify the machine so that a tty is not subsequently required.
      * <p>
-     * this command must be run with allocatePTY set as a flag to ssh. 
+     * this command must be run with allocatePTY set as a flag to ssh.  see SshTasks.dontRequireTtyForSudo which sets that up. 
      * <p>
      * (having a tty for sudo seems like another case of imaginary security which is just irritating.
      * like water restrictions at airport security.) */
     public static String dontRequireTtyForSudo() {
-        return sudo("sed -i.brooklyn.bak s/.*requiretty.*/#brooklyn-removed-require-tty/ /etc/sudoers");
+        return file("/etc/sudoers", sudo("sed -i.brooklyn.bak s/.*requiretty.*/#brooklyn-removed-require-tty/ /etc/sudoers"));
     }
 
     /**
-     * Returns a command that runs only 1f the operating system is as specified; Checks {@code /etc/issue} for the specified name
+     * Returns a command that runs only if the operating system is as specified; Checks {@code /etc/issue} for the specified name
      */
     public static String on(String osName, String command) {
-        return format("(grep \"%s\" /etc/issue && %s)", osName, command);
+        return format("( grep \"%s\" /etc/issue && %s )", osName, command);
     }
 
     /**
      * Returns a command that runs only if the specified executable is in the path
      */
     public static String file(String path, String command) {
-        return format("(test -f %s && %s)", path, command);
+        return format("( test -f %s && %s )", path, command);
     }
 
     /**
@@ -100,40 +115,48 @@ public class CommonCommands {
     public static String exists(String executable, String ...commands) {
         String extraCommandsAnded = "";
         for (String c: commands) if (c!=null) extraCommandsAnded += " && "+c;
-        return format("(which %s%s)", executable, extraCommandsAnded);
+        return format("( which %s%s )", executable, extraCommandsAnded);
     }
 
     /**
      * Returns a command that runs only if the specified executable is NOT in the path
      */
     public static String missing(String executable, String command) {
-        return format("(which %s || %s)", executable, command);
+        return format("( which %s || %s )", executable, command);
     }
 
     /**
-     * Returns a sequence of chained commands that runs until one of them fails
+     * Returns a sequence of chained commands that runs until one of them fails (i.e. joined by '&&')
      */
     public static String chain(Collection<String> commands) {
-        return "(" + join(commands, " && ") + ")";
+        return "( " + Strings.join(commands, " && ") + " )";
+    }
+
+    /** Convenience for {@link #chain(Collection)} */
+    public static String chain(String ...commands) {
+        return "( " + Strings.join(commands, " && ") + " )";
     }
 
     /**
-     * Returns a sequence of alternative commands that runs until one of the commands succeeds
+     * Returns a sequence of alternative commands that runs until one of the commands succeeds;
+     * or if none succeed, it will run the failure command.
+     * @deprecated since 0.6.0; this method just treats the failure command as another alternative so hardly seems worth it; 
+     * prefer {@link #alternatives(Collection)} or  
+     */ @Deprecated
+    public static String alternatives(Collection<String> commands, String failureCommand) {
+        return format("(%s || %s)", Strings.join(commands, " || "), failureCommand);
+    }
+    
+    /**
+     * Returns a sequence of chained commands that runs until one of them succeeds (i.e. joined by '||')
      */
-    public static String alternatives(Collection<String> commands, String failure) {
-        return format("(%s || %s)", join(commands, " || "), failure);
+    public static String alternatives(Collection<String> commands) {
+        return format("( " + Strings.join(commands, " || ") + " )");
     }
 
-    private static String join(Collection<String> c, String separator) {
-        StringBuilder sb = new StringBuilder();
-        Iterator<String> it = c.iterator();
-        while (it.hasNext()) {
-            sb.append(it.next());
-            if (it.hasNext()) {
-                sb.append(separator);
-            }
-        }
-        return sb.toString();
+    /** Convenience for {@link #alternatives(Collection)} */
+    public static String alternatives(String ...commands) {
+        return format("( " + Strings.join(commands, " || ") + " )");
     }
 
     /** returns the pattern formatted with the given arg if the arg is not null, otherwise returns null */
@@ -170,9 +193,15 @@ public class CommonCommands {
         commands.add(exists("brew", brewInstall));
         commands.add(exists("port", sudo(portInstall)));
         
-        String failure = format("(echo \"WARNING: no known/successful package manager to install %s, may fail subsequently\")",
-                packageDefaultName!=null ? packageDefaultName : flags.toString());
-        return alternatives(commands, failure);
+        String failure = warn("WARNING: no known/successful package manager to install " +
+                (packageDefaultName!=null ? packageDefaultName : flags.toString()) +
+                ", may fail subsequently");
+        commands.add(failure);
+        return alternatives(commands);
+    }
+    
+    public static String warn(String message) {
+        return "( echo "+BashStringEscapes.wrapBash(message)+" | tee /dev/stderr )";
     }
 
     public static String installPackage(String packageDefaultName) {
@@ -183,6 +212,7 @@ public class CommonCommands {
     public static final String INSTALL_CURL = installExecutable("curl");
     public static final String INSTALL_WGET = installExecutable("wget");
     public static final String INSTALL_ZIP = installExecutable("zip");
+    public static final String INSTALL_UNZIP = alternatives(installExecutable("unzip"), installExecutable("zip"));
 
     /** 
      * @see downloadUrlAs(Map, String, String, String)

@@ -5,12 +5,14 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.basic.SshTasks.AbstractSshTask;
 import brooklyn.entity.basic.SshTasks.SshTask;
+import brooklyn.entity.basic.SshTasks.SshTaskDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 
 /** convenience classes and methods for working with ssh */
@@ -53,6 +55,11 @@ public class SshEffectorTasks {
         @SuppressWarnings("unchecked")
         public SshEffectorTask<String> requiringZeroAndReturningStdout() {
             return (SshEffectorTask<String>) super.requiringZeroAndReturningStdout();
+        }
+        
+        @SuppressWarnings("unchecked")
+        public <RET2> SshTask<RET2> returning(Function<SshTaskDetails, RET2> resultTransformation) {
+            return (SshTask<RET2>) super.returning(resultTransformation);
         }
     }
     

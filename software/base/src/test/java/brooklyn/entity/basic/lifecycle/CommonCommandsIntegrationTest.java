@@ -10,6 +10,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -33,6 +35,8 @@ import com.google.common.io.Files;
 
 public class CommonCommandsIntegrationTest {
 
+    private static final Logger log = LoggerFactory.getLogger(CommonCommandsIntegrationTest.class);
+    
     private ManagementContext mgmt;
     private BasicExecutionContext exec;
     
@@ -205,14 +209,25 @@ public class CommonCommandsIntegrationTest {
     
     @Test(groups="Integration")
     public void testDownloadToStdout() throws Exception {
-        SshTask<String> t = SshTasks.newInstance(
+        SshTask<String> t = SshTasks.newInstance(loc, 
                 "cd "+destFile.getParentFile().getAbsolutePath(),
                 CommonCommands.downloadToStdout(Arrays.asList(sourceFileUrl1))+" | sed s/my/your/")
-            .machine(loc)
             .requiringZeroAndReturningStdout();
 
         String result = exec.submit(t).get();
         assertTrue(result.trim().equals("yoursource1"), "Wrong contents of stdout download: "+result);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test(groups="Integration")
+    public void testDeprecatedAlternatives() throws Exception {
+        SshTask<Integer> t = SshTasks.newInstance(loc)
+            .add(CommonCommands.alternatives(
+                    Arrays.asList("asdfj_no_such_command_1",  "asdfj_no_such_command_2"), "echo cannae-find-command"));
+
+        Integer returnCode = exec.submit(t).get();
+        log.info("alternatives for bad commands gave: "+returnCode+"; err="+new String(t.getStderr())+"; out="+new String(t.getStdout()));
+        assertTrue(returnCode != 0);
     }
 
 }
