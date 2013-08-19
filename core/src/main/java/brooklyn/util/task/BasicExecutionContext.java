@@ -20,6 +20,7 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -67,7 +68,11 @@ public class BasicExecutionContext extends AbstractExecutionContext {
      
     @SuppressWarnings({ "deprecation", "unchecked", "rawtypes" })
     @Override
-    protected <T> Task<T> submitInternal(Map properties, final Object task) {
+    protected <T> Task<T> submitInternal(Map<?,?> propertiesQ, final Object task) {
+        if (task instanceof TaskAdaptable<?> && !(task instanceof Task<?>)) 
+            return submitInternal(propertiesQ, ((TaskAdaptable<?>)task).asTask());
+        
+        Map properties = propertiesQ;
         if (properties.get("tags")==null) properties.put("tags", new ArrayList()); 
         Collection taskTags = (Collection)properties.get("tags");
         
@@ -79,6 +84,8 @@ public class BasicExecutionContext extends AbstractExecutionContext {
         if (target!=null && !tags.contains(BrooklynTasks.tagForContextEntity(target))) {
             // task is switching execution context boundaries
             final ExecutionContext tc = ((EntityInternal)target).getExecutionContext();
+            if (log.isDebugEnabled())
+                log.debug("Switching task context on execution of "+task+": from "+this+" to "+target+" (in "+Tasks.current()+")");
             if (task instanceof Task<?>) {
                 final Task<T> t = (Task<T>)task;
                 if (!Tasks.isQueuedOrSubmitted(t) && (!(Tasks.current() instanceof HasTaskChildren) || 

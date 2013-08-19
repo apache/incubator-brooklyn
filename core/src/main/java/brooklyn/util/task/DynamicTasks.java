@@ -6,9 +6,11 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.management.HasTask;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
+import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
+import brooklyn.management.TaskWrapper;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.Beta;
@@ -43,14 +45,19 @@ public class DynamicTasks {
         taskQueueingContext.remove();
     }
 
-    public static class TaskQueueingResult<T> implements HasTask<T> {
+    public static class TaskQueueingResult<T> implements TaskWrapper<T> {
         private final Task<T> task;
         private final boolean wasQueued;
         
-        private TaskQueueingResult(Task<T> task, boolean wasQueued) {
-            this.task = task;
+        private TaskQueueingResult(TaskAdaptable<T> task, boolean wasQueued) {
+            this.task = task.asTask();
             this.wasQueued = wasQueued;
         }
+        @Override
+        public Task<T> asTask() {
+            return task;
+        }
+        @Override
         public Task<T> getTask() {
             return task;
         }
@@ -104,19 +111,17 @@ public class DynamicTasks {
     }
     
     /** tries to add the task to the current addition context if there is one, otherwise does nothing */
-    public static <T> TaskQueueingResult<T> queueIfPossible(Task<T> task) {
+    public static <T> TaskQueueingResult<T> queueIfPossible(TaskAdaptable<T> task) {
         TaskQueueingContext adder = getTaskQueuingContext();
         boolean result = false;
         if (adder!=null)
             result = Tasks.tryQueueing(adder, task);
         return new TaskQueueingResult<T>(task, result);
     }
-
-    /** @see #queueIfPossible(Task) */
-    public static <T> TaskQueueingResult<T> queueIfPossible(HasTask<T> task) {
-        return queueIfPossible(task.getTask());
+    public static <T> TaskQueueingResult<T> queueIfPossible(TaskFactory<? extends TaskAdaptable<T>> task) {
+        return queueIfPossible(task.newTask());
     }
-    
+
     /** adds the given task to the nearest task addition context,
      * either set as a thread-local, or in the current task, or the submitter of the task, etc
      * <p>
@@ -149,13 +154,13 @@ public class DynamicTasks {
         throw new IllegalStateException("No task addition context available in current task hierarchy for adding task "+task);
     }
 
-    public static <U,V extends Task<U>> V queue(V task) {
+    public static <V extends TaskAdaptable<?>> V queue(V task) {
         try {
             Preconditions.checkNotNull(task, "Task to queue cannot be null");
             Preconditions.checkState(!Tasks.isQueuedOrSubmitted(task), "Task to queue must not yet be submitted: %s", task);
             TaskQueueingContext adder = getTaskQueuingContext();
             Preconditions.checkNotNull(adder, "Task %s cannot be queued here; no queueing context available", task);
-            adder.queue(task);
+            adder.queue(task.asTask());
             return task;
         } catch (Throwable e) {
             log.warn("Error queueing "+task+" (rethrowing): "+e);
@@ -163,23 +168,23 @@ public class DynamicTasks {
         }
     }
 
-    public static <U,V extends HasTask<U>> Task<U> queue(V hasTask) {
-        return queue(hasTask.getTask());
-    }
-    
-    public static void queue(Task<?> task1, Task<?> task2, Task<?> ...tasks) {
+    public static void queue(TaskAdaptable<?> task1, TaskAdaptable<?> task2, TaskAdaptable<?> ...tasks) {
         queue(task1);
         queue(task2);
-        for (Task<?> task: tasks) queue(task);
+        for (TaskAdaptable<?> task: tasks) queue(task);
+    }
+
+    public static <T extends TaskAdaptable<?>> T queue(TaskFactory<T> taskFactory) {
+        return queue(taskFactory.newTask());
+    }
+
+    public static void queue(TaskFactory<?> task1, TaskFactory<?> task2, TaskFactory<?> ...tasks) {
+        queue(task1.newTask());
+        queue(task2.newTask());
+        for (TaskFactory<?> task: tasks) queue(task.newTask());
     }
     
-    public static void queue(HasTask<?> task1, HasTask<?> task2, HasTask<?> ...tasks) {
-        queue(task1.getTask());
-        queue(task2.getTask());
-        for (HasTask<?> task: tasks) queue(task.getTask());
-    }
-    
-    public static <T> Task<T> queueIfNeeded(Task<T> task) {
+    public static <T extends TaskAdaptable<?>> T queueIfNeeded(T task) {
         if (!Tasks.isQueuedOrSubmitted(task))
             queue(task);
         return task;
@@ -188,11 +193,11 @@ public class DynamicTasks {
     /** submits the given task if needed, and gets the result (unchecked) 
      * only permitted in a queueing context (ie a DST main job) */
     // things get really confusing if you try to queueInTaskHierarchy -- easy to cause deadlocks!
-    public static <T> T get(Task<T> t) {
-        return queueIfNeeded(t).getUnchecked();
+    public static <T> T get(TaskAdaptable<T> t) {
+        return queueIfNeeded(t).asTask().getUnchecked();
     }
 
-    public abstract static class AutoQueue<T> implements Supplier<T>, HasTask<T> {
+    public abstract static class AutoQueue<T> implements Supplier<T>, TaskWrapper<T> {
         final Task<T> task;
         public AutoQueue(final String name) {
             task = DynamicTasks.queue(Tasks.<T>builder().name(name).body(

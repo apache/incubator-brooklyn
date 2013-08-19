@@ -1,7 +1,8 @@
 package brooklyn.entity.basic;
 
-import brooklyn.management.HasTask;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
+import brooklyn.management.TaskFactory;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.task.DynamicSequentialTask;
@@ -36,30 +37,28 @@ public abstract class EffectorBody<T> {
         return (EntityLocal) BrooklynTasks.getTargetOrContextEntity(Tasks.current());
     }
     
-    // messy generics used to transparently invoke right queueing method
-    protected <U,V extends Task<U>> V queue(V task) {
+    protected <V extends TaskAdaptable<?>> V queue(V task) {
         return DynamicTasks.queue(task);
     }
 
-    protected <U,V extends HasTask<U>> V queue(V taskHaver) {
-        DynamicTasks.queue(taskHaver.getTask());
-        return taskHaver;
-    }
-
-    protected <U,V extends Task<U>> void queue(V task1, V task2, V ...tasks) {
+    protected <V extends TaskAdaptable<?>> void queue(V task1, V task2, V ...tasks) {
         DynamicTasks.queue(task1);
         DynamicTasks.queue(task2);
         for (V task: tasks)
             DynamicTasks.queue(task);
     }
 
-    protected <U,V extends HasTask<U>> void queue(V taskHaver1, V taskHaver2, V ...taskHavers) {
-        DynamicTasks.queue(taskHaver1.getTask());
-        DynamicTasks.queue(taskHaver2.getTask());
-        for (V taskHaver: taskHavers)
-            DynamicTasks.queue(taskHaver.getTask());
+    protected <V extends TaskFactory<?>> void queue(V task1, V task2, V ...tasks) {
+        DynamicTasks.queue(task1.newTask());
+        DynamicTasks.queue(task2.newTask());
+        for (V task: tasks)
+            DynamicTasks.queue(task.newTask());
     }
-
+    
+    protected <U extends TaskAdaptable<?>> U queue(TaskFactory<U> task) {
+        return DynamicTasks.queue(task.newTask());
+    }
+    
     /** Returns the last task queued in this context, or null if none. Does not wait,
      * and no guarantee the task is submitted. */
     protected Task<?> last() {

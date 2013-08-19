@@ -12,7 +12,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.EffectorTasks.EffectorBodyTaskFactory;
 import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
-import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Objects;
@@ -89,7 +89,7 @@ public class Effectors {
     }
 
     /** returns an unsubmitted task which invokes the given effector; use {@link Entities#invokeEffector(EntityLocal, Entity, Effector, Map)} for a submitted variant */
-    public static <T> Task<T> invocation(Entity entity, Effector<T> eff, @SuppressWarnings("rawtypes") Map parameters) {
+    public static <T> TaskAdaptable<T> invocation(Entity entity, Effector<T> eff, @SuppressWarnings("rawtypes") Map parameters) {
         @SuppressWarnings("unchecked")
         Effector<T> eff2 = (Effector<T>) ((EntityInternal)entity).getEffector(eff.getName());
         if (log.isTraceEnabled())

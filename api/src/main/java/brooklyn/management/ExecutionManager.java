@@ -44,7 +44,7 @@ public interface ExecutionManager {
     public boolean isShutdown();
     
     /** returns the task with the given ID, or null if none */ 
-    public Task getTask(String id);
+    public Task<?> getTask(String id);
     
     /** returns all tasks with the given tag (immutable) */
     public Set<Task<?>> getTasksWithTag(Object tag);
@@ -79,7 +79,7 @@ public interface ExecutionManager {
     /** 
      * @see {@link #submit(Map, Task)}
      * 
-     * @deprecated While refactoring groovy->java; use strongly typed methods
+     * @deprecated since 0.5.0 or 0.6.0, while refactoring groovy->java; use strongly typed methods
      */
     @Deprecated
     public <T> Task<T> submit(Map<?, ?> flags, Object c);
@@ -102,7 +102,7 @@ public interface ExecutionManager {
      * <p>
      * If a Map is supplied it must be modifiable (currently; may allow immutable maps in future). 
      */
-    public <T> Task<T> submit(Map<?, ?> flags, Task<T> task);
+    public <T> Task<T> submit(Map<?, ?> flags, TaskAdaptable<T> task);
 
     //following also used, may be moved up to interface
 //    void setTaskPreprocessorForTag(Object tag, Class<? extends TaskPreprocessor> preprocessor);

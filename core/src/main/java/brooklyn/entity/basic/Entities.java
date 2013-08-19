@@ -36,6 +36,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.management.LocationManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -100,7 +101,7 @@ public class Entities {
             entitiesToCall = ImmutableList.of();
         }
 
-        List<Task<T>> tasks = Lists.newArrayList();
+        List<TaskAdaptable<T>> tasks = Lists.newArrayList();
 
         for (final Entity entity : entitiesToCall) {
             tasks.add( Effectors.invocation(entity, effector, parameters) );
@@ -138,7 +139,7 @@ public class Entities {
     
     public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
-        Task<T> t = Effectors.invocation(entityToCall, effector, parameters);
+        Task<T> t = Effectors.invocation(entityToCall, effector, parameters).asTask();
         // we pass to callingEntity for consistency above, but in exec-context it should be
         // re-dispatched to targetEntity
         ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(

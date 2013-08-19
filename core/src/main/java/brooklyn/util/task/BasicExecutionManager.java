@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
 
@@ -266,10 +267,12 @@ public class BasicExecutionManager implements ExecutionManager {
     public <T> Task<T> submit(Map<?,?> flags, Callable<T> c) { return submit(flags, new BasicTask<T>(flags, c)); }
 
     public <T> Task<T> submit(Task<T> t) { return submit(new LinkedHashMap(1), t); }
-    public <T> Task<T> submit(Map<?,?> flags, Task<T> task) {
+    public <T> Task<T> submit(Map<?,?> flags, TaskAdaptable<T> task) {
+        if (!(task instanceof Task))
+            task = task.asTask();
         synchronized (task) {
-            if (((TaskInternal<?>)task).getResult()!=null) return task;
-            return submitNewTask(flags, task);
+            if (((TaskInternal<?>)task).getResult()!=null) return (Task<T>)task;
+            return submitNewTask(flags, (Task<T>) task);
         }
     }
 

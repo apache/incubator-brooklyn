@@ -8,11 +8,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
-import brooklyn.entity.basic.SshTasks.AbstractSshTask;
-import brooklyn.entity.basic.SshTasks.SshTask;
-import brooklyn.entity.basic.SshTasks.SshTaskDetails;
+import brooklyn.entity.basic.SshTasks.AbstractSshTaskFactory;
+import brooklyn.entity.basic.SshTasks.PlainSshTaskFactory;
+import brooklyn.entity.basic.SshTasks.SshTaskFactory;
+import brooklyn.entity.basic.SshTasks.SshTaskWrapper;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.ssh.CommonCommands;
 import brooklyn.util.task.TaskBuilder;
@@ -37,29 +37,29 @@ public class SshEffectorTasks {
             return getMachineOfEntity(entity());
         }
 
-        /** convenience for generating an {@link SshTask} which can be further customised if desired, and then (it must be explicitly) queued */
-        public SshTask<Integer> ssh(String ...commands) {
-            return new SshTask<Integer>(machine(), commands);
+        /** convenience for generating an {@link PlainSshTaskFactory} which can be further customised if desired, and then (it must be explicitly) queued */
+        public SshTaskFactory<Integer> ssh(String ...commands) {
+            return SshTasks.newTaskFactory(machine(), commands);
         }
 
         // TODO scp, install, etc
     }
 
-    /** variant of {@link SshTask} which fulfills the {@link EffectorTaskFactory} signature so can be used directly as an impl for an effector,
+    /** variant of {@link PlainSshTaskFactory} which fulfills the {@link EffectorTaskFactory} signature so can be used directly as an impl for an effector,
      * also injects the machine automatically; can also be used outwith effector contexts, and machine is still injected if it is
      * run from inside a task at an entity with a single SshMachineLocation */
-    public static class SshEffectorTask<RET> extends AbstractSshTask<SshEffectorTask<RET>,RET> implements EffectorTaskFactory<RET> {
+    public static class SshEffectorTask<RET> extends AbstractSshTaskFactory<SshEffectorTask<RET>,RET> implements EffectorTaskFactory<RET> {
 
         public SshEffectorTask(String ...commands) {
             super(commands);
         }
 
         @Override
-        public Task<RET> newTask(Entity entity, Effector<RET> effector, ConfigBag parameters) {
-            // NB this can only be used once to generate a task
-            checkStillMutable();
+        public SshTaskWrapper<RET> newTask(Entity entity, Effector<RET> effector, ConfigBag parameters) {
+            markDirty();
+            if (summary==null) summary(effector.getName()+" (ssh)");
             machine(getMachineOfEntity(entity));
-            return getTask();
+            return newTask();
         }
         
         @Override
@@ -80,7 +80,7 @@ public class SshEffectorTasks {
         }
         
         @SuppressWarnings("unchecked")
-        public <RET2> SshEffectorTask<RET2> returning(Function<SshTaskDetails, RET2> resultTransformation) {
+        public <RET2> SshEffectorTask<RET2> returning(Function<SshTaskWrapper<?>, RET2> resultTransformation) {
             return (SshEffectorTask<RET2>) super.returning(resultTransformation);
         }
     }
@@ -109,8 +109,8 @@ public class SshEffectorTasks {
 
     /** as {@link #codePidRunning(String)} but returning boolean */
     public static SshEffectorTask<Boolean> isPidRunning(Integer pid) {
-        return codePidRunning(pid).returning(new Function<SshTasks.SshTaskDetails, Boolean>() {
-            public Boolean apply(@Nullable SshTaskDetails input) { return ((Integer)0).equals(input.getExitCode()); }
+        return codePidRunning(pid).returning(new Function<SshTaskWrapper<?>, Boolean>() {
+            public Boolean apply(@Nullable SshTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
         });
     }
 
@@ -137,8 +137,8 @@ public class SshEffectorTasks {
 
     /** as {@link #codePidFromFileRunning(String)} but returning boolean */
     public static SshEffectorTask<Boolean> isPidFromFileRunning(String pidFile) {
-        return codePidFromFileRunning(pidFile).returning(new Function<SshTasks.SshTaskDetails, Boolean>() {
-            public Boolean apply(@Nullable SshTaskDetails input) { return ((Integer)0).equals(input.getExitCode()); }
+        return codePidFromFileRunning(pidFile).returning(new Function<SshTaskWrapper<?>, Boolean>() {
+            public Boolean apply(@Nullable SshTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
         });
     }
 }

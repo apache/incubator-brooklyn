@@ -11,6 +11,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.javalang.Reflections;
@@ -29,7 +30,7 @@ public class EffectorTasks {
     private static final Logger log = LoggerFactory.getLogger(EffectorTasks.class);
     
     public interface EffectorTaskFactory<T> {
-        public abstract Task<T> newTask(Entity entity, Effector<T> effector, ConfigBag parameters);
+        public abstract TaskAdaptable<T> newTask(Entity entity, Effector<T> effector, ConfigBag parameters);
     }
 
     public static class EffectorBodyTaskFactory<T> implements EffectorTaskFactory<T> {

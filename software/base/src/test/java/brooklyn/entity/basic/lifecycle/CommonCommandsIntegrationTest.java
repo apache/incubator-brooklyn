@@ -18,7 +18,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SshTasks;
-import brooklyn.entity.basic.SshTasks.SshTask;
+import brooklyn.entity.basic.SshTasks.PlainSshTaskFactory;
+import brooklyn.entity.basic.SshTasks.SshTaskWrapper;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
@@ -207,10 +208,10 @@ public class CommonCommandsIntegrationTest {
     
     @Test(groups="Integration")
     public void testDownloadToStdout() throws Exception {
-        SshTask<String> t = SshTasks.newInstance(loc, 
+        SshTaskWrapper<String> t = SshTasks.newTaskFactory(loc, 
                 "cd "+destFile.getParentFile().getAbsolutePath(),
                 CommonCommands.downloadToStdout(Arrays.asList(sourceFileUrl1))+" | sed s/my/your/")
-            .requiringZeroAndReturningStdout();
+            .requiringZeroAndReturningStdout().newTask();
 
         String result = exec.submit(t).get();
         assertTrue(result.trim().equals("yoursource1"), "Wrong contents of stdout download: "+result);
@@ -219,10 +220,10 @@ public class CommonCommandsIntegrationTest {
     @SuppressWarnings("deprecation")
     @Test(groups="Integration")
     public void testDeprecatedAlternatives() throws Exception {
-        SshTask<Integer> t = SshTasks.newInstance(loc)
+        SshTaskWrapper<Integer> t = SshTasks.newTaskFactory(loc)
             .add(CommonCommands.alternatives(
                     Arrays.asList("asdfj_no_such_command_1",  "asdfj_no_such_command_2"), 
-                    CommonCommands.fail("echo cannae-find-command", 88)));
+                    CommonCommands.fail("echo cannae-find-command", 88))).newTask();
 
         Integer returnCode = exec.submit(t).get();
         log.info("alternatives for bad commands gave: "+returnCode+"; err="+new String(t.getStderr())+"; out="+new String(t.getStdout()));
@@ -231,9 +232,9 @@ public class CommonCommandsIntegrationTest {
 
     @Test(groups="Integration")
     public void testRequireTestHandlesFailure() throws Exception {
-        SshTask<?> t = SshTasks.newInstance(loc)
+        SshTaskWrapper<?> t = SshTasks.newTaskFactory(loc)
             .add(CommonCommands.requireTest("-f "+sourceNonExistantFile.getPath(),
-                    "The requested file does not exist"));
+                    "The requested file does not exist")).newTask();
 
         exec.submit(t).get();
         assertNotEquals(t.getExitCode(), (Integer)0);
@@ -243,9 +244,9 @@ public class CommonCommandsIntegrationTest {
 
     @Test(groups="Integration")
     public void testRequireTestHandlesSuccess() throws Exception {
-        SshTask<?> t = SshTasks.newInstance(loc)
+        SshTaskWrapper<?> t = SshTasks.newTaskFactory(loc)
             .add(CommonCommands.requireTest("-f "+sourceFile1.getPath(),
-                    "The requested file does not exist"));
+                    "The requested file does not exist")).newTask();
 
         exec.submit(t).get();
         assertEquals(t.getExitCode(), (Integer)0);
@@ -254,8 +255,8 @@ public class CommonCommandsIntegrationTest {
 
     @Test(groups="Integration")
     public void testRequireFileHandlesFailure() throws Exception {
-        SshTask<?> t = SshTasks.newInstance(loc)
-            .add(CommonCommands.requireFile(sourceNonExistantFile.getPath()));
+        SshTaskWrapper<?> t = SshTasks.newTaskFactory(loc)
+            .add(CommonCommands.requireFile(sourceNonExistantFile.getPath())).newTask();
 
         exec.submit(t).get();
         assertNotEquals(t.getExitCode(), (Integer)0);
@@ -267,8 +268,8 @@ public class CommonCommandsIntegrationTest {
 
     @Test(groups="Integration")
     public void testRequireFileHandlesSuccess() throws Exception {
-        SshTask<?> t = SshTasks.newInstance(loc)
-            .add(CommonCommands.requireFile(sourceFile1.getPath()));
+        SshTaskWrapper<?> t = SshTasks.newTaskFactory(loc)
+            .add(CommonCommands.requireFile(sourceFile1.getPath())).newTask();
 
         exec.submit(t).get();
         assertEquals(t.getExitCode(), (Integer)0);

@@ -5,8 +5,8 @@ import java.util.concurrent.Callable;
 
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
-import brooklyn.management.HasTask;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
 
 import com.google.common.collect.Maps;
 
@@ -19,7 +19,7 @@ public abstract class AbstractExecutionContext implements ExecutionContext {
      *   
      * @see ExecutionManager#submit(Map, Task) 
      */
-    public Task<?> submit(Map<?, ?> properties, Runnable runnable) { return submitInternal(properties, runnable); }
+    public Task<?> submit(Map<?,?> properties, Runnable runnable) { return submitInternal(properties, runnable); }
     
     /** @see #submit(Map, Runnable) */
     public Task<?> submit(Runnable runnable) { return submitInternal(Maps.newLinkedHashMap(), runnable); }
@@ -28,16 +28,13 @@ public abstract class AbstractExecutionContext implements ExecutionContext {
     public <T> Task<T> submit(Callable<T> callable) { return submitInternal(Maps.newLinkedHashMap(), callable); }
     
     /** @see #submit(Map, Runnable) */
-    public <T> Task<T> submit(Map<?, ?> properties, Callable<T> callable) { return submitInternal(properties, callable); }
+    public <T> Task<T> submit(Map<?,?> properties, Callable<T> callable) { return submitInternal(properties, callable); }
  
     /** @see #submit(Map, Runnable) */
-    public <T> Task<T> submit(Task<T> task) { return submitInternal(Maps.newLinkedHashMap(), task); }
+    public <T> Task<T> submit(TaskAdaptable<T> task) { return submitInternal(Maps.newLinkedHashMap(), task.asTask()); }
 
     /** @see #submit(Map, Runnable) */
-    public <T> Task<T> submit(HasTask<T> task) { return submitInternal(Maps.newLinkedHashMap(), task.getTask()); }
-
-    /** @see #submit(Map, Runnable) */
-    public <T> Task<T> submit(Map<?, ?> properties, Task<T> task) { return submitInternal(properties, task); }
+    public <T> Task<T> submit(Map<?,?> properties, TaskAdaptable<T> task) { return submitInternal(properties, task.asTask()); }
 
     /**
      * Provided for compatibility
@@ -48,6 +45,6 @@ public abstract class AbstractExecutionContext implements ExecutionContext {
      */
     public void execute(Runnable r) { submit(r); }
 
-    protected abstract <T> Task<T> submitInternal(Map properties, Object task);
+    protected abstract <T> Task<T> submitInternal(Map<?,?> properties, Object task);
     
 }

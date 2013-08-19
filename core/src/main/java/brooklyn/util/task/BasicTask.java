@@ -128,6 +128,11 @@ public class BasicTask<T> implements TaskInternal<T> {
                 (tags!=null && !tags.isEmpty()?tags+"; ":"")+getId()+"]";
     }
 
+    @Override
+    public Task<T> asTask() {
+        return this;
+    }
+    
     // housekeeping --------------------
 
     /*

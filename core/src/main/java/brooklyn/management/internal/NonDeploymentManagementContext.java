@@ -289,9 +289,9 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         public Task<?> getCurrentTask() {
             return null;
         }
-        
+
         @Override
-        protected <T> Task<T> submitInternal(@SuppressWarnings("rawtypes") Map properties, Object task) {
+        protected <T> Task<T> submitInternal(Map<?, ?> properties, Object task) {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }

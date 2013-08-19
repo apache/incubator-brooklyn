@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import brooklyn.management.HasTask;
 import brooklyn.management.Task;
+import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
@@ -96,11 +96,10 @@ public class TaskBuilder<T> {
             return new SequentialTask(flags, children);
     }
 
-    /** returns a wrapper for the task which defers building until the task is retrieved */
-    public HasTask<T> buildDeferred() {
-        return new HasTask<T>() {
-            @Override
-            public Task<T> getTask() {
+    /** returns a a factory based on this builder */
+    public TaskFactory<Task<T>> buildFactory() {
+        return new TaskFactory<Task<T>>() {
+            public Task<T> newTask() {
                 return build();
             }
         };

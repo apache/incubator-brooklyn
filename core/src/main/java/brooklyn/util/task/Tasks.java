@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionContext;
-import brooklyn.management.HasTask;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.flags.TypeCoercions;
 
@@ -165,45 +165,37 @@ public class Tasks {
         return TaskBuilder.<T>builder();
     }
     
-    private static Task<?>[] asTasks(HasTask<?> ...tasks) {
+    private static Task<?>[] asTasks(TaskAdaptable<?> ...tasks) {
         Task<?>[] result = new Task<?>[tasks.length];
         for (int i=0; i<tasks.length; i++)
-            result[i] = tasks[i].getTask();
+            result[i] = tasks[i].asTask();
         return result;
     }
     
-    public static Task<List<?>> parallel(HasTask<?> ...tasks) {
-        return parallel(asTasks(tasks));
+    public static Task<List<?>> parallel(TaskAdaptable<?> ...tasks) {
+        return parallelInternal("parallelised tasks", asTasks(tasks));
     }
     
-    public static Task<List<?>> parallel(String name, HasTask<?> ...tasks) {
-        return parallel(name, asTasks(tasks));
+    public static Task<List<?>> parallel(String name, TaskAdaptable<?> ...tasks) {
+        return parallelInternal(name, asTasks(tasks));
     }
     
-    public static Task<List<?>> parallel(Task<?> ...tasks) {
-        return parallel("parallelised tasks", tasks);
-    }
-    
-    public static Task<List<?>> parallel(String name, Task<?> ...tasks) {
+    public static Task<List<?>> parallelInternal(String name, Task<?> tasks[]) {
         TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().name(name).parallel(true);
         for (Task<?> task: tasks)
             tb.add(task);
         return tb.build();
     }
 
-    public static Task<List<?>> sequential(HasTask<?> ...tasks) {
-        return sequential(asTasks(tasks));
+    public static Task<List<?>> sequential(TaskAdaptable<?> ...tasks) {
+        return sequentialInternal("sequential tasks", asTasks(tasks));
     }
     
-    public static Task<List<?>> sequential(String name, HasTask<?> ...tasks) {
-        return sequential(name, asTasks(tasks));
+    public static Task<List<?>> sequential(String name, TaskAdaptable<?> ...tasks) {
+        return sequentialInternal(name, asTasks(tasks));
     }
     
-    public static Task<List<?>> sequential(Task<?> ...tasks) {
-        return sequential("sequential tasks", tasks);
-    }
-    
-    public static Task<List<?>> sequential(String name, Task<?> ...tasks) {
+    private static Task<List<?>> sequentialInternal(String name, Task<?> tasks[]) {
         TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().name(name).parallel(false);
         for (Task<?> task: tasks)
             tb.add(task);
@@ -227,17 +219,17 @@ public class Tasks {
         return isAncestorCancelled(t.getSubmittedByTask());
     }
 
-    public static boolean isQueuedOrSubmitted(Task<?> task) {
-        return ((TaskInternal<?>)task).isQueuedOrSubmitted();
+    public static boolean isQueuedOrSubmitted(TaskAdaptable<?> task) {
+        return ((TaskInternal<?>)task.asTask()).isQueuedOrSubmitted();
     }
     
     /** tries to add the given task in the given addition context,
      * returns true if it could, false if it could not (doesn't throw anything) */
-    public static boolean tryQueueing(TaskQueueingContext adder, Task<?> task) {
+    public static boolean tryQueueing(TaskQueueingContext adder, TaskAdaptable<?> task) {
         if (task==null || isQueuedOrSubmitted(task))
             return false;
         try {
-            adder.queue(task);
+            adder.queue(task.asTask());
             return true;
         } catch (Exception e) {
             if (log.isDebugEnabled())
@@ -246,11 +238,11 @@ public class Tasks {
         }        
     }
     
-    public static <T> Supplier<T> supplier(final Task<T> task) {
+    public static <T> Supplier<T> supplier(final TaskAdaptable<T> task) {
         return new Supplier<T>() {
             @Override
             public T get() {
-                return task.getUnchecked();
+                return task.asTask().getUnchecked();
             }
         };
     }

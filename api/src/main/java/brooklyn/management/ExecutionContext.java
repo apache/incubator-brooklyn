@@ -26,24 +26,21 @@ public interface ExecutionContext extends Executor {
     Set<Task<?>> getTasks();
 
     /**
-     * See {@link ExecutionManager#submit(Map, Task)} for properties that can be passed in.
+     * See {@link ExecutionManager#submit(Map, TaskAdaptable)} for properties that can be passed in.
      */
-    Task<?> submit(Map<?, ?> properties, Runnable runnable);
+    Task<?> submit(Map<?,?> properties, Runnable runnable);
 
     /**
-     * See {@link ExecutionManager#submit(Map, Task)} for properties that can be passed in.
+     * See {@link ExecutionManager#submit(Map, TaskAdaptable)} for properties that can be passed in.
      */
-    <T> Task<T> submit(Map<?, ?> properties, Callable<T> callable);
+    <T> Task<T> submit(Map<?,?> properties, Callable<T> callable);
 
-    /** See {@link ExecutionManager#submit(Map, Task)}. */
-    <T> Task<T> submit(Task<T> task);
-    
-    /** See {@link ExecutionManager#submit(Map, Task)}. */
-    <T> Task<T> submit(HasTask<T> task);
+    /** See {@link ExecutionManager#submit(Map, TaskAdaptable)}. */
+    <T> Task<T> submit(TaskAdaptable<T> task);
     
     /**
-     * See {@link ExecutionManager#submit(Map, Task)} for properties that can be passed in.
+     * See {@link ExecutionManager#submit(Map, TaskAdaptable)} for properties that can be passed in.
      */
-    public <T> Task<T> submit(Map<?, ?> properties, Task<T> task);
+    <T> Task<T> submit(Map<?,?> properties, TaskAdaptable<T> task);
 
 }
