@@ -7,7 +7,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -116,8 +116,8 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("jboss-as-%s", getVersion()));
         
         List<String> commands = new LinkedList<String>();
-        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
-        commands.add(CommonCommands.INSTALL_TAR);
+        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
 
         newScript(INSTALLING).

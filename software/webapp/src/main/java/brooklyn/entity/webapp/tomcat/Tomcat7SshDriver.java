@@ -12,7 +12,7 @@ import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 
 
 public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {
@@ -48,8 +48,8 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName("apache-tomcat-"+getVersion());
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
-        commands.add(CommonCommands.INSTALL_TAR);
+        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.add(BashCommands.INSTALL_TAR);
         commands.add(format("tar xvzf %s",saveAs));
 
         newScript(INSTALLING).

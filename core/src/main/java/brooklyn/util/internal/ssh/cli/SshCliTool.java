@@ -21,7 +21,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
@@ -178,7 +178,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         
         // use "-f" because some systems have "rm" aliased to "rm -i"; use "< /dev/null" to guarantee doesn't hang
         String cmd = 
-                (runAsRoot ? CommonCommands.sudo(scriptPath) : scriptPath) + " < /dev/null"+separator+
+                (runAsRoot ? BashCommands.sudo(scriptPath) : scriptPath) + " < /dev/null"+separator+
                 "RESULT=\\$?"+separator+
                 (noExtraOutput==null || !noExtraOutput ? "echo Executed "+scriptPath+", result \\$RESULT"+separator : "")+
                 "rm -f "+scriptPath+" < /dev/null"+separator+

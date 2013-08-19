@@ -18,13 +18,13 @@ import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.basic.lifecycle.ScriptRunner;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -291,7 +291,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             // try resolving http resources remotely using curl
             result = getMachine().execCommands(flags, "download-resource",
                     ImmutableList.of(
-                            CommonCommands.INSTALL_CURL,
+                            BashCommands.INSTALL_CURL,
                             String.format("curl -f --silent --insecure %s -o %s", resource, dest)));
         }
         // if not downloaded yet, retrieve locally and copy across

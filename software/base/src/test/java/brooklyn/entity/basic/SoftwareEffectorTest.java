@@ -11,8 +11,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.SshEffectorTasks.SshEffectorBody;
-import brooklyn.entity.basic.SshTasks.PlainSshTaskFactory;
-import brooklyn.entity.basic.SshTasks.SshTaskWrapper;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
@@ -20,6 +18,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.task.ssh.SshTaskWrapper;
 
 import com.google.common.base.Throwables;
 

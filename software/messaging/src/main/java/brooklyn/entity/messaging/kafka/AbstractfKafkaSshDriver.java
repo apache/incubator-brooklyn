@@ -28,7 +28,7 @@ import brooklyn.BrooklynVersion;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.java.UsesJmx;
@@ -79,8 +79,8 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("kafka-%s-src", getVersion()));
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
-        commands.add(CommonCommands.INSTALL_TAR);
+        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv "+saveAs);
         commands.add("cd "+expandedInstallDir);
         commands.add("./sbt update");

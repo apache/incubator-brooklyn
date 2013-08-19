@@ -12,16 +12,16 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.SshTasks;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Throwables;
@@ -84,7 +84,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         
         newScript("disable requiretty").
             setFlag("allocatePTY", true).
-            body.append(CommonCommands.dontRequireTtyForSudo()).
+            body.append(BashCommands.dontRequireTtyForSudo()).
             execute();
 
         DownloadResolver nginxResolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
@@ -120,11 +120,11 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         
         List<String> cmds = Lists.newArrayList();
         
-        cmds.add(CommonCommands.INSTALL_TAR);
-        cmds.add(CommonCommands.installPackage(installGccPackageFlags, "nginx-prerequisites-gcc"));
-        cmds.add(CommonCommands.installPackage(installMakePackageFlags, "nginx-prerequisites-make"));
-        cmds.add(CommonCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
-        cmds.addAll(CommonCommands.downloadUrlAs(nginxUrls, nginxSaveAs));
+        cmds.add(BashCommands.INSTALL_TAR);
+        cmds.add(BashCommands.installPackage(installGccPackageFlags, "nginx-prerequisites-gcc"));
+        cmds.add(BashCommands.installPackage(installMakePackageFlags, "nginx-prerequisites-make"));
+        cmds.add(BashCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
+        cmds.addAll(BashCommands.downloadUrlAs(nginxUrls, nginxSaveAs));
         
         if (isMac) {
             String pcreVersion = entity.getConfig(NginxController.PCRE_VERSION);
@@ -135,7 +135,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
             String pcreExpandedInstallDirname = pcreResolver.getUnpackedDirectoryName("pcre-"+pcreVersion);
 
             // Install PCRE
-            cmds.addAll(CommonCommands.downloadUrlAs(pcreUrls, pcreSaveAs));
+            cmds.addAll(BashCommands.downloadUrlAs(pcreUrls, pcreSaveAs));
             cmds.add(format("mkdir -p %s/pcre-dist", getInstallDir()));
             cmds.add(format("tar xvzf %s", pcreSaveAs));
             cmds.add(format("cd %s", pcreExpandedInstallDirname));
@@ -150,7 +150,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
         if (sticky) {
             cmds.add("cd src");
-            cmds.addAll(CommonCommands.downloadUrlAs(stickyModuleUrls, stickyModuleSaveAs));
+            cmds.addAll(BashCommands.downloadUrlAs(stickyModuleUrls, stickyModuleSaveAs));
             cmds.add(format("tar xvzf %s", stickyModuleSaveAs));
             cmds.add("cd ..");
         }
@@ -256,11 +256,11 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     }
 
     public static String sudoIfPrivilegedPort(int port, String command) {
-        return port < 1024 ? CommonCommands.sudo(command) : command;
+        return port < 1024 ? BashCommands.sudo(command) : command;
     }
     
     public static String sudoBashCIfPrivilegedPort(int port, String command) {
-        return port < 1024 ? CommonCommands.sudo("bash -c '"+command+"'") : command;
+        return port < 1024 ? BashCommands.sudo("bash -c '"+command+"'") : command;
     }
     
     @Override

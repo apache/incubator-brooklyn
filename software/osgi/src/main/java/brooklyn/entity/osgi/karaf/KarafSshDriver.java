@@ -7,11 +7,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.net.Networking;
+import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
 
@@ -50,8 +50,8 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-karaf-%s", getVersion()));
         
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
-                .add(CommonCommands.INSTALL_TAR)
+                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .add(BashCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .build();
         

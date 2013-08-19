@@ -13,8 +13,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.SshTasks.AbstractSshTaskFactory;
-import brooklyn.entity.basic.SshTasks.SshTaskWrapper;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
@@ -22,6 +20,8 @@ import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
+import brooklyn.util.task.ssh.AbstractSshTaskFactory;
+import brooklyn.util.task.ssh.SshTaskWrapper;
 
 import com.google.common.io.Files;
 

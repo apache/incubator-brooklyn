@@ -2,9 +2,9 @@ package brooklyn.entity.database.mysql;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
-import static brooklyn.util.ssh.CommonCommands.downloadUrlAs;
-import static brooklyn.util.ssh.CommonCommands.installPackage;
-import static brooklyn.util.ssh.CommonCommands.ok;
+import static brooklyn.util.ssh.BashCommands.downloadUrlAs;
+import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.ok;
 import static java.lang.String.format;
 
 import java.io.InputStreamReader;
@@ -25,7 +25,7 @@ import brooklyn.location.basic.BasicOsDetails.OsVersions;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.ComparableVersion;
 import brooklyn.util.text.Strings;
 
@@ -93,8 +93,8 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         _expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("mysql-%s-%s", getVersion(), getOsTag()));
         
         List<String> commands = new LinkedList<String>();
-        commands.add(CommonCommands.INSTALL_TAR);
-        commands.add(CommonCommands.INSTALL_CURL);
+        commands.add(BashCommands.INSTALL_TAR);
+        commands.add(BashCommands.INSTALL_CURL);
         commands.add("echo installing extra packages");
         commands.add(installPackage(ImmutableMap.of("yum", "libgcc_s.so.1"), null));
         commands.add(installPackage(ImmutableMap.of("yum", "libaio.so.1 libncurses.so.5", "apt", "libaio1 libaio-dev"), null));

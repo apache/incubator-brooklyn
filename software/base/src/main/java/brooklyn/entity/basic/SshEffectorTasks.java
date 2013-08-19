@@ -8,15 +8,16 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
-import brooklyn.entity.basic.SshTasks.AbstractSshTaskFactory;
-import brooklyn.entity.basic.SshTasks.PlainSshTaskFactory;
-import brooklyn.entity.basic.SshTasks.SshTaskFactory;
-import brooklyn.entity.basic.SshTasks.SshTaskWrapper;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.ssh.AbstractSshTaskFactory;
+import brooklyn.util.task.ssh.PlainSshTaskFactory;
+import brooklyn.util.task.ssh.SshTaskFactory;
+import brooklyn.util.task.ssh.SshTaskWrapper;
+import brooklyn.util.task.ssh.SshTasks;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
@@ -122,8 +123,8 @@ public class SshEffectorTasks {
      * 1 if matching file but no matching process,
      * and 2 if 2+ matching files */
     public static SshEffectorTask<Integer> codePidFromFileRunning(String pidFile) {
-        return ssh(CommonCommands.chain(
-                CommonCommands.requireTest("-f "+pidFile, "The PID file "+pidFile+" does not exist."),
+        return ssh(BashCommands.chain(
+                BashCommands.requireTest("-f "+pidFile, "The PID file "+pidFile+" does not exist."),
                 "ps -p `cat "+pidFile+"`")).summary("check PID in file "+pidFile);
     }
     

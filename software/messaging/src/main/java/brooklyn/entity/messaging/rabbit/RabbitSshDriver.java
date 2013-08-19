@@ -1,6 +1,6 @@
 package brooklyn.entity.messaging.rabbit;
 
-import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.installPackage;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -10,12 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -64,8 +64,8 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
                                 "apt", "erlang-nox erlang-dev",
                                 "port", "erlang@"+getErlangVersion()+"+ssl"),
                         "erlang"))
-                .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
-                .add(CommonCommands.installExecutable("tar"))
+                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .add(BashCommands.installExecutable("tar"))
                 .add(format("tar xvzf %s",saveAs))
                 .build();
 

@@ -2,9 +2,6 @@ package brooklyn.entity.messaging.qpid;
 
 import static java.lang.String.format;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -12,14 +9,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
+import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -57,8 +52,8 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("qpid-broker-%s", getVersion()));
         
         List<String> commands = new LinkedList<String>();
-        commands.addAll( CommonCommands.downloadUrlAs(urls, saveAs));
-        commands.add(CommonCommands.INSTALL_TAR);
+        commands.addAll( BashCommands.downloadUrlAs(urls, saveAs));
+        commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv "+saveAs);
 
         newScript(INSTALLING)

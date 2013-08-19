@@ -37,7 +37,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.InputStreamSupplier;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.text.Identifiers;
@@ -287,7 +287,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         
         // use "-f" because some systems have "rm" aliased to "rm -i"; use "< /dev/null" to guarantee doesn't hang
         ImmutableList.Builder<String> cmds = ImmutableList.<String>builder()
-                .add((runAsRoot ? CommonCommands.sudo(scriptPath) : scriptPath) + " < /dev/null")
+                .add((runAsRoot ? BashCommands.sudo(scriptPath) : scriptPath) + " < /dev/null")
                 .add("RESULT=$?");
         if (noExtraOutput==null || !noExtraOutput)
             cmds.add("echo Executed "+scriptPath+", result $RESULT"); 

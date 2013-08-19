@@ -22,7 +22,7 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.ssh.IptablesCommands;
 import brooklyn.util.ssh.IptablesCommands.Chain;
 import brooklyn.util.ssh.IptablesCommands.Policy;
@@ -44,8 +44,8 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
     @Override
     public void install() {
         List<String> commands = ImmutableList.<String>builder()
-                .add(CommonCommands.installPackage(MutableMap.of("yum", "bind"), "bind"))
-                .add(CommonCommands.ok("which setenforce && " + CommonCommands.sudo("setenforce 0")))
+                .add(BashCommands.installPackage(MutableMap.of("yum", "bind"), "bind"))
+                .add(BashCommands.ok("which setenforce && " + BashCommands.sudo("setenforce 0")))
                 .build();
 
         newScript(INSTALLING)
@@ -64,27 +64,27 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
                         // TODO determine name of ethernet interface if not eth0?
                         IptablesCommands.insertIptablesRule(Chain.INPUT, "eth0", Protocol.UDP, dnsPort, Policy.ACCEPT),
                         IptablesCommands.insertIptablesRule(Chain.INPUT, "eth0", Protocol.TCP, dnsPort, Policy.ACCEPT),
-                        CommonCommands.sudo("service iptables save"),
-                        CommonCommands.sudo("service iptables restart")
+                        BashCommands.sudo("service iptables save"),
+                        BashCommands.sudo("service iptables restart")
                 ).execute();
     }
 
     @Override
     public void launch() {
         newScript(MutableMap.of("usePidFile", false), LAUNCHING).
-        body.append(CommonCommands.sudo("service named start")).execute();
+        body.append(BashCommands.sudo("service named start")).execute();
     }
 
     @Override
     public boolean isRunning() {
         return newScript(MutableMap.of("usePidFile", false), CHECK_RUNNING)
-                    .body.append(CommonCommands.sudo("service named status")).execute() == 0;
+                    .body.append(BashCommands.sudo("service named status")).execute() == 0;
     }
 
     @Override
     public void stop() {
         newScript(MutableMap.of("usePidFile", false), STOPPING)
-                .body.append(CommonCommands.sudo("service named stop")).execute();
+                .body.append(BashCommands.sudo("service named stop")).execute();
     }
 
 }

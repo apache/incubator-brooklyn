@@ -18,7 +18,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -78,9 +78,9 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                 getMachine().copyTo(distroStream, getInstallDir()+"/"+saveAs);
             }
         } else {
-            commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
+            commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
         }
-        commands.add(CommonCommands.INSTALL_TAR);
+        commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
         
         newScript(INSTALLING).

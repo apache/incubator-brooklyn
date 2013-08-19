@@ -1,10 +1,10 @@
 package brooklyn.entity.database.postgresql;
 
-import static brooklyn.util.ssh.CommonCommands.alternatives;
-import static brooklyn.util.ssh.CommonCommands.dontRequireTtyForSudo;
-import static brooklyn.util.ssh.CommonCommands.file;
-import static brooklyn.util.ssh.CommonCommands.installPackage;
-import static brooklyn.util.ssh.CommonCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.alternatives;
+import static brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
+import static brooklyn.util.ssh.BashCommands.file;
+import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.sudo;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -16,14 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.SshTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Function;
@@ -69,13 +69,13 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
                         "apt", "postgresql", 
                         "port", "postgresql91 postgresql91-server"
                     ), "postgresql"))
-                .append(CommonCommands.warn("WARNING: failed to find or install postgresql binaries"));
+                .append(BashCommands.warn("WARNING: failed to find or install postgresql binaries"));
         
         // Link to correct binaries folder (different versions of pg_ctl and psql don't always play well together)
         MutableList<String> linkFromHere = MutableList.<String>of()
                 .append(linkToCommandIfItExists("pg_ctl", "bin/"))
                 .appendAll(Iterables.transform(pgctlLocations, linkingToFileIfItExistsInDirectory("pg_ctl", "bin/")))
-                .append(CommonCommands.warn("WARNING: failed to find postgresql binaries for linking; aborting"))
+                .append(BashCommands.warn("WARNING: failed to find postgresql binaries for linking; aborting"))
                 .append("exit 9");
 
         // TODO tied to version 9.1 for port installs
@@ -97,15 +97,15 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
         return file(path, "ln -s " + path + " "+linkToMake);
     }
     private static String linkToCommandIfItExists(final String command, final String linkToMake) {
-        return CommonCommands.exists(command, "ln -s `which " + command + "` "+linkToMake);
+        return BashCommands.exists(command, "ln -s `which " + command + "` "+linkToMake);
     }
 
     public static String sudoAsUser(String user, String command) {
-        return CommonCommands.sudoAsUser(user, command);
+        return BashCommands.sudoAsUser(user, command);
     }
     
     public static String sudoAsUserAppendCommandOutputToFile(String user, String commandWhoseOutputToWrite, String file) {
-        return CommonCommands.executeCommandThenAsUserTeeOutputToFile(commandWhoseOutputToWrite, user, file);
+        return BashCommands.executeCommandThenAsUserTeeOutputToFile(commandWhoseOutputToWrite, user, file);
     }
     
     @Override

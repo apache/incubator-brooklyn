@@ -197,6 +197,10 @@ public class DynamicTasks {
         return queueIfNeeded(t).asTask().getUnchecked();
     }
 
+    /** convenience for writing code which should be automatically queued as the body of a {@link DynamicSequentialTask},
+     * where further tasks can be queued
+     * <p>
+     * to use, create the class and implement main */
     public abstract static class AutoQueue<T> implements Supplier<T>, TaskWrapper<T> {
         final Task<T> task;
         public AutoQueue(final String name) {
@@ -218,6 +222,7 @@ public class DynamicTasks {
         }
     }
 
+    /** see {@link AutoQueue} */
     public abstract static class AutoQueueVoid {
         final Task<Void> task;
         public AutoQueueVoid(final String name) {

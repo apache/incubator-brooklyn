@@ -1,4 +1,4 @@
-package brooklyn.entity.basic.lifecycle;
+package brooklyn.util.ssh;
 
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
@@ -17,14 +17,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SshTasks;
-import brooklyn.entity.basic.SshTasks.PlainSshTaskFactory;
-import brooklyn.entity.basic.SshTasks.SshTaskWrapper;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.BasicExecutionContext;
+import brooklyn.util.task.ssh.SshTaskWrapper;
+import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets;
@@ -32,9 +31,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
-public class CommonCommandsIntegrationTest {
+public class BashCommandsIntegrationTest {
 
-    private static final Logger log = LoggerFactory.getLogger(CommonCommandsIntegrationTest.class);
+    private static final Logger log = LoggerFactory.getLogger(BashCommandsIntegrationTest.class);
     
     private ManagementContext mgmt;
     private BasicExecutionContext exec;
@@ -97,7 +96,7 @@ public class CommonCommandsIntegrationTest {
     public void testSudo() throws Exception {
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         ByteArrayOutputStream errStream = new ByteArrayOutputStream();
-        String cmd = CommonCommands.sudo("whoami");
+        String cmd = BashCommands.sudo("whoami");
         int exitcode = loc.execCommands(ImmutableMap.of("out", outStream, "err", errStream), "test", ImmutableList.of(cmd));
         String outstr = new String(outStream.toByteArray());
         String errstr = new String(errStream.toByteArray());
@@ -107,7 +106,7 @@ public class CommonCommandsIntegrationTest {
     }
     
     public void testDownloadUrl() throws Exception {
-        List<String> cmds = CommonCommands.downloadUrlAs(
+        List<String> cmds = BashCommands.downloadUrlAs(
                 ImmutableList.of(sourceFileUrl1), 
                 destFile.getAbsolutePath());
         int exitcode = loc.execCommands("test", cmds);
@@ -118,7 +117,7 @@ public class CommonCommandsIntegrationTest {
     
     @Test(groups="Integration")
     public void testDownloadFirstSuccessfulFile() throws Exception {
-        List<String> cmds = CommonCommands.downloadUrlAs(
+        List<String> cmds = BashCommands.downloadUrlAs(
                 ImmutableList.of(sourceNonExistantFileUrl, sourceFileUrl1, sourceFileUrl2), 
                 destFile.getAbsolutePath());
         int exitcode = loc.execCommands("test", cmds);
@@ -133,7 +132,7 @@ public class CommonCommandsIntegrationTest {
         try {
             List<String> cmds = ImmutableList.<String>builder()
                     .add("cd "+destEntityFile.getParentFile().getAbsolutePath())
-                    .addAll(CommonCommands.downloadUrlAs(
+                    .addAll(BashCommands.downloadUrlAs(
                             ImmutableMap.of(),
                             sourceFileUrl1, 
                             localRepoEntityVersionPath,
@@ -154,7 +153,7 @@ public class CommonCommandsIntegrationTest {
         try {
             List<String> cmds = ImmutableList.<String>builder()
                     .add("cd "+destEntityFile.getParentFile().getAbsolutePath())
-                    .addAll(CommonCommands.downloadUrlAs(
+                    .addAll(BashCommands.downloadUrlAs(
                             ImmutableMap.of("skipLocalRepo", true),
                             sourceFileUrl1, 
                             localRepoEntityVersionPath,
@@ -175,7 +174,7 @@ public class CommonCommandsIntegrationTest {
         try {
             List<String> cmds = ImmutableList.<String>builder()
                     .add("cd "+destEntityFile.getParentFile().getAbsolutePath())
-                    .addAll(CommonCommands.downloadUrlAs(
+                    .addAll(BashCommands.downloadUrlAs(
                             ImmutableMap.of(),
                             sourceFileUrl1, 
                             "localnotthere",
@@ -194,7 +193,7 @@ public class CommonCommandsIntegrationTest {
     public void testDownloadEntityUrlWhenNoneSupplied() throws Exception {
         List<String> cmds = ImmutableList.<String>builder()
                 .add("cd "+destFile.getParentFile().getAbsolutePath())
-                .addAll(CommonCommands.downloadUrlAs(
+                .addAll(BashCommands.downloadUrlAs(
                         ImmutableMap.of(),
                         sourceNonExistantFileUrl,
                         "localnotthere",
@@ -210,7 +209,7 @@ public class CommonCommandsIntegrationTest {
     public void testDownloadToStdout() throws Exception {
         SshTaskWrapper<String> t = SshTasks.newTaskFactory(loc, 
                 "cd "+destFile.getParentFile().getAbsolutePath(),
-                CommonCommands.downloadToStdout(Arrays.asList(sourceFileUrl1))+" | sed s/my/your/")
+                BashCommands.downloadToStdout(Arrays.asList(sourceFileUrl1))+" | sed s/my/your/")
             .requiringZeroAndReturningStdout().newTask();
 
         String result = exec.submit(t).get();
@@ -221,9 +220,9 @@ public class CommonCommandsIntegrationTest {
     @Test(groups="Integration")
     public void testDeprecatedAlternatives() throws Exception {
         SshTaskWrapper<Integer> t = SshTasks.newTaskFactory(loc)
-            .add(CommonCommands.alternatives(
+            .add(BashCommands.alternatives(
                     Arrays.asList("asdfj_no_such_command_1",  "asdfj_no_such_command_2"), 
-                    CommonCommands.fail("echo cannae-find-command", 88))).newTask();
+                    BashCommands.fail("echo cannae-find-command", 88))).newTask();
 
         Integer returnCode = exec.submit(t).get();
         log.info("alternatives for bad commands gave: "+returnCode+"; err="+new String(t.getStderr())+"; out="+new String(t.getStdout()));
@@ -233,7 +232,7 @@ public class CommonCommandsIntegrationTest {
     @Test(groups="Integration")
     public void testRequireTestHandlesFailure() throws Exception {
         SshTaskWrapper<?> t = SshTasks.newTaskFactory(loc)
-            .add(CommonCommands.requireTest("-f "+sourceNonExistantFile.getPath(),
+            .add(BashCommands.requireTest("-f "+sourceNonExistantFile.getPath(),
                     "The requested file does not exist")).newTask();
 
         exec.submit(t).get();
@@ -245,7 +244,7 @@ public class CommonCommandsIntegrationTest {
     @Test(groups="Integration")
     public void testRequireTestHandlesSuccess() throws Exception {
         SshTaskWrapper<?> t = SshTasks.newTaskFactory(loc)
-            .add(CommonCommands.requireTest("-f "+sourceFile1.getPath(),
+            .add(BashCommands.requireTest("-f "+sourceFile1.getPath(),
                     "The requested file does not exist")).newTask();
 
         exec.submit(t).get();
@@ -256,7 +255,7 @@ public class CommonCommandsIntegrationTest {
     @Test(groups="Integration")
     public void testRequireFileHandlesFailure() throws Exception {
         SshTaskWrapper<?> t = SshTasks.newTaskFactory(loc)
-            .add(CommonCommands.requireFile(sourceNonExistantFile.getPath())).newTask();
+            .add(BashCommands.requireFile(sourceNonExistantFile.getPath())).newTask();
 
         exec.submit(t).get();
         assertNotEquals(t.getExitCode(), (Integer)0);
@@ -269,7 +268,7 @@ public class CommonCommandsIntegrationTest {
     @Test(groups="Integration")
     public void testRequireFileHandlesSuccess() throws Exception {
         SshTaskWrapper<?> t = SshTasks.newTaskFactory(loc)
-            .add(CommonCommands.requireFile(sourceFile1.getPath())).newTask();
+            .add(BashCommands.requireFile(sourceFile1.getPath())).newTask();
 
         exec.submit(t).get();
         assertEquals(t.getExitCode(), (Integer)0);

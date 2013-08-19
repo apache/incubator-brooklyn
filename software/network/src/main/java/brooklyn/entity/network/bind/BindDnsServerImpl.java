@@ -34,7 +34,7 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Cidr;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
@@ -222,7 +222,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         copyTemplate(getConfig(NAMED_CONF_TEMPLATE), "/etc/named.conf", machine);
         copyTemplate(getConfig(DOMAIN_ZONE_FILE_TEMPLATE), "/var/named/domain.zone", machine);
         copyTemplate(getConfig(REVERSE_ZONE_FILE_TEMPLATE), "/var/named/reverse.zone", machine);
-        machine.execScript("restart bind", ImmutableList.of(CommonCommands.sudo("service named restart")));
+        machine.execScript("restart bind", ImmutableList.of(BashCommands.sudo("service named restart")));
         LOG.info("updated named configuration and zone file for '{}' on {}", getDomainName(), this);
     }
 
@@ -231,7 +231,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
             copyTemplate(getConfig(RESOLV_CONF_TEMPLATE), "/etc/resolv.conf", machine);
         } else {
             appendTemplate(getConfig(INTERFACE_CONFIG_TEMPLATE), "/etc/sysconfig/network-scripts/ifcfg-eth0", machine);
-            machine.execScript("reload network", ImmutableList.of(CommonCommands.sudo("service network reload")));
+            machine.execScript("reload network", ImmutableList.of(BashCommands.sudo("service network reload")));
         }
         LOG.info("configured resolver on {}", machine);
     }
@@ -240,7 +240,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         String content = ((BindDnsServerSshDriver) getDriver()).processTemplate(template);
         String temp = "/tmp/template-" + Strings.makeRandomId(6);
         machine.copyTo(new ByteArrayInputStream(content.getBytes()), temp);
-        machine.execScript("copying file", ImmutableList.of(CommonCommands.sudo(String.format("mv %s %s", temp, destination))));
+        machine.execScript("copying file", ImmutableList.of(BashCommands.sudo(String.format("mv %s %s", temp, destination))));
     }
 
     public void appendTemplate(String template, String destination, SshMachineLocation machine) {
@@ -248,7 +248,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         String temp = "/tmp/template-" + Strings.makeRandomId(6);
         machine.copyTo(new ByteArrayInputStream(content.getBytes()), temp);
         machine.execScript("updating file", ImmutableList.of(
-                CommonCommands.sudo(String.format("tee -a %s < %s", destination, temp)),
+                BashCommands.sudo(String.format("tee -a %s < %s", destination, temp)),
                 String.format("rm -f %s", temp)));
     }
 }
