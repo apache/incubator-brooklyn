@@ -50,6 +50,7 @@ public class SshTasks {
         protected boolean runAsScript = false;
         protected boolean runAsRoot = false;
         protected boolean requireExitCodeZero = false;
+        protected String extraErrorMessage = null;
         protected Map<String,String> shellEnvironment = new MutableMap<String, String>();
 
         // execution details
@@ -140,6 +141,13 @@ public class SshTasks {
             return self();
         }
         
+        public T requiringExitCodeZero(String extraErrorMessage) {
+            checkStillMutable();
+            requireExitCodeZero = true;
+            this.extraErrorMessage = extraErrorMessage;
+            return self();
+        }
+        
         @SuppressWarnings({ "unchecked" })
         public AbstractSshTask<?,String> requiringZeroAndReturningStdout() {
             requiringExitCodeZero();
@@ -194,14 +202,19 @@ public class SshTasks {
         @Override
         public synchronized Task<RET> getTask() {
             if (task==null) {
-                TaskBuilder<Object> tb = TaskBuilder.builder().dynamic(false).name("ssh: "+getSummary()).body(job);
-                tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDIN, 
-                        Streams.byteArrayOfString(Strings.join(commands, "\n"))));
-                if (stdout!=null) tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDOUT, stdout));
-                if (stderr!=null) tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDERR, stderr));
-                task = tb.build();
+                task = constructCustomizedTaskBuilder().build();
             }
             return (Task<RET>) task;
+        }
+
+        /** creates the TaskBuilder which can be further customized; typically invoked by the initial getTask */
+        protected TaskBuilder<Object> constructCustomizedTaskBuilder() {
+            TaskBuilder<Object> tb = TaskBuilder.builder().dynamic(false).name("ssh: "+getSummary()).body(job);
+            tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDIN, 
+                    Streams.byteArrayOfString(Strings.join(commands, "\n"))));
+            if (stdout!=null) tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDOUT, stdout));
+            if (stderr!=null) tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDERR, stderr));
+            return tb;
         }
         
         public T summary(String summary) {
@@ -242,7 +255,9 @@ public class SshTasks {
                     exitCode = getMachine().execCommands(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
                 
                 if (requireExitCodeZero && exitCode!=0)
-                    throw new IllegalStateException("Ssh job ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary());
+                    throw new IllegalStateException(
+                            (extraErrorMessage!=null ? extraErrorMessage+": " : "")+
+                            "ssh job ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary());
 
                 if (returnResultTransformation!=null)
                     return returnResultTransformation.apply(AbstractSshTask.this);

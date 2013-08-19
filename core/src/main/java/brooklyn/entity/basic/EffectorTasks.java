@@ -13,12 +13,14 @@ import brooklyn.entity.ParameterType;
 import brooklyn.management.Task;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.DynamicSequentialTask;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Preconditions;
 
 @Beta // added in 0.6.0
 public class EffectorTasks {
@@ -115,6 +117,20 @@ public class EffectorTasks {
                 return task;
             }
         };
+    }
+
+    /** Finds the entity where this task is running, throwing NPE if there is none */
+    public static Entity findEntity() {
+        return Preconditions.checkNotNull(BrooklynTasks.getTargetOrContextEntity(Tasks.current()),
+                "This must be executed in a task whose execution context has a target or context entity " +
+                "(i.e. it must be run from within an effector)");
+    }
+
+    /** Finds the entity where this task is running, throwing NPE if there is none,
+     * and throwing IAE if it is not of the indicated type */
+    public static <T extends Entity> T findEntity(Class<T> type) {
+        Entity t = findEntity();
+        return Reflections.cast(t, type);
     }
 
 }

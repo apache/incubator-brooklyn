@@ -604,4 +604,13 @@ public class Reflections {
         boolean isSuper2 = c2.isAssignableFrom(c1);
         return (isSuper1) ? (isSuper2 ? null : c2) : (isSuper2 ? c1 : null);
     }
+    
+    /** convenience for casting the given candidate to the given type (without any coercion, and allowing candidate to be null) */
+    @SuppressWarnings("unchecked")
+    public static <T> T cast(Object candidate, Class<? extends T> type) {
+        if (candidate==null) return null;
+        if (!type.isAssignableFrom(candidate.getClass()))
+            throw new IllegalArgumentException("Requires a "+type+", but had a "+candidate.getClass()+" ("+candidate+")");
+        return (T)candidate;
+    }
 }

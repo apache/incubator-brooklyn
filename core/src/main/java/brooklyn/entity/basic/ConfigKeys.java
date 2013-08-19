@@ -25,6 +25,10 @@ public class ConfigKeys {
         return new BasicConfigKey<T>(type, name, description);
     }
 
+    public static <T> ConfigKey<T> newConfigKey(TypeToken<T> type, String name) {
+        return new BasicConfigKey<T>(type, name);
+    }
+
     public static <T> ConfigKey<T> newConfigKey(TypeToken<T> type, String name, String description) {
         return new BasicConfigKey<T>(type, name, description);
     }

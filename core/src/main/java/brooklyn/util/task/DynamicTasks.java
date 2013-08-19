@@ -163,6 +163,22 @@ public class DynamicTasks {
         }
     }
 
+    public static <U,V extends HasTask<U>> Task<U> queue(V hasTask) {
+        return queue(hasTask.getTask());
+    }
+    
+    public static void queue(Task<?> task1, Task<?> task2, Task<?> ...tasks) {
+        queue(task1);
+        queue(task2);
+        for (Task<?> task: tasks) queue(task);
+    }
+    
+    public static void queue(HasTask<?> task1, HasTask<?> task2, HasTask<?> ...tasks) {
+        queue(task1.getTask());
+        queue(task2.getTask());
+        for (HasTask<?> task: tasks) queue(task.getTask());
+    }
+    
     public static <T> Task<T> queueIfNeeded(Task<T> task) {
         if (!Tasks.isQueuedOrSubmitted(task))
             queue(task);

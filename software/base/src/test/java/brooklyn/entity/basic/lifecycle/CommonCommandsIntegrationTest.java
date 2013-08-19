@@ -19,11 +19,9 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SshTasks;
 import brooklyn.entity.basic.SshTasks.SshTask;
-import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
 import brooklyn.util.ssh.CommonCommands;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.text.Identifiers;
@@ -41,7 +39,7 @@ public class CommonCommandsIntegrationTest {
     private BasicExecutionContext exec;
     
     private File destFile;
-    private File sourceNonExistantFile = new File("/this/does/not/exist");
+    private File sourceNonExistantFile;
     private File sourceFile1;
     private File sourceFile2;
     private String sourceNonExistantFileUrl;
@@ -62,7 +60,7 @@ public class CommonCommandsIntegrationTest {
         
         destFile = java.io.File.createTempFile("commoncommands-test-dest", "txt");
         
-        sourceNonExistantFile = new File("/this/does/not/exist");
+        sourceNonExistantFile = new File("/this/does/not/exist/ERQBETJJIG1234");
         sourceNonExistantFileUrl = sourceNonExistantFile.toURI().toString();
         
         sourceFile1 = java.io.File.createTempFile("commoncommands-test", "txt");
@@ -184,7 +182,7 @@ public class CommonCommandsIntegrationTest {
                     .build();
             int exitcode = loc.execCommands("test", cmds);
             
-            assertEquals(0, exitcode);
+            assertEquals(exitcode, 0);
             assertEquals(Files.readLines(destEntityFile, Charsets.UTF_8), ImmutableList.of("mysource1"));
         } finally {
             destEntityFile.delete();
@@ -197,13 +195,13 @@ public class CommonCommandsIntegrationTest {
                 .add("cd "+destFile.getParentFile().getAbsolutePath())
                 .addAll(CommonCommands.downloadUrlAs(
                         ImmutableMap.of(),
-                        "localnotthere",
                         sourceNonExistantFileUrl,
+                        "localnotthere",
                         destFile.getName()))
                 .build();
         int exitcode = loc.execCommands("test", cmds);
         
-        assertNotEquals(exitcode, 0);
+        assertNotEquals(exitcode, 0, "Expected non-zero exit code, but got "+exitcode);
         assertEquals(Files.readLines(destFile, Charsets.UTF_8), ImmutableList.of());
     }
     
@@ -223,11 +221,59 @@ public class CommonCommandsIntegrationTest {
     public void testDeprecatedAlternatives() throws Exception {
         SshTask<Integer> t = SshTasks.newInstance(loc)
             .add(CommonCommands.alternatives(
-                    Arrays.asList("asdfj_no_such_command_1",  "asdfj_no_such_command_2"), "echo cannae-find-command"));
+                    Arrays.asList("asdfj_no_such_command_1",  "asdfj_no_such_command_2"), 
+                    CommonCommands.fail("echo cannae-find-command", 88)));
 
         Integer returnCode = exec.submit(t).get();
         log.info("alternatives for bad commands gave: "+returnCode+"; err="+new String(t.getStderr())+"; out="+new String(t.getStdout()));
-        assertTrue(returnCode != 0);
+        assertEquals(returnCode, (Integer)88);
     }
+
+    @Test(groups="Integration")
+    public void testRequireTestHandlesFailure() throws Exception {
+        SshTask<?> t = SshTasks.newInstance(loc)
+            .add(CommonCommands.requireTest("-f "+sourceNonExistantFile.getPath(),
+                    "The requested file does not exist"));
+
+        exec.submit(t).get();
+        assertNotEquals(t.getExitCode(), (Integer)0);
+        assertTrue(t.getStderr().contains("The requested file"), "Expected message in: "+t.getStderr());
+        assertTrue(t.getStdout().contains("The requested file"), "Expected message in: "+t.getStdout());
+    }
+
+    @Test(groups="Integration")
+    public void testRequireTestHandlesSuccess() throws Exception {
+        SshTask<?> t = SshTasks.newInstance(loc)
+            .add(CommonCommands.requireTest("-f "+sourceFile1.getPath(),
+                    "The requested file does not exist"));
+
+        exec.submit(t).get();
+        assertEquals(t.getExitCode(), (Integer)0);
+        assertTrue(t.getStderr().equals(""), "Expected no stderr messages, but got: "+t.getStderr());
+    }
+
+    @Test(groups="Integration")
+    public void testRequireFileHandlesFailure() throws Exception {
+        SshTask<?> t = SshTasks.newInstance(loc)
+            .add(CommonCommands.requireFile(sourceNonExistantFile.getPath()));
+
+        exec.submit(t).get();
+        assertNotEquals(t.getExitCode(), (Integer)0);
+        assertTrue(t.getStderr().contains("required file"), "Expected message in: "+t.getStderr());
+        assertTrue(t.getStderr().contains(sourceNonExistantFile.getPath()), "Expected message in: "+t.getStderr());
+        assertTrue(t.getStdout().contains("required file"), "Expected message in: "+t.getStdout());
+        assertTrue(t.getStdout().contains(sourceNonExistantFile.getPath()), "Expected message in: "+t.getStdout());
+    }
+
+    @Test(groups="Integration")
+    public void testRequireFileHandlesSuccess() throws Exception {
+        SshTask<?> t = SshTasks.newInstance(loc)
+            .add(CommonCommands.requireFile(sourceFile1.getPath()));
+
+        exec.submit(t).get();
+        assertEquals(t.getExitCode(), (Integer)0);
+        assertTrue(t.getStderr().equals(""), "Expected no stderr messages, but got: "+t.getStderr());
+    }
+
 
 }

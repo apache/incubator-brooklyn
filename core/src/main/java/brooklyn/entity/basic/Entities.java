@@ -24,7 +24,6 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.BrooklynTasks.WrappedEntity;
 import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.trait.Startable;
@@ -46,7 +45,6 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.Tasks;
 

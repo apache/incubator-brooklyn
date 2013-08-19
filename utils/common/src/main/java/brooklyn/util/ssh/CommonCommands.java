@@ -2,9 +2,9 @@ package brooklyn.util.ssh;
 
 import static java.lang.String.format;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -23,12 +23,12 @@ public class CommonCommands {
      * <p/>
      * Uses {@link #installPackage} and accepts the same flags e.g. for apt, yum, rpm.
      */
-    public static String installExecutable(Map flags, String executable) {
+    public static String installExecutable(Map<?,?> flags, String executable) {
         return missing(executable, installPackage(flags, executable));
     }
 
     public static String installExecutable(String executable) {
-        return installExecutable(new HashMap(), executable);
+        return installExecutable(MutableMap.of(), executable);
     }
 
     /**
@@ -174,7 +174,7 @@ public class CommonCommands {
      * installPackage("libssl-devel", yum:"openssl-devel", apt:"openssl libssl-dev zlib1g-dev")
      * </pre>
      */
-    public static String installPackage(Map flags, String packageDefaultName) {
+    public static String installPackage(Map<?,?> flags, String packageDefaultName) {
         String ifmissing = (String) flags.get("onlyifmissing");
         
         String aptInstall = formatIfNotNull("apt-get install -y --allow-unauthenticated %s", getFlag(flags, "apt", packageDefaultName));
@@ -204,8 +204,45 @@ public class CommonCommands {
         return "( echo "+BashStringEscapes.wrapBash(message)+" | tee /dev/stderr )";
     }
 
+    /** returns a command which logs a message to stdout and stderr then exits with the given error code */
+    public static String fail(String message, int code) {
+        return chain(warn(message), "exit "+code);
+    }
+
+    /** requires the command to have a non-zero exit code; e.g.
+     * <code>require("which foo", "Command foo must be found", 1)</code> */
+    public static String require(String command, String failureMessage, int exitCode) {
+        return alternatives(command, fail(failureMessage, exitCode));
+    }
+
+    /** as {@link #require(String, String, int)} but returning the original exit code */
+    public static String require(String command, String failureMessage) {
+        return alternatives(command, chain("EXIT_CODE=$?", warn(failureMessage), "exit $EXIT_CODE"));
+    }
+
+    /** requires the test to pass, as valid bash `test` arguments; e.g.
+     * <code>requireTest("-f /etc/hosts", "Hosts file must exist", 1)</code> */
+    public static String requireTest(String test, String failureMessage, int exitCode) {
+        return require("test "+test, failureMessage, exitCode);
+    }
+
+    /** as {@link #requireTest(String, String, int)} but returning the original exit code */
+    public static String requireTest(String test, String failureMessage) {
+        return require("test "+test, failureMessage);
+    }
+
+    /** fails with nice error if the given file does not exist */
+    public static String requireFile(String file) {
+        return requireTest("-f "+BashStringEscapes.wrapBash(file), "The required file \""+file+"\" does not exist");
+    }
+
+    /** fails with nice error if the given file does not exist */
+    public static String requireExecutable(String command) {
+        return require("which `"+BashStringEscapes.wrapBash(command)+"`", "The required executable \""+command+"\" does not exist");
+    }
+
     public static String installPackage(String packageDefaultName) {
-        return installPackage(new HashMap(), packageDefaultName);
+        return installPackage(MutableMap.of(), packageDefaultName);
     }
 
     public static final String INSTALL_TAR = installExecutable("tar");
@@ -220,7 +257,7 @@ public class CommonCommands {
      */
     @Deprecated
     public static List<String> downloadUrlAs(String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
-        return downloadUrlAs(new HashMap(), url, entityVersionPath, pathlessFilenameToSaveAs);
+        return downloadUrlAs(MutableMap.of(), url, entityVersionPath, pathlessFilenameToSaveAs);
     }
 
     /**
@@ -237,7 +274,7 @@ public class CommonCommands {
      * @deprecated since 0.5.0 - Use {@link downloadUrlAs(List, String)}, and rely on {@link DownloadResolverManager} to include the local-repo
      */
     @Deprecated
-    public static List<String> downloadUrlAs(Map flags, String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
+    public static List<String> downloadUrlAs(Map<?,?> flags, String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
         Boolean skipLocalRepo = (Boolean) flags.get("skipLocalRepo");
         boolean useLocalRepo =  skipLocalRepo!=null?!skipLocalRepo:true;
         List<String> urls;
@@ -255,7 +292,8 @@ public class CommonCommands {
      * (see `curl -f` documentation).
      */
     public static List<String> downloadUrlAs(List<String> urls, String saveAs) {
-        return Arrays.asList(INSTALL_CURL, simpleDownloadUrlAs(urls, saveAs) + " || exit 9");
+        return Arrays.asList(INSTALL_CURL, 
+                require(simpleDownloadUrlAs(urls, saveAs), "Could not retrieve "+saveAs+" (from "+urls.size()+" sites)", 9));
     }
 
     /**
@@ -264,8 +302,12 @@ public class CommonCommands {
      * Will try each URL in turn until one is successful
      */
     public static String downloadToStdout(List<String> urls) {
-        return "( " + INSTALL_CURL + " > /dev/null ) && ( "+simpleDownloadUrlAs(urls, null) + " || exit 9 )";
+        return chain(
+                INSTALL_CURL + " > /dev/null", 
+                require(simpleDownloadUrlAs(urls, null), 
+                        "Could not retrieve file (from "+urls.size()+" sites)", 9));
     }
+    
     /** as {@link #downloadToStdout(List)} but varargs for convenience */
     public static String downloadToStdout(String ...urls) {
         return downloadToStdout(Arrays.asList(urls));
@@ -278,20 +320,17 @@ public class CommonCommands {
     public static String simpleDownloadUrlAs(List<String> urls, String saveAs) {
         if (urls.isEmpty()) throw new IllegalArgumentException("No URLs supplied to download "+saveAs);
         
-        StringBuilder command = new StringBuilder("");
-        boolean firsturl = true;
+        List<String> commands = new ArrayList<String>();
         for (String url : urls) {
-            if (!firsturl) command.append(" || ");
-            firsturl = false;
-            command.append(format("curl -f -L \"%s\"", url));
+            String command = format("curl -f -L \"%s\"", url);
             if (saveAs!=null)
-                command.append(format(" -o %s", saveAs));
+                command = command + format(" -o %s", saveAs);
+            commands.add(command);
         }
-        
-        return command.toString();
+        return alternatives(commands);
     }
 
-    private static Object getFlag(Map flags, String flagName, Object defaultValue) {
+    private static Object getFlag(Map<?,?> flags, String flagName, Object defaultValue) {
         Object found = flags.get(flagName);
         return found == null ? defaultValue : found;
     }
@@ -305,5 +344,5 @@ public class CommonCommands {
     public static String installJava6() {
         return installPackage(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null);
     }
-    
+
 }

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import brooklyn.management.HasTask;
 import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.GroovyJavaMethods;
@@ -95,6 +96,16 @@ public class TaskBuilder<T> {
             return new SequentialTask(flags, children);
     }
 
+    /** returns a wrapper for the task which defers building until the task is retrieved */
+    public HasTask<T> buildDeferred() {
+        return new HasTask<T>() {
+            @Override
+            public Task<T> getTask() {
+                return build();
+            }
+        };
+    }
+    
     @Override
     public String toString() {
         return super.toString()+"["+name+"]";
