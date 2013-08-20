@@ -17,6 +17,7 @@ import brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 
 public class LocalhostLocationResolverTest {
 
@@ -36,6 +37,23 @@ public class LocalhostLocationResolverTest {
     
     @Test
     public void testTakesLocalhostScopedProperties() {
+        brooklynProperties.put("brooklyn.location.localhost.privateKeyFile", "myprivatekeyfile");
+        brooklynProperties.put("brooklyn.location.localhost.publicKeyFile", "mypublickeyfile");
+        brooklynProperties.put("brooklyn.location.localhost.privateKeyData", "myprivateKeyData");
+        brooklynProperties.put("brooklyn.location.localhost.publicKeyData", "myPublicKeyData");
+        brooklynProperties.put("brooklyn.location.localhost.privateKeyPassphrase", "myprivateKeyPassphrase");
+
+        Map<String, Object> conf = resolve("localhost").getAllConfig(true);
+        
+        assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
+        assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
+        assertEquals(conf.get("privateKeyData"), "myprivateKeyData");
+        assertEquals(conf.get("publicKeyData"), "myPublicKeyData");
+        assertEquals(conf.get("privateKeyPassphrase"), "myprivateKeyPassphrase");
+    }
+
+    @Test
+    public void testTakesLocalhostDeprecatedScopedProperties() {
         brooklynProperties.put("brooklyn.localhost.privateKeyFile", "myprivatekeyfile");
         brooklynProperties.put("brooklyn.localhost.publicKeyFile", "mypublickeyfile");
         brooklynProperties.put("brooklyn.localhost.privateKeyData", "myprivateKeyData");
@@ -67,6 +85,29 @@ public class LocalhostLocationResolverTest {
         assertEquals(conf.get("privateKeyPassphrase"), "myprivateKeyPassphrase");
     }
     
+    @Test
+    public void testPropertyScopePrescedence() {
+        brooklynProperties.put("brooklyn.location.named.mynamed", "localhost");
+        
+        // prefer those in "named" over everything else
+        brooklynProperties.put("brooklyn.location.named.mynamed.privateKeyFile", "privateKeyFile-inNamed");
+        brooklynProperties.put("brooklyn.location.localhost.privateKeyFile", "privateKeyFile-inProviderSpecific");
+        brooklynProperties.put("brooklyn.localhost.privateKeyFile", "privateKeyFile-inGeneric");
+
+        // prefer those in provider-specific over generic
+        brooklynProperties.put("brooklyn.location.localhost.publicKeyFile", "publicKeyFile-inProviderSpecific");
+        brooklynProperties.put("brooklyn.location.publicKeyFile", "publicKeyFile-inGeneric");
+
+        // prefer location-generic if nothing else
+        brooklynProperties.put("brooklyn.location.privateKeyData", "privateKeyData-inGeneric");
+
+        Map<String, Object> conf = resolve("named:mynamed").getAllConfig(true);
+        
+        assertEquals(conf.get("privateKeyFile"), "privateKeyFile-inNamed");
+        assertEquals(conf.get("publicKeyFile"), "publicKeyFile-inProviderSpecific");
+        assertEquals(conf.get("privateKeyData"), "privateKeyData-inGeneric");
+    }
+
     @Test
     public void testLocalhostLoads() {
         Assert.assertTrue(resolve("localhost") instanceof LocalhostMachineProvisioningLocation);

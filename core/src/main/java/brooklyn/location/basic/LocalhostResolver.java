@@ -47,21 +47,6 @@ public class LocalhostResolver implements LocationResolver {
     private static final Pattern PATTERN = Pattern.compile("("+LOCALHOST+"|"+LOCALHOST.toUpperCase()+")" + "(:\\((.*)\\))?$");
     private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("name");
     
-    private static final ConfigKey<?>[] KEYS = new ConfigKey[] {
-        LocationConfigKeys.PRIVATE_KEY_FILE, LocationConfigKeys.PUBLIC_KEY_FILE, 
-        LocationConfigKeys.PRIVATE_KEY_DATA, LocationConfigKeys.PUBLIC_KEY_DATA, 
-        LocationConfigKeys.PRIVATE_KEY_PASSPHRASE };
-
-    private static final Map<String, String> DEPRECATED_KEYS_MAPPING;
-    static {
-        @SuppressWarnings("deprecation")
-        DeprecatedKeysMappingBuilder builder = new DeprecatedKeysMappingBuilder(log);
-        for (ConfigKey<?> key : KEYS) {
-            builder.camelToHyphen(key);
-        }
-        DEPRECATED_KEYS_MAPPING = builder.build();
-    }
-
     private ManagementContext managementContext;
 
     @Override
@@ -85,6 +70,8 @@ public class LocalhostResolver implements LocationResolver {
     }
     
     protected Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
+        String namedLocation = (String) locationFlags.get("name");
+        
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like localhost or localhost(name=abc)");
@@ -102,12 +89,8 @@ public class LocalhostResolver implements LocationResolver {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; if name supplied then value must be non-empty");
         }
 
-        Map<String, Object> filteredProperties = ConfigUtils.filterForPrefixAndStrip(properties, "brooklyn.localhost.").asMapWithStringKeys();
-        MutableMap<String, Object> allFilteredProperties = MutableMap.<String, Object>builder().putAll(filteredProperties).putAll(locationFlags).build();
-        
-        MutableMap<String,Object> flags = new MutableMap<String,Object>();
-        
-        flags.putAll(transformDeprecated(allFilteredProperties));
+        Map<String, Object> filteredProperties = new LocalhostPropertiesFromBrooklynProperties().getLocationProperties("localhost", namedLocation, properties);
+        MutableMap<String, Object> flags = MutableMap.<String, Object>builder().putAll(filteredProperties).putAll(locationFlags).build();
         
         if (namePart != null) {
             flags.put("name", namePart);
@@ -121,24 +104,6 @@ public class LocalhostResolver implements LocationResolver {
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
                 .configure(flags));
-    }
-
-    private static Map<String, Object> transformDeprecated(Map<String, ? extends Object> properties) {
-        Map<String,Object> result = Maps.newLinkedHashMap();
-        
-        for (Map.Entry<String,?> entry : properties.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            if (DEPRECATED_KEYS_MAPPING.containsKey(key)) {
-                String transformedKey = DEPRECATED_KEYS_MAPPING.get(key);
-                log.warn("Deprecated key {}, transformed to {}; will not be supported in future versions", new Object[] {key, transformedKey});
-                result.put(transformedKey, value);
-            } else {
-                result.put(key, value);
-            }
-        }
-        
-        return result;
     }
 
     @Override

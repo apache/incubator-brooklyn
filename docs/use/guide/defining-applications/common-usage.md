@@ -51,17 +51,17 @@ Configuration is typically set in `~/.brooklyn/brooklyn.properties` using keys s
 
 {% highlight java %}
     # use this key for localhost (this is the default, although if you have a passphrase you must set it)
-    brooklyn.localhost.privateKeyFile=~/.ssh/id_rsa
+    brooklyn.location.localhost.privateKeyFile=~/.ssh/id_rsa
     
-    brooklyn.localhost.privateKeyPassphrase=s3cr3tPASSPHRASE
+    brooklyn.location.localhost.privateKeyPassphrase=s3cr3tPASSPHRASE
        
     # use a special key when connecting to public clouds, and a particularly special one for AWS
-    brooklyn.jclouds.privateKeyFile=~/.ssh/public_clouds/id_rsa
-    brooklyn.jclouds.aws-ec2.privateKeyFile=~/.ssh/public_clouds/aws_id_rsa
+    brooklyn.location.jclouds.privateKeyFile=~/.ssh/public_clouds/id_rsa
+    brooklyn.location.jclouds.aws-ec2.privateKeyFile=~/.ssh/public_clouds/aws_id_rsa
         
     # AWS credentials (when deploying to location jclouds:aws-ec2)
-    brooklyn.jclouds.aws-ec2.identity=ABCDEFGHIJKLMNOPQRST      
-    brooklyn.jclouds.aws-ec2.credential=s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
+    brooklyn.location.jclouds.aws-ec2.identity=ABCDEFGHIJKLMNOPQRST      
+    brooklyn.location.jclouds.aws-ec2.credential=s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
     
     # credentials for 'geoscaling' service
     brooklyn.geoscaling.username=cloudsoft                      
@@ -72,7 +72,7 @@ These can also be set as environment variables (in the shell) or system properti
 (There are also ``BROOKLYN_JCLOUDS_PRIVATE_KEY_FILE`` variants accepted.)
 
 For any jclouds provider you will typically need to set ``identity`` and ``credential``
-in the ``brooklyn.jclouds.provider`` namespace.
+in the ``brooklyn.location.jclouds.provider`` namespace.
 
 To deploy to sets of machines with known IP's, assuming you have the credentials,
 use the syntax ``byon:(hosts="user@10.9.1.1,user@10.9.1.2,user@10.9.1.3")``
@@ -83,7 +83,7 @@ A wide range of other fields is available, because in the real world sometimes t
 The following is supported from the configuration file (with whatever customization you might want available in code): 
 
 - If there is a passphrase on the key file being used, you must supply it to Brooklyn for it to work, of course!
-  ``privateKeyPassphrase`` does the trick (as in ``brooklyn.jclouds.privateKeyPassphrase``, or other places
+  ``privateKeyPassphrase`` does the trick (as in ``brooklyn.location.jclouds.privateKeyPassphrase``, or other places
   where ``privateKeyFile`` is valid).  If you don't like keys, you can just use a plain old ``password``.
 
 - Hardware requirements such as ``minRam`` and ``minCores`` can be supplied, or a ``hardwareId``  (jclouds only)
