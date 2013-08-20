@@ -321,13 +321,12 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     
     @Override
     public void start() {
-        new DynamicTasks.AutoQueueVoid("install java") { protected void main() { 
-            installJava(); }};
+        DynamicTasks.queue("install java)", new Runnable() { public void run() {
+            installJava(); }});
             
         if (isJmxEnabled()) {
-            new DynamicTasks.AutoQueueVoid("install jmx") { protected void main() { 
-                installJmxSupport();
-            }}; 
+            DynamicTasks.queue("install jmx", new Runnable() { public void run() {
+                installJmxSupport(); }}); 
         }
         
         super.start();

@@ -23,11 +23,11 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
         if (((SoftwareProcessImpl)entity()).getDriver() == null) 
             throw new IllegalStateException("entity "+this+" not set up for operations (restart)");
         ((SoftwareProcessImpl)entity()).getDriver().restart();
-        new DynamicTasks.AutoQueueVoid("post-restart") { protected void main() {
+        DynamicTasks.queue("post-restart", new Runnable() { public void run() {
             ((SoftwareProcessImpl)entity()).postDriverRestart();
             DynamicTasks.waitForLast();
             entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
-        }};
+        }});
     }
     
     @Override

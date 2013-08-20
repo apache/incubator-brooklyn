@@ -55,24 +55,24 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      */
 	@Override
 	public void start() {
-        new DynamicTasks.AutoQueueVoid("install") { protected void main() { 
+	    DynamicTasks.queue("install", new Runnable() { public void run() {
             waitForConfigKey(ConfigKeys.INSTALL_LATCH);
             install();
-        }};
+        }});
         
-        new DynamicTasks.AutoQueueVoid("customize") { protected void main() { 
+	    DynamicTasks.queue("customize", new Runnable() { public void run() {
             waitForConfigKey(ConfigKeys.CUSTOMIZE_LATCH);
             customize();
-        }};
+        }});
         
-        new DynamicTasks.AutoQueueVoid("launch") { protected void main() { 
+	    DynamicTasks.queue("launch", new Runnable() { public void run() {
             waitForConfigKey(ConfigKeys.LAUNCH_LATCH);
             launch();
-        }};
+        }});
         
-        new DynamicTasks.AutoQueueVoid("post-launch") { protected void main() { 
+	    DynamicTasks.queue("post-launch", new Runnable() { public void run() {
             postLaunch();
-        }};
+        }});
 	}
 
 	@Override
@@ -94,7 +94,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     
 	@Override
 	public void restart() {
-	    new DynamicTasks.AutoQueueVoid("stop (if running)") { protected void main() {
+	    DynamicTasks.queue("stop (if running)", new Runnable() { public void run() {
 	        boolean previouslyRunning = isRunning();
 	        try {
 	            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
@@ -106,11 +106,11 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 	                log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
 	            }
 	        }
-	    }};
-	    new DynamicTasks.AutoQueueVoid("launch") { protected void main() {
+	    }});
+	    DynamicTasks.queue("launch", new Runnable() { public void run() {
 	        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
 	        launch();
-        }};
+        }});
 	}
 	
 	public EntityLocal getEntity() { return entity; } 

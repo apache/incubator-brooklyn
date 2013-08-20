@@ -15,7 +15,6 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 
 /** contains static methods which detect and use the current {@link TaskQueueingContext} to execute tasks */
 @Beta // introduced in 0.6.0
@@ -183,7 +182,15 @@ public class DynamicTasks {
         queue(task2.newTask());
         for (TaskFactory<?> task: tasks) queue(task.newTask());
     }
-    
+
+    public static <T> Task<T> queue(String name, Callable<T> job) {
+        return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
+    }
+
+    public static <T> Task<T> queue(String name, Runnable job) {
+        return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
+    }
+
     public static <T extends TaskAdaptable<?>> T queueIfNeeded(T task) {
         if (!Tasks.isQueuedOrSubmitted(task))
             queue(task);
@@ -195,55 +202,6 @@ public class DynamicTasks {
     // things get really confusing if you try to queueInTaskHierarchy -- easy to cause deadlocks!
     public static <T> T get(TaskAdaptable<T> t) {
         return queueIfNeeded(t).asTask().getUnchecked();
-    }
-
-    /** convenience for writing code which should be automatically queued as the body of a {@link DynamicSequentialTask},
-     * where further tasks can be queued
-     * <p>
-     * to use, create the class and implement main */
-    public abstract static class AutoQueue<T> implements Supplier<T>, TaskWrapper<T> {
-        final Task<T> task;
-        public AutoQueue(final String name) {
-            task = DynamicTasks.queue(Tasks.<T>builder().name(name).body(
-                    new Callable<T>() {
-                        public T call() throws Exception {
-                            return main();
-                        }
-                    }).build());
-        }
-        protected abstract T main() throws Exception;
-        public T get() {
-            try {
-                return task.get();
-            } catch (Exception e) { throw Exceptions.propagate(e); }
-        }
-        public Task<T> getTask() {
-            return task;
-        }
-        @Override
-        public Task<T> asTask() {
-            return getTask();
-        }
-    }
-
-    /** see {@link AutoQueue} */
-    public abstract static class AutoQueueVoid {
-        final Task<Void> task;
-        public AutoQueueVoid(final String name) {
-            task = DynamicTasks.queue(Tasks.<Void>builder().name(name).body(
-                    new Callable<Void>() {
-                        public Void call() throws Exception {
-                            main();
-                            return null;
-                        }
-                    }).build());
-        }
-        protected abstract void main() throws Exception;
-        public void get() {
-            try {
-                task.get();
-            } catch (Exception e) { throw Exceptions.propagate(e); }
-        }
     }
 
     /** Waits for the last task queued in this context to complete;

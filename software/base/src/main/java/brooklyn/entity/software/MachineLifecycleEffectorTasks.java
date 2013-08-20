@@ -35,7 +35,6 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.DynamicTasks.AutoQueue;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Preconditions;
@@ -180,9 +179,9 @@ public abstract class MachineLifecycleEffectorTasks {
         
         final Supplier<MachineLocation> locationSF = locationS;
         preStartAtMachineAsync(locationSF);
-        new DynamicTasks.AutoQueueVoid("start (processes)") { protected void main() { 
+        DynamicTasks.queue("start (processes)", new Runnable() { public void run() {
             startProcessesAtMachine(locationSF);
-        }};
+        }});
         postStartAtMachineAsync();
         return;
     }
@@ -222,7 +221,7 @@ public abstract class MachineLifecycleEffectorTasks {
 
     /** wraps a call to {@link #preStartCustom(MachineLocation)}, after setting the hostname and address */
     protected void preStartAtMachineAsync(final Supplier<MachineLocation> machineS) {
-        new DynamicTasks.AutoQueueVoid("pre-start") { protected void main() { 
+        DynamicTasks.queue("pre-start", new Runnable() { public void run() {
             MachineLocation machine = machineS.get();
             log.info("Starting {} on machine {}", this, machine);
             entity().addLocations(ImmutableList.of((Location)machine));
@@ -236,7 +235,7 @@ public abstract class MachineLifecycleEffectorTasks {
                 entity().setAttribute(Attributes.ADDRESS, machine.getAddress().getHostAddress());
             
             preStartCustom(machine);
-        }};
+        }});
     }
         
     /** default pre-start hooks, can be extended by subclasses if needed*/
@@ -258,9 +257,9 @@ public abstract class MachineLifecycleEffectorTasks {
     protected abstract String startProcessesAtMachine(final Supplier<MachineLocation> machineS);
     
     protected void postStartAtMachineAsync() {
-        new DynamicTasks.AutoQueueVoid("post-start") { protected void main() {
+        DynamicTasks.queue("post-start", new Runnable() { public void run() {
             postStartCustom();
-        }};
+        }});
     }
 
     /** default post-start hooks, can be extended by subclasses, and typically will do to wait for confirmation of start */
@@ -272,7 +271,7 @@ public abstract class MachineLifecycleEffectorTasks {
     
     /** default restart impl, stops processes if possible, then starts the entity again */
     protected void restart() {
-        new DynamicTasks.AutoQueue<String>("stopping (process)") { protected String main() {
+        DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
             try {
                 stopProcessesAtMachine();
                 DynamicTasks.waitForLast();
@@ -282,13 +281,13 @@ public abstract class MachineLifecycleEffectorTasks {
                 return msg;
             }
             return "Stop of process completed with no errors.";
-        }};
+        }});
         
-        new DynamicTasks.AutoQueueVoid("starting") { protected void main() {
+        DynamicTasks.queue("starting", new Runnable() { public void run() {
             // startInLocations will look up the location, and provision a machine if necessary
             // (if it remembered the provisioning location)
             startInLocations(null);
-        }};
+        }});
     }
 
     // ---------------------
@@ -299,7 +298,7 @@ public abstract class MachineLifecycleEffectorTasks {
     protected void stop() {
         log.info("Stopping {} in {}", entity(), entity().getLocations());
         
-        new DynamicTasks.AutoQueue<String>("pre-stop") { protected String main() {
+        DynamicTasks.queue("pre-stop", new Callable<String>() { public String call() {
             if (entity().getAttribute(SoftwareProcess.SERVICE_STATE)==Lifecycle.STOPPED) {
                 log.debug("Skipping stop of entity "+entity()+" when already stopped");
                 return "Already stopped";
@@ -308,13 +307,13 @@ public abstract class MachineLifecycleEffectorTasks {
             entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
             preStopCustom();
             return null;
-        }};
+        }});
         
         if (entity().getAttribute(SoftwareProcess.SERVICE_STATE)==Lifecycle.STOPPED) {
             return;
         }
                 
-        AutoQueue<Object> stoppingProcess = new DynamicTasks.AutoQueue<Object>("stopping (process)") { protected Object main() {
+        Task<Object> stoppingProcess = DynamicTasks.queue("stopping (process)", new Callable<Object>() { public Object call() {
             try {
                 stopProcessesAtMachine();
                 DynamicTasks.waitForLast();
@@ -324,22 +323,21 @@ public abstract class MachineLifecycleEffectorTasks {
                 return error;
             }
             return "Stop at machine completed with no errors.";
-        }};
+        }});
         
         // Release this machine (even if error trying to stop process - we rethrow that after)
-        new DynamicTasks.AutoQueue<String>("stopping (machines)") { protected String main() {
+        DynamicTasks.queue("stopping (machine)", new Callable<String>() { public String call() {
             if (entity().getAttribute(SoftwareProcess.SERVICE_STATE)==Lifecycle.STOPPED) {
                 log.debug("Skipping stop of entity "+entity()+" when already stopped");
                 return "Already stopped";
             }
-            
             return stopAnyProvisionedMachines();
-        }};
+        }});
         
         DynamicTasks.waitForLast();
         
-        if (stoppingProcess.get() instanceof Throwable)
-            throw Exceptions.propagate((Throwable)stoppingProcess.get());
+        if (stoppingProcess.getUnchecked() instanceof Throwable)
+            throw Exceptions.propagate((Throwable)stoppingProcess.getUnchecked());
         
         entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
         entity().setAttribute(SoftwareProcess.SERVICE_STATE, Lifecycle.STOPPED);
