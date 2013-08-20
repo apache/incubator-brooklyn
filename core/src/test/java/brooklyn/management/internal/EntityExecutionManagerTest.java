@@ -205,8 +205,9 @@ public class EntityExecutionManagerTest {
         
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             @Override public void run() {
-                Set<Task<?>> storedTasks = app.getManagementContext().getExecutionManager().getTasksWithAllTags(
-                        ImmutableList.of(entity, ManagementContextInternal.EFFECTOR_TAG));
+                Set<Task<?>> storedTasks = app.getManagementContext().getExecutionManager().getTasksWithAllTags(ImmutableList.of(
+                        BrooklynTasks.tagForTargetEntity(entity), 
+                        ManagementContextInternal.EFFECTOR_TAG));
                 assertEquals(storedTasks, ImmutableSet.of(), "storedTasks="+storedTasks);
             }});
 
