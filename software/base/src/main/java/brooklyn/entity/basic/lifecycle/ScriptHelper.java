@@ -47,6 +47,7 @@ public class ScriptHelper {
     protected Predicate<? super Integer> resultCodeCheck = Predicates.alwaysTrue();
     protected Predicate<? super ScriptHelper> executionCheck = Predicates.alwaysTrue();
     
+    protected boolean isTransient = false;
     protected boolean gatherOutput = false;
     protected ByteArrayOutputStream stdout, stderr;
     protected Task<Integer> task;
@@ -202,6 +203,12 @@ public class ScriptHelper {
         return this;
     }
     
+    /** indicates explicitly that the task can be safely forgotten about after it runs; useful for things like
+     * check_running which run repeatedly */
+    public void setTransient() {
+        isTransient = true;
+    }
+
     /** creates a task which will execute this script; note this can only be run once per instance of this class */
     public synchronized Task<Integer> newTask() {
         if (task!=null) throw new IllegalStateException("task can only be generated once");
@@ -229,6 +236,7 @@ public class ScriptHelper {
             tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDERR, stderr));
         }
         task = tb.build();
+        if (isTransient) BrooklynTasks.setTransient(task);
         return task;
     }
     

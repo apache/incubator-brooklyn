@@ -266,7 +266,7 @@ public class BasicExecutionManager implements ExecutionManager {
     public Task<?> submit(Callable c) { return submit(new LinkedHashMap(1), c); }
     public <T> Task<T> submit(Map<?,?> flags, Callable<T> c) { return submit(flags, new BasicTask<T>(flags, c)); }
 
-    public <T> Task<T> submit(Task<T> t) { return submit(new LinkedHashMap(1), t); }
+    public <T> Task<T> submit(TaskAdaptable<T> t) { return submit(new LinkedHashMap(1), t); }
     public <T> Task<T> submit(Map<?,?> flags, TaskAdaptable<T> task) {
         if (!(task instanceof Task))
             task = task.asTask();

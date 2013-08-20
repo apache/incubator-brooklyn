@@ -220,6 +220,10 @@ public class DynamicTasks {
         public Task<T> getTask() {
             return task;
         }
+        @Override
+        public Task<T> asTask() {
+            return getTask();
+        }
     }
 
     /** see {@link AutoQueue} */

@@ -3,6 +3,9 @@ package brooklyn.util.task.ssh;
 import java.io.ByteArrayOutputStream;
 import java.util.concurrent.Callable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.management.Task;
 import brooklyn.management.TaskWrapper;
@@ -13,8 +16,13 @@ import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Preconditions;
 
+/** Wraps a fully constructed SSH task, and allows callers to inspect status. 
+ * Note that methods in here such as {@link #getStdout()} will return partially completed streams while the task is ongoing
+ * (and exit code will be null). You can {@link #block()} or {@link #get()} as conveniences on the underlying {@link #getTask()}. */ 
 public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET> {
 
+    private static final Logger log = LoggerFactory.getLogger(SshTaskWrapper.class);
+    
     private Task<RET> task;
 
     // execution details
@@ -82,10 +90,17 @@ public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET>
             else
                 exitCode = getMachine().execCommands(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
             
-            if (requireExitCodeZero && exitCode!=0)
-                throw new IllegalStateException(
+            if (exitCode!=0 && requireExitCodeZero!=Boolean.FALSE) {
+                if (requireExitCodeZero==Boolean.TRUE) {
+                    throw new IllegalStateException(
                         (extraErrorMessage!=null ? extraErrorMessage+": " : "")+
-                        "ssh job ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary());
+                        "SSH task ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary());
+                } else {
+                    // warn, but allow, on non-zero not explicitly allowed
+                    log.warn("SSH task ended with exit code "+exitCode+" when non-zero was not explicitly allowed (error may be thrown in future), in "
+                            +Tasks.current()+": "+getSummary());
+                }
+            }
 
             switch (returnType) {
             case CUSTOM: return returnResultTransformation.apply(SshTaskWrapper.this);
@@ -103,6 +118,22 @@ public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET>
     @Override
     public String toString() {
         return super.toString()+"["+task+"]";
+    }
+
+    /** blocks and gets the result, throwing if there was an exception */
+    public RET get() {
+        return getTask().getUnchecked();
+    }
+    
+    /** blocks until the task completes; does not throw */
+    public SshTaskWrapper<RET> block() {
+        getTask().blockUntilEnded();
+        return this;
+    }
+ 
+    /** true iff the ssh job has completed (with or without failure) */
+    public boolean isDone() {
+        return getTask().isDone();
     }
     
 }

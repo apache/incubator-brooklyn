@@ -16,6 +16,7 @@ public interface ManagementContextInternal extends ManagementContext {
 
     public static final String EFFECTOR_TAG = "EFFECTOR";
     public static final String NON_TRANSIENT_TASK_TAG = "NON-TRANSIENT";
+    public static final String TRANSIENT_TASK_TAG = "TRANSIENT";
 
     public static final ConfigKey<String> BROOKLYN_CATALOG_URL = ConfigKeys.newStringConfigKey("brooklyn.catalog.url",
             "The URL of a catalog.xml descriptor; absent for default (~/.brooklyn/catalog.xml), " +

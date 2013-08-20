@@ -357,6 +357,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             s.failIfBodyEmpty();
         if (ImmutableSet.of(INSTALLING, LAUNCHING).contains(phase))
             s.updateTaskAndFailOnNonZeroResultCode();
+        if (phase.equalsIgnoreCase(CHECK_RUNNING))
+            s.setTransient();
 
         if (truth(flags.get(USE_PID_FILE))) {
             String pidFile = (flags.get(USE_PID_FILE) instanceof CharSequence ? flags.get(USE_PID_FILE) : getRunDir()+"/"+PID_FILENAME).toString();

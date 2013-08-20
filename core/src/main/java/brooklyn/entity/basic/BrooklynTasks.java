@@ -5,16 +5,22 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -91,10 +97,13 @@ public class BrooklynTasks {
     }
 
     public static Entity getTargetOrContextEntity(Task<?> t) {
-        Entity result = getWrappedEntityOfType(t, TARGET_ENTITY);
+        Entity result = getWrappedEntityOfType(t, CONTEXT_ENTITY);
         if (result!=null) return result;
-        result = getWrappedEntityOfType(t, CONTEXT_ENTITY);
-        if (result!=null) return result;
+        result = getWrappedEntityOfType(t, TARGET_ENTITY);
+        if (result!=null) {
+            log.warn("Context entity found by looking at target entity tag, not context entity");
+            return result;
+        }
         
         result = Tasks.tag(t, Entity.class, false);
         if (result!=null) {
@@ -118,7 +127,7 @@ public class BrooklynTasks {
             Preconditions.checkNotNull(streamContents);
             this.streamType = streamType;
             this.streamContents = streamContents;
-            this.streamSize = streamSize != null ? streamSize : Suppliers.<Integer>ofInstance(null);
+            this.streamSize = streamSize != null ? streamSize : Suppliers.<Integer>ofInstance(streamContents.get().length());
         }
         protected WrappedStream(String streamType, ByteArrayOutputStream stream) {
             Preconditions.checkNotNull(streamType);
@@ -153,6 +162,11 @@ public class BrooklynTasks {
         return new WrappedStream(streamType, stream);
     }
 
+    /** creates a tag suitable for marking a stream available on a task */
+    public static WrappedStream tagForStream(String streamType, Supplier<String> contents, Supplier<Integer> size) {
+        return new WrappedStream(streamType, contents, size);
+    }
+
     /** returns the set of tags indicating the streams available on a task */
     public static Set<WrappedStream> streams(Task<?> task) {
         Set<WrappedStream> result = new LinkedHashSet<BrooklynTasks.WrappedStream>();
@@ -171,4 +185,29 @@ public class BrooklynTasks {
                 return (WrappedStream)tag;
         return null;
     }
+    
+    public static void addTagDynamically(TaskAdaptable<?> task, final Object tag) {
+        ((BasicTask<?>)task.asTask()).applyTagModifier(new Function<Set<Object>, Void>() {
+            public Void apply(@Nullable Set<Object> input) {
+                input.add(tag);
+                return null;
+            }
+        });
+    }
+    
+    public static void addTagsDynamically(TaskAdaptable<?> task, final Object tag1, final Object ...tags) {
+        ((BasicTask<?>)task.asTask()).applyTagModifier(new Function<Set<Object>, Void>() {
+            public Void apply(@Nullable Set<Object> input) {
+                input.add(tag1);
+                for (Object tag: tags) input.add(tag);
+                return null;
+            }
+        });
+    }
+    
+    public static void setTransient(Task<?> task) {
+        addTagDynamically(task, ManagementContextInternal.TRANSIENT_TASK_TAG);
+    }
+
+    
 }

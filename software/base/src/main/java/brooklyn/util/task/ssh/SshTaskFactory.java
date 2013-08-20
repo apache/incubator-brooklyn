@@ -15,6 +15,7 @@ public interface SshTaskFactory<T> extends TaskFactory<SshTaskWrapper<T>> {
     public SshTaskFactory<T> add(Iterable<String> commandsToAdd);
     public SshTaskFactory<T> requiringExitCodeZero();
     public SshTaskFactory<T> requiringExitCodeZero(String extraErrorMessage);
+    public SshTaskFactory<T> allowingNonZeroExitCode();
     public SshTaskFactory<String> requiringZeroAndReturningStdout();
     public SshTaskFactory<?> returning(ScriptReturnType type);
     public <RET2> SshTaskFactory<RET2> returning(Function<SshTaskWrapper<?>, RET2> resultTransformation);

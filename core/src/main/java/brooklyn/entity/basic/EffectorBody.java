@@ -33,8 +33,8 @@ public abstract class EffectorBody<T> {
     
     // ---- convenience method(s) for implementers of main -- see subclasses and *Tasks statics for more
     
-    protected EntityLocal entity() {
-        return (EntityLocal) BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+    protected EntityInternal entity() {
+        return (EntityInternal) BrooklynTasks.getTargetOrContextEntity(Tasks.current());
     }
     
     protected <V extends TaskAdaptable<?>> V queue(V task) {
@@ -80,5 +80,4 @@ public abstract class EffectorBody<T> {
         
         return TypeCoercions.coerce(last.getUnchecked(), type);
     }
-
 }

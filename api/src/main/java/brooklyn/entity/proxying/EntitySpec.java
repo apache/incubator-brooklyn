@@ -253,18 +253,21 @@ public class EntitySpec<T extends Entity> implements Serializable {
         return this;
     }
 
+    /** adds a policy to the spec */
     public <V> EntitySpec<T> policy(Policy val) {
         checkMutable();
         policies.add(val);
         return this;
     }
 
+    /** adds the supplied policies to the spec */
     public <V> EntitySpec<T> policies(Iterable<? extends Policy> val) {
         checkMutable();
         policies.addAll(Sets.newLinkedHashSet(val));
         return this;
     }
     
+    /** "seals" this spec, preventing any future changes */
     public EntitySpec<T> immutable() {
         immutable = true;
         return this;

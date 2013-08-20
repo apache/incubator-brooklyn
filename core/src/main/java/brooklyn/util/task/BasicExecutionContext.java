@@ -1,5 +1,6 @@
 package brooklyn.util.task;
 
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTasks.WrappedEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
@@ -57,6 +59,16 @@ public class BasicExecutionContext extends AbstractExecutionContext {
 
         if (flags.get("tag") != null) tags.add(flags.remove("tag"));
         if (flags.containsKey("tags")) tags.addAll((Collection<?>)flags.remove("tags"));
+
+        // FIXME brooklyn-specific check, just for sanity
+        // the context tag should always be a non-proxy entity, because that is what is passed to effector tasks
+        // which may require access to internal methods
+        for (Object tag: tags) {
+            if (tag instanceof BrooklynTasks.WrappedEntity) {
+                if (Proxy.isProxyClass(((WrappedEntity)tag).entity.getClass()))
+                    log.warn(""+this+" has entity proxy in "+tag);
+            }
+        }
     }
 
     public ExecutionManager getExecutionManager() {

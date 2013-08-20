@@ -72,6 +72,12 @@ public class AbstractSshTaskFactory<T extends AbstractSshTaskFactory<T,RET>,RET>
         return self();
     }
     
+    public T allowingNonZeroExitCode() {
+        markDirty();
+        requireExitCodeZero = false;
+        return self();
+    }
+    
     @SuppressWarnings({ "unchecked" })
     public AbstractSshTaskFactory<?,String> requiringZeroAndReturningStdout() {
         requiringExitCodeZero();
@@ -128,7 +134,7 @@ public class AbstractSshTaskFactory<T extends AbstractSshTaskFactory<T,RET>,RET>
         return new SshTaskWrapper<RET>(this);
     }
 
-    /** creates the TaskBuilder which can be further customized; typically invoked by the initial getTask */
+    /** creates the TaskBuilder which can be further customized; typically invoked by the initial {@link #newTask()} */
     protected TaskBuilder<Object> constructCustomizedTaskBuilder() {
         TaskBuilder<Object> tb = TaskBuilder.builder().dynamic(false).name("ssh: "+getSummary());
         tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDIN, 

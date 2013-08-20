@@ -9,13 +9,11 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.EffectorBody;
-import brooklyn.entity.basic.EffectorTasks;
-import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.AbstractSshTaskFactory;
 import brooklyn.util.task.ssh.PlainSshTaskFactory;
@@ -68,7 +66,7 @@ public class SshEffectorTasks {
         }
         
         @Override
-        protected TaskBuilder<Object> constructCustomizedTaskBuilder() {
+        public synchronized SshTaskWrapper<RET> newTask() {
             if (machine==null) {
                 if (log.isDebugEnabled())
                     log.debug("Using an SshEffectorTask not in an effector without any machine; will attempt to infer the machine: "+this);
@@ -76,7 +74,7 @@ public class SshEffectorTasks {
                 if (entity!=null)
                     machine(getMachineOfEntity(entity));
             }
-            return super.constructCustomizedTaskBuilder();
+            return super.newTask();
         }
         
         @SuppressWarnings("unchecked")

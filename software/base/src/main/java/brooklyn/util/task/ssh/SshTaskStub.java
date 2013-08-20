@@ -10,6 +10,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class SshTaskStub {
@@ -27,7 +28,7 @@ public class SshTaskStub {
     
     protected boolean runAsScript = false;
     protected boolean runAsRoot = false;
-    protected boolean requireExitCodeZero = false;
+    protected Boolean requireExitCodeZero = null;
     protected String extraErrorMessage = null;
     protected Map<String,String> shellEnvironment = new MutableMap<String, String>();
 
@@ -65,4 +66,7 @@ public class SshTaskStub {
         return super.toString()+"["+getSummary()+"]";
     }
 
+    public List<String> getCommands() {
+        return ImmutableList.copyOf(commands);
+    }
 }

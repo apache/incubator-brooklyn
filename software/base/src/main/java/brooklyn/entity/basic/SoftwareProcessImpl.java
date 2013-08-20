@@ -56,11 +56,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     /** @see #connectServiceUpIsRunning() */
     private volatile FunctionFeed serviceUp;
 
-    public static final Effector<Void> START = Effectors.effector(Startable.START).
-            impl(new SoftwareProcessDriverStartEffectorTask()).build();
+    private static final SoftwareProcessDriverLifecycleEffectorTasks LIFECYCLE_TASKS =
+            new SoftwareProcessDriverLifecycleEffectorTasks();
     
-    public static final Effector<Void> RESTART = Effectors.effector(Startable.RESTART).
-            impl(new SoftwareProcessDriverRestartEffectorTask()).build();
+    public static final Effector<Void> START = LIFECYCLE_TASKS.newStartEffector();
+    public static final Effector<Void> RESTART = LIFECYCLE_TASKS.newRestartEffector();
+    public static final Effector<Void> STOP = LIFECYCLE_TASKS.newStopEffector();
     
 	public SoftwareProcessImpl() {
         super(MutableMap.of(), null);
@@ -266,7 +267,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
     @Override
 	public final void start(Collection<? extends Location> locations) {
-        invoke(START, ConfigBag.newInstance().configure(SoftwareProcessDriverStartEffectorTask.LOCATIONS, locations).getAllConfig()).getUnchecked();
+        invoke(START, ConfigBag.newInstance().configure(SoftwareProcessDriverLifecycleEffectorTasks.LOCATIONS, locations).getAllConfig())
+            .getUnchecked();
     }
     
     /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
@@ -392,67 +394,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         // The other thread might reset SERVICE_UP to true immediately after we set it to false here.
         // Deactivating adapters before setting SERVICE_UP reduces the race, and it is reduced further by setting
         // SERVICE_UP to false at the end of stop as well.
+	    
+	    // Perhaps we should wait until all feeds have completed here, 
+	    // or do a SERVICE_STATE check before setting SERVICE_UP to true in a feed (?).
         
-        if (getAttribute(SERVICE_STATE)==Lifecycle.STOPPED) {
-            log.warn("Skipping stop of software process entity "+this+" when already stopped");
-            return;
-        }
-        log.info("Stopping {} in {}", this, getLocations());
-		setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
-        setAttribute(SERVICE_UP, false);
-		preStop();
-		MachineLocation machine = removeFirstMachineLocation();
-		if (machine != null) {
-			stopInLocation(machine);
-		}
-		setAttribute(HOSTNAME, null);
-		setAttribute(ADDRESS, null);
-        setAttribute(SERVICE_UP, false);
-		setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
-        if (log.isDebugEnabled()) log.debug("Stopped software process entity "+this);
+        invoke(STOP, MutableMap.<String,Object>of()).getUnchecked();
 	}
-
-	private MachineLocation removeFirstMachineLocation() {
-	    for (Location loc : getLocations()) {
-	        if (loc instanceof MachineLocation) {
-	            removeLocations(ImmutableList.of(loc));
-	            return (MachineLocation) loc;
-	        }
-	    }
-	    return null;
-	}
-
-    public void stopInLocation(MachineLocation machine) {
-        MachineProvisioningLocation provisioner = getAttribute(PROVISIONING_LOCATION);
-        Throwable err = null;
-        
-        try {
-            if (driver != null) driver.stop();
-            
-        } catch (Throwable t) {
-            LOG.warn("Error stopping "+this+" on machine "+machine+
-                    (provisioner != null ? ", releasing machine and rethrowing" : ", rethrowing"), 
-                    t);
-            err = t;
-            
-        } finally {
-            // Release this machine (even if error trying to stop it)
-            // Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
-            try {
-                if (provisioner != null) provisioner.release(machine);
-            } catch (Throwable t) {
-                if (err != null) {
-                    LOG.warn("Error releasing machine "+machine+" while stopping "+this+"; rethrowing earlier exception", t);
-                } else {
-                    LOG.warn("Error releasing machine "+machine+" while stopping "+this+"; rethrowing ("+t+")");
-                    err = t;
-                }
-            }
-            driver = null;
-        }
-        
-        if (err != null) throw Exceptions.propagate(err);
-    }
 
     public void restart() {
         invoke(RESTART, MutableMap.<String,Object>of()).getUnchecked();

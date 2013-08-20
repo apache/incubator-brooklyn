@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -20,6 +21,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.ssh.SshTaskWrapper;
@@ -71,7 +73,7 @@ public class BashCommandsIntegrationTest {
         sourceFileUrl2 = sourceFile2.toURI().toString();
         Files.write("mysource2".getBytes(), sourceFile2);
 
-        localRepoEntityVersionPath = "commondcommands-test-dest-"+Identifiers.makeRandomId(8);
+        localRepoEntityVersionPath = JavaClassNames.simpleClassName(this)+"-test-dest-"+Identifiers.makeRandomId(8);
         localRepoBasePath = new File(format("%s/.brooklyn/repository", System.getProperty("user.home")));
         localRepoEntityBasePath = new File(localRepoBasePath, localRepoEntityVersionPath);
         localRepoEntityFile = new File(localRepoEntityBasePath, localRepoFilename);
@@ -87,7 +89,7 @@ public class BashCommandsIntegrationTest {
         if (sourceFile2 != null) sourceFile2.delete();
         if (destFile != null) destFile.delete();
         if (localRepoEntityFile != null) localRepoEntityFile.delete();
-        if (localRepoEntityBasePath != null) localRepoBasePath.delete();
+        if (localRepoEntityBasePath != null) FileUtils.deleteDirectory(localRepoEntityBasePath);
         if (loc != null) loc.close();
         if (mgmt != null) Entities.destroyAll(mgmt);
     }

@@ -157,6 +157,8 @@ public class BrooklynGarbageCollector {
     
     public boolean shouldDeleteTask(Task<?> task) {
         Set<Object> tags = task.getTags();
+        if (tags.contains(ManagementContextInternal.TRANSIENT_TASK_TAG))
+            return true;
         if (tags.contains(ManagementContextInternal.EFFECTOR_TAG) || tags.contains(ManagementContextInternal.NON_TRANSIENT_TASK_TAG))
             return false;
         if (task.getSubmittedByTask()!=null && !shouldDeleteTask(task.getSubmittedByTask()))

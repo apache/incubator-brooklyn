@@ -35,6 +35,7 @@ import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
@@ -790,5 +791,15 @@ public class NonBasicTask<T> implements TaskInternal<T> {
     public ExecutionManager getExecutionManager() {
         return em;
     }
+
+    @Override
+    public void applyTagModifier(Function<Set<Object>,Void> modifier) {
+        throw new UnsupportedOperationException();
+    }
     
+    @Override
+    public Task<T> asTask() {
+        return this;
+    }
+
 }

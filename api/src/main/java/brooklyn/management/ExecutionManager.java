@@ -68,7 +68,7 @@ public interface ExecutionManager {
     public <T> Task<T> submit(Callable<T> c);
 
     /** see {@link #submit(Map, Task)} */
-    public <T> Task<T> submit(Task<T> task);
+    public <T> Task<T> submit(TaskAdaptable<T> task);
     
     /** see {@link #submit(Map, Task)} */
     public Task<?> submit(Map<?, ?> flags, Runnable r);

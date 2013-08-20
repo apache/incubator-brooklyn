@@ -9,6 +9,7 @@ import brooklyn.management.Task;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.util.concurrent.ExecutionList;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -89,4 +90,6 @@ public interface TaskInternal<T> extends Task<T> {
     void setStartTimeUtc(long currentTimeMillis);
     
     ExecutionManager getExecutionManager();
+
+    void applyTagModifier(Function<Set<Object>,Void> modifier);
 }
