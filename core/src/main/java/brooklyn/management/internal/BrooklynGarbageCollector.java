@@ -139,6 +139,7 @@ public class BrooklynGarbageCollector {
     }
     
     public void onUnmanaged(Entity entity) {
+        // remove all references to this entity from tasks
         executionManager.deleteTag(entity);
         executionManager.deleteTag(BrooklynTasks.tagForContextEntity(entity));
         executionManager.deleteTag(BrooklynTasks.tagForCallerEntity(entity));
