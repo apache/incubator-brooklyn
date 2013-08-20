@@ -501,15 +501,22 @@ public class Entities {
     /** stops, destroys, and unmanages all apps in the given context,
      * and then terminates the management context */
     public static void destroyAll(ManagementContext mgmt) {
+        Exception error = null;
         if (!mgmt.isRunning()) return;
         log.debug("destroying all apps in "+mgmt+": "+mgmt.getApplications());
         for (Application app: mgmt.getApplications()) {
             log.debug("destroying app "+app+" (managed? "+isManaged(app)+"; mgmt is "+mgmt+")");
-            destroy(app);
-            log.debug("destroyed app "+app+"; mgmt now "+mgmt);
+            try {
+                destroy(app);
+                log.debug("destroyed app "+app+"; mgmt now "+mgmt);
+            } catch (Exception e) {
+                log.warn("problems destroying app "+app+" (mgmt now "+mgmt+", will rethrow at least one exception): "+e);
+                if (error==null) error = e;
+            }
         }
         if (mgmt instanceof ManagementContextInternal) 
             ((ManagementContextInternal)mgmt).terminate();
+        if (error!=null) throw Exceptions.propagate(error);
     }
 
     /** as {@link #destroyAll(ManagementContext)} but catching all errors */

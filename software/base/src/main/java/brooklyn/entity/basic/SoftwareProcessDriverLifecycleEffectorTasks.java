@@ -25,6 +25,8 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
         ((SoftwareProcessImpl)entity()).getDriver().restart();
         new DynamicTasks.AutoQueueVoid("post-restart") { protected void main() {
             ((SoftwareProcessImpl)entity()).postDriverRestart();
+            DynamicTasks.waitForLast();
+            entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
         }};
     }
     

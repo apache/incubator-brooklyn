@@ -247,7 +247,7 @@ public class DynamicTasks {
     }
 
     /** Waits for the last task queued in this context to complete;
-     * it does throw if there is a problem.
+     * it throws if there is a problem, but happily returns null if there is no last task.
      * <p>
      * Preferred over {@link #last()}.get() because this waits on all tasks, 
      * in sequentially (so that blocking information is always accurate) */

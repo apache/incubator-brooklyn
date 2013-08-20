@@ -95,6 +95,14 @@ public class BasicExecutionContext extends AbstractExecutionContext {
         Entity target = BrooklynTasks.getWrappedEntityOfType(taskTags, BrooklynTasks.TARGET_ENTITY);
         if (target!=null && !tags.contains(BrooklynTasks.tagForContextEntity(target))) {
             // task is switching execution context boundaries
+            /* 
+             * longer notes:
+             * you fall in to this block if the caller requests a target entity different to the current context 
+             * (e.g. where entity X is invoking an effector on Y, it will start in X's context, 
+             * but the effector should run in Y's context).
+             * 
+             * if X is invoking an effector on himself in his own context, or a sensor or other task, it will not come in to this block.
+             */
             final ExecutionContext tc = ((EntityInternal)target).getExecutionContext();
             if (log.isDebugEnabled())
                 log.debug("Switching task context on execution of "+task+": from "+this+" to "+target+" (in "+Tasks.current()+")");

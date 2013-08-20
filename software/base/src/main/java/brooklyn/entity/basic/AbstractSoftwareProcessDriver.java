@@ -110,7 +110,6 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 	    new DynamicTasks.AutoQueueVoid("launch") { protected void main() {
 	        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
 	        launch();
-	        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
         }};
 	}
 	

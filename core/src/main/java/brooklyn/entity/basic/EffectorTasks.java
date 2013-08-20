@@ -127,8 +127,9 @@ public class EffectorTasks {
                 "(i.e. it must be run from within an effector)");
     }
 
-    /** Finds the entity where this task is running, throwing NPE if there is none,
-     * and throwing IAE if it is not of the indicated type */
+    /** Finds the entity where this task is running
+     * @throws NullPointerException if there is none
+     * @throws IllegalArgumentException if it is not of the indicated type */
     public static <T extends Entity> T findEntity(Class<T> type) {
         Entity t = findEntity();
         return Reflections.cast(t, type);

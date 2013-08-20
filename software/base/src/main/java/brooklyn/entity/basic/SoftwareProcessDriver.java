@@ -31,18 +31,19 @@ public interface SoftwareProcessDriver extends EntityDriver {
     void rebind();
 
     /**
-     * Queues tasks for starting
+     * Performs software start (or queues tasks to do this)
      */
     void start();
 
     /**
-     * Queues tasks for restart
+     * Performs software restart (or queues tasks to do this); implementations should update SERVICE_STATE for STOPPING and STARTING
+     * as appropriate (but framework will set RUNNING afterwards)
      * @see Startable#restart()
-     * Unlike the other methods, the driver here is responsible for queueing a task to update the SERVICE_STATE sensor.
      */
     void restart();
     
     /**
+     * Performs software stop (or queues tasks to do this) 
      * @see Startable#stop()
      */
     void stop();

@@ -16,6 +16,7 @@ import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 
@@ -172,7 +173,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                         List<Object> result2 = secondaryJobMaster.get();
                         try {
                             if (primaryJob==null) result = (T)result2;
-                        } catch (Exception e) { /* ignore class cast exception; result will just be null */ }
+                        } catch (ClassCastException e) { /* ignore class cast exception; leave the result as null */ }
                     }
                 }
             } catch (Throwable t) {
@@ -188,12 +189,13 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     }
 
     public void handleException(Throwable throwable) throws Exception {
+        // allow checked exceptions to be passed through
         if (throwable instanceof Exception) {
             if (throwable instanceof InterruptedException)
                 throw new RuntimeInterruptedException((InterruptedException) throwable);
             throw (Exception)throwable;
         }
-        throw new PropagatedRuntimeException(throwable);
+        throw Exceptions.propagate(throwable);
     }
 
     @Override
