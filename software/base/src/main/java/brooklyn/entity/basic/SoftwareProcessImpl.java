@@ -1,6 +1,5 @@
 package brooklyn.entity.basic;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.time.TimeDuration;
 
 import java.net.InetAddress;
@@ -19,37 +18,28 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.HasSubnetHostname;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.LocationConfigKeys;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.Repeater;
-import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Functions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.reflect.TypeToken;
 
 /**
  * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
@@ -66,6 +56,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     /** @see #connectServiceUpIsRunning() */
     private volatile FunctionFeed serviceUp;
 
+    public static final Effector<Void> START = Effectors.effector(Startable.START).
+            impl(new SoftwareProcessDriverStartEffectorTask()).build();
+    
+    public static final Effector<Void> RESTART = Effectors.effector(Startable.RESTART).
+            impl(new SoftwareProcessDriverRestartEffectorTask()).build();
+    
 	public SoftwareProcessImpl() {
         super(MutableMap.of(), null);
     }
@@ -270,134 +266,22 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
     @Override
 	public final void start(Collection<? extends Location> locations) {
-        invoke(START, ConfigBag.newInstance().configure(SoftwareProcessStartEffectorTask.LOCATIONS, locations).getAllConfig()).getUnchecked();
+        invoke(START, ConfigBag.newInstance().configure(SoftwareProcessDriverStartEffectorTask.LOCATIONS, locations).getAllConfig()).getUnchecked();
     }
     
-    public static final Effector<Void> START = Effectors.effector(Startable.START).
-            impl(new SoftwareProcessStartEffectorTask()).build();
-    
-    public static class SoftwareProcessStartEffectorTask extends EffectorBody<Void> {
-        @SuppressWarnings("serial")
-        public static final ConfigKey<Collection<? extends Location>> LOCATIONS =
-                ConfigKeys.newConfigKey(new TypeToken<Collection<? extends Location>>() {}, "locations", 
-                "locations where the entity should be started");
-        private Collection<? extends Location> locations;
-
-        @Override
-        public Void main(ConfigBag parameters) {
-            locations = parameters.get(LOCATIONS);
-            checkNotNull(locations, "locations");
-            entity().setAttribute(SERVICE_STATE, Lifecycle.STARTING);
-            try {
-                startInLocationsAsync(locations);
-                waitForLast();
-                if (entity().getAttribute(SERVICE_STATE) == Lifecycle.STARTING) 
-                    entity().setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
-            } catch (Throwable t) {
-                entity().setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
-                throw Exceptions.propagate(t);
-            }
-            return null;
-        }
-        
-        protected void startInLocationsAsync(Collection<? extends Location> locations) {
-            if (locations.isEmpty()) locations = entity().getLocations();
-            if (locations.size() != 1 || Iterables.getOnlyElement(locations)==null)
-                throw new IllegalArgumentException("Expected one non-null location when starting "+this+", but given "+locations);
-                
-            startInLocationAsync( Iterables.getOnlyElement(locations) );
-        }
-
-        protected void startInLocationAsync(Location location) {
-            if (location instanceof MachineProvisioningLocation) {
-                Task<MachineLocation> machineTask = provisionAsync((MachineProvisioningLocation<? extends MachineLocation>)location);
-                startInMachineLocationAsync(Tasks.supplier(machineTask));
-            } else if (location instanceof MachineLocation) {
-                startInMachineLocationAsync(Suppliers.ofInstance((MachineLocation)location));
-            } else {
-                throw new IllegalArgumentException("Unsupported location "+location+", when starting "+this);
-            }
-        }
-
-        protected final Task<MachineLocation> provisionAsync(final MachineProvisioningLocation<?> location) {
-            return DynamicTasks.queue(Tasks.<MachineLocation>builder().name("provisioning ("+location.getDisplayName()+")").body(
-                    new Callable<MachineLocation>() {
-                        public MachineLocation call() throws Exception {
-                            final Map<String,Object> flags = ((SoftwareProcessImpl)entity()).obtainProvisioningFlags(location);
-                            if (!(location instanceof LocalhostMachineProvisioningLocation))
-                                log.info("Starting {}, obtaining a new location instance in {} with ports {}", new Object[] {this, location, flags.get("inboundPorts")});
-                            entity().setAttribute(PROVISIONING_LOCATION, location);
-                            MachineLocation machine;
-                            try {
-                                machine = Tasks.withBlockingDetails("Provisioning machine in "+location, new Callable<MachineLocation>() {
-                                    public MachineLocation call() throws NoMachinesAvailableException {
-                                        return location.obtain(flags);
-                                    }});
-                                if (machine == null) throw new NoMachinesAvailableException("Failed to obtain machine in "+location.toString());
-                            } catch (Exception e) {
-                                throw Exceptions.propagate(e);
-                            }
-                            
-                            if (log.isDebugEnabled())
-                                log.debug("While starting {}, obtained new location instance {}", this, 
-                                        (machine instanceof SshMachineLocation ? 
-                                                machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getAllConfig()) 
-                                                : machine));
-                            if (!(location instanceof LocalhostMachineProvisioningLocation))
-                                log.info("While starting {}, obtained a new location instance {}, now preparing process there", this, machine);
-                            return machine;
-                        }
-                    }).build());
-        }
-        
-        protected void startInMachineLocationAsync(final Supplier<MachineLocation> machineS) {
-            new DynamicTasks.AutoQueueVoid("pre-start") { protected void main() { 
-                MachineLocation machine = machineS.get();
-                log.info("Starting {} on machine {}", this, machine);
-                ((SoftwareProcessImpl)entity()).addLocations(ImmutableList.of((Location)machine));
-
-                ((SoftwareProcessImpl)entity()).initDriver(machine);
-
-                // Note: must only apply config-sensors after adding to locations and creating driver; 
-                // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
-                ConfigToAttributes.apply(entity());
-
-                if (entity().getAttribute(HOSTNAME)==null)
-                    entity().setAttribute(HOSTNAME, machine.getAddress().getHostName());
-                if (entity().getAttribute(ADDRESS)==null)
-                    entity().setAttribute(ADDRESS, machine.getAddress().getHostAddress());
-
-                // Opportunity to block startup until other dependent components are available
-                Object val = entity().getConfig(START_LATCH);
-                if (val != null) log.debug("{} finished waiting for start-latch; continuing...", this, val);
-                ((SoftwareProcessImpl)entity()).preStart(); 
-            }};
-            new DynamicTasks.AutoQueueVoid("start") { protected void main() { 
-                ((SoftwareProcessImpl)entity()).driver.startAsync();
-            }};
-            new DynamicTasks.AutoQueueVoid("post-start") { protected void main() {
-                ((SoftwareProcessImpl)entity()).postDriverStart();
-                ((SoftwareProcessImpl)entity()).connectSensors();
-                ((SoftwareProcessImpl)entity()).waitForServiceUp();
-                ((SoftwareProcessImpl)entity()).postStart();
-            }};
-        }
-     
-    }
-    
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessStartEffectorTask} */
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
     protected final void startInLocation(Collection<? extends Location> locations) {}
 
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessStartEffectorTask} */
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
     protected final void startInLocation(Location location) {}
 
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessStartEffectorTask} */
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
 	protected final void startInLocation(final MachineProvisioningLocation<?> location) {}
 	
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessStartEffectorTask} */
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
     protected final void startInLocation(MachineLocation machine) {}
 
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessStartEffectorTask} */
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
     protected final void callStartHooks() {}
     
     protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {
@@ -414,7 +298,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     /** @deprecated in 0.4.0. use obtainProvisioningFlags. 
      * introduced in a branch which duplicates changes in master where it is called "obtainPF".
      * will remove as soon as those uses are updated. */
-    protected Map<String,Object> getProvisioningFlags(MachineProvisioningLocation location) {
+    protected final Map<String,Object> getProvisioningFlags(MachineProvisioningLocation location) {
         return obtainProvisioningFlags(location);
     }
     
@@ -450,7 +334,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         return hostname;
 	}
 
-    private void initDriver(MachineLocation machine) {
+    void initDriver(MachineLocation machine) {
         SoftwareProcessDriver newDriver = doInitDriver(machine);
         if (newDriver == null) {
             throw new UnsupportedOperationException("cannot start "+this+" on "+machine+": no driver available");
@@ -571,9 +455,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 
     public void restart() {
-        if (driver == null) throw new IllegalStateException("entity "+this+" not set up for operations (restart)");
-        
-        driver.restart();
-        postDriverRestart();
+        invoke(RESTART, MutableMap.<String,Object>of()).getUnchecked();
     }
 }

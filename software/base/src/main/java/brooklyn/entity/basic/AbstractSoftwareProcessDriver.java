@@ -54,7 +54,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      * @see #stop()
      */
 	@Override
-	public void startAsync() {
+	public void start() {
         new DynamicTasks.AutoQueueVoid("install") { protected void main() { 
             waitForConfigKey(ConfigKeys.INSTALL_LATCH);
             install();
@@ -73,11 +73,6 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
         new DynamicTasks.AutoQueueVoid("post-launch") { protected void main() { 
             postLaunch();
         }};
-	}
-	
-	/** @deprecated in 0.6.0 use startTask */ @Deprecated
-	public final Void start() {
-	    throw new IllegalStateException("This method is deprecated and must not be called");
 	}
 
 	@Override
@@ -99,20 +94,24 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     
 	@Override
 	public void restart() {
-	    boolean previouslyRunning = isRunning();
-        try {
-            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
-            stop();
-        } catch (Exception e) {
-            if (previouslyRunning) {
-                log.debug(getEntity() + " restart: stop failed, when was previously running", e);
-            } else {
-                log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
-            }
-        }
-        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
-        launch();
-        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
+	    new DynamicTasks.AutoQueueVoid("stop (if running)") { protected void main() {
+	        boolean previouslyRunning = isRunning();
+	        try {
+	            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+	            stop();
+	        } catch (Exception e) {
+	            if (previouslyRunning) {
+	                log.debug(getEntity() + " restart: stop failed, when was previously running", e);
+	            } else {
+	                log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
+	            }
+	        }
+	    }};
+	    new DynamicTasks.AutoQueueVoid("launch") { protected void main() {
+	        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+	        launch();
+	        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
+        }};
 	}
 	
 	public EntityLocal getEntity() { return entity; } 

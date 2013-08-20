@@ -238,7 +238,7 @@ public class BashCommands {
 
     /** fails with nice error if the given file does not exist */
     public static String requireExecutable(String command) {
-        return require("which `"+BashStringEscapes.wrapBash(command)+"`", "The required executable \""+command+"\" does not exist");
+        return require("which "+BashStringEscapes.wrapBash(command), "The required executable \""+command+"\" does not exist");
     }
 
     public static String installPackage(String packageDefaultName) {

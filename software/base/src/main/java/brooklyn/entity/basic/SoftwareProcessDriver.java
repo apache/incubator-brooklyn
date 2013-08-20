@@ -33,19 +33,19 @@ public interface SoftwareProcessDriver extends EntityDriver {
     /**
      * Queues tasks for starting
      */
-    void startAsync();
+    void start();
 
+    /**
+     * Queues tasks for restart
+     * @see Startable#restart()
+     * Unlike the other methods, the driver here is responsible for queueing a task to update the SERVICE_STATE sensor.
+     */
+    void restart();
+    
     /**
      * @see Startable#stop()
      */
     void stop();
-
-    /**
-     * @see Startable#restart()
-     * 
-     * Unlike the other methods, the driver here is responsible for updating the SERVICE_STATE sensor.
-     */
-    void restart();
     
     /**
      * Kills the process, ungracefully and immediately where possible (e.g. with `kill -9`).

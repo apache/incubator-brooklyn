@@ -17,7 +17,7 @@ public class MockSshDriver implements SoftwareProcessDriver {
     }
     
     @Override
-    public void startAsync() {
+    public void start() {
         numCallsToRunApp++;
     }
 

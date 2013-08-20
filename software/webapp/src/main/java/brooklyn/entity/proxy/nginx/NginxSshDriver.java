@@ -80,13 +80,9 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void install() {
+        // TODO if nginx is already installed, should be able to skip sudo requirement
         DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), true)).orSubmitAndBlock();
         
-        newScript("disable requiretty").
-            setFlag("allocatePTY", true).
-            body.append(BashCommands.dontRequireTtyForSudo()).
-            execute();
-
         DownloadResolver nginxResolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> nginxUrls = nginxResolver.getTargets();
         String nginxSaveAs = nginxResolver.getFilename();
@@ -243,6 +239,8 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         newScript(flags, LAUNCHING).
                 body.append(
                 format("cd %s", getRunDir()),
+                // FIXME '|| exit' here is needed because the script allows intermediate non-zero exit codes
+                BashCommands.requireExecutable("./sbin/nginx")+" || exit $?",
                 sudoBashCIfPrivilegedPort(getHttpPort(), format(
                         "nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir())),
                 format("for i in {1..10}\n" +
@@ -250,7 +248,8 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                         "    test -f %s && ps -p `cat %s` && exit\n" +
                         "    sleep 1\n" +
                         "done\n" +
-                        "echo \"Couldn't determine if process is running (pid not running); continuing but may subsequently fail\"",
+                        "echo \"No explicit error launching nginx but couldn't find process by pid; continuing but may subsequently fail\"\n" +
+                        "cat ./console | tee /dev/stderr",
                         getRunDir()+"/"+NGINX_PID_FILE, getRunDir()+"/"+NGINX_PID_FILE)
         ).execute();
     }
@@ -289,17 +288,18 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         stop(); // TODO Don't `kill -9`, as that doesn't stop the worker processes
     }
 
-    @Override
-    public void restart() {
-        try {
-            if (isRunning()) {
-                stop();
-            }
-        } catch (Exception e) {
-            log.debug(getEntity() + " stop failed during restart (but wasn't in stop state, so not surprising): " + e);
-        }
-        launch();
-    }
+    // TODO this (previously) overrode the parent _without_ the setAttributes, which seems wrong
+//    @Override
+//    public void restart() {
+//        try {
+//            if (isRunning()) {
+//                stop();
+//            }
+//        } catch (Exception e) {
+//            log.debug(getEntity() + " stop failed during restart (but wasn't in stop state, so not surprising): " + e);
+//        }
+//        launch();
+//    }
     
     private final ExecController reloadExecutor = new ExecController(
             entity+"->reload",

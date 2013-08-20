@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.software;
 
 import java.util.Arrays;
 
@@ -10,7 +10,10 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Effector;
-import brooklyn.entity.basic.SshEffectorTasks.SshEffectorBody;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Effectors;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.software.SshEffectorTasks.SshEffectorBody;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;

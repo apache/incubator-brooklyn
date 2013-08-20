@@ -320,7 +320,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
     
     @Override
-    public void startAsync() {
+    public void start() {
         new DynamicTasks.AutoQueueVoid("install java") { protected void main() { 
             installJava(); }};
             
@@ -330,7 +330,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
             }}; 
         }
         
-        super.startAsync();
+        super.start();
     }
 
 }

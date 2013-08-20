@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.software;
 
 import javax.annotation.Nullable;
 
@@ -7,6 +7,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.EffectorBody;
+import brooklyn.entity.basic.EffectorTasks;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
