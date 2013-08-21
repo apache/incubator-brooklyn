@@ -38,7 +38,7 @@ public class DynamicToyMySqlEntityBuilder {
 
     public static EntitySpec<? extends Entity> spec() {
         EntitySpec<? extends Entity> spec = EntitySpec.create(BasicStartable.class, BasicStartableImpl.class);
-        // TODO indicate to run the make method automatically?
+        // TODO how to invoke the makeMySql method automatically ???
         return spec;
     }
     
