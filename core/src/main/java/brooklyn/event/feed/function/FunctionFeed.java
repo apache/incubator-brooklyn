@@ -59,7 +59,7 @@ import com.google.common.collect.Sets;
  */
 public class FunctionFeed extends AbstractFeed {
 
-    public static final Logger log = LoggerFactory.getLogger(FunctionFeed.class);
+    private static final Logger log = LoggerFactory.getLogger(FunctionFeed.class);
 
     public static Builder builder() {
         return new Builder();
