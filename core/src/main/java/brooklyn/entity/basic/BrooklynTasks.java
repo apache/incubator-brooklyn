@@ -83,6 +83,7 @@ public class BrooklynTasks {
     }
 
     public static Entity getWrappedEntityOfType(Task<?> t, String wrappingType) {
+        if (t==null) return null;
         return getWrappedEntityOfType(t.getTags(), wrappingType);
     }
     public static Entity getWrappedEntityOfType(Collection<?> tags, String wrappingType) {
@@ -97,6 +98,7 @@ public class BrooklynTasks {
     }
 
     public static Entity getTargetOrContextEntity(Task<?> t) {
+        if (t==null) return null;
         Entity result = getWrappedEntityOfType(t, CONTEXT_ENTITY);
         if (result!=null) return result;
         result = getWrappedEntityOfType(t, TARGET_ENTITY);

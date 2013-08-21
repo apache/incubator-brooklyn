@@ -340,6 +340,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         List<String> allcmds = toCommandSequence(commands, env);
         String singlecmd = Joiner.on(separator).join(allcmds);
 
+        if (getOptionalVal(props, PROP_RUN_AS_ROOT)==Boolean.TRUE) {
+            LOG.warn("Cannot run as root when executing sshj as command; run as a script instead (will run as normal user): "+singlecmd);
+        }
+        
         if (LOG.isTraceEnabled()) LOG.trace("Running command at {}: {}", host, singlecmd);
         
         Command result = acquire(new ExecAction(singlecmd, out, err));

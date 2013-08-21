@@ -286,14 +286,28 @@ public class BashCommands {
         }
         return downloadUrlAs(urls, "./"+pathlessFilenameToSaveAs);
     }
-    
+
+    /** @deprecated since 0.6.0 use {@link #commandsToDownloadUrlsAs(List, String)} (because method uses a list),
+     * or {@link #commandToDownloadUrlsAs(List, String)} for the single-string variant */ @Deprecated
+    public static List<String> downloadUrlAs(List<String> urls, String saveAs) {
+        return Arrays.asList(INSTALL_CURL, 
+                require(simpleDownloadUrlAs(urls, saveAs), "Could not retrieve "+saveAs+" (from "+urls.size()+" sites)", 9));
+    }
     /**
      * Returns commands to download the URL, saving as the given file. Will try each URL in turn until one is successful
      * (see `curl -f` documentation).
      */
-    public static List<String> downloadUrlAs(List<String> urls, String saveAs) {
+    public static List<String> commandsToDownloadUrlsAs(List<String> urls, String saveAs) {
         return Arrays.asList(INSTALL_CURL, 
                 require(simpleDownloadUrlAs(urls, saveAs), "Could not retrieve "+saveAs+" (from "+urls.size()+" sites)", 9));
+    }
+    public static String commandToDownloadUrlsAs(List<String> urls, String saveAs) {
+        return chain(INSTALL_CURL, 
+                require(simpleDownloadUrlAs(urls, saveAs), "Could not retrieve "+saveAs+" (from "+urls.size()+" sites)", 9));
+    }
+    public static String commandToDownloadUrlAs(String url, String saveAs) {
+        return chain(INSTALL_CURL, 
+                require(simpleDownloadUrlAs(Arrays.asList(url), saveAs), "Could not retrieve "+saveAs+" (from 1 site)", 9));
     }
 
     /**

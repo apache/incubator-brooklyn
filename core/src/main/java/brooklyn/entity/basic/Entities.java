@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +35,12 @@ import brooklyn.event.Sensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.LocationManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
+import brooklyn.management.TaskFactory;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -707,4 +711,37 @@ public class Entities {
             throw new NullPointerException("Key "+urlKey+" on "+entity+" should not be null");
         return new ResourceUtils(entity).checkUrlExists(url);
     }
+    
+    /** submits a task factory to construct its task at the entity (in a precursor task) and then to submit it;
+     * important if e.g. task construction relies on an entity being in scope (in tags, via {@link BrooklynTasks}) */
+    public static <T extends TaskAdaptable<?>> T submit(final Entity entity, final TaskFactory<T> taskFactory) {
+        // TODO it is messy to have to do this, but not sure there is a cleaner way :(
+        final Semaphore s = new Semaphore(0);
+        final AtomicReference<T> result = new AtomicReference<T>();
+        final ExecutionContext executionContext = ((EntityInternal)entity).getManagementSupport().getExecutionContext();
+        executionContext.execute(new Runnable() {
+            // TODO could give this task a name, like "create task from factory"
+            @Override
+            public void run() {
+                T t = taskFactory.newTask();
+                result.set(t);
+                s.release();
+            }
+        });
+        try {
+            s.acquire();
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
+        executionContext.submit(result.get().asTask());
+        return result.get();
+    }
+
+    /** submits a task to run at the entity */
+    public static <T extends TaskAdaptable<?>> T submit(final Entity entity, final T task) {
+        final ExecutionContext executionContext = ((EntityInternal)entity).getManagementSupport().getExecutionContext();
+        executionContext.submit(task.asTask());
+        return task;
+    }
+
 }
