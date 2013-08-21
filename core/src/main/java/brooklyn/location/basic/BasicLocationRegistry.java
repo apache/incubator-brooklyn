@@ -75,8 +75,14 @@ public class BasicLocationRegistry implements LocationRegistry {
         }
     }
     
+    @Deprecated
     @Override
     public LocationDefinition getDefinedLocation(String id) {
+        return getDefinedLocationById(id);
+    }
+    
+    @Override
+    public LocationDefinition getDefinedLocationById(String id) {
         return definedLocations.get(id);
     }
 
@@ -154,14 +160,31 @@ public class BasicLocationRegistry implements LocationRegistry {
     /** to catch circular references */
     protected ThreadLocal<Set<String>> specsSeen = new ThreadLocal<Set<String>>();
     
-    @Override
+    @Override @Deprecated
     public boolean canResolve(String spec) {
+        return canMaybeResolve(spec);
+    }
+    @Override
+    public boolean canMaybeResolve(String spec) {
         return getSpecResolver(spec) != null;
     }
 
     @Override
     public final Location resolve(String spec) {
         return resolve(spec, new MutableMap());
+    }
+    
+    @Override
+    public final Location resolveIfPossible(String spec) {
+        if (!canMaybeResolve(spec)) return null;
+        try {
+            return resolve(spec);
+        } catch (Exception e) {
+            if (log.isTraceEnabled())
+                log.trace("Unable to resolve "+spec+": "+e, e);
+            // can't resolve
+            return null;
+        }
     }
 
     @Override

@@ -971,6 +971,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             .configure("jcloudsParent", this)
                             .configure("node", node));
         } else {
+            LOG.warn("Using deprecated JcloudsSshMachineLocation constructor because "+this+" is not managed");
             return new JcloudsSshMachineLocation(MutableMap.builder()
                     .put("address", vmHostname) 
                     .put("displayName", vmHostname)
@@ -1238,11 +1239,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             ConfigBag sshConfig = extractSshConfig(setup, new ConfigBag());
             
             // TODO messy way to get an SSH session 
-            sshLocByIp = new SshMachineLocation(MutableMap.builder()
+            MutableMap<Object, Object> locationProps = MutableMap.builder()
                     .put("address", ip) 
                     .put("user", getUser(setup))
                     .putAll(sshConfig.getAllConfig())
-                    .build());
+                    .build();
+            if (isManaged()) {
+                sshLocByIp = getManagementContext().getLocationManager().createLocation(locationProps, SshMachineLocation.class);
+            } else {
+                sshLocByIp = new SshMachineLocation(locationProps);
+            }
             
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errStream = new ByteArrayOutputStream();
