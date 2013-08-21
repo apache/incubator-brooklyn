@@ -26,4 +26,8 @@ public interface SshExecTaskFactory<T> extends TaskFactory<SshExecTaskWrapper<T>
     public SshExecTaskFactory<T> environmentVariables(Map<String,String> vars);
     public SshExecTaskFactory<T> summary(String summary);
     public <V> SshExecTaskFactory<T> configure(ConfigKey<V> key, V value);
+    
+    /** adds a listener which will be notified of (otherwise) successful completion,
+     * typically used to invalidate the result (ie throw exception, to promote a string in the output to an exception) */
+    public SshExecTaskFactory<T> addCompletionListener(Function<SshExecTaskWrapper<?>, Void> function);
 }

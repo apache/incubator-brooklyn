@@ -152,7 +152,12 @@ public class AbstractSshExecTaskFactory<T extends AbstractSshExecTaskFactory<T,R
         config.configure(key, value);
         return self();
     }
-    
+ 
+    public T addCompletionListener(Function<SshExecTaskWrapper<?>, Void> listener) {
+        completionListeners.add(listener);
+        return self();
+    }
+
     @Override
     protected void finalize() throws Throwable {
         // help let people know of API usage error

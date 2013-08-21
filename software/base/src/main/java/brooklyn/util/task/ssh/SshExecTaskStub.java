@@ -31,6 +31,7 @@ public class SshExecTaskStub {
     protected Boolean requireExitCodeZero = null;
     protected String extraErrorMessage = null;
     protected Map<String,String> shellEnvironment = new MutableMap<String, String>();
+    protected final List<Function<SshExecTaskWrapper<?>, Void>> completionListeners = new ArrayList<Function<SshExecTaskWrapper<?>,Void>>();
 
     public SshExecTaskStub() {}
     
@@ -46,6 +47,7 @@ public class SshExecTaskStub {
         requireExitCodeZero = source.requireExitCodeZero;
         extraErrorMessage = source.extraErrorMessage;
         shellEnvironment.putAll(source.getShellEnvironment());
+        completionListeners.addAll(source.completionListeners);
     }
 
     public String getSummary() {
@@ -69,4 +71,9 @@ public class SshExecTaskStub {
     public List<String> getCommands() {
         return ImmutableList.copyOf(commands);
     }
+ 
+    public List<Function<SshExecTaskWrapper<?>, Void>> getCompletionListeners() {
+        return completionListeners;
+    }
+    
 }

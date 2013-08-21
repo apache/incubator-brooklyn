@@ -17,12 +17,12 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.AbstractSshExecTaskFactory;
 import brooklyn.util.task.ssh.PlainSshExecTaskFactory;
+import brooklyn.util.task.ssh.SshExecTaskFactory;
+import brooklyn.util.task.ssh.SshExecTaskWrapper;
 import brooklyn.util.task.ssh.SshFetchTaskFactory;
 import brooklyn.util.task.ssh.SshFetchTaskWrapper;
 import brooklyn.util.task.ssh.SshPutTaskFactory;
 import brooklyn.util.task.ssh.SshPutTaskWrapper;
-import brooklyn.util.task.ssh.SshExecTaskFactory;
-import brooklyn.util.task.ssh.SshExecTaskWrapper;
 import brooklyn.util.task.ssh.SshTasks;
 
 import com.google.common.annotations.Beta;
@@ -154,17 +154,17 @@ public class SshEffectorTasks {
 
     /** task which returns 0 if pid is running */
     public static SshEffectorTask<Integer> codePidRunning(Integer pid) {
-        return ssh("ps -p "+pid).summary("check PID "+pid);
+        return ssh("ps -p "+pid).summary("PID "+pid+" is-running check (exit code)").allowingNonZeroExitCode();
     }
     
     /** task which fails if the given PID is not running */
     public static SshEffectorTask<?> requirePidRunning(Integer pid) {
-        return codePidRunning(pid).summary("require PID "+pid).requiringExitCodeZero("Process with PID "+pid+" is required to be running");
+        return codePidRunning(pid).summary("PID "+pid+" is-running check (required)").requiringExitCodeZero("Process with PID "+pid+" is required to be running");
     }
 
     /** as {@link #codePidRunning(String)} but returning boolean */
     public static SshEffectorTask<Boolean> isPidRunning(Integer pid) {
-        return codePidRunning(pid).returning(new Function<SshExecTaskWrapper<?>, Boolean>() {
+        return codePidRunning(pid).summary("PID "+pid+" is-running check (boolean)").returning(new Function<SshExecTaskWrapper<?>, Boolean>() {
             public Boolean apply(@Nullable SshExecTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
         });
     }
@@ -176,27 +176,40 @@ public class SshEffectorTasks {
      * returns 1 if no matching file, 
      * 1 if matching file but no matching process,
      * and 2 if 2+ matching files */
-    public static SshEffectorTask<Integer> codePidFromFileRunning(String pidFile) {
+    public static SshEffectorTask<Integer> codePidFromFileRunning(final String pidFile) {
         return ssh(BashCommands.chain(
+                // this fails, but isn't an error
                 BashCommands.requireTest("-f "+pidFile, "The PID file "+pidFile+" does not exist."),
-                BashCommands.require("cat "+pidFile, "The PID file "+pidFile+" cannot be read (permissions?)."),
-                "ps -p `cat "+pidFile+"`")).summary("check PID in file "+pidFile)
-                .allowingNonZeroExitCode();
+                // this fails and logs an error picked up later
+                BashCommands.requireTest("`ls "+pidFile+" | wc -w` -eq 1", "ERROR: there are multiple matching PID files"),
+                // this fails and logs an error picked up later
+                BashCommands.require("cat "+pidFile, "ERROR: the PID file "+pidFile+" cannot be read (permissions?)."),
+                // finally check the process
+                "ps -p `cat "+pidFile+"`")).summary("PID file "+pidFile+" is-running check (exit code)")
+                .allowingNonZeroExitCode()
+                .addCompletionListener(new Function<SshExecTaskWrapper<?>,Void>() {
+                    public Void apply(SshExecTaskWrapper<?> input) {
+                        if (input.getStderr().contains("ERROR:"))
+                            throw new IllegalStateException("Invalid or inaccessible PID filespec: "+pidFile);
+                        return null;
+                    }
+                });
     }
     
     /** task which fails if the pid in the given file is not running (or if there is no such PID file);
      * method accepts wildcards so long as they match a single file on the remote end (fails if 0 or 2+ matching files) */
     public static SshEffectorTask<?> requirePidFromFileRunning(String pidFile) {
         return codePidFromFileRunning(pidFile)
-                .summary("require PID in file "+pidFile+" to be running")
+                .summary("PID file "+pidFile+" is-running check (required)")
                 .requiringExitCodeZero("Process with PID from file "+pidFile+" is required to be running");
     }
 
     /** as {@link #codePidFromFileRunning(String)} but returning boolean */
     public static SshEffectorTask<Boolean> isPidFromFileRunning(String pidFile) {
-        return codePidFromFileRunning(pidFile).returning(new Function<SshExecTaskWrapper<?>, Boolean>() {
-            public Boolean apply(@Nullable SshExecTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
-        });
+        return codePidFromFileRunning(pidFile).summary("PID file "+pidFile+" is-running check (boolean)").
+                returning(new Function<SshExecTaskWrapper<?>, Boolean>() {
+                    public Boolean apply(@Nullable SshExecTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
+                });
     }
 
 }

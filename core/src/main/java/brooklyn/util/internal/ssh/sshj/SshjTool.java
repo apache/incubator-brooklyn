@@ -383,13 +383,13 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 try {
                     disconnect();
                 } catch (Exception e2) {
-                    LOG.warn("<< ("+toString()+") error closing connection: "+e+" / "+e2, e);
+                    LOG.debug("<< ("+toString()+") error closing connection: "+e+" / "+e2, e);
                 }
                 if (i + 1 == sshTries) {
-                    LOG.warn("<< {}: {}", fullMessage, e.getMessage());
+                    LOG.debug("<< {} (rethrowing, out of retries): {}", fullMessage, e.getMessage());
                     throw propagate(e, fullMessage + "; out of retries");
                 } else if (sshTriesTimeout > 0 && stopwatch.elapsed(TimeUnit.MILLISECONDS) > sshTriesTimeout) {
-                    LOG.warn("<< {}: {}", fullMessage, e.getMessage());
+                    LOG.debug("<< {} (rethrowing, out of time): {}", fullMessage, e.getMessage());
                     throw propagate(e, fullMessage + "; out of time");
                 } else {
                     if (LOG.isDebugEnabled()) LOG.debug("<< {}: {}", fullMessage, e.getMessage());

@@ -16,6 +16,7 @@ import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
 /** Wraps a fully constructed SSH task, and allows callers to inspect status. 
@@ -98,17 +99,18 @@ public class SshExecTaskWrapper<RET> extends SshExecTaskStub implements TaskWrap
             
             if (exitCode!=0 && requireExitCodeZero!=Boolean.FALSE) {
                 if (requireExitCodeZero==Boolean.TRUE) {
-                    String message = (extraErrorMessage!=null ? extraErrorMessage+": " : "")+
-                            "SSH task ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary();
-                    log.warn(message+" (throwing)");
-                    logProblemDetails("STDERR", stderr, 1024);
-                    logProblemDetails("STDOUT", stdout, 1024);
-                    logProblemDetails("STDIN", Streams.byteArrayOfString(Strings.join(commands,"\n")), 4096);
-                    throw new IllegalStateException(message);
+                    logWithDetailsAndThrow("SSH task ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary(), null);
                 } else {
                     // warn, but allow, on non-zero not explicitly allowed
                     log.warn("SSH task ended with exit code "+exitCode+" when non-zero was not explicitly allowed (error may be thrown in future), in "
                             +Tasks.current()+": "+getSummary());
+                }
+            }
+            for (Function<SshExecTaskWrapper<?>, Void> listener: completionListeners) {
+                try {
+                    listener.apply(SshExecTaskWrapper.this);
+                } catch (Exception e) {
+                    logWithDetailsAndThrow("Error in SSH task "+getSummary()+": "+e, e);                    
                 }
             }
 
@@ -122,6 +124,16 @@ public class SshExecTaskWrapper<RET> extends SshExecTaskStub implements TaskWrap
             }
 
             throw new IllegalStateException("Unknown return type for ssh job "+getSummary()+": "+returnType);
+        }
+
+        protected void logWithDetailsAndThrow(String message, Throwable optionalCause) {
+            message = (extraErrorMessage!=null ? extraErrorMessage+": " : "") + message;
+            log.warn(message+" (throwing)");
+            logProblemDetails("STDERR", stderr, 1024);
+            logProblemDetails("STDOUT", stdout, 1024);
+            logProblemDetails("STDIN", Streams.byteArrayOfString(Strings.join(commands,"\n")), 4096);
+            if (optionalCause!=null) throw new IllegalStateException(message, optionalCause);
+            throw new IllegalStateException(message);
         }
 
         protected void logProblemDetails(String streamName, ByteArrayOutputStream stream, int max) {

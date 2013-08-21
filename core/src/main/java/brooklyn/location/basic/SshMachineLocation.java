@@ -454,11 +454,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     @SuppressWarnings("resource")
     protected int execWithLogging(Map<String,?> props, final String summaryForLogging, final List<String> commands, final Map<String,?> env, final ExecRunner execCommand) {
-        if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {}: {}", new Object[] {summaryForLogging, this, commands});
+        if (logSsh.isDebugEnabled()) logSsh.debug("{}, starting on machine {}: {}", new Object[] {summaryForLogging, this, commands});
         
         Preconditions.checkNotNull(address, "host address must be specified for ssh");
         if (commands.isEmpty()) {
-            logSsh.debug("{} on machine {} ending: no commands to run", summaryForLogging, this);
+            logSsh.debug("{}, on machine {} ,ending: no commands to run", summaryForLogging, this);
             return 0;
         }
         
@@ -506,7 +506,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 return execSsh(MutableMap.copyOf(sshFlags.getAllConfig()), new Function<SshTool, Integer>() {
                     public Integer apply(SshTool ssh) {
                         int result = execCommand.exec(ssh, MutableMap.copyOf(execFlags.getAllConfig()), commands, env);
-                        if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {} completed: return status {}", new Object[] {summaryForLogging, this, result});
+                        if (logSsh.isDebugEnabled()) logSsh.debug("{}, on machine {}, completed: return status {}", new Object[] {summaryForLogging, this, result});
                         return result;
                     }});
 
@@ -515,7 +515,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }
             
         } catch (IOException e) {
-            if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {} failed: {}", new Object[] {summaryForLogging, this, e});
+            if (logSsh.isDebugEnabled()) logSsh.debug("{}, on machine {}, failed: {}", new Object[] {summaryForLogging, this, e});
             throw Throwables.propagate(e);
         } finally {
             // Must close the pipedOutStreams, otherwise input will never read -1 so StreamGobbler thread would never die
