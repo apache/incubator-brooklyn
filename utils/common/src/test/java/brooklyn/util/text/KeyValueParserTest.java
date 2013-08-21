@@ -14,8 +14,7 @@ import java.util.Map;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.util.text.KeyValueParser;
-
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -27,6 +26,13 @@ import com.google.common.collect.Maps;
  **/
 public class KeyValueParserTest {
 
+    // Gives an example of how to do this with guava. But note that does not
+    // give the same behaviour for quoted values.
+    @Test
+    public void testGuavaEquivalent() {
+        assertOrderedMapsEqual(Splitter.on(",").withKeyValueSeparator("=").split("a=x,b=y"), ImmutableMap.of("a", "x", "b", "y"));
+    }
+    
     @Test
     public void testTrimsWhiteSpaceOutsideOfQuotes() throws Exception {
         assertOrderedMapsEqual(KeyValueParser.parseMap("a=x"), ImmutableMap.of("a", "x"));

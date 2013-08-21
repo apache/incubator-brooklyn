@@ -163,7 +163,7 @@ public class BasicExecutionManager implements ExecutionManager {
     /**
      * Deletes the given tag, including all tasks using this tag.
      * 
-     * Useful, for example, if an entity is being expunged so that we don't keep holiding
+     * Useful, for example, if an entity is being expunged so that we don't keep holding
      * a reference to it as a tag.
      */
     public void deleteTag(Object tag) {

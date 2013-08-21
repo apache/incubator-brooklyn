@@ -6,6 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Splitter;
+
 
 /**
  * Parses a String that consists of multiple arguments, which are either single or key-value pairs.
@@ -19,6 +21,15 @@ import java.util.Map;
  *  "b" = "x x"
  *  "c" = null
  *  "d d" = null 
+ * 
+ * Consider instead using {@link Splitter#withKeyValueSeparator(char)}, but that doesn't give the
+ * same behaviour for values, see {@link QuotedStringTokenizer}. For example:
+ * <pre>
+ * {@code
+ * String val = "a=x,b=y";
+ * Map<String,String> map = Splitter.on(",").withKeyValueSeparator("=").split(val);
+ * }
+ * </pre>
  * 
  * @author aled
  **/
