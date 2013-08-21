@@ -39,6 +39,7 @@ import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.InputStreamSupplier;
+import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Time;
@@ -48,6 +49,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -203,16 +205,21 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         /* sshj needs to:
          *   1) to know the length of the InputStream to copy the file to perform copy; and
          *   2) re-read the input stream on retry if the first attempt fails.
-         * For now, write it to a file.
+         * For now, write it to a file, unless caller supplies a KnownSizeInputStream
+         * 
          * (We could have a switch where we hold it in memory if less than some max size,
          * but most the routines should supply a string or byte array or similar,
          * so we probably don't come here too often.)
          */
-        File tempFile = writeTempFile(contents);
-        try {
-            return copyToServer(props, tempFile, pathAndFileOnRemoteServer);
-        } finally {
-            tempFile.delete();
+        if (contents instanceof KnownSizeInputStream) {
+            return copyToServer(props, Suppliers.ofInstance(contents), ((KnownSizeInputStream)contents).length(), pathAndFileOnRemoteServer);
+        } else {
+            File tempFile = writeTempFile(contents);
+            try {
+                return copyToServer(props, tempFile, pathAndFileOnRemoteServer);
+            } finally {
+                tempFile.delete();
+            }
         }
     }
     

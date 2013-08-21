@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
+import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.flags.TypeCoercions;
 
@@ -200,6 +201,26 @@ public class Tasks {
         for (Task<?> task: tasks)
             tb.add(task);
         return tb.build();
+    }
+
+    public static TaskFactory<?> sequential(TaskFactory<?> ...taskFactories) {
+        return sequentialInternal("sequential tasks", taskFactories);
+    }
+    
+    public static TaskFactory<?> sequential(String name, TaskFactory<?> ...taskFactories) {
+        return sequentialInternal(name, taskFactories);
+    }
+    
+    private static TaskFactory<?> sequentialInternal(final String name, final TaskFactory<?> ...taskFactories) {
+        return new TaskFactory<TaskAdaptable<?>>() {
+            @Override
+            public TaskAdaptable<?> newTask() {
+                TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().name(name).parallel(false);
+                for (TaskFactory<?> tf: taskFactories)
+                    tb.add(tf.newTask().asTask());
+                return tb.build();
+            }
+        };
     }
 
     /** returns the first tag found on the given task which matches the given type, looking up the submission hierarachy if necessary */

@@ -37,6 +37,7 @@ public class TestDynamicMySqlEntityBuilder {
 
     public static EntitySpec<? extends Entity> spec() {
         EntitySpec<? extends Entity> spec = EntitySpec.create(BasicStartable.class, BasicStartableImpl.class);
+        // TODO indicate to run the make method automatically?
         return spec;
     }
     
@@ -77,8 +78,6 @@ public class TestDynamicMySqlEntityBuilder {
     }
 
     public static Entity makeMySql(final EntityInternal entity) {
-        // TODO attach effectors
-        
         new MachineLifecycleEffectorTasks() {
             @Override
             protected String startProcessesAtMachine(Supplier<MachineLocation> machineS) {
@@ -97,7 +96,7 @@ public class TestDynamicMySqlEntityBuilder {
             protected void postStartCustom() {
                 // if it's still up after 5s assume we are good
                 Time.sleep(Duration.FIVE_SECONDS);
-                if (!DynamicTasks.queue(SshEffectorTasks.isPidFromFileRunning(dir(entity)+"/*/data/*.pid")).getTask().getUnchecked()) {
+                if (!DynamicTasks.queue(SshEffectorTasks.isPidFromFileRunning(dir(entity)+"/*/data/*.pid")).get()) {
                     // but if it's not up add a bunch of other info
                     log.warn("MySQL did not start: "+dir(entity));
                     SshTaskWrapper<Integer> info = DynamicTasks.queue(SshEffectorTasks.ssh(

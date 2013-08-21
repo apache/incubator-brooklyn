@@ -17,6 +17,10 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.AbstractSshTaskFactory;
 import brooklyn.util.task.ssh.PlainSshTaskFactory;
+import brooklyn.util.task.ssh.SshFetchTaskFactory;
+import brooklyn.util.task.ssh.SshFetchTaskWrapper;
+import brooklyn.util.task.ssh.SshPutTaskFactory;
+import brooklyn.util.task.ssh.SshPutTaskWrapper;
 import brooklyn.util.task.ssh.SshTaskFactory;
 import brooklyn.util.task.ssh.SshTaskWrapper;
 import brooklyn.util.task.ssh.SshTasks;
@@ -42,7 +46,7 @@ public class SshEffectorTasks {
 
         /** convenience for generating an {@link PlainSshTaskFactory} which can be further customised if desired, and then (it must be explicitly) queued */
         public SshTaskFactory<Integer> ssh(String ...commands) {
-            return SshTasks.newTaskFactory(machine(), commands);
+            return SshTasks.newSshTaskFactory(machine(), commands);
         }
 
         // TODO scp, install, etc
@@ -88,8 +92,52 @@ public class SshEffectorTasks {
         }
     }
     
+    public static class SshPutEffectorTaskFactory extends SshPutTaskFactory implements EffectorTaskFactory<Void> {
+        public SshPutEffectorTaskFactory(String remoteFile) {
+            super(remoteFile);
+        }
+        @Override
+        public SshPutTaskWrapper newTask(Entity entity, Effector<Void> effector, ConfigBag parameters) {
+            machine(getMachineOfEntity(entity));
+            return super.newTask();
+        }
+        @Override
+        public SshPutTaskWrapper newTask() {
+            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+            if (entity!=null)
+                machine(getMachineOfEntity(entity));
+            return super.newTask();
+        }
+    }
+
+    public static class SshFetchEffectorTaskFactory extends SshFetchTaskFactory implements EffectorTaskFactory<String> {
+        public SshFetchEffectorTaskFactory(String remoteFile) {
+            super(remoteFile);
+        }
+        @Override
+        public SshFetchTaskWrapper newTask(Entity entity, Effector<String> effector, ConfigBag parameters) {
+            machine(getMachineOfEntity(entity));
+            return super.newTask();
+        }
+        @Override
+        public SshFetchTaskWrapper newTask() {
+            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+            if (entity!=null)
+                machine(getMachineOfEntity(entity));
+            return super.newTask();
+        }
+    }
+
     public static SshEffectorTask<Integer> ssh(String ...commands) {
         return new SshEffectorTask<Integer>(commands);
+    }
+
+    public static SshPutTaskFactory put(String remoteFile) {
+        return new SshPutEffectorTaskFactory(remoteFile);
+    }
+
+    public static SshFetchEffectorTaskFactory fetch(String remoteFile) {
+        return new SshFetchEffectorTaskFactory(remoteFile);
     }
 
     public static SshMachineLocation getMachineOfEntity(Entity entity) {
@@ -144,4 +192,5 @@ public class SshEffectorTasks {
             public Boolean apply(@Nullable SshTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
         });
     }
+
 }

@@ -151,7 +151,8 @@ public interface SshTool {
      *   <li>'lastAccessDate' see {@link #PROP_LAST_ACCESS_DATE}; not supported by all SshTool implementations
      * </ul>
      * 
-     * @return exit code (not supported by all SshTool implementations, sometimes just returning 0)
+     * @return exit code (not supported by all SshTool implementations, usually throwing on error;
+     * sometimes possibly returning 0 even on error (?) )
      */
     public int copyToServer(Map<String,?> props, File localFile, String pathAndFileOnRemoteServer);
 
@@ -169,15 +170,17 @@ public interface SshTool {
     public int copyToServer(Map<String,?> props, byte[] contents, String pathAndFileOnRemoteServer);
 
     /**
-     * Copies the file to the server at the given path.
-     * If path is null, empty, '.', '..', or ends with '/' then file name is used.
-     * <p>
-     * Optional properties are:
-     * <ul>
-     *   <li>'permissions' (e.g. "0644") - see {@link #PROP_PERMISSIONS}
-     * </ul>
+     * Copies the file from the server at the given path.
      *
-     * @return exit code (not supported by all SshTool implementations, sometimes just returning 0)
+     * @return exit code (not supported by all SshTool implementations, usually throwing on error;
+     * sometimes possibly returning 0 even on error (?) )
      */
     public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File local);
+
+    // TODO might be more efficicent than copyFrom by way of temp file
+//    /**
+//     * Reads from the file at the given path on the remote server.
+//     */
+//    public InputStream streamFromServer(Map<String,?> props, String pathAndFileOnRemoteServer);
+
 }

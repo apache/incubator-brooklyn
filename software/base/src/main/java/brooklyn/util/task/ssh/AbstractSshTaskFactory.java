@@ -129,7 +129,7 @@ public class AbstractSshTaskFactory<T extends AbstractSshTaskFactory<T,RET>,RET>
     }
 
     @Override
-    public synchronized SshTaskWrapper<RET> newTask() {
+    public SshTaskWrapper<RET> newTask() {
         dirty = false;
         return new SshTaskWrapper<RET>(this);
     }

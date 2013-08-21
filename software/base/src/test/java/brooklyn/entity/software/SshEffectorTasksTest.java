@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -22,7 +23,12 @@ import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
+import brooklyn.util.net.Urls;
 import brooklyn.util.task.ssh.AbstractSshTaskFactory;
+import brooklyn.util.task.ssh.SshFetchTaskFactory;
+import brooklyn.util.task.ssh.SshFetchTaskWrapper;
+import brooklyn.util.task.ssh.SshPutTaskFactory;
+import brooklyn.util.task.ssh.SshPutTaskWrapper;
 import brooklyn.util.task.ssh.SshTaskWrapper;
 
 import com.google.common.io.Files;
@@ -33,24 +39,28 @@ public class SshEffectorTasksTest {
     
     TestApplication app;
     ManagementContext mgmt;
+    SshMachineLocation host;
+    File tempDir;
     
     boolean failureExpected;
-    
+
     @BeforeMethod(alwaysRun=true)
     public void setup() throws Exception {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         mgmt = app.getManagementContext();
         
         LocalhostMachineProvisioningLocation lhc = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
-        SshMachineLocation lh = lhc.obtain();
-        app.start(Arrays.asList(lh));
+        host = lhc.obtain();
+        app.start(Arrays.asList(host));
         clearExpectedFailure();
+        tempDir = Files.createTempDir();
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (mgmt != null) Entities.destroyAll(mgmt);
         mgmt = null;
+        FileUtils.deleteDirectory(tempDir);
         checkExpectedFailure();
     }
 
@@ -68,7 +78,6 @@ public class SshEffectorTasksTest {
     protected void setExpectingFailure() {
         failureExpected = true;
     }
-
 
     protected <U,T extends AbstractSshTaskFactory<?,U>> SshTaskWrapper<U> submit(final T task) {
         final Semaphore s = new Semaphore(0);
@@ -89,6 +98,84 @@ public class SshEffectorTasksTest {
         }
         return result.get();
     }
+
+    protected SshPutTaskWrapper submit(final SshPutTaskFactory task) {
+        final Semaphore s = new Semaphore(0);
+        final AtomicReference<SshPutTaskWrapper> result = new AtomicReference<SshPutTaskWrapper>(); 
+        app.getExecutionContext().execute(new Runnable() {
+            @Override
+            public void run() {
+                SshPutTaskWrapper t = task.newTask();
+                app.getExecutionContext().submit(t);
+                result.set(t);
+                s.release();
+            }
+        });
+        try {
+            s.acquire();
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
+        return result.get();
+    }
+
+    protected SshFetchTaskWrapper submit(final SshFetchTaskFactory task) {
+        final Semaphore s = new Semaphore(0);
+        final AtomicReference<SshFetchTaskWrapper> result = new AtomicReference<SshFetchTaskWrapper>(); 
+        app.getExecutionContext().execute(new Runnable() {
+            @Override
+            public void run() {
+                SshFetchTaskWrapper t = task.newTask();
+                app.getExecutionContext().submit(t);
+                result.set(t);
+                s.release();
+            }
+        });
+        try {
+            s.acquire();
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
+        return result.get();
+    }
+
+    // ------------------- basic ssh
+    
+    @Test(groups="Integration")
+    public void testSshEchoHello() {
+        SshTaskWrapper<Integer> t = submit(SshEffectorTasks.ssh("sleep 1 ; echo hello world"));
+        Assert.assertFalse(t.isDone());
+        Assert.assertEquals(t.get(), (Integer)0);
+        Assert.assertEquals(t.getTask().getUnchecked(), (Integer)0);
+        Assert.assertEquals(t.getStdout().trim(), "hello world");
+    }
+
+    @Test(groups="Integration")
+    public void testSshPut() throws IOException {
+        String fn = Urls.mergePaths(tempDir.getPath(), "f1");
+        SshPutTaskWrapper t = submit(SshEffectorTasks.put(fn).contents("hello world"));
+        t.block();
+        Assert.assertEquals(FileUtils.readFileToString(new File(fn)), "hello world");
+        // and make sure this doesn't throw
+        Assert.assertTrue(t.isDone());
+        Assert.assertTrue(t.isSuccessful());
+        Assert.assertEquals(t.get(), null);
+        Assert.assertEquals(t.getExitCode(), (Integer)0);
+    }
+
+    @Test(groups="Integration")
+    public void testSshFetch() throws IOException {
+        String fn = Urls.mergePaths(tempDir.getPath(), "f2");
+        FileUtils.write(new File(fn), "hello fetched world");
+        
+        SshFetchTaskWrapper t = submit(SshEffectorTasks.fetch(fn));
+        t.block();
+        
+        Assert.assertTrue(t.isDone());
+        Assert.assertEquals(t.get(), "hello fetched world");
+    }
+
+    // ----------------- pid stuff
     
     @Test(groups="Integration")
     public void testNonRunningPid() {
@@ -130,7 +217,7 @@ public class SshEffectorTasksTest {
             throw new PropagatedRuntimeException("Test depends on (fragile) getMyPid method which does not work here", e);
         }
     }
-    
+
     @Test(groups="Integration")
     public void testRunningPid() {
         SshTaskWrapper<Integer> t = submit(SshEffectorTasks.codePidRunning(getMyPid()));

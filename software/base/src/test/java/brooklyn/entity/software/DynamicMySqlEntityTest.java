@@ -29,15 +29,16 @@ import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 
 
 public class DynamicMySqlEntityTest {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicMySqlEntityTest.class);
     
-    private TestApplication app;
-    private ManagementContext mgmt;
-    private LocalhostMachineProvisioningLocation localhostCloud;
+    protected TestApplication app;
+    protected ManagementContext mgmt;
+    protected LocalhostMachineProvisioningLocation localhostCloud;
 
     @BeforeMethod(alwaysRun=true)
     public void setup() throws Exception {
@@ -55,9 +56,8 @@ public class DynamicMySqlEntityTest {
     }
 
     @Test(groups="Integration")
-    public void testSampleMySql() throws NoMachinesAvailableException {
-        Entity mysql = app.createAndManageChild(TestDynamicMySqlEntityBuilder.spec());
-        TestDynamicMySqlEntityBuilder.makeMySql((EntityInternal) mysql);
+    public void testMySqlOnLocalhost() throws NoMachinesAvailableException {
+        Entity mysql = createMysql();
         
         SshMachineLocation lh = localhostCloud.obtain();
         app.start(Arrays.asList(lh));
@@ -68,7 +68,7 @@ public class DynamicMySqlEntityTest {
         
         Integer pid = mysql.getAttribute(Attributes.PID);
         Assert.assertNotNull(pid);
-        SshTasks.newTaskFactory(lh, "ps -p "+pid).requiringExitCodeZero();
+        SshTasks.newSshTaskFactory(lh, "ps -p "+pid).requiringExitCodeZero();
         
         app.stop();
 
@@ -77,10 +77,44 @@ public class DynamicMySqlEntityTest {
         
         // and assert it has died
         log.info("mysql in pid "+pid+" should be dead now");
-        SshTaskWrapper<Integer> t = SshTasks.newTaskFactory(lh, "ps -p "+pid).allowingNonZeroExitCode().newTask();
+        SshTaskWrapper<Integer> t = SshTasks.newSshTaskFactory(lh, "ps -p "+pid).allowingNonZeroExitCode().newTask();
         mgmt.getExecutionManager().submit(t);
         t.block();
         Assert.assertNotEquals(t.getExitCode(), (Integer)0);
+    }
+
+    @Test(groups="Integration")
+    public void testMySqlOnLocalhostProvisioning() throws NoMachinesAvailableException {
+        Entity mysql = createMysql();
+        
+        app.start(Arrays.asList(localhostCloud));
+        
+        Asserts.eventually(MutableMap.of("timeout", Duration.FIVE_MINUTES),
+                Entities.attributeSupplier(mysql, Attributes.SERVICE_STATE),
+                Predicates.equalTo(Lifecycle.RUNNING));
+        
+        SshMachineLocation lh = (SshMachineLocation) Iterables.getOnlyElement( mysql.getLocations() );
+        Integer pid = mysql.getAttribute(Attributes.PID);
+        Assert.assertNotNull(pid);
+        SshTasks.newSshTaskFactory(lh, "ps -p "+pid).requiringExitCodeZero();
+        
+        app.stop();
+
+        // let the kill -1 take effect 
+        Time.sleep(Duration.ONE_SECOND);
+        
+        // and assert it has died
+        log.info("mysql in pid "+pid+" should be dead now");
+        SshTaskWrapper<Integer> t = SshTasks.newSshTaskFactory(lh, "ps -p "+pid).allowingNonZeroExitCode().newTask();
+        mgmt.getExecutionManager().submit(t);
+        t.block();
+        Assert.assertNotEquals(t.getExitCode(), (Integer)0);
+    }
+
+    protected Entity createMysql() {
+        Entity mysql = app.createAndManageChild(TestDynamicMySqlEntityBuilder.spec());
+        TestDynamicMySqlEntityBuilder.makeMySql((EntityInternal) mysql);
+        return mysql;
     }
     
 }

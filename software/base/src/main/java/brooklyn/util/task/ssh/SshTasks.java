@@ -16,14 +16,22 @@ public class SshTasks {
 
     private static final Logger log = LoggerFactory.getLogger(SshTasks.class);
         
-    public static SshTaskFactory<Integer> newTaskFactory(SshMachineLocation machine, String ...commands) {
+    public static SshTaskFactory<Integer> newSshTaskFactory(SshMachineLocation machine, String ...commands) {
         return new PlainSshTaskFactory<Integer>(machine, commands);
+    }
+
+    public static SshPutTaskFactory newSshPutTaskFactory(SshMachineLocation machine, String remoteFile) {
+        return new SshPutTaskFactory(machine, remoteFile);
+    }
+
+    public static SshFetchTaskFactory newSshFetchTaskFactory(SshMachineLocation machine, String remoteFile) {
+        return new SshFetchTaskFactory(machine, remoteFile);
     }
 
     /** creates a task which returns modifies sudoers to ensure non-tty access is permitted;
      * also gives nice warnings if sudo is not permitted */
     public static SshTaskFactory<Boolean> dontRequireTtyForSudo(SshMachineLocation machine, final boolean requireSuccess) {
-        return newTaskFactory(machine, 
+        return newSshTaskFactory(machine, 
                 BashCommands.dontRequireTtyForSudo())
             .summary("setting up sudo")
             .configure(SshTool.PROP_ALLOCATE_PTY, true)
