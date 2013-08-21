@@ -1,4 +1,4 @@
-package brooklyn.entity.software;
+package brooklyn.entity.software.mysql;
 
 import java.io.File;
 
@@ -17,6 +17,7 @@ import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails.OsVersions;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
@@ -31,9 +32,9 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Iterables;
 
-public class TestDynamicMySqlEntityBuilder {
+public class DynamicToyMySqlEntityBuilder {
 
-    private static final Logger log = LoggerFactory.getLogger(TestDynamicMySqlEntityBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(DynamicToyMySqlEntityBuilder.class);
 
     public static EntitySpec<? extends Entity> spec() {
         EntitySpec<? extends Entity> spec = EntitySpec.create(BasicStartable.class, BasicStartableImpl.class);
@@ -41,11 +42,13 @@ public class TestDynamicMySqlEntityBuilder {
         return spec;
     }
     
-    public static final String downloadUrl(Entity e) { 
-        for (int i=50; i>20; i--) {
-            String f = System.getProperty("user.home")+"/.brooklyn/repository/MySqlNode/5.5."+i+"/mysql-5.5."+i+"-osx10.6-x86_64.tar.gz";
-            if (new File(f).exists())
-                return "file://"+f;
+    public static final String downloadUrl(Entity e, boolean isLocalhost) {
+        if (isLocalhost) {
+            for (int i=50; i>20; i--) {
+                String f = System.getProperty("user.home")+"/.brooklyn/repository/MySqlNode/5.5."+i+"/mysql-5.5."+i+"-osx10.6-x86_64.tar.gz";
+                if (new File(f).exists())
+                    return "file://"+f;
+            }
         }
         // download
         String version = "5.5.33";
@@ -84,8 +87,8 @@ public class TestDynamicMySqlEntityBuilder {
                 DynamicTasks.queue(SshEffectorTasks.ssh(
                         "mkdir "+dir(entity),
                         "cd "+dir(entity),
-                        BashCommands.downloadToStdout(downloadUrl(entity))+" | tar xvz"
-                    ).summary("download mysql").returning(SshTasks.returningStdoutLoggingInfo(null, true)));
+                        BashCommands.downloadToStdout(downloadUrl(entity, isLocalhost(machineS)))+" | tar xvz"
+                    ).summary("download mysql").returning(SshTasks.returningStdoutLoggingInfo(log, true)));
                 DynamicTasks.queue(SshEffectorTasks.ssh(
                         "cd "+dir(entity)+"/*",
                         "scripts/mysql_install_db",
@@ -139,5 +142,9 @@ public class TestDynamicMySqlEntityBuilder {
 
         return entity;
     }
-    
+
+    private static boolean isLocalhost(Supplier<MachineLocation> machineS) {
+        return machineS.get() instanceof LocalhostMachine;
+    }
+
 }

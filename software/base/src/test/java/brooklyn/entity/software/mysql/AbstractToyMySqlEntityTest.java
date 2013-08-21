@@ -1,4 +1,4 @@
-package brooklyn.entity.software;
+package brooklyn.entity.software.mysql;
 
 import java.util.Arrays;
 
@@ -13,15 +13,16 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.ssh.SshTaskWrapper;
 import brooklyn.util.task.ssh.SshTasks;
@@ -32,20 +33,24 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
 
-public class DynamicMySqlEntityTest {
+public abstract class AbstractToyMySqlEntityTest {
 
-    private static final Logger log = LoggerFactory.getLogger(DynamicMySqlEntityTest.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractToyMySqlEntityTest.class);
     
     protected TestApplication app;
     protected ManagementContext mgmt;
-    protected LocalhostMachineProvisioningLocation localhostCloud;
+    protected MachineProvisioningLocation<? extends SshMachineLocation> targetLocation;
 
     @BeforeMethod(alwaysRun=true)
     public void setup() throws Exception {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         mgmt = app.getManagementContext();
         
-        localhostCloud = mgmt.getLocationManager().createLocation(LocationSpec.create(
+        targetLocation = createLocation();
+    }
+
+    protected MachineProvisioningLocation<? extends SshMachineLocation> createLocation() {
+        return mgmt.getLocationManager().createLocation(LocationSpec.create(
                 LocalhostMachineProvisioningLocation.class));
     }
     
@@ -56,18 +61,23 @@ public class DynamicMySqlEntityTest {
     }
 
     @Test(groups="Integration")
-    public void testMySqlOnLocalhost() throws NoMachinesAvailableException {
+    public void testMySqlOnMachineLocation() throws NoMachinesAvailableException {
         Entity mysql = createMysql();
         
-        SshMachineLocation lh = localhostCloud.obtain();
+        SshMachineLocation lh = targetLocation.obtain(MutableMap.of());
         app.start(Arrays.asList(lh));
-        
+
+        // should be starting within a few seconds (and almost certainly won't complete in that time) 
+        Asserts.eventually(MutableMap.of("timeout", Duration.FIVE_SECONDS),
+                Entities.attributeSupplier(mysql, Attributes.SERVICE_STATE),
+                Predicates.or(Predicates.equalTo(Lifecycle.STARTING), Predicates.equalTo(Lifecycle.RUNNING)));
+        // should be up and running within 5m 
         Asserts.eventually(MutableMap.of("timeout", Duration.FIVE_MINUTES),
                 Entities.attributeSupplier(mysql, Attributes.SERVICE_STATE),
                 Predicates.equalTo(Lifecycle.RUNNING));
         
-        Integer pid = mysql.getAttribute(Attributes.PID);
-        Assert.assertNotNull(pid);
+        Integer pid = getPid(mysql);
+        Assert.assertNotNull(pid, "PID should be set as an attribute (or getPid() overridden to supply)");
         SshTasks.newSshTaskFactory(lh, "ps -p "+pid).requiringExitCodeZero();
         
         app.stop();
@@ -83,12 +93,21 @@ public class DynamicMySqlEntityTest {
         Assert.assertNotEquals(t.getExitCode(), (Integer)0);
     }
 
+    protected Integer getPid(Entity mysql) {
+        return mysql.getAttribute(Attributes.PID);
+    }
+
     @Test(groups="Integration")
-    public void testMySqlOnLocalhostProvisioning() throws NoMachinesAvailableException {
+    public void testMySqlOnProvisioningLocation() throws NoMachinesAvailableException {
         Entity mysql = createMysql();
         
-        app.start(Arrays.asList(localhostCloud));
+        app.start(MutableList.of(targetLocation));
         
+        // should be starting within a few seconds 
+        Asserts.eventually(MutableMap.of("timeout", Duration.FIVE_SECONDS),
+                Entities.attributeSupplier(mysql, Attributes.SERVICE_STATE),
+                Predicates.or(Predicates.equalTo(Lifecycle.STARTING), Predicates.equalTo(Lifecycle.RUNNING)));
+        // should be up and running within 5m 
         Asserts.eventually(MutableMap.of("timeout", Duration.FIVE_MINUTES),
                 Entities.attributeSupplier(mysql, Attributes.SERVICE_STATE),
                 Predicates.equalTo(Lifecycle.RUNNING));
@@ -111,10 +130,6 @@ public class DynamicMySqlEntityTest {
         Assert.assertNotEquals(t.getExitCode(), (Integer)0);
     }
 
-    protected Entity createMysql() {
-        Entity mysql = app.createAndManageChild(TestDynamicMySqlEntityBuilder.spec());
-        TestDynamicMySqlEntityBuilder.makeMySql((EntityInternal) mysql);
-        return mysql;
-    }
+    protected abstract Entity createMysql();
     
 }

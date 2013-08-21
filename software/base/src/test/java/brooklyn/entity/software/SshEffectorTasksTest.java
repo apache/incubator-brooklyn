@@ -3,8 +3,6 @@ package brooklyn.entity.software;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -20,14 +18,12 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.TaskAdaptable;
+import brooklyn.management.TaskFactory;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.net.Urls;
-import brooklyn.util.task.ssh.AbstractSshTaskFactory;
-import brooklyn.util.task.ssh.SshFetchTaskFactory;
 import brooklyn.util.task.ssh.SshFetchTaskWrapper;
-import brooklyn.util.task.ssh.SshPutTaskFactory;
 import brooklyn.util.task.ssh.SshPutTaskWrapper;
 import brooklyn.util.task.ssh.SshTaskWrapper;
 
@@ -78,67 +74,11 @@ public class SshEffectorTasksTest {
     protected void setExpectingFailure() {
         failureExpected = true;
     }
-
-    protected <U,T extends AbstractSshTaskFactory<?,U>> SshTaskWrapper<U> submit(final T task) {
-        final Semaphore s = new Semaphore(0);
-        final AtomicReference<SshTaskWrapper<U>> result = new AtomicReference<SshTaskWrapper<U>>(); 
-        app.getExecutionContext().execute(new Runnable() {
-            @Override
-            public void run() {
-                SshTaskWrapper<U> t = task.newTask();
-                app.getExecutionContext().submit(t);
-                result.set(t);
-                s.release();
-            }
-        });
-        try {
-            s.acquire();
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        }
-        return result.get();
+    
+    public <T extends TaskAdaptable<?>> T submit(final TaskFactory<T> taskFactory) {
+        return Entities.submit(app, taskFactory);
     }
-
-    protected SshPutTaskWrapper submit(final SshPutTaskFactory task) {
-        final Semaphore s = new Semaphore(0);
-        final AtomicReference<SshPutTaskWrapper> result = new AtomicReference<SshPutTaskWrapper>(); 
-        app.getExecutionContext().execute(new Runnable() {
-            @Override
-            public void run() {
-                SshPutTaskWrapper t = task.newTask();
-                app.getExecutionContext().submit(t);
-                result.set(t);
-                s.release();
-            }
-        });
-        try {
-            s.acquire();
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        }
-        return result.get();
-    }
-
-    protected SshFetchTaskWrapper submit(final SshFetchTaskFactory task) {
-        final Semaphore s = new Semaphore(0);
-        final AtomicReference<SshFetchTaskWrapper> result = new AtomicReference<SshFetchTaskWrapper>(); 
-        app.getExecutionContext().execute(new Runnable() {
-            @Override
-            public void run() {
-                SshFetchTaskWrapper t = task.newTask();
-                app.getExecutionContext().submit(t);
-                result.set(t);
-                s.release();
-            }
-        });
-        try {
-            s.acquire();
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        }
-        return result.get();
-    }
-
+    
     // ------------------- basic ssh
     
     @Test(groups="Integration")
