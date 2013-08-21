@@ -32,12 +32,12 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ParallelTask;
+import brooklyn.util.task.TaskInternal;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -116,7 +116,7 @@ public class DependentConfiguration {
         return new BasicTask<V>(
                 MutableMap.of("tag", "attributePostProcessedWhenReady", "displayName", "retrieving "+source+" "+sensor), 
                 new Callable<V>() {
-                    public V call() {
+                    @Override public V call() {
                         T result = waitInTaskForAttributeReady(source, sensor, ready);
                         return postProcess.apply(result);
                     }
@@ -127,7 +127,7 @@ public class DependentConfiguration {
         T value = source.getAttribute(sensor);
         if (ready==null) ready = GroovyJavaMethods.truthPredicate();
         if (ready.apply(value)) return value;
-        BasicTask current = (BasicTask) Tasks.current();
+        TaskInternal<?> current = (TaskInternal<?>) Tasks.current();
         if (current == null) throw new IllegalStateException("Should only be invoked in a running task");
         Entity entity = BrooklynTasks.getTargetOrContextEntity(current);
         if (entity == null) throw new IllegalStateException("Should only be invoked in a running task with an entity tag; "+
@@ -137,15 +137,18 @@ public class DependentConfiguration {
         SubscriptionHandle subscription = null;
         try {
             subscription = ((EntityInternal)entity).getSubscriptionContext().subscribe(source, sensor, new SensorEventListener<T>() {
-                public void onEvent(SensorEvent<T> event) {
+                @Override public void onEvent(SensorEvent<T> event) {
                     data.set(event.getValue());
                     semaphore.release();
                 }});
             value = source.getAttribute(sensor);
             while (!ready.apply(value)) {
                 current.setBlockingDetails("Waiting for ready from "+source+" "+sensor+" (subscription)");
-                semaphore.acquire();
-                current.resetBlockingDetails();
+                try {
+                    semaphore.acquire();
+                } finally {
+                    current.resetBlockingDetails();
+                }
                 value = data.get();
             }
             if (LOG.isDebugEnabled()) LOG.debug("Attribute-ready for {} in entity {}", sensor, source);

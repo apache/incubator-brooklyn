@@ -42,20 +42,12 @@ import com.google.common.util.concurrent.ExecutionList;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * The basic concrete implementation of a {@link Task} to be executed.
- *
- * A {@link Task} is a wrapper for an executable unit, such as a {@link Closure} or a {@link Runnable} or
- * {@link Callable} and will run in its own {@link Thread}.
- * <p>
- * The task can be given an optional displayName and description in its constructor (as named
- * arguments in the first {@link Map} parameter). It is guaranteed to have {@link Object#notify()} called
- * once whenever the task starts running and once again when the task is about to complete. Due to
- * the way executors work it is ugly to guarantee notification <em>after</em> completion, so instead we
- * notify just before then expect the user to call {@link #get()} - which will throw errors if the underlying job
- * did so - or {@link #blockUntilEnded()} which will not throw errors.
+ * For testing: a task that does not extend BasicTask, to confirm we haven't left any casts in...
+ * 
+ * This is a copy of {@link BasicTask}, as at 2013-08-21.
  */
-public class BasicTask<T> implements TaskInternal<T> {
-    protected static final Logger log = LoggerFactory.getLogger(BasicTask.class);
+public class NonBasicTask<T> implements TaskInternal<T> {
+    protected static final Logger log = LoggerFactory.getLogger(NonBasicTask.class);
 
     private String id = Identifiers.makeRandomId(8);
     protected Callable<T> job;
@@ -75,12 +67,12 @@ public class BasicTask<T> implements TaskInternal<T> {
      *
      * The generics on {@link Closure} break it if that is first constructor.
      */
-    protected BasicTask() { this(Collections.emptyMap()); }
-    protected BasicTask(Map<?,?> flags) { this(flags, (Callable<T>) null); }
+    protected NonBasicTask() { this(Collections.emptyMap()); }
+    protected NonBasicTask(Map<?,?> flags) { this(flags, (Callable<T>) null); }
 
-    public BasicTask(Callable<T> job) { this(Collections.emptyMap(), job); }
+    public NonBasicTask(Callable<T> job) { this(Collections.emptyMap(), job); }
     
-    public BasicTask(Map<?,?> flags, Callable<T> job) {
+    public NonBasicTask(Map<?,?> flags, Callable<T> job) {
         this.job = job;
 
         if (flags.containsKey("tag")) tags.add(flags.remove("tag"));
@@ -99,10 +91,10 @@ public class BasicTask<T> implements TaskInternal<T> {
         displayName = d;
     }
 
-    public BasicTask(Runnable job) { this(GroovyJavaMethods.<T>callableFromRunnable(job)); }
-    public BasicTask(Map<?,?> flags, Runnable job) { this(flags, GroovyJavaMethods.<T>callableFromRunnable(job)); }
-    public BasicTask(Closure<T> job) { this(GroovyJavaMethods.callableFromClosure(job)); }
-    public BasicTask(Map<?,?> flags, Closure<T> job) { this(flags, GroovyJavaMethods.callableFromClosure(job)); }
+    public NonBasicTask(Runnable job) { this(GroovyJavaMethods.<T>callableFromRunnable(job)); }
+    public NonBasicTask(Map<?,?> flags, Runnable job) { this(flags, GroovyJavaMethods.<T>callableFromRunnable(job)); }
+    public NonBasicTask(Closure<T> job) { this(GroovyJavaMethods.callableFromClosure(job)); }
+    public NonBasicTask(Map<?,?> flags, Closure<T> job) { this(flags, GroovyJavaMethods.callableFromClosure(job)); }
 
     @Override
     public String getId() {

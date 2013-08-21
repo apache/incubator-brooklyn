@@ -73,7 +73,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
                 " passed to compound task; must be Runnable, Callable, Closure or Task");
         }
         for (Task<?> t: getChildren())
-            ((BasicTask<?>)t).markQueued();
+            ((TaskInternal<?>)t).markQueued();
     }
 
     /** return value needs to be specified by subclass; subclass should also setBlockingDetails 

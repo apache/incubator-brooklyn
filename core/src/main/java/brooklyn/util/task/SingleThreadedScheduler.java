@@ -26,7 +26,7 @@ import brooklyn.management.Task;
  * <p>
  * This implementation does so by blocking on a {@link ConcurrentLinkedQueue}, <em>after</em>
  * the task is started in a thread (and {@link Task#isBegun()} returns true), but (of course)
- * <em>before</em> the {@link BasicTask#job} actually gets invoked.
+ * <em>before</em> the {@link TaskInternal#getJob()} actually gets invoked.
  */
 public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
     private static final Logger LOG = LoggerFactory.getLogger(SingleThreadedScheduler.class);

@@ -176,12 +176,10 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     public void deleteTask(Task<?> task) {
-        Set<?> tags = checkNotNull((BasicTask<?>)task, "task").tags;
-        if (tags != null) {
-            for (Object tag : tags) {
-                Set<Task> tasks = getMutableTasksWithTagOrNull(tag);
-                if (tasks != null) tasks.remove(task);
-            }
+        Set<?> tags = checkNotNull(task, "task").getTags();
+        for (Object tag : tags) {
+            Set<Task> tasks = getMutableTasksWithTagOrNull(tag);
+            if (tasks != null) tasks.remove(task);
         }
         tasksById.remove(task.getId());
     }
@@ -270,7 +268,7 @@ public class BasicExecutionManager implements ExecutionManager {
     public <T> Task<T> submit(Task<T> t) { return submit(new LinkedHashMap(1), t); }
     public <T> Task<T> submit(Map<?,?> flags, Task<T> task) {
         synchronized (task) {
-            if (((BasicTask)task).getResult()!=null) return task;
+            if (((TaskInternal<?>)task).getResult()!=null) return task;
             return submitNewTask(flags, task);
         }
     }
@@ -290,7 +288,7 @@ public class BasicExecutionManager implements ExecutionManager {
     public <T> Task<T> scheduleWith(Task<T> task) { return scheduleWith(Collections.emptyMap(), task); }
 	public <T> Task<T> scheduleWith(Map flags, Task<T> task) {
 		synchronized (task) {
-			if (((BasicTask)task).getResult()!=null) return task;
+			if (((TaskInternal<?>)task).getResult()!=null) return task;
 			return submitNewTask(flags, task);
 		}
 	}
@@ -301,10 +299,10 @@ public class BasicExecutionManager implements ExecutionManager {
 		if (!task.isDone()) {
 			task.result = delayedRunner.schedule(new Callable() { public Object call() {
 				if (task.startTimeUtc==-1) task.startTimeUtc = System.currentTimeMillis();
-				final BasicTask taskScheduled = (BasicTask) task.newTask();
-				taskScheduled.submittedByTask = task;
-				final Callable oldJob = taskScheduled.job;
-				taskScheduled.job = new Callable() { public Object call() {
+				final TaskInternal<?> taskScheduled = (TaskInternal<?>) task.newTask();
+				taskScheduled.setSubmittedByTask(task);
+				final Callable oldJob = taskScheduled.getJob();
+				taskScheduled.setJob(new Callable() { public Object call() {
 					task.recentRun = taskScheduled;
 					synchronized (task) {
 					    task.notifyAll();
@@ -322,7 +320,7 @@ public class BasicExecutionManager implements ExecutionManager {
 						submitNewScheduledTask(flags, task);
 					}
 					return result;
-				}};
+				}});
 				task.nextRun = taskScheduled;
 				return submit(taskScheduled);
 			}},
@@ -342,7 +340,7 @@ public class BasicExecutionManager implements ExecutionManager {
         
         beforeSubmit(flags, task);
         
-        if (((BasicTask<T>)task).job==null) 
+        if (((TaskInternal<T>)task).getJob() == null) 
             throw new NullPointerException("Task "+task+" submitted with with null job: job must be supplied.");
         
         Callable<T> job = new Callable<T>() { public T call() {
@@ -358,7 +356,7 @@ public class BasicExecutionManager implements ExecutionManager {
                 }
                 beforeStart(flags, task);
                 if (!task.isCancelled()) {
-                    result = ((BasicTask<T>)task).job.call();
+                    result = (T) ((TaskInternal)task).getJob().call();
                 } else throw new CancellationException();
             } catch(Throwable e) {
                 error = e;
@@ -379,14 +377,14 @@ public class BasicExecutionManager implements ExecutionManager {
             }
             return result;
           } finally {
-              ((BasicTask<?>)task).runListeners();
+              ((TaskInternal<?>)task).runListeners();
           }
         }};
-        ((BasicTask<T>)task).initExecutionManager(this);
+        ((TaskInternal<T>)task).initExecutionManager(this);
         
         // If there's a scheduler then use that; otherwise execute it directly
         Set<TaskScheduler> schedulers = null;
-        for (Object tago: ((BasicTask<?>)task).tags) {
+        for (Object tago: task.getTags()) {
             TaskScheduler scheduler = getTaskSchedulerForTag(tago);
             if (scheduler!=null) {
                 if (schedulers==null) schedulers = new LinkedHashSet<TaskScheduler>(2);
@@ -402,18 +400,18 @@ public class BasicExecutionManager implements ExecutionManager {
         }
         // on completion, listeners get triggered above; here, below we ensure they get triggered on cancel
         // (and we make sure the same ExecutionList is used in the future as in the task)
-        ListenableFuture<T> listenableFuture = new ListenableForwardingFuture<T>(future, ((BasicTask<T>)task).listeners) {
+        ListenableFuture<T> listenableFuture = new ListenableForwardingFuture<T>(future, ((TaskInternal<T>)task).getListeners()) {
             @Override
             public boolean cancel(boolean mayInterruptIfRunning) {
                 boolean result = false;
                 if (!task.isCancelled()) result |= task.cancel(mayInterruptIfRunning);
                 result |= super.cancel(mayInterruptIfRunning);
-                ((BasicTask<?>)task).runListeners();
+                ((TaskInternal<?>)task).runListeners();
                 return result;
             }
         };
 
-        ((BasicTask<T>)task).initResult(listenableFuture);
+        ((TaskInternal<T>)task).initResult(listenableFuture);
         return task;
     }
     
@@ -422,18 +420,18 @@ public class BasicExecutionManager implements ExecutionManager {
         incompleteTaskCount.incrementAndGet();
         
 		Task currentTask = getCurrentTask();
-        if (currentTask!=null) ((BasicTask)task).submittedByTask = currentTask;
-        ((BasicTask)task).submitTimeUtc = System.currentTimeMillis();
+        if (currentTask!=null) ((TaskInternal<?>)task).setSubmittedByTask(currentTask);
+        ((TaskInternal<?>)task).setSubmitTimeUtc(System.currentTimeMillis());
         
-        if (flags.get("tag")!=null) ((BasicTask)task).tags.add(flags.remove("tag"));
-        if (flags.get("tags")!=null) ((BasicTask)task).tags.addAll((Collection)flags.remove("tags"));
+        if (flags.get("tag")!=null) ((TaskInternal<?>)task).getMutableTags().add(flags.remove("tag"));
+        if (flags.get("tags")!=null) ((TaskInternal<?>)task).getMutableTags().addAll((Collection)flags.remove("tags"));
 
-        for (Object tag: ((BasicTask)task).tags) {
+        for (Object tag: ((TaskInternal<?>)task).getTags()) {
             getMutableTasksWithTag(tag).add(task);
         }
         
         List tagLinkedPreprocessors = new ArrayList();
-        for (Object tag: ((BasicTask)task).tags) {
+        for (Object tag: ((TaskInternal<?>)task).getTags()) {
             TaskPreprocessor p = getTaskPreprocessorForTag(tag);
             if (p!=null) tagLinkedPreprocessors.add(p);
         }
@@ -451,13 +449,13 @@ public class BasicExecutionManager implements ExecutionManager {
         //set thread _before_ start time, so we won't get a null thread when there is a start-time
         if (log.isTraceEnabled()) log.trace(""+this+" beforeStart, task: "+task);
         if (!task.isCancelled()) {
-            ((BasicTask)task).thread = Thread.currentThread();
+            ((TaskInternal<?>)task).setThread(Thread.currentThread());
             if (RENAME_THREADS) {
                 String newThreadName = "brooklyn-" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, task.getDisplayName().replace(" ", "")) + "-" + task.getId().substring(0, 8);
-                ((BasicTask)task).thread.setName(newThreadName);
+                task.getThread().setName(newThreadName);
             }
             PerThreadCurrentTaskHolder.perThreadCurrentTask.set(task);
-            ((BasicTask)task).startTimeUtc = System.currentTimeMillis();
+            ((TaskInternal<?>)task).setStartTimeUtc(System.currentTimeMillis());
         }
         for (Object to : (Collection)flags.get("tagLinkedPreprocessors")) { 
             TaskPreprocessor t = (TaskPreprocessor)to;
@@ -481,13 +479,13 @@ public class BasicExecutionManager implements ExecutionManager {
         }
 
         PerThreadCurrentTaskHolder.perThreadCurrentTask.remove();
-        ((BasicTask)task).endTimeUtc = System.currentTimeMillis();
+        ((TaskInternal)task).setEndTimeUtc(System.currentTimeMillis());
         //clear thread _after_ endTime set, so we won't get a null thread when there is no end-time
         if (RENAME_THREADS) {
             String newThreadName = "brooklyn-"+Identifiers.makeRandomId(8);
-            ((BasicTask)task).thread.setName(newThreadName);
+            task.getThread().setName(newThreadName);
         }
-        ((BasicTask)task).thread = null;
+        ((TaskInternal)task).setThread(null);
         synchronized (task) { task.notifyAll(); }
 
         for (ExecutionListener listener : listeners) {

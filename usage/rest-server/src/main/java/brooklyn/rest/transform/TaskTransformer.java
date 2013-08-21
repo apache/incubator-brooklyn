@@ -20,12 +20,10 @@ import brooklyn.rest.domain.LinkWithMetadata;
 import brooklyn.rest.domain.TaskSummary;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.task.BasicTask;
+import brooklyn.util.task.TaskInternal;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
 
 public class TaskTransformer {
 
@@ -74,8 +72,8 @@ public class TaskTransformer {
         return new TaskSummary(task.getId(), task.getDisplayName(), task.getDescription(), entityId, entityDisplayName, 
                 task.getTags(), ifPositive(task.getSubmitTimeUtc()), ifPositive(task.getStartTimeUtc()), ifPositive(task.getEndTimeUtc()),
                 task.getStatusSummary(), children, asLink(task.getSubmittedByTask()), 
-                task instanceof BasicTask ? asLink(((BasicTask<?>)task).getBlockingTask()) : null, 
-                task instanceof BasicTask ? ((BasicTask<?>)task).getBlockingDetails() : null, 
+                task instanceof TaskInternal ? asLink(((TaskInternal<?>)task).getBlockingTask()) : null, 
+                task instanceof TaskInternal ? ((TaskInternal<?>)task).getBlockingDetails() : null, 
                 task.getStatusDetail(true),
                 links);
       } catch (URISyntaxException e) {
