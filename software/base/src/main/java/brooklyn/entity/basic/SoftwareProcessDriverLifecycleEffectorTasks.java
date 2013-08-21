@@ -10,9 +10,13 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.task.DynamicTasks;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Supplier;
 
-/** Thin shim delegating to driver to do start/stop/restart */
+/** Thin shim delegating to driver to do start/stop/restart, wrapping as tasks,
+ * with common code pulled up to {@link MachineLifecycleEffectorTasks} for non-driver usage 
+ * @since 0.6.0 */
+@Beta
 public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycleEffectorTasks {
     
     @SuppressWarnings("unused")

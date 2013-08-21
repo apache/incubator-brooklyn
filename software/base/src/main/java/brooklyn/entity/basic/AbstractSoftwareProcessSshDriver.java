@@ -19,7 +19,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.entity.basic.lifecycle.ScriptRunner;
+import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -40,7 +40,7 @@ import com.google.common.collect.Sets;
  * creating/using a PID file for some operations, and reading ssh-specific config from the entity
  * to override/augment ssh flags on the session.  
  */
-public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareProcessDriver implements ScriptRunner {
+public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareProcessDriver implements NaiveScriptRunner {
 
     public static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessSshDriver.class);
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);

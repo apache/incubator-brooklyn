@@ -22,7 +22,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
-import brooklyn.util.task.ssh.SshTaskWrapper;
+import brooklyn.util.task.ssh.SshExecTaskWrapper;
 import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.text.ComparableVersion;
 import brooklyn.util.time.Duration;
@@ -102,7 +102,7 @@ public class DynamicToyMySqlEntityBuilder {
                 if (!DynamicTasks.queue(SshEffectorTasks.isPidFromFileRunning(dir(entity)+"/*/data/*.pid")).get()) {
                     // but if it's not up add a bunch of other info
                     log.warn("MySQL did not start: "+dir(entity));
-                    SshTaskWrapper<Integer> info = DynamicTasks.queue(SshEffectorTasks.ssh(
+                    SshExecTaskWrapper<Integer> info = DynamicTasks.queue(SshEffectorTasks.ssh(
                             "cd "+dir(entity)+"/*",
                             "cat out.log",
                             "cat err.log > /dev/stderr")).block();

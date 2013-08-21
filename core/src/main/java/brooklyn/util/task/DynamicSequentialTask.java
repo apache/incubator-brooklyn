@@ -3,6 +3,7 @@ package brooklyn.util.task;
 import groovy.lang.Closure;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -83,7 +84,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     
     @Override
     public Iterable<Task<?>> getChildren() {
-        return secondaryJobsAll;
+        return Collections.unmodifiableCollection(secondaryJobsAll);
     }
     
     /** submits the indicated task for execution in the current execution context, and returns immediately */

@@ -13,7 +13,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class SshTaskStub {
+public class SshExecTaskStub {
     
     protected final List<String> commands = new ArrayList<String>();
     protected SshMachineLocation machine;
@@ -23,7 +23,7 @@ public class SshTaskStub {
     protected final ConfigBag config = ConfigBag.newInstance();
     
     public static enum ScriptReturnType { CUSTOM, EXIT_CODE, STDOUT_STRING, STDOUT_BYTES, STDERR_STRING, STDERR_BYTES }
-    protected Function<SshTaskWrapper<?>, ?> returnResultTransformation = null;
+    protected Function<SshExecTaskWrapper<?>, ?> returnResultTransformation = null;
     protected ScriptReturnType returnType = ScriptReturnType.EXIT_CODE;
     
     protected Boolean runAsScript = null;
@@ -32,9 +32,9 @@ public class SshTaskStub {
     protected String extraErrorMessage = null;
     protected Map<String,String> shellEnvironment = new MutableMap<String, String>();
 
-    public SshTaskStub() {}
+    public SshExecTaskStub() {}
     
-    protected SshTaskStub(SshTaskStub source) {
+    protected SshExecTaskStub(SshExecTaskStub source) {
         commands.addAll(source.commands);
         machine = source.getMachine();
         summary = source.getSummary();

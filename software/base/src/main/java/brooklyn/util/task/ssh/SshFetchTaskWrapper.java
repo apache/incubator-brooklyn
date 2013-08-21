@@ -18,7 +18,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
 /**
- * As {@link SshTaskWrapper}, but putting a file on the remote machine
+ * As {@link SshExecTaskWrapper}, but putting a file on the remote machine
  * 
  * @since 0.6.0
  */

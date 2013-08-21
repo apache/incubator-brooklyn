@@ -24,7 +24,7 @@ import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.task.ssh.SshTaskWrapper;
+import brooklyn.util.task.ssh.SshExecTaskWrapper;
 import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -78,7 +78,7 @@ public abstract class AbstractToyMySqlEntityTest {
         
         Integer pid = getPid(mysql);
         Assert.assertNotNull(pid, "PID should be set as an attribute (or getPid() overridden to supply)");
-        SshTasks.newSshTaskFactory(lh, "ps -p "+pid).requiringExitCodeZero();
+        SshTasks.newSshExecTaskFactory(lh, "ps -p "+pid).requiringExitCodeZero();
         
         app.stop();
 
@@ -87,7 +87,7 @@ public abstract class AbstractToyMySqlEntityTest {
         
         // and assert it has died
         log.info("mysql in pid "+pid+" should be dead now");
-        SshTaskWrapper<Integer> t = SshTasks.newSshTaskFactory(lh, "ps -p "+pid).allowingNonZeroExitCode().newTask();
+        SshExecTaskWrapper<Integer> t = SshTasks.newSshExecTaskFactory(lh, "ps -p "+pid).allowingNonZeroExitCode().newTask();
         mgmt.getExecutionManager().submit(t);
         t.block();
         Assert.assertNotEquals(t.getExitCode(), (Integer)0);
@@ -115,7 +115,7 @@ public abstract class AbstractToyMySqlEntityTest {
         SshMachineLocation lh = (SshMachineLocation) Iterables.getOnlyElement( mysql.getLocations() );
         Integer pid = mysql.getAttribute(Attributes.PID);
         Assert.assertNotNull(pid);
-        SshTasks.newSshTaskFactory(lh, "ps -p "+pid).requiringExitCodeZero();
+        SshTasks.newSshExecTaskFactory(lh, "ps -p "+pid).requiringExitCodeZero();
         
         app.stop();
 
@@ -124,7 +124,7 @@ public abstract class AbstractToyMySqlEntityTest {
         
         // and assert it has died
         log.info("mysql in pid "+pid+" should be dead now");
-        SshTaskWrapper<Integer> t = SshTasks.newSshTaskFactory(lh, "ps -p "+pid).allowingNonZeroExitCode().newTask();
+        SshExecTaskWrapper<Integer> t = SshTasks.newSshExecTaskFactory(lh, "ps -p "+pid).allowingNonZeroExitCode().newTask();
         mgmt.getExecutionManager().submit(t);
         t.block();
         Assert.assertNotEquals(t.getExitCode(), (Integer)0);

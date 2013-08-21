@@ -18,7 +18,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Effectors;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.internal.storage.BrooklynStorageFactory;
 import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;

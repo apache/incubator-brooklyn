@@ -8,29 +8,33 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
-import brooklyn.entity.basic.EffectorBody;
-import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.effector.EffectorBody;
+import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.Tasks;
-import brooklyn.util.task.ssh.AbstractSshTaskFactory;
-import brooklyn.util.task.ssh.PlainSshTaskFactory;
+import brooklyn.util.task.ssh.AbstractSshExecTaskFactory;
+import brooklyn.util.task.ssh.PlainSshExecTaskFactory;
 import brooklyn.util.task.ssh.SshFetchTaskFactory;
 import brooklyn.util.task.ssh.SshFetchTaskWrapper;
 import brooklyn.util.task.ssh.SshPutTaskFactory;
 import brooklyn.util.task.ssh.SshPutTaskWrapper;
-import brooklyn.util.task.ssh.SshTaskFactory;
-import brooklyn.util.task.ssh.SshTaskWrapper;
+import brooklyn.util.task.ssh.SshExecTaskFactory;
+import brooklyn.util.task.ssh.SshExecTaskWrapper;
 import brooklyn.util.task.ssh.SshTasks;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 
-/** convenience classes and methods for working with ssh */
-@Beta // added in 0.6.0
+/** convenience classes and methods for working with {@link SshTasks}, where the
+ * {@link SshMachineLocation} is inferred either from the effector generation or
+ * the context task 
+ * 
+ * @since 0.6.0 */
+@Beta
 public class SshEffectorTasks {
 
     private static final Logger log = LoggerFactory.getLogger(SshEffectorTasks.class);
@@ -44,25 +48,25 @@ public class SshEffectorTasks {
             return getMachineOfEntity(entity());
         }
 
-        /** convenience for generating an {@link PlainSshTaskFactory} which can be further customised if desired, and then (it must be explicitly) queued */
-        public SshTaskFactory<Integer> ssh(String ...commands) {
-            return SshTasks.newSshTaskFactory(machine(), commands);
+        /** convenience for generating an {@link PlainSshExecTaskFactory} which can be further customised if desired, and then (it must be explicitly) queued */
+        public SshExecTaskFactory<Integer> ssh(String ...commands) {
+            return SshTasks.newSshExecTaskFactory(machine(), commands);
         }
 
         // TODO scp, install, etc
     }
 
-    /** variant of {@link PlainSshTaskFactory} which fulfills the {@link EffectorTaskFactory} signature so can be used directly as an impl for an effector,
+    /** variant of {@link PlainSshExecTaskFactory} which fulfills the {@link EffectorTaskFactory} signature so can be used directly as an impl for an effector,
      * also injects the machine automatically; can also be used outwith effector contexts, and machine is still injected if it is
      * run from inside a task at an entity with a single SshMachineLocation */
-    public static class SshEffectorTask<RET> extends AbstractSshTaskFactory<SshEffectorTask<RET>,RET> implements EffectorTaskFactory<RET> {
+    public static class SshEffectorTask<RET> extends AbstractSshExecTaskFactory<SshEffectorTask<RET>,RET> implements EffectorTaskFactory<RET> {
 
         public SshEffectorTask(String ...commands) {
             super(commands);
         }
 
         @Override
-        public SshTaskWrapper<RET> newTask(Entity entity, Effector<RET> effector, ConfigBag parameters) {
+        public SshExecTaskWrapper<RET> newTask(Entity entity, Effector<RET> effector, ConfigBag parameters) {
             markDirty();
             if (summary==null) summary(effector.getName()+" (ssh)");
             machine(getMachineOfEntity(entity));
@@ -70,7 +74,7 @@ public class SshEffectorTasks {
         }
         
         @Override
-        public synchronized SshTaskWrapper<RET> newTask() {
+        public synchronized SshExecTaskWrapper<RET> newTask() {
             if (machine==null) {
                 if (log.isDebugEnabled())
                     log.debug("Using an SshEffectorTask not in an effector without any machine; will attempt to infer the machine: "+this);
@@ -87,7 +91,7 @@ public class SshEffectorTasks {
         }
         
         @SuppressWarnings("unchecked")
-        public <RET2> SshEffectorTask<RET2> returning(Function<SshTaskWrapper<?>, RET2> resultTransformation) {
+        public <RET2> SshEffectorTask<RET2> returning(Function<SshExecTaskWrapper<?>, RET2> resultTransformation) {
             return (SshEffectorTask<RET2>) super.returning(resultTransformation);
         }
     }
@@ -160,8 +164,8 @@ public class SshEffectorTasks {
 
     /** as {@link #codePidRunning(String)} but returning boolean */
     public static SshEffectorTask<Boolean> isPidRunning(Integer pid) {
-        return codePidRunning(pid).returning(new Function<SshTaskWrapper<?>, Boolean>() {
-            public Boolean apply(@Nullable SshTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
+        return codePidRunning(pid).returning(new Function<SshExecTaskWrapper<?>, Boolean>() {
+            public Boolean apply(@Nullable SshExecTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
         });
     }
 
@@ -190,8 +194,8 @@ public class SshEffectorTasks {
 
     /** as {@link #codePidFromFileRunning(String)} but returning boolean */
     public static SshEffectorTask<Boolean> isPidFromFileRunning(String pidFile) {
-        return codePidFromFileRunning(pidFile).returning(new Function<SshTaskWrapper<?>, Boolean>() {
-            public Boolean apply(@Nullable SshTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
+        return codePidFromFileRunning(pidFile).returning(new Function<SshExecTaskWrapper<?>, Boolean>() {
+            public Boolean apply(@Nullable SshExecTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
         });
     }
 

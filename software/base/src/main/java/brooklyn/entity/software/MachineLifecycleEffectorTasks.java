@@ -16,12 +16,12 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EffectorBody;
-import brooklyn.entity.basic.Effectors;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.effector.EffectorBody;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
@@ -37,6 +37,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -57,7 +58,9 @@ import com.google.common.reflect.TypeToken;
  *  <li> {@link #postStartCustom(MachineLocation)}
  *  <li> {@link #preStopCustom(MachineLocation)}
  *  
+ * @since 0.6.0
  **/
+@Beta
 public abstract class MachineLifecycleEffectorTasks {
 
     private static final Logger log = LoggerFactory.getLogger(MachineLifecycleEffectorTasks.class);
@@ -97,7 +100,7 @@ public abstract class MachineLifecycleEffectorTasks {
     public EffectorBody<Void> newStartEffectorTask() {
         return new EffectorBody<Void>() {
             @Override
-            public Void main(ConfigBag parameters) {
+            public Void call(ConfigBag parameters) {
                 Collection<? extends Location> locations = parameters.get(LOCATIONS);
                 Preconditions.checkNotNull(locations, "locations");
                 start(locations);
@@ -110,7 +113,7 @@ public abstract class MachineLifecycleEffectorTasks {
     public EffectorBody<Void> newRestartEffectorTask() {
         return new EffectorBody<Void>() {
             @Override
-            public Void main(ConfigBag parameters) {
+            public Void call(ConfigBag parameters) {
                 restart();
                 return null;
             }
@@ -121,7 +124,7 @@ public abstract class MachineLifecycleEffectorTasks {
     public EffectorBody<Void> newStopEffectorTask() {
         return new EffectorBody<Void>() {
             @Override
-            public Void main(ConfigBag parameters) {
+            public Void call(ConfigBag parameters) {
                 stop();
                 return null;
             }

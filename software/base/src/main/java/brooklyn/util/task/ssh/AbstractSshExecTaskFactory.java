@@ -18,19 +18,19 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 
 // cannot be (cleanly) instantiated due to nested generic self-referential type; however trivial subclasses do allow it 
-public class AbstractSshTaskFactory<T extends AbstractSshTaskFactory<T,RET>,RET> extends SshTaskStub implements SshTaskFactory<RET> {
+public class AbstractSshExecTaskFactory<T extends AbstractSshExecTaskFactory<T,RET>,RET> extends SshExecTaskStub implements SshExecTaskFactory<RET> {
     
-    private static final Logger log = LoggerFactory.getLogger(AbstractSshTaskFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractSshExecTaskFactory.class);
     
     boolean dirty = false;
     
     /** constructor where machine will be added later */
-    public AbstractSshTaskFactory(String ...commands) {
+    public AbstractSshExecTaskFactory(String ...commands) {
         this.commands.addAll(Arrays.asList(commands));
     }
 
     /** convenience constructor to supply machine immediately */
-    public AbstractSshTaskFactory(SshMachineLocation machine, String ...commands) {
+    public AbstractSshExecTaskFactory(SshMachineLocation machine, String ...commands) {
         this(commands);
         machine(machine);
     }
@@ -79,23 +79,23 @@ public class AbstractSshTaskFactory<T extends AbstractSshTaskFactory<T,RET>,RET>
     }
     
     @SuppressWarnings({ "unchecked" })
-    public AbstractSshTaskFactory<?,String> requiringZeroAndReturningStdout() {
+    public AbstractSshExecTaskFactory<?,String> requiringZeroAndReturningStdout() {
         requiringExitCodeZero();
-        return (AbstractSshTaskFactory<?,String>)returning(ScriptReturnType.STDOUT_STRING);
+        return (AbstractSshExecTaskFactory<?,String>)returning(ScriptReturnType.STDOUT_STRING);
     }
 
-    public AbstractSshTaskFactory<?,?> returning(ScriptReturnType type) {
+    public AbstractSshExecTaskFactory<?,?> returning(ScriptReturnType type) {
         markDirty();
         returnType = Preconditions.checkNotNull(type);
         return self();
     }
 
     @SuppressWarnings("unchecked")
-    public <RET2> AbstractSshTaskFactory<?,RET2> returning(Function<SshTaskWrapper<?>, RET2> resultTransformation) {
+    public <RET2> AbstractSshExecTaskFactory<?,RET2> returning(Function<SshExecTaskWrapper<?>, RET2> resultTransformation) {
         markDirty();
         returnType = ScriptReturnType.CUSTOM;
         this.returnResultTransformation = resultTransformation;
-        return (AbstractSshTaskFactory<?, RET2>) self();
+        return (AbstractSshExecTaskFactory<?, RET2>) self();
     }
     
     public T runAsCommand() {
@@ -129,9 +129,9 @@ public class AbstractSshTaskFactory<T extends AbstractSshTaskFactory<T,RET>,RET>
     }
 
     @Override
-    public SshTaskWrapper<RET> newTask() {
+    public SshExecTaskWrapper<RET> newTask() {
         dirty = false;
-        return new SshTaskWrapper<RET>(this);
+        return new SshExecTaskWrapper<RET>(this);
     }
 
     /** creates the TaskBuilder which can be further customized; typically invoked by the initial {@link #newTask()} */

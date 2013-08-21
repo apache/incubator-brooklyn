@@ -36,7 +36,7 @@ public class ScriptHelper {
 
     public static final Logger log = LoggerFactory.getLogger(ScriptHelper.class);
 
-    protected final ScriptRunner runner;
+    protected final NaiveScriptRunner runner;
     public final String summary;
 
     public final ScriptPart header = new ScriptPart(this);
@@ -52,7 +52,7 @@ public class ScriptHelper {
     protected ByteArrayOutputStream stdout, stderr;
     protected Task<Integer> task;
 
-    public ScriptHelper(ScriptRunner runner, String summary) {
+    public ScriptHelper(NaiveScriptRunner runner, String summary) {
         this.runner = runner;
         this.summary = summary;
     }

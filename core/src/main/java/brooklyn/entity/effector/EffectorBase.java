@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.effector;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.ParameterType;
-import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
+import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 
 import com.google.common.base.Joiner;
 

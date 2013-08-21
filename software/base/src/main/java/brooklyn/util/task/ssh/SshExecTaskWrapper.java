@@ -21,9 +21,9 @@ import com.google.common.base.Preconditions;
 /** Wraps a fully constructed SSH task, and allows callers to inspect status. 
  * Note that methods in here such as {@link #getStdout()} will return partially completed streams while the task is ongoing
  * (and exit code will be null). You can {@link #block()} or {@link #get()} as conveniences on the underlying {@link #getTask()}. */ 
-public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET> {
+public class SshExecTaskWrapper<RET> extends SshExecTaskStub implements TaskWrapper<RET> {
 
-    private static final Logger log = LoggerFactory.getLogger(SshTaskWrapper.class);
+    private static final Logger log = LoggerFactory.getLogger(SshExecTaskWrapper.class);
     
     private final Task<RET> task;
 
@@ -33,8 +33,7 @@ public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET>
     protected Integer exitCode = null;
     
     @SuppressWarnings("unchecked")
-    // package private as only AbstractSshTaskFactory should invoke
-    SshTaskWrapper(AbstractSshTaskFactory<?,RET> constructor) {
+    SshExecTaskWrapper(AbstractSshExecTaskFactory<?,RET> constructor) {
         super(constructor);
         TaskBuilder<Object> tb = constructor.constructCustomizedTaskBuilder();
         if (stdout!=null) tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDOUT, stdout));
@@ -81,7 +80,7 @@ public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET>
         public Object call() throws Exception {
             Preconditions.checkNotNull(getMachine(), "machine");
             
-            ConfigBag config = ConfigBag.newInstanceCopying(SshTaskWrapper.this.config);
+            ConfigBag config = ConfigBag.newInstanceCopying(SshExecTaskWrapper.this.config);
             if (stdout!=null) config.put(SshTool.PROP_OUT_STREAM, stdout);
             if (stderr!=null) config.put(SshTool.PROP_ERR_STREAM, stderr);
             
@@ -114,7 +113,7 @@ public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET>
             }
 
             switch (returnType) {
-            case CUSTOM: return returnResultTransformation.apply(SshTaskWrapper.this);
+            case CUSTOM: return returnResultTransformation.apply(SshExecTaskWrapper.this);
             case STDOUT_STRING: return stdout.toString();
             case STDOUT_BYTES: return stdout.toByteArray();
             case STDERR_STRING: return stderr.toString();
@@ -146,7 +145,7 @@ public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET>
     }
     
     /** blocks until the task completes; does not throw */
-    public SshTaskWrapper<RET> block() {
+    public SshExecTaskWrapper<RET> block() {
         getTask().blockUntilEnded();
         return this;
     }

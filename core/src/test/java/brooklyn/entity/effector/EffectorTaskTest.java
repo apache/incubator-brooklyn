@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.effector;
 
 import java.util.concurrent.Callable;
 
@@ -9,7 +9,15 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.effector.EffectorBody;
+import brooklyn.entity.effector.EffectorTasks;
+import brooklyn.entity.effector.EffectorWithBody;
+import brooklyn.entity.effector.Effectors;
+import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
@@ -43,7 +51,7 @@ public class EffectorTaskTest {
             .description("doubles the given number")
             .parameter(Integer.class, "numberToDouble")
             .impl(new EffectorBody<Integer>() {
-                public Integer main(ConfigBag parameters) {
+                public Integer call(ConfigBag parameters) {
                     // do a sanity check
                     Assert.assertNotNull(entity());
                     
@@ -136,7 +144,7 @@ public class EffectorTaskTest {
             .description("doubles the given number and adds one")
             .parameter(Integer.class, "numberToStartWith")
             .impl(new EffectorBody<Integer>() {
-                public Integer main(ConfigBag parameters) {
+                public Integer call(ConfigBag parameters) {
                     int input = (Integer)parameters.getStringKey("numberToStartWith");
                     queue( add(times(input, 2), 1) );
                     return last(Integer.class);
@@ -148,7 +156,7 @@ public class EffectorTaskTest {
             .description("doubles the given number and adds one, as a basic task")
             .parameter(Integer.class, "numberToStartWith")
             .impl(new EffectorBody<Integer>() {
-                public Integer main(ConfigBag parameters) {
+                public Integer call(ConfigBag parameters) {
                     int input = (Integer)parameters.getStringKey("numberToStartWith");
                     // note the subtasks must be queued explicitly with a basic task
                     // (but with the DynamicSequentialTask they can be resolved by the task itself; see above)
@@ -227,7 +235,7 @@ public class EffectorTaskTest {
         // add it
         doubler.getMutableEntityType().addEffector(DOUBLE_BODYLESS, new EffectorBody<Integer>() {
             @Override
-            public Integer main(ConfigBag parameters) {
+            public Integer call(ConfigBag parameters) {
                 int input = (Integer)parameters.getStringKey("numberToDouble");
                 return queue(times(input, 2)).getUnchecked();            
             }

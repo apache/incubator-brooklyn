@@ -36,8 +36,8 @@ public class ScriptHelperTest {
     @BeforeMethod
     private void setup() { commands.clear(); }
     
-    private ScriptRunner newMockRunner(final int result) {
-        return new ScriptRunner() {
+    private NaiveScriptRunner newMockRunner(final int result) {
+        return new NaiveScriptRunner() {
             @Override
             public int execute(List<String> script, String summaryForLogging) {
                 return execute(new MutableMap(), script, summaryForLogging);
@@ -50,8 +50,8 @@ public class ScriptHelperTest {
         };
     }
 
-    public static ScriptRunner newLocalhostRunner() {
-        return new ScriptRunner() {
+    public static NaiveScriptRunner newLocalhostRunner() {
+        return new NaiveScriptRunner() {
             LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
             @Override
             public int execute(List<String> script, String summaryForLogging) {

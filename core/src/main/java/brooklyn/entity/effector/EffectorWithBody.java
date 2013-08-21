@@ -1,7 +1,7 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.effector;
 
 import brooklyn.entity.Effector;
-import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
+import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 
 import com.google.common.annotations.Beta;
 

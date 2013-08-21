@@ -11,8 +11,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Effectors;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.software.SshEffectorTasks.SshEffectorBody;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -21,7 +21,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.task.ssh.SshTaskWrapper;
+import brooklyn.util.task.ssh.SshExecTaskWrapper;
 
 import com.google.common.base.Throwables;
 
@@ -51,8 +51,8 @@ public class SoftwareEffectorTest {
     public static final Effector<String> GET_REMOTE_DATE_1 = Effectors.effector(String.class, "getRemoteDate")
             .description("retrieves the date from the remote machine")
             .impl(new SshEffectorBody<String>() {
-                public String main(ConfigBag parameters) {
-                    queue(ssh("date").requiringZeroAndReturningStdout());
+                public String call(ConfigBag parameters) {
+                    queue( ssh("date").requiringZeroAndReturningStdout() );
                     return last(String.class);
                 }
             })
@@ -86,7 +86,7 @@ public class SoftwareEffectorTest {
     public void testBadExitCodeCaught() {
         Task<Void> call = Entities.invokeEffector(app, app, Effectors.effector(Void.class, "badExitCode")
                 .impl(new SshEffectorBody<Void>() {
-                    public Void main(ConfigBag parameters) {
+                    public Void call(ConfigBag parameters) {
                         queue( ssh(COMMAND_THAT_DOES_NOT_EXIST).requiringZeroAndReturningStdout() );
                         return null;
                     }
@@ -106,11 +106,11 @@ public class SoftwareEffectorTest {
         
     @Test(groups="Integration")
     public void testBadExitCodeCaughtAndStdErrAvailable() {
-        final SshTaskWrapper<?>[] sshTasks = new SshTaskWrapper[1];
+        final SshExecTaskWrapper<?>[] sshTasks = new SshExecTaskWrapper[1];
         
         Task<Void> call = Entities.invokeEffector(app, app, Effectors.effector(Void.class, "badExitCode")
                 .impl(new SshEffectorBody<Void>() {
-                    public Void main(ConfigBag parameters) {
+                    public Void call(ConfigBag parameters) {
                         sshTasks[0] = queue( ssh(COMMAND_THAT_DOES_NOT_EXIST).requiringExitCodeZero() );
                         return null;
                     }

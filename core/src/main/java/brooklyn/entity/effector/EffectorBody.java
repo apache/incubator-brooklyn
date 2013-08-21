@@ -1,5 +1,7 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.effector;
 
+import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
@@ -27,7 +29,7 @@ public abstract class EffectorBody<T> {
      * <p>
      * The associated entity can be accessed through the {@link #entity()} method.
      */
-    public abstract T main(ConfigBag parameters);
+    public abstract T call(ConfigBag parameters);
     
     // NB: we could also support an 'init' method which is done at creation,
     // as a place where implementers can describe the structure of the task before it executes

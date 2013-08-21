@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.effector;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -18,6 +18,10 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.MethodEffector;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;

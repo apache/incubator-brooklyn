@@ -5,9 +5,9 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.EffectorAndBody
 import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.basic.SoftwareProcessImpl
+import brooklyn.entity.effector.EffectorAndBody;
 import brooklyn.entity.java.VanillaJavaApp
 import brooklyn.entity.webapp.WebAppServiceConstants
 import brooklyn.location.Location

@@ -72,9 +72,9 @@ public class SshTasksTest {
     }
 
 
-    protected <T> SshTaskWrapper<T> submit(final SshTaskFactory<T> tf) {
+    protected <T> SshExecTaskWrapper<T> submit(final SshExecTaskFactory<T> tf) {
         tf.machine(host);
-        SshTaskWrapper<T> t = tf.newTask();
+        SshExecTaskWrapper<T> t = tf.newTask();
         mgmt.getExecutionManager().submit(t);
         return t;
     }
@@ -87,7 +87,7 @@ public class SshTasksTest {
 
     @Test(groups="Integration")
     public void testSshEchoHello() {
-        SshTaskWrapper<Integer> t = submit(SshTasks.newSshTaskFactory(host, "sleep 1 ; echo hello world"));
+        SshExecTaskWrapper<Integer> t = submit(SshTasks.newSshExecTaskFactory(host, "sleep 1 ; echo hello world"));
         Assert.assertFalse(t.isDone());
         Assert.assertEquals(t.get(), (Integer)0);
         Assert.assertEquals(t.getTask().getUnchecked(), (Integer)0);

@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.effector;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -11,6 +11,8 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
+import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.internal.EffectorUtils;
@@ -54,7 +56,7 @@ public class EffectorTasks {
                         public T call() throws Exception {
                             try {
                                 DynamicTasks.setTaskQueueingContext(dst.get());
-                                return effectorBody.main(parameters);
+                                return effectorBody.call(parameters);
                             } finally {
                                 DynamicTasks.removeTaskQueueingContext();
                             }

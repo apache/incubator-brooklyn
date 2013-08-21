@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.effector;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import com.google.common.annotations.Beta;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.ParameterType;
-import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
+import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 
 @Beta // added in 0.6.0
 public class EffectorAndBody<T> extends EffectorBase<T> implements EffectorWithBody<T> {
