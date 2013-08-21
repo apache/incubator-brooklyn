@@ -31,23 +31,23 @@ public class Tasks {
      * then invoked with 'null' just after the wait */
     public static void setBlockingDetails(String description) {
         Task<?> current = current();
-        if (current instanceof BasicTask)
-            ((BasicTask<?>)current).setBlockingDetails(description); 
+        if (current instanceof TaskInternal)
+            ((TaskInternal<?>)current).setBlockingDetails(description); 
     }
     public static void resetBlockingDetails() {
         Task<?> current = current();
-        if (current instanceof BasicTask)
-            ((BasicTask<?>)current).resetBlockingDetails(); 
+        if (current instanceof TaskInternal)
+            ((TaskInternal<?>)current).resetBlockingDetails(); 
     }
     public static void setBlockingTask(Task<?> blocker) {
         Task<?> current = current();
-        if (current instanceof BasicTask)
-            ((BasicTask<?>)current).setBlockingTask(blocker); 
+        if (current instanceof TaskInternal)
+            ((TaskInternal<?>)current).setBlockingTask(blocker); 
     }
     public static void resetBlockingTask() {
         Task<?> current = current();
-        if (current instanceof BasicTask)
-            ((BasicTask<?>)current).resetBlockingTask(); 
+        if (current instanceof TaskInternal)
+            ((TaskInternal<?>)current).resetBlockingTask(); 
     }
     
     /** convenience for setting "blocking details" on any task where the current thread is running,
@@ -61,13 +61,13 @@ public class Tasks {
             log.warn("legacy invocation of withBlockingDetails with null code block, ignoring");
             return null;
         }
-        if (current instanceof BasicTask)
-            ((BasicTask)current).setBlockingDetails(description); 
+        if (current instanceof TaskInternal)
+            ((TaskInternal)current).setBlockingDetails(description); 
         try {
             return code.call();
         } finally {
-            if (current instanceof BasicTask)
-                ((BasicTask)current).setBlockingDetails(null); 
+            if (current instanceof TaskInternal)
+                ((TaskInternal)current).setBlockingDetails(null); 
         }
     }
 
@@ -157,8 +157,8 @@ public class Tasks {
      */
     public static void setExtraStatusDetails(String notes) {
         Task<?> current = current();
-        if (current instanceof BasicTask)
-            ((BasicTask<?>)current).setExtraStatusText(notes); 
+        if (current instanceof TaskInternal)
+            ((TaskInternal<?>)current).setExtraStatusText(notes); 
     }
 
     public static <T> TaskBuilder<T> builder() {
@@ -228,7 +228,7 @@ public class Tasks {
     }
 
     public static boolean isQueuedOrSubmitted(Task<?> task) {
-        return ((BasicTask<?>)task).isQueuedOrSubmitted();
+        return ((TaskInternal<?>)task).isQueuedOrSubmitted();
     }
     
     /** tries to add the given task in the given addition context,

@@ -59,7 +59,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                 throw new IllegalStateException("Cannot add a task to "+this+" when it is already finished (trying to add "+t+")");
             secondaryJobsAll.add(t);
             secondaryJobsRemaining.add(t);
-            ((BasicTask<?>)t).markQueued();
+            ((TaskInternal<?>)t).markQueued();
             jobTransitionLock.notifyAll();
         }
     }
@@ -108,7 +108,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                 primaryStarted = true;
                 primaryThread = Thread.currentThread();
                 for (Task<?> t: secondaryJobsAll)
-                    ((BasicTask<?>)t).markQueued();
+                    ((TaskInternal<?>)t).markQueued();
             }
             // TODO overkill having a thread/task for this, but it works (room for optimization...)
             Task<List<Object>> secondaryJobMaster = Tasks.<List<Object>>builder().dynamic(false)

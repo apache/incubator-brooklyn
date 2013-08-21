@@ -158,7 +158,7 @@ public class DynamicTasks {
 //                Preconditions.checkState(!Tasks.isQueuedOrSubmitted(t), "Task %s is already queued or submitted; cannot queue.", t);
 //                Preconditions.checkNotNull(Tasks.current(), "Can only use a TaskQueueingContext inside a task; cannot queue %s here.", t);
 //                if (BasicExecutionContext.getCurrentExecutionContext() == null) {
-//                    ExecutionManager em = ((BasicTask<?>)Tasks.current()).em;
+//                    ExecutionManager em = ((TaskInternal<?>)Tasks.current()).getExecutionManager();
 //                    if (em!=null) {
 //                        log.warn("Discouraged submission of compound task ({}) from {} without execution context; using execution manager", t, Tasks.current());
 //                        em.submit(t);
