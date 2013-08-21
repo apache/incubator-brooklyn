@@ -17,14 +17,18 @@ import brooklyn.util.task.Tasks;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
-/** As {@link SshTaskWrapper}, but putting a file on the remote machine */
+/**
+ * As {@link SshTaskWrapper}, but putting a file on the remote machine
+ * 
+ * @since 0.6.0
+ */
 @Beta
 public class SshFetchTaskWrapper implements TaskWrapper<String> {
 
-    private Task<String> task;
+    private final Task<String> task;
 
-    private String remoteFile;
-    private SshMachineLocation machine;
+    private final String remoteFile;
+    private final SshMachineLocation machine;
     private File backingFile;
     
     // package private as only AbstractSshTaskFactory should invoke
@@ -35,6 +39,7 @@ public class SshFetchTaskWrapper implements TaskWrapper<String> {
         task = tb.body(new SshFetchJob()).build();
     }
     
+    @Override
     public Task<String> asTask() {
         return getTask();
     }

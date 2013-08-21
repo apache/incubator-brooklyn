@@ -22,7 +22,7 @@ public class SshPutTaskWrapper extends SshPutTaskStub implements TaskWrapper<Voi
 
     private static final Logger log = LoggerFactory.getLogger(SshPutTaskWrapper.class);
     
-    private Task<Void> task;
+    private final Task<Void> task;
 
     protected Integer exitCodeOfCopy = null;
     protected Exception exception = null;
@@ -35,6 +35,7 @@ public class SshPutTaskWrapper extends SshPutTaskStub implements TaskWrapper<Voi
         task = tb.body(new SshPutJob()).build();
     }
     
+    @Override
     public Task<Void> asTask() {
         return getTask();
     }

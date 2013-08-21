@@ -17,7 +17,6 @@ import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 
 import com.google.common.collect.ImmutableList;
@@ -55,6 +54,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         this.job = new DstJob(mainJob);
     }
     
+    @Override
     public void queue(Task<?> t) {
         synchronized (jobTransitionLock) {
             if (primaryFinished)
@@ -81,6 +81,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         return cancel;
     }
     
+    @Override
     public Iterable<Task<?>> getChildren() {
         return secondaryJobsAll;
     }

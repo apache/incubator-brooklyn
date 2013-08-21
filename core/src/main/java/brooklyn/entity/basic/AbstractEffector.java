@@ -49,6 +49,7 @@ public abstract class AbstractEffector<T> extends EffectorBase<T> implements Eff
     }
     
     /** not meant for overriding; subclasses should override the abstract {@link #call(Entity, Map)} method in this class */
+    @Override
     public final EffectorTaskFactory<T> getBody() {
         return new EffectorTaskFactory<T>() {
             @Override
@@ -56,7 +57,7 @@ public abstract class AbstractEffector<T> extends EffectorBase<T> implements Eff
                 return new BasicTask<T>(
                         getFlagsForTaskInvocationAt(entity),
                 new Callable<T>() {
-                    public T call() {
+                    @Override public T call() {
                         return AbstractEffector.this.call(parameters.getAllConfig(), entity);
                     }
                 });

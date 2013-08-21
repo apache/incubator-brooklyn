@@ -2,6 +2,7 @@ package brooklyn.entity.basic;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,10 @@ import brooklyn.util.task.Tasks;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
-@Beta // added in 0.6.0
+/**
+ * @since 0.6.0
+ */
+@Beta
 public class EffectorTasks {
 
     @SuppressWarnings("unused")
@@ -39,18 +43,17 @@ public class EffectorTasks {
             this.effectorBody = effectorBody;
         }
         
-        @SuppressWarnings("unchecked")
+        @Override
         public Task<T> newTask(final Entity entity, final brooklyn.entity.Effector<T> effector, final ConfigBag parameters) {
-            @SuppressWarnings("rawtypes")
-            final DynamicSequentialTask[] dst = new DynamicSequentialTask[1];
+            final AtomicReference<DynamicSequentialTask<T>> dst = new AtomicReference<DynamicSequentialTask<T>>();
 
-            dst[0] = new DynamicSequentialTask<T>(
+            dst.set(new DynamicSequentialTask<T>(
                     getFlagsForTaskInvocationAt(entity, effector), 
                     new Callable<T>() {
                         @Override
                         public T call() throws Exception {
                             try {
-                                DynamicTasks.setTaskQueueingContext(dst[0]);
+                                DynamicTasks.setTaskQueueingContext(dst.get());
                                 return effectorBody.main(parameters);
                             } finally {
                                 DynamicTasks.removeTaskQueueingContext();
@@ -61,9 +64,9 @@ public class EffectorTasks {
                         public void handleException(Throwable throwable) throws Exception {
                             EffectorUtils.handleEffectorException(entity, effector, throwable);
                         }
-                    };
-            return (DynamicSequentialTask<T>)dst[0];
-        }
+                    });
+            return dst.get();
+        };
         
         /** subclasses may override to add additional flags, but they should include the flags returned here 
          * unless there is very good reason not to; default impl returns a MutableMap */

@@ -16,8 +16,12 @@ import brooklyn.util.exceptions.Exceptions;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
-/** contains static methods which detect and use the current {@link TaskQueueingContext} to execute tasks */
-@Beta // introduced in 0.6.0
+/** 
+ * Contains static methods which detect and use the current {@link TaskQueueingContext} to execute tasks.
+ * 
+ * @since 0.6.0
+ */
+@Beta
 public class DynamicTasks {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicTasks.class);

@@ -23,6 +23,7 @@ public class EffectorAndBody<T> extends EffectorBase<T> implements EffectorWithB
         this.body = body;
     }
 
+    @Override
     public EffectorTaskFactory<T> getBody() {
         return body;
     }

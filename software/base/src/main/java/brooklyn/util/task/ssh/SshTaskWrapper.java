@@ -25,7 +25,7 @@ public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET>
 
     private static final Logger log = LoggerFactory.getLogger(SshTaskWrapper.class);
     
-    private Task<RET> task;
+    private final Task<RET> task;
 
     // execution details
     protected ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -42,6 +42,7 @@ public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET>
         task = (Task<RET>) tb.body(new SshJob()).build();
     }
     
+    @Override
     public Task<RET> asTask() {
         return getTask();
     }

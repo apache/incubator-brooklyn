@@ -44,6 +44,7 @@ public class SshFetchTaskFactory implements TaskFactory<SshFetchTaskWrapper> {
         return self();
     }
 
+    @Override
     public SshFetchTaskWrapper newTask() {
         dirty = false;
         return new SshFetchTaskWrapper(this);

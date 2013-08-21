@@ -69,7 +69,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     protected Task<?> blockingTask = null;
     Object extraStatusText = null;
 
-    ExecutionList listeners = new ExecutionList();
+    protected final ExecutionList listeners = new ExecutionList();
     
     /**
      * Constructor needed to prevent confusion in groovy stubs when looking for default constructor,
