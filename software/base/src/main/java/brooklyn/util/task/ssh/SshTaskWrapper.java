@@ -11,8 +11,10 @@ import brooklyn.management.Task;
 import brooklyn.management.TaskWrapper;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Preconditions;
 
@@ -82,19 +84,27 @@ public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET>
             if (stdout!=null) config.put(SshTool.PROP_OUT_STREAM, stdout);
             if (stderr!=null) config.put(SshTool.PROP_ERR_STREAM, stderr);
             
+            if (!config.containsKey(SshTool.PROP_NO_EXTRA_OUTPUT))
+                // by default no extra output (so things like cat, etc work as expected)
+                config.put(SshTool.PROP_NO_EXTRA_OUTPUT, true);
+
             if (runAsRoot)
                 config.put(SshTool.PROP_RUN_AS_ROOT, true);
 
-            if (runAsScript)
-                exitCode = getMachine().execScript(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
-            else
+            if (runAsScript==Boolean.FALSE)
                 exitCode = getMachine().execCommands(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
+            else // null or TRUE
+                exitCode = getMachine().execScript(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
             
             if (exitCode!=0 && requireExitCodeZero!=Boolean.FALSE) {
                 if (requireExitCodeZero==Boolean.TRUE) {
-                    throw new IllegalStateException(
-                        (extraErrorMessage!=null ? extraErrorMessage+": " : "")+
-                        "SSH task ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary());
+                    String message = (extraErrorMessage!=null ? extraErrorMessage+": " : "")+
+                            "SSH task ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary();
+                    log.warn(message+" (throwing)");
+                    logProblemDetails("STDERR", stderr, 1024);
+                    logProblemDetails("STDOUT", stdout, 1024);
+                    logProblemDetails("STDIN", Streams.byteArrayOfString(Strings.join(commands,"\n")), 4096);
+                    throw new IllegalStateException(message);
                 } else {
                     // warn, but allow, on non-zero not explicitly allowed
                     log.warn("SSH task ended with exit code "+exitCode+" when non-zero was not explicitly allowed (error may be thrown in future), in "
@@ -112,6 +122,15 @@ public class SshTaskWrapper<RET> extends SshTaskStub implements TaskWrapper<RET>
             }
 
             throw new IllegalStateException("Unknown return type for ssh job "+getSummary()+": "+returnType);
+        }
+
+        protected void logProblemDetails(String streamName, ByteArrayOutputStream stream, int max) {
+            if (stream!=null && stream.size()>0) {
+                String stderrOut = stream.toString();
+                if (stderrOut.length()>max)
+                    stderrOut = "... "+stderrOut.substring(stderrOut.length()-max);
+                log.info(streamName+" for problem in "+Tasks.current()+":\n"+stderrOut);
+            }
         }
     }
     

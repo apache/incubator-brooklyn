@@ -26,7 +26,7 @@ public class SshTaskStub {
     protected Function<SshTaskWrapper<?>, ?> returnResultTransformation = null;
     protected ScriptReturnType returnType = ScriptReturnType.EXIT_CODE;
     
-    protected boolean runAsScript = false;
+    protected Boolean runAsScript = null;
     protected boolean runAsRoot = false;
     protected Boolean requireExitCodeZero = null;
     protected String extraErrorMessage = null;

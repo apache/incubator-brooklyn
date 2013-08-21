@@ -175,7 +175,9 @@ public class SshEffectorTasks {
     public static SshEffectorTask<Integer> codePidFromFileRunning(String pidFile) {
         return ssh(BashCommands.chain(
                 BashCommands.requireTest("-f "+pidFile, "The PID file "+pidFile+" does not exist."),
-                "ps -p `cat "+pidFile+"`")).summary("check PID in file "+pidFile);
+                BashCommands.require("cat "+pidFile, "The PID file "+pidFile+" cannot be read (permissions?)."),
+                "ps -p `cat "+pidFile+"`")).summary("check PID in file "+pidFile)
+                .allowingNonZeroExitCode();
     }
     
     /** task which fails if the pid in the given file is not running (or if there is no such PID file);
