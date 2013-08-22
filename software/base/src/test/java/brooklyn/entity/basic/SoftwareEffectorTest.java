@@ -48,30 +48,32 @@ public class SoftwareEffectorTest {
             .description("retrieves the date from the remote machine")
             .impl(new SshEffectorBody<String>() {
                 public String main(ConfigBag parameters) {
-                    queue( ssh("date").requiringZeroAndReturningStdout() );
+                    queue(ssh("date").requiringZeroAndReturningStdout());
                     return last(String.class);
                 }
             })
             .build();
 
     public static final Effector<String> GET_REMOTE_DATE_2 = Effectors.effector(GET_REMOTE_DATE_1)
-            // use date 100 years in future to confirm implementation is different
-            .description("retrieves a date in the future from the remote machine")
-            .impl(SshEffectorTasks.ssh("date -v+100y").requiringZeroAndReturningStdout())
+            // Just get year to confirm implementation is different
+            .description("retrieves the year from the remote machine")
+            .impl(SshEffectorTasks.ssh("date +%Y").requiringZeroAndReturningStdout())
             .build();
+
+    // TODO revisit next two tests before end 2019 ;)
 
     @Test(groups="Integration")
     public void testSshDateEffector1() {
         Task<String> call = Entities.invokeEffector(app, app, GET_REMOTE_DATE_1);
         log.info("ssh date 1 gives: "+call.getUnchecked());
-        Assert.assertTrue(call.getUnchecked().indexOf("20") >= 0);
+        Assert.assertTrue(call.getUnchecked().indexOf("201") > 0);
     }
 
     @Test(groups="Integration")
     public void testSshDateEffector2() {
         Task<String> call = Entities.invokeEffector(app, app, GET_REMOTE_DATE_2);
         log.info("ssh date 2 gives: "+call.getUnchecked());
-        Assert.assertTrue(call.getUnchecked().indexOf("21") >= 0);
+        Assert.assertTrue(call.getUnchecked().indexOf("201") == 0);
     }
 
     public static final String COMMAND_THAT_DOES_NOT_EXIST = "blah_blah_blah_command_DOES_NOT_EXIST";
