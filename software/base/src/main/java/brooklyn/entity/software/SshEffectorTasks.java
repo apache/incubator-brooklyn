@@ -15,15 +15,15 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.Tasks;
-import brooklyn.util.task.ssh.AbstractSshExecTaskFactory;
-import brooklyn.util.task.ssh.PlainSshExecTaskFactory;
-import brooklyn.util.task.ssh.SshExecTaskFactory;
-import brooklyn.util.task.ssh.SshExecTaskWrapper;
 import brooklyn.util.task.ssh.SshFetchTaskFactory;
 import brooklyn.util.task.ssh.SshFetchTaskWrapper;
 import brooklyn.util.task.ssh.SshPutTaskFactory;
 import brooklyn.util.task.ssh.SshPutTaskWrapper;
 import brooklyn.util.task.ssh.SshTasks;
+import brooklyn.util.task.ssh.internal.AbstractSshExecTaskFactory;
+import brooklyn.util.task.ssh.internal.PlainSshExecTaskFactory;
+import brooklyn.util.task.system.ProcessTaskFactory;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
@@ -49,7 +49,7 @@ public class SshEffectorTasks {
         }
 
         /** convenience for generating an {@link PlainSshExecTaskFactory} which can be further customised if desired, and then (it must be explicitly) queued */
-        public SshExecTaskFactory<Integer> ssh(String ...commands) {
+        public ProcessTaskFactory<Integer> ssh(String ...commands) {
             return SshTasks.newSshExecTaskFactory(machine(), commands);
         }
 
@@ -66,7 +66,7 @@ public class SshEffectorTasks {
         }
 
         @Override
-        public SshExecTaskWrapper<RET> newTask(Entity entity, Effector<RET> effector, ConfigBag parameters) {
+        public ProcessTaskWrapper<RET> newTask(Entity entity, Effector<RET> effector, ConfigBag parameters) {
             markDirty();
             if (summary==null) summary(effector.getName()+" (ssh)");
             machine(getMachineOfEntity(entity));
@@ -74,7 +74,7 @@ public class SshEffectorTasks {
         }
         
         @Override
-        public synchronized SshExecTaskWrapper<RET> newTask() {
+        public synchronized ProcessTaskWrapper<RET> newTask() {
             if (machine==null) {
                 if (log.isDebugEnabled())
                     log.debug("Using an SshEffectorTask not in an effector without any machine; will attempt to infer the machine: "+this);
@@ -91,7 +91,7 @@ public class SshEffectorTasks {
         }
         
         @SuppressWarnings("unchecked")
-        public <RET2> SshEffectorTask<RET2> returning(Function<SshExecTaskWrapper<?>, RET2> resultTransformation) {
+        public <RET2> SshEffectorTask<RET2> returning(Function<ProcessTaskWrapper<?>, RET2> resultTransformation) {
             return (SshEffectorTask<RET2>) super.returning(resultTransformation);
         }
     }
@@ -164,8 +164,8 @@ public class SshEffectorTasks {
 
     /** as {@link #codePidRunning(String)} but returning boolean */
     public static SshEffectorTask<Boolean> isPidRunning(Integer pid) {
-        return codePidRunning(pid).summary("PID "+pid+" is-running check (boolean)").returning(new Function<SshExecTaskWrapper<?>, Boolean>() {
-            public Boolean apply(@Nullable SshExecTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
+        return codePidRunning(pid).summary("PID "+pid+" is-running check (boolean)").returning(new Function<ProcessTaskWrapper<?>, Boolean>() {
+            public Boolean apply(@Nullable ProcessTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
         });
     }
 
@@ -187,8 +187,8 @@ public class SshEffectorTasks {
                 // finally check the process
                 "ps -p `cat "+pidFile+"`")).summary("PID file "+pidFile+" is-running check (exit code)")
                 .allowingNonZeroExitCode()
-                .addCompletionListener(new Function<SshExecTaskWrapper<?>,Void>() {
-                    public Void apply(SshExecTaskWrapper<?> input) {
+                .addCompletionListener(new Function<ProcessTaskWrapper<?>,Void>() {
+                    public Void apply(ProcessTaskWrapper<?> input) {
                         if (input.getStderr().contains("ERROR:"))
                             throw new IllegalStateException("Invalid or inaccessible PID filespec: "+pidFile);
                         return null;
@@ -207,8 +207,8 @@ public class SshEffectorTasks {
     /** as {@link #codePidFromFileRunning(String)} but returning boolean */
     public static SshEffectorTask<Boolean> isPidFromFileRunning(String pidFile) {
         return codePidFromFileRunning(pidFile).summary("PID file "+pidFile+" is-running check (boolean)").
-                returning(new Function<SshExecTaskWrapper<?>, Boolean>() {
-                    public Boolean apply(@Nullable SshExecTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
+                returning(new Function<ProcessTaskWrapper<?>, Boolean>() {
+                    public Boolean apply(@Nullable ProcessTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
                 });
     }
 

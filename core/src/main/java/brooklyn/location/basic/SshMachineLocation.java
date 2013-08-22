@@ -43,6 +43,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
@@ -54,6 +55,8 @@ import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.ReaderInputStream;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.system.internal.ExecWithLoggingHelpers;
+import brooklyn.util.task.system.internal.ExecWithLoggingHelpers.ExecRunner;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
@@ -67,7 +70,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -82,11 +84,7 @@ import com.google.common.io.Closeables;
 public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier, WithMutexes, Closeable {
     public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
-    
-    protected interface ExecRunner {
-        public int exec(SshTool ssh, Map<String,?> flags, List<String> cmds, Map<String,?> env);
-    }
-    
+        
     @SetFromFlag
     String user;
 
@@ -154,7 +152,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 }
             }));
             
-    private transient  Pool<SshTool> vanillaSshToolPool;
+    private transient Pool<SshTool> vanillaSshToolPool;
     
     public SshMachineLocation() {
         this(MutableMap.of());
@@ -274,13 +272,13 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
     public int run(final Map props, final List<String> commands, final Map env) {
         if (commands == null || commands.isEmpty()) return 0;
-        return execSsh(props, new Function<SshTool, Integer>() {
-            public Integer apply(SshTool ssh) {
+        return execSsh(props, new Function<ShellTool, Integer>() {
+            public Integer apply(ShellTool ssh) {
                 return ssh.execScript(props, commands, env);
             }});
     }
 
-    protected <T> T execSsh(Map props, Function<SshTool,T> task) {
+    protected <T> T execSsh(Map props, Function<ShellTool,T> task) {
         if (props.isEmpty() || Sets.difference(props.keySet(), REUSABLE_SSH_PROPS).isEmpty()) {
             return vanillaSshToolPool.exec(task);
         } else {
@@ -375,8 +373,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int exec(final Map props, final List<String> commands, final Map env) {
         Preconditions.checkNotNull(address, "host address must be specified for ssh");
         if (commands == null || commands.isEmpty()) return 0;
-        return execSsh(props, new Function<SshTool, Integer>() {
-            public Integer apply(SshTool ssh) {
+        return execSsh(props, new Function<ShellTool, Integer>() {
+            public Integer apply(ShellTool ssh) {
                 return ssh.execCommands(props, commands, env);
             }});
     }
@@ -417,10 +415,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return execCommands(MutableMap.<String,Object>of(), summaryForLogging, commands, env);
     }
     public int execCommands(Map<String,?> props, String summaryForLogging, List<String> commands, Map<String,?> env) {
-        return execWithLogging(props, summaryForLogging, commands, env, new ExecRunner() {
-                @Override public int exec(SshTool ssh, Map<String,?> flags, List<String> cmds, Map<String,?> env) {
-                    return ssh.execCommands(flags, cmds, env);
-                }});
+        return newExecWithLoggingHelpers().execCommands(props, summaryForLogging, commands, env);
     }
 
     /** executes a set of commands, wrapped as a script sent to the remote machine.
@@ -439,102 +434,37 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return execScript(MutableMap.<String,Object>of(), summaryForLogging, commands, env);
     }
     public int execScript(Map<String,?> props, String summaryForLogging, List<String> commands, Map<String,?> env) {
-        return execWithLogging(props, summaryForLogging, commands, env, new ExecRunner() {
-                @Override public int exec(SshTool ssh, Map<String, ?> flags, List<String> cmds, Map<String, ?> env) {
-                    return ssh.execScript(flags, cmds, env);
-                }});
+        return newExecWithLoggingHelpers().execScript(props, summaryForLogging, commands, env);
+    }
+    
+    protected ExecWithLoggingHelpers newExecWithLoggingHelpers() {
+        return new ExecWithLoggingHelpers() {
+            @Override
+            protected <T> T execWithTool(MutableMap<String, Object> props, Function<ShellTool, T> function) {
+                return execSsh(props, function);
+            }
+            @Override
+            protected void preExecChecks() {
+                Preconditions.checkNotNull(address, "host address must be specified for ssh");
+            }
+            @Override
+            protected String constructDefaultLoggingPrefix(ConfigBag execFlags) {
+                String hostname = getAddress().getHostName();
+                Integer port = execFlags.peek(SshTool.PROP_PORT); 
+                if (port == null) port = getConfig(ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PORT));
+                if (port == null) port = getConfig(ConfigUtils.prefixedKey(SSHCONFIG_PREFIX, SshTool.PROP_PORT));
+                return (user != null ? user+"@" : "") + hostname + (port != null ? ":"+port : "");
+            }
+        }.logger(logSsh);
     }
 
     protected int execWithLogging(Map<String,?> props, String summaryForLogging, List<String> commands, Map env, final Closure<Integer> execCommand) {
-        return execWithLogging(props, summaryForLogging, commands, env, new ExecRunner() {
-                @Override public int exec(SshTool ssh, Map<String, ?> flags, List<String> cmds, Map<String, ?> env) {
+        return newExecWithLoggingHelpers().execWithLogging(props, summaryForLogging, commands, env, new ExecRunner() {
+                @Override public int exec(ShellTool ssh, Map<String, ?> flags, List<String> cmds, Map<String, ?> env) {
                     return execCommand.call(ssh, flags, cmds, env);
                 }});
     }
     
-    @SuppressWarnings("resource")
-    protected int execWithLogging(Map<String,?> props, final String summaryForLogging, final List<String> commands, final Map<String,?> env, final ExecRunner execCommand) {
-        if (logSsh.isDebugEnabled()) logSsh.debug("{}, starting on machine {}: {}", new Object[] {summaryForLogging, this, commands});
-        
-        Preconditions.checkNotNull(address, "host address must be specified for ssh");
-        if (commands.isEmpty()) {
-            logSsh.debug("{}, on machine {} ,ending: no commands to run", summaryForLogging, this);
-            return 0;
-        }
-        
-        final ConfigBag execFlags = new ConfigBag().putAll(props);
-        // some props get overridden in execFlags, so remove them from the ssh flags
-        final ConfigBag sshFlags = new ConfigBag().putAll(props).removeAll(LOG_PREFIX, STDOUT, STDERR);
-        
-        PipedOutputStream outO = null;
-        PipedOutputStream outE = null;
-        StreamGobbler gO=null, gE=null;
-        try {
-        	String logPrefix = execFlags.get(LOG_PREFIX);
-        	if (logPrefix == null) {
-        		String hostname = getAddress().getHostName();
-        		Integer port = execFlags.peek(SshTool.PROP_PORT); 
-        		if (port == null) port = getConfig(ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PORT));
-        		if (port == null) port = getConfig(ConfigUtils.prefixedKey(SSHCONFIG_PREFIX, SshTool.PROP_PORT));
-        		logPrefix = (user != null ? user+"@" : "") + hostname + (port != null ? ":"+port : "");
-        	}
-        	
-            if (!execFlags.get(NO_STDOUT_LOGGING)) {
-                PipedInputStream insO = new PipedInputStream();
-                outO = new PipedOutputStream(insO);
-            
-                String stdoutLogPrefix = "["+(logPrefix != null ? logPrefix+":stdout" : "stdout")+"] ";
-                gO = new StreamGobbler(insO, execFlags.get(STDOUT), logSsh).setLogPrefix(stdoutLogPrefix);
-                gO.start();
-                
-                execFlags.put(STDOUT, outO);
-            }
-            
-            if (!execFlags.get(NO_STDERR_LOGGING)) {
-                PipedInputStream insE = new PipedInputStream();
-                outE = new PipedOutputStream(insE);
-            
-                String stderrLogPrefix = "["+(logPrefix != null ? logPrefix+":stderr" : "stderr")+"] ";
-                gE = new StreamGobbler(insE, execFlags.get(STDERR), logSsh).setLogPrefix(stderrLogPrefix);
-                gE.start();
-                
-                execFlags.put(STDERR, outE);
-            }
-            
-            Tasks.setBlockingDetails("SSH executing, "+summaryForLogging);
-            try {
-                return execSsh(MutableMap.copyOf(sshFlags.getAllConfig()), new Function<SshTool, Integer>() {
-                    public Integer apply(SshTool ssh) {
-                        int result = execCommand.exec(ssh, MutableMap.copyOf(execFlags.getAllConfig()), commands, env);
-                        if (logSsh.isDebugEnabled()) logSsh.debug("{}, on machine {}, completed: return status {}", new Object[] {summaryForLogging, this, result});
-                        return result;
-                    }});
-
-            } finally {
-                Tasks.setBlockingDetails(null);
-            }
-            
-        } catch (IOException e) {
-            if (logSsh.isDebugEnabled()) logSsh.debug("{}, on machine {}, failed: {}", new Object[] {summaryForLogging, this, e});
-            throw Throwables.propagate(e);
-        } finally {
-            // Must close the pipedOutStreams, otherwise input will never read -1 so StreamGobbler thread would never die
-            if (outO!=null) try { outO.flush(); } catch (IOException e) {}
-            if (outE!=null) try { outE.flush(); } catch (IOException e) {}
-            Closeables.closeQuietly(outO);
-            Closeables.closeQuietly(outE);
-            
-            try {
-                if (gE!=null) { gE.join(); }
-                if (gO!=null) { gO.join(); }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                Throwables.propagate(e);
-            }
-        }
-
-    }
-
     public int copyTo(File src, File destination) {
         return copyTo(MutableMap.<String,Object>of(), src, destination);
     }
@@ -571,9 +501,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         if (filesize == -1) {
             return copyTo(props, src, destination);
         } else {
-            return execSsh(props, new Function<SshTool,Integer>() {
-                public Integer apply(SshTool ssh) {
-                    return ssh.copyToServer(props, new KnownSizeInputStream(src, filesize), destination);
+            return execSsh(props, new Function<ShellTool,Integer>() {
+                public Integer apply(ShellTool ssh) {
+                    return ((SshTool)ssh).copyToServer(props, new KnownSizeInputStream(src, filesize), destination);
 //                    return ssh.createFile(props, destination, src, filesize);
                 }});
         }
@@ -581,9 +511,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     // FIXME the return code is not a reliable indicator of success or failure
     // Closes input stream before returning
     public int copyTo(final Map<String,?> props, final InputStream src, final String destination) {
-        return execSsh(props, new Function<SshTool,Integer>() {
-            public Integer apply(SshTool ssh) {
-                return ssh.copyToServer(props, src, destination);
+        return execSsh(props, new Function<ShellTool,Integer>() {
+            public Integer apply(ShellTool ssh) {
+                return ((SshTool)ssh).copyToServer(props, src, destination);
             }});
     }
 
@@ -592,9 +522,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return copyFrom(MutableMap.<String,Object>of(), remote, local);
     }
     public int copyFrom(final Map<String,?> props, final String remote, final String local) {
-        return execSsh(props, new Function<SshTool,Integer>() {
-            public Integer apply(SshTool ssh) {
-                return ssh.copyFromServer(props, remote, new File(local));
+        return execSsh(props, new Function<ShellTool,Integer>() {
+            public Integer apply(ShellTool ssh) {
+                return ((SshTool)ssh).copyFromServer(props, remote, new File(local));
             }});
     }
 

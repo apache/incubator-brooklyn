@@ -25,7 +25,7 @@ import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.ssh.SshFetchTaskWrapper;
 import brooklyn.util.task.ssh.SshPutTaskWrapper;
-import brooklyn.util.task.ssh.SshExecTaskWrapper;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.io.Files;
 
@@ -83,7 +83,7 @@ public class SshEffectorTasksTest {
     
     @Test(groups="Integration")
     public void testSshEchoHello() {
-        SshExecTaskWrapper<Integer> t = submit(SshEffectorTasks.ssh("sleep 1 ; echo hello world"));
+        ProcessTaskWrapper<Integer> t = submit(SshEffectorTasks.ssh("sleep 1 ; echo hello world"));
         Assert.assertFalse(t.isDone());
         Assert.assertEquals(t.get(), (Integer)0);
         Assert.assertEquals(t.getTask().getUnchecked(), (Integer)0);
@@ -119,16 +119,16 @@ public class SshEffectorTasksTest {
     
     @Test(groups="Integration")
     public void testNonRunningPid() {
-        SshExecTaskWrapper<Integer> t = submit(SshEffectorTasks.codePidRunning(99999));
+        ProcessTaskWrapper<Integer> t = submit(SshEffectorTasks.codePidRunning(99999));
         Assert.assertNotEquals(t.getTask().getUnchecked(), (Integer)0);
         Assert.assertNotEquals(t.getExitCode(), (Integer)0);
-        SshExecTaskWrapper<Boolean> t2 = submit(SshEffectorTasks.isPidRunning(99999));
+        ProcessTaskWrapper<Boolean> t2 = submit(SshEffectorTasks.isPidRunning(99999));
         Assert.assertFalse(t2.getTask().getUnchecked());
     }
 
     @Test(groups="Integration")
     public void testNonRunningPidRequired() {
-        SshExecTaskWrapper<?> t = submit(SshEffectorTasks.requirePidRunning(99999));
+        ProcessTaskWrapper<?> t = submit(SshEffectorTasks.requirePidRunning(99999));
         setExpectingFailure();
         try {
             t.getTask().getUnchecked();
@@ -160,9 +160,9 @@ public class SshEffectorTasksTest {
 
     @Test(groups="Integration")
     public void testRunningPid() {
-        SshExecTaskWrapper<Integer> t = submit(SshEffectorTasks.codePidRunning(getMyPid()));
+        ProcessTaskWrapper<Integer> t = submit(SshEffectorTasks.codePidRunning(getMyPid()));
         Assert.assertEquals(t.getTask().getUnchecked(), (Integer)0);
-        SshExecTaskWrapper<Boolean> t2 = submit(SshEffectorTasks.isPidRunning(getMyPid()));
+        ProcessTaskWrapper<Boolean> t2 = submit(SshEffectorTasks.isPidRunning(getMyPid()));
         Assert.assertTrue(t2.getTask().getUnchecked());
     }
 
@@ -170,9 +170,9 @@ public class SshEffectorTasksTest {
     public void testRunningPidFromFile() throws IOException {
         File f = File.createTempFile("testBrooklynPid", ".pid");
         Files.write( (""+getMyPid()).getBytes(), f );
-        SshExecTaskWrapper<Integer> t = submit(SshEffectorTasks.codePidFromFileRunning(f.getPath()));
+        ProcessTaskWrapper<Integer> t = submit(SshEffectorTasks.codePidFromFileRunning(f.getPath()));
         Assert.assertEquals(t.getTask().getUnchecked(), (Integer)0);
-        SshExecTaskWrapper<Boolean> t2 = submit(SshEffectorTasks.isPidFromFileRunning(f.getPath()));
+        ProcessTaskWrapper<Boolean> t2 = submit(SshEffectorTasks.isPidFromFileRunning(f.getPath()));
         Assert.assertTrue(t2.getTask().getUnchecked());
     }
 
@@ -180,7 +180,7 @@ public class SshEffectorTasksTest {
     public void testRequirePidFromFileOnFailure() throws IOException {
         File f = File.createTempFile("testBrooklynPid", ".pid");
         Files.write( "99999".getBytes(), f );
-        SshExecTaskWrapper<?> t = submit(SshEffectorTasks.requirePidFromFileRunning(f.getPath()));
+        ProcessTaskWrapper<?> t = submit(SshEffectorTasks.requirePidFromFileRunning(f.getPath()));
         
         setExpectingFailure();
         try {
@@ -196,7 +196,7 @@ public class SshEffectorTasksTest {
 
     @Test(groups="Integration")
     public void testRequirePidFromFileOnFailureNoSuchFile() throws IOException {
-        SshExecTaskWrapper<?> t = submit(SshEffectorTasks.requirePidFromFileRunning("/path/does/not/exist/SADVQW"));
+        ProcessTaskWrapper<?> t = submit(SshEffectorTasks.requirePidFromFileRunning("/path/does/not/exist/SADVQW"));
         
         setExpectingFailure();
         try {
@@ -212,7 +212,7 @@ public class SshEffectorTasksTest {
 
     @Test(groups="Integration")
     public void testRequirePidFromFileOnFailureTooManyFiles() throws IOException {
-        SshExecTaskWrapper<?> t = submit(SshEffectorTasks.requirePidFromFileRunning("/*"));
+        ProcessTaskWrapper<?> t = submit(SshEffectorTasks.requirePidFromFileRunning("/*"));
         
         setExpectingFailure();
         try {
@@ -230,7 +230,7 @@ public class SshEffectorTasksTest {
     public void testRequirePidFromFileOnSuccess() throws IOException {
         File f = File.createTempFile("testBrooklynPid", ".pid");
         Files.write( (""+getMyPid()).getBytes(), f );
-        SshExecTaskWrapper<?> t = submit(SshEffectorTasks.requirePidFromFileRunning(f.getPath()));
+        ProcessTaskWrapper<?> t = submit(SshEffectorTasks.requirePidFromFileRunning(f.getPath()));
         
         t.getTask().getUnchecked();
     }
@@ -239,7 +239,7 @@ public class SshEffectorTasksTest {
     public void testRequirePidFromFileOnSuccessAcceptsWildcards() throws IOException {
         File f = File.createTempFile("testBrooklynPid", ".pid");
         Files.write( (""+getMyPid()).getBytes(), f );
-        SshExecTaskWrapper<?> t = submit(SshEffectorTasks.requirePidFromFileRunning(f.getPath()+"*"));
+        ProcessTaskWrapper<?> t = submit(SshEffectorTasks.requirePidFromFileRunning(f.getPath()+"*"));
         
         t.getTask().getUnchecked();
     }

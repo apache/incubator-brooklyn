@@ -1,4 +1,4 @@
-package brooklyn.util.task.ssh;
+package brooklyn.util.task.system;
 
 import java.io.ByteArrayOutputStream;
 import java.util.concurrent.Callable;
@@ -14,17 +14,17 @@ import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.system.internal.AbstractProcessTaskFactory;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 
-/** Wraps a fully constructed SSH task, and allows callers to inspect status. 
+/** Wraps a fully constructed process task, and allows callers to inspect status. 
  * Note that methods in here such as {@link #getStdout()} will return partially completed streams while the task is ongoing
  * (and exit code will be null). You can {@link #block()} or {@link #get()} as conveniences on the underlying {@link #getTask()}. */ 
-public class SshExecTaskWrapper<RET> extends SshExecTaskStub implements TaskWrapper<RET> {
+public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements TaskWrapper<RET> {
 
-    private static final Logger log = LoggerFactory.getLogger(SshExecTaskWrapper.class);
+    private static final Logger log = LoggerFactory.getLogger(ProcessTaskWrapper.class);
     
     private final Task<RET> task;
 
@@ -34,12 +34,12 @@ public class SshExecTaskWrapper<RET> extends SshExecTaskStub implements TaskWrap
     protected Integer exitCode = null;
     
     @SuppressWarnings("unchecked")
-    SshExecTaskWrapper(AbstractSshExecTaskFactory<?,RET> constructor) {
+    protected ProcessTaskWrapper(AbstractProcessTaskFactory<?,RET> constructor) {
         super(constructor);
         TaskBuilder<Object> tb = constructor.constructCustomizedTaskBuilder();
         if (stdout!=null) tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDOUT, stdout));
         if (stderr!=null) tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDERR, stderr));
-        task = (Task<RET>) tb.body(new SshJob()).build();
+        task = (Task<RET>) tb.body(new ProcessTaskInternalJob()).build();
     }
     
     @Override
@@ -76,12 +76,10 @@ public class SshExecTaskWrapper<RET> extends SshExecTaskStub implements TaskWrap
         return stderr.toString();
     }
     
-    private class SshJob implements Callable<Object> {
+    protected class ProcessTaskInternalJob implements Callable<Object> {
         @Override
         public Object call() throws Exception {
-            Preconditions.checkNotNull(getMachine(), "machine");
-            
-            ConfigBag config = ConfigBag.newInstanceCopying(SshExecTaskWrapper.this.config);
+            ConfigBag config = ConfigBag.newInstanceCopying(ProcessTaskWrapper.this.config);
             if (stdout!=null) config.put(SshTool.PROP_OUT_STREAM, stdout);
             if (stderr!=null) config.put(SshTool.PROP_ERR_STREAM, stderr);
             
@@ -92,10 +90,7 @@ public class SshExecTaskWrapper<RET> extends SshExecTaskStub implements TaskWrap
             if (runAsRoot)
                 config.put(SshTool.PROP_RUN_AS_ROOT, true);
 
-            if (runAsScript==Boolean.FALSE)
-                exitCode = getMachine().execCommands(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
-            else // null or TRUE
-                exitCode = getMachine().execScript(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
+            run(config);
             
             if (exitCode!=0 && requireExitCodeZero!=Boolean.FALSE) {
                 if (requireExitCodeZero==Boolean.TRUE) {
@@ -106,16 +101,16 @@ public class SshExecTaskWrapper<RET> extends SshExecTaskStub implements TaskWrap
                             +Tasks.current()+": "+getSummary());
                 }
             }
-            for (Function<SshExecTaskWrapper<?>, Void> listener: completionListeners) {
+            for (Function<ProcessTaskWrapper<?>, Void> listener: completionListeners) {
                 try {
-                    listener.apply(SshExecTaskWrapper.this);
+                    listener.apply(ProcessTaskWrapper.this);
                 } catch (Exception e) {
                     logWithDetailsAndThrow("Error in SSH task "+getSummary()+": "+e, e);                    
                 }
             }
 
             switch (returnType) {
-            case CUSTOM: return returnResultTransformation.apply(SshExecTaskWrapper.this);
+            case CUSTOM: return returnResultTransformation.apply(ProcessTaskWrapper.this);
             case STDOUT_STRING: return stdout.toString();
             case STDOUT_BYTES: return stdout.toByteArray();
             case STDERR_STRING: return stderr.toString();
@@ -157,7 +152,7 @@ public class SshExecTaskWrapper<RET> extends SshExecTaskStub implements TaskWrap
     }
     
     /** blocks until the task completes; does not throw */
-    public SshExecTaskWrapper<RET> block() {
+    public ProcessTaskWrapper<RET> block() {
         getTask().blockUntilEnded();
         return this;
     }
@@ -166,5 +161,7 @@ public class SshExecTaskWrapper<RET> extends SshExecTaskStub implements TaskWrap
     public boolean isDone() {
         return getTask().isDone();
     }
+
+    protected abstract void run(ConfigBag config);
     
 }

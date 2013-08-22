@@ -8,7 +8,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.util.task.ssh.SshExecTaskWrapper;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 
 public class ChefSoloDriverMySqlEntityLiveTest extends AbstractChefToyMySqlEntityLiveTest {
 
@@ -20,7 +20,7 @@ public class ChefSoloDriverMySqlEntityLiveTest extends AbstractChefToyMySqlEntit
 
     @Override
     protected Integer getPid(Entity mysql) {
-        SshExecTaskWrapper<Integer> t = Entities.submit(mysql, SshEffectorTasks.ssh("sudo cat "+ChefDriverToyMySqlEntity.PID_FILE));
+        ProcessTaskWrapper<Integer> t = Entities.submit(mysql, SshEffectorTasks.ssh("sudo cat "+ChefDriverToyMySqlEntity.PID_FILE));
         return Integer.parseInt(t.block().getStdout().trim());
     }
     

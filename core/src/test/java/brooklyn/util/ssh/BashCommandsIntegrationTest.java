@@ -24,8 +24,8 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.BasicExecutionContext;
-import brooklyn.util.task.ssh.SshExecTaskWrapper;
 import brooklyn.util.task.ssh.SshTasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets;
@@ -209,7 +209,7 @@ public class BashCommandsIntegrationTest {
     
     @Test(groups="Integration")
     public void testDownloadToStdout() throws Exception {
-        SshExecTaskWrapper<String> t = SshTasks.newSshExecTaskFactory(loc, 
+        ProcessTaskWrapper<String> t = SshTasks.newSshExecTaskFactory(loc, 
                 "cd "+destFile.getParentFile().getAbsolutePath(),
                 BashCommands.downloadToStdout(Arrays.asList(sourceFileUrl1))+" | sed s/my/your/")
             .requiringZeroAndReturningStdout().newTask();
@@ -221,7 +221,7 @@ public class BashCommandsIntegrationTest {
     @SuppressWarnings("deprecation")
     @Test(groups="Integration")
     public void testDeprecatedAlternatives() throws Exception {
-        SshExecTaskWrapper<Integer> t = SshTasks.newSshExecTaskFactory(loc)
+        ProcessTaskWrapper<Integer> t = SshTasks.newSshExecTaskFactory(loc)
             .add(BashCommands.alternatives(
                     Arrays.asList("asdfj_no_such_command_1",  "asdfj_no_such_command_2"), 
                     BashCommands.fail("echo cannae-find-command", 88))).newTask();
@@ -233,7 +233,7 @@ public class BashCommandsIntegrationTest {
 
     @Test(groups="Integration")
     public void testRequireTestHandlesFailure() throws Exception {
-        SshExecTaskWrapper<?> t = SshTasks.newSshExecTaskFactory(loc)
+        ProcessTaskWrapper<?> t = SshTasks.newSshExecTaskFactory(loc)
             .add(BashCommands.requireTest("-f "+sourceNonExistantFile.getPath(),
                     "The requested file does not exist")).newTask();
 
@@ -245,7 +245,7 @@ public class BashCommandsIntegrationTest {
 
     @Test(groups="Integration")
     public void testRequireTestHandlesSuccess() throws Exception {
-        SshExecTaskWrapper<?> t = SshTasks.newSshExecTaskFactory(loc)
+        ProcessTaskWrapper<?> t = SshTasks.newSshExecTaskFactory(loc)
             .add(BashCommands.requireTest("-f "+sourceFile1.getPath(),
                     "The requested file does not exist")).newTask();
 
@@ -256,7 +256,7 @@ public class BashCommandsIntegrationTest {
 
     @Test(groups="Integration")
     public void testRequireFileHandlesFailure() throws Exception {
-        SshExecTaskWrapper<?> t = SshTasks.newSshExecTaskFactory(loc)
+        ProcessTaskWrapper<?> t = SshTasks.newSshExecTaskFactory(loc)
             .add(BashCommands.requireFile(sourceNonExistantFile.getPath())).newTask();
 
         exec.submit(t).get();
@@ -269,7 +269,7 @@ public class BashCommandsIntegrationTest {
 
     @Test(groups="Integration")
     public void testRequireFileHandlesSuccess() throws Exception {
-        SshExecTaskWrapper<?> t = SshTasks.newSshExecTaskFactory(loc)
+        ProcessTaskWrapper<?> t = SshTasks.newSshExecTaskFactory(loc)
             .add(BashCommands.requireFile(sourceFile1.getPath())).newTask();
 
         exec.submit(t).get();

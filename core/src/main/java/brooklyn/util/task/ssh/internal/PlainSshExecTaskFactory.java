@@ -1,6 +1,7 @@
-package brooklyn.util.task.ssh;
+package brooklyn.util.task.ssh.internal;
 
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.base.Function;
 
@@ -24,7 +25,7 @@ public class PlainSshExecTaskFactory<RET> extends AbstractSshExecTaskFactory<Pla
     }
 
     @SuppressWarnings("unchecked")
-    public <RET2> PlainSshExecTaskFactory<RET2> returning(Function<SshExecTaskWrapper<?>, RET2> resultTransformation) {
+    public <RET2> PlainSshExecTaskFactory<RET2> returning(Function<ProcessTaskWrapper<?>, RET2> resultTransformation) {
         return (PlainSshExecTaskFactory<RET2>) super.returning(resultTransformation);
     }
 }

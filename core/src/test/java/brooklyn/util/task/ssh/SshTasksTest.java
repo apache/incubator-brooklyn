@@ -12,8 +12,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.software.SoftwareEffectorTest;
-import brooklyn.entity.software.SshEffectorTasksTest;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
@@ -21,6 +19,8 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommandsIntegrationTest;
+import brooklyn.util.task.system.ProcessTaskFactory;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.io.Files;
 
@@ -72,9 +72,9 @@ public class SshTasksTest {
     }
 
 
-    protected <T> SshExecTaskWrapper<T> submit(final SshExecTaskFactory<T> tf) {
+    protected <T> ProcessTaskWrapper<T> submit(final ProcessTaskFactory<T> tf) {
         tf.machine(host);
-        SshExecTaskWrapper<T> t = tf.newTask();
+        ProcessTaskWrapper<T> t = tf.newTask();
         mgmt.getExecutionManager().submit(t);
         return t;
     }
@@ -87,7 +87,7 @@ public class SshTasksTest {
 
     @Test(groups="Integration")
     public void testSshEchoHello() {
-        SshExecTaskWrapper<Integer> t = submit(SshTasks.newSshExecTaskFactory(host, "sleep 1 ; echo hello world"));
+        ProcessTaskWrapper<Integer> t = submit(SshTasks.newSshExecTaskFactory(host, "sleep 1 ; echo hello world"));
         Assert.assertFalse(t.isDone());
         Assert.assertEquals(t.get(), (Integer)0);
         Assert.assertEquals(t.getTask().getUnchecked(), (Integer)0);

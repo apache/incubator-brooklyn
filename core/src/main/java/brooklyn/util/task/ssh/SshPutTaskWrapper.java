@@ -12,11 +12,12 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
-/** As {@link SshExecTaskWrapper}, but putting a file on the remote machine */
+/** As {@link ProcessTaskWrapper}, but putting a file on the remote machine */
 @Beta
 public class SshPutTaskWrapper extends SshPutTaskStub implements TaskWrapper<Void> {
 

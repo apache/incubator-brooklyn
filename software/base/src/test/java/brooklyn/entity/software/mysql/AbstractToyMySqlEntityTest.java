@@ -22,7 +22,7 @@ import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.task.ssh.SshExecTaskWrapper;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -95,7 +95,7 @@ public abstract class AbstractToyMySqlEntityTest {
         // and assert it has died
         log.info("mysql in pid "+pid+" should be dead now");
         // (app has stopped, so submit on mgmt context)
-        SshExecTaskWrapper<Integer> t = SshEffectorTasks.codePidRunning(pid).machine(lh).newTask();
+        ProcessTaskWrapper<Integer> t = SshEffectorTasks.codePidRunning(pid).machine(lh).newTask();
         mgmt.getExecutionManager().submit(t);
         Assert.assertNotEquals(t.block().getExitCode(), (Integer)0);
     }

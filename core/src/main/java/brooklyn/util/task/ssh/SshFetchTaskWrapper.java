@@ -13,12 +13,13 @@ import brooklyn.management.TaskWrapper;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
 /**
- * As {@link SshExecTaskWrapper}, but putting a file on the remote machine
+ * As {@link ProcessTaskWrapper}, but putting a file on the remote machine
  * 
  * @since 0.6.0
  */

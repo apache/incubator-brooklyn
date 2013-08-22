@@ -21,7 +21,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.task.ssh.SshExecTaskWrapper;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.base.Throwables;
 
@@ -106,7 +106,7 @@ public class SoftwareEffectorTest {
         
     @Test(groups="Integration")
     public void testBadExitCodeCaughtAndStdErrAvailable() {
-        final SshExecTaskWrapper<?>[] sshTasks = new SshExecTaskWrapper[1];
+        final ProcessTaskWrapper<?>[] sshTasks = new ProcessTaskWrapper[1];
         
         Task<Void> call = Entities.invokeEffector(app, app, Effectors.effector(Void.class, "badExitCode")
                 .impl(new SshEffectorBody<Void>() {

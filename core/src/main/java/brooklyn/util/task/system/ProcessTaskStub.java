@@ -1,4 +1,4 @@
-package brooklyn.util.task.ssh;
+package brooklyn.util.task.system;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,9 +13,10 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class SshExecTaskStub {
+public class ProcessTaskStub {
     
     protected final List<String> commands = new ArrayList<String>();
+    /** null for localhost */
     protected SshMachineLocation machine;
     
     // config data
@@ -23,7 +24,7 @@ public class SshExecTaskStub {
     protected final ConfigBag config = ConfigBag.newInstance();
     
     public static enum ScriptReturnType { CUSTOM, EXIT_CODE, STDOUT_STRING, STDOUT_BYTES, STDERR_STRING, STDERR_BYTES }
-    protected Function<SshExecTaskWrapper<?>, ?> returnResultTransformation = null;
+    protected Function<ProcessTaskWrapper<?>, ?> returnResultTransformation = null;
     protected ScriptReturnType returnType = ScriptReturnType.EXIT_CODE;
     
     protected Boolean runAsScript = null;
@@ -31,11 +32,11 @@ public class SshExecTaskStub {
     protected Boolean requireExitCodeZero = null;
     protected String extraErrorMessage = null;
     protected Map<String,String> shellEnvironment = new MutableMap<String, String>();
-    protected final List<Function<SshExecTaskWrapper<?>, Void>> completionListeners = new ArrayList<Function<SshExecTaskWrapper<?>,Void>>();
+    protected final List<Function<ProcessTaskWrapper<?>, Void>> completionListeners = new ArrayList<Function<ProcessTaskWrapper<?>,Void>>();
 
-    public SshExecTaskStub() {}
+    public ProcessTaskStub() {}
     
-    protected SshExecTaskStub(SshExecTaskStub source) {
+    protected ProcessTaskStub(ProcessTaskStub source) {
         commands.addAll(source.commands);
         machine = source.getMachine();
         summary = source.getSummary();
@@ -55,6 +56,7 @@ public class SshExecTaskStub {
         return Strings.join(commands, " ; ");
     }
     
+    /** null for localhost */
     public SshMachineLocation getMachine() {
         return machine;
     }
@@ -72,7 +74,7 @@ public class SshExecTaskStub {
         return ImmutableList.copyOf(commands);
     }
  
-    public List<Function<SshExecTaskWrapper<?>, Void>> getCompletionListeners() {
+    public List<Function<ProcessTaskWrapper<?>, Void>> getCompletionListeners() {
         return completionListeners;
     }
     
