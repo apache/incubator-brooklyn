@@ -232,7 +232,7 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
         try {
             if (provisioner != null) provisioner.release(machine);
         } catch (Throwable t) {
-            LOG.warn("Error releasing machine "+machine+" while stopping "+this+"; rethrowing ("+t+")");
+            log.warn("Error releasing machine "+machine+" while stopping "+this+"; rethrowing ("+t+")");
             throw Exceptions.propagate(t);
         }
     }

@@ -41,7 +41,7 @@ import com.google.common.collect.Maps;
  * A cluster of entities that can dynamically increase or decrease the number of entities.
  */
 public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicCluster {
-    private static final Logger logger = LoggerFactory.getLogger(DynamicClusterImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DynamicClusterImpl.class);
 
     // Mutex for synchronizing during re-size operations
     private final Object mutex = new Object[0];
@@ -174,9 +174,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             int currentSize = getCurrentSize();
             int delta = desiredSize - currentSize;
             if (delta != 0) {
-                logger.info("Resize {} from {} to {}", new Object[] {this, currentSize, desiredSize});
+                LOG.info("Resize {} from {} to {}", new Object[] {this, currentSize, desiredSize});
             } else {
-                if (logger.isDebugEnabled()) logger.debug("Resize no-op {} from {} to {}", new Object[] {this, currentSize, desiredSize});
+                if (LOG.isDebugEnabled()) LOG.debug("Resize no-op {} from {} to {}", new Object[] {this, currentSize, desiredSize});
             }
     
             if (delta > 0) {
@@ -191,7 +191,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public String replaceMember(String memberId) {
         Entity member = getEntityManager().getEntity(memberId);
-        logger.info("In {}, replacing member {} ({})", new Object[] {this, memberId, member});
+        LOG.info("In {}, replacing member {} ({})", new Object[] {this, memberId, member});
 
         if (member == null) {
             throw new NoSuchElementException("In "+this+", entity "+memberId+" cannot be resolved, so not replacing");
@@ -294,8 +294,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 throw Exceptions.propagate(e);
             } catch (Throwable t) {
                 Throwable interesting = Exceptions.getFirstInteresting(t);
-                logger.error("Cluster "+this+" failed to start entity "+entity+" (removing): "+interesting, interesting);
-                logger.debug("Trace for: Cluster "+this+" failed to start entity "+entity+" (removing): "+t, t);
+                LOG.error("Cluster "+this+" failed to start entity "+entity+" (removing): "+interesting, interesting);
+                LOG.debug("Trace for: Cluster "+this+" failed to start entity "+entity+" (removing): "+t, t);
                 // previously we unwrapped but now there is no need I think
                 errors.put(entity, t);
             }
@@ -318,7 +318,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     
     protected Entity addNode() {
         Map creation = Maps.newLinkedHashMap(getCustomChildFlags());
-        if (logger.isDebugEnabled()) logger.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] {this, getId(), creation});
+        if (LOG.isDebugEnabled()) LOG.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] {this, getId(), creation});
 
         Entity entity = createNode(creation);
         Entities.manage(entity);
@@ -351,7 +351,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         // TODO use pluggable strategy; default is to remove newest
         // TODO inefficient impl
         Preconditions.checkState(getMembers().size() > 0, "Attempt to remove a node when members is empty, from cluster "+this);
-        if (logger.isDebugEnabled()) logger.debug("Removing a node from {}", this);
+        if (LOG.isDebugEnabled()) LOG.debug("Removing a node from {}", this);
         
         Entity entity = getRemovalStrategy().apply(getMembers());
         Preconditions.checkNotNull(entity, "No entity chosen for removal from "+getId());

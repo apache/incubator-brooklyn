@@ -2,22 +2,24 @@ package brooklyn.entity.database.mysql;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.event.feed.ssh.SshPollValue;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.collect.Iterables;
 
 public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MySqlNodeImpl.class);
 
     private SshFeed feed;
 

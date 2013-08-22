@@ -22,7 +22,7 @@ import com.google.common.collect.Sets;
 
 public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl implements JavaWebAppService, JavaWebAppSoftwareProcess {
 
-    private static final Logger log = LoggerFactory.getLogger(JavaWebAppSoftwareProcessImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JavaWebAppSoftwareProcessImpl.class);
 
     public JavaWebAppSoftwareProcessImpl(){
         super();

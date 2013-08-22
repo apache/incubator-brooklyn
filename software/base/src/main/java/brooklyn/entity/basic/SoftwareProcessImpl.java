@@ -381,7 +381,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 		}
 		if (!isRunningResult) {
             String msg = "Software process entity "+this+" did not appear to start within "+
-                    Time.makeTimeString(System.currentTimeMillis()-startTime)+
+                    Time.makeTimeStringRounded(System.currentTimeMillis()-startTime)+
                     "; setting state to indicate problem and throwing; consult logs for more details";
             log.warn(msg);
 			setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
@@ -389,6 +389,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 		}
 	}
 
+    @Override
 	public void stop() {
 	    // TODO There is a race where we set SERVICE_UP=false while sensor-adapter threads may still be polling.
         // The other thread might reset SERVICE_UP to true immediately after we set it to false here.
@@ -401,6 +402,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         invoke(STOP, MutableMap.<String,Object>of()).getUnchecked();
 	}
 
+	@Override
     public void restart() {
         invoke(RESTART, MutableMap.<String,Object>of()).getUnchecked();
     }

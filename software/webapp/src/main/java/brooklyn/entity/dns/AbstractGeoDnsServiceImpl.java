@@ -268,7 +268,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 }
                 
             } catch (MalformedURLException e) {
-                LOG.warn("Invalid URL {} for entity {} in {}", new Object[] {url, entity, this});
+                log.warn("Invalid URL {} for entity {} in {}", new Object[] {url, entity, this});
             }
         }
         return hostname;
