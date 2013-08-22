@@ -27,7 +27,7 @@ import com.google.common.collect.Maps;
 public class PolicyTypeImpl implements PolicyType {
     private static final long serialVersionUID = -662979234559595903L;
 
-    protected static final Logger LOG = LoggerFactory.getLogger(PolicyTypeImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyTypeImpl.class);
 
     private final String name;
     private final Map<String, ConfigKey<?>> configKeys;

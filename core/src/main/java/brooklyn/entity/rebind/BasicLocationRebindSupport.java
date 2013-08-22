@@ -19,7 +19,7 @@ import brooklyn.util.flags.FlagUtils;
 
 public class BasicLocationRebindSupport implements RebindSupport<LocationMemento> {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(BasicLocationRebindSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BasicLocationRebindSupport.class);
     
     private final AbstractLocation location;
     

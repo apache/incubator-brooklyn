@@ -37,7 +37,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implements AbstractGeoDnsService {
-    protected static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
 
     @SetFromFlag
     protected Entity targetEntityProvider;

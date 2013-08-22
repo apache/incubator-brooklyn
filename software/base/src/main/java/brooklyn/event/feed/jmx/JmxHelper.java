@@ -65,7 +65,7 @@ import com.google.common.collect.Iterables;
 
 public class JmxHelper {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(JmxHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmxHelper.class);
 
     static { TimeExtras.init(); }
 

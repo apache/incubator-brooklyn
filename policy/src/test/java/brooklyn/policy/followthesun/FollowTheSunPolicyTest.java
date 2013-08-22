@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.testng.annotations.BeforeMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
@@ -33,6 +34,8 @@ import com.google.common.collect.Lists;
 
 public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
     
+    private static final Logger LOG = LoggerFactory.getLogger(FollowTheSunPolicyTest.class);
+
     @Test
     public void testPolicyUpdatesModel() {
         final MockContainerEntity containerA = newContainer(app, loc1, "A");

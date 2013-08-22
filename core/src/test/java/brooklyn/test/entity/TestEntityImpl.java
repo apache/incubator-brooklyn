@@ -22,7 +22,7 @@ import com.google.common.collect.Lists;
  * Mock entity for testing.
  */
 public class TestEntityImpl extends AbstractEntity implements TestEntity {
-	protected static final Logger LOG = LoggerFactory.getLogger(TestEntityImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TestEntityImpl.class);
 
 	protected int sequenceValue = 0;
 	protected AtomicInteger counter = new AtomicInteger(0);

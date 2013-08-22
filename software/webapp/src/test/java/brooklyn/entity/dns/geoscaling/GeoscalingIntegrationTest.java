@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class GeoscalingIntegrationTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(GeoscalingIntegrationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GeoscalingIntegrationTest.class);
 
     private final String primaryDomain = "geopaas.org";//"domain"+((int)(Math.random()*10000))+".test.org";
     private final String subDomain = "subdomain"+((int)(Math.random()*10000));

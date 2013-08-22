@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
 
 public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(BasicEntityRebindSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BasicEntityRebindSupport.class);
     
     private final EntityLocal entity;
     

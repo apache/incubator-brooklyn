@@ -56,7 +56,7 @@ import com.google.common.util.concurrent.ListenableFuture;
  * did so - or {@link #blockUntilEnded()} which will not throw errors.
  */
 public class BasicTask<T> implements TaskInternal<T> {
-    protected static final Logger log = LoggerFactory.getLogger(BasicTask.class);
+    private static final Logger log = LoggerFactory.getLogger(BasicTask.class);
 
     private String id = Identifiers.makeRandomId(8);
     protected Callable<T> job;

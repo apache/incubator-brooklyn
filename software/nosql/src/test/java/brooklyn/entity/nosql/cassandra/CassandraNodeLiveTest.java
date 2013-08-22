@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableList;
  */
 public class CassandraNodeLiveTest extends AbstractCassandraNodeTest {
 
+    private static final Logger log = LoggerFactory.getLogger(CassandraNodeLiveTest.class);
+
     @DataProvider(name = "virtualMachineData")
     public Object[][] provideVirtualMachineData() {
         return new Object[][] { // ImageName, Provider, Region

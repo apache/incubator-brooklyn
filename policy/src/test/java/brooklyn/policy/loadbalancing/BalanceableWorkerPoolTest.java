@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableList;
 
 public class BalanceableWorkerPoolTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(BalanceableWorkerPoolTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BalanceableWorkerPoolTest.class);
     
     protected static final long TIMEOUT_MS = 10*1000;
     protected static final long SHORT_WAIT_MS = 250;

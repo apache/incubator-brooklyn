@@ -46,7 +46,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     // sub-classes need to be extremely careful about any additional synchronization and of
     // their implementations of update/reconfigureService/reload.
     
-    protected static final Logger LOG = LoggerFactory.getLogger(AbstractControllerImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractControllerImpl.class);
 
     protected volatile boolean isActive;
     protected volatile boolean updateNeeded = true;

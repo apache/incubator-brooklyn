@@ -20,7 +20,7 @@ import brooklyn.util.internal.TimeExtras;
  */
 public class AbstractCassandraNodeTest {
 
-    protected static final Logger log = LoggerFactory.getLogger(AbstractCassandraNodeTest.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractCassandraNodeTest.class);
 
     static {
         TimeExtras.init();

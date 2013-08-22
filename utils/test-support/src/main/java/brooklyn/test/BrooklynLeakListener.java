@@ -9,7 +9,7 @@ import org.testng.TestListenerAdapter;
 
 public class BrooklynLeakListener extends TestListenerAdapter {
 
-    protected static final Logger TEST_RESOURCE_LOG = LoggerFactory.getLogger("test.resource.usage");
+    private static final Logger TEST_RESOURCE_LOG = LoggerFactory.getLogger("test.resource.usage");
     
     @Override
     public void onStart(ITestContext testContext) {

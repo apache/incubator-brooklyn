@@ -24,7 +24,7 @@ import static org.testng.Assert.assertNotNull;
 
 public class MongoDBReplicaSetEc2LiveTest extends AbstractEc2LiveTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(MongoDBReplicaSetEc2LiveTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBReplicaSetEc2LiveTest.class);
     private static final Integer REPLICA_SET_SIZE = 3;
     private static final TimeDuration TIMEOUT = new TimeDuration(0, 0, 180, 0);
 

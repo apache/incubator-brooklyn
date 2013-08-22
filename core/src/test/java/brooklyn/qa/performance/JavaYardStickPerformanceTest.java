@@ -16,7 +16,7 @@ import com.google.common.base.Throwables;
 
 public class JavaYardStickPerformanceTest extends AbstractPerformanceTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(JavaYardStickPerformanceTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JavaYardStickPerformanceTest.class);
     
     protected static final long TIMEOUT_MS = 10*1000;
 

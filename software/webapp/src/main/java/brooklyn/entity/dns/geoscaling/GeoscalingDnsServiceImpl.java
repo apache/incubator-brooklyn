@@ -4,17 +4,17 @@ import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_CITY_IN
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.render.RendererHints;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
 import brooklyn.location.geo.HostGeoInfo;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
@@ -22,7 +22,9 @@ import brooklyn.util.text.Strings;
 import com.google.common.base.Function;
 
 public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implements GeoscalingDnsService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(GeoscalingDnsServiceImpl.class);
+
     static {
         RendererHints.register(GeoscalingDnsService.MANAGED_DOMAIN, new RendererHints.NamedActionWithUrl("Open", new Function<Object,String>() {
             public String apply(Object input) {

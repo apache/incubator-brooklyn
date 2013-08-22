@@ -35,7 +35,7 @@ import com.google.common.reflect.TypeToken;
  */
 public class MementoTransformer {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(MementoTransformer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MementoTransformer.class);
     
     public static <T> T transformIdsToLocations(RebindContext rebindContext, Object value, Class<T> requiredType, boolean removeDanglingRefs) {
         if (value == null) {

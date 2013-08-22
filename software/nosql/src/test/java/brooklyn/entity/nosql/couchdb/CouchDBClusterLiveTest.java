@@ -42,7 +42,7 @@ import com.google.common.collect.Iterables;
  */
 class CouchDBClusterLiveTest {
 
-    protected static final Logger log = LoggerFactory.getLogger(CouchDBClusterLiveTest.class);
+    private static final Logger log = LoggerFactory.getLogger(CouchDBClusterLiveTest.class);
 
     // private String provider = "rackspace-cloudservers-uk";
     private String provider = "aws-ec2:eu-west-1";

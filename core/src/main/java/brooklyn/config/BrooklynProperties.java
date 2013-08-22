@@ -39,7 +39,7 @@ import com.google.common.base.Throwables;
 public class BrooklynProperties extends LinkedHashMap implements StringConfigMap {
 
     private static final long serialVersionUID = -945875483083108978L;
-    protected static final Logger LOG = LoggerFactory.getLogger(BrooklynProperties.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynProperties.class);
 
     public static class Factory {
         public static BrooklynProperties newEmpty() {

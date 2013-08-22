@@ -32,7 +32,7 @@ import brooklyn.util.internal.TimeExtras;
  */
 public class AbstractCouchDBNodeTest {
 
-    protected static final Logger log = LoggerFactory.getLogger(AbstractCouchDBNodeTest.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractCouchDBNodeTest.class);
 
     static {
         TimeExtras.init();

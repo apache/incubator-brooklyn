@@ -37,7 +37,7 @@ import com.google.common.collect.Sets;
 
 public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(FollowTheSunPolicySoakTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FollowTheSunPolicySoakTest.class);
     
     private static final long TIMEOUT_MS = 10*1000;
     

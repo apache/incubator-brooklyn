@@ -37,7 +37,7 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
 
     // TODO Duplication of code in SoftwareProcessImpl; could review and tidy
     
-    protected static final Logger log = LoggerFactory.getLogger(SameServerEntityImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(SameServerEntityImpl.class);
     
     protected void setProvisioningLocation(MachineProvisioningLocation val) {
         if (getAttribute(PROVISIONING_LOCATION) != null) throw new IllegalStateException("Cannot change provisioning location: existing="+getAttribute(PROVISIONING_LOCATION)+"; new="+val);

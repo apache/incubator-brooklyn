@@ -47,7 +47,7 @@ public class HttpTestUtils {
 	// TODO Delete methods from TestUtils, to just have them here (or switch so TestUtils delegates here,
 	// and deprecate methods in TestUtils until deleted).
 
-    protected static final Logger LOG = LoggerFactory.getLogger(HttpTestUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HttpTestUtils.class);
 
     static final ExecutorService executor = Executors.newCachedThreadPool();
     

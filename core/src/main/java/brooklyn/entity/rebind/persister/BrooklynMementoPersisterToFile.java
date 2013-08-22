@@ -24,7 +24,7 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     // Is this definitely no longer useful? Delete if not, and 
     // merge AbstractBrooklynMementoPersister+BrooklynMementoPerisisterInMemory.
 
-    protected static final Logger LOG = LoggerFactory.getLogger(BrooklynMementoPersisterToFile.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynMementoPersisterToFile.class);
 
     private final File file;
     private final MementoSerializer<BrooklynMemento> serializer;

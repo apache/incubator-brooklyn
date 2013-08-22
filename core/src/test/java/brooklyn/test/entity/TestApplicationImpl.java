@@ -19,7 +19,7 @@ import brooklyn.management.SubscriptionHandle;
  * Mock application for testing.
  */
 public class TestApplicationImpl extends AbstractApplication implements TestApplication {
-	protected static final Logger LOG = LoggerFactory.getLogger(TestApplication.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TestApplication.class);
 
     public TestApplicationImpl() {
         super();

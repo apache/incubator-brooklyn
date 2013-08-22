@@ -21,7 +21,7 @@ import brooklyn.test.entity.TestEntity
 
 public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(SubscriptionPerformanceTest.class)
+    private static final Logger LOG = LoggerFactory.getLogger(SubscriptionPerformanceTest.class)
     
     private static final long LONG_TIMEOUT_MS = 30*1000
     private static final int NUM_ITERATIONS = 10000

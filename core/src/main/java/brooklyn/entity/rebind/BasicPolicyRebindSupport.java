@@ -14,7 +14,7 @@ import brooklyn.policy.basic.AbstractPolicy;
 
 public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(BasicPolicyRebindSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BasicPolicyRebindSupport.class);
     
     private final AbstractPolicy policy;
     

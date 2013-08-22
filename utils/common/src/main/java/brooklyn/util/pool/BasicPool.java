@@ -25,7 +25,7 @@ public class BasicPool<T> implements Pool<T> {
 
     // TODO Implement expiry of pooled resources
 
-    protected static final Logger LOG = LoggerFactory.getLogger(BasicPool.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BasicPool.class);
 
     public static <T> Builder<T> builder() {
         return new Builder<T>();

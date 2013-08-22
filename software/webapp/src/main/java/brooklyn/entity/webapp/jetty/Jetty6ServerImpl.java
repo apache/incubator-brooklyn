@@ -70,7 +70,7 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
             JavaAppUtils.connectJavaAppServerPolicies(this);
         } else {
             // if not using JMX
-            LOG.warn("Jetty running without JMX monitoring; limited visibility of service available");
+            log.warn("Jetty running without JMX monitoring; limited visibility of service available");
             // TODO we could at least check the http/s is up
         }
     }
@@ -78,7 +78,7 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     @Override
     public void waitForServiceUp() {
         // Increases wait-time by overriding this
-        LOG.info("Waiting for {} up, via {}", this, jmxFeed == null ? "" : jmxFeed.getJmxUri());
+        log.info("Waiting for {} up, via {}", this, jmxFeed == null ? "" : jmxFeed.getJmxUri());
         waitForServiceUp(Duration.of(getConfig(TomcatServer.START_TIMEOUT), TimeUnit.SECONDS));
     }
 
