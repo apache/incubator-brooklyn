@@ -37,7 +37,6 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.InputStreamSupplier;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.StreamGobbler;
@@ -53,7 +52,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.Ints;
@@ -99,7 +97,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     private static class ConcreteBuilder extends Builder<SshjTool, ConcreteBuilder> {
     }
     
-    public static class Builder<T extends SshjTool, B extends Builder<T,B>> extends AbstractToolBuilder<T,B> {
+    public static class Builder<T extends SshjTool, B extends Builder<T,B>> extends AbstractSshToolBuilder<T,B> {
         protected int connectTimeout;
         protected int sessionTimeout;
         protected int sshTries = 4;  //allow 4 tries by default, much safer
@@ -245,11 +243,6 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         }
     }
 
-    @Override
-    public int execScript(Map<String,?> props, List<String> commands) {
-        return execScript(props, commands, Collections.<String,Object>emptyMap());
-    }
-    
     /**
      * This creates a script containing the user's commands, copies it to the remote server, and
      * executes the script. The script is then deleted.
@@ -287,22 +280,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
         
         String scriptContents = toScript(props, commands, env);
-        
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
-        
         copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
         
-        // use "-f" because some systems have "rm" aliased to "rm -i"; use "< /dev/null" to guarantee doesn't hang
-        ImmutableList.Builder<String> cmds = ImmutableList.<String>builder()
-                .add((runAsRoot ? BashCommands.sudo(scriptPath) : scriptPath) + " < /dev/null")
-                .add("RESULT=$?");
-        if (noExtraOutput==null || !noExtraOutput)
-            cmds.add("echo Executed "+scriptPath+", result $RESULT"); 
-        cmds.add("rm -f "+scriptPath+" < /dev/null"); 
-        cmds.add("exit $RESULT");
-        
-        Integer result = acquire(new ShellAction(cmds.build(), out, err));
-        return result != null ? result : -1;
+        return asInt(acquire(new ShellAction(buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot), out, err)), -1);
     }
 
     public int execShellDirect(Map<String,?> props, List<String> commands, Map<String,?> env) {
@@ -320,12 +301,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         
         Integer result = acquire(new ShellAction(allcmds, out, err));
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} completed: return status {}", host, result);
-        return result != null ? result : -1;
-    }
-
-    @Override
-    public int execCommands(Map<String,?> props, List<String> commands) {
-        return execCommands(props, commands, Collections.<String,Object>emptyMap());
+        return asInt(result, -1);
     }
 
     @Override
@@ -341,15 +317,17 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         String singlecmd = Joiner.on(separator).join(allcmds);
 
         if (getOptionalVal(props, PROP_RUN_AS_ROOT)==Boolean.TRUE) {
-            LOG.warn("Cannot run as root when executing sshj as command; run as a script instead (will run as normal user): "+singlecmd);
+            LOG.warn("Cannot run as root when executing as command; run as a script instead (will run as normal user): "+singlecmd);
         }
         
         if (LOG.isTraceEnabled()) LOG.trace("Running command at {}: {}", host, singlecmd);
         
         Command result = acquire(new ExecAction(singlecmd, out, err));
         if (LOG.isTraceEnabled()) LOG.trace("Running command at {} completed: exit code {}", host, result.getExitStatus());
-        // FIXME this can NPE if no exit status is received (observed on kill `ps aux | grep thing-to-grep-for | awk {print $2}`
-        return result.getExitStatus();
+        // can be null if no exit status is received (observed on kill `ps aux | grep thing-to-grep-for | awk {print $2}`
+        if (result.getExitStatus()==null) LOG.warn("Null exit status running at {}: {}", host, singlecmd);
+        
+        return asInt(result.getExitStatus(), -1);
     }
 
     protected void checkConnected() {
@@ -513,7 +491,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                             .build());
                 }
             } finally {
-                Closeables.closeQuietly(inputStreamRef.get());
+                closeWhispering(inputStreamRef.get(), this);
             }
             return null;
         }

@@ -27,9 +27,9 @@ import com.google.common.collect.ImmutableList;
  * 
  * Intended for human-invocation and inspection, to see which parts are most expensive.
  */
-public abstract class SshToolPerformanceTest {
+public abstract class SshToolAbstractPerformanceTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SshToolPerformanceTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SshToolAbstractPerformanceTest.class);
     
     private SshTool tool;
     
@@ -97,7 +97,7 @@ public abstract class SshToolPerformanceTest {
             long postCpuTime = (Long) mbeanServer.getAttribute(osMBeanName, "ProcessCpuTime");
             long elapsedTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             double fractionCpu = (elapsedTime > 0) ? ((double)postCpuTime-preCpuTime) / TimeUnit.MILLISECONDS.toNanos(elapsedTime) : -1;
-            LOG.info("Executing {}; completed {}; took {}; fraction cpu {}", new Object[] {context, (i+1), Time.makeTimeString(elapsedTime), fractionCpu});
+            LOG.info("Executing {}; completed {}; took {}; fraction cpu {}", new Object[] {context, (i+1), Time.makeTimeStringRounded(elapsedTime), fractionCpu});
         }
     }
 

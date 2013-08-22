@@ -3,11 +3,9 @@ package brooklyn.util.internal.ssh.cli;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -17,14 +15,12 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshAbstractTool;
-import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.stream.StreamGobbler;
+import brooklyn.util.internal.ssh.process.ProcessTool;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
+import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -49,7 +45,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     private static class ConcreteBuilder extends Builder<SshCliTool, ConcreteBuilder> {
     }
     
-    public static class Builder<T extends SshCliTool, B extends Builder<T,B>> extends AbstractToolBuilder<T,B> {
+    public static class Builder<T extends SshCliTool, B extends Builder<T,B>> extends AbstractSshToolBuilder<T,B> {
         private String sshExecutable;
         private String sshFlags;
         private String scpExecutable;
@@ -158,11 +154,6 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     }
 
     @Override
-    public int execScript(Map<String,?> props, List<String> commands) {
-        return execScript(props, commands, Collections.<String,Object>emptyMap());
-    }
-    
-    @Override
     public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
         String separator = getOptionalVal(props, PROP_SEPARATOR);
         String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
@@ -176,20 +167,8 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         
         copyTempFileToServer(ImmutableMap.of("permissions", "0700"), writeTempFile(scriptContents), scriptPath);
         
-        // use "-f" because some systems have "rm" aliased to "rm -i"; use "< /dev/null" to guarantee doesn't hang
-        String cmd = 
-                (runAsRoot ? BashCommands.sudo(scriptPath) : scriptPath) + " < /dev/null"+separator+
-                "RESULT=\\$?"+separator+
-                (noExtraOutput==null || !noExtraOutput ? "echo Executed "+scriptPath+", result \\$RESULT"+separator : "")+
-                "rm -f "+scriptPath+" < /dev/null"+separator+
-                "exit \\$RESULT";
-        Integer result = sshExec(props, cmd);
-        return result != null ? result : -1;
-    }
-
-    @Override
-    public int execCommands(Map<String,?> props, List<String> commands) {
-        return execCommands(props, commands, Collections.<String,Object>emptyMap());
+        String cmd = Strings.join(buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot), separator);
+        return asInt(sshExec(props, cmd), -1);
     }
 
     @Override
@@ -282,7 +261,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
             }
             cmd.add((Strings.isEmpty(getUsername()) ? "" : getUsername()+"@")+getHostAddress());
             
-            cmd.add("bash -c \""+command+"\"");
+            cmd.add("bash -c "+BashStringEscapes.wrapBash(command));
             // previously we tried these approaches:
             //cmd.add("$(<"+tempCmdFile.getAbsolutePath()+")");
             // only pays attention to the first word; the "; echo Executing ..." get treated as arguments
@@ -302,50 +281,10 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
             if (tempKeyFile != null) tempKeyFile.delete();
         }
     }
-    
-    private int execProcess(Map<String,?> props, List<String> cmd) {
+
+    private int execProcess(Map<String,?> props, List<String> cmdWords) {
         OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
         OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
-        StreamGobbler errgobbler = null;
-        StreamGobbler outgobbler = null;
-        
-        ProcessBuilder pb = new ProcessBuilder(cmd);
-
-        try {
-            Process p = pb.start();
-            
-            if (out != null) {
-                InputStream outstream = p.getInputStream();
-                outgobbler = new StreamGobbler(outstream, out, (Logger) null);
-                outgobbler.start();
-            }
-            if (err != null) {
-                InputStream errstream = p.getErrorStream();
-                errgobbler = new StreamGobbler(errstream, err, (Logger) null);
-                errgobbler.start();
-            }
-            
-            int result = p.waitFor();
-            
-            if (outgobbler != null) outgobbler.blockUntilFinished();
-            if (errgobbler != null) errgobbler.blockUntilFinished();
-            
-            if (result==255)
-                // this is not definitive, but tests (and code?) expects throw exception if can't connect;
-                // only return exit code when it is exit code from underlying process;
-                // we have no way to distinguish 255 from ssh failure from 255 from the command run through ssh ...
-                // but probably 255 is from CLI ssh
-                throw new SshException("exit code 255 from CLI ssh; probably failed to connect");
-            
-            return result;
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        } catch (IOException e) {
-            throw Exceptions.propagate(e);
-        } finally {
-            closeWhispering(outgobbler, this);
-            closeWhispering(errgobbler, this);
-        }
+        return ProcessTool.execSingleProcess(cmdWords, null, out, err, this);
     }
-    
 }

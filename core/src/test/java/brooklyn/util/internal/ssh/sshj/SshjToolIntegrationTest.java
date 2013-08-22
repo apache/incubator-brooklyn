@@ -17,7 +17,7 @@ import org.testng.annotations.Test;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.internal.ssh.SshToolIntegrationTest;
+import brooklyn.util.internal.ssh.SshToolAbstractIntegrationTest;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -25,10 +25,10 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Test the operation of the {@link SshJschTool} utility class.
  */
-public class SshjToolIntegrationTest extends SshToolIntegrationTest {
+public class SshjToolIntegrationTest extends SshToolAbstractIntegrationTest {
 
     @Override
-    protected SshTool newSshTool(Map<String,?> flags) {
+    protected SshTool newTool(Map<String,?> flags) {
         return new SshjTool(flags);
     }
 

@@ -1,14 +1,15 @@
 package brooklyn.util.internal.ssh;
 
+import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
+import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
+
 import java.io.File;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import static brooklyn.entity.basic.ConfigKeys.*;
 import brooklyn.util.stream.KnownSizeInputStream;
 
 /**
@@ -22,11 +23,7 @@ import brooklyn.util.stream.KnownSizeInputStream;
  * contained in {@link ConfigKeys}
  * (which are generally {@value #BROOKLYN_CONFIG_KEY_PREFIX} prefixed to the names of keys here).
  */
-public interface SshTool {
-
-//    /** Intermediate config keys for Brooklyn are defined where they are used, e.g. in {@link SshMachineLocation} 
-//     * and have this prefix pre-prended to the config keys in this class. */
-//    public static final String LOCATION_CONFIG_KEY_PREFIX = "ssh.config.";
+public interface SshTool extends ShellTool {
     
     /** Public-facing global config keys for Brooklyn are defined in ConfigKeys, 
      * and have this prefix pre-prended to the config keys in this class. */
@@ -51,24 +48,8 @@ public interface SshTool {
     public static final ConfigKey<Integer> PROP_SSH_TRIES_TIMEOUT = newConfigKey("sshTriesTimeout", "Timeout when attempting to connect for ssh operations; so if too slow trying sshTries times, will abort anyway", 2*60*1000);
     public static final ConfigKey<Long> PROP_SSH_RETRY_DELAY = newConfigKey("sshRetryDelay", "Time (in milliseconds) before first ssh-retry, after which it will do exponential backoff", 50L);
 
-    public static final ConfigKey<File> PROP_LOCAL_TEMP_DIR = newConfigKey("localTempDir", "The directory on the local machine (i.e. running brooklyn) for writing temp files", 
-            new File(System.getProperty("java.io.tmpdir"), "tmpssh"));
-    
     // NB -- items above apply for _session_ (a tool), below apply for a _call_
     // TODO would be nice to track which arguments are used, so we can indicate whether extras are supplied
-
-    public static final ConfigKey<Boolean> PROP_RUN_AS_ROOT = newConfigKey("runAsRoot", "When running a script, whether to run as root", Boolean.FALSE);
-    
-    public static final ConfigKey<OutputStream> PROP_OUT_STREAM = newConfigKey(OutputStream.class, "out", "Stream to which to capture stdout");
-    public static final ConfigKey<OutputStream> PROP_ERR_STREAM = newConfigKey(OutputStream.class, "err", "Stream to which to capture stderr");
-    
-    public static final ConfigKey<Boolean> PROP_NO_EXTRA_OUTPUT = newConfigKey("noExtraOutput", "Suppresses any decorative output such as result code which some tool commands insert", false);
-    
-    public static final ConfigKey<String> PROP_SEPARATOR = newConfigKey("separator", "string to insert between caller-supplied commands being executed as commands", " ; ");
-    
-    public static final ConfigKey<String> PROP_SCRIPT_DIR = newConfigKey("scriptDir", "directory where scripts should be copied", "/tmp");
-    public static final ConfigKey<String> PROP_SCRIPT_HEADER = newConfigKey("scriptHeader", "lines to insert at the start of scripts generated for caller-supplied commands for script execution", "#!/bin/bash -e\n");
-    public static final ConfigKey<String> PROP_DIRECT_HEADER = newConfigKey("directHeader", "commands to run remotely before any caller-supplied commands for direct execution", "exec bash -e");
 
     public static final ConfigKey<String> PROP_PERMISSIONS = newConfigKey("permissions", "Default permissions for files copied/created on remote machine; must be four-digit octal string, default '0644'", "0644");
     public static final ConfigKey<Long> PROP_LAST_MODIFICATION_DATE = newConfigKey("lastModificationDate", "Last-modification-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; defaults to current)", 0L);
@@ -95,47 +76,29 @@ public interface SshTool {
     public boolean isConnected();
 
     /**
-     * Executes the set of commands in a shell script. Blocks until completion.
-     * <p>
-     * 
-     * Optional properties are:
-     * <ul>
-     *   <li>'out' {@link OutputStream} - see {@link #PROP_OUT_STREAM}
-     *   <li>'err' {@link OutputStream} - see {@link #PROP_ERR_STREAM}
-     * </ul>
-     * 
-     * @return exit status of script
-     * 
+     * @see super{@link #execScript(Map, List, Map)}
      * @throws SshException If failed to connect
      */
+    @Override
     public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env);
 
     /**
      * @see #execScript(Map, List, Map)
      */
+    @Override
     public int execScript(Map<String,?> props, List<String> commands);
 
     /**
-     * Executes the set of commands using ssh exec.
-     * 
-     * This is generally more efficient than shell, but is not suitable if you need 
-     * env values which are only set on a fully-fledged shell.
-     *
-     * Optional properties are:
-     * <ul>
-     *   <li>'out' {@link OutputStream} - see {@link #PROP_OUT_STREAM}
-     *   <li>'err' {@link OutputStream} - see {@link #PROP_ERR_STREAM}
-     *   <li>'separator', defaulting to ";" - see {@link #PROP_SEPARATOR}
-     * </ul>
-     * 
-     * @return exit status of commands
+     * @see super{@link #execCommands(Map, List, Map)}
      * @throws SshException If failed to connect
      */
+    @Override
     public int execCommands(Map<String,?> properties, List<String> commands, Map<String,?> env);
 
     /**
      * @see #execCommands(Map, List, Map)
      */
+    @Override
     public int execCommands(Map<String,?> properties, List<String> commands);
 
     /**

@@ -5,7 +5,6 @@ import javax.annotation.Nonnull;
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
-import brooklyn.util.internal.ssh.SshTool;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -138,38 +137,43 @@ public class ConfigKeys {
         return newConfigKey(Boolean.class, name, description, defaultValue);
     }
 
-    // ------- keys
-    
-    public static final ConfigKey<String> BROOKLYN_DATA_DIR = newStringConfigKey(
-            "brooklyn.datadir", "Directory for writing all brooklyn data", "/tmp/brooklyn-"+System.getProperty("user.name"));
-
-    // FIXME Rename to VERSION, instead of SUGGESTED_VERSION? And declare as BasicAttributeSensorAndConfigKey?
-    public static final ConfigKey<String> SUGGESTED_VERSION = newStringConfigKey("install.version", "Suggested version");
-    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = newStringConfigKey("install.dir", "Suggested installation directory");
-    public static final ConfigKey<String> SUGGESTED_RUN_DIR = newStringConfigKey("run.dir", "Suggested working directory for the running app");
-    
-    /**
-     * Intention is to use this with DependentConfiguration.attributeWhenReady, to allow an entity's start
-     * to block until dependents are ready. This is particularly useful when we want to block until a dependent
-     * component is up, but this entity does not care about the dependent component's actual config values.
+    /* Key definitions were deprecated here in 0.6.0 because they introduce nasty circular dependencies on the
+     * methods in this class, causing some final fields to be null when they are accessed. 
      */
-    public static final ConfigKey<Boolean> START_LATCH = newBooleanConfigKey("start.latch", "Latch for blocking start until ready");
-    public static final ConfigKey<Boolean> INSTALL_LATCH = newBooleanConfigKey("install.latch", "Latch for blocking install until ready");
-    public static final ConfigKey<Boolean> CUSTOMIZE_LATCH = newBooleanConfigKey("customize.latch", "Latch for blocking customize until ready");
-    public static final ConfigKey<Boolean> LAUNCH_LATCH = newBooleanConfigKey("launch.latch", "Latch for blocking launch until ready");
 
-    public static final ConfigKey<Integer> START_TIMEOUT = newConfigKey(
-            "start.timeout", "Time to wait for SERVICE_UP to be set before failing (in seconds, default 60)", 60);
-        
-    /* selected properties from SshTool for external public access (e.g. putting on entities) */
-    
-    public static final ConfigKey<String> SSH_TOOL_CLASS = newConfigKeyWithPrefix(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_TOOL_CLASS);
-    public static final ConfigKey<String> SSH_CONFIG_HOST = newConfigKeyWithPrefix(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_HOST);
-    public static final ConfigKey<Integer> SSH_CONFIG_PORT = newConfigKeyWithPrefix(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PORT);
-    public static final ConfigKey<String> SSH_CONFIG_USER = newConfigKeyWithPrefix(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_USER);
-    public static final ConfigKey<String> SSH_CONFIG_PASSWORD = newConfigKeyWithPrefix(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PASSWORD);
-    public static final ConfigKey<String> SSH_CONFIG_SCRIPT_DIR = newConfigKeyWithPrefix(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_SCRIPT_DIR);
-    public static final ConfigKey<String> SSH_CONFIG_SCRIPT_HEADER = newConfigKeyWithPrefix(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_SCRIPT_HEADER);
-    public static final ConfigKey<String> SSH_CONFIG_DIRECT_HEADER = newConfigKeyWithPrefix(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_DIRECT_HEADER);
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<String> BROOKLYN_DATA_DIR = BrooklynConfigKeys.BROOKLYN_DATA_DIR;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<String> SUGGESTED_VERSION = BrooklynConfigKeys.SUGGESTED_VERSION;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = BrooklynConfigKeys.SUGGESTED_INSTALL_DIR;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<Boolean> START_LATCH = BrooklynConfigKeys.START_LATCH;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<Boolean> INSTALL_LATCH = BrooklynConfigKeys.INSTALL_LATCH;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<Boolean> CUSTOMIZE_LATCH = BrooklynConfigKeys.CUSTOMIZE_LATCH;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<Integer> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<String> SSH_TOOL_CLASS = BrooklynConfigKeys.SSH_TOOL_CLASS;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<String> SSH_CONFIG_HOST = BrooklynConfigKeys.SSH_CONFIG_HOST;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<Integer> SSH_CONFIG_PORT = BrooklynConfigKeys.SSH_CONFIG_PORT;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<String> SSH_CONFIG_USER = BrooklynConfigKeys.SSH_CONFIG_USER;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<String> SSH_CONFIG_PASSWORD = BrooklynConfigKeys.SSH_CONFIG_PASSWORD;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<String> SSH_CONFIG_SCRIPT_DIR = BrooklynConfigKeys.SSH_CONFIG_SCRIPT_DIR;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<String> SSH_CONFIG_SCRIPT_HEADER = BrooklynConfigKeys.SSH_CONFIG_SCRIPT_HEADER;
+    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
+    public static final ConfigKey<String> SSH_CONFIG_DIRECT_HEADER = BrooklynConfigKeys.SSH_CONFIG_DIRECT_HEADER;
 
 }
