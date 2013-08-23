@@ -1,10 +1,6 @@
 package brooklyn.entity.database.postgresql;
 
-import static brooklyn.util.ssh.BashCommands.alternatives;
-import static brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
-import static brooklyn.util.ssh.BashCommands.file;
-import static brooklyn.util.ssh.BashCommands.installPackage;
-import static brooklyn.util.ssh.BashCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.*;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -21,7 +17,6 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
-import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.text.StringFunctions;
@@ -60,52 +55,43 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
     public void install() {
         DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), true)).orSubmitAndBlock();
         
-        // Check we can actually find a usable pg_ctl
+        // Check whether we can find a usable pg_ctl, and if not install one
         MutableList<String> findOrInstall = MutableList.<String>of()
                 .append("which pg_ctl")
-                .appendAll(Iterables.transform(pgctlLocations, StringFunctions.formatter("test -f %s pg_ctl")))
+                .appendAll(Iterables.transform(pgctlLocations, StringFunctions.formatter("test -x %s/pg_ctl")))
                 .append(installPackage(ImmutableMap.of(
                         "yum", "postgresql postgresql-server", 
                         "apt", "postgresql", 
                         "port", "postgresql91 postgresql91-server"
                     ), "postgresql"))
-                .append(BashCommands.warn("WARNING: failed to find or install postgresql binaries"));
+                // due to impl of installPackage, it will not come to the line below I don't think
+                .append(warn("WARNING: failed to find or install postgresql binaries (will likely fail later unless binaries found in path)"));
         
         // Link to correct binaries folder (different versions of pg_ctl and psql don't always play well together)
         MutableList<String> linkFromHere = MutableList.<String>of()
-                .append(linkToCommandIfItExists("pg_ctl", "bin/"))
-                .appendAll(Iterables.transform(pgctlLocations, linkingToFileIfItExistsInDirectory("pg_ctl", "bin/")))
-                .append(BashCommands.warn("WARNING: failed to find postgresql binaries for linking; aborting"))
-                .append("exit 9");
+                .append(ifExecutableElse1("pg_ctl", chainGroup("PG_EXECUTABLE=`which pg_ctl`", "PG_DIR=`dirname $PG_EXECUTABLE`",
+                        "echo 'found pg_ctl in '$PG_DIR' on path so linking PG bin/ to that dir'", "ln -s $PG_DIR bin")))
+                .appendAll(Iterables.transform(pgctlLocations, givenDirIfFileExistsInItLinkToDir("pg_ctl", "bin")))
+                .append(fail("WARNING: failed to find postgresql binaries for pg_ctl; aborting", 9));
 
-        // TODO tied to version 9.1 for port installs
         newScript(INSTALLING).body.append(
                 dontRequireTtyForSudo(),
-                alternatives(findOrInstall),
-                alternatives(linkFromHere))
+                alternativesGroup(findOrInstall),
+                alternativesGroup(linkFromHere))
                 .failOnNonZeroResultCode().queue();
     }
 
-    private static Function<String, String> linkingToFileIfItExistsInDirectory(final String filename, final String linkToMake) {
+    private static Function<String, String> givenDirIfFileExistsInItLinkToDir(final String filename, final String linkToMake) {
         return new Function<String, String>() {
-            public String apply(@Nullable String s) {
-                return linkToFileIfItExists(Urls.mergePaths(s, filename), linkToMake);
+            public String apply(@Nullable String dir) {
+                return ifExecutableElse1(Urls.mergePaths(dir, filename), 
+                        chainGroup("echo 'found "+filename+" in "+dir+" so linking to it in "+linkToMake+"'", "ln -s " + dir + " "+linkToMake));
             }
         };
     }
-    private static String linkToFileIfItExists(final String path, final String linkToMake) {
-        return file(path, "ln -s " + path + " "+linkToMake);
-    }
-    private static String linkToCommandIfItExists(final String command, final String linkToMake) {
-        return BashCommands.exists(command, "ln -s `which " + command + "` "+linkToMake);
-    }
 
-    public static String sudoAsUser(String user, String command) {
-        return BashCommands.sudoAsUser(user, command);
-    }
-    
     public static String sudoAsUserAppendCommandOutputToFile(String user, String commandWhoseOutputToWrite, String file) {
-        return BashCommands.executeCommandThenAsUserTeeOutputToFile(commandWhoseOutputToWrite, user, file);
+        return executeCommandThenAsUserTeeOutputToFile(commandWhoseOutputToWrite, user, file);
     }
     
     @Override
@@ -115,6 +101,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
         newScript(CUSTOMIZING).body.append(
                 sudo("mkdir -p " + getDataDir()),
                 sudo("chown postgres:postgres " + getDataDir()),
+                sudo("chmod 700 " + getDataDir()),
                 sudo("touch " + getLogFile()),
                 sudo("chown postgres:postgres " + getLogFile()),
                 sudoAsUser("postgres", getInstallDir() + "/bin/initdb -D " + getDataDir()),
