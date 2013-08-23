@@ -19,6 +19,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
+import brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -113,7 +114,10 @@ public class JcloudsByonLocationResolver implements LocationResolver {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; if name supplied then value must be non-empty");
         }
 
-        JcloudsLocation jcloudsLocation = (JcloudsLocation) registry.resolve("jclouds:"+provider+(region != null ? ":"+region : ""), locationFlags);
+        Map namedProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties(null, namedLocation, properties);
+        Map<String,?> jcloudsProperties = MutableMap.<String,Object>builder().putAll(locationFlags).removeAll("named").putAll(namedProperties).build();
+
+        JcloudsLocation jcloudsLocation = (JcloudsLocation) registry.resolve("jclouds:"+provider+(region != null ? ":"+region : ""), jcloudsProperties);
 
         List<String> hostIdentifiers = WildcardGlobs.getGlobsAfterBraceExpansion("{"+hosts+"}",
                 true /* numeric */, /* no quote support though */ PhraseTreatment.NOT_A_SPECIAL_CHAR, PhraseTreatment.NOT_A_SPECIAL_CHAR);

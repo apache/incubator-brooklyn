@@ -128,8 +128,9 @@ public class ByonLocationResolver implements LocationResolver {
             machines.add(machine);
         }
         
-        Map<String,Object> flags = Maps.newLinkedHashMap();
-        flags.putAll(locationFlags);
+        Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties("byon", namedLocation, properties);
+        MutableMap<String, Object> flags = MutableMap.<String, Object>builder().putAll(filteredProperties).putAll(locationFlags).build();
+
         flags.put("machines", machines);
         if (user != null) flags.put("user", user);
         if (name != null) flags.put("name", name);

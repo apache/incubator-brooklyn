@@ -8,19 +8,28 @@ import org.slf4j.LoggerFactory;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.collect.ImmutableMap;
 
 @SuppressWarnings("serial")
 public class SingleMachineProvisioningLocation<T extends MachineLocation> extends FixedListMachineProvisioningLocation<T> {
 
     private static final Logger log = LoggerFactory.getLogger(SingleMachineProvisioningLocation.class);
     
-    private String location = null;
+    @SetFromFlag(nullable=false)
+    private String location;
+    
+    @SetFromFlag(nullable=false)
+    private Map<?,?> locationFlags;
+    
     private T singleLocation;
     private int referenceCount;
     private MachineProvisioningLocation<T> provisioningLocation;
 
-    @SuppressWarnings("rawtypes")
-    private final Map locationFlags;
+
+    public SingleMachineProvisioningLocation() {
+    }
 
     @SuppressWarnings("rawtypes")
     public SingleMachineProvisioningLocation(String location, Map locationFlags) {
@@ -41,15 +50,16 @@ public class SingleMachineProvisioningLocation<T extends MachineLocation> extend
         if (singleLocation == null) {
             if (provisioningLocation == null) {
                 provisioningLocation = (MachineProvisioningLocation) getManagementContext().getLocationRegistry().resolve(
-                    location);
+                    location, locationFlags);
             }
-            singleLocation = provisioningLocation.obtain(locationFlags);
+            singleLocation = provisioningLocation.obtain(ImmutableMap.of());
             inUse.add(singleLocation);
         }
         referenceCount++;
         return singleLocation;
     }
 
+    @Override
     public synchronized void release(T machine) {
         if (!machine.equals(singleLocation)) {
             throw new IllegalArgumentException("Invalid machine " + machine + " passed to release, expecting: " + singleLocation);
