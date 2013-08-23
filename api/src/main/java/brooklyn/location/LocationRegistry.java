@@ -14,12 +14,15 @@ public interface LocationRegistry {
 
     public Map<String,LocationDefinition> getDefinedLocations();
     
-    /** @deprecated since 0.6.0 @see #getDefinedLocationById(String) 
+    /**
+     * @deprecated since 0.6.0; use {@link #getDefinedLocationById(String)}
      * (ID should be explicit because this is usually *not* the method people want) */
     @Deprecated
     public LocationDefinition getDefinedLocation(String id);
+    
     /** returns a LocationDefinition given its ID (usually a random string), or null if none */
     public LocationDefinition getDefinedLocationById(String id);
+    
     /** returns a LocationDefinition given its name (e.g. for named locations, supply the bit after the "named:" prefix), 
      * or null if none */
     public LocationDefinition getDefinedLocationByName(String name);

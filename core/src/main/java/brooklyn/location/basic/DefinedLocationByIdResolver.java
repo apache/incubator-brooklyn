@@ -35,15 +35,16 @@ public class DefinedLocationByIdResolver implements LocationResolver {
         throw new UnsupportedOperationException("This class must have the RegistryLocationResolver.newLocationFromString method invoked");
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({ "rawtypes" })
     @Override
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         String id = spec;
         if (spec.toLowerCase().startsWith(ID+":")) {
             id = spec.substring( (ID+":").length() );
         }
-        LocationDefinition ld = registry.getDefinedLocation(id);
-        return ((BasicLocationRegistry)registry).resolveLocationDefinition(ld, locationFlags, id);
+        LocationDefinition ld = registry.getDefinedLocationById(id);
+        ld.getSpec();
+        return ((BasicLocationRegistry)registry).resolveLocationDefinition(ld, locationFlags, null);
     }
 
     @Override
@@ -55,7 +56,7 @@ public class DefinedLocationByIdResolver implements LocationResolver {
     @Override
     public boolean accepts(String spec, LocationRegistry registry) {
         if (BasicLocationRegistry.isResolverPrefixForSpec(this, spec, false)) return true;
-        if (registry.getDefinedLocation(spec)!=null) return true;
+        if (registry.getDefinedLocationById(spec)!=null) return true;
         return false;
     }
 

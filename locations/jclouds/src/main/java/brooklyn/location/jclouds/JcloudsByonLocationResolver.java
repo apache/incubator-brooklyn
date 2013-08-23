@@ -87,6 +87,8 @@ public class JcloudsByonLocationResolver implements LocationResolver {
         
         // prefer args map over location flags
         
+        String namedLocation = (String) locationFlags.get("named");
+
         String provider = argsMap.containsKey("provider") ? argsMap.get("provider") : (String)locationFlags.get("provider");
 
         String region = argsMap.containsKey("region") ? argsMap.get("region") : (String)locationFlags.get("region");

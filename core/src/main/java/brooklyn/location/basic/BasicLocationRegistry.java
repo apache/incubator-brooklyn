@@ -80,7 +80,7 @@ public class BasicLocationRegistry implements LocationRegistry {
     public LocationDefinition getDefinedLocation(String id) {
         return getDefinedLocationById(id);
     }
-    
+
     @Override
     public LocationDefinition getDefinedLocationById(String id) {
         return definedLocations.get(id);
@@ -263,12 +263,12 @@ public class BasicLocationRegistry implements LocationRegistry {
                 List<String> l = expandCommaSeparateLocations((String)id);
                 if (l.size()>1) id = l;
             } else if (id instanceof Iterable) {
-                log.warn("LocationRegistry got list of list of location strings, "+spec+"; flattening");
+                log.warn("Deprecated use of LocationRegistry got list of list of location strings, "+spec+"; flattening");
             }
             if (id instanceof String) {
                 result.add(resolve((String) id));
             } else if (id instanceof Iterable) {
-                result.addAll(getLocationsById((Iterable<?>) id));
+                result.addAll(resolve((Iterable<?>) id));
             } else if (id instanceof Location) {
                 result.add((Location) id);
             } else {
@@ -287,7 +287,7 @@ public class BasicLocationRegistry implements LocationRegistry {
     public Location resolveLocationDefinition(LocationDefinition ld, Map locationFlags, String optionalName) {
         MutableMap newLocationFlags = new MutableMap().add(locationFlags).add(ld.getConfig());
         if (optionalName==null && ld.getName()!=null) optionalName = ld.getName();
-        if (optionalName!=null) newLocationFlags.add("name", optionalName);
+        if (optionalName!=null) newLocationFlags.add("named", optionalName);
         try {
             return resolve(ld.getSpec(), newLocationFlags);
         } catch (Exception e) {

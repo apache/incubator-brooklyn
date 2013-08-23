@@ -50,26 +50,12 @@ public class LocationPropertiesFromBrooklynProperties {
      * Converts deprecated hyphenated properties to the non-deprecated camelCase format. 
      */
     public Map<String, Object> getLocationProperties(String provider, String namedLocation, Map<String, ?> properties) {
-        if (Strings.isNullOrEmpty(namedLocation) && Strings.isNullOrEmpty(provider)) {
-            throw new IllegalArgumentException("Neither cloud provider/API nor location name have been specified correctly");
-        }
-
         Map<String, Object> result = Maps.newHashMap();
         
-        if (!Strings.isNullOrEmpty(namedLocation)) {
-            String namedProvider = getNamedProvider(namedLocation, properties);
-            if (!Strings.isNullOrEmpty(provider)) {
-                if (!provider.equals(namedProvider)) throw new IllegalStateException("Conflicting configuration: provider="+provider+"; namedLocation="+namedLocation+"; namedProvider="+namedProvider);
-            } else if (Strings.isNullOrEmpty(namedProvider)) {
-                throw new IllegalStateException("Missing configuration: no named provider for named location "+namedLocation);
-            }
-            provider = namedProvider;
-        }
-        
         // named properties are preferred over providerOrApi properties
-        result.put("provider", provider);
+        if (!Strings.isNullOrEmpty(provider)) result.put("provider", provider);
         result.putAll(transformDeprecated(getGenericLocationSingleWordProperties(properties)));
-        result.putAll(transformDeprecated(getScopedLocationProperties(provider, properties)));
+        if (!Strings.isNullOrEmpty(provider)) result.putAll(transformDeprecated(getScopedLocationProperties(provider, properties)));
         if (!Strings.isNullOrEmpty(namedLocation)) result.putAll(transformDeprecated(getNamedLocationProperties(namedLocation, properties)));
         String brooklynDataDir = (String) properties.get(ConfigKeys.BROOKLYN_DATA_DIR.getName());
         if (brooklynDataDir != null && brooklynDataDir.length() > 0) {

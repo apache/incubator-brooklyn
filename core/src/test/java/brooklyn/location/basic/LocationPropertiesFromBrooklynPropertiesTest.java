@@ -86,20 +86,6 @@ public class LocationPropertiesFromBrooklynPropertiesTest {
     
 
     @Test
-    public void testInfersProviderFromNamedLocation() throws Exception {
-        String provider = null;
-        String namedLocation = "mynamed";
-        
-        Map<String, String> properties = Maps.newLinkedHashMap();
-        
-        properties.put("brooklyn.location.named.mynamed", "myprovider");
-        properties.put("brooklyn.location.myprovider.privateKeyFile", "privateKeyFile-inProviderSpecific");
-
-        Map<String, Object> conf = parser.getLocationProperties(provider, namedLocation, properties);
-        assertEquals(conf.get("privateKeyFile"), "privateKeyFile-inProviderSpecific");
-    }
-    
-    @Test
     public void testThrowsIfProviderDoesNotMatchNamed() throws Exception {
         String provider = "myprovider";
         String namedLocation = "mynamed";

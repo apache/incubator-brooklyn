@@ -84,6 +84,8 @@ public class ByonLocationResolver implements LocationResolver {
         
         // prefer args map over location flags
         
+        String namedLocation = (String) locationFlags.get("named");
+
         String name = argsMap.containsKey("name") ? argsMap.get("name") : (String)locationFlags.get("name");
         
         String hosts = argsMap.get("hosts");
