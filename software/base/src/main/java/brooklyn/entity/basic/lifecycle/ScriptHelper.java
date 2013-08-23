@@ -24,9 +24,11 @@ import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
@@ -282,18 +284,27 @@ public class ScriptHelper {
             }
             result = runner.execute(flags, lines, summary);
         } catch (RuntimeInterruptedException e) {
-            throw e;
+            throw logWithDetailsAndThrow(format("Execution failed, invocation error for %s: %s", summary, e.getMessage()), e);
         } catch (Exception e) {
-            throw new IllegalStateException(format("Execution failed, invocation error for %s: %s", summary, e.getMessage()), e);
+            throw logWithDetailsAndThrow(format("Execution failed, invocation error for %s: %s", summary, e.getMessage()), e);
         } finally {
             mutexRelease.run();
         }
         if (log.isTraceEnabled()) log.trace("finished executing: {} - result code {}", summary, result);
         
         if (!resultCodeCheck.apply(result)) {
-            throw new IllegalStateException(format("Execution failed, invalid result %s for %s", result, summary));
+            throw logWithDetailsAndThrow(format("Execution failed, invalid result %s for %s", result, summary), null);
         }
         return result;
+    }
+
+    protected RuntimeException logWithDetailsAndThrow(String message, Throwable optionalCause) {
+        log.warn(message+" (throwing)");
+        Streams.logStreamTail(log, "STDERR of problem in "+Tasks.current(), stderr, 1024);
+        Streams.logStreamTail(log, "STDOUT of problem in "+Tasks.current(), stdout, 1024);
+        Streams.logStreamTail(log, "STDIN of problem in "+Tasks.current(), Streams.byteArrayOfString(Strings.join(getLines(),"\n")), 4096);
+        if (optionalCause!=null) throw new IllegalStateException(message, optionalCause);
+        throw new IllegalStateException(message);
     }
 
     public Map getFlags() {

@@ -47,7 +47,9 @@ public class SystemProcessTaskFactory<T> extends AbstractProcessTaskFactory<Syst
         return new ExecWithLoggingHelpers() {
             @Override
             protected <U> U execWithTool(MutableMap<String, Object> props, Function<ShellTool, U> task) {
-                log.info("Ignoring properties "+props+" when running "+this);
+                // properties typically passed to both
+                if (log.isDebugEnabled() && props!=null && !props.isEmpty())
+                    log.debug("Ignoring flags "+props+" when running "+this);
                 return task.apply(new ProcessTool());
             }
             @Override

@@ -72,4 +72,46 @@ public class SystemTasksTest {
         Assert.assertEquals(t.getStdout().trim(), "hello world");
     }
 
+    @Test(groups="Integration")
+    public void testSubshellExitScriptDoesNotExit() {
+        checkSubshellExitDoesNotExit(taskSubshellExit().runAsScript());
+    }
+
+    @Test(groups="Integration")
+    public void testSubshellExitCommandDoesNotExit() {
+        checkSubshellExitDoesNotExit(taskSubshellExit().runAsCommand());
+    }
+
+    public ProcessTaskFactory<Integer> taskSubshellExit() {
+        return SystemTasks.exec("echo hello", "( exit 1 )", "echo bye code $?");
+    }
+
+    public void checkSubshellExitDoesNotExit(ProcessTaskFactory<Integer> task) {
+        ProcessTaskWrapper<Integer> t = submit(task);
+        t.block();
+        Assert.assertEquals(t.get(), (Integer)0);
+        Assert.assertTrue(t.getStdout().contains("bye code 1"), "stdout is: "+t.getStdout());
+    }
+
+    @Test(groups="Integration")
+    public void testGroupExitScriptDoesNotExit() {
+        checkGroupExitDoesExit(taskGroupExit().runAsScript());
+    }
+
+    @Test(groups="Integration")
+    public void testGroupExitCommandDoesNotExit() {
+        checkGroupExitDoesExit(taskGroupExit().runAsCommand());
+    }
+
+    public ProcessTaskFactory<Integer> taskGroupExit() {
+        return SystemTasks.exec("echo hello", "{ exit 1 ; }", "echo bye code $?");
+    }
+
+    public void checkGroupExitDoesExit(ProcessTaskFactory<Integer> task) {
+        ProcessTaskWrapper<Integer> t = submit(task);
+        t.block();
+        Assert.assertEquals(t.get(), (Integer)1);
+        Assert.assertFalse(t.getStdout().contains("bye"), "stdout is: "+t.getStdout());
+    }
+
 }

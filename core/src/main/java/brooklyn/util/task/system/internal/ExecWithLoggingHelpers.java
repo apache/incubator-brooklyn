@@ -34,7 +34,7 @@ public abstract class ExecWithLoggingHelpers {
         public int exec(ShellTool ssh, Map<String,?> flags, List<String> cmds, Map<String,?> env);
     }
 
-    protected abstract <T> T execWithTool(MutableMap<String, Object> copyOf, Function<ShellTool, T> function);
+    protected abstract <T> T execWithTool(MutableMap<String, Object> toolCreationAndConnectionProperties, Function<ShellTool, T> runMethodOnTool);
     
     public ExecWithLoggingHelpers() {
     }
@@ -70,7 +70,7 @@ public abstract class ExecWithLoggingHelpers {
 
         final ConfigBag execFlags = new ConfigBag().putAll(props);
         // some props get overridden in execFlags, so remove them from the ssh flags
-        final ConfigBag sshFlags = new ConfigBag().putAll(props).removeAll(LOG_PREFIX, STDOUT, STDERR);
+        final ConfigBag sshFlags = new ConfigBag().putAll(props).removeAll(LOG_PREFIX, STDOUT, STDERR, ShellTool.PROP_NO_EXTRA_OUTPUT);
 
         PipedOutputStream outO = null;
         PipedOutputStream outE = null;

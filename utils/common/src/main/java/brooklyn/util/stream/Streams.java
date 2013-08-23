@@ -64,4 +64,15 @@ public class Streams {
         return stream;
     }
 
+    public static boolean logStreamTail(Logger log, String message, ByteArrayOutputStream stream, int max) {
+        if (stream!=null && stream.size()>0) {
+            String streamS = stream.toString();
+            if (max>=0 && streamS.length()>max)
+                streamS = "... "+streamS.substring(streamS.length()-max);
+            log.info(message+":\n"+streamS);
+            return true;
+        }
+        return false;
+    }
+
 }

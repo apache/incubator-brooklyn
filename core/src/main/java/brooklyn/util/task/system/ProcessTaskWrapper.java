@@ -130,15 +130,11 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
             if (optionalCause!=null) throw new IllegalStateException(message, optionalCause);
             throw new IllegalStateException(message);
         }
-
+        
         protected void logProblemDetails(String streamName, ByteArrayOutputStream stream, int max) {
-            if (stream!=null && stream.size()>0) {
-                String stderrOut = stream.toString();
-                if (stderrOut.length()>max)
-                    stderrOut = "... "+stderrOut.substring(stderrOut.length()-max);
-                log.info(streamName+" for problem in "+Tasks.current()+":\n"+stderrOut);
-            }
+            Streams.logStreamTail(log, streamName+" for problem in "+Tasks.current(), stream, max);
         }
+
     }
     
     @Override
