@@ -9,6 +9,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.ssh.internal.PlainSshExecTaskFactory;
 import brooklyn.util.task.system.ProcessTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
@@ -50,9 +51,9 @@ public class SshTasks {
             .allowingNonZeroExitCode()
             .returning(new Function<ProcessTaskWrapper<?>,Boolean>() { public Boolean apply(ProcessTaskWrapper<?> task) {
                 if (task.getExitCode()==0) return true;
-                log.warn("Error setting up sudo for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+": "+
-                        Strings.trim(Strings.isNonBlank(task.getStderr()) ? task.getStderr() : task.getStdout()) + 
+                log.warn("Error setting up sudo for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+" "+
                         " (exit code "+task.getExitCode()+")");
+                Streams.logStreamTail(log, "STDERR of sudo setup problem", Streams.byteArrayOfString(task.getStderr()), 1024);
                 if (requireSuccess) {
                     throw new IllegalStateException("Passwordless sudo is required for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName());
                 }

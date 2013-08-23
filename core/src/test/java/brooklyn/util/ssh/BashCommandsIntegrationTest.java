@@ -13,6 +13,7 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -275,6 +276,20 @@ public class BashCommandsIntegrationTest {
         exec.submit(t).get();
         assertEquals(t.getExitCode(), (Integer)0);
         assertTrue(t.getStderr().equals(""), "Expected no stderr messages, but got: "+t.getStderr());
+    }
+
+    @Test(groups="Integration")
+    public void testRequireFailureExitsImmediately() throws Exception {
+        ProcessTaskWrapper<?> t = SshTasks.newSshExecTaskFactory(loc)
+            .add(BashCommands.requireTest("-f "+sourceNonExistantFile.getPath(),
+                    "The requested file does not exist"))
+            .add("echo shouldnae come here").newTask();
+
+        exec.submit(t).get();
+        assertNotEquals(t.getExitCode(), (Integer)0);
+        assertTrue(t.getStderr().contains("The requested file"), "Expected message in: "+t.getStderr());
+        assertTrue(t.getStdout().contains("The requested file"), "Expected message in: "+t.getStdout());
+        Assert.assertFalse(t.getStdout().contains("shouldnae"), "Expected message in: "+t.getStdout());
     }
 
 

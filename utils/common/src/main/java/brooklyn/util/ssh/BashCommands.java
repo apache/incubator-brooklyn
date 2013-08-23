@@ -24,7 +24,7 @@ public class BashCommands {
      * Uses {@link #installPackage} and accepts the same flags e.g. for apt, yum, rpm.
      */
     public static String installExecutable(Map<?,?> flags, String executable) {
-        return missing(executable, installPackage(flags, executable));
+        return onlyIfExecutableMissing(executable, installPackage(flags, executable));
     }
 
     public static String installExecutable(String executable) {
@@ -70,13 +70,13 @@ public class BashCommands {
     /** sudo to a given user and run the indicated command*/
     public static String sudoAsUser(String user, String command) {
         if (command == null) return null;
-        return format("( sudo -E -n -u %s -s -- %s )", user, command);
+        return format("{ sudo -E -n -u %s -s -- %s ; }", user, command);
     }
 
     /** executes a command, then as user tees the output to the given file. 
      * useful e.g. for appending to a file which is only writable by root or a priveleged user. */
     public static String executeCommandThenAsUserTeeOutputToFile(String commandWhoseOutputToWrite, String user, String file) {
-        return format("( %s | sudo -E -n -u %s -s -- tee -a %s )",
+        return format("{ %s | sudo -E -n -u %s -s -- tee -a %s ; }",
                 commandWhoseOutputToWrite, user, file);
     }
 
@@ -91,26 +91,49 @@ public class BashCommands {
      * (having a tty for sudo seems like another case of imaginary security which is just irritating.
      * like water restrictions at airport security.) */
     public static String dontRequireTtyForSudo() {
-        return file("/etc/sudoers", sudo("sed -i.brooklyn.bak s/.*requiretty.*/#brooklyn-removed-require-tty/ /etc/sudoers"));
+        return ifFileExistsElse0("/etc/sudoers", sudo("sed -i.brooklyn.bak 's/.*requiretty.*/#brooklyn-removed-require-tty/' /etc/sudoers"));
     }
 
     /**
      * Returns a command that runs only if the operating system is as specified; Checks {@code /etc/issue} for the specified name
+     * @deprecated since 0.6.0 very non-portable
      */
     public static String on(String osName, String command) {
         return format("( grep \"%s\" /etc/issue && %s )", osName, command);
     }
 
     /**
-     * Returns a command that runs only if the specified executable is in the path
+     * Returns a command that runs only if the specified file exists
+     * @deprecated since 0.6.0 use {@link #ifFileExistsElse0(String, String)} or {@link #ifFileExistsElse1(String, String)}   
      */
     public static String file(String path, String command) {
         return format("( test -f %s && %s )", path, command);
     }
 
+    // TODO a builder would be better than these ifBlahExistsElseBlah methods!
+    // (ideally formatting better also; though maybe SshTasks would be better?)
+    
+    /**
+     * Returns a command that runs only if the specified file (or link or directory) exists;
+     * if the command runs and fails that exit is preserved (but if the file does not exist exit code is zero).
+     * Executed as  { { not-file-exists && ok ; } || command ; }  for portability.
+     * ("if [ ... ] ; then xxx ; else xxx ; fi" syntax is not quite as portable, I seem to recall (not sure, Alex Aug 2013).) 
+     */
+    public static String ifFileExistsElse0(String path, String command) {
+        return alternativesGroup(
+                chainGroup(format("test ! -e %s", path), "true"),
+                command);
+    }
+    /** as {@link #ifFileExistsElse0(String, String)} but returns non-zero if the test fails (also returns non-zero if the command fails,
+     * so you can't tell the difference :( -- we need if ; then ; else ; fi semantics for that I think, but not sure how portable that is) */
+    public static String ifFileExistsElse1(String path, String command) {
+        return chainGroup(format("test -e %s", path), command);
+    }
+
     /**
      * Returns a command that runs only if the specified executable is in the path.
      * If command is null, no command runs (and the script component this creates will return true if the executable).
+     * @deprecated since 0.6.0 use {@link #ifExecutableElse0(String, String)}
      */
     public static String exists(String executable, String ...commands) {
         String extraCommandsAnded = "";
@@ -119,14 +142,42 @@ public class BashCommands {
     }
 
     /**
+     * Returns a command that runs only if the specified executable exists on the path (using `which`).
+     * if the command runs and fails that exit is preserved (but if the executable is not on the path exit code is zero).
+     * @see #ifFileExistsElse0(String, String) for implementation discussion, using <code>{ { test -z `which executable` && true ; } || command ; } 
+     */
+    public static String ifExecutableElse0(String executable, String command) {
+        return alternativesGroup(
+                chainGroup(format("test -z `which %s`", executable), "true"),
+                command);
+    }
+
+    /** as {@link #ifExecutableElse0(String, String)} but returns 1 if the test fails (also returns non-zero if the command fails) */
+    public static String ifExecutableElse1(String executable, String command) {
+        return chainGroup(format("which %s", executable), command);
+    }
+
+    /**
      * Returns a command that runs only if the specified executable is NOT in the path
+     * @deprecated since 0.6.0 use {@link #onlyIfExecutableMissing(String, String)}
      */
     public static String missing(String executable, String command) {
         return format("( which %s || %s )", executable, command);
     }
 
     /**
+     * Returns a command that runs only if the specified executable exists on the path (using `which`).
+     * if the command runs and fails that exit is preserved (but if the executable is not on the path exit code is zero).
+     * @see #ifFileExistsElse0(String, String) for implementation discussion, using <code>{ { test -z `which executable` && true ; } || command ; } 
+     */
+    public static String onlyIfExecutableMissing(String executable, String command) {
+        return alternativesGroup(format("which %s", executable), command);
+    }
+    
+    /**
      * Returns a sequence of chained commands that runs until one of them fails (i.e. joined by '&&')
+     * This currently runs as a subshell (so exits are swallowed) but behaviour may be changed imminently. 
+     * (Use {@link #chainGroup(Collection)} or {@link #chainSubshell(Collection)} to be clear.)
      */
     public static String chain(Collection<String> commands) {
         return "( " + Strings.join(commands, " && ") + " )";
@@ -135,6 +186,31 @@ public class BashCommands {
     /** Convenience for {@link #chain(Collection)} */
     public static String chain(String ...commands) {
         return "( " + Strings.join(commands, " && ") + " )";
+    }
+
+    /** As {@link #chain(Collection)}, but explicitly using { } grouping characters
+     * to ensure exits are propagated. */
+    public static String chainGroup(Collection<String> commands) {
+        // spaces required around curly braces
+        return format("{ " + Strings.join(commands, " && ") + " ; }");
+    }
+
+    /** As {@link #chainGroup(Collection)} */
+    public static String chainGroup(String ...commands) {
+        return format("{ " + Strings.join(commands, " && ") + " ; }");
+    }
+
+    /** As {@link #chain(Collection)}, but explicitly using ( ) grouping characters
+     * to ensure exits are caught. */
+    public static String chainSubshell(Collection<String> commands) {
+        // the spaces are not required, but it might be possible that a (( expr )) is interpreted differently
+        // (won't hurt to have the spaces in any case!) 
+        return format("( " + Strings.join(commands, " && ") + " )");
+    }
+
+    /** As {@link #chainSubshell(Collection)} */
+    public static String chainSubshell(String ...commands) {
+        return format("( " + Strings.join(commands, " && ") + "  )");
     }
 
     /**
@@ -148,15 +224,42 @@ public class BashCommands {
     }
     
     /**
-     * Returns a sequence of chained commands that runs until one of them succeeds (i.e. joined by '||')
+     * Returns a sequence of chained commands that runs until one of them succeeds (i.e. joined by '||').
+     * This currently runs as a subshell (so exits are swallowed) but behaviour may be changed imminently. 
+     * (Use {@link #alternativesGroup(Collection)} or {@link #alternativesSubshell(Collection)} to be clear.)
      */
     public static String alternatives(Collection<String> commands) {
         return format("( " + Strings.join(commands, " || ") + " )");
     }
 
-    /** Convenience for {@link #alternatives(Collection)} */
+    /** As {@link #alternatives(Collection)} */
     public static String alternatives(String ...commands) {
         return format("( " + Strings.join(commands, " || ") + " )");
+    }
+
+    /** As {@link #alternatives(Collection)}, but explicitly using { } grouping characters
+     * to ensure exits are propagated. */
+    public static String alternativesGroup(Collection<String> commands) {
+        // spaces required around curly braces
+        return format("{ " + Strings.join(commands, " || ") + " ; }");
+    }
+
+    /** As {@link #alternativesGroup(Collection)} */
+    public static String alternativesGroup(String ...commands) {
+        return format("{ " + Strings.join(commands, " || ") + " ; }");
+    }
+
+    /** As {@link #alternatives(Collection)}, but explicitly using ( ) grouping characters
+     * to ensure exits are caught. */
+    public static String alternativesSubshell(Collection<String> commands) {
+        // the spaces are not required, but it might be possible that a (( expr )) is interpreted differently
+        // (won't hurt to have the spaces in any case!) 
+        return format("( " + Strings.join(commands, " || ") + " )");
+    }
+
+    /** As {@link #alternativesSubshell(Collection)} */
+    public static String alternativesSubshell(String ...commands) {
+        return format("( " + Strings.join(commands, " || ") + "  )");
     }
 
     /** returns the pattern formatted with the given arg if the arg is not null, otherwise returns null */
@@ -167,6 +270,7 @@ public class BashCommands {
     
     /**
      * Returns a command for installing the given package.
+     * Warns, but does not fail or return non-zero if it ultimately fails.
      * <p/>
      * Flags can contain common overrides for deb, apt, yum, rpm and port
      * as the package names can be different for each of those:
@@ -174,6 +278,7 @@ public class BashCommands {
      * installPackage("libssl-devel", yum:"openssl-devel", apt:"openssl libssl-dev zlib1g-dev")
      * </pre>
      */
+    // TODO other variants, which fail if it can't install, or return non-zero (so callers can wrap in "ok" if it's not required)
     public static String installPackage(Map<?,?> flags, String packageDefaultName) {
         String ifmissing = (String) flags.get("onlyifmissing");
         
@@ -184,19 +289,19 @@ public class BashCommands {
         
         List<String> commands = new LinkedList<String>();
         if (ifmissing != null) commands.add(format("which %s", ifmissing));
-        commands.add(exists("apt-get",
+        commands.add(ifExecutableElse1("apt-get",
+                chainGroup(
                 "echo apt-get exists, doing update",
                 "export DEBIAN_FRONTEND=noninteractive",
                 sudo("apt-get update"), 
-                sudo(aptInstall)));
-        commands.add(exists("yum", sudo(yumInstall)));
-        commands.add(exists("brew", brewInstall));
-        commands.add(exists("port", sudo(portInstall)));
+                sudo(aptInstall))));
+        commands.add(ifExecutableElse1("yum", sudo(yumInstall)));
+        commands.add(ifExecutableElse1("brew", brewInstall));
+        commands.add(ifExecutableElse1("port", sudo(portInstall)));
         
-        String failure = warn("WARNING: no known/successful package manager to install " +
+        commands.add(warn("WARNING: no known/successful package manager to install " +
                 (packageDefaultName!=null ? packageDefaultName : flags.toString()) +
-                ", may fail subsequently");
-        commands.add(failure);
+                ", may fail subsequently"));
         return alternatives(commands);
     }
     
@@ -206,18 +311,18 @@ public class BashCommands {
 
     /** returns a command which logs a message to stdout and stderr then exits with the given error code */
     public static String fail(String message, int code) {
-        return chain(warn(message), "exit "+code);
+        return chainGroup(warn(message), "exit "+code);
     }
 
     /** requires the command to have a non-zero exit code; e.g.
      * <code>require("which foo", "Command foo must be found", 1)</code> */
     public static String require(String command, String failureMessage, int exitCode) {
-        return alternatives(command, fail(failureMessage, exitCode));
+        return alternativesGroup(command, fail(failureMessage, exitCode));
     }
 
     /** as {@link #require(String, String, int)} but returning the original exit code */
     public static String require(String command, String failureMessage) {
-        return alternatives(command, chain("EXIT_CODE=$?", warn(failureMessage), "exit $EXIT_CODE"));
+        return alternativesGroup(command, chainGroup("EXIT_CODE=$?", warn(failureMessage), "exit $EXIT_CODE"));
     }
 
     /** requires the test to pass, as valid bash `test` arguments; e.g.
