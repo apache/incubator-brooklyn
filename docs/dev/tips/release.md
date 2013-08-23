@@ -55,29 +55,8 @@ To publish:
 	* bump the snapshot version in brooklyn master to the next release
 
 
-## Preparing a Snapshot Release
-
-### Prepare a Release Branch
-
-{% highlight bash %}
-
-export BROOKLYN_DIR=/path/to/brooklyncentral-brooklyn
-export EXAMPLES_DIR=/path/to/brooklyncentral-brooklyn-examples
-export SITE_DIR=/path/to/brooklyncentral-brooklyncentral.github.com
-
-export SNAPSHOT_VERSION=0.6.0-SNAPSHOT
-export RELEASE_VERSION=0.6.0-M1
-
-cd $BROOKLYN_DIR
-git checkout -b $RELEASE_VERSION
-usage/scripts/change-version.sh $SNAPSHOT_VERSION $RELEASE_VERSION
-git commit -a -m "Changed version to $RELEASE_VERSION"
-git push -u central $RELEASE_VERSION
-
-{% endhighlight %}
 	
-
-### Deploying to Sonatype
+## Configuration 
 
 Your .m2/settings.xml must be configured with the right credentials for Sonatype
 
@@ -95,11 +74,77 @@ Your .m2/settings.xml must be configured with the right credentials for Sonatype
 		</server>
 	...
 	</servers>
-
-Some good tips are at:  https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide
 You must be configured to sign artifacts using PGP.
 
+If this is the first time you have used Sonatype, the [Sonatype - Maven Usage Guide](https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide) is required reading.  
+
+The code snippets below use the following variables:
+{% highlight bash %}
+
+export BROOKLYN_DIR=/path/to/brooklyncentral-brooklyn
+export EXAMPLES_DIR=/path/to/brooklyncentral-brooklyn-examples
+export SITE_DIR=/path/to/brooklyncentral-brooklyncentral.github.com
+
+export SNAPSHOT_VERSION=0.6.0-SNAPSHOT
+export RELEASE_VERSION=0.6.0-M1
+{% endhighlight %}
+
+
+## Preparing a Snapshot Release
+
+### Deploy to Sonatype
+
 Execute the following:
+{% highlight bash %}
+mvn -Dbrooklyn.deployTo=sonatype -DskipTests clean install deploy
+{% endhighlight %}
+
+### (Option) Publish snapshot docs.
+
+(Only required if there have been significant changes to docs or java docs.)
+
+{% highlight bash %}
+
+cd $BROOKLYN_DIR/docs
+git checkout master
+
+if [ ! -f $SITE_DIR/index.html ] ; then echo "could not find docs in $SITE_DIR" ; exit 1 ; fi
+
+# Build the docs
+_scripts/build.sh || { echo "failed to build docs" ; exit 1 ; }
+
+# Wipe any previous edition of the same version, replacing with new build.
+rm -rf $SITE_DIR/v/$SNAPSHOT_VERSION
+mkdir $SITE_DIR/v/$SNAPSHOT_VERSION
+cp -r _site/* $SITE_DIR/v/$SNAPSHOT_VERSION/
+
+# and push, causing GitHub to republish with updated /v/$SNAPSHOT_VERSION/
+pushd $SITE_DIR
+git add -A .
+git commit -m "Updated version docs for version $SNAPSHOT_VERSION"
+git push
+popd
+
+{% endhighlight %}
+
+
+
+## Preparing a (Milestone) Release
+
+### Prepare a Release Branch
+
+{% highlight bash %}
+
+cd $BROOKLYN_DIR
+git checkout -b $RELEASE_VERSION
+usage/scripts/change-version.sh $SNAPSHOT_VERSION $RELEASE_VERSION
+git commit -a -m "Changed version to $RELEASE_VERSION"
+git push -u upstream $RELEASE_VERSION
+
+{% endhighlight %}
+
+### Deploy to Sonatype, and Close the repo.
+
 {% highlight bash %}
 mvn -Dbrooklyn.deployTo=sonatype -DskipTests clean install deploy
 {% endhighlight %}
@@ -108,7 +153,7 @@ mvn -Dbrooklyn.deployTo=sonatype -DskipTests clean install deploy
 * 'Close' the repo
 * Email the closed repo address to brooklyn-dev list, have people download and confirm it works.
 
-### Update the Examples Repo Version Branch
+### Update the brooklyn-examples repo's vtersion Branch
 
 {% highlight bash %}
 
@@ -157,9 +202,9 @@ popd
 
 {% endhighlight %}
 	
-## Preparing a Full/Milestone Release
+## Preparing a Full Release
 
-Complete *all* above steps for a Snapshot release.
+Complete *all* above steps.
 
 ### Deploy to Maven Central
 
@@ -222,7 +267,7 @@ popd
 
 ### Announce
 * Email the Dev and Users mailing lists.
-* Tweet?
+* Tweet from [@brooklyncentral](https://twitter.com/brooklyncentral)
 
 ### Update Snapshot Version
 
@@ -234,6 +279,6 @@ cd $BROOKLYN_DIR
 git checkout master
 usage/scripts/change-version.sh $SNAPSHOT_VERSION $NEW_SNAPSHOT_VERSION
 git commit -a -m "Changed version to $NEW_SNAPSHOT_VERSION"
-git push -u central master
+git push -u upstream master
 
 {% endhighlight %}
