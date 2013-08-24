@@ -5,14 +5,14 @@ import java.util.Map;
 import org.testng.annotations.Test;
 
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.internal.ssh.SshToolPerformanceTest;
+import brooklyn.util.internal.ssh.SshToolAbstractPerformanceTest;
 
 /**
  * Test the performance of different variants of invoking the sshj tool.
  * 
  * Intended for human-invocation and inspection, to see which parts are most expensive.
  */
-public class SshCliToolPerformanceTest extends SshToolPerformanceTest {
+public class SshCliToolPerformanceTest extends SshToolAbstractPerformanceTest {
 
     @Override
     protected SshTool newSshTool(Map<String,?> flags) {

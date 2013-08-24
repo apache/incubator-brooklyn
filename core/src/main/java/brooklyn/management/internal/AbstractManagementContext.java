@@ -251,7 +251,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
                 return invokeEffectorMethodLocal(entity, eff, args);
             }
         } catch (Exception e) {
-            throw new ExecutionException("Error invoking "+eff+" on entity "+entity, e);
+            // don't need to attach any message or warning because the Effector impl hierarchy does that (see calls to EffectorUtils.handleException)
+            throw new ExecutionException(e);
         }
     }
 

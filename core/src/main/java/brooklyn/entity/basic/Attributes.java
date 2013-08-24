@@ -97,8 +97,13 @@ public interface Attributes {
     
     AttributeSensor<Lifecycle> SERVICE_STATE = Sensors.newSensor(Lifecycle.class,
             "service.state", "Expected lifecycle state of the service");
+
+    /*
+     * Other metadata (optional)
+     */
     
-	/** optional */
+    AttributeSensor<Integer> PID = Sensors.newIntegerSensor("pid", "Process ID for the previously launched instance");
+
     AttributeSensor<String> LOG_FILE_LOCATION = new BasicAttributeSensor<String>(
             String.class, "log.location", "Log file location");
 }

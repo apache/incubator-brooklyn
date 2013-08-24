@@ -106,6 +106,7 @@ public class SoftwareProcessEntityTest {
             LOG.info("Error during stop, after simulating error during start", e);
         }
         Assert.assertEquals(loc.getAvailable(), ImmutableSet.of(machine));
+        Entities.unmanage(entity);
     }
 
     @Test
@@ -126,6 +127,7 @@ public class SoftwareProcessEntityTest {
             IllegalStateException cause = Throwables2.getFirstThrowableOfType(e, IllegalStateException.class);
             if (cause == null || !cause.toString().contains("Simulating stop error")) throw e;
         }
+        Entities.unmanage(entity);
     }
 
     @ImplementedBy(MyServiceImpl.class)

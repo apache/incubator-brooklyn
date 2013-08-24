@@ -375,6 +375,7 @@ public class JmxHelper {
                 connector.close();
             } catch (Exception e) {
                 LOG.warn("Caught exception disconnecting from JMX at {} ({})", url, e.getMessage());
+                if (LOG.isDebugEnabled()) LOG.debug("Details for exception disconnecting JMX", e);
             } finally {
                 connector = null;
                 connection = null;

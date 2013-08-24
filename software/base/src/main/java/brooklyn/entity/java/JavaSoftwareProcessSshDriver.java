@@ -17,12 +17,13 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
@@ -286,7 +287,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                 
                 log.debug("installing java at " + entity + " @ " + getLocation() + ", using CommonCommands.installJava6");
                 result = newScript("INSTALL_OPENJDK").body.append(
-                        CommonCommands.installJava6()
+                        BashCommands.installJava6()
                         // TODO the following complains about yum-install not defined
                         // even though it is set as an alias (at the start of the first file)
                         //                            new ResourceUtils(this).getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
@@ -320,8 +321,14 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     
     @Override
     public void start() {
-        installJava();
-        installJmxSupport();
+        DynamicTasks.queue("install java)", new Runnable() { public void run() {
+            installJava(); }});
+            
+        if (isJmxEnabled()) {
+            DynamicTasks.queue("install jmx", new Runnable() { public void run() {
+                installJmxSupport(); }}); 
+        }
+        
         super.start();
     }
 

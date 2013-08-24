@@ -14,6 +14,7 @@ import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.management.LocationManager;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.WildcardGlobs;
@@ -238,12 +239,20 @@ implements MachineProvisioningLocation<T>, Closeable {
      * </pre>
      */
     public static class Builder {
+        LocationManager lm;
         String user;
         String privateKeyPassphrase;
         String privateKeyFile;
         String privateKeyData;
         File localTempDir;
 
+        public Builder(LocationManager lm) {
+            this.lm = lm;
+        }
+        /** @deprecated since 0.6.0 use {@link #build(LocationManager)} */ @Deprecated
+        public Builder() {
+        }
+        
         List machines = Lists.newArrayList();
         public Builder user(String user) {
             this.user = user;
@@ -288,8 +297,14 @@ implements MachineProvisioningLocation<T>, Closeable {
                 addrs.addAll(WildcardGlobs.getGlobsAfterBraceExpansion("{"+address+"}",
                         true /* numeric */, /* no quote support though */ PhraseTreatment.NOT_A_SPECIAL_CHAR, PhraseTreatment.NOT_A_SPECIAL_CHAR));
             for (String addr: addrs)
-                add(new SshMachineLocation(makeConfig(addr))); 
+                add(createMachine(addr)); 
             return this;
+        }
+        protected SshMachineLocation createMachine(String addr) {
+            if (lm==null)
+                return new SshMachineLocation(makeConfig(addr));
+            else
+                return lm.createLocation(makeConfig(addr), SshMachineLocation.class);
         }
         private Map makeConfig(String address) {
             String user = this.user;
@@ -308,8 +323,10 @@ implements MachineProvisioningLocation<T>, Closeable {
             if (truth(localTempDir)) config.put("localTempDir", localTempDir);
             return config;
         }
-        public FixedListMachineProvisioningLocation build() {
-            return new FixedListMachineProvisioningLocation(MutableMap.builder()
+        @SuppressWarnings("unchecked")
+        public FixedListMachineProvisioningLocation<SshMachineLocation> build() {
+            if (lm==null)
+                return new FixedListMachineProvisioningLocation<SshMachineLocation>(MutableMap.builder()
                     .putIfNotNull("machines", machines)
                     .putIfNotNull("user", user)
                     .putIfNotNull("privateKeyPassphrase", privateKeyPassphrase)
@@ -317,6 +334,16 @@ implements MachineProvisioningLocation<T>, Closeable {
                     .putIfNotNull("privateKeyData", privateKeyData)
                     .putIfNotNull("localTempDir", localTempDir)
                     .build());
+            else
+                return lm.createLocation(MutableMap.builder()
+                    .putIfNotNull("machines", machines)
+                    .putIfNotNull("user", user)
+                    .putIfNotNull("privateKeyPassphrase", privateKeyPassphrase)
+                    .putIfNotNull("privateKeyFile", privateKeyFile)
+                    .putIfNotNull("privateKeyData", privateKeyData)
+                    .putIfNotNull("localTempDir", localTempDir)
+                    .build(), 
+                FixedListMachineProvisioningLocation.class);
         }        
     }
 }

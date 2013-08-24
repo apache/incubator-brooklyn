@@ -9,6 +9,6 @@ public class ActivityResourceTest extends BrooklynRestResourceTest {
   protected void setUpResources() throws Exception {
   }
 
-  // TODO tests for activity resource
+  // TODO tests for activity resource, including streams
 
 }

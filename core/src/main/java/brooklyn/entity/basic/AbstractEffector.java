@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
-import brooklyn.entity.basic.EffectorTasks.EffectorTaskFactory;
+import brooklyn.entity.effector.EffectorBase;
+import brooklyn.entity.effector.EffectorWithBody;
+import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.management.Task;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.config.ConfigBag;
@@ -49,6 +51,7 @@ public abstract class AbstractEffector<T> extends EffectorBase<T> implements Eff
     }
     
     /** not meant for overriding; subclasses should override the abstract {@link #call(Entity, Map)} method in this class */
+    @Override
     public final EffectorTaskFactory<T> getBody() {
         return new EffectorTaskFactory<T>() {
             @Override
@@ -56,7 +59,7 @@ public abstract class AbstractEffector<T> extends EffectorBase<T> implements Eff
                 return new BasicTask<T>(
                         getFlagsForTaskInvocationAt(entity),
                 new Callable<T>() {
-                    public T call() {
+                    @Override public T call() {
                         return AbstractEffector.this.call(parameters.getAllConfig(), entity);
                     }
                 });

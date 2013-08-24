@@ -32,7 +32,8 @@ public class LocalhostPropertiesFromBrooklynProperties extends LocationPropertie
         if (!Strings.isNullOrEmpty(namedLocation)) {
             String namedProvider = getNamedProvider(namedLocation, properties);
             if (!Strings.isNullOrEmpty(provider)) {
-                if (!provider.equals(namedProvider)) throw new IllegalStateException("Conflicting configuration: provider="+provider+"; namedLocation="+namedLocation+"; namedProvider="+namedProvider);
+                if (namedProvider!=null && !provider.equals(namedProvider)) 
+                    throw new IllegalStateException("Conflicting configuration: provider="+provider+"; namedLocation="+namedLocation+"; namedProvider="+namedProvider);
             } else if (Strings.isNullOrEmpty(namedProvider)) {
                 throw new IllegalStateException("Missing configuration: no named provider for named location "+namedLocation);
             }

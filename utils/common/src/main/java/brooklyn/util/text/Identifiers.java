@@ -169,5 +169,10 @@ public class Identifiers {
             if (validSubsequentChars.indexOf(token.charAt(i))==-1) return false;
         return true;
     }
+
+    /** changes 'token' to a string which is valid in java, but resembles the original */
+    public static String makeValidJavaToken(String token) {
+        return Strings.makeValidJavaName(token);
+    }
     
 }

@@ -12,7 +12,7 @@ import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 
 
 public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver {
@@ -46,8 +46,8 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName("jetty-"+getVersion());
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
-        commands.add(CommonCommands.INSTALL_ZIP);
+        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.add(BashCommands.INSTALL_ZIP);
         commands.add("unzip "+saveAs);
 
         newScript(INSTALLING).

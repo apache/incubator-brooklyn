@@ -1,7 +1,5 @@
 package brooklyn.entity.basic;
 
-import java.util.Collection;
-
 import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.entity.trait.Startable;
 
@@ -33,21 +31,22 @@ public interface SoftwareProcessDriver extends EntityDriver {
     void rebind();
 
     /**
-     * @see Startable#start(Collection)
+     * Performs software start (or queues tasks to do this)
      */
     void start();
 
     /**
+     * Performs software restart (or queues tasks to do this); implementations should update SERVICE_STATE for STOPPING and STARTING
+     * as appropriate (but framework will set RUNNING afterwards)
+     * @see Startable#restart()
+     */
+    void restart();
+    
+    /**
+     * Performs software stop (or queues tasks to do this) 
      * @see Startable#stop()
      */
     void stop();
-
-    /**
-     * @see Startable#restart()
-     * 
-     * Unlike the other methods, the driver here is responsible for updating the SERVICE_STATE sensor.
-     */
-    void restart();
     
     /**
      * Kills the process, ungracefully and immediately where possible (e.g. with `kill -9`).

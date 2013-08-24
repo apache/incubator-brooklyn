@@ -31,6 +31,7 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 import brooklyn.util.exceptions.CompoundRuntimeException;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;
@@ -297,8 +298,8 @@ public class BrooklynLauncher {
                     LOG.info("Starting brooklyn application {} in location{} {}", new Object[] { app, locations.size()!=1?"s":"", locations });
                     ((Startable)app).start(locations);
                 } catch (Exception e) {
-                    LOG.error("Error starting "+app+": "+e, e);
-                    appExceptions.add(e);
+                    LOG.error("Error starting "+app+": "+Exceptions.collapseText(e), Exceptions.getFirstInteresting(e));
+                    appExceptions.add(Exceptions.collapse(e));
                     
                     if (Thread.currentThread().isInterrupted()) {
                         LOG.error("Interrupted while starting applications; aborting");

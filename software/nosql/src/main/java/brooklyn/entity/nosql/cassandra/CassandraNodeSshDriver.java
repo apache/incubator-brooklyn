@@ -22,7 +22,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -77,8 +77,8 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-cassandra-%s", getVersion()));
         
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
-                .add(CommonCommands.INSTALL_TAR)
+                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .add(BashCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .build();
 

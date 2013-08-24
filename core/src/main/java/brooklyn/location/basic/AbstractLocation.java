@@ -112,6 +112,9 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
         
         if (_legacyConstruction) {
             LOG.warn("Deprecated use of old-style location construction for "+getClass().getName()+"; instead use LocationManager().createLocation(spec)");
+            if (LOG.isDebugEnabled())
+                LOG.debug("Source of use of old-style location construction", new Throwable("Source of use of old-style location construction"));
+            
             configure(properties);
             
             boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));

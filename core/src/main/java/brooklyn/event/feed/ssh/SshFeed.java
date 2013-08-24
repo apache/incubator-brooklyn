@@ -13,16 +13,19 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
+import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
@@ -139,9 +142,17 @@ public class SshFeed extends AbstractFeed {
     // Treat as immutable once built
     private final SetMultimap<SshPollIdentifier, SshPollConfig<?>> polls = HashMultimap.<SshPollIdentifier,SshPollConfig<?>>create();
     
+    public static SshMachineLocation getMachineOfEntity(Entity entity) {
+        if (entity.getLocations()==null || entity.getLocations().size()!=1)
+            return null;
+        Location l = Iterables.getOnlyElement( entity.getLocations() );
+        if (l instanceof SshMachineLocation) return (SshMachineLocation)l;
+        return null;
+    }
+
     protected SshFeed(Builder builder) {
         super(builder.entity);
-        machine = checkNotNull(builder.machine, "machine");
+        machine = checkNotNull(builder.machine != null ? builder.machine : getMachineOfEntity(builder.entity), "machine");
         
         for (SshPollConfig<?> config : builder.polls) {
             SshPollConfig<?> configCopy = new SshPollConfig(config);

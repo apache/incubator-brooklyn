@@ -297,7 +297,10 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     
     @Override
     public AbstractEntity configure(Map flags) {
-        assertNotYetManaged();
+        if (!inConstruction && getManagementSupport().isDeployed()) {
+            LOG.warn("bulk/flag configuration being made to {} after deployment: may not be supported in future versions ({})", 
+                    new Object[] { this, flags });
+        }
         // TODO use a config bag instead
 //        ConfigBag bag = new ConfigBag().putAll(flags);
         
@@ -779,36 +782,31 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         return configsInternal.getConfig(key, defaultValue);
     }
 
-    /**
-     * @deprecated since 0.6; use assertNotYetManaged
-     */
-    @Deprecated
-    protected void assertNotYetOwned() {
-        assertNotYetManaged();
-    }
-    
-    protected void assertNotYetManaged() {
+    @SuppressWarnings("unchecked")
+    private <T> T setConfigInternal(ConfigKey<T> key, Object val) {
         if (!inConstruction && getManagementSupport().isDeployed()) {
-            LOG.warn("configuration being made to {} after deployment; may not be supported in future versions", this);
+            // previously we threw, then warned, but it is still quite common;
+            // so long as callers don't expect miracles, it should be fine.
+            // i (Alex) think the way to be stricter about this (if that becomes needed) 
+            // would be to introduce a 'mutable' field on config keys
+            LOG.debug("configuration being made to {} after deployment: {} = {}; change may not be visible in other contexts", 
+                    new Object[] { this, key, val });
         }
-        //throw new IllegalStateException("Cannot set configuration "+key+" on active entity "+this)
+        return (T) configsInternal.setConfig(key, val);
     }
 
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
-        assertNotYetManaged();
-        return (T) configsInternal.setConfig(key, val);
+        return setConfigInternal(key, val);
     }
 
     @Override
     public <T> T setConfig(ConfigKey<T> key, Task<T> val) {
-        assertNotYetManaged();
-        return (T) configsInternal.setConfig(key, val);
+        return setConfigInternal(key, val);
     }
 
     public <T> T setConfig(ConfigKey<T> key, DeferredSupplier val) {
-        assertNotYetManaged();
-        return (T) configsInternal.setConfig(key, val);
+        return setConfigInternal(key, val);
     }
 
     @Override

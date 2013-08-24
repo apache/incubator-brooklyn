@@ -1,10 +1,10 @@
 package brooklyn.entity.database.mysql;
 
-import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.ok;
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.ssh.BashCommands.downloadUrlAs;
+import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.ok;
 import static java.lang.String.format;
 
 import java.io.InputStreamReader;
@@ -18,13 +18,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails.OsVersions;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.ComparableVersion;
 import brooklyn.util.text.Strings;
 
@@ -85,15 +86,15 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public void install() {
         //mysql-${version}-${driver.osTag}.tar.gz
         
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(
+        DownloadResolver resolver = ((EntityInternal)entity).getManagementContext().getEntityDownloadsManager().newDownloader(
                 this, ImmutableMap.of("filename", getInstallFilename()));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         _expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("mysql-%s-%s", getVersion(), getOsTag()));
         
         List<String> commands = new LinkedList<String>();
-        commands.add(CommonCommands.INSTALL_TAR);
-        commands.add(CommonCommands.INSTALL_CURL);
+        commands.add(BashCommands.INSTALL_TAR);
+        commands.add(BashCommands.INSTALL_CURL);
         commands.add("echo installing extra packages");
         commands.add(installPackage(ImmutableMap.of("yum", "libgcc_s.so.1"), null));
         commands.add(installPackage(ImmutableMap.of("yum", "libaio.so.1 libncurses.so.5", "apt", "libaio1 libaio-dev"), null));

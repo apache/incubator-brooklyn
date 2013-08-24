@@ -43,8 +43,7 @@ public class BasicStartableImpl extends AbstractEntity implements BasicStartable
                 l2 = filter.filterForContext(new ArrayList<Location>(locations), entity);
                 log.debug("Child "+entity+" of "+this+" being started in filtered location list: "+l2);
             }
-            tasks.add( getManagementSupport().getExecutionContext().submit(
-                    Entities.invokeEffectorWithArgs(this, entity, Startable.START, l2)) );
+            tasks.add( Entities.invokeEffectorWithArgs(this, entity, Startable.START, l2) );
         }
         for (Task<?> t: tasks) t.getUnchecked();
     }

@@ -45,7 +45,7 @@ public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
 
     @Override
     public String toString() {
-        return name!=null ? "SingleThreadedExecutor["+name+"]" : super.toString();
+        return name!=null ? "SingleThreadedScheduler["+name+"]" : super.toString();
     }
     
     @Override
@@ -61,7 +61,7 @@ public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
             WrappingFuture<T> f = new WrappingFuture<T>();
             order.add(new QueuedSubmission<T>(c, f));
             int size = order.size();
-            if (size>0 && (size == 10 || (size<=500 && (size%100)==0) || (size%1000)==0) && size!=lastSizeWarn) {
+            if (size>0 && (size == 50 || (size<=500 && (size%100)==0) || (size%1000)==0) && size!=lastSizeWarn) {
                 LOG.warn("{} is backing up, {} tasks queued", this, size);
                 lastSizeWarn = size;
             }

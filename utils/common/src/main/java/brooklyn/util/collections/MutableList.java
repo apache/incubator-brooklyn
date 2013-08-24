@@ -18,18 +18,11 @@ public class MutableList<V> extends ArrayList<V> {
         return result;
     }
     
-    public static <V> MutableList<V> of(V v1, V v2) {
+    public static <V> MutableList<V> of(V v1, V v2, V ...vv) {
         MutableList<V> result = new MutableList<V>();
         result.add(v1);
         result.add(v2);
-        return result;
-    }
-    
-    public static <V> MutableList<V> of(V v1, V v2, V v3) {
-        MutableList<V> result = new MutableList<V>();
-        result.add(v1);
-        result.add(v2);
-        result.add(v3);
+        for (V v: vv) result.add(v);
         return result;
     }
 
@@ -114,4 +107,15 @@ public class MutableList<V> extends ArrayList<V> {
             return ImmutableList.copyOf(result);
         }
     }
+    
+    public MutableList<V> append(V ...items) {
+        for (V item: items) add(item);
+        return this;
+    }
+
+    public MutableList<V> appendAll(Iterable<? extends V> items) {
+        for (V item: items) add(item);
+        return this;
+    }
+
 }

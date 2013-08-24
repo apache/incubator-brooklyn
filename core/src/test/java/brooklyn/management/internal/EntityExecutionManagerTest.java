@@ -54,6 +54,7 @@ public class EntityExecutionManagerTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
+        app = null;
     }
 
     @Test
@@ -74,8 +75,7 @@ public class EntityExecutionManagerTest {
         assertEquals(tasks, ImmutableList.of(task));
     }
     
-    // FIXME 14 Aug 2013, how is task tag GC triggered? why is it not happening!?!
-    @Test(enabled=false)
+    @Test
     public void testUnmanagedEntityCanBeGcedEvenIfPreviouslyTagged() throws Exception {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         e = app.createAndManageChild(EntitySpec.create(TestEntity.class));

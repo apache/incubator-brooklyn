@@ -32,11 +32,12 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -265,11 +266,13 @@ public class BasicExecutionManager implements ExecutionManager {
     public Task<?> submit(Callable c) { return submit(new LinkedHashMap(1), c); }
     public <T> Task<T> submit(Map<?,?> flags, Callable<T> c) { return submit(flags, new BasicTask<T>(flags, c)); }
 
-    public <T> Task<T> submit(Task<T> t) { return submit(new LinkedHashMap(1), t); }
-    public <T> Task<T> submit(Map<?,?> flags, Task<T> task) {
+    public <T> Task<T> submit(TaskAdaptable<T> t) { return submit(new LinkedHashMap(1), t); }
+    public <T> Task<T> submit(Map<?,?> flags, TaskAdaptable<T> task) {
+        if (!(task instanceof Task))
+            task = task.asTask();
         synchronized (task) {
-            if (((TaskInternal<?>)task).getResult()!=null) return task;
-            return submitNewTask(flags, task);
+            if (((TaskInternal<?>)task).getResult()!=null) return (Task<T>)task;
+            return submitNewTask(flags, (Task<T>) task);
         }
     }
 
@@ -312,7 +315,7 @@ public class BasicExecutionManager implements ExecutionManager {
 					    result = oldJob.call();
 					} catch (Exception e) {
 					    log.warn("Error executing "+oldJob+" ("+task.getDescription()+")", e);
-					    throw Throwables.propagate(e);
+					    throw Exceptions.propagate(e);
 				    }
 					task.runCount++;
 					if (task.period!=null && !task.isCancelled()) {
@@ -373,7 +376,7 @@ public class BasicExecutionManager implements ExecutionManager {
                     if (log.isTraceEnabled())
                         log.trace("Trace for exception running task "+task+" (rethrowing): "+error.getMessage(), error);
                 }
-                throw Throwables.propagate(error);
+                throw Exceptions.propagate(error);
             }
             return result;
           } finally {
@@ -517,9 +520,9 @@ public class BasicExecutionManager implements ExecutionManager {
             try {
                 setTaskPreprocessorForTag(tag, preprocessor.newInstance());
             } catch (InstantiationException e) {
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             } catch (IllegalAccessException e) {
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             }
         }
     }
@@ -580,9 +583,9 @@ public class BasicExecutionManager implements ExecutionManager {
                 if (schedulerI instanceof CanSetName) ((CanSetName)schedulerI).setName(""+tag);
                 setTaskSchedulerForTag(tag, schedulerI);
             } catch (InstantiationException e) {
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             } catch (IllegalAccessException e) {
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             }
         }
     }

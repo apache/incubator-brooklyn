@@ -12,8 +12,11 @@ import javax.annotation.Nullable;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 public class Strings {
 
@@ -513,12 +516,19 @@ public class Strings {
         return result.toString();
     }
 
+    public static String trim(String s) {
+        if (s==null) return null;
+        return s.trim();
+    }
+
     public static String trimEnd(String s) {
+        if (s==null) return null;
         return ("a"+s).trim().substring(1);
     }
 
     /** returns up to maxlen characters from the start of s */
     public static String maxlen(String s, int maxlen) {
+        if (s==null) return null;
         return s.substring(0, Math.min(s.length(), maxlen));
     }
 
@@ -573,6 +583,10 @@ public class Strings {
     /** returns a configurable shortener */
     public static StringShortener shortener() {
         return new StringShortener();
+    }
+
+    public static Supplier<String> toStringSupplier(Object src) {
+        return Suppliers.compose(Functions.toStringFunction(), Suppliers.ofInstance(src));
     }
 
     /** wraps a call to {@link String#format(String, Object...)} in a toString, i.e. using %s syntax,

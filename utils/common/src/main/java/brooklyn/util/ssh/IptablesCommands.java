@@ -1,7 +1,7 @@
 package brooklyn.util.ssh;
 
-import static brooklyn.util.ssh.CommonCommands.chain;
-import static brooklyn.util.ssh.CommonCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.chain;
+import static brooklyn.util.ssh.BashCommands.sudo;
 
 import com.google.common.collect.ImmutableList;
 

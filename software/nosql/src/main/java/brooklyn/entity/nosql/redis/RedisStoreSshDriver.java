@@ -10,7 +10,7 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
 
@@ -38,8 +38,8 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("redis-%s", getVersion()));
 
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
-                .add(CommonCommands.INSTALL_TAR)
+                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .add(BashCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .add(format("cd redis-%s", getVersion()))
                 .add("make clean && make")

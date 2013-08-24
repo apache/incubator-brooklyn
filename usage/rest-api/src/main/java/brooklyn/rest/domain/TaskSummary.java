@@ -34,6 +34,7 @@ public class TaskSummary {
   private final LinkWithMetadata blockingTask;
   private final String blockingDetails;
   private final String detailedStatus;
+  private final Map<String, LinkWithMetadata> streams;
   private final Map<String, URI> links;
   
   public TaskSummary(
@@ -52,6 +53,7 @@ public class TaskSummary {
           @JsonProperty("blockingTask") LinkWithMetadata blockingTask,
           @JsonProperty("blockingDetails") String blockingDetails,
           @JsonProperty("detailedStatus") String detailedStatus,
+          @JsonProperty("streams") Map<String, LinkWithMetadata> streams,
           @JsonProperty("links") Map<String, URI> links) {
     this.id = id;
     this.displayName = displayName;
@@ -68,6 +70,7 @@ public class TaskSummary {
     this.blockingTask = blockingTask;
     this.submittedByTask = submittedByTask;
     this.detailedStatus = detailedStatus;
+    this.streams = streams;
     this.links = ImmutableMap.copyOf(links);
 }
 
@@ -138,6 +141,10 @@ public class TaskSummary {
 
   public String getDetailedStatus() {
       return detailedStatus;
+  }
+  
+  public Map<String, LinkWithMetadata> getStreams() {
+      return streams;
   }
 
   public Map<String, URI> getLinks() {

@@ -10,6 +10,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxying.EntitySpec
@@ -18,7 +19,7 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.EntityTestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestJavaWebAppEntity
-import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableMap
 import brooklyn.util.internal.TimeExtras
 
 import com.google.common.collect.Iterables
@@ -46,6 +47,18 @@ public class DynamicWebAppClusterTest {
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
+    @Test
+    public void testTestJWAEntity() {
+        Entity test = app.createAndManageChild(EntitySpec.create(Entity.class, TestJavaWebAppEntity.class))
+        try {
+            test.invoke(Startable.START, [locations:[]]).get()
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw t;
+        }
+//        ((Startable)test).start([])
+    }
+    
     @Test
     public void testRequestCountAggregation() {
         DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)

@@ -3,6 +3,8 @@ package brooklyn.entity.basic.lifecycle;
 import java.util.List;
 import java.util.Map;
 
+/** @deprecated in 0.6.0, see NaiveScriptRunner from software-base project */
+@Deprecated
 public interface ScriptRunner {
 
     /** Runs a script and returns the result code */

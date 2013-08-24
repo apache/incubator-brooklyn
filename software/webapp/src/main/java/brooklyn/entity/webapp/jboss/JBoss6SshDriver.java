@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.net.Networking;
+import brooklyn.util.ssh.BashCommands;
 
 public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver {
 
@@ -79,8 +79,8 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         // overwrite interrupts the installer.
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
-        commands.add(CommonCommands.installExecutable("unzip"));
+        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.add(BashCommands.INSTALL_UNZIP);
         commands.add(format("unzip -o %s",saveAs));
 
         newScript(INSTALLING).

@@ -122,7 +122,7 @@ public class BasicPool<T> implements Pool<T> {
     }
 
     @Override
-    public <R> R exec(Function<T,R> receiver) {
+    public <R> R exec(Function<? super T,R> receiver) {
         Lease<T> lease = leaseObject();
         try {
             if (LOG.isTraceEnabled()) LOG.trace("{} executing {} with leasee {}", new Object[] {this, receiver, lease.leasedObject()});

@@ -65,6 +65,7 @@ public class FeedConfig<V, T, This extends FeedConfig<V,T,This>> {
         return onexception;
     }
 
+    /** sets the predicate used to check whether a feed run is successful */
     public This checkSuccess(Predicate<? super V> val) {
         this.checkSuccess = checkNotNull(val, "checkSuccess");
         return self();

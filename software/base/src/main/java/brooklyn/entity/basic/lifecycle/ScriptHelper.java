@@ -4,10 +4,12 @@ import static java.lang.String.format;
 import groovy.lang.Closure;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
@@ -15,11 +17,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.management.ExecutionContext;
+import brooklyn.management.Task;
+import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
+import brooklyn.util.stream.Streams;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 
@@ -27,7 +38,7 @@ public class ScriptHelper {
 
     public static final Logger log = LoggerFactory.getLogger(ScriptHelper.class);
 
-    protected final ScriptRunner runner;
+    protected final NaiveScriptRunner runner;
     public final String summary;
 
     public final ScriptPart header = new ScriptPart(this);
@@ -38,10 +49,12 @@ public class ScriptHelper {
     protected Predicate<? super Integer> resultCodeCheck = Predicates.alwaysTrue();
     protected Predicate<? super ScriptHelper> executionCheck = Predicates.alwaysTrue();
     
+    protected boolean isTransient = false;
     protected boolean gatherOutput = false;
     protected ByteArrayOutputStream stdout, stderr;
+    protected Task<Integer> task;
 
-    public ScriptHelper(ScriptRunner runner, String summary) {
+    public ScriptHelper(NaiveScriptRunner runner, String summary) {
         this.runner = runner;
         this.summary = summary;
     }
@@ -192,7 +205,66 @@ public class ScriptHelper {
         return this;
     }
     
+    /** indicates explicitly that the task can be safely forgotten about after it runs; useful for things like
+     * check_running which run repeatedly */
+    public void setTransient() {
+        isTransient = true;
+    }
+
+    /** creates a task which will execute this script; note this can only be run once per instance of this class */
+    public synchronized Task<Integer> newTask() {
+        if (task!=null) throw new IllegalStateException("task can only be generated once");
+        TaskBuilder<Integer> tb = Tasks.<Integer>builder().name("ssh: "+summary).body(
+                new Callable<Integer>() {
+                    public Integer call() throws Exception {
+                        return executeInternal();
+                    }
+                });
+        
+        try {
+            ByteArrayOutputStream stdin = new ByteArrayOutputStream();
+            for (String line: getLines()) {
+                stdin.write(line.getBytes());
+                stdin.write("\n".getBytes());
+            }
+            tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDIN, stdin));
+        } catch (IOException e) {
+            log.warn("Error registering stream "+BrooklynTasks.STREAM_STDIN+" on "+tb+": "+e, e);
+        }
+        if (gatherOutput) {
+            stdout = new ByteArrayOutputStream();
+            tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDOUT, stdout));
+            stderr = new ByteArrayOutputStream();
+            tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDERR, stderr));
+        }
+        task = tb.build();
+        if (isTransient) BrooklynTasks.setTransient(task);
+        return task;
+    }
+    
+    /** returns the task, if it has been constructed, or null; use {@link #newTask()} to build 
+     * (if it is null and you need a task) */
+    public Task<Integer> peekTask() {
+        return task;
+    }
+
+    /** queues the task for execution if we are in a {@link TaskQueueingContext} (e.g. EffectorTaskFactory); 
+     * or if we aren't in a queueing context, it will submit the task (assuming there is an {@link ExecutionContext}
+     * _and_ block until completion, throwing on error */
+    @Beta
+    public Task<Integer> queue() {
+        return DynamicTasks.queueIfPossible(newTask()).orSubmitAndBlock().getTask();
+    }
+    
     public int execute() {
+        if (DynamicTasks.getTaskQueuingContext()!=null) {
+            return queue().getUnchecked();
+        } else {
+            return executeInternal();
+        }
+    }
+    
+    public int executeInternal() {
         if (!executionCheck.apply(this)) {
             return 0;
         }
@@ -212,18 +284,27 @@ public class ScriptHelper {
             }
             result = runner.execute(flags, lines, summary);
         } catch (RuntimeInterruptedException e) {
-            throw e;
+            throw logWithDetailsAndThrow(format("Execution failed, invocation error for %s: %s", summary, e.getMessage()), e);
         } catch (Exception e) {
-            throw new IllegalStateException(format("Execution failed, invocation error for %s: %s", summary, e.getMessage()), e);
+            throw logWithDetailsAndThrow(format("Execution failed, invocation error for %s: %s", summary, e.getMessage()), e);
         } finally {
             mutexRelease.run();
         }
         if (log.isTraceEnabled()) log.trace("finished executing: {} - result code {}", summary, result);
         
         if (!resultCodeCheck.apply(result)) {
-            throw new IllegalStateException(format("Execution failed, invalid result %s for %s", result, summary));
+            throw logWithDetailsAndThrow(format("Execution failed, invalid result %s for %s", result, summary), null);
         }
         return result;
+    }
+
+    protected RuntimeException logWithDetailsAndThrow(String message, Throwable optionalCause) {
+        log.warn(message+" (throwing)");
+        Streams.logStreamTail(log, "STDERR of problem in "+Tasks.current(), stderr, 1024);
+        Streams.logStreamTail(log, "STDOUT of problem in "+Tasks.current(), stdout, 1024);
+        Streams.logStreamTail(log, "STDIN of problem in "+Tasks.current(), Streams.byteArrayOfString(Strings.join(getLines(),"\n")), 4096);
+        if (optionalCause!=null) throw new IllegalStateException(message, optionalCause);
+        throw new IllegalStateException(message);
     }
 
     public Map getFlags() {

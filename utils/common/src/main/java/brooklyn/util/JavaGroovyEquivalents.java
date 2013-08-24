@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,5 +153,10 @@ public class JavaGroovyEquivalents {
                 return c.call(input);
             }
         };
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static <T> Callable<T> toCallable(final Runnable job) {
+        return (Callable<T>) ((job instanceof Callable) ? (Callable<T>)job : Executors.callable(job));
     }
 }

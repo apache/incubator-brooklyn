@@ -18,7 +18,7 @@ import brooklyn.util.time.Duration;
  * ExecutionContext, in which case it will be returned, or it may be created by submission
  * of a {@link Runnable} or {@link Callable} and thereafter it can be treated just like a {@link Future}.
  */
-public interface Task<T> extends ListenableFuture<T> {
+public interface Task<T> extends ListenableFuture<T>, TaskAdaptable<T> {
     
     public String getId();
     

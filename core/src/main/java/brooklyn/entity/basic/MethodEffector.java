@@ -16,6 +16,8 @@ import brooklyn.entity.ParameterType;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.Strings;
 
@@ -165,7 +167,7 @@ public class MethodEffector<T> extends AbstractEffector<T> {
     public T call(Entity entity, Map parameters) {
         Object[] parametersArray = EffectorUtils.prepareArgsForEffector(this, parameters);
         if (entity instanceof AbstractEntity) {
-            return EffectorUtils.invokeEffector(entity, this, parametersArray);
+            return EffectorUtils.invokeMethodEffector(entity, this, parametersArray);
         } else {
             // we are dealing with a proxy here
             // this implementation invokes the method on the proxy
@@ -184,7 +186,8 @@ public class MethodEffector<T> extends AbstractEffector<T> {
                         try {
                             return (T) method.invoke(entity, parametersArray);
                         } catch (Exception e) {
-                            throw new RuntimeException("Error invoking effector "+this+" on entity "+entity, e);
+                            // exception handled by the proxy invocation (which leads to EffectorUtils.invokeEffectorMethod...)
+                            throw Exceptions.propagate(e);
                         }
                     }
                 }

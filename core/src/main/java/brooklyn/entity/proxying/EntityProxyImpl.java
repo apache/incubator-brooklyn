@@ -81,7 +81,7 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
             Object[] nonNullArgs = (args == null) ? new Object[0] : args;
             Effector<?> eff = findEffector(m, nonNullArgs);
             if (eff != null) {
-                result = EffectorUtils.invokeEffector(delegate, eff, nonNullArgs);
+                result = EffectorUtils.invokeMethodEffector(delegate, eff, nonNullArgs);
             } else {
                 result = m.invoke(delegate, nonNullArgs);
             }

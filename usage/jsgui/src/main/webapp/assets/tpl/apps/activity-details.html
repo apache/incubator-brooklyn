@@ -2,7 +2,7 @@
     <div>
      <div style="float: left;"><i class="backDrillDown icon-chevron-left handy" rel="tooltip" title="Back up one level" style="margin-top: 3px;"></i>&nbsp;</div>
      <div style="margin-bottom: 6px;">
-      <span style="font-weight: 400;" class="ifField-entityDisplayName"><span class="updateField-entityDisplayName"/>:</span>
+      <span style="font-weight: 400;" class="ifField-entityDisplayName hide"><span class="updateField-entityDisplayName"/>:</span>
       <div style="display: inline-block;" class="updateField-displayName">Loading...</div>
      </div>
      <% for (crumb in breadcrumbs) { %>
@@ -18,6 +18,8 @@
 </div>
 <div class="activity-details-section activity-status">
     <span class="updateField-currentStatus"/>
+    <span class="ifField-blockingDetails hide">- <span class="updateField-blockingDetails"/></span>
+    <span class="ifField-blockingTask hide"> (blocked on <span class="updateField-blockingTask"/>)</span>
 </div>
 
   <div class="toggler-region task-detail">
@@ -40,12 +42,6 @@
     <div class="ifField-endTimeUtc"><span class="activity-label">Finished:</span>
         <span class="updateField-endTimeUtc"/></div>
 </div>
-<div class="ifField-tags">
-  <div class="activity-details-section activity-tags">
-    <span class="activity-label">Tags:</span> 
-        <span class="updateField-tags"/>
-  </div>
-</div>
 <div class="ifField-submittedByTask">
   <div class="activity-details-section activity-tags">
     <span class="activity-label">Submitted by:</span> 
@@ -56,7 +52,15 @@
     </div>
   </div>
     
-
+  <div class="toggler-region tasks-streams ifField-streams">
+    <div class="toggler-header">
+      <div class="toggler-icon icon-chevron-down"></div>
+      <div><b>Available Streams</b></div>
+    </div>
+    <div class="activity-details-section updateField-streams">
+    </div>
+  </div>
+    
   <div class="toggler-region tasks-children">
     <div class="toggler-header">
       <div class="toggler-icon icon-chevron-down"></div>
@@ -68,26 +72,36 @@
     </div>
   </div>
     
+  <div class="toggler-region tasks-submitted">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>Background Tasks</b></div>
+    </div>
+    <div class="activity-details-section activity-tasks-submitted hide">
+      <div id="activities-submitted-table" class="table-scroll-wrapper">
+      </div>
+    </div>
+  </div>
+
+  <div class="ifField-tags toggler-region task-tags">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>Tags</b></div>
+    </div>
+    <div class="activity-details-section activity-tags hide">
+        <span class="updateField-tags"></span>
+    </div>
+  </div>
+
   <div class="toggler-region task-detail">
-    <div class="toggler-header">
-      <div class="toggler-icon icon-chevron-down"></div>
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
       <div><b>Detailed Status</b></div>
     </div>
-    <div class="activity-details-section activity-detailStatus">
+    <div class="activity-details-section activity-detailStatus hide">
      <div class="for-textarea">
       <textarea id="detailStatus-textrea" readonly="readonly" style="width: 100%;"></textarea>
      </div>
-    </div>
-  </div>
-    
-  <div class="toggler-region tasks-submitted">
-    <div class="toggler-header">
-      <div class="toggler-icon icon-chevron-down"></div>
-      <div><b>Background Tasks</b></div>
-    </div>
-    <div class="activity-details-section activity-tasks-submitted">
-      <div id="activities-submitted-table" class="table-scroll-wrapper">
-      </div>
     </div>
   </div>
         

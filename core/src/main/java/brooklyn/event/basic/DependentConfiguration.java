@@ -39,6 +39,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -219,16 +220,18 @@ public class DependentConfiguration {
     
     /** @see #transformMultiple(Function, Task...) */
     public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, Task<U> ...tasks) {
-        if (tasks.length==1) {
-            return transform(flags, tasks[0], new Function<U,T>() {
+        return transformMultiple(flags, transformer, Arrays.asList(tasks));
+    }
+    public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, List<Task<U>> tasks) {
+        if (tasks.size()==1) {
+            return transform(flags, tasks.get(0), new Function<U,T>() {
                 @Override @Nullable
                 public T apply(@Nullable U input) {
-                    return transformer.apply(Arrays.asList(input));
+                    return transformer.apply(ImmutableList.of(input));
                 }
-                
             });
         }
-        return transform(flags, new ParallelTask(tasks), transformer);
+        return transform(flags, new ParallelTask<U>(tasks), transformer);
     }
 
 
@@ -246,14 +249,18 @@ public class DependentConfiguration {
      * }
      * </pre>
      */
+    @SuppressWarnings("unchecked")
     public static Task<String> formatString(final String spec, final Object ...args) {
-        List<Object> taskArgs = Lists.newArrayList();
-        for (Object arg: args)
-            if (arg instanceof Task) taskArgs.add(arg);
+        List<Task<Object>> taskArgs = Lists.newArrayList();
+        for (Object arg: args) {
+            if (arg instanceof Task) taskArgs.add((Task<Object>)arg);
+        }
             
-        return transformMultiple(new Function<List<Object>, String>() {
+        return transformMultiple(
+            MutableMap.<String,String>of("displayName", "formatting '"+spec+"' with "+taskArgs.size()+" task"+(taskArgs.size()!=1?"s":"")), 
+                new Function<List<Object>, String>() {
             @Override public String apply(List<Object> input) {
-                Iterator<Object> tri = input.iterator();
+                Iterator<?> tri = input.iterator();
                 Object[] vv = new Object[args.length];
                 int i=0;
                 for (Object arg : args) {
@@ -263,7 +270,7 @@ public class DependentConfiguration {
                 }
                 return String.format(spec, vv);
             }},
-            (Task[]) taskArgs.toArray(new Task[taskArgs.size()]));
+            taskArgs);
     }
 
     /** returns a task for parallel execution returning a list of values for the given sensor for the given entity list, 

@@ -45,6 +45,14 @@ public class WrappingEntitySpec<T extends Entity> extends BasicEntitySpec<T, Wra
     }
     
     @Override
+    public List<EntityInitializer> getInitializers() {
+        return ImmutableList.<EntityInitializer>builder()
+                .addAll(super.getInitializers())
+                .addAll(delegate.getInitializers())
+                .build();
+    }
+    
+    @Override
     public Entity getParent() {
         return (super.getParent() == null) ? delegate.getParent() : super.getParent();
     }

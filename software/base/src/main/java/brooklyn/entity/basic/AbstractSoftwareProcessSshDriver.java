@@ -18,13 +18,13 @@ import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.entity.basic.lifecycle.ScriptRunner;
+import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -40,7 +40,7 @@ import com.google.common.collect.Sets;
  * creating/using a PID file for some operations, and reading ssh-specific config from the entity
  * to override/augment ssh flags on the session.  
  */
-public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareProcessDriver implements ScriptRunner {
+public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareProcessDriver implements NaiveScriptRunner {
 
     public static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessSshDriver.class);
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
@@ -291,7 +291,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             // try resolving http resources remotely using curl
             result = getMachine().execCommands(flags, "download-resource",
                     ImmutableList.of(
-                            CommonCommands.INSTALL_CURL,
+                            BashCommands.INSTALL_CURL,
                             String.format("curl -f --silent --insecure %s -o %s", resource, dest)));
         }
         // if not downloaded yet, retrieve locally and copy across
@@ -357,6 +357,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             s.failIfBodyEmpty();
         if (ImmutableSet.of(INSTALLING, LAUNCHING).contains(phase))
             s.updateTaskAndFailOnNonZeroResultCode();
+        if (phase.equalsIgnoreCase(CHECK_RUNNING))
+            s.setTransient();
 
         if (truth(flags.get(USE_PID_FILE))) {
             String pidFile = (flags.get(USE_PID_FILE) instanceof CharSequence ? flags.get(USE_PID_FILE) : getRunDir()+"/"+PID_FILENAME).toString();

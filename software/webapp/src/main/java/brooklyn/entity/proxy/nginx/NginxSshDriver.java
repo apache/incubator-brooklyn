@@ -12,14 +12,16 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Throwables;
@@ -78,11 +80,9 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void install() {
-        newScript("disable requiretty").
-            setFlag("allocatePTY", true).
-            body.append(CommonCommands.dontRequireTtyForSudo()).
-            execute();
-
+        // TODO if nginx is already installed, should be able to skip sudo requirement
+        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), true)).orSubmitAndBlock();
+        
         DownloadResolver nginxResolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> nginxUrls = nginxResolver.getTargets();
         String nginxSaveAs = nginxResolver.getFilename();
@@ -116,11 +116,11 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         
         List<String> cmds = Lists.newArrayList();
         
-        cmds.add(CommonCommands.INSTALL_TAR);
-        cmds.add(CommonCommands.installPackage(installGccPackageFlags, "nginx-prerequisites-gcc"));
-        cmds.add(CommonCommands.installPackage(installMakePackageFlags, "nginx-prerequisites-make"));
-        cmds.add(CommonCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
-        cmds.addAll(CommonCommands.downloadUrlAs(nginxUrls, nginxSaveAs));
+        cmds.add(BashCommands.INSTALL_TAR);
+        cmds.add(BashCommands.installPackage(installGccPackageFlags, "nginx-prerequisites-gcc"));
+        cmds.add(BashCommands.installPackage(installMakePackageFlags, "nginx-prerequisites-make"));
+        cmds.add(BashCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
+        cmds.addAll(BashCommands.downloadUrlAs(nginxUrls, nginxSaveAs));
         
         if (isMac) {
             String pcreVersion = entity.getConfig(NginxController.PCRE_VERSION);
@@ -131,7 +131,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
             String pcreExpandedInstallDirname = pcreResolver.getUnpackedDirectoryName("pcre-"+pcreVersion);
 
             // Install PCRE
-            cmds.addAll(CommonCommands.downloadUrlAs(pcreUrls, pcreSaveAs));
+            cmds.addAll(BashCommands.downloadUrlAs(pcreUrls, pcreSaveAs));
             cmds.add(format("mkdir -p %s/pcre-dist", getInstallDir()));
             cmds.add(format("tar xvzf %s", pcreSaveAs));
             cmds.add(format("cd %s", pcreExpandedInstallDirname));
@@ -146,7 +146,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
         if (sticky) {
             cmds.add("cd src");
-            cmds.addAll(CommonCommands.downloadUrlAs(stickyModuleUrls, stickyModuleSaveAs));
+            cmds.addAll(BashCommands.downloadUrlAs(stickyModuleUrls, stickyModuleSaveAs));
             cmds.add(format("tar xvzf %s", stickyModuleSaveAs));
             cmds.add("cd ..");
         }
@@ -239,6 +239,8 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         newScript(flags, LAUNCHING).
                 body.append(
                 format("cd %s", getRunDir()),
+                // FIXME '|| exit' here is needed because the script allows intermediate non-zero exit codes
+                BashCommands.requireExecutable("./sbin/nginx")+" || exit $?",
                 sudoBashCIfPrivilegedPort(getHttpPort(), format(
                         "nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir())),
                 format("for i in {1..10}\n" +
@@ -246,17 +248,18 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                         "    test -f %s && ps -p `cat %s` && exit\n" +
                         "    sleep 1\n" +
                         "done\n" +
-                        "echo \"Couldn't determine if process is running (pid not running); continuing but may subsequently fail\"",
+                        "echo \"No explicit error launching nginx but couldn't find process by pid; continuing but may subsequently fail\"\n" +
+                        "cat ./console | tee /dev/stderr",
                         getRunDir()+"/"+NGINX_PID_FILE, getRunDir()+"/"+NGINX_PID_FILE)
         ).execute();
     }
 
     public static String sudoIfPrivilegedPort(int port, String command) {
-        return port < 1024 ? CommonCommands.sudo(command) : command;
+        return port < 1024 ? BashCommands.sudo(command) : command;
     }
     
     public static String sudoBashCIfPrivilegedPort(int port, String command) {
-        return port < 1024 ? CommonCommands.sudo("bash -c '"+command+"'") : command;
+        return port < 1024 ? BashCommands.sudo("bash -c '"+command+"'") : command;
     }
     
     @Override
@@ -285,17 +288,18 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         stop(); // TODO Don't `kill -9`, as that doesn't stop the worker processes
     }
 
-    @Override
-    public void restart() {
-        try {
-            if (isRunning()) {
-                stop();
-            }
-        } catch (Exception e) {
-            log.debug(getEntity() + " stop failed during restart (but wasn't in stop state, so not surprising): " + e);
-        }
-        launch();
-    }
+    // TODO this (previously) overrode the parent _without_ the setAttributes, which seems wrong
+//    @Override
+//    public void restart() {
+//        try {
+//            if (isRunning()) {
+//                stop();
+//            }
+//        } catch (Exception e) {
+//            log.debug(getEntity() + " stop failed during restart (but wasn't in stop state, so not surprising): " + e);
+//        }
+//        launch();
+//    }
     
     private final ExecController reloadExecutor = new ExecController(
             entity+"->reload",

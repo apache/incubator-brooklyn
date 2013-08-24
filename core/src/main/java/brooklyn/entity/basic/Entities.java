@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +26,9 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.BrooklynTasks.WrappedEntity;
 import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.AttributeSensor;
@@ -34,9 +36,12 @@ import brooklyn.event.Sensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.LocationManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
+import brooklyn.management.TaskFactory;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -46,7 +51,6 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.Tasks;
 
@@ -102,7 +106,7 @@ public class Entities {
             entitiesToCall = ImmutableList.of();
         }
 
-        List<Task<T>> tasks = Lists.newArrayList();
+        List<TaskAdaptable<T>> tasks = Lists.newArrayList();
 
         for (final Entity entity : entitiesToCall) {
             tasks.add( Effectors.invocation(entity, effector, parameters) );
@@ -140,7 +144,7 @@ public class Entities {
     
     public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
-        Task<T> t = Effectors.invocation(entityToCall, effector, parameters);
+        Task<T> t = Effectors.invocation(entityToCall, effector, parameters).asTask();
         // we pass to callingEntity for consistency above, but in exec-context it should be
         // re-dispatched to targetEntity
         ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(
@@ -502,15 +506,22 @@ public class Entities {
     /** stops, destroys, and unmanages all apps in the given context,
      * and then terminates the management context */
     public static void destroyAll(ManagementContext mgmt) {
+        Exception error = null;
         if (!mgmt.isRunning()) return;
         log.debug("destroying all apps in "+mgmt+": "+mgmt.getApplications());
         for (Application app: mgmt.getApplications()) {
             log.debug("destroying app "+app+" (managed? "+isManaged(app)+"; mgmt is "+mgmt+")");
-            destroy(app);
-            log.debug("destroyed app "+app+"; mgmt now "+mgmt);
+            try {
+                destroy(app);
+                log.debug("destroyed app "+app+"; mgmt now "+mgmt);
+            } catch (Exception e) {
+                log.warn("problems destroying app "+app+" (mgmt now "+mgmt+", will rethrow at least one exception): "+e);
+                if (error==null) error = e;
+            }
         }
         if (mgmt instanceof ManagementContextInternal) 
             ((ManagementContextInternal)mgmt).terminate();
+        if (error!=null) throw Exceptions.propagate(error);
     }
 
     /** as {@link #destroyAll(ManagementContext)} but catching all errors */
@@ -701,4 +712,37 @@ public class Entities {
             throw new NullPointerException("Key "+urlKey+" on "+entity+" should not be null");
         return new ResourceUtils(entity).checkUrlExists(url);
     }
+    
+    /** submits a task factory to construct its task at the entity (in a precursor task) and then to submit it;
+     * important if e.g. task construction relies on an entity being in scope (in tags, via {@link BrooklynTasks}) */
+    public static <T extends TaskAdaptable<?>> T submit(final Entity entity, final TaskFactory<T> taskFactory) {
+        // TODO it is messy to have to do this, but not sure there is a cleaner way :(
+        final Semaphore s = new Semaphore(0);
+        final AtomicReference<T> result = new AtomicReference<T>();
+        final ExecutionContext executionContext = ((EntityInternal)entity).getManagementSupport().getExecutionContext();
+        executionContext.execute(new Runnable() {
+            // TODO could give this task a name, like "create task from factory"
+            @Override
+            public void run() {
+                T t = taskFactory.newTask();
+                result.set(t);
+                s.release();
+            }
+        });
+        try {
+            s.acquire();
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
+        executionContext.submit(result.get().asTask());
+        return result.get();
+    }
+
+    /** submits a task to run at the entity */
+    public static <T extends TaskAdaptable<?>> T submit(final Entity entity, final T task) {
+        final ExecutionContext executionContext = ((EntityInternal)entity).getManagementSupport().getExecutionContext();
+        executionContext.submit(task.asTask());
+        return task;
+    }
+
 }

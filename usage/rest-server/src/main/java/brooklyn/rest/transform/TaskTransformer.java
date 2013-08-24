@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTasks.WrappedStream;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.rest.domain.LinkWithMetadata;
@@ -21,6 +22,7 @@ import brooklyn.rest.domain.TaskSummary;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.TaskInternal;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -65,6 +67,17 @@ public class TaskTransformer {
             }
         }
         
+        Map<String,LinkWithMetadata> streams = new MutableMap<String, LinkWithMetadata>();
+        for (WrappedStream stream: BrooklynTasks.streams(task)) {
+            MutableMap<String, Object> metadata = MutableMap.<String,Object>of("name", stream.streamType);
+            if (stream.streamSize.get()!=null) {
+                metadata.add("size", stream.streamSize.get());
+                metadata.add("sizeText", Strings.makeSizeString(stream.streamSize.get()));
+            }
+            String link = selfLink+"/stream/"+stream.streamType;
+            streams.put(stream.streamType, new LinkWithMetadata(link, metadata));
+        }
+        
         Map<String,URI> links = MutableMap.of("self", new URI(selfLink),
                 "children", new URI(selfLink+"/"+"children"));
         if (entityLink!=null) links.put("entity", entityLink);
@@ -75,6 +88,7 @@ public class TaskTransformer {
                 task instanceof TaskInternal ? asLink(((TaskInternal<?>)task).getBlockingTask()) : null, 
                 task instanceof TaskInternal ? ((TaskInternal<?>)task).getBlockingDetails() : null, 
                 task.getStatusDetail(true),
+                streams,
                 links);
       } catch (URISyntaxException e) {
           // shouldn't happen
@@ -91,9 +105,12 @@ public class TaskTransformer {
         if (t==null) return null;
         MutableMap<String,Object> data = new MutableMap<String,Object>();
         data.put("id", t.getId());
-        data.put("taskName", t.getDisplayName());
+        if (t.getDisplayName()!=null) data.put("taskName", t.getDisplayName());
         Entity entity = BrooklynTasks.getContextEntity(t);
-        if (entity!=null) data.put("entityDisplayName", entity.getDisplayName());
+        if (entity!=null) {
+            data.put("entityId", entity.getId());
+            if (entity.getDisplayName()!=null) data.put("entityDisplayName", entity.getDisplayName());
+        }
         return new LinkWithMetadata("/v1/activities/"+t.getId(), data);
     }
 

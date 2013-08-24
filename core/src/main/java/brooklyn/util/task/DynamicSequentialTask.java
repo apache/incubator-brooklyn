@@ -3,6 +3,7 @@ package brooklyn.util.task;
 import groovy.lang.Closure;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -16,8 +17,9 @@ import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /** Represents a task whose run() method can create other tasks
@@ -53,6 +55,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         this.job = new DstJob(mainJob);
     }
     
+    @Override
     public void queue(Task<?> t) {
         synchronized (jobTransitionLock) {
             if (primaryFinished)
@@ -79,8 +82,9 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         return cancel;
     }
     
+    @Override
     public Iterable<Task<?>> getChildren() {
-        return secondaryJobsAll;
+        return Collections.unmodifiableCollection(secondaryJobsAll);
     }
     
     /** submits the indicated task for execution in the current execution context, and returns immediately */
@@ -89,8 +93,15 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         if (log.isTraceEnabled())
             log.trace("task {} - submitting background task {} ({})", new Object[] { 
                 Tasks.current(), task, ec });
-        Preconditions.checkNotNull(ec,
-                "Cannot submit tasks when not in the thread of a task with an execution context");
+        if (ec==null) {
+            String message = Tasks.current()!=null ?
+                    // user forgot ExecContext:
+                        "Task "+this+" submitting background task requires an ExecutionContext (an ExecutionManager is not enough): submitting "+task+" in "+Tasks.current()
+                    : // should not happen:
+                        "Cannot submit tasks inside DST when not in a task : submitting "+task+" in "+this;
+            log.warn(message+" (rethrowing)");
+            throw new IllegalStateException(message);
+        }
         ec.submit(task);
     }
 
@@ -146,23 +157,29 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             
             T result = null;
             try {
-                log.trace("calling primary job for {}", this);
-                if (primaryJob!=null) result = primaryJob.call();
-            } finally {
-                log.trace("cleaning up for {}", this);
-                synchronized (jobTransitionLock) {
-                    // semaphore might be nicer here (aled notes as it is this is a little hard to read)
-                    primaryThread = null;
-                    primaryFinished = true;
-                    jobTransitionLock.notifyAll();
+                try {
+                    log.trace("calling primary job for {}", this);
+                    if (primaryJob!=null) result = primaryJob.call();
+                } finally {
+                    log.trace("cleaning up for {}", this);
+                    synchronized (jobTransitionLock) {
+                        // semaphore might be nicer here (aled notes as it is this is a little hard to read)
+                        primaryThread = null;
+                        primaryFinished = true;
+                        jobTransitionLock.notifyAll();
+                    }
+                    if (!isCancelled() && !secondaryJobMaster.isDone()) {
+                        log.trace("waiting for secondaries for {}", this);
+                        // wait on tasks sequentially so that blocking information is more interesting
+                        DynamicTasks.waitForLast();
+                        List<Object> result2 = secondaryJobMaster.get();
+                        try {
+                            if (primaryJob==null) result = (T)result2;
+                        } catch (ClassCastException e) { /* ignore class cast exception; leave the result as null */ }
+                    }
                 }
-                if (!isCancelled() && !secondaryJobMaster.isDone()) {
-                    log.trace("waiting for secondaries for {}", this);
-                    List<Object> result2 = secondaryJobMaster.get();
-                    try {
-                        if (primaryJob==null) result = (T)result2;
-                    } catch (Exception e) { /* ignore class cast exception; result will just be null */ }
-                }
+            } catch (Throwable t) {
+                handleException(t);
             }
             return result;
         }
@@ -171,6 +188,16 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     @Override
     public List<Task<?>> getQueue() {
         return ImmutableList.copyOf(secondaryJobsAll);
+    }
+
+    public void handleException(Throwable throwable) throws Exception {
+        // allow checked exceptions to be passed through
+        if (throwable instanceof Exception) {
+            if (throwable instanceof InterruptedException)
+                throw new RuntimeInterruptedException((InterruptedException) throwable);
+            throw (Exception)throwable;
+        }
+        throw Exceptions.propagate(throwable);
     }
 
     @Override

@@ -35,6 +35,7 @@ import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
@@ -68,7 +69,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     protected Task<?> blockingTask = null;
     Object extraStatusText = null;
 
-    ExecutionList listeners = new ExecutionList();
+    protected final ExecutionList listeners = new ExecutionList();
     
     /**
      * Constructor needed to prevent confusion in groovy stubs when looking for default constructor,
@@ -128,6 +129,11 @@ public class BasicTask<T> implements TaskInternal<T> {
                 (tags!=null && !tags.isEmpty()?tags+"; ":"")+getId()+"]";
     }
 
+    @Override
+    public Task<T> asTask() {
+        return this;
+    }
+    
     // housekeeping --------------------
 
     /*
@@ -405,7 +411,7 @@ public class BasicTask<T> implements TaskInternal<T> {
             throw Exceptions.propagate(e);
         }
     }
-
+    
     // ------------------ status ---------------------------
     
     /**
@@ -797,6 +803,11 @@ public class BasicTask<T> implements TaskInternal<T> {
     @Override
     public ExecutionManager getExecutionManager() {
         return em;
+    }
+
+    @Override
+    public void applyTagModifier(Function<Set<Object>,Void> modifier) {
+        modifier.apply(tags);
     }
     
 }

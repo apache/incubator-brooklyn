@@ -1,5 +1,6 @@
 package brooklyn.util.internal.ssh.cli;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -14,9 +15,11 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.internal.ssh.SshToolIntegrationTest;
+import brooklyn.util.internal.ssh.SshToolAbstractIntegrationTest;
+import brooklyn.util.internal.ssh.cli.SshCliTool;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -24,18 +27,18 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Test the operation of the {@link SshJschTool} utility class.
  */
-public class SshCliToolIntegrationTest extends SshToolIntegrationTest {
+public class SshCliToolIntegrationTest extends SshToolAbstractIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(SshCliToolIntegrationTest.class);
     
     @Override
-    protected SshTool newSshTool(Map<String,?> flags) {
+    protected SshTool newTool(Map<String,?> flags) {
         return new SshCliTool(flags);
     }
 
     @Test(groups = {"Integration"})
     public void testFlags() throws Exception {
-        final SshTool localtool = newSshTool(ImmutableMap.of("sshFlags", "-vvv -tt", "host", "localhost"));
+        final SshTool localtool = newTool(ImmutableMap.of("sshFlags", "-vvv -tt", "host", "localhost"));
         tools.add(localtool);
         try {
             localtool.connect();
@@ -66,7 +69,7 @@ public class SshCliToolIntegrationTest extends SshToolIntegrationTest {
     // Doing .connect() isn't enough; need to cause ssh or scp to be invoked
     @Test(enabled=false, groups = {"Integration"})
     public void testConnectWithInvalidUserThrowsException() throws Exception {
-        final SshTool localtool = newSshTool(ImmutableMap.of("user", "wronguser", "host", "localhost", "privateKeyFile", "~/.ssh/id_rsa"));
+        final SshTool localtool = newTool(ImmutableMap.of("user", "wronguser", "host", "localhost", "privateKeyFile", "~/.ssh/id_rsa"));
         tools.add(localtool);
         try {
             localtool.connect();
@@ -89,4 +92,11 @@ public class SshCliToolIntegrationTest extends SshToolIntegrationTest {
     public void testCopyToServerWithLastModifiedDate() throws Exception {
         super.testCopyToServerWithLastModifiedDate();
     }
+    
+    @Test(groups = {"Integration"})
+    public void testExecReturningNonZeroExitCode() throws Exception {
+        int exitcode = tool.execCommands(MutableMap.<String,Object>of(), ImmutableList.of("exit 123"));
+        assertEquals(exitcode, 123);
+    }
+
 }

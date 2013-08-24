@@ -6,7 +6,7 @@ import java.util.Map;
 
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +48,8 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getBaseName());
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
-        commands.add(CommonCommands.INSTALL_TAR);
+        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
 
         newScript(INSTALLING)

@@ -37,8 +37,8 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.ssh.CommonCommands;
 import brooklyn.util.stream.InputStreamSupplier;
+import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Time;
@@ -48,10 +48,10 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.Ints;
@@ -97,7 +97,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     private static class ConcreteBuilder extends Builder<SshjTool, ConcreteBuilder> {
     }
     
-    public static class Builder<T extends SshjTool, B extends Builder<T,B>> extends AbstractToolBuilder<T,B> {
+    public static class Builder<T extends SshjTool, B extends Builder<T,B>> extends AbstractSshToolBuilder<T,B> {
         protected int connectTimeout;
         protected int sessionTimeout;
         protected int sshTries = 4;  //allow 4 tries by default, much safer
@@ -203,16 +203,21 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         /* sshj needs to:
          *   1) to know the length of the InputStream to copy the file to perform copy; and
          *   2) re-read the input stream on retry if the first attempt fails.
-         * For now, write it to a file.
+         * For now, write it to a file, unless caller supplies a KnownSizeInputStream
+         * 
          * (We could have a switch where we hold it in memory if less than some max size,
          * but most the routines should supply a string or byte array or similar,
          * so we probably don't come here too often.)
          */
-        File tempFile = writeTempFile(contents);
-        try {
-            return copyToServer(props, tempFile, pathAndFileOnRemoteServer);
-        } finally {
-            tempFile.delete();
+        if (contents instanceof KnownSizeInputStream) {
+            return copyToServer(props, Suppliers.ofInstance(contents), ((KnownSizeInputStream)contents).length(), pathAndFileOnRemoteServer);
+        } else {
+            File tempFile = writeTempFile(contents);
+            try {
+                return copyToServer(props, tempFile, pathAndFileOnRemoteServer);
+            } finally {
+                tempFile.delete();
+            }
         }
     }
     
@@ -238,11 +243,6 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         }
     }
 
-    @Override
-    public int execScript(Map<String,?> props, List<String> commands) {
-        return execScript(props, commands, Collections.<String,Object>emptyMap());
-    }
-    
     /**
      * This creates a script containing the user's commands, copies it to the remote server, and
      * executes the script. The script is then deleted.
@@ -280,22 +280,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
         
         String scriptContents = toScript(props, commands, env);
-        
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
-        
         copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
         
-        // use "-f" because some systems have "rm" aliased to "rm -i"; use "< /dev/null" to guarantee doesn't hang
-        ImmutableList.Builder<String> cmds = ImmutableList.<String>builder()
-                .add((runAsRoot ? CommonCommands.sudo(scriptPath) : scriptPath) + " < /dev/null")
-                .add("RESULT=$?");
-        if (noExtraOutput==null || !noExtraOutput)
-            cmds.add("echo Executed "+scriptPath+", result $RESULT"); 
-        cmds.add("rm -f "+scriptPath+" < /dev/null"); 
-        cmds.add("exit $RESULT");
-        
-        Integer result = acquire(new ShellAction(cmds.build(), out, err));
-        return result != null ? result : -1;
+        return asInt(acquire(new ShellAction(buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot), out, err)), -1);
     }
 
     public int execShellDirect(Map<String,?> props, List<String> commands, Map<String,?> env) {
@@ -313,12 +301,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         
         Integer result = acquire(new ShellAction(allcmds, out, err));
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} completed: return status {}", host, result);
-        return result != null ? result : -1;
-    }
-
-    @Override
-    public int execCommands(Map<String,?> props, List<String> commands) {
-        return execCommands(props, commands, Collections.<String,Object>emptyMap());
+        return asInt(result, -1);
     }
 
     @Override
@@ -333,12 +316,18 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         List<String> allcmds = toCommandSequence(commands, env);
         String singlecmd = Joiner.on(separator).join(allcmds);
 
+        if (getOptionalVal(props, PROP_RUN_AS_ROOT)==Boolean.TRUE) {
+            LOG.warn("Cannot run as root when executing as command; run as a script instead (will run as normal user): "+singlecmd);
+        }
+        
         if (LOG.isTraceEnabled()) LOG.trace("Running command at {}: {}", host, singlecmd);
         
         Command result = acquire(new ExecAction(singlecmd, out, err));
         if (LOG.isTraceEnabled()) LOG.trace("Running command at {} completed: exit code {}", host, result.getExitStatus());
-        // FIXME this can NPE if no exit status is received (observed on kill `ps aux | grep thing-to-grep-for | awk {print $2}`
-        return result.getExitStatus();
+        // can be null if no exit status is received (observed on kill `ps aux | grep thing-to-grep-for | awk {print $2}`
+        if (result.getExitStatus()==null) LOG.warn("Null exit status running at {}: {}", host, singlecmd);
+        
+        return asInt(result.getExitStatus(), -1);
     }
 
     protected void checkConnected() {
@@ -372,13 +361,13 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 try {
                     disconnect();
                 } catch (Exception e2) {
-                    LOG.warn("<< ("+toString()+") error closing connection: "+e+" / "+e2, e);
+                    LOG.debug("<< ("+toString()+") error closing connection: "+e+" / "+e2, e);
                 }
                 if (i + 1 == sshTries) {
-                    LOG.warn("<< {}: {}", fullMessage, e.getMessage());
+                    LOG.debug("<< {} (rethrowing, out of retries): {}", fullMessage, e.getMessage());
                     throw propagate(e, fullMessage + "; out of retries");
                 } else if (sshTriesTimeout > 0 && stopwatch.elapsed(TimeUnit.MILLISECONDS) > sshTriesTimeout) {
-                    LOG.warn("<< {}: {}", fullMessage, e.getMessage());
+                    LOG.debug("<< {} (rethrowing, out of time): {}", fullMessage, e.getMessage());
                     throw propagate(e, fullMessage + "; out of time");
                 } else {
                     if (LOG.isDebugEnabled()) LOG.debug("<< {}: {}", fullMessage, e.getMessage());
@@ -502,7 +491,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                             .build());
                 }
             } finally {
-                Closeables.closeQuietly(inputStreamRef.get());
+                closeWhispering(inputStreamRef.get(), this);
             }
             return null;
         }

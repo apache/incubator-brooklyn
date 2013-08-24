@@ -7,6 +7,8 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import java.util.Arrays;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -200,13 +202,37 @@ public class StringsTest {
         Assert.assertEquals(c.count, 1);
     }
 
+    @Test
+    public void testToStringSupplier() {
+        ToStringCounter c = new ToStringCounter(true);
+        Assert.assertEquals(Strings.toStringSupplier(c).get(), "world1");
+        FormattedString x = Strings.format("hello %s", c);
+        Assert.assertEquals(x.toString(), "hello world2");
+        Assert.assertEquals(x.toString(), "hello world3");
+    }
+
     private static class ToStringCounter {
         private int count = 0;
+        private boolean appendCount = false;
+        private ToStringCounter() {}
+        private ToStringCounter(boolean append) { this.appendCount = append; }
         @Override
         public String toString() {
             count++;
-            return "world";
+            return "world"+(appendCount?""+count:"");
         }
+    }
+
+    @Test
+    public void testFormatter() {
+        Assert.assertEquals(StringFunctions.formatter("hello %s").apply("world"), "hello world");
+        Assert.assertEquals(StringFunctions.formatterForArray("%s %s").apply(new String[] { "hello", "world" }), "hello world");
+    }
+
+    @Test
+    public void testJoiner() {
+        Assert.assertEquals(StringFunctions.joiner(" ").apply(Arrays.asList("hello", "world")), "hello world");
+        Assert.assertEquals(StringFunctions.joinerForArray(" ").apply(new String[] { "hello", "world" }), "hello world");
     }
 
 }

@@ -35,7 +35,8 @@ public interface LocationManager {
     Collection<Location> getLocations();
 
     /**
-     * Returns the location with the given identifier (may be a full instance, or a proxy to one which is remote).
+     * Returns the location under management (e.g. in use) with the given identifier (e.g. random string).
+     * May return a full instance, or a proxy to one which is remote.
      * If no location found with that id, returns null.
      */
     Location getLocation(String id);

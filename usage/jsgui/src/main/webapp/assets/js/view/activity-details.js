@@ -29,6 +29,7 @@ define([
             "click #activities-children-table .activity-table tr":"childrenRowClick",
             "click #activities-submitted-table .activity-table tr":"submittedRowClick",
             'click .showDrillDownSubmittedByAnchor':'showDrillDownSubmittedByAnchor',
+            'click .showDrillDownBlockerOfAnchor':'showDrillDownBlockerOfAnchor',
             'click .backDrillDown':'backDrillDown'
         },
         // requires taskLink or task; breadcrumbs is optional
@@ -118,7 +119,12 @@ define([
             this.updateField('id')
             this.updateField('description')
             this.updateField('currentStatus')
-            this.updateField('tags')
+            this.updateField('blockingDetails')
+            this.updateFieldWith('blockingTask',
+                function(v) { 
+                    return "<a class='showDrillDownBlockerOfAnchor handy' link='"+_.escape(v.link)+"'>"+
+                        that.displayTextForLinkedTask(v)+"</a>" })
+            this.updateFieldWith('tags', function(tags) { return _.escape(tags.join(", ")) })
             
             var submitTimeUtc = this.updateFieldWith('submitTimeUtc',
                 function(v) { return v <= 0 ? "-" : moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).fromNow()+"</i>" })
@@ -132,6 +138,22 @@ define([
 
             ViewUtils.updateTextareaWithData($(".task-detail .for-textarea", this.$el), 
                 this.task.get('detailedStatus'), false, 30, 100)
+
+            this.updateFieldWith('streams',
+                function(v) {
+                    var result = "";
+                    for (si in v) {
+                        var sv = v[si];
+                        result += "<div class='activity-stream-div'>"+
+                                  "<span class='activity-label'>"+
+                                    _.escape(si)+
+                                  "</span><span>"+
+                                      "<a href='"+sv.link+"'</a>download</a>"+
+                                      (sv.metadata["sizeText"] ? " ("+_.escape(sv.metadata["sizeText"])+")" : "")+
+                                  "</span></div>";
+                    }
+                    return result; 
+                })
 
             this.updateFieldWith('submittedByTask',
                 function(v) { return "<a class='showDrillDownSubmittedByAnchor handy' link='"+_.escape(v.link)+"'>"+
@@ -190,13 +212,18 @@ define([
                 $('.toggler-region.tasks-submitted', this.$el).hide();
                 return;
             }
+            if (this.task==null) {
+                log("task not yet available")
+                return;
+            } 
+            
             // find tasks submitted by this one which aren't included as children
             // this uses collections -- which is everything in the current execution context
             var subtasks = []
             for (taskI in this.collection.models) {
                 var task = this.collection.models[taskI]
                 var submittedBy = task.get("submittedByTask")
-                if (submittedBy!=null && submittedBy.metadata.id == this.task.id &&
+                if (submittedBy!=null && submittedBy.metadata!=null && submittedBy.metadata["id"] == this.task.id &&
                         this.children.get(task.id)==null) {
                     subtasks.push(task)
                 }
@@ -228,7 +255,8 @@ define([
         },
         updateFieldWith: function(field, f) {
             var v = this.task.get(field)
-            if (v !== undefined && v != null) {
+            if (v !== undefined && v != null && 
+                    (typeof v !== "object" || _.size(v) > 0)) {
                 $('.updateField-'+field, this.$el).html( f(v) );
                 $('.ifField-'+field, this.$el).show();
             } else {
@@ -257,6 +285,10 @@ define([
         showDrillDownSubmittedByAnchor: function(from) {
             var link = $(from.target).closest('a').attr("link")
             this.showDrillDownTask("submitter of", link)
+        },
+        showDrillDownBlockerOfAnchor: function(from) {
+            var link = $(from.target).closest('a').attr("link")
+            this.showDrillDownTask("blocker of", link)
         },
         showDrillDownTask: function(relation, newTaskLink, newTask) {
             log("activities deeper drill down - "+newTaskLink)

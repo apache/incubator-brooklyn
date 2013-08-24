@@ -15,12 +15,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.database.mysql.MySqlSshDriver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.ssh.BashCommands;
 
 public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements RubyRepDriver {
 
@@ -41,8 +41,8 @@ public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements Ru
 
         String saveAs = format("rubyrep-%s.zip", getVersion());
         // TODO for the time being it is hard coded download url since it isn't predictable
-        commands.addAll(CommonCommands.downloadUrlAs("http://rubyforge.org/frs/download.php/74408/rubyrep-1.2.0.zip", getEntityVersionLabel("/"), saveAs));
-        commands.add(CommonCommands.installExecutable("unzip"));
+        commands.addAll(BashCommands.downloadUrlAs("http://rubyforge.org/frs/download.php/74408/rubyrep-1.2.0.zip", getEntityVersionLabel("/"), saveAs));
+        commands.add(BashCommands.installExecutable("unzip"));
         commands.add("unzip " + saveAs);
 
         newScript(INSTALLING).failOnNonZeroResultCode().failOnNonZeroResultCode().

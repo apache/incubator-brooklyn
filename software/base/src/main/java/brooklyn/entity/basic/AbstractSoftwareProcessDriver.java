@@ -2,11 +2,8 @@ package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -15,14 +12,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.collect.ImmutableMap;
-
-import freemarker.cache.StringTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
 
 /**
  * An abstract implementation of the {@link SoftwareProcessDriver}.
@@ -62,16 +55,24 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      */
 	@Override
 	public void start() {
-        waitForConfigKey(ConfigKeys.INSTALL_LATCH);
-		install();
+	    DynamicTasks.queue("install", new Runnable() { public void run() {
+            waitForConfigKey(ConfigKeys.INSTALL_LATCH);
+            install();
+        }});
         
-        waitForConfigKey(ConfigKeys.CUSTOMIZE_LATCH);
-		customize();
+	    DynamicTasks.queue("customize", new Runnable() { public void run() {
+            waitForConfigKey(ConfigKeys.CUSTOMIZE_LATCH);
+            customize();
+        }});
         
-        waitForConfigKey(ConfigKeys.LAUNCH_LATCH);
-		launch();
+	    DynamicTasks.queue("launch", new Runnable() { public void run() {
+            waitForConfigKey(ConfigKeys.LAUNCH_LATCH);
+            launch();
+        }});
         
-        postLaunch();  
+	    DynamicTasks.queue("post-launch", new Runnable() { public void run() {
+            postLaunch();
+        }});
 	}
 
 	@Override
@@ -93,20 +94,23 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     
 	@Override
 	public void restart() {
-	    boolean previouslyRunning = isRunning();
-        try {
-            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
-            stop();
-        } catch (Exception e) {
-            if (previouslyRunning) {
-                log.debug(getEntity() + " restart: stop failed, when was previously running", e);
-            } else {
-                log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
-            }
-        }
-        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
-        launch();
-        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
+	    DynamicTasks.queue("stop (if running)", new Runnable() { public void run() {
+	        boolean previouslyRunning = isRunning();
+	        try {
+	            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+	            stop();
+	        } catch (Exception e) {
+	            if (previouslyRunning) {
+	                log.debug(getEntity() + " restart: stop failed, when was previously running", e);
+	            } else {
+	                log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
+	            }
+	        }
+	    }});
+	    DynamicTasks.queue("launch", new Runnable() { public void run() {
+	        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+	        launch();
+        }});
 	}
 	
 	public EntityLocal getEntity() { return entity; } 

@@ -119,9 +119,9 @@ public class ByonLocationResolver implements LocationResolver {
                 throw new IllegalArgumentException("Invalid host '"+hostHere+"' specified in '"+spec+"': "+e);
             }
             if (JavaGroovyEquivalents.groovyTruth(userHere)) {
-                machine = new SshMachineLocation(MutableMap.of("user", userHere.trim(), "address", hostHere.trim()));    
+                machine = managementContext.getLocationManager().createLocation(MutableMap.of("user", userHere.trim(), "address", hostHere.trim()), SshMachineLocation.class);    
             } else {
-                machine = new SshMachineLocation(MutableMap.of("address", hostHere.trim()));
+                machine = managementContext.getLocationManager().createLocation(MutableMap.of("address", hostHere.trim()), SshMachineLocation.class);
             }
             machines.add(machine);
         }

@@ -49,7 +49,7 @@ public interface Pool<T> extends Closeable {
 
     Lease<T> leaseObject();
     
-    <R> R exec(Function<T,R> receiver);
+    <R> R exec(Function<? super T,R> receiver);
     
     void close() throws IOException;
 }

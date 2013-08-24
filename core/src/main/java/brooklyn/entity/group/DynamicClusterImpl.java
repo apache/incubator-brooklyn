@@ -293,24 +293,16 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             } catch (InterruptedException e) {
                 throw Exceptions.propagate(e);
             } catch (Throwable t) {
-                logger.error("Cluster "+this+" failed to start entity "+entity+" (removing): "+t);
+                Throwable interesting = Exceptions.getFirstInteresting(t);
+                logger.error("Cluster "+this+" failed to start entity "+entity+" (removing): "+interesting, interesting);
                 logger.debug("Trace for: Cluster "+this+" failed to start entity "+entity+" (removing): "+t, t);
-                errors.put(entity, unwrapException(t));
+                // previously we unwrapped but now there is no need I think
+                errors.put(entity, t);
             }
         }
         return errors;
     }
-    
-    protected Throwable unwrapException(Throwable e) {
-        if (e instanceof ExecutionException) {
-            return unwrapException(e.getCause());
-        } else if (e instanceof org.codehaus.groovy.runtime.InvokerInvocationException) {
-            return unwrapException(e.getCause());
-        } else {
-            return e;
-        }
-    }
-    
+        
     @Override
     public boolean removeChild(Entity child) {
         boolean changed = super.removeChild(child);
