@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -19,7 +18,6 @@ public class DynamicToyMySqlEntityTest extends AbstractToyMySqlEntityTest {
     
     protected Entity createMysql() {
         Entity mysql = app.createAndManageChild(DynamicToyMySqlEntityBuilder.spec());
-        DynamicToyMySqlEntityBuilder.makeMySql((EntityInternal) mysql);
         log.debug("created "+mysql);
         return mysql;
     }

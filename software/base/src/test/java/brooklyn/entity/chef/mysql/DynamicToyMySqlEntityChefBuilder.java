@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicStartable;
-import brooklyn.entity.basic.BasicStartableImpl;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefConfigs;
@@ -27,8 +26,8 @@ public class DynamicToyMySqlEntityChefBuilder implements ChefConfig {
     private static final Logger log = LoggerFactory.getLogger(DynamicToyMySqlEntityChefBuilder.class);
 
     public static EntitySpec<? extends Entity> spec() {
-        EntitySpec<? extends Entity> spec = EntitySpec.create(BasicStartable.class, BasicStartableImpl.class);
-        // TODO how to invoke the makeMySql method automatically ???
+        EntitySpec<? extends Entity> spec = EntitySpec.create(BasicStartable.class);
+        // TODO use EntityInitializer rather than makeMySql below
         return spec;
     }
 

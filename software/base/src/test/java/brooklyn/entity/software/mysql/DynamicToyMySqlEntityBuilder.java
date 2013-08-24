@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicStartable;
-import brooklyn.entity.basic.BasicStartableImpl;
 import brooklyn.entity.basic.BrooklynTasks;
-import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -37,9 +37,7 @@ public class DynamicToyMySqlEntityBuilder {
     private static final Logger log = LoggerFactory.getLogger(DynamicToyMySqlEntityBuilder.class);
 
     public static EntitySpec<? extends Entity> spec() {
-        EntitySpec<? extends Entity> spec = EntitySpec.create(BasicStartable.class, BasicStartableImpl.class);
-        // TODO how to invoke the makeMySql method automatically ???
-        return spec;
+        return EntitySpec.create(BasicStartable.class).addInitializer(MySqlEntityInitializer.class);
     }
     
     public static final String downloadUrl(Entity e, boolean isLocalhost) {
@@ -80,8 +78,9 @@ public class DynamicToyMySqlEntityBuilder {
         return osp1+"-"+osp2;
     }
 
-    public static Entity makeMySql(final EntityInternal entity) {
-        new MachineLifecycleEffectorTasks() {
+    public static class MySqlEntityInitializer implements EntityInitializer {
+        public void apply(final EntityLocal entity) {
+          new MachineLifecycleEffectorTasks() {
             @Override
             protected String startProcessesAtMachine(Supplier<MachineLocation> machineS) {
                 DynamicTasks.queue(SshEffectorTasks.ssh(
@@ -137,10 +136,8 @@ public class DynamicToyMySqlEntityBuilder {
                         ));
                 return "submitted kill";
             }
-            
-        }.attachLifecycleEffectors(entity);
-
-        return entity;
+          }.attachLifecycleEffectors(entity);
+      }
     }
 
     private static boolean isLocalhost(Supplier<MachineLocation> machineS) {

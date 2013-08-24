@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -85,6 +87,7 @@ public class EntitySpec<T extends Entity> implements Serializable {
         EntitySpec<T> result = create(spec.getType())
                 .displayName(spec.getDisplayName())
                 .additionalInterfaces(spec.getAdditionalInterfaces())
+                .addInitializers(spec.getInitializers())
                 .configure(spec.getConfig())
                 .configure(spec.getFlags())
                 .policies(spec.getPolicies());
@@ -107,6 +110,7 @@ public class EntitySpec<T extends Entity> implements Serializable {
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
     private final List<Policy> policies = Lists.newArrayList();
     private final Set<Class<?>> additionalInterfaces = Sets.newLinkedHashSet();
+    private final List<EntityInitializer> entityInitializers = Lists.newArrayList();
     private volatile boolean immutable;
     
     public EntitySpec(Class<T> type) {
@@ -146,6 +150,11 @@ public class EntitySpec<T extends Entity> implements Serializable {
         return additionalInterfaces;
     }
 
+    /** @return {@link EntityInitializer} objects which customize the entity to be created */
+    public List<EntityInitializer> getInitializers() {
+        return entityInitializers;
+    }
+    
     /**
      * @return The entity's parent
      */
@@ -200,6 +209,29 @@ public class EntitySpec<T extends Entity> implements Serializable {
         return this;
     }
 
+    public EntitySpec<T> addInitializer(EntityInitializer initializer) {
+        checkMutable();
+        entityInitializers.add(initializer);
+        return this;
+    }
+        
+    public EntitySpec<T> addInitializers(Collection<EntityInitializer> initializer) {
+        checkMutable();
+        entityInitializers.addAll(initializer);
+        return this;
+    }
+
+    /** The supplied class must have a public no-arg constructor. */
+    public EntitySpec<T> addInitializer(Class<? extends EntityInitializer> initializerType) {
+        checkMutable();
+        try {
+            entityInitializers.add(initializerType.newInstance());
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
+        return this;
+    }
+        
     public EntitySpec<T> parent(Entity val) {
         checkMutable();
         parent = checkNotNull(val, "parent");

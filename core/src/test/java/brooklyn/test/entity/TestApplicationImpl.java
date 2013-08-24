@@ -35,7 +35,7 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
     }
     
     /**
-     * @deprecated Use {@link #addChild(EntitySpec)}
+     * @deprecated since 0.6.0 Use {@link #addChild(EntitySpec)}
      */
     @Override
     public <T extends Entity> T createChild(EntitySpec<T> spec) {

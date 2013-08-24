@@ -149,6 +149,8 @@ public class InternalEntityFactory {
                 ((EntityLocal)entity).setConfig((ConfigKey)entry.getKey(), entry.getValue());
             }
             ((AbstractEntity)entity).init();
+            for (EntityInitializer initializer: spec.getInitializers())
+                initializer.apply((EntityInternal)entity);
             
             for (Policy policy : spec.getPolicies()) {
                 entity.addPolicy((AbstractPolicy)policy);
