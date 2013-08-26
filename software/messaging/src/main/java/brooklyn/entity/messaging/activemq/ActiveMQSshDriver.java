@@ -133,7 +133,7 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
     public void launch() {
         newScript(ImmutableMap.of("usePidFile", false), LAUNCHING).
                 body.append(
-                "nohup ./bin/activemq start > ./data/activemq-extra.log 2>&1 &"
+                "./bin/activemq start; sleep 10s; ps -ef; cat data/*; true"
                 ).execute();
     }
 
