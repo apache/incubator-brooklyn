@@ -10,7 +10,7 @@ import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.management.Task;
 import brooklyn.management.TaskWrapper;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
@@ -80,24 +80,24 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
         @Override
         public Object call() throws Exception {
             ConfigBag config = ConfigBag.newInstanceCopying(ProcessTaskWrapper.this.config);
-            if (stdout!=null) config.put(SshTool.PROP_OUT_STREAM, stdout);
-            if (stderr!=null) config.put(SshTool.PROP_ERR_STREAM, stderr);
+            if (stdout!=null) config.put(ShellTool.PROP_OUT_STREAM, stdout);
+            if (stderr!=null) config.put(ShellTool.PROP_ERR_STREAM, stderr);
             
-            if (!config.containsKey(SshTool.PROP_NO_EXTRA_OUTPUT))
+            if (!config.containsKey(ShellTool.PROP_NO_EXTRA_OUTPUT))
                 // by default no extra output (so things like cat, etc work as expected)
-                config.put(SshTool.PROP_NO_EXTRA_OUTPUT, true);
+                config.put(ShellTool.PROP_NO_EXTRA_OUTPUT, true);
 
             if (runAsRoot)
-                config.put(SshTool.PROP_RUN_AS_ROOT, true);
+                config.put(ShellTool.PROP_RUN_AS_ROOT, true);
 
             run(config);
             
             if (exitCode!=0 && requireExitCodeZero!=Boolean.FALSE) {
                 if (requireExitCodeZero==Boolean.TRUE) {
-                    logWithDetailsAndThrow("SSH task ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary(), null);
+                    logWithDetailsAndThrow(taskTypeShortName()+" task ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary(), null);
                 } else {
                     // warn, but allow, on non-zero not explicitly allowed
-                    log.warn("SSH task ended with exit code "+exitCode+" when non-zero was not explicitly allowed (error may be thrown in future), in "
+                    log.warn(taskTypeShortName()+" task ended with exit code "+exitCode+" when non-zero was not explicitly allowed (error may be thrown in future), in "
                             +Tasks.current()+": "+getSummary());
                 }
             }
@@ -105,7 +105,7 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
                 try {
                     listener.apply(ProcessTaskWrapper.this);
                 } catch (Exception e) {
-                    logWithDetailsAndThrow("Error in SSH task "+getSummary()+": "+e, e);                    
+                    logWithDetailsAndThrow("Error in "+taskTypeShortName()+" task "+getSummary()+": "+e, e);                    
                 }
             }
 
@@ -118,7 +118,7 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
             case EXIT_CODE: return exitCode;
             }
 
-            throw new IllegalStateException("Unknown return type for ssh job "+getSummary()+": "+returnType);
+            throw new IllegalStateException("Unknown return type for "+taskTypeShortName()+" job "+getSummary()+": "+returnType);
         }
 
         protected void logWithDetailsAndThrow(String message, Throwable optionalCause) {
@@ -153,11 +153,13 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
         return this;
     }
  
-    /** true iff the ssh job has completed (with or without failure) */
+    /** true iff the process has completed (with or without failure) */
     public boolean isDone() {
         return getTask().isDone();
     }
 
     protected abstract void run(ConfigBag config);
+    
+    protected abstract String taskTypeShortName();
     
 }

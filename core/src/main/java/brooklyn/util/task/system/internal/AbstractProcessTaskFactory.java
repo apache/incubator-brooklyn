@@ -65,7 +65,16 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         requireExitCodeZero = false;
         return self();
     }
-    
+
+    public ProcessTaskFactory<Boolean> returningIsExitCodeZero() {
+        if (requireExitCodeZero==null) allowingNonZeroExitCode();
+        return returning(new Function<ProcessTaskWrapper<?>,Boolean>() {
+            public Boolean apply(ProcessTaskWrapper<?> input) {
+                return input.getExitCode()==0;
+            }
+        });
+    }
+
     @SuppressWarnings({ "unchecked" })
     public AbstractProcessTaskFactory<?,String> requiringZeroAndReturningStdout() {
         requiringExitCodeZero();

@@ -1,16 +1,19 @@
 package brooklyn.util.internal.ssh.process;
 
+import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.ShellAbstractTool;
@@ -30,7 +33,11 @@ import com.google.common.io.Files;
 public class ProcessTool extends ShellAbstractTool implements ShellTool {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProcessTool.class);
+
+    // applies to calls
     
+    public static final ConfigKey<Boolean> PROP_LOGIN_SHELL = newConfigKey("loginShell", "Causes the commands to be invoked with bash arguments to forcea  login shell", Boolean.FALSE);
+
     public ProcessTool() {
         this(null);
     }
@@ -39,6 +46,7 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
         super(getOptionalVal(flags, PROP_LOCAL_TEMP_DIR));
         if (flags!=null) {
             MutableMap<String, Object> flags2 = MutableMap.copyOf(flags);
+            // TODO should remember other flags here?  (e.g. NO_EXTRA_OUTPUT, RUN_AS_ROOT, etc)
             flags2.remove(PROP_LOCAL_TEMP_DIR.getName());
             if (!flags2.isEmpty())
                 LOG.warn(""+this+" ignoring unsupported constructor flags: "+flags);
@@ -66,7 +74,7 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
 
             List<String> cmds = buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot);
             cmds.add(0, "chmod +x "+scriptPath);
-            return asInt(execProcesses(cmds, null, out, err, separator, this), -1);
+            return asInt(execProcesses(cmds, null, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -89,18 +97,26 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
         }
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command (process): {}", singlecmd);
         
-        return asInt(execProcesses(allcmds, env, out, err, separator, this), -1);
+        return asInt(execProcesses(allcmds, env, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
     }
 
+    /** as {@link #execProcesses(List, Map, OutputStream, OutputStream, String, boolean, Object)} but not using a login shell
+     */
+    public static int execProcesses(List<String> cmds, Map<String,?> env, OutputStream out, OutputStream err, String separator, Object contextForLogging) {
+        return execProcesses(cmds, env, out, err, separator, false, contextForLogging);
+    }
+    
     /** executes a set of commands by sending them as a single process to `bash -c` 
      * (single command argument of all the commands, joined with separator)
      * <p>
      * consequence of this is that you should not normally need to escape things oddly in your commands, 
      * type them just as you would into a bash shell (if you find exceptions please note them here!)
      */
-    public static int execProcesses(List<String> cmds, Map<String,?> env, OutputStream out, OutputStream err, String separator, Object contextForLogging) {
-        return execSingleProcess(Arrays.asList("bash", "-c", Strings.join(cmds, Preconditions.checkNotNull(separator, "separator"))), 
-                env, out, err, contextForLogging);
+    public static int execProcesses(List<String> cmds, Map<String,?> env, OutputStream out, OutputStream err, String separator, boolean asLoginShell, Object contextForLogging) {
+        MutableList<String> commands = new MutableList<String>().append("bash");
+        if (asLoginShell) commands.append("-l");
+        commands.append("-c", Strings.join(cmds, Preconditions.checkNotNull(separator, "separator")));
+        return execSingleProcess(commands, env, out, err, contextForLogging);
     }
     
     /** executes a single process made up of the given command words (*not* bash escaped);

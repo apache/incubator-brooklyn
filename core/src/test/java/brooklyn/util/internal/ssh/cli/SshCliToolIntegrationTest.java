@@ -31,8 +31,7 @@ public class SshCliToolIntegrationTest extends SshToolAbstractIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(SshCliToolIntegrationTest.class);
     
-    @Override
-    protected SshTool newTool(Map<String,?> flags) {
+    protected SshTool newUnregisteredTool(Map<String,?> flags) {
         return new SshCliTool(flags);
     }
 
