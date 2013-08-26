@@ -45,6 +45,7 @@ import brooklyn.management.TaskFactory;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.management.internal.NonDeploymentManagementContext;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.ResourceUtils;
@@ -507,6 +508,11 @@ public class Entities {
      * and then terminates the management context */
     public static void destroyAll(ManagementContext mgmt) {
         Exception error = null;
+        if (mgmt instanceof NonDeploymentManagementContext) {
+            // log here because it is easy for tests to destroyAll(app.getMgmtContext())
+            // which will *not* destroy the mgmt context if the app has been stopped!
+            log.warn("Entities.destroyAll invoked on non-deployment "+mgmt+" - not likely to have much effect!");
+        }
         if (!mgmt.isRunning()) return;
         log.debug("destroying all apps in "+mgmt+": "+mgmt.getApplications());
         for (Application app: mgmt.getApplications()) {

@@ -13,6 +13,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
+import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
@@ -23,6 +24,7 @@ import com.google.common.collect.Iterables;
 public class SameServerEntityTest {
 
     private LocalhostMachineProvisioningLocation loc;
+    private ManagementContext mgmt;
     private TestApplication app;
     private SameServerEntity entity;
     
@@ -30,12 +32,13 @@ public class SameServerEntityTest {
     public void setUp() {
         loc = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        mgmt = app.getManagementContext();
         entity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class));
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        if (app != null) Entities.destroyAll(mgmt);
     }
     
     @Test
