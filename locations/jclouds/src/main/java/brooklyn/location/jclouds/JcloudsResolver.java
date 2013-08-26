@@ -162,7 +162,7 @@ public class JcloudsResolver implements LocationResolver {
     @SuppressWarnings("unchecked")
     protected JcloudsLocation newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
         JcloudsSpecParser details = JcloudsSpecParser.parse(spec, false);
-        String namedLocation = (String) locationFlags.get("name");
+        String namedLocation = (String) locationFlags.get("named");
 
         boolean isProvider = details.isProvider();
         String providerOrApi = details.providerOrApi;

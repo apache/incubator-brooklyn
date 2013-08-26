@@ -70,7 +70,7 @@ public class LocalhostResolver implements LocationResolver {
     }
     
     protected Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
-        String namedLocation = (String) locationFlags.get("name");
+        String namedLocation = (String) locationFlags.get("named");
         
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {

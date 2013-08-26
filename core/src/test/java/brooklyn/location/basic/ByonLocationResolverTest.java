@@ -3,6 +3,8 @@ package brooklyn.location.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import java.net.InetAddress;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -16,11 +18,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.TestUtils;
+import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
@@ -33,16 +36,66 @@ public class ByonLocationResolverTest {
 
     private static final Logger log = LoggerFactory.getLogger(ByonLocationResolverTest.class);
     
+    private BrooklynProperties brooklynProperties;
     private LocalManagementContext managementContext;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext();
+        brooklynProperties = BrooklynProperties.Factory.newEmpty();
+        managementContext = new LocalManagementContext(brooklynProperties);
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (managementContext != null) Entities.destroyAll(managementContext);
+    }
+    
+    @Test
+    public void testTakesByonScopedProperties() {
+        brooklynProperties.put("brooklyn.location.byon.privateKeyFile", "myprivatekeyfile");
+        brooklynProperties.put("brooklyn.location.byon.publicKeyFile", "mypublickeyfile");
+        brooklynProperties.put("brooklyn.location.byon.privateKeyData", "myprivateKeyData");
+        brooklynProperties.put("brooklyn.location.byon.publicKeyData", "myPublicKeyData");
+        brooklynProperties.put("brooklyn.location.byon.privateKeyPassphrase", "myprivateKeyPassphrase");
+
+        Map<String, Object> conf = resolve("byon:(hosts=\"1.1.1.1\")").getAllConfig(true);
+        
+        assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
+        assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
+        assertEquals(conf.get("privateKeyData"), "myprivateKeyData");
+        assertEquals(conf.get("publicKeyData"), "myPublicKeyData");
+        assertEquals(conf.get("privateKeyPassphrase"), "myprivateKeyPassphrase");
     }
 
-    @AfterMethod(alwaysRun = true)
-    public void tearDown(){
-        if (managementContext != null) Entities.destroyAll(managementContext);
+    @Test
+    public void testNamedByonLocation() throws Exception {
+        brooklynProperties.put("brooklyn.location.named.mynamed", "byon:(hosts=\"1.1.1.1\")");
+        
+        FixedListMachineProvisioningLocation<SshMachineLocation> loc = resolve("named:mynamed");
+        assertEquals(loc.obtain().getAddress(), InetAddress.getByName("1.1.1.1"));
+    }
+
+    @Test
+    public void testPropertyScopePrescedence() throws Exception {
+        brooklynProperties.put("brooklyn.location.named.mynamed", "byon:(hosts=\"1.1.1.1\")");
+        
+        // prefer those in "named" over everything else
+        brooklynProperties.put("brooklyn.location.named.mynamed.privateKeyFile", "privateKeyFile-inNamed");
+        brooklynProperties.put("brooklyn.location.byon.privateKeyFile", "privateKeyFile-inProviderSpecific");
+        brooklynProperties.put("brooklyn.localhost.privateKeyFile", "privateKeyFile-inGeneric");
+
+        // prefer those in provider-specific over generic
+        brooklynProperties.put("brooklyn.location.byon.publicKeyFile", "publicKeyFile-inProviderSpecific");
+        brooklynProperties.put("brooklyn.location.publicKeyFile", "publicKeyFile-inGeneric");
+
+        // prefer location-generic if nothing else
+        brooklynProperties.put("brooklyn.location.privateKeyData", "privateKeyData-inGeneric");
+
+        Map<String, Object> conf = resolve("named:mynamed").getAllConfig(true);
+        
+        assertEquals(conf.get("privateKeyFile"), "privateKeyFile-inNamed");
+        assertEquals(conf.get("publicKeyFile"), "publicKeyFile-inProviderSpecific");
+        assertEquals(conf.get("privateKeyData"), "privateKeyData-inGeneric");
     }
 
     @Test
@@ -76,8 +129,8 @@ public class ByonLocationResolverTest {
 
     @Test(groups="Integration")
     public void testNiceError() throws Exception {
-        TestUtils.assertFailsWith(new Runnable() {
-            public void run() {
+        Asserts.assertFailsWith(new Runnable() {
+            @Override public void run() {
                 FixedListMachineProvisioningLocation<SshMachineLocation> x = 
                         resolve("byon:(hosts=\"1.1.1.{1,2}}\")");
                 log.error("got "+x+" but should have failed (your DNS is giving an IP for hostname '1.1.1.1}' (with the extra '}')");
@@ -202,6 +255,7 @@ public class ByonLocationResolverTest {
         }
     }
     
+    @SuppressWarnings("unchecked")
     private FixedListMachineProvisioningLocation<SshMachineLocation> resolve(String val) {
         return (FixedListMachineProvisioningLocation<SshMachineLocation>) managementContext.getLocationRegistry().resolve(val);
     }

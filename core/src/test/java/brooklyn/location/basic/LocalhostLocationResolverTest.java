@@ -1,6 +1,8 @@
 package brooklyn.location.basic;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.util.List;
 import java.util.Map;
@@ -14,10 +16,10 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
+import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 
 public class LocalhostLocationResolverTest {
 
@@ -113,46 +115,87 @@ public class LocalhostLocationResolverTest {
         Assert.assertTrue(resolve("localhost") instanceof LocalhostMachineProvisioningLocation);
     }
 
-    @Test(expectedExceptions={ NoSuchElementException.class, IllegalArgumentException.class })
-    public void testBogusFails() {
-        /* the exception is thrown by credentialsfromenv, which is okay;
-         * we could query jclouds ahead of time to see if the provider is supported, 
-         * and add the following parameter to the @Test annotation:
-         * expectedExceptionsMessageRegExp=".*[Nn]o resolver.*")
-         */
-        resolve("bogus:bogus");
+    @Test
+    public void testThrowsOnInvalid() throws Exception {
+        assertThrowsNoSuchElement("wrongprefix");
+        assertThrowsIllegalArgument("localhost:(name=abc"); // no closing bracket
+        assertThrowsIllegalArgument("localhost:(name)"); // no value for name
+        assertThrowsIllegalArgument("localhost:(name=)"); // no value for name
     }
+    
 
     @Test
     public void testAcceptsList() {
-        getLocationResolver().getLocationsById(ImmutableList.of("localhost"));
+        List<Location> l = getLocationResolver().resolve(ImmutableList.of("localhost"));
+        assertEquals(l.size(), 1, "l="+l);
+        assertTrue(l.get(0) instanceof LocalhostMachineProvisioningLocation, "l="+l);
     }
 
     @Test
-    public void testRegistryCommaResolution() {
+    public void testRegistryCommaResolution() throws NoMachinesAvailableException {
         List<Location> l;
-        l = getLocationResolver().getLocationsById(ImmutableList.of("byon:(hosts=\"192.168.1.{1,2}\")"));
-        Assert.assertEquals(1, l.size());
-        l = getLocationResolver().getLocationsById(ImmutableList.of("byon:(hosts=192.168.0.1),byon:(hosts=\"192.168.1.{1,2}\"),byon:(hosts=192.168.0.2)"));
-        Assert.assertEquals(3, l.size());
-        l = getLocationResolver().getLocationsById(ImmutableList.of("byon:(hosts=192.168.0.1),byon:(hosts=\"192.168.1.{1,2}\",user=bob),byon:(hosts=192.168.0.2)"));
-        Assert.assertEquals(3, l.size());
+        l = getLocationResolver().resolve(ImmutableList.of("localhost,localhost,localhost"));
+        assertEquals(l.size(), 3, "l="+l);
+        assertTrue(l.get(0) instanceof LocalhostMachineProvisioningLocation, "l="+l);
+        assertTrue(l.get(1) instanceof LocalhostMachineProvisioningLocation, "l="+l);
+        assertTrue(l.get(2) instanceof LocalhostMachineProvisioningLocation, "l="+l);
+
+        // And check works if comma in brackets
+        l = getLocationResolver().resolve(ImmutableList.of("byon:(hosts=\"192.168.0.1\",user=bob),byon:(hosts=\"192.168.0.2\",user=bob2)"));
+        assertEquals(l.size(), 2, "l="+l);
+        assertTrue(l.get(0) instanceof FixedListMachineProvisioningLocation, "l="+l);
+        assertTrue(l.get(1) instanceof FixedListMachineProvisioningLocation, "l="+l);
+        assertEquals(((FixedListMachineProvisioningLocation<SshMachineLocation>)l.get(0)).obtain().getUser(), "bob");
+        assertEquals(((FixedListMachineProvisioningLocation<SshMachineLocation>)l.get(1)).obtain().getUser(), "bob2");
     }
 
     @Test
     public void testAcceptsListOLists() {
         //if inner list has a single item it automatically gets coerced correctly to string
         //preserve for compatibility with older CommandLineLocations (since 0.4.0) [but log warning]
-        ((BasicLocationRegistry)managementContext.getLocationRegistry()).getLocationsById(ImmutableList.of(ImmutableList.of("localhost")));
+        ((BasicLocationRegistry)managementContext.getLocationRegistry()).resolve(ImmutableList.of(ImmutableList.of("localhost")));
     }
 
+    @Test
+    public void testResolvesName() throws Exception {
+        Location location = resolve("localhost");
+        assertTrue(location instanceof LocalhostMachineProvisioningLocation);
+        assertEquals(location.getDisplayName(), "localhost");
+
+        Location location2 = resolve("localhost:()");
+        assertTrue(location2 instanceof LocalhostMachineProvisioningLocation);
+        assertEquals(location2.getDisplayName(), "localhost");
+
+        Location location3 = resolve("localhost:(name=myname)");
+        assertTrue(location3 instanceof LocalhostMachineProvisioningLocation);
+        assertEquals(location3.getDisplayName(), "myname");
+    }
+    
     private BasicLocationRegistry getLocationResolver() {
         return (BasicLocationRegistry) managementContext.getLocationRegistry();
     }
     
-    private Location resolve(String id) {
-        Location l = managementContext.getLocationRegistry().resolve(id);
+    private Location resolve(String val) {
+        Location l = managementContext.getLocationRegistry().resolve(val);
         Assert.assertNotNull(l);
         return l;
+    }
+    
+    private void assertThrowsNoSuchElement(String val) {
+        try {
+            resolve(val);
+            fail();
+        } catch (NoSuchElementException e) {
+            // success
+        }
+    }
+    
+    private void assertThrowsIllegalArgument(String val) {
+        try {
+            resolve(val);
+            fail();
+        } catch (IllegalArgumentException e) {
+            // success
+        }
     }
 }
