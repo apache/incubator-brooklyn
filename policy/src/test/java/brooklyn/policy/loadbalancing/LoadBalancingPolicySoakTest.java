@@ -21,7 +21,7 @@ import com.google.common.collect.Iterables;
 
 public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicySoakTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicySoakTest.class);
     
     private static final long TIMEOUT_MS = 40*1000;
     

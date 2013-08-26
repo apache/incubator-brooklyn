@@ -30,7 +30,7 @@ import com.google.common.base.Stopwatch;
  */
 public class AbstractPerformanceTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(AbstractPerformanceTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractPerformanceTest.class);
     
     public static final DoubleSystemProperty PERFORMANCE_EXPECTATION_SYSPROP = 
             new DoubleSystemProperty("brooklyn.test.performanceExpectation");

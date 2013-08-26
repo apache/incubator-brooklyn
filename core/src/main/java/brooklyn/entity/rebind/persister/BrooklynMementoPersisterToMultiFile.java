@@ -32,7 +32,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersister {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(BrooklynMementoPersisterToMultiFile.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynMementoPersisterToMultiFile.class);
 
     private static final int SHUTDOWN_TIMEOUT_MS = 10*1000;
     

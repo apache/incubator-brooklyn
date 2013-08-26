@@ -21,7 +21,7 @@ import brooklyn.util.task.SingleThreadedScheduler
 
 public class TaskPerformanceTest extends AbstractPerformanceTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(TaskPerformanceTest.class)
+    private static final Logger LOG = LoggerFactory.getLogger(TaskPerformanceTest.class)
     
     private static final long LONG_TIMEOUT_MS = 30*1000
     

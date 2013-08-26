@@ -36,7 +36,7 @@ import com.google.common.collect.Iterables;
  */
 public class Dumpers {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(Dumpers.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Dumpers.class);
 
     private static List<String> UNTRAVERSED_PREFIXES = ImmutableList.of("java.lang", "java.io");
     

@@ -17,7 +17,7 @@ import brooklyn.util.flags.SetFromFlag
  * Mock web application server entity for testing.
  */
 public class TestJavaWebAppEntity extends VanillaJavaApp {
-	protected static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntity)
+	private static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntity.class);
     public static final Effector<Void> START = new EffectorAndBody<Void>(SoftwareProcessImpl.START, new MethodEffector(TestJavaWebAppEntity.class, "customStart").getBody());
 
     public TestJavaWebAppEntity(Map properties=[:], Entity parent=null) {

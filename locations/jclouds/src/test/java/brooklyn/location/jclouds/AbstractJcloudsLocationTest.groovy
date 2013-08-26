@@ -18,7 +18,7 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Maps
 
 public abstract class AbstractJcloudsLocationTest {
-    protected static final Logger LOG = LoggerFactory.getLogger(AbstractJcloudsLocationTest.class)
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractJcloudsLocationTest.class)
 
     private final String provider
 

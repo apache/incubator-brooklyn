@@ -37,7 +37,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implements AbstractGeoDnsService {
-    protected static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
 
     @SetFromFlag
     protected Entity targetEntityProvider;
@@ -268,7 +268,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 }
                 
             } catch (MalformedURLException e) {
-                LOG.warn("Invalid URL {} for entity {} in {}", new Object[] {url, entity, this});
+                log.warn("Invalid URL {} for entity {} in {}", new Object[] {url, entity, this});
             }
         }
         return hostname;

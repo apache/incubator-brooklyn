@@ -25,7 +25,7 @@ import com.google.common.base.Predicates;
  */
 public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements TomcatServer {
 
-    private static final Logger log = LoggerFactory.getLogger(TomcatServerImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TomcatServerImpl.class);
 
     public TomcatServerImpl() {
         super();

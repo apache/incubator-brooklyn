@@ -33,7 +33,7 @@ import com.google.common.util.concurrent.MoreExecutors;
  */
 public class MementoFileWriter<T> {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(MementoFileWriter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MementoFileWriter.class);
 
     private final File file;
     private final File tmpFile;

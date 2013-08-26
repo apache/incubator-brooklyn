@@ -30,7 +30,7 @@ import com.google.common.collect.Iterables;
  */
 class CassandraClusterLiveTest {
 
-    protected static final Logger log = LoggerFactory.getLogger(CassandraClusterLiveTest.class);
+    private static final Logger log = LoggerFactory.getLogger(CassandraClusterLiveTest.class);
 
     // private String provider = "rackspace-cloudservers-uk";
     private String provider = "aws-ec2:eu-west-1";

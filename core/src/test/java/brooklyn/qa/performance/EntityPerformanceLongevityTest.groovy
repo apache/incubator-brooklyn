@@ -11,7 +11,7 @@ import brooklyn.test.entity.TestEntity
 
 public class EntityPerformanceLongevityTest extends EntityPerformanceTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(EntityPerformanceLongevityTest.class)
+    private static final Logger LOG = LoggerFactory.getLogger(EntityPerformanceLongevityTest.class)
 
     // TODO enable this to some big number to see what happens when things run for a long time.
     // e.g. will we eventually get OOME when storing all tasks relating to effector calls?

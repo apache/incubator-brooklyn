@@ -40,7 +40,7 @@ import com.google.common.collect.Sets;
  */
 public class Reflections {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(Reflections.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Reflections.class);
 
 	public static class ReflectionNotFoundException extends RuntimeException {
 		private static final long serialVersionUID = 9032835250796708037L;

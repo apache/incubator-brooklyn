@@ -44,7 +44,7 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
     
     // TODO Better way of setting/overriding defaults for config keys that are defined in super class SoftwareProcess
 
-    protected static final Logger LOG = LoggerFactory.getLogger(KarafContainerImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KarafContainerImpl.class);
 
     public static final String KARAF_ADMIN = "org.apache.karaf:type=admin,name=%s";
     public static final String KARAF_FEATURES = "org.apache.karaf:type=features,name=%s";

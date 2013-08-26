@@ -13,7 +13,7 @@ import brooklyn.util.task.SingleThreadedScheduler;
 
 public class AsyncCollectionChangeAdapter<Item> implements CollectionChangeListener<Item> {
 	
-    protected static final Logger LOG = LoggerFactory.getLogger(AsyncCollectionChangeAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AsyncCollectionChangeAdapter.class);
 
     private final ExecutionManager executor;
     private final CollectionChangeListener<Item> delegate;

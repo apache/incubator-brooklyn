@@ -56,7 +56,7 @@ import com.google.common.collect.Multimap;
  */
 public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsServer {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(BindDnsServerImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BindDnsServerImpl.class);
 
     private AtomicLong serial = new AtomicLong(System.currentTimeMillis());
     private Object[] mutex = new Object[0];

@@ -29,7 +29,7 @@ import com.google.common.collect.Maps;
  */
 public class BasicSubscriptionContext implements SubscriptionContext {
     
-    protected static final Logger LOG = LoggerFactory.getLogger(BasicSubscriptionContext.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BasicSubscriptionContext.class);
 
     private final SubscriptionManager manager;
     private final Object subscriber;

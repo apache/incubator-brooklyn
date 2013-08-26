@@ -49,7 +49,7 @@ import com.google.common.collect.Maps;
  */
 public class EntityDynamicType {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(EntityDynamicType.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EntityDynamicType.class);
 
     private final Class<? extends Entity> entityClass;
     private final AbstractEntity entity;

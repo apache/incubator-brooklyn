@@ -47,7 +47,7 @@ import com.google.common.collect.Lists;
  */
 public class BrooklynGarbageCollector {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(BrooklynGarbageCollector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynGarbageCollector.class);
 
     public static final ConfigKey<Long> GC_PERIOD = new BasicConfigKey<Long>(
             Long.class, "brooklyn.gc.period", "the period, in millisconds, for checking if any tasks need to be deleted", 60*1000L);

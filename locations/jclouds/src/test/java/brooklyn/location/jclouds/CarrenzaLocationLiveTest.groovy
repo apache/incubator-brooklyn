@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableList
  * will not work in brooklyn 0.4.0-M2 etc.
  */
 class CarrenzaLocationLiveTest {
-    protected static final Logger LOG = LoggerFactory.getLogger(CarrenzaLocationLiveTest.class)
+    private static final Logger LOG = LoggerFactory.getLogger(CarrenzaLocationLiveTest.class)
     
     private static final String PROVIDER = "vcloud"
     private static final String ENDPOINT = "https://myvdc.carrenza.net/api"

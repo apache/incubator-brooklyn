@@ -17,6 +17,8 @@ package brooklyn.entity.nosql.couchdb;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -37,6 +39,8 @@ import com.google.common.collect.ImmutableList;
  * set, usually in the {@code .brooklyn/brooklyn.properties} file.
  */
 public class CouchDBNodeLiveTest extends AbstractCouchDBNodeTest {
+
+    private static final Logger log = LoggerFactory.getLogger(CouchDBNodeLiveTest.class);
 
     @DataProvider(name = "virtualMachineData")
     public Object[][] provideVirtualMachineData() {

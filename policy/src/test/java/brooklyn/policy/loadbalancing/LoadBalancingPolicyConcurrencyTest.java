@@ -11,6 +11,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -23,6 +25,8 @@ import com.google.common.collect.Lists;
 
 public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPolicyTest {
     
+    private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicyConcurrencyTest.class);
+
     private static final double WORKRATE_JITTER = 2d;
     private static final int NUM_CONTAINERS = 20;
     private static final int WORKRATE_UPDATE_PERIOD_MS = 1000;

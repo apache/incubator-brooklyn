@@ -37,7 +37,7 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
 
     // TODO Duplication of code in SoftwareProcessImpl; could review and tidy
     
-    protected static final Logger log = LoggerFactory.getLogger(SameServerEntityImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(SameServerEntityImpl.class);
     
     protected void setProvisioningLocation(MachineProvisioningLocation val) {
         if (getAttribute(PROVISIONING_LOCATION) != null) throw new IllegalStateException("Cannot change provisioning location: existing="+getAttribute(PROVISIONING_LOCATION)+"; new="+val);
@@ -232,7 +232,7 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
         try {
             if (provisioner != null) provisioner.release(machine);
         } catch (Throwable t) {
-            LOG.warn("Error releasing machine "+machine+" while stopping "+this+"; rethrowing ("+t+")");
+            log.warn("Error releasing machine "+machine+" while stopping "+this+"; rethrowing ("+t+")");
             throw Exceptions.propagate(t);
         }
     }

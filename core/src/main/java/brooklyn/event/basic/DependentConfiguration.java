@@ -55,7 +55,7 @@ import com.google.common.collect.Lists;
  */
 public class DependentConfiguration {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(DependentConfiguration.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DependentConfiguration.class);
     
     //not instantiable, only a static helper
     private DependentConfiguration() {}

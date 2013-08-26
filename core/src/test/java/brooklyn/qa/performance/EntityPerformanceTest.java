@@ -27,7 +27,7 @@ import com.google.common.collect.Lists;
 
 public class EntityPerformanceTest extends AbstractPerformanceTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(EntityPerformanceTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EntityPerformanceTest.class);
     
     private static final long TIMEOUT_MS = 10*1000;
     
