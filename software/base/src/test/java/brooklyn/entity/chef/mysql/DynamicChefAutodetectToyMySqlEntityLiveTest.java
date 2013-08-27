@@ -7,9 +7,9 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.location.NoMachinesAvailableException;
 
-public class DynamicChefSoloToyMySqlEntityLiveTest extends AbstractChefToyMySqlEntityLiveTest {
+public class DynamicChefAutodetectToyMySqlEntityLiveTest extends AbstractChefToyMySqlEntityLiveTest {
 
-    private static final Logger log = LoggerFactory.getLogger(DynamicChefSoloToyMySqlEntityLiveTest.class);
+    private static final Logger log = LoggerFactory.getLogger(DynamicChefAutodetectToyMySqlEntityLiveTest.class);
     
     // test here just so Eclipse IDE picks it up
     @Override @Test(groups="Live")
@@ -19,7 +19,7 @@ public class DynamicChefSoloToyMySqlEntityLiveTest extends AbstractChefToyMySqlE
     
     @Override
     protected Entity createMysql() {
-        Entity mysql = app.createAndManageChild(DynamicToyMySqlEntityChef.specSolo());
+        Entity mysql = app.createAndManageChild(DynamicToyMySqlEntityChef.spec());
         log.debug("created "+mysql);
         return mysql;
     }
