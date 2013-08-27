@@ -58,7 +58,7 @@ public class ChefServerTasks {
     public static TaskFactory<ProcessTaskWrapper<Boolean>> isKnifeInstalled() {
         return new KnifeTaskFactory<Boolean,ProcessTaskWrapper<Boolean>>("knife install check") {
             public ProcessTaskWrapper<Boolean> newTask() {
-                return knifeTaskFactory("client list").returningIsExitCodeZero().newTask();
+                return knifeTaskFactory("node list").returningIsExitCodeZero().newTask();
             }
             @Override
             public ProcessTaskFactory<Boolean> tuneTaskFactory(ProcessTaskFactory<Boolean> factory) {

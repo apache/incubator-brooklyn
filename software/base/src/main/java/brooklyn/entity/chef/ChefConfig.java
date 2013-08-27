@@ -16,7 +16,7 @@ public interface ChefConfig {
     public static final MapConfigKey<Object> CHEF_LAUNCH_ATTRIBUTES = new MapConfigKey<Object>(Object.class, "brooklyn.chef.launch.attributes");
     
     public static final ConfigKey<Boolean> CHEF_RUN_CONVERGE_TWICE = ConfigKeys.newBooleanConfigKey("brooklyn.chef.converge.twice",
-            "Whether to run converge commands twice if the first one fails; needed in some contexts, e.g. when switching between chef-server and chef-solo mode");
+            "Whether to run converge commands twice if the first one fails; needed in some contexts, e.g. when switching between chef-server and chef-solo mode", false);
 
     public static enum ChefModes {
         /** Force use of Chef Solo */

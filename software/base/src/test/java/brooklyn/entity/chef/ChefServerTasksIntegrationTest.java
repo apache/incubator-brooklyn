@@ -79,7 +79,7 @@ public class ChefServerTasksIntegrationTest {
         File tempDir = Files.createTempDir();
         ResourceUtils r = new ResourceUtils(ChefServerTasksIntegrationTest.class);
         try {
-            for (String f: new String[] { "knife.rb", "brooklyn.pem", "brooklyn-validator.pem" }) {
+            for (String f: new String[] { "knife.rb", "brooklyn-tests.pem", "brooklyn-validator.pem" }) {
                 Files.copy(InputStreamSupplier.fromString(r.getResourceAsString(
                         "classpath:///brooklyn/entity/chef/hosted-chef-brooklyn-credentials/"+f)),
                         new File(tempDir, f));
