@@ -110,6 +110,9 @@ public class ChefServerTasks {
                 String result = super.fullCommand(knifeSubcommand);
                 if (entity().getConfig(ChefConfig.CHEF_RUN_CONVERGE_TWICE))
                     result = BashCommands.alternatives(result, result);
+                String extraCommands = entity().getConfig(ChefConfig.KNIFE_SETUP_COMMANDS);
+                if (!Strings.isEmpty(extraCommands))
+                    result = BashCommands.chain(extraCommands, result);
                 return result;
             }
         };

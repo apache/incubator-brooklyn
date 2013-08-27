@@ -32,6 +32,8 @@ public interface ChefConfig {
     public static final ConfigKey<ChefModes> CHEF_MODE = ConfigKeys.newConfigKey(ChefModes.class, "brooklyn.chef.mode",
             "Whether Chef should run in solo mode, knife mode, or auto-detect", ChefModes.AUTODETECT);
     
+    public static final ConfigKey<String> KNIFE_SETUP_COMMANDS = ConfigKeys.newStringConfigKey("brooklyn.chef.knife.setupCommands",
+            "An optional set of commands to run on localhost before invoking knife; useful if using ruby version manager for example");
     public static final ConfigKey<String> KNIFE_EXECUTABLE = ConfigKeys.newStringConfigKey("brooklyn.chef.knife.executableFile",
             "Knife command to run on the Brooklyn machine, including full path; defaults to scanning the path");
     public static final ConfigKey<String> KNIFE_CONFIG_FILE = ConfigKeys.newStringConfigKey("brooklyn.chef.knife.configFile",
