@@ -1,6 +1,5 @@
 package brooklyn.event.feed;
 
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;

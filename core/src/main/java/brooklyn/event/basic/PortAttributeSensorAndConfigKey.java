@@ -5,6 +5,8 @@ import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Iterables;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
@@ -49,7 +51,18 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
                         LOG.debug(""+entity+" choosing port "+p+" for "+getName());
                         return p;
                     }
-                    LOG.warn(""+entity+" no port available for "+getName()+" in range "+value);
+                    int rangeSize = Iterables.size(value);
+                    if (rangeSize==0)
+                        LOG.warn(""+entity+" no port available for "+getName()+" (empty range "+value+")");
+                    else if (rangeSize==1) {
+                        Integer pp = value.iterator().next();
+                        if (pp>1024)
+                            LOG.warn(""+entity+" port "+pp+" not available for "+getName());
+                        else 
+                            LOG.warn(""+entity+" port "+pp+" not available for "+getName()+" (root may be required?)");
+                    } else {
+                        LOG.warn(""+entity+" no port available for "+getName()+" (tried range "+value+")");
+                    }
                     // definitively, no ports available
                     return null;
                 }
