@@ -90,11 +90,11 @@ public class SshjTool extends SshAbstractTool implements SshTool {
 
     private final SshjClientConnection sshClientConnection;
 
-    public static Builder<SshjTool,?> builder() {
-        return new ConcreteBuilder();
+    public static SshjToolBuilder builder() {
+        return new SshjToolBuilder();
     }
     
-    private static class ConcreteBuilder extends Builder<SshjTool, ConcreteBuilder> {
+    public static class SshjToolBuilder extends Builder<SshjTool, SshjToolBuilder> {
     }
     
     public static class Builder<T extends SshjTool, B extends Builder<T,B>> extends AbstractSshToolBuilder<T,B> {

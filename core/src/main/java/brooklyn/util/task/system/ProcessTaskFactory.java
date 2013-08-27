@@ -33,6 +33,7 @@ public interface ProcessTaskFactory<T> extends TaskFactory<ProcessTaskWrapper<T>
     public <V> ProcessTaskFactory<T> configure(ConfigKey<V> key, V value);
     
     /** adds a listener which will be notified of (otherwise) successful completion,
-     * typically used to invalidate the result (ie throw exception, to promote a string in the output to an exception) */
+     * typically used to invalidate the result (ie throw exception, to promote a string in the output to an exception);
+     * invoked even if return code is zero, so a better error can be thrown */
     public ProcessTaskFactory<T> addCompletionListener(Function<ProcessTaskWrapper<?>, Void> function);
 }

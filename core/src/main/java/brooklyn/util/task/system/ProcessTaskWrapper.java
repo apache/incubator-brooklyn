@@ -92,6 +92,14 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
 
             run(config);
             
+            for (Function<ProcessTaskWrapper<?>, Void> listener: completionListeners) {
+                try {
+                    listener.apply(ProcessTaskWrapper.this);
+                } catch (Exception e) {
+                    logWithDetailsAndThrow("Error in "+taskTypeShortName()+" task "+getSummary()+": "+e, e);                    
+                }
+            }
+            
             if (exitCode!=0 && requireExitCodeZero!=Boolean.FALSE) {
                 if (requireExitCodeZero==Boolean.TRUE) {
                     logWithDetailsAndThrow(taskTypeShortName()+" task ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary(), null);
@@ -101,14 +109,6 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
                             +Tasks.current()+": "+getSummary());
                 }
             }
-            for (Function<ProcessTaskWrapper<?>, Void> listener: completionListeners) {
-                try {
-                    listener.apply(ProcessTaskWrapper.this);
-                } catch (Exception e) {
-                    logWithDetailsAndThrow("Error in "+taskTypeShortName()+" task "+getSummary()+": "+e, e);                    
-                }
-            }
-
             switch (returnType) {
             case CUSTOM: return returnResultTransformation.apply(ProcessTaskWrapper.this);
             case STDOUT_STRING: return stdout.toString();

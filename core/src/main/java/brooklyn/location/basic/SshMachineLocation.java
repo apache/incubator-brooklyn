@@ -13,7 +13,9 @@ import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.net.InetAddress;
+import java.security.KeyPair;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,7 @@ import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
@@ -49,6 +52,7 @@ import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
 import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
+import brooklyn.util.net.Urls;
 import brooklyn.util.pool.BasicPool;
 import brooklyn.util.pool.Pool;
 import brooklyn.util.stream.KnownSizeInputStream;
@@ -89,6 +93,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     String user;
 
     @SetFromFlag
+    /** @deprecated since 0.6.0 not used */ @Deprecated
     String privateKeyData;
 
     @SetFromFlag(nullable = false)
@@ -242,7 +247,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     public String getUser() {
+        if (!truth(user)) {
+            return System.getProperty("user.name");
+        }
         return user;
+    }
+    
+    public int getPort() {
+        return getConfig(SshTool.PROP_PORT);
     }
     
     public int run(String command) {
@@ -298,7 +310,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     protected boolean previouslyConnected = false;
     protected SshTool connectSsh(Map props) {
         try {
-            if (!truth(user)) user = System.getProperty("user.name");
+            if (!truth(user)) user = getUser();
             
             ConfigBag args = new ConfigBag().
                 configure(SshTool.PROP_USER, user).
@@ -319,9 +331,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                     // currently e.g. it will not admit a tool-specific property.
                     // thinking either we know about the tool here,
                     // or we don't allow unadorned keys to be set
-                    // (require use of BROOKLYN_CONFOG_KEY_PREFIX)
+                    // (require use of BROOKLYN_CONFIG_KEY_PREFIX)
                 } else {
-                    // this key is not applicatble here; ignore it
+                    // this key is not applicable here; ignore it
                     continue;
                 }
                 args.putStringKey(key, entry.getValue());
@@ -669,4 +681,27 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         vanillaSshToolPool = buildVanillaPool();
     }
 
+    /** returns the un-passphrased key-pair info if a key is being used, or else null */ 
+    public KeyPair findKeyPair() {
+        String fn = getConfig(SshTool.PROP_PRIVATE_KEY_FILE);
+        if (fn!=null) return SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl(fn), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
+        String data = getConfig(SshTool.PROP_PRIVATE_KEY_DATA);
+        if (data!=null) return SecureKeys.readPem(new ReaderInputStream(new StringReader(data)), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
+        if (findPassword()!=null)
+            // if above not specified, and password is, use password
+            return null;
+        // fall back to id_rsa and id_dsa
+        if (new File( Urls.mergePaths(System.getProperty("user.home"), ".ssh/id_rsa") ).exists() )
+            return SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("~/.ssh/id_rsa"), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
+        if (new File( Urls.mergePaths(System.getProperty("user.home"), ".ssh/id_dsa") ).exists() )
+            return SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("~/.ssh/id_dsa"), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
+        LOG.warn("Unable to extract any key or passphrase data in request to findKeyPair for "+this);
+        return null;
+    }
+
+    /** returns the password being used to log in, if a password is being used, or else null */
+    public String findPassword() {
+        return getConfig(SshTool.PROP_PASSWORD);
+    }
+    
 }

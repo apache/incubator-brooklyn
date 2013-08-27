@@ -1,11 +1,18 @@
 package brooklyn.util.crypto;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.charset.Charset;
 import java.security.KeyPair;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import brooklyn.util.ResourceUtils;
+
+import com.google.common.io.Files;
 
 public class SecureKeysAndSignerTest {
 
@@ -59,6 +66,42 @@ public class SecureKeysAndSignerTest {
         X509Certificate aCert = signer.newCertificateFor("A", aKey);
         
         Assert.assertTrue(SecureKeys.isCertificateAuthorizedBy(aCert, caCert));
+    }
+
+    @Test
+    public void testReadRsaKey() throws Exception {
+        KeyPair key = SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa.pem"), null);
+        checkNonTrivial(key);
+    }
+
+    @Test
+    public void testReadDsaKey() throws Exception {
+        KeyPair key = SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_dsa.pem"), null);
+        checkNonTrivial(key);
+    }
+
+    @Test(expectedExceptions=Exception.class)
+    public void testCantReadRsaPassphraseKeyWithoutPassphrase() throws Exception {
+        KeyPair key = SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa_passphrase.pem"), null);
+        checkNonTrivial(key);
+    }
+
+    @Test
+    public void testReadRsaPassphraseKeyAndWriteWithoutPassphrase() throws Exception {
+        KeyPair key = SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa_passphrase.pem"), "passphrase");
+        checkNonTrivial(key);
+        File f = File.createTempFile("brooklyn-sample_rsa_passphrase_without_passphrase", "pem");
+        f.deleteOnExit();
+        Files.write(SecureKeys.stringPem(key), f, Charset.defaultCharset());
+        KeyPair key2 = SecureKeys.readPem(new FileInputStream(f), null);
+        checkNonTrivial(key2);
+        Assert.assertEquals(key2.getPrivate().getEncoded(), key.getPrivate().getEncoded());
+        Assert.assertEquals(key2.getPublic().getEncoded(), key.getPublic().getEncoded());
+    }
+
+    private void checkNonTrivial(KeyPair key) {
+        Assert.assertNotEquals(key.getPrivate().getEncoded().length, 0);
+        Assert.assertNotEquals(key.getPublic().getEncoded().length, 0);
     }
 
 }
