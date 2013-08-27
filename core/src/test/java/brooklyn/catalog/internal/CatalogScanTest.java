@@ -17,6 +17,8 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.net.Urls;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -48,7 +50,7 @@ public class CatalogScanTest {
         if (fullCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), 
-                "data:,"+URLEncoder.encode("<catalog><classpath scan=\"types\"/></catalog>"));
+                "data:,"+Urls.encode("<catalog><classpath scan=\"types\"/></catalog>"));
         fullCatalog = newManagementContext(props).getCatalog();        
         log.info("ENTITIES loaded for FULL: "+fullCatalog.getCatalogItems(Predicates.alwaysTrue()));
     }
@@ -147,5 +149,14 @@ public class CatalogScanTest {
         
         Assert.assertEquals(numFromAnnots, numInDefault);
     }
-    
+
+    // a simple test asserting no errors when listing the real catalog, and listing them for reference
+    // also useful to test variants in a stored catalog to assert they all load
+    // TODO integration tests which build up catalogs assuming other things are installed
+    @Test
+    public void testListCurrentCatalogItems() {
+        LocalManagementContext mgmt = newManagementContext(BrooklynProperties.Factory.newDefault());
+        log.info("ITEMS\n"+Strings.join(mgmt.getCatalog().getCatalogItems(), "\n"));
+    }
+
 }

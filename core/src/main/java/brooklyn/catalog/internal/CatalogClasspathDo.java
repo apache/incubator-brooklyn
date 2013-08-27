@@ -3,6 +3,7 @@ package brooklyn.catalog.internal;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -23,6 +24,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.ReflectionScanner;
 import brooklyn.util.javalang.UrlClassLoader;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
@@ -125,13 +127,13 @@ public class CatalogClasspathDo {
                     baseCL = ((ManagementContextInternal)catalog.mgmt).getBaseClassLoader();
                     baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
                 }
-                scanner = new ReflectionScanner(baseCL, catalog.getRootClassLoader(), baseCP, prefix);
+                scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
                 if (scanner.getSubTypesOf(Entity.class).isEmpty()) {
                     try {
                         ((ManagementContextInternal)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
                         log.debug("Catalog scan of default classloader returned nothing; reverting to java.class.path");
                         baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
-                        scanner = new ReflectionScanner(baseCL, catalog.getRootClassLoader(), baseCP, prefix);
+                        scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
                     } catch (Exception e) {
                         log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+")");
                         Exceptions.propagateIfFatal(e);
@@ -140,7 +142,7 @@ public class CatalogClasspathDo {
             }
         } else {
             // scan specified jars:
-            scanner = new ReflectionScanner(getLocalClassLoader(), catalog.getRootClassLoader(), null, prefix);
+            scanner = new ReflectionScanner(urls==null || urls.length==0 ? null : Arrays.asList(urls), prefix, getLocalClassLoader()); 
         }
         
         if (scanner!=null) {
@@ -181,7 +183,8 @@ public class CatalogClasspathDo {
             } else {
                 throw new IllegalStateException("Unsupported catalog scan mode "+scanMode+" for "+this);
             }
-            log.info("Catalog '"+catalog.dto.name+"' classpath scan completed: loaded "+count+" items ("+countApps+" apps) in "+Time.makeTimeStringRounded(timer));
+            log.info("Catalog '"+catalog.dto.name+"' classpath scan completed: loaded "+
+                    count+" item"+Strings.s(count)+" ("+countApps+" app"+Strings.s(countApps)+") in "+Time.makeTimeStringRounded(timer));
         }
         
         isLoaded = true;

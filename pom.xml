@@ -103,7 +103,7 @@
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.46</bouncycastle.version>
         <sshj.version>0.8.1</sshj.version>
-        <reflections.version>0.9.8</reflections.version>
+        <reflections.version>0.9.9-RC1</reflections.version>
         <jetty.version>8.1.4.v20120524</jetty.version>
         <git-like-cli.version>0.3</git-like-cli.version>
         <mockwebserver.version>20121111</mockwebserver.version>

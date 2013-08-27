@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
 
 import javax.annotation.Nullable;
 
@@ -112,6 +113,13 @@ public class Urls {
             }
         }
         return result.toString();
+    }
+
+    /** encodes the string suitable for use in a URL, using default character set
+     * (non-deprecated version of URLEncoder.encode) */
+    @SuppressWarnings("deprecation")
+    public static String encode(String text) {
+        return URLEncoder.encode(text);
     }
 
 }
