@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
 
 public class StringFunctions {
 
@@ -58,4 +59,18 @@ public class StringFunctions {
     public static Function<Object,String> toStringFunction() {
         return Functions.toStringFunction();
     }
+
+    /** Surrounds an input string with the given prefix and suffix */
+    public static Function<String,String> surround(final String prefix, final String suffix) {
+        Preconditions.checkNotNull(prefix);
+        Preconditions.checkNotNull(suffix);
+        return new Function<String,String>() {
+            @Override
+            public String apply(String input) {
+                if (input==null) return null;
+                return prefix+input+suffix;
+            }
+        };
+    }
+
 }
