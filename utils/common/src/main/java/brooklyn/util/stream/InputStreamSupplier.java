@@ -18,4 +18,8 @@ public class InputStreamSupplier implements InputSupplier<InputStream> {
         return target;
     }
 
+    public static InputStreamSupplier fromString(String input) {
+        return new InputStreamSupplier(Streams.fromString(input));
+    }
+    
 }

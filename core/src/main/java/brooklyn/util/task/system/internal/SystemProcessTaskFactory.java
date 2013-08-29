@@ -40,6 +40,7 @@ public class SystemProcessTaskFactory<T> extends AbstractProcessTaskFactory<Syst
                 else // runScript = null or TRUE
                     this.exitCode = newExecWithLoggingHelpers().execScript(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
             }
+            protected String taskTypeShortName() { return "Process"; }
         };
     }
 

@@ -139,6 +139,10 @@ public class ResourceUtils {
 //                    u = getLoader().getResource("/"+urlNoSlash);
 //                    if (u!=null) return u.openStream();
                 }
+                if (url.startsWith("~")) {
+                    // but first, if it starts with tilde, treat specially
+                    url = Strings.removeFromStart(tidyFileUrl("file:"+url), "file://", "file:");
+                }
                 File f = new File(url);
                 if (f.exists()) return new FileInputStream(f);
             } catch (IOException e) {

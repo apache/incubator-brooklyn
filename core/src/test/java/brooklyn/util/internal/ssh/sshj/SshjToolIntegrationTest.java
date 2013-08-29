@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableMap;
 public class SshjToolIntegrationTest extends SshToolAbstractIntegrationTest {
 
     @Override
-    protected SshTool newTool(Map<String,?> flags) {
+    protected SshTool newUnregisteredTool(Map<String,?> flags) {
         return new SshjTool(flags);
     }
 
@@ -108,11 +108,11 @@ public class SshjToolIntegrationTest extends SshToolAbstractIntegrationTest {
         }
     }
     
-    private String execShellDirect(List<String> cmds) {
+    protected String execShellDirect(List<String> cmds) {
         return execShellDirect(cmds, ImmutableMap.<String,Object>of());
     }
     
-    private String execShellDirect(List<String> cmds, Map<String,?> env) {
+    protected String execShellDirect(List<String> cmds, Map<String,?> env) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int exitcode = ((SshjTool)tool).execShellDirect(ImmutableMap.of("out", out), cmds, env);
         String outstr = new String(out.toByteArray());

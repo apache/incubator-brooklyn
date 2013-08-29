@@ -10,6 +10,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.EffectorBody;
+import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
@@ -27,7 +28,6 @@ import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 
 /** convenience classes and methods for working with {@link SshTasks}, where the
  * {@link SshMachineLocation} is inferred either from the effector generation or
@@ -45,7 +45,7 @@ public class SshEffectorTasks {
         
         /** convenience for accessing the machine */
         public SshMachineLocation machine() {
-            return getMachineOfEntity(entity());
+            return EffectorTasks.getSshMachine(entity());
         }
 
         /** convenience for generating an {@link PlainSshExecTaskFactory} which can be further customised if desired, and then (it must be explicitly) queued */
@@ -69,7 +69,7 @@ public class SshEffectorTasks {
         public ProcessTaskWrapper<RET> newTask(Entity entity, Effector<RET> effector, ConfigBag parameters) {
             markDirty();
             if (summary==null) summary(effector.getName()+" (ssh)");
-            machine(getMachineOfEntity(entity));
+            machine(EffectorTasks.getSshMachine(entity));
             return newTask();
         }
         
@@ -80,7 +80,7 @@ public class SshEffectorTasks {
                     log.debug("Using an SshEffectorTask not in an effector without any machine; will attempt to infer the machine: "+this);
                 Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
                 if (entity!=null)
-                    machine(getMachineOfEntity(entity));
+                    machine(EffectorTasks.getSshMachine(entity));
             }
             return super.newTask();
         }
@@ -102,14 +102,14 @@ public class SshEffectorTasks {
         }
         @Override
         public SshPutTaskWrapper newTask(Entity entity, Effector<Void> effector, ConfigBag parameters) {
-            machine(getMachineOfEntity(entity));
+            machine(EffectorTasks.getSshMachine(entity));
             return super.newTask();
         }
         @Override
         public SshPutTaskWrapper newTask() {
             Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
             if (entity!=null)
-                machine(getMachineOfEntity(entity));
+                machine(EffectorTasks.getSshMachine(entity));
             return super.newTask();
         }
     }
@@ -120,14 +120,14 @@ public class SshEffectorTasks {
         }
         @Override
         public SshFetchTaskWrapper newTask(Entity entity, Effector<String> effector, ConfigBag parameters) {
-            machine(getMachineOfEntity(entity));
+            machine(EffectorTasks.getSshMachine(entity));
             return super.newTask();
         }
         @Override
         public SshFetchTaskWrapper newTask() {
             Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
             if (entity!=null)
-                machine(getMachineOfEntity(entity));
+                machine(EffectorTasks.getSshMachine(entity));
             return super.newTask();
         }
     }
@@ -142,14 +142,6 @@ public class SshEffectorTasks {
 
     public static SshFetchEffectorTaskFactory fetch(String remoteFile) {
         return new SshFetchEffectorTaskFactory(remoteFile);
-    }
-
-    public static SshMachineLocation getMachineOfEntity(Entity entity) {
-        try {
-            return (SshMachineLocation) Iterables.getOnlyElement( entity.getLocations() );
-        } catch (Exception e) {
-            throw new IllegalStateException("Entity "+entity+" (in "+Tasks.current()+") requires a single SshMachineLocation, but has "+entity.getLocations(), e);
-        }
     }
 
     /** task which returns 0 if pid is running */

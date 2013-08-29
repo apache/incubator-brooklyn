@@ -20,6 +20,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Time;
 
@@ -41,7 +42,18 @@ public abstract class ShellToolAbstractTest {
     
     protected ShellTool tool;
     
-    protected abstract ShellTool newTool();
+    protected ShellTool newTool() {
+        return newTool(MutableMap.<String,Object>of());
+    }
+    
+    protected ShellTool newTool(Map<String,?> flags) {
+        ShellTool t = newUnregisteredTool(flags);
+        tools.add(t);
+        return t;
+    }
+
+    protected abstract ShellTool newUnregisteredTool(Map<String,?> flags);
+    
     protected ShellTool tool() { return tool; }
 
     @BeforeMethod(alwaysRun=true)
@@ -51,7 +63,6 @@ public abstract class ShellToolAbstractTest {
         filesCreated.add(localFilePath);
 
         tool = newTool();
-        tools.add(tool);
         connect(tool);
     }
     
@@ -168,7 +179,6 @@ public abstract class ShellToolAbstractTest {
         try {
             for (int i = 0; i < 10; i++) {
                 final ShellTool localtool = newTool();
-                tools.add(localtool);
                 connect(localtool);
                 
                 futures.add(executor.submit(new Runnable() {
@@ -192,7 +202,6 @@ public abstract class ShellToolAbstractTest {
             long starttime = System.currentTimeMillis();
             for (int i = 0; i < 10; i++) {
                 final ShellTool localtool = newTool();
-                tools.add(localtool);
                 connect(localtool);
                 
                 futures.add(executor.submit(new Runnable() {
@@ -293,7 +302,6 @@ public abstract class ShellToolAbstractTest {
     @Test(groups = {"Integration"})
     public void testScriptHeader() {
         final ShellTool localtool = newTool();
-        tools.add(localtool);
         String out = execScript(MutableMap.of("scriptHeader", "#!/bin/bash -e\necho hello world\n"), 
                 localtool, Arrays.asList("echo goodbye world"), null);
         assertTrue(out.contains("goodbye world"), "no goodbye in output: "+out);
@@ -303,7 +311,6 @@ public abstract class ShellToolAbstractTest {
     @Test(groups = {"Integration"})
     public void testStdErr() {
         final ShellTool localtool = newTool();
-        tools.add(localtool);
         Map<String,Object> props = new LinkedHashMap<String, Object>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -318,7 +325,6 @@ public abstract class ShellToolAbstractTest {
     @Test(groups = {"Integration"})
     public void testRunAsRoot() {
         final ShellTool localtool = newTool();
-        tools.add(localtool);
         Map<String,Object> props = new LinkedHashMap<String, Object>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -339,7 +345,6 @@ public abstract class ShellToolAbstractTest {
     @Test(groups = {"Integration"})
     public void testExecScriptEchosDontExecuteWhenToldNoExtraOutput() throws Exception {
         final ShellTool localtool = newTool();
-        tools.add(localtool);
         Map<String,Object> props = new LinkedHashMap<String, Object>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -361,8 +366,17 @@ public abstract class ShellToolAbstractTest {
     }
 
     protected String execCommands(List<String> cmds, Map<String,?> env) {
+        execCommands(null, cmds, env);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         tool.execCommands(ImmutableMap.of("out", out), cmds, env);
+        return new String(out.toByteArray());
+    }
+
+    protected String execCommands(ConfigBag config, List<String> cmds, Map<String,?> env) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        MutableMap<String,Object> flags = MutableMap.<String,Object>of("out", out);
+        if (config!=null) flags.add(config.getAllConfig());
+        tool.execCommands(flags, cmds, env);
         return new String(out.toByteArray());
     }
 

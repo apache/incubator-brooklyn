@@ -11,14 +11,14 @@ import org.testng.annotations.Test
 
 import brooklyn.location.PortRange
 import brooklyn.location.basic.PortRanges.BasicPortRange
+import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.ResourceUtils
-import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableMap
 import brooklyn.util.internal.ssh.SshException
 
 import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables
 import com.google.common.io.Files
 

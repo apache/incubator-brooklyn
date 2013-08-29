@@ -2,7 +2,11 @@ package brooklyn.util.crypto;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -20,8 +24,13 @@ import javax.security.auth.x500.X500Principal;
 
 import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMReader;
+import org.bouncycastle.openssl.PEMWriter;
+import org.bouncycastle.openssl.PasswordFinder;
 
 import brooklyn.util.exceptions.Exceptions;
+
+import com.google.common.base.Throwables;
 
 /**
  * Utility methods for generating and working with keys
@@ -151,5 +160,32 @@ public class SecureKeys {
         return new X509Principal("" + "C=None," + "L=None," + "O=None," + "OU=None," + "CN=" + commonName);
     }
 
-    
+    public static KeyPair readPem(InputStream input, final String passphrase) {
+        try {
+            Security.addProvider(new BouncyCastleProvider());
+            PEMReader pr = new PEMReader(new InputStreamReader(input), new PasswordFinder() {
+                public char[] getPassword() {
+                    return passphrase!=null ? passphrase.toCharArray() : new char[0];
+                }
+            });
+            KeyPair result = (KeyPair) pr.readObject();
+            pr.close();
+            return result;
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    /** returns the PEM (base64, ie for id_rsa) string for the private key / key pair */
+    public static String stringPem(KeyPair key) {
+        try {
+            StringWriter sw = new StringWriter();
+            PEMWriter w = new PEMWriter(sw);
+            w.writeObject(key);
+            w.close();
+            return sw.toString();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 }

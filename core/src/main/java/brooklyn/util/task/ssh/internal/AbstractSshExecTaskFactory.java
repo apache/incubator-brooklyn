@@ -39,6 +39,7 @@ public class AbstractSshExecTaskFactory<T extends AbstractProcessTaskFactory<T,R
                 else // runScript = null or TRUE
                     this.exitCode = getMachine().execScript(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
             }
+            protected String taskTypeShortName() { return "SSH"; }
         };
     }
 }

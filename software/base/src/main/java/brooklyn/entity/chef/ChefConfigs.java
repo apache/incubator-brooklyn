@@ -3,6 +3,7 @@ package brooklyn.entity.chef;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.SetConfigKey.SetModifications;
 
 import com.google.common.annotations.Beta;
@@ -13,11 +14,21 @@ import com.google.common.base.Preconditions;
 @Beta
 public class ChefConfigs {
 
+    public static void addToRunList(EntitySpec<?> entity, String ...recipes) {
+        for (String recipe: recipes)
+            entity.configure(ChefSoloDriver.CHEF_RUN_LIST, SetModifications.addItem(recipe));
+    }
+
     public static void addToRunList(EntityInternal entity, String ...recipes) {
         for (String recipe: recipes)
             entity.setConfig(ChefSoloDriver.CHEF_RUN_LIST, SetModifications.addItem(recipe));
     }
 
+    public static void addToCookbooksFromGithub(EntitySpec<?> entity, String ...cookbookNames) {
+        for (String cookbookName: cookbookNames)
+            addToCookbooksFromGithub(entity, cookbookName, getGithubOpscodeRepo(cookbookName)); 
+    }
+    
     public static void addToCookbooksFromGithub(EntityInternal entity, String ...cookbookNames) {
         for (String cookbookName: cookbookNames)
             addToCookbooksFromGithub(entity, cookbookName, getGithubOpscodeRepo(cookbookName)); 
@@ -26,11 +37,19 @@ public class ChefConfigs {
     public static String getGithubOpscodeRepo(String cookbookName) {
         return "https://github.com/opscode-cookbooks/"+cookbookName+"/archive/master.tar.gz";
     }
+    
+    public static void addToCookbooksFromGithub(EntitySpec<?> entity, String cookbookName, String cookbookUrl) {
+        entity.configure(ChefSoloDriver.CHEF_COOKBOOKS.subKey(cookbookName), cookbookUrl);
+    }
 
     public static void addToCookbooksFromGithub(EntityInternal entity, String cookbookName, String cookbookUrl) {
         entity.setConfig(ChefSoloDriver.CHEF_COOKBOOKS.subKey(cookbookName), cookbookUrl);
     }
 
+    public static void setLaunchAttribute(EntitySpec<?> entity, String rootAttribute, Object value) {
+        entity.configure(ChefSoloDriver.CHEF_LAUNCH_ATTRIBUTES.subKey(rootAttribute), value);
+    }
+    
     public static void setLaunchAttribute(EntityInternal entity, String rootAttribute, Object value) {
         entity.setConfig(ChefSoloDriver.CHEF_LAUNCH_ATTRIBUTES.subKey(rootAttribute), value);
     }

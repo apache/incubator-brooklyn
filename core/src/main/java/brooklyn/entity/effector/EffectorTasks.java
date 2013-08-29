@@ -13,6 +13,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.internal.EffectorUtils;
@@ -25,6 +26,7 @@ import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 
 /**
  * @since 0.6.0
@@ -38,7 +40,7 @@ public class EffectorTasks {
     public interface EffectorTaskFactory<T> {
         public abstract TaskAdaptable<T> newTask(Entity entity, Effector<T> effector, ConfigBag parameters);
     }
-
+    
     public static class EffectorBodyTaskFactory<T> implements EffectorTaskFactory<T> {
         private final EffectorBody<T> effectorBody;
         public EffectorBodyTaskFactory(EffectorBody<T> effectorBody) {
@@ -125,19 +127,38 @@ public class EffectorTasks {
         };
     }
 
-    /** Finds the entity where this task is running, throwing NPE if there is none */
+    /** Finds the entity where this task is running
+     * @throws NullPointerException if there is none (no task, or no context entity for that task) */
     public static Entity findEntity() {
         return Preconditions.checkNotNull(BrooklynTasks.getTargetOrContextEntity(Tasks.current()),
                 "This must be executed in a task whose execution context has a target or context entity " +
                 "(i.e. it must be run from within an effector)");
     }
 
-    /** Finds the entity where this task is running
+    /** Finds the entity where this task is running, casted to the given Entity subtype
      * @throws NullPointerException if there is none
      * @throws IllegalArgumentException if it is not of the indicated type */
     public static <T extends Entity> T findEntity(Class<T> type) {
         Entity t = findEntity();
         return Reflections.cast(t, type);
+    }
+
+    /** Finds a unique {@link SshMachineLocation} attached to the entity 
+     * where this task is running
+     * @throws NullPointerException if {@link #findEntity()} fails
+     * @throws IllegalStateException if call to {@link #getSshMachine(Entity)} fails */
+    public static SshMachineLocation findSshMachine() {
+        return getSshMachine(findEntity());
+    }
+
+    /** Finds a unique {@link SshMachineLocation} attached to the supplied entity 
+     * @throws IllegalStateException if there is not a unique such {@link SshMachineLocation} */
+    public static SshMachineLocation getSshMachine(Entity entity) {
+        try {
+            return (SshMachineLocation) Iterables.getOnlyElement( entity.getLocations() );
+        } catch (Exception e) {
+            throw new IllegalStateException("Entity "+entity+" (in "+Tasks.current()+") requires a single SshMachineLocation, but has "+entity.getLocations(), e);
+        }
     }
 
 }

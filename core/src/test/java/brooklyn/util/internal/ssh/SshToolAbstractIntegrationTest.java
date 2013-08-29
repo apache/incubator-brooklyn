@@ -52,12 +52,20 @@ public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTe
 
     protected String remoteFilePath;
 
-    protected abstract SshTool newTool(Map<String,?> flags);
     protected SshTool tool() { return (SshTool)tool; }
+    
+    protected abstract SshTool newUnregisteredTool(Map<String,?> flags);
 
+    @Override
     protected SshTool newTool() {
         return newTool(ImmutableMap.of("host", "localhost", "privateKeyFile", "~/.ssh/id_rsa"));
     }
+    
+    @Override
+    protected SshTool newTool(Map<String,?> flags) {
+        return (SshTool) super.newTool(flags);
+    }
+    
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -190,7 +198,6 @@ public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTe
     @Test(groups = {"Integration"})
     public void testAllocatePty() {
         final ShellTool localtool = newTool(MutableMap.of("host", "localhost", SshTool.PROP_ALLOCATE_PTY.getName(), true));
-        tools.add(localtool);
         Map<String,Object> props = new LinkedHashMap<String, Object>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -210,7 +217,6 @@ public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTe
                 .put(SshTool.PROP_PRIVATE_KEY_FILE.getName(), SSH_KEY_WITH_PASSPHRASE)
                 .put(SshTool.PROP_PRIVATE_KEY_PASSPHRASE.getName(), SSH_PASSPHRASE)
                 .build());
-        tools.add(localtool);
         localtool.connect();
         
         assertEquals(tool.execScript(MutableMap.<String,Object>of(), ImmutableList.of("date")), 0);
@@ -221,7 +227,6 @@ public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTe
                     .put(SshTool.PROP_HOST.getName(), "localhost")
                     .put(SshTool.PROP_PRIVATE_KEY_FILE.getName(), SSH_KEY_WITH_PASSPHRASE)
                     .build());
-            tools.add(localtool2);
             localtool2.connect();
             fail();
         } catch (Exception e) {
