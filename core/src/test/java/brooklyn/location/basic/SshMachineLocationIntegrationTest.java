@@ -40,7 +40,7 @@ public class SshMachineLocationIntegrationTest {
     // Note: requires `named:localhost-passphrase` set up with a key whose passphrase is "localhost"    
     @Test(groups = "Integration")
     public void testExtractingConnectablePassphraselessKey() throws Exception {
-        LocalhostMachineProvisioningLocation lhp = (LocalhostMachineProvisioningLocation) mgmt.getLocationRegistry().resolve("named:localhost-passphrase");
+        LocalhostMachineProvisioningLocation lhp = (LocalhostMachineProvisioningLocation) mgmt.getLocationRegistry().resolveIfPossible("named:localhost-passphrase");
         Preconditions.checkNotNull(lhp, "This test requires a localhost named location called 'localhost-passphrase' (which should have a passphrase set)");
         SshMachineLocation sm = lhp.obtain();
         
