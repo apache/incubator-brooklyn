@@ -53,7 +53,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     // Note also called reflectively by BrooklynLeakListener
     public static void logAll(Logger logger){
         for (LocalManagementContext context : getInstances()) {
-            logger.warn("Management Context running, creation stacktrace:\n" + Throwables.getStackTraceAsString(context.constructionStackTrace));
+            logger.warn("Management Context "+context+" running, creation stacktrace:\n" + Throwables.getStackTraceAsString(context.constructionStackTrace));
         }
     }
 
@@ -77,7 +77,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     private final String shortid = Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5);
     private final String tostring = "LocalManagementContext("+shortid+")";
 
-    private final Throwable constructionStackTrace = new Exception("for construction stacktrace").fillInStackTrace();
+    private final Throwable constructionStackTrace = new Throwable("for construction stacktrace").fillInStackTrace();
     
     /**
      * Creates a LocalManagement with default BrooklynProperties.

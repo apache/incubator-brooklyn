@@ -16,7 +16,6 @@ public class MyEntityDriver implements EntityDriver {
     
     @Override
     public EntityLocal getEntity() {
-        System.out.println("Calling getEntity");
         return (EntityLocal) entity;
     }
 

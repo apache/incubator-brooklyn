@@ -32,6 +32,18 @@ public class DownloadSubstituters {
 
     private static final Logger LOG = LoggerFactory.getLogger(DownloadSubstituters.class);
 
+    static {
+        // TODO in Freemarker 2.4 SLF4J may be auto-selected and we can remove this;
+        // for now, we need it somewhere, else we get j.u.l logging; 
+        // since this is the main place it is used, let's do it here
+        try {
+            LOG.debug("Configuring Freemarker logging for Brooklyn to use SLF4J");
+            freemarker.log.Logger.selectLoggerLibrary(freemarker.log.Logger.LIBRARY_SLF4J);
+        } catch (Exception e) {
+            LOG.warn("Error setting Freemarker logging: "+e, e);
+        }
+    }
+    
     private DownloadSubstituters() {}
     
     /**

@@ -68,16 +68,18 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     }
 
     @Override
-    public synchronized boolean cancel(boolean mayInterruptIfRunning) {
+    public boolean cancel(boolean mayInterruptIfRunning) {
         if (isDone()) return false;
         log.trace("cancelling {}", this);
         boolean cancel = super.cancel(mayInterruptIfRunning);
         for (Task<?> t: secondaryJobsAll)
             cancel |= t.cancel(mayInterruptIfRunning);
-        if (primaryThread!=null) {
-            log.trace("cancelling {} - interrupting", this);
-            primaryThread.interrupt();
-            cancel = true;
+        synchronized (jobTransitionLock) {
+            if (primaryThread!=null) {
+                log.trace("cancelling {} - interrupting", this);
+                primaryThread.interrupt();
+                cancel = true;
+            }
         }
         return cancel;
     }
