@@ -4,6 +4,7 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,9 +19,13 @@ import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.internal.ssh.process.ProcessTool;
 import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.net.Networking;
+import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -195,6 +200,8 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             super(MutableMap.builder().putAll(properties).put("mutexSupport", mutexSupport).build());
         }
         public boolean obtainSpecificPort(int portNumber) {
+            if (!isSudoAllowed() && portNumber <= 1024)
+                return false;
             return LocalhostMachineProvisioningLocation.obtainSpecificPort(getAddress(), portNumber);
         }
         public int obtainPort(PortRange range) {
@@ -213,7 +220,34 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         
         @Override
         public OsDetails getOsDetails() {
-            return new BasicOsDetails.Factory().newLocalhostInstance();
+            return BasicOsDetails.Factory.newLocalhostInstance();
         }
     }
+
+    private static class SudoChecker {
+        static volatile long lastSudoCheckTime = -1;
+        static boolean lastSudoResult = false;
+        public static boolean isSudoAllowed() {
+            if (Time.hasElapsedSince(lastSudoCheckTime, Duration.FIVE_MINUTES))
+                checkIfNeeded();                    
+            return lastSudoResult;
+        }
+        private static synchronized void checkIfNeeded() {
+            if (Time.hasElapsedSince(lastSudoCheckTime, Duration.FIVE_MINUTES)) {
+                try {
+                    lastSudoResult = new ProcessTool().execCommands(MutableMap.<String,Object>of(), Arrays.asList(
+                            BashCommands.sudo("date"))) == 0;
+                } catch (Exception e) {
+                    lastSudoResult = false;
+                    LOG.debug("Error checking sudo at localhost: "+e, e);
+                }
+                lastSudoCheckTime = System.currentTimeMillis();
+            }
+        }
+    }
+
+    public static boolean isSudoAllowed() {
+        return SudoChecker.isSudoAllowed();
+    }
+
 }

@@ -365,7 +365,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	public void waitForEntityStart() {
 		if (log.isDebugEnabled()) log.debug("waiting to ensure {} doesn't abort prematurely", this);
 		long startTime = System.currentTimeMillis();
-		long waitTime = startTime + 75000; // FIXME magic number; should be config key with default value?
+		long waitTime = startTime + 2*60*1000; // FIXME magic number; should be config key with default value?
 		boolean isRunningResult = false;
 		while (!isRunningResult && System.currentTimeMillis() < waitTime) {
 		    Time.sleep(1000); // FIXME magic number; should be config key with default value?

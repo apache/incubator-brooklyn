@@ -596,4 +596,9 @@ public class Strings {
         return new FormattedString(pattern, args);
     }
 
+    /** returns "s" if the argument is not 1, empty string otherwise; useful when constructing plurals */
+    public static String s(int count) {
+        return count==1 ? "" : "s";
+    }
+
 }

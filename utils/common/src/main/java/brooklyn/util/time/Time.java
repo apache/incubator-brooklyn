@@ -361,4 +361,14 @@ public class Time {
         return date==null ? null : date.getTime()%1000!=0 ? new Date(date.getTime() - (date.getTime()%1000)) : date;
     }
 
+    /** returns the duration elapsed since the given timestamp (UTC) */
+    public static Duration elapsedSince(long timestamp) {
+        return Duration.millis(System.currentTimeMillis() - timestamp);
+    }
+    
+    /** true iff it has been longer than the given duration since the given timestamp */
+    public static boolean hasElapsedSince(long timestamp, Duration duration) {
+        return elapsedSince(timestamp).compareTo(duration) > 0;
+    }
+
 }

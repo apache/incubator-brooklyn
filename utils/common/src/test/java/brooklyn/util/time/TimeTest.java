@@ -110,9 +110,25 @@ public class TimeTest {
         Assert.assertNull(Time.dropMilliseconds(null));
     }
 
+    @Test
     public void testMakeStringExactZero() { check(0, "0"); }
+    @Test
     public void testMakeStringExactNegative() { check(-1, "-1ms"); }
+    @Test
     public void testMakeStringRoundedZero() { checkR(0, "0"); }
+    @Test
     public void testMakeStringRoundedNegative() { checkR(-1, "-1ms"); }
-    
+
+    @Test
+    public void testElapsedSince() {
+        long aFewSecondsAgo = System.currentTimeMillis() - 7*1000;
+        
+        Duration aFewSeconds = Time.elapsedSince(aFewSecondsAgo);
+        Assert.assertTrue(aFewSeconds.toMilliseconds() > 5*1000);
+        Assert.assertTrue(10*1000 > aFewSeconds.toMilliseconds());
+        
+        Assert.assertTrue(Time.hasElapsedSince(aFewSecondsAgo, Duration.FIVE_SECONDS));
+        Assert.assertFalse(Time.hasElapsedSince(aFewSecondsAgo, Duration.TEN_SECONDS));
+        Assert.assertTrue(Time.hasElapsedSince(-1, Duration.TEN_SECONDS));
+    }
 }

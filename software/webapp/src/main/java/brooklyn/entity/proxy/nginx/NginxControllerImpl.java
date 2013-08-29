@@ -27,12 +27,10 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.TimeExtras;
 import brooklyn.util.text.Strings;
 
-import com.google.common.base.Predicates;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
@@ -60,7 +58,6 @@ import com.google.common.collect.Sets;
 public class NginxControllerImpl extends AbstractControllerImpl implements NginxController {
 
     private static final Logger LOG = LoggerFactory.getLogger(NginxControllerImpl.class);
-    static { TimeExtras.init(); }
 
     private volatile HttpFeed httpFeed;
     

@@ -9,7 +9,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
@@ -19,18 +18,11 @@ import brooklyn.util.collections.MutableSet;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
-import com.google.common.base.Function;
-
 public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implements GeoscalingDnsService {
 
-    private static final Logger log = LoggerFactory.getLogger(GeoscalingDnsServiceImpl.class);
+    private static final long serialVersionUID = -7619255593828435554L;
 
-    static {
-        RendererHints.register(GeoscalingDnsService.MANAGED_DOMAIN, new RendererHints.NamedActionWithUrl("Open", new Function<Object,String>() {
-            public String apply(Object input) {
-                return "http://"+input+"/";
-            }}));
-    }
+    private static final Logger log = LoggerFactory.getLogger(GeoscalingDnsServiceImpl.class);
 
     // Must remember any desired redirection targets if they're specified before configure() has been called.
     private Set<HostGeoInfo> rememberedTargetHosts;
@@ -152,7 +144,14 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
             log.debug("GeoScaling {} being reconfigured to use {}", this, targetHosts);
             String script = GeoscalingScriptGenerator.generateScriptString(targetHosts);
             smartSubdomain.configure(PROVIDE_CITY_INFO, script);
-            setServiceState(targetHosts.isEmpty() ? Lifecycle.CREATED : Lifecycle.RUNNING);
+            if (targetHosts.isEmpty()) {
+                setServiceState(Lifecycle.CREATED);
+                setAttribute(ROOT_URL, null);
+            } else {
+                setServiceState(Lifecycle.RUNNING);
+                String domain = getAttribute(MANAGED_DOMAIN);
+                if (!Strings.isEmpty(domain)) setAttribute(ROOT_URL, "http://"+domain+"/");
+            }
         } else {
             log.warn("Failed to retrieve or create GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+
                     "', aborting attempt to configure service");

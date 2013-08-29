@@ -46,6 +46,9 @@ public class EntitySpecs {
      * However, if the type is a class then the that implementation will be used directly. When an entity is
      * created using the EntitySpec, one will get back a proxy of type {@link StartableApplication}, but the
      * proxy will also implement all the other interfaces that the given type class implements.
+     * 
+     * FIXME if this *class* is deprecated where does the replacement for this live?
+     * perhaps we should have spec add all interfaces unless indicated otherwise, then we can just use EntitySpec.create.
      */
     @SuppressWarnings("unchecked")
     public static <T extends StartableApplication> BasicEntitySpec<StartableApplication, ?> appSpec(Class<? extends T> type) {
@@ -62,6 +65,11 @@ public class EntitySpecs {
     /**
      * Wraps an entity spec so its configuration can be overridden without modifying the 
      * original entity spec.
+     * 
+     * @deprecated since 0.6.0; use {@link EntitySpec#create(EntitySpec)} - though note that
+     * semantics are slightly different there, the new method copies the spec so if the wrapped 
+     * entity changes the new method will not pick up those changes; 
+     * no plans at present to continue to support the delegation pattern (is there any need?)
      */
     public static <T extends Entity> WrappingEntitySpec<T> wrapSpec(EntitySpec<? extends T> spec) {
         return WrappingEntitySpec.newInstance(spec);

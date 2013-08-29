@@ -53,7 +53,9 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
 
     @Override
     public void install() {
-        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), true)).orSubmitAndBlock();
+        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), 
+                // sudo is absolutely required here, in customize we set user to postgres
+                true)).orSubmitAndBlock();
         
         // Check whether we can find a usable pg_ctl, and if not install one
         MutableList<String> findOrInstall = MutableList.<String>of()

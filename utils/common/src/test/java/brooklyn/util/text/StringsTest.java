@@ -235,4 +235,9 @@ public class StringsTest {
         Assert.assertEquals(StringFunctions.joinerForArray(" ").apply(new String[] { "hello", "world" }), "hello world");
     }
 
+    @Test
+    public void testSurround() {
+        Assert.assertEquals(StringFunctions.surround("hello ", " world").apply("new"), "hello new world");
+    }
+        
 }

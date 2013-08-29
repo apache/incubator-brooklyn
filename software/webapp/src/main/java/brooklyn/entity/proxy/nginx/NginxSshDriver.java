@@ -11,11 +11,13 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
@@ -80,10 +82,11 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void install() {
-        // TODO if nginx is already installed, should be able to skip sudo requirement
-        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), true)).orSubmitAndBlock();
+        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), 
+                // will fail later if can't sudo (if sudo is required)
+                false)).orSubmitAndBlock();
         
-        DownloadResolver nginxResolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
+        DownloadResolver nginxResolver = mgmt().getEntityDownloadsManager().newDownloader(this);
         List<String> nginxUrls = nginxResolver.getTargets();
         String nginxSaveAs = nginxResolver.getFilename();
         expandedInstallDir = getInstallDir()+"/" + nginxResolver.getUnpackedDirectoryName(format("nginx-%s", getVersion()));
@@ -107,7 +110,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 "port", null);
 
         String stickyModuleVersion = entity.getConfig(NginxController.STICKY_VERSION);
-        DownloadResolver stickyModuleResolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(
+        DownloadResolver stickyModuleResolver = mgmt().getEntityDownloadsManager().newDownloader(
                 this, "stickymodule", ImmutableMap.of("addonversion", stickyModuleVersion));
         List<String> stickyModuleUrls = stickyModuleResolver.getTargets();
         String stickyModuleSaveAs = stickyModuleResolver.getFilename();
@@ -120,18 +123,18 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         cmds.add(BashCommands.installPackage(installGccPackageFlags, "nginx-prerequisites-gcc"));
         cmds.add(BashCommands.installPackage(installMakePackageFlags, "nginx-prerequisites-make"));
         cmds.add(BashCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
-        cmds.addAll(BashCommands.downloadUrlAs(nginxUrls, nginxSaveAs));
+        cmds.addAll(BashCommands.commandsToDownloadUrlsAs(nginxUrls, nginxSaveAs));
         
         if (isMac) {
             String pcreVersion = entity.getConfig(NginxController.PCRE_VERSION);
-            DownloadResolver pcreResolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(
+            DownloadResolver pcreResolver = mgmt().getEntityDownloadsManager().newDownloader(
                     this, "pcre", ImmutableMap.of("addonversion", pcreVersion));
             List<String> pcreUrls = pcreResolver.getTargets();
             String pcreSaveAs = pcreResolver.getFilename();
             String pcreExpandedInstallDirname = pcreResolver.getUnpackedDirectoryName("pcre-"+pcreVersion);
 
             // Install PCRE
-            cmds.addAll(BashCommands.downloadUrlAs(pcreUrls, pcreSaveAs));
+            cmds.addAll(BashCommands.commandsToDownloadUrlsAs(pcreUrls, pcreSaveAs));
             cmds.add(format("mkdir -p %s/pcre-dist", getInstallDir()));
             cmds.add(format("tar xvzf %s", pcreSaveAs));
             cmds.add(format("cd %s", pcreExpandedInstallDirname));
@@ -146,7 +149,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
         if (sticky) {
             cmds.add("cd src");
-            cmds.addAll(BashCommands.downloadUrlAs(stickyModuleUrls, stickyModuleSaveAs));
+            cmds.addAll(BashCommands.commandsToDownloadUrlsAs(stickyModuleUrls, stickyModuleSaveAs));
             cmds.add(format("tar xvzf %s", stickyModuleSaveAs));
             cmds.add("cd ..");
         }
@@ -210,6 +213,10 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         }
     }
 
+    private ManagementContext mgmt() {
+        return ((EntityInternal)entity).getManagementContext();
+    }
+
     @Override
     public void customize() {
         newScript(CUSTOMIZING).
@@ -228,10 +235,14 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     @Override
     public void launch() {
-        // By default, nginx writes the pid of the master process to "logs/nginx.pid"
+        // TODO if can't be root, and ports > 1024 are in the allowed port range,
+        // prefer that; could do this on SshMachineLocation which implements PortSupplier,
+        // invoked from PortAttrSensorAndConfigKey, which is invoked from MachineLifecycleTasks.preStartCustom
         Networking.checkPortsValid(MutableMap.of("httpPort", getHttpPort()));
-        Map flags = MutableMap.of("usePidFile", false);
-
+        
+        // By default, nginx writes the pid of the master process to "logs/nginx.pid"
+        Map<Object,Object> flags = MutableMap.<Object,Object>of("usePidFile", false);
+        
         // We wait for evidence of running because, using 
         // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
         // we saw the ssh session return before the tomcat process was fully running 
@@ -239,8 +250,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         newScript(flags, LAUNCHING).
                 body.append(
                 format("cd %s", getRunDir()),
-                // FIXME '|| exit' here is needed because the script allows intermediate non-zero exit codes
-                BashCommands.requireExecutable("./sbin/nginx")+" || exit $?",
+                BashCommands.requireExecutable("./sbin/nginx"),
                 sudoBashCIfPrivilegedPort(getHttpPort(), format(
                         "nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir())),
                 format("for i in {1..10}\n" +
@@ -264,7 +274,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     @Override
     public boolean isRunning() {
-        Map flags = MutableMap.of("usePidFile", NGINX_PID_FILE);
+        Map<Object,Object> flags = MutableMap.<Object,Object>of("usePidFile", NGINX_PID_FILE);
         return newScript(flags, CHECK_RUNNING).execute() == 0;
     }
 
@@ -272,7 +282,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public void stop() {
         // Don't `kill -9`, as that doesn't stop the worker processes
         String pidFile = NGINX_PID_FILE;
-        Map flags = MutableMap.of("usePidFile", false);
+        Map<Object,Object> flags = MutableMap.<Object,Object>of("usePidFile", false);
 
         newScript(flags, STOPPING).
                 body.append(
@@ -285,22 +295,9 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void kill() {
-        stop(); // TODO Don't `kill -9`, as that doesn't stop the worker processes
+        stop();
     }
 
-    // TODO this (previously) overrode the parent _without_ the setAttributes, which seems wrong
-//    @Override
-//    public void restart() {
-//        try {
-//            if (isRunning()) {
-//                stop();
-//            }
-//        } catch (Exception e) {
-//            log.debug(getEntity() + " stop failed during restart (but wasn't in stop state, so not surprising): " + e);
-//        }
-//        launch();
-//    }
-    
     private final ExecController reloadExecutor = new ExecController(
             entity+"->reload",
             new Runnable() {

@@ -5,11 +5,14 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.internal.PlainSshExecTaskFactory;
 import brooklyn.util.task.system.ProcessTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
@@ -55,7 +58,9 @@ public class SshTasks {
                         " (exit code "+task.getExitCode()+")");
                 Streams.logStreamTail(log, "STDERR of sudo setup problem", Streams.byteArrayOfString(task.getStderr()), 1024);
                 if (requireSuccess) {
-                    throw new IllegalStateException("Passwordless sudo is required for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName());
+                    Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+                    throw new IllegalStateException("Passwordless sudo is required for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+
+                            (entity!=null ? " ("+entity+")" : ""));
                 }
                 return true; 
             } });
