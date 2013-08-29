@@ -511,7 +511,10 @@ public class Entities {
         if (mgmt instanceof NonDeploymentManagementContext) {
             // log here because it is easy for tests to destroyAll(app.getMgmtContext())
             // which will *not* destroy the mgmt context if the app has been stopped!
-            log.warn("Entities.destroyAll invoked on non-deployment "+mgmt+" - not likely to have much effect!");
+            log.warn("Entities.destroyAll invoked on non-deployment "+mgmt+" - not likely to have much effect! " +
+            		"(This usually means the mgmt context has been taken from entity has been destroyed. " +
+            		"To destroy other things on the management context ensure you keep a handle to the context " +
+            		"before the entity is destroyed, such as by creating the management context first.)");
         }
         if (!mgmt.isRunning()) return;
         log.debug("destroying all apps in "+mgmt+": "+mgmt.getApplications());
