@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicStartable;
+import brooklyn.entity.basic.EffectorStartableImpl;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefConfigs;
@@ -18,7 +19,7 @@ public class DynamicToyMySqlEntityChef implements ChefConfig {
     private static final Logger log = LoggerFactory.getLogger(DynamicToyMySqlEntityChef.class);
 
     protected static EntitySpec<? extends Entity> specBase() {
-        EntitySpec<BasicStartable> spec = EntitySpec.create(BasicStartable.class).addInitializer(ChefMySqlEntityInitializer.class);
+        EntitySpec<BasicStartable> spec = EntitySpec.create(BasicStartable.class, EffectorStartableImpl.class).addInitializer(ChefMySqlEntityInitializer.class);
         
         ChefConfigs.addToRunList(spec, "mysql::server");
         

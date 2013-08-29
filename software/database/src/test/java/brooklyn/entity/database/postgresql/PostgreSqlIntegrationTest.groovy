@@ -70,7 +70,7 @@ INSERT INTO COMMENTS values (1, 'lars', 'myemail@gmail.com','http://www.vogella.
     @Test(groups = ["Integration"])
     public void test_localhost() throws Exception {
         PostgreSqlNode pgsql = tapp.createAndManageChild(EntitySpec.create(PostgreSqlNode.class)
-                .configure("creationScriptContents", CREATION_SCRIPT)
+                .configure(PostgreSqlNode.CREATION_SCRIPT_CONTENTS, CREATION_SCRIPT)
                 .configure("port", "9111"));
 
         tapp.start([new LocalhostMachineProvisioningLocation()]);

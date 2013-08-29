@@ -23,11 +23,11 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -292,5 +292,14 @@ public class BashCommandsIntegrationTest {
         Assert.assertFalse(t.getStdout().contains("shouldnae"), "Expected message in: "+t.getStdout());
     }
 
+    @Test(groups="Integration")
+    public void testPipeMultiline() throws Exception {
+        ProcessTaskWrapper<String> t = SshTasks.newSshExecTaskFactory(loc,
+                BashCommands.pipeTextTo("hello world\n"+"and goodbye\n", "wc"))
+            .requiringZeroAndReturningStdout().newTask();
+
+        String output = exec.submit(t).get();
+        assertEquals(Strings.replaceAllRegex(output, "\\s+", " ").trim(), "3 4 25");
+    }
 
 }

@@ -19,6 +19,8 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(PostgreSqlNodeImpl.class)
 public interface PostgreSqlNode extends DatabaseNode {
 
+    // TODO share these with MySQL
+    
     @SetFromFlag("creationScriptUrl")
     public static final ConfigKey<String> CREATION_SCRIPT_URL =
             new BasicConfigKey<String>(String.class, "postgresql.creation.script.url", "URL where PostgreSQL creation script can be found", null);

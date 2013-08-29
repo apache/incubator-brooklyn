@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
 
@@ -462,6 +463,14 @@ public class BashCommands {
      */
     public static String installJava6() {
         return installPackage(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null);
+    }
+
+    /** cats the given text to the given command, using bash << multi-line input syntax */
+    public static String pipeTextTo(String text, String command) {
+        String id = Identifiers.makeRandomId(8);
+        return "cat << EOF_"+id+" | "+command+"\n"
+                +text
+                +"\n"+"EOF_"+id+"\n";
     }
 
 }

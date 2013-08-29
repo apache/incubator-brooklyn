@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.chef.ChefConfig;
+import brooklyn.entity.chef.ChefLiveTestSupport;
 import brooklyn.entity.chef.ChefServerTasksIntegrationTest;
 import brooklyn.location.NoMachinesAvailableException;
 
@@ -25,8 +25,8 @@ public class DynamicChefServerToyMySqlEntityLiveTest extends AbstractChefToyMySq
     
     @Override
     protected Entity createMysql() {
+        ChefLiveTestSupport.installBrooklynChefHostedConfig(app);
         Entity mysql = app.createAndManageChild(DynamicToyMySqlEntityChef.specKnife());
-        app.setConfig(ChefConfig.KNIFE_CONFIG_FILE, ChefServerTasksIntegrationTest.installBrooklynChefHostedConfig());
         log.debug("created "+mysql);
         return mysql;
     }

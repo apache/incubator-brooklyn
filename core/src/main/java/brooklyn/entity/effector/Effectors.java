@@ -7,6 +7,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
@@ -49,6 +50,10 @@ public class Effectors {
         }
         public <V> EffectorBuilder<T> parameter(Class<V> paramType, String paramName, String paramDescription, V defaultValue) {
             return parameter(new BasicParameterType<V>(paramName, paramType, paramDescription, defaultValue));
+        }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public <V> EffectorBuilder<T> parameter(ConfigKey<V> key) {
+            return parameter(new BasicParameterType<V>(key.getName(), (Class)key.getType(), key.getDescription(), key.getDefaultValue()));
         }
         public EffectorBuilder<T> parameter(ParameterType<?> p) {
             parameters.add(p);

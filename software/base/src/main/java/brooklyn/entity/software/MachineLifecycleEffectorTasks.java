@@ -15,7 +15,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTasks;
-import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.EffectorStartableImpl.StartParameters;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
@@ -43,7 +43,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.reflect.TypeToken;
 
 /** 
  * Default skeleton for start/stop/restart tasks on machines.
@@ -65,11 +64,7 @@ public abstract class MachineLifecycleEffectorTasks {
 
     private static final Logger log = LoggerFactory.getLogger(MachineLifecycleEffectorTasks.class);
     
-    // TODO polymorphic parametrisation of effetor, take LOCATION, take strings, etc
-    @SuppressWarnings("serial")
-    public static final ConfigKey<Collection<? extends Location>> LOCATIONS =
-            ConfigKeys.newConfigKey(new TypeToken<Collection<? extends Location>>() {}, "locations", 
-            "locations where the entity should be started");
+    public static final ConfigKey<Collection<? extends Location>> LOCATIONS = StartParameters.LOCATIONS;
 
     /** attaches lifecycle effectors (start, restart, stop) to the given entity (post-creation) */ 
     public void attachLifecycleEffectors(Entity entity) {
@@ -265,7 +260,8 @@ public abstract class MachineLifecycleEffectorTasks {
         }});
     }
 
-    /** default post-start hooks, can be extended by subclasses, and typically will do to wait for confirmation of start */
+    /** default post-start hooks, can be extended by subclasses, and typically will do to wait for confirmation of start 
+     * (service not set to running until after this) */
     protected void postStartCustom() {
         // nothing by default
     }

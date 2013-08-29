@@ -81,6 +81,9 @@ public class ChefServerTasks {
         }, true); 
     }
     public static TaskFactory<ProcessTaskWrapper<Integer>> knifeConverge(final Function<? super Entity,String> runList, final boolean sudo) {
+        return knifeConverge(runList, sudo, null);
+    }
+    public static TaskFactory<ProcessTaskWrapper<Integer>> knifeConverge(final Function<? super Entity,String> runList, final boolean sudo, final String otherParameters) {
         return new KnifeTaskFactory<Integer,ProcessTaskWrapper<Integer>>("knife converge") {
             public ProcessTaskWrapper<Integer> newTask() {
                 SshMachineLocation machine = EffectorTasks.findSshMachine();
@@ -100,8 +103,7 @@ public class ChefServerTasks {
                         +" -p "+port+" -x "+user+" "+auth
                         +(sudo ? " --sudo" : "") 
                         +" -r "+BashStringEscapes.wrapBash(runList.apply(entity()))
-                        // TODO:
-//                                +" -j "+jsonAttributes
+                        +(Strings.isNonEmpty(otherParameters) ? " "+otherParameters : "")
                         ).requiringExitCodeZero();
                 return f.newTask();
             }
