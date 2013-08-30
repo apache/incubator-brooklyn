@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
+import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.Maps;
@@ -77,6 +78,21 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
         }
         return Collections.unmodifiableMap(result);
     }
+    /** returns the entries in the map against this config key and any sub-config-keys, without resolving
+     * (like {@link #extractValue(Map, ExecutionContext)} but without resolving/coercing;
+     * useful because values in this "map" are actually stored against {@link SubElementConfigKey}s */
+    public Map<String,Object> rawValue(Map<?,?> vals) {
+        Map<String,Object> result = Maps.newLinkedHashMap();
+        for (Map.Entry<?,?> entry : vals.entrySet()) {
+            Object k = entry.getKey();
+            if (isSubKey(k)) {
+                @SuppressWarnings("unchecked")
+                SubElementConfigKey<V> subk = (SubElementConfigKey<V>) k;
+                result.put(extractSubKeyName(subk), vals.get(subk));
+            }
+        }
+        return result;
+    }
 
     @Override
     public boolean isSet(Map<?, ?> vals) {
@@ -133,12 +149,24 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
     public static class MapModifications extends StructuredModifications {
         /** when passed as a value to a MapConfigKey, causes each of these items to be put 
          * (this Mod is redundant as no other value is really sensible) */
-        public static final <V> MapModification<V> put(final Map<String,V> items) { 
-            return new MapModificationBase<V>(items, false);
+        public static final <V> MapModification<V> put(final Map<String,V> itemsToPutInMapReplacing) { 
+            return new MapModificationBase<V>(itemsToPutInMapReplacing, false);
         }
         /** when passed as a value to a MapConfigKey, causes the map to be cleared and these items added */
-        public static final <V> MapModification<V> set(final Map<String,V> items) {
-            return new MapModificationBase<V>(items, true);
+        public static final <V> MapModification<V> set(final Map<String,V> itemsToPutInMapAfterClearing) {
+            return new MapModificationBase<V>(itemsToPutInMapAfterClearing, true);
+        }
+        /** when passed as a value to a MapConfigKey, causes the items to be added to the underlying map
+         * using {@link Jsonya} add semantics (combining maps and lists) */
+        public static final <V> MapModification<V> add(final Map<String,V> itemsToAdd) {
+            return new MapModificationBase<V>(itemsToAdd, false /* ignored */) {
+                private static final long serialVersionUID = 1L;
+                @SuppressWarnings("rawtypes")
+                @Override
+                public Object applyToKeyInMap(MapConfigKey<V> key, Map target) {
+                    return key.applyValueToMap(Jsonya.of(key.rawValue(target)).add(this).getRootMap(), target);
+                }
+            };
         }
     }
 

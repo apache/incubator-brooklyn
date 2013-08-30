@@ -19,7 +19,7 @@ public interface ProcessTaskFactory<T> extends TaskFactory<ProcessTaskWrapper<T>
     public ProcessTaskFactory<T> allowingNonZeroExitCode();
     public ProcessTaskFactory<String> requiringZeroAndReturningStdout();
     public ProcessTaskFactory<Boolean> returningIsExitCodeZero();
-    public ProcessTaskFactory<?> returning(ScriptReturnType type);
+    public <RET2> ProcessTaskFactory<RET2> returning(ScriptReturnType type);
     public <RET2> ProcessTaskFactory<RET2> returning(Function<ProcessTaskWrapper<?>, RET2> resultTransformation);
     public ProcessTaskFactory<T> runAsCommand();
     public ProcessTaskFactory<T> runAsScript();

@@ -22,7 +22,6 @@ import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
 
 public abstract class ExecWithLoggingHelpers {
-    protected Logger commandLogger = null;
 
     public static final ConfigKey<OutputStream> STDOUT = SshMachineLocation.STDOUT;
     public static final ConfigKey<OutputStream> STDERR = SshMachineLocation.STDERR;
@@ -30,13 +29,18 @@ public abstract class ExecWithLoggingHelpers {
     public static final ConfigKey<Boolean> NO_STDERR_LOGGING = SshMachineLocation.NO_STDERR_LOGGING;
     public static final ConfigKey<String> LOG_PREFIX = SshMachineLocation.LOG_PREFIX;
 
+    protected final String shortName;
+    protected Logger commandLogger = null;
+    
     public interface ExecRunner {
         public int exec(ShellTool ssh, Map<String,?> flags, List<String> cmds, Map<String,?> env);
     }
 
     protected abstract <T> T execWithTool(MutableMap<String, Object> toolCreationAndConnectionProperties, Function<ShellTool, T> runMethodOnTool);
     
-    public ExecWithLoggingHelpers() {
+    /** takes a very short name for use in blocking details, e.g. SSH or Process */
+    public ExecWithLoggingHelpers(String shortName) {
+        this.shortName = shortName;
     }
 
     public ExecWithLoggingHelpers logger(Logger commandLogger) {
@@ -53,14 +57,14 @@ public abstract class ExecWithLoggingHelpers {
 
     public int execCommands(Map<String,?> props, String summaryForLogging, List<String> commands, Map<String,?> env) {
         return execWithLogging(props, summaryForLogging, commands, env, new ExecRunner() {
-                @Override public int exec(ShellTool ssh, Map<String,?> flags, List<String> cmds, Map<String,?> env) {
-                    return ssh.execCommands(flags, cmds, env);
+                @Override public int exec(ShellTool tool, Map<String,?> flags, List<String> cmds, Map<String,?> env) {
+                    return tool.execCommands(flags, cmds, env);
                 }});
     }
 
     @SuppressWarnings("resource")
     public int execWithLogging(Map<String,?> props, final String summaryForLogging, final List<String> commands, final Map<String,?> env, final ExecRunner execCommand) {
-        if (commandLogger!=null && commandLogger.isDebugEnabled()) commandLogger.debug("{}, starting on machine {}: {}", new Object[] {summaryForLogging, this, commands});
+        if (commandLogger!=null && commandLogger.isDebugEnabled()) commandLogger.debug("{}, initiating "+shortName.toLowerCase()+" on machine {}: {}", new Object[] {summaryForLogging, this, commands});
 
         if (commands.isEmpty()) {
             if (commandLogger!=null && commandLogger.isDebugEnabled())
@@ -69,8 +73,8 @@ public abstract class ExecWithLoggingHelpers {
         }
 
         final ConfigBag execFlags = new ConfigBag().putAll(props);
-        // some props get overridden in execFlags, so remove them from the ssh flags
-        final ConfigBag sshFlags = new ConfigBag().putAll(props).removeAll(LOG_PREFIX, STDOUT, STDERR, ShellTool.PROP_NO_EXTRA_OUTPUT);
+        // some props get overridden in execFlags, so remove them from the tool flags
+        final ConfigBag toolFlags = new ConfigBag().putAll(props).removeAll(LOG_PREFIX, STDOUT, STDERR, ShellTool.PROP_NO_EXTRA_OUTPUT);
 
         PipedOutputStream outO = null;
         PipedOutputStream outE = null;
@@ -103,9 +107,9 @@ public abstract class ExecWithLoggingHelpers {
                 execFlags.put(STDERR, outE);
             }
 
-            Tasks.setBlockingDetails("SSH executing, "+summaryForLogging);
+            Tasks.setBlockingDetails(shortName+" executing, "+summaryForLogging);
             try {
-                return execWithTool(MutableMap.copyOf(sshFlags.getAllConfig()), new Function<ShellTool, Integer>() {
+                return execWithTool(MutableMap.copyOf(toolFlags.getAllConfig()), new Function<ShellTool, Integer>() {
                     public Integer apply(ShellTool tool) {
                         int result = execCommand.exec(tool, MutableMap.copyOf(execFlags.getAllConfig()), commands, env);
                         if (commandLogger!=null && commandLogger.isDebugEnabled()) 

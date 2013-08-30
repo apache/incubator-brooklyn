@@ -41,12 +41,12 @@ public class DynamicToyMySqlEntityChef implements ChefConfig {
     protected static void addChefSoloConfig(EntitySpec<? extends Entity> spec) {
         // for solo we always need dependent cookbooks set, and mysql requires password set
         ChefConfigs.addToCookbooksFromGithub(spec, "mysql", "build-essential", "openssl");
-        ChefConfigs.setLaunchAttribute(spec, "mysql",  
+        ChefConfigs.addLaunchAttributes(spec, MutableMap.of("mysql",  
                 MutableMap.of()
                 .add("server_root_password", "MyPassword")
                 .add("server_debian_password", "MyPassword")
                 .add("server_repl_password", "MyPassword")
-                );
+            ));
     }
 
     public static EntitySpec<? extends Entity> specSolo() {

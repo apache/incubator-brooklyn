@@ -85,12 +85,20 @@ public class SshEffectorTasks {
             return super.newTask();
         }
         
-        @SuppressWarnings("unchecked")
+        @Override
+        public <T2> SshEffectorTask<T2> returning(ScriptReturnType type) {
+            return (SshEffectorTask<T2>) super.<T2>returning(type);
+        }
+
+        @Override
+        public SshEffectorTask<Boolean> returningIsExitCodeZero() {
+            return (SshEffectorTask<Boolean>) super.returningIsExitCodeZero();
+        }
+
         public SshEffectorTask<String> requiringZeroAndReturningStdout() {
             return (SshEffectorTask<String>) super.requiringZeroAndReturningStdout();
         }
         
-        @SuppressWarnings("unchecked")
         public <RET2> SshEffectorTask<RET2> returning(Function<ProcessTaskWrapper<?>, RET2> resultTransformation) {
             return (SshEffectorTask<RET2>) super.returning(resultTransformation);
         }

@@ -47,7 +47,7 @@ public class JsonyaTest {
     public void testJsonyaWithList() {
         Navigator<MutableMap<Object, Object>> n = europeMap();
         n.at("europe", "uk", "neighbours").list().add("ireland")
-            .root().at("europe", "france", "neighbours").add("spain", "germany").add("switzerland")
+            .root().at("europe", "france", "neighbours").list().add("spain", "germany").add("switzerland")
             .root().at("europe", "france", "neighbours").add("lux");
         Object l = n.root().get("europe", "france", "neighbours");
         Assert.assertTrue(l instanceof List);
@@ -60,4 +60,54 @@ public class JsonyaTest {
         Map nd2 = (Map) n.root().get("europe", "france", "neighbours", 4);
         Assert.assertEquals(nd2.size(), 2);
     }
+    
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testCreateMapInList1() {
+        MutableMap<Object, Object> map = Jsonya.at("countries").list().map().add("europe", "uk").getRootMap();
+        List l = (List)map.get("countries");
+        Assert.assertEquals( ((Map)l.get(0)).get("europe"), "uk" );
+    }
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testCreateMapInList2() {
+        MutableMap<Object, Object> map = Jsonya.at("countries").list().map().add("europe", "uk")
+            .root().at("countries").add("antarctica")
+            .root().at("countries").map().add("asia", (Object)null)
+                .at("asia").list().add("china", "japan").getRootMap();
+        
+        List l = (List)map.get("countries");
+        Assert.assertEquals( ((Map)l.get(0)).get("europe"), "uk" );
+    }
+    
+    @Test
+    public void testJsonyaDeepSimple() {
+        Navigator<MutableMap<Object, Object>> n = Jsonya.of(europeMap())
+                .at("europe").add("spain", "plains");
+        Assert.assertEquals( n.root().get("europe", "spain"), "plains" );
+        Assert.assertEquals( n.getRootMap().size(), 1 );
+        Assert.assertEquals( n.root().at("europe").getFocusMap().size(), 3 );
+    }
+    
+    @Test(expectedExceptions=Exception.class)
+    public void testJsonyaDeepSimpleFailure() {
+        Jsonya.of(europeMap()).at("euroope").add("spain");
+    }
+
+    @Test
+    public void testJsonyaDeepMoreComplicated() {
+        Navigator<MutableMap<Object, Object>> n = Jsonya.of(europeMap()).at("asia")
+            .list().add("china", "japan")
+            .root().add( Jsonya.newInstance().at("europe", "uk", "glasgow").put("weather", "even wetter").getRootMap() );
+        
+        Assert.assertEquals( n.getRootMap().size(), 2 );
+        Assert.assertTrue( n.root().at("asia").get(List.class).contains("china") );
+        Assert.assertTrue( ((List<?>)n.root().get("asia")).contains("japan") );
+        
+        Assert.assertEquals(n.root().at("europe", "uk").get(Map.class).size(), 2);
+        Assert.assertEquals(n.root().at("europe", "uk", "edinburgh", "weather").get(), "wet");
+        Assert.assertEquals(n.root().at("europe", "uk", "glasgow", "weather").get(), "even wetter");
+    }
+    
+
 }

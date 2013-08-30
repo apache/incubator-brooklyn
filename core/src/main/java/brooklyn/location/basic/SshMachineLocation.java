@@ -450,7 +450,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
     
     protected ExecWithLoggingHelpers newExecWithLoggingHelpers() {
-        return new ExecWithLoggingHelpers() {
+        return new ExecWithLoggingHelpers("SSH") {
             @Override
             protected <T> T execWithTool(MutableMap<String, Object> props, Function<ShellTool, T> function) {
                 return execSsh(props, function);

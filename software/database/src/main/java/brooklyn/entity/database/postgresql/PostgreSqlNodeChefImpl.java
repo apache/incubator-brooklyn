@@ -1,7 +1,5 @@
 package brooklyn.entity.database.postgresql;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,15 +21,11 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.Jsonya;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
-import com.google.common.base.Functions;
 import com.google.common.collect.Iterables;
-import com.google.gson.GsonBuilder;
 
 public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements PostgreSqlNode, SoftwareProcess {
 
@@ -56,28 +50,23 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
             usePidFile("/var/run/postgresql/*.pid");
             useService("postgresql");
         }
-        protected String json(Object o) {
-            return new GsonBuilder().create().toJson(o);
-        }
         protected void startWithKnifeAsync() {
             Entities.warnOnIgnoringConfig(entity(), ChefConfig.CHEF_RUN_LIST);
             Entities.warnOnIgnoringConfig(entity(), ChefConfig.CHEF_LAUNCH_ATTRIBUTES);
             
-            // build launch attributes
-            Map<String,Object> attributes = MutableMap.of();
-            // configure the port and listen_address to use
-            Jsonya.of(attributes).at("postgresql", "config").put(
-                    "port", entity().getAttribute(PostgreSqlNode.POSTGRESQL_PORT), 
-                    "listen_addresses", "*");
-            // let anyone log in, with a valid password
-            Jsonya.of(attributes).at("postgresql", "pg_hba").list().put(
-                    "type", "host", "db", "all", "user", "all", 
-                        "addr", "0.0.0.0/0", "method", "md5");
-            // no other arguments (for now); chef will pick a password for us
-            
             DynamicTasks.queue(
-                    ChefServerTasks.knifeConverge(Functions.constant("postgresql::server"), true,
-                            "-j "+BashStringEscapes.wrapBash(json(attributes))));
+                    ChefServerTasks
+                        .knifeConvergeRunList("postgresql::server")
+                        .knifeAddAttributes(Jsonya
+                            .at("postgresql", "config").add(
+                                "port", entity().getAttribute(PostgreSqlNode.POSTGRESQL_PORT), 
+                                "listen_addresses", "*").getRootMap())
+                        .knifeAddAttributes(Jsonya
+                            .at("postgresql", "pg_hba").list().map().add(
+                                "type", "host", "db", "all", "user", "all", 
+                                "addr", "0.0.0.0/0", "method", "md5").getRootMap()) 
+                        // no other arguments currenty supported; chef will pick a password for us
+                );
         }
         protected void postStartCustom() {
             super.postStartCustom();

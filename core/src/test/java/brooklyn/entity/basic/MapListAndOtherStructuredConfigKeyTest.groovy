@@ -225,15 +225,43 @@ public class MapListAndOtherStructuredConfigKeyTest {
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
         entity.setConfig(TestEntity.CONF_MAP_THING, MapModifications.clearing())
         // for now defaults to null, but empty map might be better? or whatever the default is?
-        //assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), null)
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), null)
     }
     @Test
-    public void testMapConfigListMode() throws Exception {
+    public void testMapConfigSetMod() throws Exception {
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
         entity.setConfig(TestEntity.CONF_MAP_THING, MapModifications.set([bkey:"bval"]))
-        //assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [bkey:"bval"])
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [bkey:"bval"])
+    }
+    @Test
+    public void testMapConfigDeepSetFromMap() throws Exception {
+        entity.setConfig(TestEntity.CONF_MAP_THING_OBJECT, [akey: [aa:"AA", a2:"A2"], bkey: "b"])
+        
+        entity.getConfig(TestEntity.CONF_MAP_THING_OBJECT.subKey("akey"), [aa:"AA", a2:"A2"])
+        entity.getConfig(TestEntity.CONF_MAP_THING_OBJECT.subKey("bkey"), ["b"])
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING_OBJECT), 
+            [akey:[aa:"AA",a2:"A2"],bkey:"b" ])
+    }
+    @Test
+    public void testMapConfigDeepSetFromSubkeys() throws Exception {
+        entity.setConfig(TestEntity.CONF_MAP_THING_OBJECT.subKey("akey"), [aa:"AA", a2:"A2"])
+        entity.setConfig(TestEntity.CONF_MAP_THING_OBJECT.subKey("bkey"), "b")
+        
+        entity.getConfig(TestEntity.CONF_MAP_THING_OBJECT.subKey("akey"), [aa:"AA", a2:"A2"])
+        entity.getConfig(TestEntity.CONF_MAP_THING_OBJECT.subKey("bkey"), ["b"])
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING_OBJECT), 
+            [akey:[aa:"AA",a2:"A2"],bkey:"b" ])
+    }
+    @Test
+    public void testMapConfigAdd() throws Exception {
+        entity.setConfig(TestEntity.CONF_MAP_THING_OBJECT.subKey("0key"), 0)
+        entity.setConfig(TestEntity.CONF_MAP_THING_OBJECT.subKey("akey"), [aa:"AA", a2:"A2"])
+        entity.setConfig(TestEntity.CONF_MAP_THING_OBJECT.subKey("bkey"), ["b"])
+        entity.setConfig(TestEntity.CONF_MAP_THING_OBJECT, MapModifications.add([akey:[a3:3],bkey:"b2",ckey:"cc"]))
+        
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING_OBJECT), 
+            ["0key":0, akey:[aa:"AA",a2:"A2",a3:3],bkey:["b","b2"],ckey:"cc" ])
+        entity.getConfig(TestEntity.CONF_MAP_THING_OBJECT.subKey("akey"), [aa:"AA", a2:"A2", a3:3])
     }
 
 }
