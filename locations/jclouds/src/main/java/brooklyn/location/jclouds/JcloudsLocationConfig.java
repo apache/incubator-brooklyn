@@ -127,6 +127,10 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     
     public static final ConfigKey<Integer> OVERRIDE_RAM = ConfigKeys.newIntegerConfigKey("overrideRam", "Custom ram value");    
     
+    /**
+     * CUSTOM_MACHINE_SETUP_SCRIPT_URL accepts a URL location that points to a shell script. 
+     * Please have a look at locations/jclouds/src/main/resources/sample/script/setup-server.sh as an example
+     */
     public static final ConfigKey<String> CUSTOM_MACHINE_SETUP_SCRIPT_URL = ConfigKeys.newStringConfigKey("setup.script", "Custom script to customize a node");
     
     public static final ConfigKey<String> CUSTOM_MACHINE_SETUP_SCRIPT_VARS = ConfigKeys.newStringConfigKey("setup.script.vars", "vars to customize a setup.script i.e.: key1:value1,key2:value2");
