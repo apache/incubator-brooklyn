@@ -6,6 +6,7 @@ import groovy.lang.GroovyShell;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.Callable;
@@ -170,12 +171,16 @@ public class Main {
         public String locations;
 
         @Option(name = { "-p", "--port" }, title = "port number",
-                description = "Specifies the port to be used by the Brooklyn Management Console.")
+                description = "Specifies the port to be used by the Brooklyn Management Console")
         public String port = "8081+";
 
         @Option(name = { "-nc", "--noConsole" },
                 description = "Whether to start the web console")
         public boolean noConsole = false;
+
+        @Option(name = { "-b", "--bindAddress" },
+                description = "Specifies the IP address of the NIC to bind the Brooklyn Management Console to")
+        public String bindAddress = null;
 
         @Option(name = { "--noConsoleSecurity" },
                 description = "Whether to disable security for the web console with no security (i.e. no authentication required)")
@@ -236,15 +241,17 @@ public class Main {
             }
 
             BrooklynLauncher launcher = BrooklynLauncher.newInstance();
-            launcher
-                    .localBrooklynPropertiesFile(localBrooklynProperties)
+            launcher.localBrooklynPropertiesFile(localBrooklynProperties)
                     .webconsolePort(port)
                     .webconsole(!noConsole)
                     .shutdownOnExit(!noShutdownOnExit)
                     .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : ImmutableList.of(locations));
-            if (noConsoleSecurity) 
+            if (noConsoleSecurity) {
                 launcher.installSecurityFilter(false);
-            
+            }
+            if (Strings.isNonEmpty(bindAddress)) {
+                launcher.bindAddress(InetAddress.getByName(bindAddress));
+            }
             if (app != null) {
                 // Create the instance of the brooklyn app
                 log.debug("Load the user's application: {}", app);

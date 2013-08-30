@@ -140,6 +140,10 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     public static final BasicAttributeSensorAndConfigKey<Boolean> NO_WEB_CONSOLE_AUTHENTICATION = new BasicAttributeSensorAndConfigKey<Boolean>(
             Boolean.class, "brooklynnode.webconsole.nosecurity", "Whether to start the web console with no security", false);
 
+    @SetFromFlag("bindAddress")
+    public static final BasicAttributeSensorAndConfigKey<String> WEB_CONSOLE_BIND_ADDRESS = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "brooklynnode.webconsole.bindAddress", "Specifies the IP address of the NIC to bind the Brooklyn Management Console to", null);
+
     @SetFromFlag("classpath")
     public static final BasicAttributeSensorAndConfigKey<List<String>> CLASSPATH = new BasicAttributeSensorAndConfigKey(
             List.class, "brooklynnode.classpath", "classpath to use, as list of URL entries", Lists.newArrayList());

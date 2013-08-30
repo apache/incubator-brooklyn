@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JarBuilder;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
@@ -19,6 +20,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -57,7 +59,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
     @Override
     public void install() {
         String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
+        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("brooklyn-%s", getVersion()));
@@ -185,8 +187,9 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         String app = getEntity().getAttribute(BrooklynNode.APP);
         String locations = getEntity().getAttribute(BrooklynNode.LOCATIONS);
         Integer httpPort = getEntity().getAttribute(BrooklynNode.HTTP_PORT);
-        boolean hasLocalBrooklynProperties = entity.getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_CONTENTS) != null || entity.getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_URI) != null;
+        boolean hasLocalBrooklynProperties = getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_CONTENTS) != null || getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_URI) != null;
         String localBrooklynPropertiesPath = processTemplateContents(getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH));
+        String bindAddress = getEntity().getAttribute(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS);
 
         String cmd = "./bin/brooklyn launch";
         if (app != null) {
@@ -206,8 +209,11 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         } else {
             throw new IllegalStateException("Unsupported http protocol: "+getEntity().getEnabledHttpProtocols());
         }
+        if (Strings.isNonEmpty(bindAddress)) {
+            cmd += " --bindAddress "+bindAddress;
+        }
         if (getEntity().getAttribute(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION)) {
-            cmd += " --noConsoleSecurity ";
+            cmd += " --noConsoleSecurity";
         }
         if (getEntity().getConfig(BrooklynNode.NO_SHUTDOWN_ON_EXIT)) {
             cmd += " --noShutdownOnExit ";

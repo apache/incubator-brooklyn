@@ -13,6 +13,7 @@ import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Functions;
 
@@ -64,11 +65,13 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         // TODO what sensors should we poll?
         ConfigToAttributes.apply(this);
 
-        String host;
-        if (getAttribute(NO_WEB_CONSOLE_AUTHENTICATION)) {
-            host = "localhost"; // Because of --noConsoleSecurity option
-        } else {
-            host = getAttribute(HOSTNAME);
+        String host = getAttribute(WEB_CONSOLE_BIND_ADDRESS);
+        if (Strings.isEmpty(host)) {
+            if (getAttribute(NO_WEB_CONSOLE_AUTHENTICATION)) {
+                host = "localhost"; // Because of --noConsoleSecurity option
+            } else {
+                host = getAttribute(HOSTNAME);
+            }
         }
 
         URI webConsoleUri;
