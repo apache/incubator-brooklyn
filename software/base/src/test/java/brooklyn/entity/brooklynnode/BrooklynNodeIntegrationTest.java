@@ -67,7 +67,8 @@ public class BrooklynNodeIntegrationTest {
 
     @Test(groups="Integration")
     public void testCanStartAndStop() throws Exception {
-        BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class));
+        BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1"));
         app.start(locs);
 
         EntityTestUtils.assertAttributeEqualsEventually(brooklynNode, BrooklynNode.SERVICE_UP, true);
@@ -93,6 +94,7 @@ public class BrooklynNodeIntegrationTest {
     @Test(groups="Integration")
     public void testSetsGlobalBrooklynPropertiesFromContents() throws Exception {
         BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
                 .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH, pseudoBrooklynPropertiesFile.getAbsolutePath())
                 .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_CONTENTS, "abc=def"));
         app.start(locs);
@@ -103,6 +105,7 @@ public class BrooklynNodeIntegrationTest {
     @Test(groups="Integration")
     public void testSetsLocalBrooklynPropertiesFromContents() throws Exception {
         BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
                 .configure(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH, pseudoBrooklynPropertiesFile.getAbsolutePath())
                 .configure(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_CONTENTS, "abc=def"));
         app.start(locs);
@@ -116,6 +119,7 @@ public class BrooklynNodeIntegrationTest {
         Files.write("abc=def", brooklynPropertiesSourceFile, Charsets.UTF_8);
 
         BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
                 .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH, pseudoBrooklynPropertiesFile.getAbsolutePath())
                 .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_URI, brooklynPropertiesSourceFile.toURI().toString()));
         app.start(locs);
@@ -126,6 +130,7 @@ public class BrooklynNodeIntegrationTest {
     @Test(groups="Integration")
     public void testSetsBrooklynCatalogFromContents() throws Exception {
         BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
                 .configure(BrooklynNode.BROOKLYN_CATALOG_REMOTE_PATH, pseudoBrooklynCatalogFile.getAbsolutePath())
                 .configure(BrooklynNode.BROOKLYN_CATALOG_CONTENTS, "<catalog/>"));
         app.start(locs);
@@ -139,6 +144,7 @@ public class BrooklynNodeIntegrationTest {
         Files.write("abc=def", brooklynCatalogSourceFile, Charsets.UTF_8);
 
         BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
                 .configure(BrooklynNode.BROOKLYN_CATALOG_REMOTE_PATH, pseudoBrooklynCatalogFile.getAbsolutePath())
                 .configure(BrooklynNode.BROOKLYN_CATALOG_URI, brooklynCatalogSourceFile.toURI().toString()));
         app.start(locs);
@@ -155,6 +161,7 @@ public class BrooklynNodeIntegrationTest {
 
         try {
             BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                    .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
                     .configure(BrooklynNode.SUGGESTED_RUN_DIR, tempDir.getAbsolutePath())
                     .configure(BrooklynNode.COPY_TO_RUNDIR, ImmutableMap.of(sourceFile.getAbsolutePath(), "${RUN}/myfile.txt")));
             app.start(locs);
@@ -170,6 +177,7 @@ public class BrooklynNodeIntegrationTest {
     @Test(groups="Integration")
     public void testSetsBrooklynWebConsolePort() throws Exception {
         BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
                 .configure(BrooklynNode.HTTP_PORT, PortRanges.fromString("45000+")));
         app.start(locs);
 
