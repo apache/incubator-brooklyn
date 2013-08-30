@@ -20,7 +20,7 @@ define([
                 currentStatus:"",
                 children:[],
                 // missing a few -- submittedTask, blockingXxx -- but that seems okay
-                detailedStatus:"",
+                detailedStatus:""
             }
         },
         getTagByName:function (name) {
