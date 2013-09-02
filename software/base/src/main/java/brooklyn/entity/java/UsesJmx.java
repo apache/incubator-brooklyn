@@ -23,12 +23,13 @@ public interface UsesJmx extends UsesJava {
     @SetFromFlag("jmxPort")
     public static final PortAttributeSensorAndConfigKey JMX_PORT = Attributes.JMX_PORT;
 
+    @SetFromFlag("rmiRegistryPort")
+    public static final PortAttributeSensorAndConfigKey RMI_REGISTRY_PORT = Attributes.RMI_REGISTRY_PORT;
+    
+    /** @deprecated since 0.6.0 use RMI_REGISTRY_PORT */
+    @Deprecated
     @SetFromFlag("rmiServerPort")
     public static final PortAttributeSensorAndConfigKey RMI_SERVER_PORT = Attributes.RMI_SERVER_PORT;
-
-    @Deprecated // since 0.4 use RMI_REGISTRY_PORT
-    public static final PortAttributeSensorAndConfigKey RMI_PORT = RMI_SERVER_PORT;
-    public static final PortAttributeSensorAndConfigKey RMI_REGISTRY_PORT = RMI_SERVER_PORT;
 
     @SetFromFlag("jmxContext")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = Attributes.JMX_CONTEXT;

@@ -22,7 +22,16 @@ import javax.management.remote.JMXServiceURL;
  * This exposes JMX support for going through firewalls by starting an RMI registry server
  * on a well-known port.
  * <p>
- * Listens on 9001 unless overridden by system property {@code brooklyn.jmx-rmi-agent.port}.
+ * This implementation DOES NOT support port-forwarding however. The same hostname used internally
+ * (specified in {@link #RMI_HOSTNAME_PROPERTY} or autodetected by java) must also be addressable
+ * by the JMX client. This is due to how the property is used internally by java during the 
+ * RMI registry re-direction.
+ * <p>
+ * If you require that the client connects to a different hostname/IP than the one where the
+ * service is bound, consider using the Brooklyn JmxmpAgent, as this will not work!
+ * <p>
+ * This listens on {@value #RMI_REGISTRY_PORT_PROPERTY} unless overridden by system property 
+ * {@link #RMI_REGISTRY_PORT_PROPERTY} ({@value #RMI_REGISTRY_PORT_PROPERTY}).
  *
  * @see brooklyn.util.jmx.jmxmp.JmxmpAgent
  * @see https://blogs.oracle.com/jmxetc/entry/connecting_through_firewall_using_jmx
@@ -34,11 +43,12 @@ public class JmxRmiAgent {
     public static final String RMI_REGISTRY_PORT_PROPERTY = "brooklyn.jmx-agent.rmi-port";
     public static final String RMI_REGISTRY_DEFAULT_PORT = "9001";
 
-    /** Port for JMX server to listen on. Default to {@link #JMX_SERVER_DEFAULT_PORT}. */
+    /** Port for JMX server (sometimes called JMX_RMI server) to listen on. Default to {@link #JMX_SERVER_DEFAULT_PORT}. */
     public static final String JMX_SERVER_PORT_PROPERTY = "brooklyn.jmx-agent.jmx-port";
     public static final String JMX_SERVER_DEFAULT_PORT = "11099";
 
-    /** Hostname to advertise, and if {@value #JMX_SERVER_ADDRESS_WILDCARD_PROPERTY} is false also the hostname/interface to bind to. */
+    /** Hostname to advertise, and if {@value #JMX_SERVER_ADDRESS_WILDCARD_PROPERTY} is false also the hostname/interface to bind to. 
+     *  Should never be 0.0.0.0 as it is publicly advertised. */
     public static final String RMI_HOSTNAME_PROPERTY = "java.rmi.server.hostname";
 
     /** Whether JMX should bind to all interfaces. */
@@ -60,7 +70,11 @@ public class JmxRmiAgent {
             // Start an RMI registry on port specified
             final int rmiPort = Integer.parseInt(System.getProperty(RMI_REGISTRY_PORT_PROPERTY, RMI_REGISTRY_DEFAULT_PORT));
             final int jmxPort = Integer.parseInt(System.getProperty(JMX_SERVER_PORT_PROPERTY, JMX_SERVER_DEFAULT_PORT));
-            LocateRegistry.createRegistry(jmxPort);
+            final String hostname = getLocalhostHostname(properties);
+            
+            System.out.println("Setting up JmxRmiAgent for: "+hostname+" "+rmiPort+" / "+jmxPort);
+            
+            LocateRegistry.createRegistry(rmiPort);
 
             // Retrieve the PlatformMBeanServer.
             MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
@@ -72,15 +86,14 @@ public class JmxRmiAgent {
             // TODO Security
 
             // Create an RMI connector server.
-            final String hostname = getLocalhostHostname(properties);
-            JMXServiceURL url = new JMXServiceURL("service:jmx:rmi://" + hostname + ":" + jmxPort + "/jndi/rmi://" + hostname + ":" + jmxPort + "/jmxrmi");
+            JMXServiceURL url = new JMXServiceURL("service:jmx:rmi://" + hostname + ":" + jmxPort + "/jndi/rmi://" + hostname + ":" + rmiPort + "/jmxrmi");
 
             // Now create the server from the JMXServiceURL
             JMXConnectorServer connector = JMXConnectorServerFactory.newJMXConnectorServer(url, env, mbs);
 
             // Start the RMI connector server.
             connector.start();
-            System.out.println("JMXConnectorServer active at: " + url);
+            System.out.println("JmxRmiAgent JMXConnectorServer active at: " + url);
 
             return connector;
         } catch (RuntimeException e) {
@@ -106,27 +119,13 @@ public class JmxRmiAgent {
         return true;
     }
 
-    /**
-     * Returns boolean interpretation of a string, defaulting to {@code valueIfUnknownText} if the value is unset or unrecognised.
-     * 
-     * @throws IllegalStateException if default is null and value is unset or unrecognised
-     */
-    private boolean asBoolean(Properties properties, String key, Boolean valueIfNull, Boolean valueIfUnknownText) {
-        Object v = properties.get(key);
-        if (v == null) {
-            if (valueIfNull == null) throw new IllegalStateException("Property '" + key + "' is required.");
-            return valueIfNull;
-        }
-        String vv = v.toString();
-        if ("true".equalsIgnoreCase(vv)) return true;
-        if ("false".equalsIgnoreCase(vv)) return false;
-        if (valueIfUnknownText == null)
-            throw new IllegalStateException("Property '" + key + "' has illegal value '" + vv + "'; should be true or false");
-        return valueIfUnknownText;
-    }
-
     private String getLocalhostHostname(Properties properties) throws UnknownHostException {
         String hostname = properties == null ? null : properties.getProperty(RMI_HOSTNAME_PROPERTY);
+        if ("0.0.0.0".equals(hostname)) {
+            System.err.println("WARN: invalid hostname 0.0.0.0 specified for JmxRmiAgent; " +
+            		"it typically must be an address or hostname which is bindable on the machine where " +
+            		"this service is running AND accessible by a client machine (access will likely be impossible)");
+        }
         if (hostname == null || hostname.isEmpty()) {
             hostname = InetAddress.getLocalHost().getHostName();
         }
