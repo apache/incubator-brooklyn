@@ -41,7 +41,6 @@ import com.google.common.collect.Lists;
  */
 @Deprecated
 public class WebClusterDatabaseExampleAltJava extends AbstractApplication {
-    private static final long serialVersionUID = -3549130575905836518L;
     public static final Logger LOG = LoggerFactory.getLogger(WebClusterDatabaseExampleAltJava.class);
     
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault();

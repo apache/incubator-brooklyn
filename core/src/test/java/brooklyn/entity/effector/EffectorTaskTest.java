@@ -62,7 +62,6 @@ public class EffectorTaskTest {
             .build();
 
     public static class DoublingEntity extends AbstractEntity {
-        private static final long serialVersionUID = -3006794991232529824L;
         public static final Effector<Integer> DOUBLE = EffectorTaskTest.DOUBLE_1;
     }
 
@@ -170,7 +169,6 @@ public class EffectorTaskTest {
     // TODO a chaining style approach
     
     public static class Txp1Entity extends AbstractEntity {
-        private static final long serialVersionUID = 6732818057132953567L;
         public static final Effector<Integer> TWO_X_P_1 = EffectorTaskTest.TWO_X_PLUS_ONE;
     }
 
@@ -267,7 +265,6 @@ public class EffectorTaskTest {
     
     // --- overriding by using statics ---------
 
-    @SuppressWarnings("serial")
     public static class BadDoublingEntity extends DoublingEntity {
         public static final Effector<Integer> DOUBLE = Effectors.effector(DoublingEntity.DOUBLE).
                 impl( ((EffectorWithBody<Integer>)TWO_X_PLUS_ONE).getBody() ).build();

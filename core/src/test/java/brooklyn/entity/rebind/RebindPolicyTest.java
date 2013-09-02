@@ -68,8 +68,6 @@ public class RebindPolicyTest {
     }
     
     public static class MyPolicy extends AbstractPolicy {
-        private static final long serialVersionUID = 1L;
-        
         @SetFromFlag
         String myfield;
 

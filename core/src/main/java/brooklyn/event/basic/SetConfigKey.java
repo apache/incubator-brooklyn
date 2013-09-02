@@ -133,8 +133,8 @@ public class SetConfigKey<V> extends BasicConfigKey<Set<? extends V>> implements
         }
     }
 
-    @SuppressWarnings("serial")
     public static class SetModificationBase<T> extends LinkedHashSet<T> implements SetModification<T> {
+        private static final long serialVersionUID = 2715025591272457705L;
         private final boolean clearFirst;
         public SetModificationBase(Collection<T> delegate, boolean clearFirst) {
             super(delegate);

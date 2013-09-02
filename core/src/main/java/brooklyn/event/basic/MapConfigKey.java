@@ -142,8 +142,8 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
         }
     }
 
-    @SuppressWarnings("serial")
     public static class MapModificationBase<V> extends LinkedHashMap<String,V> implements MapModification<V> {
+        private static final long serialVersionUID = -1670820613292286486L;
         private final boolean clearFirst;
         public MapModificationBase(Map<String,V> delegate, boolean clearFirst) {
             super(delegate);

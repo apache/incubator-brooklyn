@@ -4,7 +4,6 @@ import brooklyn.catalog.Catalog;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ApplicationBuilder;
 
-@SuppressWarnings("serial")
 public class MyCatalogItems {
 
     @Catalog(description="Some silly app test")

@@ -13,8 +13,6 @@ import com.google.common.collect.Iterables;
 
 public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSqlNode {
 
-    private static final long serialVersionUID = -6172426032214683646L;
-
     private static final Logger LOG = LoggerFactory.getLogger(PostgreSqlNodeImpl.class);
 
     private SshFeed feed;

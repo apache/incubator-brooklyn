@@ -450,8 +450,6 @@ public class RebindEntityTest {
     }
     
     public static class MyEntityImpl extends AbstractEntity implements MyEntity {
-        private static final long serialVersionUID = 1L;
-        
         private final Object dummy = new Object(); // so not serializable
 
         public MyEntityImpl() {
@@ -490,8 +488,6 @@ public class RebindEntityTest {
     }
     
     public static class MyEntityReffingOthersImpl extends AbstractEntity implements MyEntityReffingOthers {
-        private static final long serialVersionUID = 1L;
-        
         @SetFromFlag("entityRef")
         public static final ConfigKey<Entity> ENTITY_REF_CONFIG = new BasicConfigKey<Entity>(
                         Entity.class, "test.config.entityref", "Ref to other entity");
@@ -528,8 +524,6 @@ public class RebindEntityTest {
     }
     
     public static class MyEntity2Impl extends AbstractEntity implements MyEntity2 {
-        private static final long serialVersionUID = 1L;
-        
         @SetFromFlag
         String myfield;
         
@@ -589,7 +583,6 @@ public class RebindEntityTest {
     }
     
     public static class MyLatchingEntityImpl extends AbstractEntity implements MyLatchingEntity {
-        private static final long serialVersionUID = 1L;
         static volatile CountDownLatch reconstructStartedLatch;
         static volatile CountDownLatch reconstructContinuesLatch;
         static volatile CountDownLatch managingStartedLatch;

@@ -16,8 +16,6 @@ import brooklyn.util.time.Duration;
 
 public class ChefDriverToyMySqlEntity extends SoftwareProcessImpl implements ChefConfig {
 
-    private static final long serialVersionUID = 529261052379403536L;
-
     public static final String PID_FILE = "/var/run/mysqld/mysqld.pid";
     public static final ConfigKey<TaskFactory<? extends TaskAdaptable<Boolean>>> IS_RUNNING_TASK =
             ConfigKeys.newConfigKeyWithDefault(ChefSoloDriver.IS_RUNNING_TASK, 

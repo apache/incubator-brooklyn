@@ -21,7 +21,6 @@ import brooklyn.test.entity.TestApplicationImpl;
  *    interface X extends Y
  *    config C is declared on S and overwritten at Y
  */
-@SuppressWarnings("serial")
 public class ConfigEntityInheritanceTest {
 
     private TestApplication app;

@@ -20,8 +20,6 @@ import brooklyn.util.text.Strings;
 
 public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implements GeoscalingDnsService {
 
-    private static final long serialVersionUID = -7619255593828435554L;
-
     private static final Logger log = LoggerFactory.getLogger(GeoscalingDnsServiceImpl.class);
 
     // Must remember any desired redirection targets if they're specified before configure() has been called.

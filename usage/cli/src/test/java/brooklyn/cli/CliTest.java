@@ -239,7 +239,7 @@ public class CliTest {
     // An empty app to be used for testing
     private static volatile boolean exampleAppRunning;
     private static volatile boolean exampleAppConstructed;
-    @SuppressWarnings("serial")
+    
     public static class ExampleApp extends AbstractApplication {
         volatile boolean running;
         volatile boolean constructed;
@@ -266,7 +266,6 @@ public class CliTest {
     public static interface ExampleEntity extends Entity, Startable {
     }
 
-    @SuppressWarnings("serial")
     public static class ExampleEntityImpl extends AbstractEntity implements ExampleEntity {
         volatile boolean running;
         
