@@ -37,7 +37,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
 
     private static final Logger log = LoggerFactory.getLogger(ChefLifecycleEffectorTasks.class);
     
-    protected String pidFile, serviceName;
+    protected String pidFile, serviceName, windowsServiceName;
     
     public ChefLifecycleEffectorTasks() {
     }
@@ -48,6 +48,10 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
     }
     public ChefLifecycleEffectorTasks useService(String serviceName) {
         this.serviceName = serviceName;
+        return this;
+    }
+    public ChefLifecycleEffectorTasks useWindowsService(String serviceName) {
+        this.windowsServiceName = serviceName;
         return this;
     }
 
@@ -118,6 +122,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         boolean result = false;
         result |= tryCheckStartPid();
         result |= tryCheckStartService();
+        result |= tryCheckStartWindowsService();
         if (!result) {
             throw new IllegalStateException("The process for "+entity()+" appears not to be running (no way to check!)");
         }
@@ -145,6 +150,18 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         Time.sleep(Duration.FIVE_SECONDS);
         if (!((Integer)0).equals(DynamicTasks.queue(SshEffectorTasks.ssh("/etc/init.d/"+serviceName+" status").runAsRoot()).get())) {
             throw new IllegalStateException("The process for "+entity()+" appears not to be running (service "+serviceName+")");
+        }
+
+        return true;
+    }
+
+    protected boolean tryCheckStartWindowsService() {
+        if (windowsServiceName==null) return false;
+        
+        // if it's still up after 5s assume we are good (default behaviour)
+        Time.sleep(Duration.FIVE_SECONDS);
+        if (!((Integer)0).equals(DynamicTasks.queue(SshEffectorTasks.ssh("sc query \""+serviceName+"\" | find \"RUNNING\"").runAsCommand()).get())) {
+            throw new IllegalStateException("The process for "+entity()+" appears not to be running (windowsService "+windowsServiceName+")");
         }
 
         return true;
