@@ -2,6 +2,7 @@ package brooklyn.util.task;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 import java.util.Collections;
@@ -31,6 +32,19 @@ public class NonBasicTaskExecutionTest {
  
     private static final int TIMEOUT_MS = 10*1000;
     
+    public static class ConcreteForwardingTask<T> extends ForwardingTask<T> {
+        private final TaskInternal<T> delegate;
+
+        ConcreteForwardingTask(TaskInternal<T> delegate) {
+            this.delegate = delegate;
+        }
+        
+        @Override
+        protected TaskInternal<T> delegate() {
+            return delegate;
+        }
+    }
+    
     private BasicExecutionManager em;
     private Map<Integer,String> data;
 
@@ -47,13 +61,15 @@ public class NonBasicTaskExecutionTest {
     
     @Test
     public void runSimpleTask() throws Exception {
-        NonBasicTask<Object> t = new NonBasicTask<Object>(new Callable<Object>() {
+        TaskInternal<Object> t = new ConcreteForwardingTask<Object>(new BasicTask<Object>(new Callable<Object>() {
             @Override public Object call() {
                 return data.put(1, "b");
-            }});
+            }}));
         data.put(1, "a");
         Task<?> t2 = em.submit(MutableMap.of("tag", "A"), t);
         assertEquals("a", t.get());
+        assertEquals("a", t2.get());
+        assertSame(t, t2, "t="+t+"; t2="+t2);
         assertEquals("b", data.get(1));
     }
     
@@ -61,13 +77,13 @@ public class NonBasicTaskExecutionTest {
     public void runBasicTaskWithWaits() throws Exception {
         final CountDownLatch signalStarted = new CountDownLatch(1);
         final CountDownLatch allowCompletion = new CountDownLatch(1);
-        final Task<Object> t = new NonBasicTask<Object>(new Callable<Object>() {
+        final TaskInternal<Object> t = new ConcreteForwardingTask<Object>(new BasicTask<Object>(new Callable<Object>() {
             @Override public Object call() throws Exception {
                 Object result = data.put(1, "b");
                 signalStarted.countDown();
                 assertTrue(allowCompletion.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
                 return result;
-            }});
+            }}));
         data.put(1, "a");
 
         Task<?> t2 = em.submit(MutableMap.of("tag", "A"), t);
