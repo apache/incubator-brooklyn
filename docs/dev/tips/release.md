@@ -153,7 +153,7 @@ mvn -Dbrooklyn.deployTo=sonatype -DskipTests clean install deploy
 * 'Close' the repo
 * Email the closed repo address to brooklyn-dev list, have people download and confirm it works.
 
-### Update the brooklyn-examples repo's vtersion Branch
+### Update the brooklyn-examples repo's version Branch
 
 {% highlight bash %}
 
