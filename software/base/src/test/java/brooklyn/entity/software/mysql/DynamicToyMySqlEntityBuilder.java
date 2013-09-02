@@ -88,6 +88,9 @@ public class DynamicToyMySqlEntityBuilder {
                         "cd "+dir(entity),
                         BashCommands.downloadToStdout(downloadUrl(entity, isLocalhost(machineS)))+" | tar xvz"
                     ).summary("download mysql").returning(SshTasks.returningStdoutLoggingInfo(log, true)));
+                if (isLinux(machineS)) {
+                    DynamicTasks.queue(SshEffectorTasks.ssh(BashCommands.installPackage("libaio1")));
+                }
                 DynamicTasks.queue(SshEffectorTasks.ssh(
                         "cd "+dir(entity)+"/*",
                         "scripts/mysql_install_db",
@@ -142,6 +145,10 @@ public class DynamicToyMySqlEntityBuilder {
 
     private static boolean isLocalhost(Supplier<MachineLocation> machineS) {
         return machineS.get() instanceof LocalhostMachine;
+    }
+
+    private static boolean isLinux(Supplier<MachineLocation> machineS) {
+        return machineS.get().getOsDetails().isLinux();
     }
 
 }
