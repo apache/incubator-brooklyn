@@ -92,14 +92,14 @@ public class ReflectionScanner {
     }
 
     @SuppressWarnings("unchecked")
-    protected <T> List<Class<? extends T>> forNames(Set<String> subTypes, final String context) {
+    protected <T> List<Class<? extends T>> forNames(Set<String> classNames, final String context) {
         List<Class<? extends T>> result = new ArrayList<Class<? extends T>>();
-        for (String className : subTypes) {
+        for (String className : classNames) {
             //noinspection unchecked
             try {
-                Class<? extends T> subClazz = (Class<? extends T>) loadClass(className);
-                if (subClazz != null) {
-                    result.add(subClazz);
+                Class<? extends T> clazz = (Class<? extends T>) loadClass(className);
+                if (clazz != null) {
+                    result.add(clazz);
                 } else {
                     log.warn("Unable to instantiate '"+className+"' ("+context+")");
                 }

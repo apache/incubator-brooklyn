@@ -15,6 +15,9 @@ import brooklyn.entity.Entity;
 
 import com.google.common.collect.ImmutableList;
 
+/**
+ * @deprecated since 0.6; code is unused and unnecessary
+ */
 public class EntityReferences {
 
     /**

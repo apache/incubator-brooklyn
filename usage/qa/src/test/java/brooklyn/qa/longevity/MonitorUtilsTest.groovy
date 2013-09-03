@@ -90,7 +90,7 @@ class MonitorUtilsTest {
         }
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testMemoryUsage() {
         int ownpid = MonitorUtils.findOwnPid()
         
