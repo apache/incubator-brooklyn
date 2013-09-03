@@ -226,9 +226,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
-    /** @deprecated temporary Beta method introduced in 0.5.0 */ 
+    /** @deprecated temporary Beta method introduced in 0.5.0; 
+     * {@link #configure(Map)} does roughly the same, and more, supporting ConfigKey inputs etc */
     public void addConfig(Map<String, Object> vals) {
-//        configure(vals);
         getConfigBag().putAll(vals);
     }
     

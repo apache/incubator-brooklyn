@@ -125,7 +125,7 @@ public class DynamicSequentialTaskTest {
     public void testCancelled() throws InterruptedException, ExecutionException {
         Task<List<?>> t = Tasks.sequential(
                 sayTask("1", null),
-                sayTask("2", Duration.ONE_SECOND),
+                sayTask("2", Duration.TEN_SECONDS),
                 sayTask("3", null));
         ec.submit(t);
         synchronized (messages) {
@@ -140,8 +140,9 @@ public class DynamicSequentialTaskTest {
         // 3 should get cancelled and not run at all
         Assert.assertEquals(messages, Arrays.asList("1"));
         
-        // we get one mutex from task2
-        Assert.assertTrue(cancellations.tryAcquire(500, TimeUnit.MILLISECONDS));
+        // we get one mutex from task2, within duration less than that set on task 2
+        // (should be immediate, but long delays seen on jenkins box)
+        Assert.assertTrue(cancellations.tryAcquire(5, TimeUnit.SECONDS));
         
         Iterator<Task<?>> ci = ((HasTaskChildren)t).getChildren().iterator();
         Assert.assertEquals(ci.next().get(), "1");

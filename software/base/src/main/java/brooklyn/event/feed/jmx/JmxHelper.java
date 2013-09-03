@@ -265,7 +265,7 @@ public class JmxHelper {
             if (failedReconnecting) {
                 if (LOG.isDebugEnabled()) LOG.debug("unable to re-connect to JMX url (repeated failure): {}: {}", url, e);
             } else {
-                LOG.warn("unable to re-connect to JMX url: {}: {}", url, e);
+                LOG.debug("unable to re-connect to JMX url {} (rethrowing): {}", url, e);
                 failedReconnecting = true;
             }
             failedReconnectingTime = System.currentTimeMillis();
@@ -411,8 +411,11 @@ public class JmxHelper {
             try {
                 connector.close();
             } catch (Exception e) {
-                LOG.warn("Caught exception disconnecting from JMX at {} ({})", url, e.getMessage());
-                if (LOG.isDebugEnabled()) LOG.debug("Details for exception disconnecting JMX", e);
+                // close attempts to connect to close cleanly; and if it can't, it throws;
+                // often we disconnect as part of shutdown, even if the other side has already stopped --
+                // so swallow exceptions (no situations known where we need a clean closure on the remote side)
+                if (LOG.isDebugEnabled()) LOG.debug("Caught exception disconnecting from JMX at {} ({})", url, e.getMessage());
+                if (LOG.isTraceEnabled()) LOG.trace("Details for exception disconnecting JMX", e);
             } finally {
                 connector = null;
                 connection = null;

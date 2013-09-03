@@ -43,7 +43,7 @@ public class JcloudsLocationMetadataTest implements JcloudsLocationConfig {
 
     @Test
     public void testCanOverrideDefaultAwsEc2Metadata() throws Exception {
-        brooklynProperties.put("brooklyn.jclouds.aws-ec2@us-west-1.latitude", "41.2");
+        brooklynProperties.put("brooklyn.location.jclouds.aws-ec2@us-west-1.latitude", "41.2");
         Location loc = managementContext.getLocationRegistry().resolve("jclouds:aws-ec2:us-west-1");
         
         assertEquals(loc.getConfig(LocationConfigKeys.LATITUDE), 41.2d);

@@ -5,7 +5,6 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.io.File;
 import java.io.StringReader;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,13 +17,14 @@ import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -61,8 +61,10 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     
     public AbstractSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
-        // FIXME this assumes we own the location!!!
-        machine.addConfig(getSshFlags());
+        // FIXME this assumes we own the location, and causes warnings about configuring location after deployment;
+        // better would be to wrap the ssh-execution-provider to supply these flags
+        if (getSshFlags()!=null && !getSshFlags().isEmpty())
+            machine.configure(getSshFlags());
     }
 
     /**
@@ -160,7 +162,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         StringConfigMap globalConfig = ((EntityInternal)getEntity()).getManagementContext().getConfig();
         Map<ConfigKey<?>, Object> mgmtConfig = globalConfig.getAllConfig();
         Map<ConfigKey<?>, Object> entityConfig = ((EntityInternal)getEntity()).getAllConfig();
-        Map<ConfigKey<?>, Object> allConfig = MutableMap.<ConfigKey<?>, Object>builder().putAll(mgmtConfig).putAll((Map)entityConfig).build();
+        Map<ConfigKey<?>, Object> allConfig = MutableMap.<ConfigKey<?>, Object>builder().putAll(mgmtConfig).putAll(entityConfig).build();
         
         for (ConfigKey<?> key : allConfig.keySet()) {
             if (key.getName().startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
@@ -184,6 +186,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return execute(Maps.newLinkedHashMap(), script, summaryForLogging);
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public int execute(Map flags2, List<String> script, String summaryForLogging) {
         Map flags = new LinkedHashMap();
@@ -199,7 +202,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * The environment variables to be set when executing the commands (for install, run, check running, etc).
      */
     public Map<String, String> getShellEnvironment() {
-        return Maps.newLinkedHashMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT, Collections.emptyMap()));
+        return Strings.toStringMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT));
     }
 
     /** @deprecated since 0.5.0, should use {@link copyResource(File, String)}. */
@@ -330,7 +333,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     protected ScriptHelper newScript(String phase) {
         return newScript(Maps.newLinkedHashMap(), phase);
     }
-    protected ScriptHelper newScript(Map flags, String phase) {
+    protected ScriptHelper newScript(Map<?,?> flags, String phase) {
         ScriptHelper s = new ScriptHelper(this, phase+" "+elvis(entity,this));
         if (!truth(flags.get("nonStandardLayout"))) {
             if (INSTALLING.equals(phase)) {

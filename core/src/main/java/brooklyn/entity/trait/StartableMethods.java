@@ -26,7 +26,7 @@ public class StartableMethods {
 
     /** Common implementation for start in parent nodes; just invokes start on all children of the entity */
 	public static void start(EntityLocal e, Collection<? extends Location> locations) {
-        log.info("Starting entity "+e+" at "+locations);
+        log.debug("Starting entity "+e+" at "+locations);
         Iterable<Entity> startables = filterStartableManagedEntities(e.getChildren());
 
         if (!Iterables.isEmpty(startables)) {

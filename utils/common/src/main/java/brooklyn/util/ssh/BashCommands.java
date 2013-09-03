@@ -291,7 +291,7 @@ public class BashCommands {
         return installPackageOr(flags, packageDefaultName, "exit 9");
     }
     public static String installPackageOr(Map<?,?> flags, String packageDefaultName, String optionalCommandToRunIfNone) {
-        String ifmissing = (String) flags.get("onlyifmissing");
+        String ifMissing = (String) flags.get("onlyifmissing");
         String aptInstall = formatIfNotNull("apt-get install -y --allow-unauthenticated %s", getFlag(flags, "apt", packageDefaultName));
         String yumInstall = formatIfNotNull("yum -y --nogpgcheck install %s", getFlag(flags, "yum", packageDefaultName));
         String brewInstall = formatIfNotNull("brew install %s", getFlag(flags, "brew", packageDefaultName));
@@ -305,7 +305,7 @@ public class BashCommands {
                     chainGroup(
                         "echo apt-get exists, doing update",
                         "export DEBIAN_FRONTEND=noninteractive",
-                        sudo("apt-get update"), 
+                        ok(sudo("apt-get update")), 
                         sudo(aptInstall))));
         if (yumInstall != null)
             commands.add(ifExecutableElse1("yum", sudo(yumInstall)));

@@ -120,7 +120,12 @@ public class JmxmpAgent {
     public static String getLocalhostHostname(Properties properties) throws UnknownHostException {
         String hostname = properties==null ? null : properties.getProperty(RMI_HOSTNAME_PROPERTY);
         if (hostname==null || hostname.isEmpty()) {
-            hostname = InetAddress.getLocalHost().getHostName();
+            try {
+                hostname = InetAddress.getLocalHost().getHostName();
+            } catch (Exception e) {
+                System.err.println("Misconfigured hostname when setting JmxmpAgent; reverting to 127.0.0.1: "+e);
+                hostname = "127.0.0.1";
+            }
         }
         return hostname;
     }

@@ -28,7 +28,7 @@ import com.google.common.collect.Maps;
  * brooklyn.location.named.NAME.key 
  * </li>
  * <li>
- * brooklyn.jclouds.PROVIDER.key
+ * brooklyn.location.jclouds.PROVIDER.key
  * </li>
  * </ul>
  * 

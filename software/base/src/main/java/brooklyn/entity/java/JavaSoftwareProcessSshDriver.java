@@ -277,7 +277,11 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                         ).execute();
                 if (result==0)
                     return true;
-                // on some ubuntu machines a delay and a retry may be needed
+                
+                // some failures might want a delay and a retry; 
+                // NOT confirmed this is needed, so:
+                // if we don't see the warning then remove, 
+                // or if we do see the warning then just remove this comment!  3 Sep 2013
                 log.warn("Unable to install Java at " + getLocation() + " for " + entity +
                         " (and Java not detected); invalid result "+result+". " + 
                         "Will retry.");

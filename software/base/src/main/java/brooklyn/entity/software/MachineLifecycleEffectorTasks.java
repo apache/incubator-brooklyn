@@ -210,8 +210,6 @@ public abstract class MachineLifecycleEffectorTasks {
                                     (machine instanceof SshMachineLocation ? 
                                             machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getAllConfig(false)) 
                                             : machine));
-                        if (!(location instanceof LocalhostMachineProvisioningLocation))
-                            log.info("While starting {}, obtained a new location instance {}, now preparing process there", entity(), machine);
                         return machine;
                     }
                 }).build());

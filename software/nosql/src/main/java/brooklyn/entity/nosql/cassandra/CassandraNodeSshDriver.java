@@ -13,12 +13,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.BrooklynVersion;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
@@ -69,7 +67,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     
     @Override
     public void install() {
-        log.info("Installing {}", entity);
+        log.debug("Installing {}", entity);
         DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
@@ -105,7 +103,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public void customize() {
-        log.info("Customizing {} (Cluster {})", entity, getClusterName());
+        log.debug("Customizing {} (Cluster {})", entity, getClusterName());
         Networking.checkPortsValid(getPortMap());
 
         String logFileEscaped = getLogFileLocation().replace("/", "\\/"); // escape slashes
@@ -129,7 +127,12 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public void launch() {
-        log.info("Launching  {}", entity);
+        log.info("Launching " + entity + ": " +
+                "cluster "+getClusterName()+", " +
+                // TODO cassandra should use a locally-resolvable IP or hostname, not a public one
+                // (also true in seeds and other settings)
+//        		"local address " + getLocalAddress() + ", " +
+        		"seeds "+getEntity().getConfig(CassandraNode.SEEDS));
         newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
                 .body.append(String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
                 .execute();
