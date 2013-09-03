@@ -28,6 +28,8 @@ import brooklyn.util.text.ComparableVersion;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Iterables;
@@ -39,7 +41,7 @@ public class DynamicToyMySqlEntityBuilder {
     public static EntitySpec<? extends Entity> spec() {
         return EntitySpec.create(BasicStartable.class).addInitializer(MySqlEntityInitializer.class);
     }
-    
+
     public static final String downloadUrl(Entity e, boolean isLocalhost) {
         if (isLocalhost) {
             for (int i=50; i>20; i--) {
@@ -54,14 +56,20 @@ public class DynamicToyMySqlEntityBuilder {
         String mirrorUrl = "http://www.mirrorservice.org/sites/ftp.mysql.com/";
         return "http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-"+version+"-"+osTag+".tar.gz/from/"+mirrorUrl;
     }
-    
-    public static String dir(Entity e) {
+
+    public static final String installDir(Entity e, boolean isLocalhost) {
+        String url = downloadUrl(e, isLocalhost);
+        String archive = Iterables.find(Splitter.on('/').omitEmptyStrings().split(url), Predicates.containsPattern(".tar.gz"));
+        return archive.replace(".tar.gz", "");
+    }
+
+    public static final String dir(Entity e) {
         return "/tmp/brooklyn-mysql-"+e.getId();
     }
-    
+
     // copied from MySqlSshDriver
     public static String getOsTag(Entity e) {
-//      e.g. "osx10.6-x86_64"; see http://www.mysql.com/downloads/mysql/#downloads
+        // e.g. "osx10.6-x86_64"; see http://www.mysql.com/downloads/mysql/#downloads
         OsDetails os = ((SshMachineLocation)Iterables.getOnlyElement(e.getLocations())).getOsDetails();
         if (os == null) return "linux2.6-i686";
         if (os.isMac()) {
@@ -83,20 +91,24 @@ public class DynamicToyMySqlEntityBuilder {
           new MachineLifecycleEffectorTasks() {
             @Override
             protected String startProcessesAtMachine(Supplier<MachineLocation> machineS) {
-                DynamicTasks.queue(SshEffectorTasks.ssh(
-                        "mkdir "+dir(entity),
-                        "cd "+dir(entity),
-                        BashCommands.downloadToStdout(downloadUrl(entity, isLocalhost(machineS)))+" | tar xvz"
-                    ).summary("download mysql").returning(SshTasks.returningStdoutLoggingInfo(log, true)));
+                DynamicTasks.queue(
+                        SshEffectorTasks.ssh(
+                            "mkdir "+dir(entity),
+                            "cd "+dir(entity),
+                            BashCommands.downloadToStdout(downloadUrl(entity, isLocalhost(machineS)))+" | tar xvz"
+                        ).summary("download mysql").returning(SshTasks.returningStdoutLoggingInfo(log, true)));
                 if (isLinux(machineS)) {
                     DynamicTasks.queue(SshEffectorTasks.ssh(BashCommands.installPackage("libaio1")));
                 }
-                DynamicTasks.queue(SshEffectorTasks.ssh(
-                        "cd "+dir(entity)+"/*",
-                        "scripts/mysql_install_db",
-                        "nohup ./support_files/mysql.server --basedir=$(pwd) start > out.log 2> err.log < /dev/null &"
-                    ).summary("run mysql").returning(SshTasks.returningStdoutLoggingInfo(log, true)));
-                return "all ssh tasks queued";
+                DynamicTasks.queue(
+                        SshEffectorTasks.put(".my.cnf")
+                            .contents(String.format("[mysqld]\nbasedir=%s/%s\n", dir(entity), installDir(entity, isLocalhost(machineS)))),
+                        SshEffectorTasks.ssh(
+                            "cd "+dir(entity)+"/*",
+                            "./scripts/mysql_install_db",
+                            "nohup ./support-files/mysql.server start > out.log 2> err.log < /dev/null &"
+                        ).summary("setup and run mysql").returning(SshTasks.returningStdoutLoggingInfo(log, true)));
+                return "submitted start";
             }
             protected void postStartCustom() {
                 // if it's still up after 5s assume we are good
@@ -115,12 +127,12 @@ public class DynamicToyMySqlEntityBuilder {
                         BrooklynTasks.tagForStream("console (nohup stderr)", Suppliers.ofInstance(info.getStderr()), null));
                     throw new IllegalStateException("MySQL appears not to be running");
                 }
-                
+
                 // and set the PID
                 entity().setAttribute(Attributes.PID, 
                         Integer.parseInt(DynamicTasks.queue(SshEffectorTasks.ssh("cat "+dir(entity)+"/*/data/*.pid")).block().getStdout().trim()));
             }
-            
+
             @Override
             protected String stopProcessesAtMachine() {
                 Integer pid = entity().getAttribute(Attributes.PID);
@@ -131,9 +143,9 @@ public class DynamicToyMySqlEntityBuilder {
 
                 DynamicTasks.queue(SshEffectorTasks.ssh(
                         "cd "+dir(entity)+"/*",
-                        "./support_files/mysql.server --basedir=$(pwd) stop"
+                        "./support-files/mysql.server stop"
                     ).summary("stop mysql"));
-                return "submitted kill";
+                return "submitted stop";
             }
           }.attachLifecycleEffectors(entity);
       }
