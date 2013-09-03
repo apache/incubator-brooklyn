@@ -38,6 +38,7 @@ import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.net.Networking;
 import brooklyn.util.text.Strings;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
@@ -250,7 +251,8 @@ public class Main {
                 launcher.installSecurityFilter(false);
             }
             if (Strings.isNonEmpty(bindAddress)) {
-                launcher.bindAddress(InetAddress.getByName(bindAddress));
+                InetAddress ip = Networking.getInetAddressWithFixedName(bindAddress);
+                launcher.bindAddress(ip);
             }
             if (app != null) {
                 // Create the instance of the brooklyn app

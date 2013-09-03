@@ -88,10 +88,13 @@ public class DynamicToyMySqlEntityBuilder {
                         "cd "+dir(entity),
                         BashCommands.downloadToStdout(downloadUrl(entity, isLocalhost(machineS)))+" | tar xvz"
                     ).summary("download mysql").returning(SshTasks.returningStdoutLoggingInfo(log, true)));
+                if (isLinux(machineS)) {
+                    DynamicTasks.queue(SshEffectorTasks.ssh(BashCommands.installPackage("libaio1")));
+                }
                 DynamicTasks.queue(SshEffectorTasks.ssh(
                         "cd "+dir(entity)+"/*",
                         "scripts/mysql_install_db",
-                        "nohup bin/mysqld_safe > out.log 2> err.log < /dev/null &"
+                        "nohup ./support_files/mysql.server --basedir=$(pwd) start > out.log 2> err.log < /dev/null &"
                     ).summary("run mysql").returning(SshTasks.returningStdoutLoggingInfo(log, true)));
                 return "all ssh tasks queued";
             }
@@ -127,13 +130,9 @@ public class DynamicToyMySqlEntityBuilder {
                 }
 
                 DynamicTasks.queue(SshEffectorTasks.ssh(
-                        // this is the right way:
-                        "kill "+pid
-                        // requires login permission:
-//                        "cd "+dir(entity)+"/*", "bin/mysqladmin shutdown"
-                        // triggers respawn:
-//                        "kill -9 "+pid
-                        ));
+                        "cd "+dir(entity)+"/*",
+                        "./support_files/mysql.server --basedir=$(pwd) stop"
+                    ).summary("stop mysql"));
                 return "submitted kill";
             }
           }.attachLifecycleEffectors(entity);
@@ -142,6 +141,10 @@ public class DynamicToyMySqlEntityBuilder {
 
     private static boolean isLocalhost(Supplier<MachineLocation> machineS) {
         return machineS.get() instanceof LocalhostMachine;
+    }
+
+    private static boolean isLinux(Supplier<MachineLocation> machineS) {
+        return machineS.get().getOsDetails().isLinux();
     }
 
 }
