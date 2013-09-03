@@ -286,5 +286,21 @@ public class JmxSupport implements UsesJmx {
     protected JmxmpSslSupport getJmxSslSupport() {
         return new JmxmpSslSupport(this);
     }
+
+    /** sets JMR_RMI_CUSTOM_AGENT as the connection mode for the indicated apps.
+     * <p>
+     * TODO callers of this method have RMI dependencies in the actual app;
+     * we should look at removing them, so that those pieces of software can run behind 
+     * forwarding public IP's and over SSL (both reasons JMXMP is preferred by us!)
+     */
+    public void recommendJmxRmiCustomAgent() {
+        // set JMX_RMI because the registry is needed (i think)
+        Object jmx = ((EntityInternal)entity).getConfigMap().getRawConfig(UsesJmx.JMX_AGENT_MODE);
+        if (jmx==null) {
+            setConfig(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
+        } else if (jmx!=JmxAgentModes.JMX_RMI_CUSTOM_AGENT) {
+            log.warn("Entity "+entity+" may not function unless running JMX_RMI_CUSTOM_AGENT mode (asked to use "+jmx+")");
+        }
+    }
     
 }

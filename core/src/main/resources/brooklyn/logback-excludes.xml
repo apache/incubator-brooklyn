@@ -21,5 +21,9 @@
     <logger name="jclouds.ssh" additivity="false">
         <appender-ref ref="FILE" />
     </logger>
+    <logger name="org.apache.http.impl.client" additivity="false">
+        <!-- DefaultHttpClient logs info e.g. about "Retrying request" on NoHttpResponseException -->
+        <appender-ref ref="FILE" />
+    </logger>
 
 </included>

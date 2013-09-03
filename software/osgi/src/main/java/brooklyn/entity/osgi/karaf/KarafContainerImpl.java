@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.java.JmxSupport;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -69,6 +70,12 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
     @Override
     public KarafDriver getDriver() {
         return (KarafDriver) super.getDriver();
+    }
+    
+    @Override
+    public void init() {
+        super.init();
+        new JmxSupport(this, null).recommendJmxRmiCustomAgent();
     }
     
     @Override

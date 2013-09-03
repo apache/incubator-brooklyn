@@ -13,6 +13,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.SubscriptionHandle;
 
 /**
@@ -72,6 +73,10 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
             Assert.assertEquals(entity.getApplication(), this);
         }
         return entity;
+    }
+
+    public LocalhostMachineProvisioningLocation newLocalhostProvisioningLocation() {
+        return (LocalhostMachineProvisioningLocation) getManagementContext().getLocationRegistry().resolve("localhost");
     }
 
 }

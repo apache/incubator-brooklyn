@@ -176,7 +176,7 @@ public class JmxHelper {
     private final Set<ObjectName> notFoundMBeans;
 
     public JmxHelper(EntityLocal entity) {
-        this(toJmxUrl(entity), entity, entity.getAttribute(UsesJmx.JMX_USER), entity.getAttribute(UsesJmx.JMX_PASSWORD));
+        this(toJmxUrl(entity), entity, entity.getAttribute(Attributes.JMX_USER), entity.getAttribute(Attributes.JMX_PASSWORD));
         
         if (entity.getAttribute(UsesJmx.JMX_URL) == null) {
             entity.setAttribute(UsesJmx.JMX_URL, url);

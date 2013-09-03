@@ -47,7 +47,7 @@ public class ActiveMQIntegrationTest {
     @BeforeMethod(alwaysRun = true)
     public void setup() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        testLocation = app.getManagementContext().getLocationRegistry().resolve("localhost");
+        testLocation = app.newLocalhostProvisioningLocation();
     }
 
     @AfterMethod(alwaysRun = true)

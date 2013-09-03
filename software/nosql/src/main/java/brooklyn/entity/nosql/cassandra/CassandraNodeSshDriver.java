@@ -20,6 +20,7 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableMap.Builder;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
@@ -97,7 +98,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     private Map<String, Integer> getPortMap() {
         return ImmutableMap.<String, Integer>builder()
                 .put("jmxPort", getJmxPort())
-                .put("rmiPort", getRmiServerPort())
+                .put("rmiPort", getRmiRegistryPort())
                 .put("gossipPort", getGossipPort())
                 .put("sslGossipPort:", getSslGossipPort())
                 .put("thriftPort", getThriftPort())
@@ -165,18 +166,19 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     }
 
     @Override
+    protected Map getCustomJavaSystemProperties() {
+        return MutableMap.<String, String>builder()
+                .putAll(super.getCustomJavaSystemProperties())
+                .put("cassandra.confing", getCassandraConfigFileName())
+                .build();
+    }
+    
+    @Override
     public Map<String, String> getShellEnvironment() {
-        // TODO do this based on config property in UsesJmx
-        String jvmOpts = String.format("-javaagent:%s -D%s=%d -D%s=%d -Djava.rmi.server.hostname=%s -Dcassandra.config=%s",
-                getJmxRmiAgentJarDestinationFilePath(),
-                JmxRmiAgent.JMX_SERVER_PORT_PROPERTY, getJmxPort(),
-                JmxRmiAgent.RMI_REGISTRY_PORT_PROPERTY, getRmiServerPort(),
-                getHostname(),
-                getCassandraConfigFileName());
         return MutableMap.<String, String>builder()
                 .putAll(super.getShellEnvironment())
                 .put("CASSANDRA_CONF", String.format("%s/conf", getRunDir()))
-                .put("JVM_OPTS", jvmOpts) // TODO see QPID_OPTS setting in QpidSshDriver
+                .renameKey("JAVA_OPTS", "JVM_OPTS")
                 .build();
     }
 }

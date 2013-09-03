@@ -46,7 +46,7 @@ public class QpidIntegrationTest {
         String workingDir = System.getProperty("user.dir");
         println workingDir
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        testLocation = new LocalhostMachineProvisioningLocation()
+        testLocation = app.newLocalhostProvisioningLocation()
     }
 
     @AfterMethod(alwaysRun=true)

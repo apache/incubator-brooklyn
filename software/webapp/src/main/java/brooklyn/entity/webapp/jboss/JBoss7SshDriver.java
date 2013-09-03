@@ -122,6 +122,8 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
 
         newScript(INSTALLING).
                 failOnNonZeroResultCode().
+                // don't set vars yet -- it resolves dependencies (e.g. DB) which we don't want until we start
+                environmentVariablesReset().
                 body.append(commands).execute();
     }
 
@@ -169,6 +171,8 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         
         // Copy the install files to the run-dir and add the management user
         newScript(CUSTOMIZING)
+                // don't set vars yet -- it resolves dependencies (e.g. DB) which we don't want until we start
+                .environmentVariablesReset()
                 .body.append(
                     format("cp -r %s/%s . || exit $!", getExpandedInstallDir(), SERVER_TYPE),
                     format("echo -e '\n%s=%s' >> %s/%s/configuration/mgmt-users.properties",

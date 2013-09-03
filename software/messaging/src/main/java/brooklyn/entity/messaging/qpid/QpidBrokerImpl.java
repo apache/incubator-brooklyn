@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.java.JmxSupport;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.jms.JMSBrokerImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
@@ -43,6 +45,12 @@ public class QpidBrokerImpl extends JMSBrokerImpl<QpidQueue, QpidTopic> implemen
     public void setBrokerUrl() {
         String urlFormat = "amqp://guest:guest@/%s?brokerlist='tcp://%s:%d'";
         setAttribute(BROKER_URL, format(urlFormat, getAttribute(VIRTUAL_HOST_NAME), getAttribute(HOSTNAME), getAttribute(AMQP_PORT)));
+    }
+    
+    @Override
+    public void init() {
+        super.init();
+        new JmxSupport(this, null).recommendJmxRmiCustomAgent();
     }
 
     public void waitForServiceUp(long duration, TimeUnit units) {

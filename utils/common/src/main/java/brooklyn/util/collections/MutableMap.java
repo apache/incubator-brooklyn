@@ -163,6 +163,15 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
             return this;
         }
 
+        /** moves the value stored under oldKey to newKey, if there was such a value */
+        public Builder<K, V> renameKey(K oldKey, K newKey) {
+            if (result.containsKey(oldKey)) {
+                V oldValue = result.remove(oldKey);
+                result.put(newKey, oldValue);
+            }
+            return this;
+        }
+        
         public MutableMap<K, V> build() {
           return new MutableMap<K,V>(result);
         }
