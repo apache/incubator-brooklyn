@@ -203,7 +203,7 @@ public class BrooklynNodeIntegrationTest {
 
     @Test(groups="Integration")
     public void testUsesLocation() throws Exception {
-        String brooklynPropertiesContents = "brooklyn.location.named.mynamedloc=localhost";
+        String brooklynPropertiesContents = "brooklyn.location.named.mynamedloc=localhost:(name=myname)";
         Files.copy(BROOKLYN_PROPERTIES_PATH, BROOKLYN_PROPERTIES_BAK_PATH);
 
         try {
@@ -229,7 +229,7 @@ public class BrooklynNodeIntegrationTest {
             // Check that the concrete location is of the required type
             String locatedLocationsContent = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/locations/usage/LocatedLocations");
             String appLocationName = parseJson(locatedLocationsContent, ImmutableList.of(appLocationId, "name"), String.class);
-            assertEquals(appLocationName, "mynamedloc");
+            assertEquals(appLocationName, "myname");
 
         } finally {
             Files.copy(BROOKLYN_PROPERTIES_BAK_PATH, BROOKLYN_PROPERTIES_PATH);
