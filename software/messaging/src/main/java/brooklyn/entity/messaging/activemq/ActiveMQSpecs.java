@@ -2,7 +2,7 @@ package brooklyn.entity.messaging.activemq;
 
 import brooklyn.entity.proxying.EntitySpec;
 
-public class ActiveMQ {
+public class ActiveMQSpecs {
 
     public static EntitySpec<ActiveMQBroker> brokerSpec() {
         return EntitySpec.create(ActiveMQBroker.class);

@@ -5,9 +5,9 @@ import brooklyn.entity.chef.ChefConfig.ChefModes;
 import brooklyn.entity.proxying.EntitySpec;
 
 /** utiltiy for creating specs for PostgreSql instances */
-public class PostgreSql {
+public class PostgreSqlSpecs {
 
-    private PostgreSql() {}
+    private PostgreSqlSpecs() {}
     
     public static EntitySpec<PostgreSqlNode> spec() {
         return EntitySpec.create(PostgreSqlNode.class);

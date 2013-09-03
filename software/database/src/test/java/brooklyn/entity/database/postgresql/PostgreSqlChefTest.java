@@ -38,7 +38,7 @@ public class PostgreSqlChefTest extends ChefLiveTestSupport {
     @Test(groups="Live")
     public void testPostgresStartsAndStops() throws Exception {
         ChefLiveTestSupport.installBrooklynChefHostedConfig(app);
-        psql = app.createAndManageChild(PostgreSql.specChef());
+        psql = app.createAndManageChild(PostgreSqlSpecs.specChef());
 
         app.start(ImmutableList.of(targetLocation));
         
@@ -64,7 +64,7 @@ public class PostgreSqlChefTest extends ChefLiveTestSupport {
     public void testPostgresScriptAndAccess() throws Exception {
         ChefLiveTestSupport.installBrooklynChefHostedConfig(app);
         PortRange randomPort = PortRanges.fromString(""+(5420+new Random().nextInt(10))+"+");
-        psql = app.createAndManageChild(PostgreSql.specChef()
+        psql = app.createAndManageChild(PostgreSqlSpecs.specChef()
                 .configure(PostgreSqlNode.CREATION_SCRIPT_CONTENTS, PostgreSqlIntegrationTest.CREATION_SCRIPT)
                 .configure(PostgreSqlNode.POSTGRESQL_PORT, randomPort)
             );

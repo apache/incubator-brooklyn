@@ -46,7 +46,7 @@ public class ChefLiveTestSupport extends BrooklynMgmtContextTestSupport {
         Location bestLocation = mgmt.getLocationRegistry().resolveIfPossible("named:ChefTests");
         if (bestLocation==null) {
             log.info("using AWS for chef tests because named:ChefTests does not exist");
-            bestLocation = mgmt.getLocationRegistry().resolveIfPossible("jclouds:aws-ec2");
+            bestLocation = mgmt.getLocationRegistry().resolveIfPossible("jclouds:aws-ec2:us-east-1");
         }
         if (bestLocation==null) {
             throw new IllegalStateException("Need a location called named:ChefTests or AWS configured for these tests");

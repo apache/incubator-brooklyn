@@ -52,16 +52,14 @@ public class SshEffectorTasks {
         public ProcessTaskFactory<Integer> ssh(String ...commands) {
             return SshTasks.newSshExecTaskFactory(machine(), commands);
         }
-
-        // TODO scp, install, etc
     }
 
     /** variant of {@link PlainSshExecTaskFactory} which fulfills the {@link EffectorTaskFactory} signature so can be used directly as an impl for an effector,
      * also injects the machine automatically; can also be used outwith effector contexts, and machine is still injected if it is
      * run from inside a task at an entity with a single SshMachineLocation */
-    public static class SshEffectorTask<RET> extends AbstractSshExecTaskFactory<SshEffectorTask<RET>,RET> implements EffectorTaskFactory<RET> {
+    public static class SshEffectorTaskFactory<RET> extends AbstractSshExecTaskFactory<SshEffectorTaskFactory<RET>,RET> implements EffectorTaskFactory<RET> {
 
-        public SshEffectorTask(String ...commands) {
+        public SshEffectorTaskFactory(String ...commands) {
             super(commands);
         }
 
@@ -86,21 +84,21 @@ public class SshEffectorTasks {
         }
         
         @Override
-        public <T2> SshEffectorTask<T2> returning(ScriptReturnType type) {
-            return (SshEffectorTask<T2>) super.<T2>returning(type);
+        public <T2> SshEffectorTaskFactory<T2> returning(ScriptReturnType type) {
+            return (SshEffectorTaskFactory<T2>) super.<T2>returning(type);
         }
 
         @Override
-        public SshEffectorTask<Boolean> returningIsExitCodeZero() {
-            return (SshEffectorTask<Boolean>) super.returningIsExitCodeZero();
+        public SshEffectorTaskFactory<Boolean> returningIsExitCodeZero() {
+            return (SshEffectorTaskFactory<Boolean>) super.returningIsExitCodeZero();
         }
 
-        public SshEffectorTask<String> requiringZeroAndReturningStdout() {
-            return (SshEffectorTask<String>) super.requiringZeroAndReturningStdout();
+        public SshEffectorTaskFactory<String> requiringZeroAndReturningStdout() {
+            return (SshEffectorTaskFactory<String>) super.requiringZeroAndReturningStdout();
         }
         
-        public <RET2> SshEffectorTask<RET2> returning(Function<ProcessTaskWrapper<?>, RET2> resultTransformation) {
-            return (SshEffectorTask<RET2>) super.returning(resultTransformation);
+        public <RET2> SshEffectorTaskFactory<RET2> returning(Function<ProcessTaskWrapper<?>, RET2> resultTransformation) {
+            return (SshEffectorTaskFactory<RET2>) super.returning(resultTransformation);
         }
     }
     
@@ -140,8 +138,8 @@ public class SshEffectorTasks {
         }
     }
 
-    public static SshEffectorTask<Integer> ssh(String ...commands) {
-        return new SshEffectorTask<Integer>(commands);
+    public static SshEffectorTaskFactory<Integer> ssh(String ...commands) {
+        return new SshEffectorTaskFactory<Integer>(commands);
     }
 
     public static SshPutTaskFactory put(String remoteFile) {
@@ -153,17 +151,17 @@ public class SshEffectorTasks {
     }
 
     /** task which returns 0 if pid is running */
-    public static SshEffectorTask<Integer> codePidRunning(Integer pid) {
+    public static SshEffectorTaskFactory<Integer> codePidRunning(Integer pid) {
         return ssh("ps -p "+pid).summary("PID "+pid+" is-running check (exit code)").allowingNonZeroExitCode();
     }
     
     /** task which fails if the given PID is not running */
-    public static SshEffectorTask<?> requirePidRunning(Integer pid) {
+    public static SshEffectorTaskFactory<?> requirePidRunning(Integer pid) {
         return codePidRunning(pid).summary("PID "+pid+" is-running check (required)").requiringExitCodeZero("Process with PID "+pid+" is required to be running");
     }
 
     /** as {@link #codePidRunning(String)} but returning boolean */
-    public static SshEffectorTask<Boolean> isPidRunning(Integer pid) {
+    public static SshEffectorTaskFactory<Boolean> isPidRunning(Integer pid) {
         return codePidRunning(pid).summary("PID "+pid+" is-running check (boolean)").returning(new Function<ProcessTaskWrapper<?>, Boolean>() {
             public Boolean apply(@Nullable ProcessTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
         });
@@ -176,7 +174,7 @@ public class SshEffectorTasks {
      * returns 1 if no matching file, 
      * 1 if matching file but no matching process,
      * and 2 if 2+ matching files */
-    public static SshEffectorTask<Integer> codePidFromFileRunning(final String pidFile) {
+    public static SshEffectorTaskFactory<Integer> codePidFromFileRunning(final String pidFile) {
         return ssh(BashCommands.chain(
                 // this fails, but isn't an error
                 BashCommands.requireTest("-f "+pidFile, "The PID file "+pidFile+" does not exist."),
@@ -198,14 +196,14 @@ public class SshEffectorTasks {
     
     /** task which fails if the pid in the given file is not running (or if there is no such PID file);
      * method accepts wildcards so long as they match a single file on the remote end (fails if 0 or 2+ matching files) */
-    public static SshEffectorTask<?> requirePidFromFileRunning(String pidFile) {
+    public static SshEffectorTaskFactory<?> requirePidFromFileRunning(String pidFile) {
         return codePidFromFileRunning(pidFile)
                 .summary("PID file "+pidFile+" is-running check (required)")
                 .requiringExitCodeZero("Process with PID from file "+pidFile+" is required to be running");
     }
 
     /** as {@link #codePidFromFileRunning(String)} but returning boolean */
-    public static SshEffectorTask<Boolean> isPidFromFileRunning(String pidFile) {
+    public static SshEffectorTaskFactory<Boolean> isPidFromFileRunning(String pidFile) {
         return codePidFromFileRunning(pidFile).summary("PID file "+pidFile+" is-running check (boolean)").
                 returning(new Function<ProcessTaskWrapper<?>, Boolean>() {
                     public Boolean apply(@Nullable ProcessTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
