@@ -1,8 +1,7 @@
 package brooklyn.entity.java;
 
-import java.util.Map;
-
-import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.SetConfigKey;
 import brooklyn.util.flags.SetFromFlag;
@@ -40,9 +39,8 @@ public interface UsesJava {
     public static final SetConfigKey<String> JAVA_OPTS = new SetConfigKey<String>(String.class, 
             "java.opts", "Java command line options", ImmutableSet.<String>of());
 
-    /**
-     * @deprecated Use JAVA_SYSPROPS instead; was deprecated in 0.4.0
-     */
-    @Deprecated
-    public static final BasicConfigKey<Map<String, String>> JAVA_OPTIONS = JAVA_SYSPROPS;
+    public static final ConfigKey<Boolean> CHECK_JAVA_HOSTNAME_BUG = ConfigKeys.newBooleanConfigKey( 
+            "java.check.hostname.bug", "Check whether hostname is too long and will likely crash Java" +
+            		"due to bug 7089443", true);
+
 }

@@ -15,6 +15,7 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
@@ -23,6 +24,7 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 import com.google.common.base.Function;
@@ -305,16 +307,41 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         }
     }
     
+    public void checkJavaHostnameBug() {
+        try {
+            ProcessTaskWrapper<Integer> hostnameLen = DynamicTasks.queue(SshEffectorTasks.ssh("hostname -f | wc | awk '{print $3}'")).block();
+            if (hostnameLen.getExitCode()==0) {
+                Integer len = Integer.parseInt(hostnameLen.getStdout().trim());
+                if (len > 63) {
+                    // likely to cause a java crash due to java bug 7089443 -- set a new short hostname
+                    // http://mail.openjdk.java.net/pipermail/net-dev/2012-July/004603.html
+                    String newHostname = "br-"+getEntity().getId();
+                    log.info("Detected likelihood of Java hostname bug with hostname length "+len+" for "+getEntity()+"; renaming "+getMachine()+"  to hostname "+newHostname);
+                    DynamicTasks.queue(SshEffectorTasks.ssh(
+                            "hostname "+newHostname,
+                            "echo 127.0.0.1 "+newHostname+" > /etc/hosts").runAsRoot()).block();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Error checking/fixing Java hostname bug: "+e, e);
+        }
+    }
+    
     @Override
     public void start() {
-        DynamicTasks.queue("install java)", new Runnable() { public void run() {
+        DynamicTasks.queue("install java", new Runnable() { public void run() {
             installJava(); }});
             
         if (isJmxEnabled()) {
             DynamicTasks.queue("install jmx", new Runnable() { public void run() {
                 installJmxSupport(); }}); 
         }
-        
+
+        if (getEntity().getConfig(UsesJava.CHECK_JAVA_HOSTNAME_BUG)) {
+            DynamicTasks.queue("check java hostname bug", new Runnable() { public void run() {
+                checkJavaHostnameBug(); }});
+        }
+
         super.start();
     }
 
