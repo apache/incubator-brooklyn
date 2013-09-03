@@ -20,8 +20,6 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableMap.Builder;
-import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 
@@ -127,22 +125,6 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         String configFileContents = processTemplate(getCassandraConfigTemplateUrl());
         String destinationConfigFile = String.format("%s/conf/%s", getRunDir(), getCassandraConfigFileName());
         getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
-
-        // Copy JMX agent Jar to server
-        // TODO do this based on config property in UsesJmx
-        getMachine().copyTo(new ResourceUtils(this).getResourceFromUrl(getJmxRmiAgentJarUrl()), getJmxRmiAgentJarDestinationFilePath());
-    }
-
-    public String getJmxRmiAgentJarBasename() {
-        return "brooklyn-jmxrmi-agent-" + BrooklynVersion.get() + ".jar";
-    }
-
-    public String getJmxRmiAgentJarUrl() {
-        return "classpath://" + getJmxRmiAgentJarBasename();
-    }
-
-    public String getJmxRmiAgentJarDestinationFilePath() {
-        return getRunDir() + "/" + getJmxRmiAgentJarBasename();
     }
 
     @Override

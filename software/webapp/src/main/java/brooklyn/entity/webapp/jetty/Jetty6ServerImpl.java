@@ -27,7 +27,7 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
 
     private static final Logger log = LoggerFactory.getLogger(Jetty6ServerImpl.class);
 
-    private volatile JmxFeed jmxFeed;
+    private volatile JmxFeed jmxFeedJetty, jmxFeedMx;
 
     @Override
     public void connectSensors() {
@@ -37,7 +37,7 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
             String serverMbeanName = "org.mortbay.jetty:type=server,id=0";
             String statsMbeanName = "org.mortbay.jetty.handler:type=atomicstatisticshandler,id=0";
 
-            jmxFeed = JmxFeed.builder()
+            jmxFeedJetty = JmxFeed.builder()
                     .entity(this)
                     .period(500, TimeUnit.MILLISECONDS)
                     .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
@@ -66,19 +66,26 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
             addEnricher(new AddingEnricher(new Sensor[] { RESPONSES_4XX_COUNT, RESPONSES_5XX_COUNT },
                     ERROR_COUNT));
 
-            JavaAppUtils.connectMXBeanSensors(this);
+            jmxFeedMx = JavaAppUtils.connectMXBeanSensors(this);
             JavaAppUtils.connectJavaAppServerPolicies(this);
         } else {
             // if not using JMX
             log.warn("Jetty running without JMX monitoring; limited visibility of service available");
-            // TODO we could at least check the http/s is up
+            // TODO we could do simple things, like check that web server is accepting connections
         }
     }
 
     @Override
+    protected void disconnectSensors() {
+        if (jmxFeedJetty != null && jmxFeedJetty.isActivated()) jmxFeedJetty.stop();
+        if (jmxFeedMx != null && jmxFeedMx.isActivated()) jmxFeedMx.stop();
+        super.disconnectSensors();
+    }
+    
+    @Override
     public void waitForServiceUp() {
         // Increases wait-time by overriding this
-        log.info("Waiting for {} up, via {}", this, jmxFeed == null ? "" : jmxFeed.getJmxUri());
+        log.info("Waiting for {} up, via {}", this, jmxFeedJetty == null ? "" : jmxFeedJetty.getJmxUri());
         waitForServiceUp(Duration.of(getConfig(TomcatServer.START_TIMEOUT), TimeUnit.SECONDS));
     }
 
