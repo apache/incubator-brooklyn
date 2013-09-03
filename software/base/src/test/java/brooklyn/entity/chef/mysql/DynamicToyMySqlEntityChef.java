@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicStartable;
+import brooklyn.entity.basic.EffectorStartableImpl;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefConfigs;
@@ -18,7 +19,7 @@ public class DynamicToyMySqlEntityChef implements ChefConfig {
     private static final Logger log = LoggerFactory.getLogger(DynamicToyMySqlEntityChef.class);
 
     protected static EntitySpec<? extends Entity> specBase() {
-        EntitySpec<BasicStartable> spec = EntitySpec.create(BasicStartable.class).addInitializer(ChefMySqlEntityInitializer.class);
+        EntitySpec<BasicStartable> spec = EntitySpec.create(BasicStartable.class, EffectorStartableImpl.class).addInitializer(ChefMySqlEntityInitializer.class);
         
         ChefConfigs.addToRunList(spec, "mysql::server");
         
@@ -40,12 +41,12 @@ public class DynamicToyMySqlEntityChef implements ChefConfig {
     protected static void addChefSoloConfig(EntitySpec<? extends Entity> spec) {
         // for solo we always need dependent cookbooks set, and mysql requires password set
         ChefConfigs.addToCookbooksFromGithub(spec, "mysql", "build-essential", "openssl");
-        ChefConfigs.setLaunchAttribute(spec, "mysql",  
+        ChefConfigs.addLaunchAttributes(spec, MutableMap.of("mysql",  
                 MutableMap.of()
                 .add("server_root_password", "MyPassword")
                 .add("server_debian_password", "MyPassword")
                 .add("server_repl_password", "MyPassword")
-                );
+            ));
     }
 
     public static EntitySpec<? extends Entity> specSolo() {

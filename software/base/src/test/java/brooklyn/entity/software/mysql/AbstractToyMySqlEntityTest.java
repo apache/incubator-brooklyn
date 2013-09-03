@@ -6,8 +6,8 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
+import brooklyn.entity.BrooklynMgmtContextTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
@@ -17,9 +17,7 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.system.ProcessTaskWrapper;
@@ -30,18 +28,16 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
 
-public abstract class AbstractToyMySqlEntityTest {
+public abstract class AbstractToyMySqlEntityTest extends BrooklynMgmtContextTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractToyMySqlEntityTest.class);
     
-    protected TestApplication app;
-    protected ManagementContext mgmt;
     protected MachineProvisioningLocation<? extends SshMachineLocation> targetLocation;
 
+    @Override
     @BeforeMethod(alwaysRun=true)
-    public void setup() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        mgmt = app.getManagementContext();
+    public void setUp() throws Exception {
+        super.setUp();
         
         targetLocation = createLocation();
     }

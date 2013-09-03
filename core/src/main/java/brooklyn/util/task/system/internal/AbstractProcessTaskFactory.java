@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.system.ProcessTaskFactory;
@@ -31,7 +32,7 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
 
     @SuppressWarnings("unchecked")
     protected T self() { return (T)this; }
-
+    
     protected void markDirty() {
         dirty = true;
     }
@@ -47,6 +48,12 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         return self();
     }
     
+    public T machine(SshMachineLocation machine) {
+        markDirty();
+        this.machine = machine;
+        return self();
+    }
+
     public T requiringExitCodeZero() {
         markDirty();
         requireExitCodeZero = true;
@@ -75,24 +82,24 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         });
     }
 
-    @SuppressWarnings({ "unchecked" })
-    public AbstractProcessTaskFactory<?,String> requiringZeroAndReturningStdout() {
+    public ProcessTaskFactory<String> requiringZeroAndReturningStdout() {
         requiringExitCodeZero();
-        return (AbstractProcessTaskFactory<?,String>)returning(ScriptReturnType.STDOUT_STRING);
-    }
-
-    public AbstractProcessTaskFactory<?,?> returning(ScriptReturnType type) {
-        markDirty();
-        returnType = Preconditions.checkNotNull(type);
-        return self();
+        return this.<String>returning(ScriptReturnType.STDOUT_STRING);
     }
 
     @SuppressWarnings("unchecked")
-    public <RET2> AbstractProcessTaskFactory<?,RET2> returning(Function<ProcessTaskWrapper<?>, RET2> resultTransformation) {
+    public <RET2> ProcessTaskFactory<RET2> returning(ScriptReturnType type) {
+        markDirty();
+        returnType = Preconditions.checkNotNull(type);
+        return (ProcessTaskFactory<RET2>) self();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <RET2> ProcessTaskFactory<RET2> returning(Function<ProcessTaskWrapper<?>, RET2> resultTransformation) {
         markDirty();
         returnType = ScriptReturnType.CUSTOM;
         this.returnResultTransformation = resultTransformation;
-        return (AbstractProcessTaskFactory<?, RET2>) self();
+        return (ProcessTaskFactory<RET2>) self();
     }
     
     public T runAsCommand() {
@@ -128,8 +135,10 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
     /** creates the TaskBuilder which can be further customized; typically invoked by the initial {@link #newTask()} */
     public TaskBuilder<Object> constructCustomizedTaskBuilder() {
         TaskBuilder<Object> tb = TaskBuilder.builder().dynamic(false).name("ssh: "+getSummary());
+        
         tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDIN, 
                 Streams.byteArrayOfString(Strings.join(commands, "\n"))));
+        
         return tb;
     }
     

@@ -1,7 +1,6 @@
 package brooklyn.entity.chef;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 
 import org.slf4j.Logger;
@@ -13,19 +12,12 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.chef.ChefConfig;
-import brooklyn.entity.chef.ChefServerTasks;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.stream.InputStreamSupplier;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
-
-import com.google.common.base.Throwables;
-import com.google.common.io.Files;
 
 /** Many tests expect knife on the path, but none require any configuration beyond that.
  * They will use the Brooklyn registered account (which has been set up with mysql cookbooks and more).
@@ -73,23 +65,10 @@ public class ChefServerTasksIntegrationTest {
         mgmt = null;
     }
 
-    private static String defaultConfigFile = null; 
+    /** @deprecated use {@link ChefLiveTestSupport} */
+    @Deprecated
     public synchronized static String installBrooklynChefHostedConfig() {
-        if (defaultConfigFile!=null) return defaultConfigFile;
-        File tempDir = Files.createTempDir();
-        ResourceUtils r = new ResourceUtils(ChefServerTasksIntegrationTest.class);
-        try {
-            for (String f: new String[] { "knife.rb", "brooklyn-tests.pem", "brooklyn-validator.pem" }) {
-                Files.copy(InputStreamSupplier.fromString(r.getResourceAsString(
-                        "classpath:///brooklyn/entity/chef/hosted-chef-brooklyn-credentials/"+f)),
-                        new File(tempDir, f));
-            }
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
-        File knifeConfig = new File(tempDir, "knife.rb");
-        defaultConfigFile = knifeConfig.getPath();
-        return defaultConfigFile;
+        return ChefLiveTestSupport.installBrooklynChefHostedConfig();
     }
     
     @Test(groups="Integration")
@@ -119,7 +98,7 @@ public class ChefServerTasksIntegrationTest {
     public void testKnifeWithConfig() {
         // requires that knife is installed on the path of login shells
         // (creates the config in a temp space)
-        app.setConfig(ChefConfig.KNIFE_CONFIG_FILE, installBrooklynChefHostedConfig());
+        ChefLiveTestSupport.installBrooklynChefHostedConfig(app);
         ProcessTaskWrapper<Boolean> t = Entities.submit(app, ChefServerTasks.isKnifeInstalled());
         log.info("isKnifeInstalled *with* config returned: "+t.get()+" ("+t.getExitCode()+")\n"+t.getStdout()+"\nERR:\n"+t.getStderr());
         Assert.assertTrue(t.get());

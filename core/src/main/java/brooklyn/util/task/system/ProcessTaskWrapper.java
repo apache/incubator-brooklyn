@@ -75,10 +75,10 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
         if (stderr==null) return null;
         return stderr.toString();
     }
-    
+
     protected class ProcessTaskInternalJob implements Callable<Object> {
-        @Override
-        public Object call() throws Exception {
+        /** for overriding */
+        protected ConfigBag getConfigForRunning() {
             ConfigBag config = ConfigBag.newInstanceCopying(ProcessTaskWrapper.this.config);
             if (stdout!=null) config.put(ShellTool.PROP_OUT_STREAM, stdout);
             if (stderr!=null) config.put(ShellTool.PROP_ERR_STREAM, stderr);
@@ -89,8 +89,12 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
 
             if (runAsRoot)
                 config.put(ShellTool.PROP_RUN_AS_ROOT, true);
-
-            run(config);
+            return config;
+        }
+        
+        @Override
+        public Object call() throws Exception {
+            run( getConfigForRunning() );
             
             for (Function<ProcessTaskWrapper<?>, Void> listener: completionListeners) {
                 try {

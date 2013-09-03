@@ -2,17 +2,12 @@ package brooklyn.entity;
 
 import java.util.Map;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
@@ -21,7 +16,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Runs a test with many different distros and versions.
  */
-public abstract class AbstractEc2LiveTest {
+public abstract class AbstractEc2LiveTest extends BrooklynMgmtContextTestSupport {
     
     // FIXME Currently have just focused on test_Debian_6; need to test the others as well!
 
@@ -38,9 +33,7 @@ public abstract class AbstractEc2LiveTest {
     public static final String SMALL_HARDWARE_ID = "m1.small";
     
     protected BrooklynProperties brooklynProperties;
-    protected ManagementContext ctx;
     
-    protected TestApplication app;
     protected Location jcloudsLocation;
     
     @BeforeMethod(alwaysRun=true)
@@ -56,13 +49,9 @@ public abstract class AbstractEc2LiveTest {
         // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
         brooklynProperties.remove("brooklyn.ssh.config.scriptHeader");
         
-        ctx = new LocalManagementContext(brooklynProperties);
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, ctx);
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        mgmt = new LocalManagementContext(brooklynProperties);
+        
+        super.setUp();
     }
 
     @Test(groups = {"Live"})
@@ -107,7 +96,7 @@ public abstract class AbstractEc2LiveTest {
                 .put("tags", ImmutableList.of(getClass().getName()))
                 .putAll(flags)
                 .build();
-        jcloudsLocation = ctx.getLocationRegistry().resolve(LOCATION_SPEC, allFlags);
+        jcloudsLocation = mgmt.getLocationRegistry().resolve(LOCATION_SPEC, allFlags);
 
         doTest(jcloudsLocation);
     }

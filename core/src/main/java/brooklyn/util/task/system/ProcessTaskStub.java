@@ -37,10 +37,10 @@ public class ProcessTaskStub {
     public ProcessTaskStub() {}
     
     protected ProcessTaskStub(ProcessTaskStub source) {
-        commands.addAll(source.commands);
+        commands.addAll(source.getCommands());
         machine = source.getMachine();
         summary = source.getSummary();
-        config.copy(source.config);
+        config.copy(source.getConfig());
         returnResultTransformation = source.returnResultTransformation;
         returnType = source.returnType;
         runAsScript = source.runAsScript;
@@ -48,7 +48,7 @@ public class ProcessTaskStub {
         requireExitCodeZero = source.requireExitCodeZero;
         extraErrorMessage = source.extraErrorMessage;
         shellEnvironment.putAll(source.getShellEnvironment());
-        completionListeners.addAll(source.completionListeners);
+        completionListeners.addAll(source.getCompletionListeners());
     }
 
     public String getSummary() {
@@ -77,5 +77,7 @@ public class ProcessTaskStub {
     public List<Function<ProcessTaskWrapper<?>, Void>> getCompletionListeners() {
         return completionListeners;
     }
+
+    protected ConfigBag getConfig() { return config; }
     
 }

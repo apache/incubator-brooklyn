@@ -85,7 +85,8 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
     }
     
     public MutableMap() {}
-    public MutableMap(Map source) { super(source); }
+    @SuppressWarnings("unchecked")
+    public MutableMap(@SuppressWarnings("rawtypes") Map source) { super(source); }
     
     public MutableMap<K,V> add(K key, V value) {
         put(key, value);

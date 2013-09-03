@@ -753,5 +753,11 @@ public class Entities {
         executionContext.submit(task.asTask());
         return task;
     }
+    
+    /** logs a warning if an entity has a value for a config key */
+    public static void warnOnIgnoringConfig(Entity entity, ConfigKey<?> key) {
+        if (((EntityInternal)entity).getConfigMap().getRawConfig(key)!=null)
+            log.warn("Ignoring "+key+" set on "+entity+" ("+entity.getConfig(key)+")");
+    }
 
 }

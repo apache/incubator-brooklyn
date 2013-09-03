@@ -9,7 +9,7 @@ import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.task.system.internal.AbstractProcessTaskFactory;
 
 // cannot be (cleanly) instantiated due to nested generic self-referential type; however trivial subclasses do allow it 
-public class AbstractSshExecTaskFactory<T extends AbstractProcessTaskFactory<T,RET>,RET> extends AbstractProcessTaskFactory<T,RET> implements ProcessTaskFactory<RET> {
+public abstract class AbstractSshExecTaskFactory<T extends AbstractProcessTaskFactory<T,RET>,RET> extends AbstractProcessTaskFactory<T,RET> implements ProcessTaskFactory<RET> {
     
     /** constructor where machine will be added later */
     public AbstractSshExecTaskFactory(String ...commands) {
@@ -20,12 +20,6 @@ public class AbstractSshExecTaskFactory<T extends AbstractProcessTaskFactory<T,R
     public AbstractSshExecTaskFactory(SshMachineLocation machine, String ...commands) {
         this(commands);
         machine(machine);
-    }
-
-    public T machine(SshMachineLocation machine) {
-        markDirty();
-        this.machine = machine;
-        return self();
     }
     
     @Override
