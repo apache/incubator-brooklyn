@@ -1,6 +1,5 @@
 package brooklyn.entity;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -26,11 +25,10 @@ import brooklyn.policy.Policy;
  * {@link brooklyn.entity.basic.AbstractEntity#addChild(EntitySpec)}, and
  * {@link brooklyn.entity.proxying.EntitySpecs}.
  * <p>
- * Entities may not be {@link Serializable} in subsequent releases!
  * 
  * @see brooklyn.entity.basic.AbstractEntity
  */
-public interface Entity extends Serializable, Rebindable {
+public interface Entity extends Rebindable {
     /**
      * The unique identifier for this entity.
      */

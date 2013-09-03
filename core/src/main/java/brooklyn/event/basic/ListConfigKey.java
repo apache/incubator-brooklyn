@@ -55,6 +55,7 @@ public class ListConfigKey<V> extends BasicConfigKey<List<V>> implements Structu
         return new SubElementConfigKey<V>(this, subType, getName()+"."+subName, "element of "+getName()+", uid "+subName, null);
     }
 
+    @Override
     public boolean isSubKey(Object contender) {
         return contender instanceof ConfigKey && isSubKey((ConfigKey<?>)contender);
     }
@@ -63,6 +64,7 @@ public class ListConfigKey<V> extends BasicConfigKey<List<V>> implements Structu
         return (contender instanceof SubElementConfigKey && this.equals(((SubElementConfigKey<?>) contender).parent));
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public List<V> extractValue(Map<?,?> vals, ExecutionContext exec) {
         List<V> result = Lists.newArrayList();
@@ -132,8 +134,8 @@ public class ListConfigKey<V> extends BasicConfigKey<List<V>> implements Structu
         }
     }
 
-    @SuppressWarnings("serial")
     public static class ListModificationBase<T> extends ArrayList<T> implements ListModification<T> {
+        private static final long serialVersionUID = 7131812294560446235L;
         private final boolean clearFirst;
         public ListModificationBase(Collection<T> delegate, boolean clearFirst) {
             super(delegate);

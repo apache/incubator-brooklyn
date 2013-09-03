@@ -16,8 +16,6 @@ import com.google.common.collect.Lists;
  * It is hooked up to a TestCluster that can be used to make assertions against
  */
 public class LocallyResizableEntity extends AbstractEntity implements Resizable {
-    private static final long serialVersionUID = 7394441878443491555L;
-    
     List<Integer> sizes = Lists.newArrayList();
     TestCluster cluster;
     long resizeSleepTime = 0;
@@ -31,6 +29,7 @@ public class LocallyResizableEntity extends AbstractEntity implements Resizable 
         setAttribute(Startable.SERVICE_UP, true);
     }
     
+    @Override
     public Integer resize(Integer newSize) {
         try {
             Thread.sleep(resizeSleepTime);
@@ -42,10 +41,12 @@ public class LocallyResizableEntity extends AbstractEntity implements Resizable 
         }
     }
     
+    @Override
     public Integer getCurrentSize() {
         return cluster.getCurrentSize();
     }
     
+    @Override
     public String toString() {
         return getDisplayName();
     }

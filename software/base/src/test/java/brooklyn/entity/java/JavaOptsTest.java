@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-@SuppressWarnings({ "rawtypes", "serial", "unchecked" })
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class JavaOptsTest {
 
     // TODO Test setting classpath; but this works by customize() copying all the artifacts into /lib/*

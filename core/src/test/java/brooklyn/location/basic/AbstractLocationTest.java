@@ -22,9 +22,9 @@ import com.google.common.collect.ImmutableList;
 
 public class AbstractLocationTest {
 
-    @SuppressWarnings("serial")
     public static class ConcreteLocation extends AbstractLocation {
-		@SetFromFlag(defaultVal="mydefault")
+        private static final long serialVersionUID = 3954199300889119970L;
+        @SetFromFlag(defaultVal="mydefault")
         String myfield;
 
         public ConcreteLocation() {
