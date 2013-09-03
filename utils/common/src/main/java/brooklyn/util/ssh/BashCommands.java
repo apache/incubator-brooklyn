@@ -284,10 +284,14 @@ public class BashCommands {
      * installPackage(ImmutableMap.of("onlyifmissing", "curl"), "curl");
      * </pre>
      */
-    // TODO other variants, which fail if it can't install, or return non-zero (so callers can wrap in "ok" if it's not required)
     public static String installPackage(Map<?,?> flags, String packageDefaultName) {
-        String ifMissing = (String) flags.get("onlyifmissing");
-
+        return installPackageOr(flags, packageDefaultName, null);
+    }
+    public static String installPackageOrFail(Map<?,?> flags, String packageDefaultName) {
+        return installPackageOr(flags, packageDefaultName, "exit 9");
+    }
+    public static String installPackageOr(Map<?,?> flags, String packageDefaultName, String optionalCommandToRunIfNone) {
+        String ifmissing = (String) flags.get("onlyifmissing");
         String aptInstall = formatIfNotNull("apt-get install -y --allow-unauthenticated %s", getFlag(flags, "apt", packageDefaultName));
         String yumInstall = formatIfNotNull("yum -y --nogpgcheck install %s", getFlag(flags, "yum", packageDefaultName));
         String brewInstall = formatIfNotNull("brew install %s", getFlag(flags, "brew", packageDefaultName));
@@ -310,9 +314,13 @@ public class BashCommands {
         if (portInstall != null)
             commands.add(ifExecutableElse1("port", sudo(portInstall)));
 
-        commands.add(warn("WARNING: no known/successful package manager to install " +
-                (packageDefaultName != null ? packageDefaultName : flags.toString()) +
-                ", may fail subsequently"));
+        String lastCommand = warn("WARNING: no known/successful package manager to install " +
+                (packageDefaultName!=null ? packageDefaultName : flags.toString()) +
+                ", may fail subsequently");
+        if (optionalCommandToRunIfNone != null)
+            lastCommand = chain(lastCommand, optionalCommandToRunIfNone);
+        commands.add(lastCommand);
+        
         return alternatives(commands);
     }
     
@@ -470,9 +478,17 @@ public class BashCommands {
      * See also: JavaSoftwareProcessSshDriver.installJava, which does a much more thorough job.
      *
      * @return the command that install Java 1.6.
+     * @deprecated since 0.6.0 prefer {@link #installJava6IfPossible()} or {@link #installJava6OrFail()}
      */
+    @Deprecated
     public static String installJava6() {
+        return installJava6IfPossible();
+    }
+    public static String installJava6IfPossible() {
         return installPackage(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null);
+    }
+    public static String installJava6OrFail() {
+        return installPackageOrFail(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null);
     }
 
     /** cats the given text to the given command, using bash << multi-line input syntax */

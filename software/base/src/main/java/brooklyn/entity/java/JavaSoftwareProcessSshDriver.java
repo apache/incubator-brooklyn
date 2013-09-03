@@ -26,6 +26,8 @@ import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -254,42 +256,47 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         return result;
     }
         
-    public void installJava() {
+    public boolean installJava() {
         try {
             getLocation().acquireMutex("install:" + getLocation().getDisplayName(), "installing Java at " + getLocation());
             log.debug("checking for java at " + entity + " @ " + getLocation());
             int result = getLocation().execCommands("check java", Arrays.asList("which java"));
             if (result == 0) {
                 log.debug("java detected at " + entity + " @ " + getLocation());
+                return true;
             } else {
-                log.debug("java not detected at " + entity + " @ " + getLocation() + ", installing");
-                // TODO support script-builder access?
-//                if (getLocation() instanceof JcloudsSshMachineLocation) {
-//                    log.debug("installing java at " + entity + " @ " + getLocation() + ", using jclouds");
-//                    ExecResponse result2 = ((JcloudsSshMachineLocation) getLocation()).submitRunScript(InstallJDK.fromOpenJDK()).get();
-//                    if (result2.getExitStatus() == 0)
-//                        return;
-//                    log.debug("invalid result code " + result2.getExitStatus() + " installing java using Jclouds routines, at " + entity + " @ "
-//                            + getLocation() + ":\n" + result2.getOutput() + "\n" + result2.getError());
-//                }
+                log.debug("java not detected at " + entity + " @ " + getLocation() + ", installing using BashCommands.installJava6");
                 
-                log.debug("installing java at " + entity + " @ " + getLocation() + ", using CommonCommands.installJava6");
                 result = newScript("INSTALL_OPENJDK").body.append(
-                        BashCommands.installJava6()
-                        // TODO the following complains about yum-install not defined
+                        BashCommands.installJava6OrFail()
+                        // could use Jclouds routines -- but the following complains about yum-install not defined
                         // even though it is set as an alias (at the start of the first file)
-                        //                            new ResourceUtils(this).getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
-                        //                            new ResourceUtils(this).getResourceAsString("classpath:///functions/installOpenJDK.sh"),
-                        //                            "installOpenJDK"
+                        //   new ResourceUtils(this).getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
+                        //   new ResourceUtils(this).getResourceAsString("classpath:///functions/installOpenJDK.sh"),
+                        //   "installOpenJDK"
                         ).execute();
                 if (result==0)
-                    return;
+                    return true;
+                // on some ubuntu machines a delay and a retry may be needed
                 log.warn("Unable to install Java at " + getLocation() + " for " + entity +
                         " (and Java not detected); invalid result "+result+". " + 
-                        "Processes may fail to start.");
+                        "Will retry.");
+                Time.sleep(Duration.TEN_SECONDS);
+                
+                result = newScript("INSTALL_OPENJDK").body.append(
+                        BashCommands.installJava6OrFail()
+                        ).execute();
+                if (result==0) {
+                    log.info("Succeeded installing Java at " + getLocation() + " for " + entity + " after retry.");
+                    return true;
+                }
+                log.error("Unable to install Java at " + getLocation() + " for " + entity +
+                          " (and Java not detected), including one retry; invalid result "+result+". " + 
+                          "Processes may fail to start.");
+                return false;
             }
         } catch (Exception e) {
-            Throwables.propagate(e);
+            throw Throwables.propagate(e);
         } finally {
             getLocation().releaseMutex("install:" + getLocation().getDisplayName());
         }
