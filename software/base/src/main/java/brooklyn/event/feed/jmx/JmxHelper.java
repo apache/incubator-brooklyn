@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.java.JmxSupport;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.crypto.SecureKeys;
@@ -53,11 +54,11 @@ import brooklyn.util.crypto.SslTrustUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.internal.Repeater;
-import brooklyn.util.internal.TimeExtras;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,8 +67,6 @@ import com.google.common.collect.Iterables;
 public class JmxHelper {
 
     private static final Logger LOG = LoggerFactory.getLogger(JmxHelper.class);
-
-    static { TimeExtras.init(); }
 
     public static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/%s";
     // first host:port may be ignored, so above is sufficient, but not sure
@@ -95,15 +94,53 @@ public class JmxHelper {
             .put("CompositeDataSupport", CompositeData.class.getName())
             .build();
 
-    public static String toConnectorUrl(String host, Integer jmxRmiRegistryPort, Integer rmiServerPort, String context) {
-        if (rmiServerPort != null && rmiServerPort > 0) {
-            return String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, jmxRmiRegistryPort, context);
+    /** constructs a JMX URL suitable for connecting to the given entity, being smart about JMX/RMI vs JMXMP */
+    public static String toJmxUrl(EntityLocal entity) {
+        String url = entity.getAttribute(UsesJmx.JMX_URL);
+        if (url != null) {
+            return url;
         } else {
-            return String.format(JMX_URL_FORMAT, host, jmxRmiRegistryPort, context);
+            new JmxSupport(entity, null).setJmxUrl();
+            url = entity.getAttribute(UsesJmx.JMX_URL);
+            return Preconditions.checkNotNull(url, "Could not find URL for "+entity);
         }
     }
 
+    /** constructs an RMI/JMX URL with the given inputs 
+     * (where the RMI Registry Port should be non-null, and at least one must be non-null) */
+    public static String toRmiJmxUrl(String host, Integer jmxRmiServerPort, Integer rmiRegistryPort, String context) {
+        if (rmiRegistryPort != null && rmiRegistryPort > 0) {
+            if (jmxRmiServerPort!=null && jmxRmiServerPort > 0 && jmxRmiServerPort!=rmiRegistryPort) {
+                // we have an explicit known JMX RMI server port (e.g. because we are using the agent),
+                // distinct from the RMI registry port
+                // (if the ports are the same, it is a short-hand, and don't use this syntax!)
+                return String.format(RMI_JMX_URL_FORMAT, host, jmxRmiServerPort, host, rmiRegistryPort, context);
+            }
+            return String.format(JMX_URL_FORMAT, host, rmiRegistryPort, context);
+        } else if (jmxRmiServerPort!=null && jmxRmiServerPort > 0) {
+            LOG.warn("No RMI registry port set for "+host+"; attempting to use JMX port for RMI lookup");
+            return String.format(JMX_URL_FORMAT, host, jmxRmiServerPort, context);
+        } else {
+            LOG.warn("No RMI/JMX details set for "+host+"; returning null");
+            return null;
+        }
+    }
+
+    /** constructs a JMXMP URL for connecting to the given host and port */
+    public static String toJmxmpUrl(String host, Integer jmxmpPort) {
+        return "service:jmx:jmxmp://"+host+(jmxmpPort!=null ? ":"+jmxmpPort : "");
+    }
+    
+    /** @deprecated since 0.6.0 use {@link #toRmiJmxUrl(String, Integer, Integer, String)},
+     * unless you might want a JMX MP URL in which case use "smart" method {@link #toJmxUrl(EntityLocal)} */
+    public static String toConnectorUrl(String host, Integer jmxRmiServerPort, Integer rmiRegistryPort, String context) {
+        return toRmiJmxUrl(host, jmxRmiServerPort, rmiRegistryPort, context);
+    }
+
+    /** @deprecated since 0.6.0 use {@link #toJmxUrl(EntityLocal)} */
     public static String toConnectorUrl(EntityLocal entity) {
+        LOG.warn("Using legacy method toConnectorUrl("+entity+") which will only return JMX URLs");
+        
         String url = entity.getAttribute(Attributes.JMX_SERVICE_URL);
         if (url != null) {
             return url;
@@ -113,7 +150,7 @@ public class JmxHelper {
             if (GroovyJavaMethods.truth(entity.getConfig(UsesJmx.JMX_SSL_ENABLED))) {
                 url = String.format(JMXMP_URL_FORMAT, host, jmxEntryPort);
             } else {
-                Integer rmiServerPort = entity.getAttribute(Attributes.RMI_SERVER_PORT);
+                Integer rmiServerPort = entity.getAttribute(Attributes.RMI_REGISTRY_PORT);
                 String context = entity.getAttribute(Attributes.JMX_CONTEXT);
                 url = toConnectorUrl(host, jmxEntryPort, rmiServerPort, context);
             }
@@ -139,7 +176,7 @@ public class JmxHelper {
     private final Set<ObjectName> notFoundMBeans;
 
     public JmxHelper(EntityLocal entity) {
-        this(toConnectorUrl(entity), entity, entity.getAttribute(Attributes.JMX_USER), entity.getAttribute(Attributes.JMX_PASSWORD));
+        this(toJmxUrl(entity), entity, entity.getAttribute(UsesJmx.JMX_USER), entity.getAttribute(UsesJmx.JMX_PASSWORD));
         
         if (entity.getAttribute(UsesJmx.JMX_URL) == null) {
             entity.setAttribute(UsesJmx.JMX_URL, url);
@@ -210,7 +247,7 @@ public class JmxHelper {
         if (failedReconnecting) {
             long timeSince = (System.currentTimeMillis() - failedReconnectingTime);
             if (timeSince < minTimeBetweenReconnectAttempts) {
-                String msg = "Not reconnecting to JMX at "+url+" because attempt failed "+Time.makeTimeString(timeSince)+" ago";
+                String msg = "Not reconnecting to JMX at "+url+" because attempt failed "+Time.makeTimeStringRounded(timeSince)+" ago";
                 throw new IllegalStateException(msg);
             }
         }

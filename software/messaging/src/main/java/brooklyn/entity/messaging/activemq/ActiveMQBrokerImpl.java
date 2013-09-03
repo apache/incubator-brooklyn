@@ -28,6 +28,12 @@ public class ActiveMQBrokerImpl extends JMSBrokerImpl<ActiveMQQueue, ActiveMQTop
         super();
     }
 
+    @Override
+    public void init() {
+        super.init();
+        Entities.getRequiredUrlConfig(this, TEMPLATE_CONFIGURATION_URL);
+    }
+    
 	public void setBrokerUrl() {
 		setAttribute(BROKER_URL, String.format("tcp://%s:%d", getAttribute(HOSTNAME), getAttribute(OPEN_WIRE_PORT)));
 	}
@@ -73,7 +79,7 @@ public class ActiveMQBrokerImpl extends JMSBrokerImpl<ActiveMQQueue, ActiveMQTop
                         .objectName(brokerMbeanName)
                         .attributeName("BrokerId")
                         .onSuccess(Functions.forPredicate(Predicates.notNull()))
-                        .onError(Functions.constant(false)))
+                        .onFailureOrException(Functions.constant(false)))
                 .build();
     }
 

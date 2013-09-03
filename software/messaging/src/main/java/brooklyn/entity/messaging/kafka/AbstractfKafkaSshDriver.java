@@ -24,22 +24,16 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.BrooklynVersion;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.util.ssh.BashCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import brooklyn.entity.java.UsesJmx;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableMap.Builder;
-import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 import brooklyn.util.net.Networking;
+import brooklyn.util.ssh.BashCommands;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriver {
@@ -112,32 +106,6 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
 
         String config = entity.getConfig(getConfigTemplateKey());
         copyTemplate(config, getConfigFileName());
-
-        if (isJmxEnabled()) {
-            // Copy JMX agent Jar to server
-            getMachine().copyTo(new ResourceUtils(this).getResourceFromUrl(getJmxRmiAgentJarUrl()), getJmxRmiAgentJarDestinationFilePath());
-        }
-    }
-
-    public String getJmxRmiAgentJarBasename() {
-        return "brooklyn-jmxrmi-agent-" + BrooklynVersion.get() + ".jar";
-    }
-
-    // KAFKA requires a JMX port specified even if it is disabled in brooklyn (we just don't consume it)
-    @Override
-    public Integer getJmxPort() {
-        return entity.getAttribute(UsesJmx.JMX_PORT);
-    }
-    public Integer getRmiServerPort() {
-        return entity.getAttribute(UsesJmx.RMI_SERVER_PORT);
-    }
-
-    public String getJmxRmiAgentJarUrl() {
-        return "classpath://" + getJmxRmiAgentJarBasename();
-    }
-
-    public String getJmxRmiAgentJarDestinationFilePath() {
-        return getRunDir() + "/" + getJmxRmiAgentJarBasename();
     }
 
     @Override
@@ -161,28 +129,6 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
                 .body.append(String.format("ps ax | grep %s | awk '{print $1}' | xargs kill", getProcessIdentifier()))
                 .body.append(String.format("ps ax | grep %s | awk '{print $1}' | xargs kill -9", getProcessIdentifier()))
                 .execute();
-    }
-
-    @Override
-    protected Map<String, ?> getJmxJavaSystemProperties() {
-        Builder<String, Object> result = MutableMap.<String, Object> builder();
-        if (isJmxEnabled()) {
-            // TODO JMX SSL ENABLED -- see superclass behaviour
-            result.put(JmxRmiAgent.JMX_SERVER_PORT_PROPERTY, getJmxPort())
-                .put(JmxRmiAgent.RMI_REGISTRY_PORT_PROPERTY, getRmiServerPort())
-                .put("com.sun.management.jmxremote.ssl", false)
-                .put("com.sun.management.jmxremote.authenticate", false)
-                .put("java.rmi.server.hostname", getHostname());
-        }
-        return result.build();
-    }
-
-    @Override
-    protected List<String> getJmxJavaConfigOptions() {
-        if (isJmxEnabled())
-            return ImmutableList.of("-javaagent:" + getJmxRmiAgentJarDestinationFilePath());
-        else
-            return ImmutableList.of();
     }
 
     /**

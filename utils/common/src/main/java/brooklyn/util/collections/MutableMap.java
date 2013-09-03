@@ -144,6 +144,11 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
             return this;
         }
 
+        public Builder<K, V> remove(K key) {
+            result.remove(key);
+            return this;
+        }
+        
         public Builder<K, V> removeAll(K... keys) {
             for (K key : keys) {
                 result.remove(key);

@@ -467,6 +467,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 if (port == null) port = getConfig(ConfigUtils.prefixedKey(SSHCONFIG_PREFIX, SshTool.PROP_PORT));
                 return (user != null ? user+"@" : "") + hostname + (port != null ? ":"+port : "");
             }
+            @Override
+            protected String getTargetName() {
+                return ""+SshMachineLocation.this;
+            }
         }.logger(logSsh);
     }
 

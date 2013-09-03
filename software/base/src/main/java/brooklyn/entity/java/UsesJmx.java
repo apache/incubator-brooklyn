@@ -10,7 +10,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 public interface UsesJmx extends UsesJava {
@@ -20,9 +19,11 @@ public interface UsesJmx extends UsesJava {
     @SetFromFlag("useJmx")
     public static final ConfigKey<Boolean> USE_JMX = ConfigKeys.newConfigKey("jmx.enabled", "JMX enabled", Boolean.TRUE);
 
+    @SuppressWarnings("deprecation")
     @SetFromFlag("jmxPort")
     public static final PortAttributeSensorAndConfigKey JMX_PORT = Attributes.JMX_PORT;
 
+    @SuppressWarnings("deprecation")
     @SetFromFlag("rmiRegistryPort")
     public static final PortAttributeSensorAndConfigKey RMI_REGISTRY_PORT = Attributes.RMI_REGISTRY_PORT;
     
@@ -31,16 +32,43 @@ public interface UsesJmx extends UsesJava {
     @SetFromFlag("rmiServerPort")
     public static final PortAttributeSensorAndConfigKey RMI_SERVER_PORT = Attributes.RMI_SERVER_PORT;
 
+    @SuppressWarnings("deprecation")
     @SetFromFlag("jmxContext")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = Attributes.JMX_CONTEXT;
 
-    public static final AttributeSensor<String> JMX_URL = Sensors.newStringSensor("jmx.url", "JMX URL");
+    @SuppressWarnings("deprecation")
+    public static final AttributeSensor<String> JMX_URL = Attributes.JMX_SERVICE_URL;
 
     /** forces JMX to be secured, using JMXMP so it gets through firewalls _and_ SSL/TLS
      * (NB: there is not currently any corresponding JMXMP without SSL/TLS) */
     @SetFromFlag("jmxSecure")
-    public static final ConfigKey<Boolean> JMX_SSL_ENABLED = ConfigKeys.newConfigKey("jmx.ssl.enabled", "JMX over JMXMP enabled with SSL/TLS", Boolean.FALSE);
+    public static final ConfigKey<Boolean> JMX_SSL_ENABLED = ConfigKeys.newBooleanConfigKey("jmx.ssl.enabled", "JMX over JMXMP enabled with SSL/TLS", Boolean.FALSE);
 
+    public enum JmxAgentModes {
+        /** auto-detect the agent to use based on location, preferring JMXMP except at localhost where JMX_RMI_CUSTOM_AGENT is preferred */
+        AUTODETECT,
+        /** JMXMP which permits firewall access through a single port */
+        JMXMP,
+        /** JMX over RMI custom agent which permits access through a known RMI registry port, redirected to a known JMX-RMI port;
+         * two ports must be opened on the firewall, and the same hostname resolvable on the target machine and by the client */
+        JMX_RMI_CUSTOM_AGENT,
+        /** do not install a JMX agent; use the default RMI which opens a registry at a known port, redirected to an _unknown_ port for jmx 
+         * (experimental) */
+        NONE
+    }
+    
+    @SetFromFlag("jmxAgentMode")
+    public static final ConfigKey<JmxAgentModes> JMX_AGENT_MODE = ConfigKeys.newConfigKey(JmxAgentModes.class,
+            "jmx.agent.mode", "What type of JMX agent to use; defaults to null (autodetect) which means " +
+    		"JMXMP most places (for firewall access through a single port) and " +
+    		"JMX_RMI_CUSTOM_AGENT on localhost (for easier access at a specified port, supporting jconsole)", 
+    		JmxAgentModes.AUTODETECT);
+
+    @SuppressWarnings("deprecation")
+    public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = Attributes.JMX_USER;
+    @SuppressWarnings("deprecation")
+    public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = Attributes.JMX_PASSWORD;
+    
     /*
      * Synopsis of how the keys work for JMX_SSL:
      * 

@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableList;
 /** represents a CIDR (classless inter-domain routing) token, i.e. 10.0.0.0/8 or 192.168.4.0/24 */
 public class Cidr {
 
+    /** 0.0.0.0/0 -- matches all addresses */
     public static final Cidr UNIVERSAL = new Cidr();
     
     public static final Cidr _10 = new Cidr(10);

@@ -192,7 +192,7 @@ public abstract class MachineLifecycleEffectorTasks {
                     public MachineLocation call() throws Exception {
                         final Map<String,Object> flags = obtainProvisioningFlags(location);
                         if (!(location instanceof LocalhostMachineProvisioningLocation))
-                            log.info("Starting {}, obtaining a new location instance in {} with ports {}", new Object[] {this, location, flags.get("inboundPorts")});
+                            log.info("Starting {}, obtaining a new location instance in {} with ports {}", new Object[] {entity(), location, flags.get("inboundPorts")});
                         entity().setAttribute(SoftwareProcess.PROVISIONING_LOCATION, location);
                         MachineLocation machine;
                         try {
@@ -206,12 +206,12 @@ public abstract class MachineLifecycleEffectorTasks {
                         }
                         
                         if (log.isDebugEnabled())
-                            log.debug("While starting {}, obtained new location instance {}", this, 
+                            log.debug("While starting {}, obtained new location instance {}", entity(), 
                                     (machine instanceof SshMachineLocation ? 
                                             machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getAllConfig(false)) 
                                             : machine));
                         if (!(location instanceof LocalhostMachineProvisioningLocation))
-                            log.info("While starting {}, obtained a new location instance {}, now preparing process there", this, machine);
+                            log.info("While starting {}, obtained a new location instance {}, now preparing process there", entity(), machine);
                         return machine;
                     }
                 }).build());
@@ -221,7 +221,7 @@ public abstract class MachineLifecycleEffectorTasks {
     protected void preStartAtMachineAsync(final Supplier<MachineLocation> machineS) {
         DynamicTasks.queue("pre-start", new Runnable() { public void run() {
             MachineLocation machine = machineS.get();
-            log.info("Starting {} on machine {}", this, machine);
+            log.info("Starting {} on machine {}", entity(), machine);
             entity().addLocations(ImmutableList.of((Location)machine));
 
             // 20 Aug 2013: previously we set these fields _after_ calling the preStart hooks,
@@ -242,7 +242,7 @@ public abstract class MachineLifecycleEffectorTasks {
 
         // Opportunity to block startup until other dependent components are available
         Object val = entity().getConfig(SoftwareProcess.START_LATCH);
-        if (val != null) log.debug("{} finished waiting for start-latch; continuing...", this, val);
+        if (val != null) log.debug("{} finished waiting for start-latch; continuing...", entity(), val);
     }
 
     protected Map<String, Object> obtainProvisioningFlags(final MachineProvisioningLocation<?> location) {

@@ -40,6 +40,9 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx,
     @SetFromFlag("openWirePort")
 	public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = new PortAttributeSensorAndConfigKey("openwire.port", "OpenWire port", "61616+");
 
+    @SetFromFlag("jettyPort")
+    public static final PortAttributeSensorAndConfigKey AMQ_JETTY_PORT = new PortAttributeSensorAndConfigKey("activemq.jetty.port", "jetty port", "8161+");
+
     @SetFromFlag("jmxUser")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(Attributes.JMX_USER, "admin");
     

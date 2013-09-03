@@ -16,12 +16,15 @@ import javax.jms.TextMessage
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.java.UsesJmx
+import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
@@ -44,7 +47,7 @@ public class ActiveMQIntegrationTest {
     @BeforeMethod(alwaysRun = true)
     public void setup() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        testLocation = new LocalhostMachineProvisioningLocation()
+        testLocation = app.getManagementContext().getLocationRegistry().resolve("localhost");
     }
 
     @AfterMethod(alwaysRun = true)
@@ -62,6 +65,7 @@ public class ActiveMQIntegrationTest {
         activeMQ.start([ testLocation ])
         executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
+            log.info("JMX URL is "+activeMQ.getAttribute(UsesJmx.JMX_URL))
         }
         assertFalse activeMQ.getAttribute(Startable.SERVICE_UP)
     }
@@ -78,15 +82,61 @@ public class ActiveMQIntegrationTest {
         app.start([ testLocation ])
         executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
+            log.info("JMX URL is "+activeMQ.getAttribute(UsesJmx.JMX_URL))
         }
         assertFalse activeMQ.getAttribute(Startable.SERVICE_UP)
+    }
+
+    @Test(groups = "Integration")
+    public void canStartTwo() {
+        ActiveMQBroker activeMQ1 = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class));
+        ActiveMQBroker activeMQ2 = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class));
+
+        activeMQ1.start([ testLocation ])
+        executeUntilSucceeds(timeout:600*TimeUnit.SECONDS) {
+            assertTrue activeMQ1.getAttribute(Startable.SERVICE_UP)
+        }
+        activeMQ2.start([ testLocation ])
+        executeUntilSucceeds(timeout:600*TimeUnit.SECONDS) {
+            assertTrue activeMQ2.getAttribute(Startable.SERVICE_UP)
+        }
     }
 
     /**
      * Test that setting the 'queue' property causes a named queue to be created.
      */
     @Test(groups = "Integration")
-    public void testCreatingQueues() {
+    public void testCreatingQueuesDefault() {
+        String url = testCreatingQueuesInternal(null);
+        // localhost default is rmi
+        Assert.assertTrue(url.contains("rmi"));
+    }
+
+    @Test(groups = "Integration")
+    public void testCreatingQueuesRmi() {
+        String url = testCreatingQueuesInternal(JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
+        Assert.assertTrue(url.contains("rmi://"));
+        Assert.assertFalse(url.contains("rmi:///jndi"));
+        Assert.assertFalse(url.contains("jmxmp"));
+    }
+
+    @Test(groups = "Integration")
+    public void testCreatingQueuesJmxmp() {
+        String url = testCreatingQueuesInternal(JmxAgentModes.JMXMP);
+        // localhost default is rmi
+        Assert.assertTrue(url.contains("jmxmp"));
+        Assert.assertFalse(url.contains("rmi"));
+    }
+
+    @Test(groups = "Integration")
+    public void testCreatingQueuesNoAgent() {
+        String url = testCreatingQueuesInternal(JmxAgentModes.NONE);
+        // localhost default is rmi
+        Assert.assertTrue(url.contains("rmi:///jndi"));
+        Assert.assertFalse(url.contains("jmxmp"));
+    }
+
+    public String testCreatingQueuesInternal(JmxAgentModes mode) {
         String queueName = "testQueue"
         int number = 20
         String content = "01234567890123456789012345678901"
@@ -95,13 +145,17 @@ public class ActiveMQIntegrationTest {
         // FIXME Not yet using app.createAndManageChild because later in test do activeMQ.queueNames,
         // which is not on interface
         activeMQ = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class)
-            .configure("queue", queueName));
+            .configure("queue", queueName)
+            .configure(UsesJmx.JMX_AGENT_MODE, mode));
         
         activeMQ.start([ testLocation ])
         executeUntilSucceeds {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
         }
 
+        String jmxUrl = activeMQ.getAttribute(UsesJmx.JMX_URL);
+        log.info("JMX URL ("+mode+") is "+jmxUrl)
+        
         try {
             // Check queue created
             assertFalse activeMQ.queueNames.isEmpty()
@@ -137,6 +191,8 @@ public class ActiveMQIntegrationTest {
             // Stop broker
 	        activeMQ.stop()
         }
+        
+        return jmxUrl;
     }
 
     private Connection getActiveMQConnection(ActiveMQBroker activeMQ) {

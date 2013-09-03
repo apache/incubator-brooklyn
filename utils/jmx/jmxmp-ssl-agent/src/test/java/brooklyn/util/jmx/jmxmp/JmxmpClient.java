@@ -64,4 +64,7 @@ public class JmxmpClient {
         connect(urlString, env); 
     }
 
+    public static void main(String[] args) throws Exception {
+        new JmxmpClient().connect("service:jmx:jmxmp://localhost:1099", null);
+    }
 }

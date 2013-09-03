@@ -21,6 +21,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.SshTasks;
@@ -202,10 +203,14 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 		"2. or you can just use the demo without nginx, instead access the appserver instances directly.\n";
             }
 
-            if (!script.getResultStderr().isEmpty())
+            if (!script.getResultStderr().isEmpty()) {
                 notes += "\n" + "STDERR\n" + script.getResultStderr()+"\n";
-            if (!script.getResultStdout().isEmpty())
+                Streams.logStreamTail(log, "STDERR of problem in "+Tasks.current(), Streams.byteArrayOfString(script.getResultStderr()), 1024);
+            }
+            if (!script.getResultStdout().isEmpty()) {
                 notes += "\n" + "STDOUT\n" + script.getResultStdout()+"\n";
+                Streams.logStreamTail(log, "STDOUT of problem in "+Tasks.current(), Streams.byteArrayOfString(script.getResultStdout()), 1024);
+            }
             
             Tasks.setExtraStatusDetails(notes.trim());
             

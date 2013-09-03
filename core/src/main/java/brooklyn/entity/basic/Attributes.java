@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -10,6 +11,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
+import brooklyn.location.PortRange;
 import brooklyn.location.basic.PortRanges;
 
 import com.google.common.collect.ImmutableList;
@@ -41,27 +43,49 @@ public interface Attributes {
      * JMX attributes.
      */
 
-    // 1099 is standard, sometimes 9999
+    /** chosen by java itself by default; setting this will only have any effect if using an agent 
+     * @deprecated since 0.6.0 use keys from UsesJmx */
+    @Deprecated
     PortAttributeSensorAndConfigKey JMX_PORT = new PortAttributeSensorAndConfigKey(
-            "jmx.port", "JMX port (e.g. JMX RMI server port, but not RMI registry port)", PortRanges.fromString("1099, 31099+"));
+            "jmx.direct.port", "JMX direct/private port (e.g. JMX RMI server port, but not RMI registry port)", PortRanges.fromString("31001+")) {
+        protected Integer convertConfigToSensor(PortRange value, Entity entity) {
+            // TODO when using JmxAgentModes.NONE we should *not* convert, but leave it null
+            // (e.g. to prevent a warning in e.g. ActiveMQIntegrationTest)
+            // however supporting that means moving these keys to UsesJmx (which would be a good thing in any case)
+            return super.convertConfigToSensor(value, entity);
+        }
+    };
     
-    // usually chosen by java; setting this will often not have any effect
+    /** well-known port used by Java itself to start the RMI registry where JMX private port can be discovered;
+     * ignored if using JMXMP agent 
+     * @deprecated since 0.6.0 use keys from UsesJmx */
+    @Deprecated
     PortAttributeSensorAndConfigKey RMI_REGISTRY_PORT = new PortAttributeSensorAndConfigKey(
-            "rmi.registry.port", "RMI server port", PortRanges.fromString("9001, 39001+"));
+            "rmi.registry.port", "RMI registry port, used for discovering JMX (private) port", PortRanges.fromString("1099, 19099+"));
     /** @deprecated since 0.6.0 use RMI_REGISTRY_PORT */ @Deprecated
     PortAttributeSensorAndConfigKey RMI_SERVER_PORT = RMI_REGISTRY_PORT;
 
+    /** Currently only used to connect; not used to set up JMX (so only applies where systems set this up themselves)
+     * @deprecated since 0.6.0 use keys from UsesJmx */
+    @Deprecated
     BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "jmx.user", "JMX username");
     
+    /** Currently only used to connect; not used to set up JMX (so only applies where systems set this up themselves)
+     * @deprecated since 0.6.0 use keys from UsesJmx */
+    @Deprecated
     BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "jmx.password", "JMX password");
     
+    /** @deprecated since 0.6.0 use keys from UsesJmx */
+    @Deprecated
     BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "jmx.context", "JMX context path", "jmxrmi");
     
+    /** @deprecated since 0.6.0 use keys from UsesJmx */
+    @Deprecated
     BasicAttributeSensorAndConfigKey<String> JMX_SERVICE_URL = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "jmx.serviceurl", "The URL for connecting to the MBean Server");
+            String.class, "jmx.service.url", "The URL for connecting to the MBean Server");
     
     /*
      * Port number attributes.

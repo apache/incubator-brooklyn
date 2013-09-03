@@ -1,7 +1,5 @@
 package brooklyn.entity.java;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -202,31 +200,31 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         return Lists.newArrayList();
     }
 
-    @Override
+    /** @deprecated since 0.6.0, the config key is always used instead of this */ @Deprecated
     public Integer getJmxPort() {
         return !isJmxEnabled() ? Integer.valueOf(-1) : entity.getAttribute(UsesJmx.JMX_PORT);
     }
 
-    @Deprecated
-    // since 0.4, use getRmiServerPort
-    @Override
+    /** @deprecated since 0.4.0, see {@link #getRmiRegistryPort()} */ @Deprecated
     public Integer getRmiPort() {
-        return getRmiServerPort();
+        return getRmiRegistryPort();
     }
 
+    /** @deprecated since 0.4.0, see {@link #getRmiRegistryPort()} */ @Deprecated
     public Integer getRmiServerPort() {
         return !isJmxEnabled() ? -1 : entity.getAttribute(UsesJmx.RMI_SERVER_PORT);
     }
 
-    @Override
+    /** @deprecated since 0.6.0, the config key is always used instead of this */ @Deprecated
+    public Integer getRmiRegistryPort() {
+        return !isJmxEnabled() ? -1 : entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT);
+    }
+
+    /** @deprecated since 0.6.0, the config key is always used instead of this */ @Deprecated
     public String getJmxContext() {
         return !isJmxEnabled() ? null : entity.getAttribute(UsesJmx.JMX_CONTEXT);
     }
 
-    public JmxmpSslSupport getJmxSslSupport() {
-        return new JmxmpSslSupport(this);
-    }
-    
     /**
      * Return the configuration properties required to enable JMX for a Java application.
      * 
@@ -237,19 +235,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         MutableMap.Builder<String, Object> result = MutableMap.<String, Object> builder();
         
         if (isJmxEnabled()) {
-            Integer jmxRemotePort = checkNotNull(getJmxPort(), "jmxPort for entity " + entity);
-            String hostName = checkNotNull(getMachine().getAddress().getHostName(), "hostname for entity " + entity);
-            result.put("com.sun.management.jmxremote", null);
-            
-            if (!isJmxSslEnabled()) {
-                result.
-                    put("com.sun.management.jmxremote.port", jmxRemotePort).
-                    put("com.sun.management.jmxremote.ssl", false).
-                    put("com.sun.management.jmxremote.authenticate", false).
-                    put("java.rmi.server.hostname", hostName);
-            } else {
-                getJmxSslSupport().applyAgentJmxJavaSystemProperties(result);
-            }
+            new JmxSupport(getEntity(), getRunDir()).applyJmxJavaSystemProperties(result);
         }
         
         return result.build();
@@ -260,8 +246,8 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
      */
     protected List<String> getJmxJavaConfigOptions() {
         List<String> result = new ArrayList<String>();
-        if (isJmxEnabled() && isJmxSslEnabled()) {
-            getJmxSslSupport().applyAgentJmxJavaConfigOptions(result);            
+        if (isJmxEnabled()) {
+            result.addAll(new JmxSupport(getEntity(), getRunDir()).getJmxJavaConfigOptions());
         }
         return result;
     }
@@ -313,9 +299,9 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
 
     public void installJmxSupport() {
-        if (isJmxEnabled() && isJmxSslEnabled()) {
+        if (isJmxEnabled()) {
             newScript("JMX_SETUP_PREINSTALL").body.append("mkdir -p "+getRunDir()).execute();
-            getJmxSslSupport().install();            
+            new JmxSupport(getEntity(), getRunDir()).install();
         }
     }
     

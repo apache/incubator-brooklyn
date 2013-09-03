@@ -107,7 +107,7 @@ public class Tasks {
                 if (!vfuture.isDone()) {
                     final AtomicReference<Object> vref = new AtomicReference<Object>(v);
                     
-                    withBlockingDetails("Waiting for "+(contextMessage!=null ? contextMessage+", " : "")+v, 
+                    withBlockingDetails("Waiting for "+(contextMessage!=null ? contextMessage+", " : ""+v), 
                             new Callable<Void>() {
                         public Void call() throws Exception {
                             vref.set( vfuture.get() );
