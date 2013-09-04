@@ -134,7 +134,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     
     @SetFromFlag("httpsPort")
     public static final PortAttributeSensorAndConfigKey HTTPS_PORT = new PortAttributeSensorAndConfigKey(
-            "brooklynnode.webconsole.httpPort", "HTTP Port for the brooklyn web-console", "8081+");
+            "brooklynnode.webconsole.httpsPort", "HTTPS Port for the brooklyn web-console", "8443+");
 
     @SetFromFlag("noWebConsoleSecurity")
     public static final BasicAttributeSensorAndConfigKey<Boolean> NO_WEB_CONSOLE_AUTHENTICATION = new BasicAttributeSensorAndConfigKey<Boolean>(
