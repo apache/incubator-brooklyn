@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
@@ -152,6 +153,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     public StringConfigMap getConfig() {
         checkInitialManagementContextReal();
         return initialManagementContext.getConfig();
+    }
+
+    @Override
+    public BrooklynProperties getBrooklynProperties() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.getBrooklynProperties();
     }
 
     @Override
