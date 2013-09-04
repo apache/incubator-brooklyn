@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.testng.internal.annotations.Sets;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
@@ -49,7 +50,7 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     @SuppressWarnings("unchecked")
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        Set<Exception> exceptions = Collections.EMPTY_SET;
+        Set<Exception> exceptions = Sets.newHashSet();
         for (MachineLocation machineLocation: machinesToTearDown) {
             try {
                 location.release(machineLocation);
@@ -58,7 +59,7 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
             }
         }
         if (managementContext != null) managementContext.terminate();
-        if (exceptions.size() > 0) {
+        if (!exceptions.isEmpty()) {
             throw new CompoundRuntimeException("Exception during tear down", exceptions);
         }
     }

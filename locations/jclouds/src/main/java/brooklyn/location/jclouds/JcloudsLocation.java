@@ -160,6 +160,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         setCreationString(getConfigBag());
     }
     
+    @Override
     public JcloudsLocation newSubLocation(Map<?,?> newFlags) {
         return LocationCreationUtils.newSubLocation(newFlags, this);
     }
