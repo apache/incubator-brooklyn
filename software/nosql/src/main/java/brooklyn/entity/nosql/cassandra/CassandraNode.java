@@ -70,19 +70,19 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
     AttributeSensor<Integer> WRITE_ACTIVE = Sensors.newIntegerSensor("cassandra.write.active", "Current active MutationStage tasks");
     AttributeSensor<Long> WRITE_COMPLETED = Sensors.newLongSensor("cassandra.write.completed", "Total completed MutationStage tasks");
 
-    ConfigKey<String> SEEDS = CassandraCluster.SEEDS;
+    ConfigKey<String> INITIAL_SEEDS = ConfigKeys.newStringConfigKey("cassandra.cluster.seeds.initial", "List of cluster nodes to seed this node");
 
+    /* Accessors used from template */
+    
     Integer getGossipPort();
-
     Integer getSslGossipPort();
-
     Integer getThriftPort();
-
     String getClusterName();
-
+    String getSubnetAddress();
     String getSeeds();
-
     Long getToken();
 
+    /* For configuration */
+    
     void setToken(String token);
 }

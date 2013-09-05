@@ -205,7 +205,7 @@ seed_provider:
       parameters:
           # seeds is actually a comma-delimited list of addresses.
           # Ex: "<ip1>,<ip2>,<ip3>"
-          - seeds: "${entity.seeds!driver.hostname}"
+          - seeds: "${entity.seeds}"
 
 # emergency pressure valve: each time heap usage after a full (CMS)
 # garbage collection is above this fraction of the max, Cassandra will
@@ -296,12 +296,11 @@ ssl_storage_port: ${entity.sslGossipPort?c}
 # address associated with the hostname (it might not be).
 #
 # Setting this to 0.0.0.0 is always wrong.
-listen_address: ${driver.address}
+listen_address: ${entity.subnetAddress}
 
 # Address to broadcast to other Cassandra nodes
 # Leaving this blank will set it to the same value as listen_address
-broadcast_address: ${driver.address}
-
+# broadcast_address: ${entity.subnetAddress}
 
 # Whether to start the native transport server.
 # Currently, only the thrift server is started by default because the native
@@ -327,7 +326,7 @@ start_rpc: true
 # 
 # Leaving this blank has the same effect it does for ListenAddress,
 # (i.e. it will be based on the configured hostname of the node).
-rpc_address: ${driver.address}
+rpc_address: 0.0.0.0
 # port for Thrift to listen for clients on
 rpc_port: ${entity.thriftPort?c}
 

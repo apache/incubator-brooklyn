@@ -13,9 +13,12 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
+import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
@@ -105,6 +108,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     public void customize() {
         log.debug("Customizing {} (Cluster {})", entity, getClusterName());
         Networking.checkPortsValid(getPortMap());
+        
+        if (entity.getConfig(CassandraNode.INITIAL_SEEDS)==null)
+            entity.setConfig(CassandraNode.INITIAL_SEEDS, 
+                    DependentConfiguration.attributeWhenReady(entity.getParent(), CassandraCluster.CURRENT_SEEDS));
 
         String logFileEscaped = getLogFileLocation().replace("/", "\\/"); // escape slashes
 
@@ -129,10 +136,9 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     public void launch() {
         log.info("Launching " + entity + ": " +
                 "cluster "+getClusterName()+", " +
-                // TODO cassandra should use a locally-resolvable IP or hostname, not a public one
-                // (also true in seeds and other settings)
-//        		"local address " + getLocalAddress() + ", " +
-        		"seeds "+getEntity().getConfig(CassandraNode.SEEDS));
+        		"hostname (public) " + getEntity().getAttribute(Attributes.HOSTNAME) + ", " +
+        		"hostname (subnet) " + Machines.findSubnetOrPublicHostname(entity).get() + ", " +
+        		"seeds "+((CassandraNode)getEntity()).getSeeds());
         newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
                 .body.append(String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
                 .execute();

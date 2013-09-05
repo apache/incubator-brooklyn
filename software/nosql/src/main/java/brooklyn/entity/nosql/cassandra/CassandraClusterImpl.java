@@ -17,13 +17,14 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
-import brooklyn.management.Task;
+import brooklyn.location.basic.Machines;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -47,31 +48,29 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     public void init() {
         super.init();
 
-        // This DeferredSupplier will return a comma separated list of all available
-        // hostnames in the cluster or if none are available yet then a Task for the first
-        // hostname in the list when it is ready. If there are no nodes yet it returns null.
-        setConfig(SEEDS, new DeferredSupplier<Object>() {
-                public Object get() {
-                    Iterable<Entity> members = getMembers();
-                    List<String> nodes = Lists.newArrayList();
-                    List<Task<String>> tasks = Lists.newArrayList();
-                    for (Entity node : members) {
-                        String hostname = node.getAttribute(CassandraNode.HOSTNAME);
-                        if (hostname != null) {
-                            nodes.add(hostname);
-                        } else {
-                            tasks.add(DependentConfiguration.attributeWhenReady(node, CassandraNode.HOSTNAME));
-                        }
-                    }
-                    if (nodes.size() > 0) {
-                        String seeds = Joiner.on(",").join(nodes);
-                        return seeds;
-                    } else if (tasks.size() > 0) {
-                        return Iterables.get(tasks, 0);
-                    } else {
-                        return null;
+        /*
+         * subscribe to hostname, and keep an accurate set of current seeds in a sensor;
+         * then at nodes we set the initial seeds to be the current seeds when ready (non-empty)
+         */
+        subscribeToMembers(this, Attributes.HOSTNAME, new SensorEventListener<String>() {
+            @Override
+            public void onEvent(SensorEvent<String> event) {
+                Iterable<Entity> members = getMembers();
+                List<String> availableHostnames = Lists.newArrayList();
+                for (Entity node : members) {
+                    Optional<String> hostname = Machines.findSubnetOrPublicHostname(node);
+                    if (hostname.isPresent()) {
+                        availableHostnames.add(hostname.get());
+                        if (availableHostnames.size()>=5)
+                            // stop at 5
+                            break;
                     }
                 }
+                if (!availableHostnames.isEmpty())
+                    setAttribute(CURRENT_SEEDS, Joiner.on(",").join(availableHostnames));
+                else
+                    setAttribute(CURRENT_SEEDS, null);
+            }
         });
     }
 
@@ -90,6 +89,8 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
 
     @Override
     public void start(Collection<? extends Location> locations) {
+        Machines.warnIfLocalhost(locations, "CassandraCluster does not support multiple nodes on localhost, " +
+        		"due to assumptions Cassandra makes about the use of the same port numbers used across the cluster.");
         super.start(locations);
 
         policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Cassandra Cluster Tracker")) {

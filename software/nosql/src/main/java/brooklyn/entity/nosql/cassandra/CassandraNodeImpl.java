@@ -18,6 +18,7 @@ import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
+import brooklyn.location.basic.Machines;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -38,18 +39,24 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     public CassandraNodeImpl() {
     }
 
-    public Integer getGossipPort() { return getAttribute(CassandraNode.GOSSIP_PORT); }
-    public Integer getSslGossipPort() { return getAttribute(CassandraNode.SSL_GOSSIP_PORT); }
-    public Integer getThriftPort() { return getAttribute(CassandraNode.THRIFT_PORT); }
-    public String getClusterName() { return getAttribute(CassandraNode.CLUSTER_NAME); }
-    public Long getToken() { return getAttribute(CassandraNode.TOKEN); }
-    public String getSeeds() { return getConfig(CassandraNode.SEEDS); }
+    @Override public Integer getGossipPort() { return getAttribute(CassandraNode.GOSSIP_PORT); }
+    @Override public Integer getSslGossipPort() { return getAttribute(CassandraNode.SSL_GOSSIP_PORT); }
+    @Override public Integer getThriftPort() { return getAttribute(CassandraNode.THRIFT_PORT); }
+    @Override public String getClusterName() { return getAttribute(CassandraNode.CLUSTER_NAME); }
+    @Override public String getSubnetAddress() { return Machines.findSubnetOrPublicHostname(this).get(); }
+    @Override public Long getToken() { return getAttribute(CassandraNode.TOKEN); }
+    @Override public String getSeeds() { return getConfig(CassandraNode.INITIAL_SEEDS); }
 
     @Override
     public Class<CassandraNodeDriver> getDriverInterface() {
         return CassandraNodeDriver.class;
     }
 
+    @Override
+    public void init() {
+        super.init();
+    }
+    
     private volatile JmxFeed jmxFeed;
     private JmxHelper jmxHelper;
     private ObjectName storageServiceMBean = JmxHelper.createObjectName("org.apache.cassandra.db:type=StorageService");

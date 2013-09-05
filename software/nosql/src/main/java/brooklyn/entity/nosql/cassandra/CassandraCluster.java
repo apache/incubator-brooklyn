@@ -4,9 +4,7 @@
 package brooklyn.entity.nosql.cassandra;
 
 import brooklyn.catalog.Catalog;
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -17,6 +15,9 @@ import brooklyn.util.flags.SetFromFlag;
 
 /**
  * A cluster of {@link CassandraNode}s based on {@link DynamicCluster} which can be resized by a policy if required.
+ * <p>
+ * Note that due to how Cassandra assumes ports are the same across a cluster, it is NOT possible to deploy a cluster to localhost.
+ * <p>
  *
  * TODO add sensors with aggregated Cassandra statistics from cluster
  */
@@ -27,8 +28,8 @@ public interface CassandraCluster extends DynamicCluster {
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "cassandra.cluster.name", "Name of the Cassandra cluster", "BrooklynCluster");
 
-    ConfigKey<String> SEEDS = ConfigKeys.newStringConfigKey("cassandra.cluster.seeds", "List of seed node hosts in cluster");
-
+    AttributeSensor<String> CURRENT_SEEDS = Sensors.newStringSensor("cassandra.cluster.seeds.current", "Current set of seeds to use to bootstrap the cluster");
+    
     AttributeSensor<String> HOSTNAME = Sensors.newStringSensor("cassandra.cluster.hostname", "Hostname to connect to cluster with");
 
     AttributeSensor<Integer> THRIFT_PORT = Sensors.newIntegerSensor("cassandra.cluster.thrift.port", "Cassandra Thrift RPC port to connect to cluster with");

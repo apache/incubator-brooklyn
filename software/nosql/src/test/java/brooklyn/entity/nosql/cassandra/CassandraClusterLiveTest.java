@@ -5,8 +5,6 @@ package brooklyn.entity.nosql.cassandra;
 
 import static org.testng.Assert.assertEquals;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -28,12 +26,13 @@ import com.google.common.collect.Iterables;
  * Tests that a two node cluster can be started on Amazon EC2 and data written on one {@link CassandraNode}
  * can be read from another, using the Astyanax API.
  */
-class CassandraClusterLiveTest {
+public class CassandraClusterLiveTest {
 
-    private static final Logger log = LoggerFactory.getLogger(CassandraClusterLiveTest.class);
-
-    // private String provider = "rackspace-cloudservers-uk";
-    private String provider = "aws-ec2:eu-west-1";
+    private String provider = 
+//            "rackspace-cloudservers-uk";
+//            "aws-ec2:eu-west-1";
+            "named:hpcloud-compute-at";
+//            "localhost";
 
     protected TestApplication app;
     protected Location testLocation;
@@ -57,7 +56,7 @@ class CassandraClusterLiveTest {
     public void canStartupAndShutdown() throws Exception {
         cluster = app.createAndManageChild(EntitySpec.create(CassandraCluster.class)
                 .configure("initialSize", 2)
-                .configure("clusterName", "AmazonCluster"));
+                .configure("clusterName", "CassandraClusterLiveTest"));
         assertEquals(cluster.getCurrentSize().intValue(), 0);
 
         app.start(ImmutableList.of(testLocation));
