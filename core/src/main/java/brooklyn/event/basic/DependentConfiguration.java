@@ -37,6 +37,7 @@ import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -78,6 +79,8 @@ public class DependentConfiguration {
      * particular useful in Entity configuration where config will block until Tasks have a value
      */
     public static <T> Task<T> attributeWhenReady(final Entity source, final AttributeSensor<T> sensor, final Predicate<? super T> ready) {
+        Preconditions.checkNotNull(source, "Entity source must be set");
+        Preconditions.checkNotNull(sensor, "Sensor must be set");
         return new BasicTask<T>(
                 MutableMap.of("tag", "attributeWhenReady", "displayName", "retrieving sensor "+sensor.getName()+" from "+source.getDisplayName()), 
                 new Callable<T>() {

@@ -2,6 +2,7 @@ package brooklyn.location.jclouds;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -15,12 +16,15 @@ import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.InterpretableStatement;
 import org.jclouds.scriptbuilder.domain.Statement;
+import org.jclouds.util.InetAddresses2.IsPrivateIPAddress;
 
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails;
 import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.net.Cidr;
+import brooklyn.util.net.Networking;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
@@ -80,15 +84,23 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         return jcloudsParent;
     }
     
-    /** returns the hostname for use by peers in the same subnet,
+    /** returns the hostname (or sometimes IP) for use by peers in the same subnet,
      * defaulting to public hostname if nothing special
      * <p>
      * for use e.g. in clouds like amazon where other machines
      * in the same subnet need to use a different IP
      */
     public String getSubnetHostname() {
-        if (truth(node.getPrivateAddresses()))
-            return node.getPrivateAddresses().iterator().next();
+        if (truth(node.getPrivateAddresses())) {
+            Iterator<String> pi = node.getPrivateAddresses().iterator();
+            while (pi.hasNext()) {
+                String p = pi.next();
+                // disallow local only addresses
+                if (Networking.isLocalOnly(p)) continue;
+                // other things may be public or private, but either way, return it
+                return p;
+            }
+        }
         return jcloudsParent.getPublicHostname(node, null);
     }
     

@@ -25,7 +25,11 @@
         <!-- DefaultHttpClient logs info e.g. about "Retrying request" on NoHttpResponseException -->
         <appender-ref ref="FILE" />
     </logger>
-    <logger name="javax.management.remote.misc" additivity="false">
+    <logger name="javax.management.remote" additivity="false">
+        <!-- Logger used by Sun JMX code warns if connections die, even if we know that is normal (because we killed the other end!) -->
+        <appender-ref ref="FILE" />
+    </logger>
+    <logger name="com.sun.jmx.remote" additivity="false">
         <!-- Logger used by Sun JMX code warns if connections die, even if we know that is normal (because we killed the other end!) -->
         <appender-ref ref="FILE" />
     </logger>

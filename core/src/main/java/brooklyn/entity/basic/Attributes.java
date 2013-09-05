@@ -114,6 +114,8 @@ public interface Attributes {
 
     AttributeSensor<String> HOSTNAME = Sensors.newStringSensor( "host.name", "Host name");
     AttributeSensor<String> ADDRESS = Sensors.newStringSensor( "host.address", "Host IP address");
+    AttributeSensor<String> SUBNET_HOSTNAME = Sensors.newStringSensor( "host.subnet.hostname", "Host name as known internally in " +
+    		"the subnet where it is running (if different to host.name)");
 	
     /*
      * Lifecycle attributes

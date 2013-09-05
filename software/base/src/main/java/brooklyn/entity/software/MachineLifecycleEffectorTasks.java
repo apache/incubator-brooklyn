@@ -29,6 +29,7 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
@@ -38,6 +39,7 @@ import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -222,13 +224,13 @@ public abstract class MachineLifecycleEffectorTasks {
             log.info("Starting {} on machine {}", entity(), machine);
             entity().addLocations(ImmutableList.of((Location)machine));
 
-            // 20 Aug 2013: previously we set these fields _after_ calling the preStart hooks,
-            // but this feels more useful (TBC)
-            
-            if (entity().getAttribute(Attributes.HOSTNAME)==null)
-                entity().setAttribute(Attributes.HOSTNAME, machine.getAddress().getHostName());
-            if (entity().getAttribute(Attributes.ADDRESS)==null)
-                entity().setAttribute(Attributes.ADDRESS, machine.getAddress().getHostAddress());
+            // elsewhere we rely on (public) hostname being set _after_ subnet_hostname
+            // (to prevent the tiny possibility of races resulting in hostname being returned
+            // simply because subnet is still being looked up)
+            Optional<String> lh = Machines.getSubnetHostname(machine);
+            if (lh.isPresent()) entity().setAttribute(Attributes.SUBNET_HOSTNAME, lh.get());
+            entity().setAttribute(Attributes.HOSTNAME, machine.getAddress().getHostName());
+            entity().setAttribute(Attributes.ADDRESS, machine.getAddress().getHostAddress());
             
             preStartCustom(machine);
         }});
@@ -374,8 +376,9 @@ public abstract class MachineLifecycleEffectorTasks {
         
         try {
             entity().removeLocations(ImmutableList.of(machine));
-            entity().setAttribute(SoftwareProcess.HOSTNAME, null);
-            entity().setAttribute(SoftwareProcess.ADDRESS, null);
+            entity().setAttribute(Attributes.HOSTNAME, null);
+            entity().setAttribute(Attributes.ADDRESS, null);
+            entity().setAttribute(Attributes.SUBNET_HOSTNAME, null);
             if (provisioner != null) provisioner.release((MachineLocation)machine);
         } catch (Throwable t) {
             throw Exceptions.propagate(t);

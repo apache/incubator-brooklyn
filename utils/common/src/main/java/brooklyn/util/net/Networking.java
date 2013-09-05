@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.text.Identifiers;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.primitives.UnsignedBytes;
 
@@ -128,7 +129,7 @@ public class Networking {
     /**
      * Check if this is a private address, not exposed on the public Internet.
      *
-     * For IPV4 addresses this is an RFC1918 subnet address ({code 10.0.0.0/8},
+     * For IPV4 addresses this is an RFC1918 subnet (site local) address ({code 10.0.0.0/8},
      * {@code 172.16.0.0/12} and {@code 192.168.0.0/16}), a link-local address
      * ({@code 169.254.0.0/16}) or a loopback address ({@code 127.0.0.1/0}).
      * <p>
@@ -142,6 +143,45 @@ public class Networking {
         return address.isSiteLocalAddress() || address.isLoopbackAddress() || address.isLinkLocalAddress();
     }
 
+    /** Check whether this address is definitely not going to be usable on any other machine;
+     * i.e. if it is a loopback address or a link-local (169.254)
+     */
+    public static boolean isLocalOnly(InetAddress address) {
+        return address.isLoopbackAddress() || address.isLinkLocalAddress();
+    }
+    
+    /** As {@link #isLocalOnly(InetAddress)} but taking a string; 
+     * does not require the string to be resolvable, and generally treats non-resolvable hostnames as NOT local-only
+     * (although they are treated as private by {@link #isPrivateSubnet(String)}),
+     * although certain well-known hostnames are recognised as local-only */
+    public static boolean isLocalOnly(String hostnameOrIp) {
+        Preconditions.checkNotNull(hostnameOrIp, "hostnameOrIp");
+        if ("127.0.0.1".equals(hostnameOrIp)) return true;
+        if ("localhost".equals(hostnameOrIp)) return true;
+        if ("localhost.localdomain".equals(hostnameOrIp)) return true;
+        try {
+            InetAddress ia = getInetAddressWithFixedName(hostnameOrIp);
+            return isLocalOnly(ia);
+        } catch (Exception e) {
+            log.debug("Networking cannot resolve "+hostnameOrIp+": assuming it is not a local-only address, but it is a private address");
+            return false;
+        }
+    }
+
+    /** As {@link #isPrivateSubnet(InetAddress) but taking a string; sepcifically local-only address ARE treated as private. 
+     * does not require the string to be resolvable, and things which aren't resolvable are treated as private 
+     * unless they are known to be local-only */
+    public static boolean isPrivateSubnet(String hostnameOrIp) {
+        Preconditions.checkNotNull(hostnameOrIp, "hostnameOrIp");
+        try {
+            InetAddress ia = getInetAddressWithFixedName(hostnameOrIp);
+            return isPrivateSubnet(ia);
+        } catch (Exception e) {
+            log.debug("Networking cannot resolve "+hostnameOrIp+": assuming it IS a private address");
+            return true;
+        }
+    }
+
     private static boolean triedUnresolvableHostname = false;
     private static String cachedAddressOfUnresolvableHostname = null;
     
@@ -151,9 +191,9 @@ public class Networking {
         String h = "noexistent-machine-"+Identifiers.makeRandomBase64Id(8);
         try {
             cachedAddressOfUnresolvableHostname = InetAddress.getByName(h).getHostAddress();
-            log.info("NetworkUtils detected "+cachedAddressOfUnresolvableHostname+" being returned by DNS for bogus hostnames ("+h+")");
+            log.info("Networking detected "+cachedAddressOfUnresolvableHostname+" being returned by DNS for bogus hostnames ("+h+")");
         } catch (Exception e) {
-            log.debug("NetworkUtils detected failure on DNS resolution of unknown hostname ("+h+" throws "+e+")");
+            log.debug("Networking detected failure on DNS resolution of unknown hostname ("+h+" throws "+e+")");
             cachedAddressOfUnresolvableHostname = null;
         }
         triedUnresolvableHostname = true;
@@ -167,12 +207,12 @@ public class Networking {
             InetAddress a = InetAddress.getByName(hostname);
             if (a==null) return null;
             String ha = a.getHostAddress();
-            if (log.isDebugEnabled()) log.debug("NetworkUtils resolved "+hostname+" as "+a);
+            if (log.isDebugEnabled()) log.debug("Networking resolved "+hostname+" as "+a);
             if (ha.equals(getAddressOfUnresolvableHostname())) return null;
             if (ha.startsWith("169.")) return null;
             return a;
         } catch (Exception e) {
-            if (log.isDebugEnabled()) log.debug("NetworkUtils failed to resolve "+hostname+", threw "+e);
+            if (log.isDebugEnabled()) log.debug("Networking failed to resolve "+hostname+", threw "+e);
             return null;
         }
     }

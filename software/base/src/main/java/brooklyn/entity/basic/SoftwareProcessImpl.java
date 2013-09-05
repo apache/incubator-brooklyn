@@ -25,6 +25,7 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.location.basic.Machines;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
@@ -34,6 +35,7 @@ import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -318,20 +320,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         return ports;
     }
 
+    /** @deprecated since 0.6.0 use {@link Machines#findSubnetHostname(this)} */ @Deprecated
     public String getLocalHostname() {
-        Location where = Iterables.getFirst(getLocations(), null);
-	    String hostname = null;
-        if (where instanceof HasSubnetHostname) {
-            hostname = ((HasSubnetHostname) where).getSubnetHostname();
-        }
-        if (hostname == null && where instanceof MachineLocation) {
-            InetAddress addr = ((MachineLocation) where).getAddress();
-            if (addr != null) hostname = addr.getHostAddress();
-        }
-        log.debug("computed hostname {} for {}", hostname, this);
-        if (hostname == null)
-            throw new IllegalStateException("Cannot find hostname for "+this+" at location "+where);
-        return hostname;
+        return Machines.findSubnetHostname(this).get();
 	}
 
     void initDriver(MachineLocation machine) {
