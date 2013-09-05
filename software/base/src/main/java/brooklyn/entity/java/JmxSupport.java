@@ -133,6 +133,13 @@ public class JmxSupport implements UsesJmx {
                     log.warn("Auto-detecting JMX configuration for "+entity+": cannot identify location so setting JMXMP");
                     jmxAgentMode = JmxAgentModes.JMXMP;                    
                 }
+                if (!new ResourceUtils(this).doesUrlExist(getJmxAgentJarUrl())) {
+                    // can happen e.g. if eclipse build
+                    log.warn("JMX agent JAR not found ("+getJmxAgentJarUrl()+") when auto-detecting JMX settings for "+entity+"; " +
+                            "likely cause is an incomplete build (e.g. from Eclipse; run a maven build then retry in the IDE); "+
+                    		"reverting to NONE (use built-in Java JMX support, which will not go through firewalls)");
+                    jmxAgentMode = JmxAgentModes.NONE;
+                }
             }
             
             ((EntityLocal)entity).setConfig(JMX_AGENT_MODE, jmxAgentMode);

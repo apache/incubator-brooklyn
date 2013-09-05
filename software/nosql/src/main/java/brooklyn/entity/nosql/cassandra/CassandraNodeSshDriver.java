@@ -140,7 +140,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         		"hostname (subnet) " + Machines.findSubnetOrPublicHostname(entity).get() + ", " +
         		"seeds "+((CassandraNode)getEntity()).getSeeds());
         newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
-                .body.append(String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
+                .body.append(
+                        // log the date to attempt to debug occasional http://wiki.apache.org/cassandra/FAQ#schema_disagreement
+                        "echo date on server `hostname` is `date`",
+                        String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
                 .execute();
     }
 

@@ -5,12 +5,18 @@ package brooklyn.entity.nosql.cassandra;
 
 import static org.testng.Assert.assertEquals;
 
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.nosql.cassandra.AstyanaxSupport.AstyanaxSample;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
@@ -28,6 +34,8 @@ import com.google.common.collect.Iterables;
  */
 public class CassandraClusterLiveTest {
 
+    private static final Logger log = LoggerFactory.getLogger(CassandraClusterLiveTest.class);
+    
     private String provider = 
 //            "rackspace-cloudservers-uk";
             "aws-ec2:eu-west-1";
@@ -69,12 +77,19 @@ public class CassandraClusterLiveTest {
 
         EntityTestUtils.assertAttributeEqualsEventually(first, Startable.SERVICE_UP, true);
         EntityTestUtils.assertAttributeEqualsEventually(second, Startable.SERVICE_UP, true);
-        EntityTestUtils.assertAttributeEquals(first, CassandraNode.PEERS, 2);
-        EntityTestUtils.assertAttributeEquals(second, CassandraNode.PEERS, 2);
+        // might take a little while for JMX to report
+        EntityTestUtils.assertAttributeEqualsEventually(first, CassandraNode.PEERS, 2);
+        EntityTestUtils.assertAttributeEqualsEventually(second, CassandraNode.PEERS, 2);
 
-        AstyanaxSupport astyanaxFirst = new AstyanaxSupport(first);
-        AstyanaxSupport astyanaxSecond = new AstyanaxSupport(second);
+        // have been seeing intermittent SchemaDisagreementException errors on AWS, probably due to Astyanax / how we are using it
+        // (confirmed that clocks are in sync)
+        AstyanaxSample astyanaxFirst = new AstyanaxSample(first);
+        Map<String, List<String>> versions = astyanaxFirst.getAstyanaxContextForCluster().getEntity().describeSchemaVersions();
+        log.info("Cassandra schema versions are: "+versions);
+        
         astyanaxFirst.writeData();
+        
+        AstyanaxSample astyanaxSecond = new AstyanaxSample(second);
         astyanaxSecond.readData();
     }
 }

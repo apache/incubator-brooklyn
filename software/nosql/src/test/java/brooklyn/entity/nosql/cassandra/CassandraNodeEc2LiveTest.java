@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.AbstractEc2LiveTest;
+import brooklyn.entity.nosql.cassandra.AstyanaxSupport.AstyanaxSample;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
@@ -25,7 +26,7 @@ public class CassandraNodeEc2LiveTest extends AbstractEc2LiveTest {
 
         EntityTestUtils.assertAttributeEqualsEventually(cassandra, CassandraNode.SERVICE_UP, true);
 
-        AstyanaxSupport astyanax = new AstyanaxSupport(cassandra);
+        AstyanaxSample astyanax = new AstyanaxSample(cassandra);
         astyanax.astyanaxTest();
     }
 }
