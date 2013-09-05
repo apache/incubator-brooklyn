@@ -30,8 +30,8 @@ public class CassandraClusterLiveTest {
 
     private String provider = 
 //            "rackspace-cloudservers-uk";
-//            "aws-ec2:eu-west-1";
-            "named:hpcloud-compute-at";
+            "aws-ec2:eu-west-1";
+//            "named:hpcloud-compute-at";
 //            "localhost";
 
     protected TestApplication app;

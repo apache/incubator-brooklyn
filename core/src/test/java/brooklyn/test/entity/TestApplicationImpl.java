@@ -15,12 +15,18 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.SubscriptionHandle;
+import brooklyn.util.logging.LoggingSetup;
 
 /**
  * Mock application for testing.
  */
 public class TestApplicationImpl extends AbstractApplication implements TestApplication {
     private static final Logger LOG = LoggerFactory.getLogger(TestApplication.class);
+
+    static {
+        // our tests should redirect the j.u.l logging messages to logback 
+        LoggingSetup.installJavaUtilLoggingBridge();
+    }
 
     public TestApplicationImpl() {
         super();

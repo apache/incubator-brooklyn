@@ -26,7 +26,6 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynServiceAttributes;
@@ -49,6 +48,7 @@ import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.logging.LoggingSetup;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
@@ -72,11 +72,9 @@ public class BrooklynWebServer {
                 BROOKLYN_WAR_URL, "/usage/launcher/target", 
                 "/usage/jsgui/target/brooklyn-jsgui-"+BrooklynVersion.get()+".war"));
     }
-    
+
     static {
-        // Jersey uses java.util.logging - bridge to slf4
-        SLF4JBridgeHandler.removeHandlersForRootLogger();
-        SLF4JBridgeHandler.install();
+        LoggingSetup.installJavaUtilLoggingBridge();
     }
     
     protected Server server;
