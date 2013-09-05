@@ -31,6 +31,12 @@ import com.google.common.collect.Lists;
 
 /**
  * Implementation of {@link CassandraCluster}.
+ * <p>
+ * Serveral subtleties to note:
+ * - a node may take some time after it is running and serving JMX to actually be contactable on its thrift port
+ * - sometimes (I think if nodes are started very near in time to each other in time, with >=2 seeds)
+ *   the subsequent node does not successfully peer with the first; have not explored why
+ * - when subsequent node is part of seed group, even if started late, it can take 1m to get a consistent schema 
  */
 public class CassandraClusterImpl extends DynamicClusterImpl implements CassandraCluster {
 
@@ -55,23 +61,48 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         subscribeToMembers(this, Attributes.HOSTNAME, new SensorEventListener<String>() {
             @Override
             public void onEvent(SensorEvent<String> event) {
+                String newHostname = event.getValue();
+                if (newHostname!=null) {
+                    // node added
+                    if (getAttribute(CURRENT_SEEDS)!=null)
+                        // if we have enough seeds already then we don't need to do anything
+                        return;
+                }
+                // node was removed, or added when we are not yet quorate; in either case let's find the seeds
+                
                 Iterable<Entity> members = getMembers();
                 List<String> availableHostnames = Lists.newArrayList();
                 for (Entity node : members) {
                     Optional<String> hostname = Machines.findSubnetOrPublicHostname(node);
                     if (hostname.isPresent()) {
                         availableHostnames.add(hostname.get());
-                        if (availableHostnames.size()>=5)
-                            // stop at 5
-                            break;
                     }
                 }
-                if (!availableHostnames.isEmpty())
-                    setAttribute(CURRENT_SEEDS, Joiner.on(",").join(availableHostnames));
-                else
-                    setAttribute(CURRENT_SEEDS, null);
+                
+                if (!availableHostnames.isEmpty()) {
+                    int quorumSize = getQuorumSize();
+                    if (availableHostnames.size()>=quorumSize) {
+                        while (availableHostnames.size()>quorumSize)
+                            availableHostnames.remove(availableHostnames.size()-1);
+                        setAttribute(CURRENT_SEEDS, Joiner.on(",").join(availableHostnames));
+                        return;
+                    }
+                }
+                
+                // not quorate
+                setAttribute(CURRENT_SEEDS, null);
             }
+
         });
+    }
+    
+    protected int getQuorumSize() {
+        Integer quorumSize = getConfig(INITIAL_QUORUM_SIZE);
+        if (quorumSize!=null && quorumSize>0)
+            return quorumSize;
+        // default 2 is recommended, unless initial size is smaller
+        // trying 1 to see if this helps subsequent node to get agreeing schemas sooner
+        return Math.min(getConfig(INITIAL_SIZE), 1);
     }
 
     /**
@@ -116,6 +147,23 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         setAttribute(Startable.SERVICE_UP, calculateServiceUp());
     }
 
+    // handled instead by using quorum size as seeds (more efficient, and the code below didn't work anyways)
+//    @Override
+//    protected Collection<Entity> grow(int delta) {
+//        if (getMembers().isEmpty() && delta>1) {
+//            // can get intermittent SchemaDisagreementErrors otherwise
+//            // more efficient would be to block on cassandra start (or even to ensure it is fixed in Cassandra);
+//            // http://stackoverflow.com/questions/6770894/schemadisagreementexception
+//            log.info("On initial creation of Cassandra cluster we are adding the first node before launching subsequent nodes");
+//            List<Entity> result = new ArrayList<Entity>();
+//            result.addAll(grow(1));
+//            result.addAll(grow(delta-1));
+//            return result;
+//        } else {
+//            return super.grow(delta);
+//        }
+//    }
+    
     @Override
     protected boolean calculateServiceUp() {
         // TODO would be useful to have "n-up" semantics (policy?) available for groups ?

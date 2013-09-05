@@ -14,7 +14,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.netflix.astyanax.AstyanaxContext;
@@ -40,23 +39,31 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 public class AstyanaxSupport {
     private static final Logger log = LoggerFactory.getLogger(AstyanaxSupport.class);
 
-    protected final CassandraNode node;
-
+    public final String clusterName;
+    public final String hostname;
+    public final int thriftPort;
+    
     public AstyanaxSupport(CassandraNode node) {
-        this.node = node;
+        this(node.getClusterName(), node.getAttribute(Attributes.HOSTNAME), node.getThriftPort());
+    }
+    
+    public AstyanaxSupport(String clusterName, String hostname, int thriftPort) {
+        this.clusterName = clusterName;
+        this.hostname = hostname;
+        this.thriftPort = thriftPort;
     }
     
     public AstyanaxContext<Keyspace> getAstyanaxContextForKeyspace(String keyspace) {
         AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
-                .forCluster(node.getClusterName())
+                .forCluster(clusterName)
                 .forKeyspace(keyspace)
                 .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
                         .setDiscoveryType(NodeDiscoveryType.NONE))
                 .withConnectionPoolConfiguration(new ConnectionPoolConfigurationImpl("BrooklynPool")
-                        .setPort(node.getThriftPort())
+                        .setPort(thriftPort)
                         .setMaxConnsPerHost(1)
                         .setConnectTimeout(5000) // 10s
-                        .setSeeds(String.format("%s:%d", node.getAttribute(Attributes.HOSTNAME), node.getThriftPort())))
+                        .setSeeds(String.format("%s:%d", hostname, thriftPort)))
                 .withConnectionPoolMonitor(new CountingConnectionPoolMonitor())
                 .buildKeyspace(ThriftFamilyFactory.getInstance());
 
@@ -66,14 +73,14 @@ public class AstyanaxSupport {
     
     public AstyanaxContext<Cluster> getAstyanaxContextForCluster() {
         AstyanaxContext<Cluster> context = new AstyanaxContext.Builder()
-                .forCluster(node.getClusterName())
+                .forCluster(clusterName)
                 .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
                         .setDiscoveryType(NodeDiscoveryType.NONE))
                 .withConnectionPoolConfiguration(new ConnectionPoolConfigurationImpl("BrooklynPool")
-                        .setPort(node.getThriftPort())
+                        .setPort(thriftPort)
                         .setMaxConnsPerHost(1)
                         .setConnectTimeout(5000) // 10s
-                        .setSeeds(String.format("%s:%d", node.getAttribute(Attributes.HOSTNAME), node.getThriftPort())))
+                        .setSeeds(String.format("%s:%d", hostname, thriftPort)))
                 .withConnectionPoolMonitor(new CountingConnectionPoolMonitor())
                 .buildCluster(ThriftFamilyFactory.getInstance());
 
@@ -91,6 +98,10 @@ public class AstyanaxSupport {
             super(node);
         }
 
+        public AstyanaxSample(String clusterName, String hostname, int thriftPort) {
+            super(clusterName, hostname, thriftPort);
+        }
+
         /**
          * Exercise the {@link CassandraNode} using the Astyanax API.
          */
@@ -101,14 +112,15 @@ public class AstyanaxSupport {
 
         /**
          * Write to a {@link CassandraNode} using the Astyanax API.
+         * @throws ConnectionException 
          */
-        public void writeData() throws Exception {
+        public void writeData() throws ConnectionException {
             // Create context
             AstyanaxContext<Keyspace> context = getAstyanaxContextForKeyspace("BrooklynIntegrationTest");
             try {
                 Keyspace keyspace = context.getEntity();
                 try {
-                    assertNull(keyspace.describeKeyspace().getColumnFamily("Rabbits"));
+                    assertNull(keyspace.describeKeyspace().getColumnFamily("People"));
                 } catch (Exception ek) {
                     // (Re) Create keyspace if needed
                     log.debug("repairing Cassandra error by re-creating keyspace "+keyspace+": "+ek);
@@ -127,6 +139,7 @@ public class AstyanaxSupport {
                     } catch (SchemaDisagreementException e) {
                         // discussion (but not terribly helpful) at http://stackoverflow.com/questions/6770894/schemadisagreementexception
                         // let's just try again after a delay
+                        // (seems to have no effect; trying to fix by starting first node before others)
                         log.warn("error creating Cassandra keyspace "+keyspace+" (retrying): "+e);
                         Time.sleep(Duration.FIVE_SECONDS);
                         keyspace.createKeyspace(ImmutableMap.<String, Object>builder()
@@ -153,11 +166,8 @@ public class AstyanaxSupport {
                 .putColumn("pet", "Cat", null);
 
                 OperationResult<Void> insert = m.execute();
-                assertEquals(insert.getHost().getHostName(), node.getAttribute(Attributes.HOSTNAME));
+                assertEquals(insert.getHost().getHostName(), hostname);
                 assertTrue(insert.getLatency() > 0L);
-            } catch (ConnectionException ce) {
-                // Error connecting to Cassandra
-                throw Throwables.propagate(ce);
             } finally {
                 context.shutdown();
             }
@@ -165,8 +175,9 @@ public class AstyanaxSupport {
 
         /**
          * Read from a {@link CassandraNode} using the Astyanax API.
+         * @throws ConnectionException 
          */
-        public void readData() throws Exception {
+        public void readData() throws ConnectionException {
             // Create context
             AstyanaxContext<Keyspace> context = getAstyanaxContextForKeyspace("BrooklynIntegrationTest");
             try {
@@ -176,7 +187,7 @@ public class AstyanaxSupport {
                 OperationResult<ColumnList<String>> query = keyspace.prepareQuery(SAMPLE_COLUMN_FAMILY)
                         .getKey("one")
                         .execute();
-                assertEquals(query.getHost().getHostName(), node.getAttribute(Attributes.HOSTNAME));
+                assertEquals(query.getHost().getHostName(), hostname);
                 assertTrue(query.getLatency() > 0L);
 
                 ColumnList<String> columns = query.getResult();
@@ -190,13 +201,14 @@ public class AstyanaxSupport {
                 for (Column<String> c : columns) {
                     assertTrue(ImmutableList.of("name", "company").contains(c.getName()));
                 }
-            } catch (ConnectionException ce) {
-                // Error connecting to Cassandra
-                Throwables.propagate(ce);
             } finally {
                 context.shutdown();
             }
         }
     }
-    
+
+    public static void main(String[] args) throws Exception {
+        AstyanaxSample support = new AstyanaxSample("ignored", "ec2-79-125-32-2.eu-west-1.compute.amazonaws.com", 9160);
+        System.out.println(support.getAstyanaxContextForCluster().getEntity().describeSchemaVersions());
+    }
 }

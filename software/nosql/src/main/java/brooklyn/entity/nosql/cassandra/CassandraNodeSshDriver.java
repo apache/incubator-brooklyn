@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.event.basic.DependentConfiguration;
@@ -23,6 +25,9 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -134,17 +139,34 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public void launch() {
+        String subnetHostname = Machines.findSubnetOrPublicHostname(entity).get();
+        String seeds = ((CassandraNode)getEntity()).getSeeds();
         log.info("Launching " + entity + ": " +
                 "cluster "+getClusterName()+", " +
         		"hostname (public) " + getEntity().getAttribute(Attributes.HOSTNAME) + ", " +
-        		"hostname (subnet) " + Machines.findSubnetOrPublicHostname(entity).get() + ", " +
-        		"seeds "+((CassandraNode)getEntity()).getSeeds());
+        		"hostname (subnet) " + subnetHostname + ", " +
+        		"seeds "+seeds);
+        boolean isFirst = seeds.startsWith(subnetHostname);
+        if (!isFirst) {
+            // if they start at the same time, they seem sometimes not to come up properly :( 
+            long firstStartTime = Entities.submit(entity, DependentConfiguration.attributeWhenReady(getEntity().getParent(), CassandraCluster.FIRST_NODE_STARTED_TIME_UTC)).getUnchecked();
+            Duration toWait = Duration.millis(firstStartTime + Duration.THIRTY_SECONDS.toMilliseconds() -  System.currentTimeMillis());
+            if (toWait.toMilliseconds()>0) {
+                log.info("Launching " + entity + ": delaying launch of non-first node by "+toWait+" to prevent schema disagreements");
+                Tasks.setBlockingDetails("Pausing to ensure first node has time to start");
+                Time.sleep(toWait);
+                Tasks.resetBlockingDetails();
+            }
+        }
         newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
                 .body.append(
                         // log the date to attempt to debug occasional http://wiki.apache.org/cassandra/FAQ#schema_disagreement
-                        "echo date on server `hostname` is `date`",
+                        "echo date on cassandra server `hostname` is `date`",
                         String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
                 .execute();
+        if (isFirst) {
+            ((EntityLocal)getEntity().getParent()).setAttribute(CassandraCluster.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
+        }
     }
 
     public String getPidFile() { return String.format("%s/cassandra.pid", getRunDir()); }

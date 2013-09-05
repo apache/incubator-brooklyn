@@ -2,7 +2,6 @@ package brooklyn.entity.basic;
 
 import groovy.time.TimeDuration;
 
-import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -23,7 +22,6 @@ import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
-import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.Machines;
 import brooklyn.util.collections.MutableMap;
@@ -35,7 +33,6 @@ import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -232,7 +229,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
     
     public void waitForServiceUp() {
-        Integer timeout = getConfig(ConfigKeys.START_TIMEOUT);
+        Integer timeout = getConfig(BrooklynConfigKeys.START_TIMEOUT);
         waitForServiceUp(timeout, TimeUnit.SECONDS);
     }
     public void waitForServiceUp(Duration duration) {

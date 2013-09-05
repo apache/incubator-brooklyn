@@ -4,6 +4,7 @@
 package brooklyn.entity.nosql.cassandra;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
@@ -69,9 +70,14 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
     AttributeSensor<Long> WRITE_PENDING = Sensors.newLongSensor("cassandra.write.pending", "Current pending MutationStage tasks");
     AttributeSensor<Integer> WRITE_ACTIVE = Sensors.newIntegerSensor("cassandra.write.active", "Current active MutationStage tasks");
     AttributeSensor<Long> WRITE_COMPLETED = Sensors.newLongSensor("cassandra.write.completed", "Total completed MutationStage tasks");
+    
+    AttributeSensor<Boolean> SERVICE_UP_JMX = Sensors.newBooleanSensor("cassandra.service.jmx.up", "Whether JMX is up for this service");
+    AttributeSensor<Long> THRIFT_PORT_LATENCY = Sensors.newLongSensor("cassandra.thrift.latency", "Latency for thrift port connection (ms) or -1 if down");
 
     ConfigKey<String> INITIAL_SEEDS = ConfigKeys.newStringConfigKey("cassandra.cluster.seeds.initial", "List of cluster nodes to seed this node");
 
+    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.START_TIMEOUT, 3*60);
+    
     /* Accessors used from template */
     
     Integer getGossipPort();

@@ -16,7 +16,8 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * A cluster of {@link CassandraNode}s based on {@link DynamicCluster} which can be resized by a policy if required.
  * <p>
- * Note that due to how Cassandra assumes ports are the same across a cluster, it is NOT possible to deploy a cluster to localhost.
+ * Note that due to how Cassandra assumes ports are the same across a cluster, 
+ * it is NOT possible to deploy a cluster to localhost.
  * <p>
  *
  * TODO add sensors with aggregated Cassandra statistics from cluster
@@ -33,6 +34,8 @@ public interface CassandraCluster extends DynamicCluster {
     AttributeSensor<String> HOSTNAME = Sensors.newStringSensor("cassandra.cluster.hostname", "Hostname to connect to cluster with");
 
     AttributeSensor<Integer> THRIFT_PORT = Sensors.newIntegerSensor("cassandra.cluster.thrift.port", "Cassandra Thrift RPC port to connect to cluster with");
+    
+    AttributeSensor<Long> FIRST_NODE_STARTED_TIME_UTC = Sensors.newLongSensor("cassandra.cluster.first.node.started.utc", "Time (UTC) when the first node was started");
 
     MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraCluster.class, "update");
 
