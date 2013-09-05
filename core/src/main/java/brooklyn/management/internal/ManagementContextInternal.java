@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -41,4 +42,6 @@ public interface ManagementContextInternal extends ManagementContext {
     <T> Task<T> invokeEffector(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters);
 
     BrooklynStorage getStorage();
+    
+    BrooklynProperties getBrooklynProperties();
 }

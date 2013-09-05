@@ -331,7 +331,10 @@ public class BrooklynLauncher {
                 brooklynProperties = builder.build();
             }
             managementContext = new LocalManagementContext(brooklynProperties);
+        } else if (brooklynProperties == null) {
+            brooklynProperties = ((ManagementContextInternal)managementContext).getBrooklynProperties();
         }
+        
         for (Map.Entry<String, Object> entry : brooklynAdditionalProperties.entrySet()) {
             brooklynProperties.put(entry.getKey(), entry.getValue());
         }

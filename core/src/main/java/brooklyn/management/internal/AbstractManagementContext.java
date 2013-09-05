@@ -275,12 +275,19 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     protected abstract <T> Task<T> runAtEntity(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters);
 
+    @Override
     public abstract void addEntitySetListener(CollectionChangeListener<Entity> listener);
 
+    @Override
     public abstract void removeEntitySetListener(CollectionChangeListener<Entity> listener);
     
     @Override
     public StringConfigMap getConfig() {
+        return configMap;
+    }
+
+    @Override
+    public BrooklynProperties getBrooklynProperties() {
         return configMap;
     }
 
