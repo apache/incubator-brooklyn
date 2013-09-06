@@ -1,7 +1,6 @@
 package brooklyn.entity.group;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +30,7 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     @SetFromFlag
     private Set<Sensor<?>> sensorsToTrack;
     
-    public AbstractMembershipTrackingPolicy(Map flags) {
+    public AbstractMembershipTrackingPolicy(Map<?,?> flags) {
         super(flags);
         if (sensorsToTrack == null)  sensorsToTrack = Sets.newLinkedHashSet();
     }

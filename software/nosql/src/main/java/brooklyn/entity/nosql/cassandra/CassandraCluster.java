@@ -12,6 +12,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
 
 /**
  * A cluster of {@link CassandraNode}s based on {@link DynamicCluster} which can be resized by a policy if required.
@@ -36,9 +37,25 @@ public interface CassandraCluster extends DynamicCluster {
     AttributeSensor<Integer> THRIFT_PORT = Sensors.newIntegerSensor("cassandra.cluster.thrift.port", "Cassandra Thrift RPC port to connect to cluster with");
     
     AttributeSensor<Long> FIRST_NODE_STARTED_TIME_UTC = Sensors.newLongSensor("cassandra.cluster.first.node.started.utc", "Time (UTC) when the first node was started");
+    
+    AttributeSensor<Integer> SCHEMA_VERSION_COUNT = Sensors.newIntegerSensor("cassandra.cluster.schema.versions.count", 
+            "Number of different schema versions in the cluster; should be 1 for a healthy cluster, 0 when off; " +
+            ">=2 indicats a Schema Disagreement Error (and keyspace access may fail)");
 
     MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraCluster.class, "update");
 
+    /** sets the number of nodes used to seed the cluster;
+     *  currently more than 1 causes consistency problems on cluster start.
+     *  see http://stackoverflow.com/questions/6770894/schemadisagreementexception/18639005
+     *  and post to cassandra mailing list.  (Alex, 6 Sept 2013)
+     */
+    public static final int DEFAULT_SEED_QUORUM = 1;
+    /** can insert a delay after the first node comes up 
+     * (does not seem to make much difference to consistency behaviour above, AFAICT) */
+    public static final Duration DELAY_AFTER_FIRST =
+            Duration.ZERO;
+//            Duration.THIRTY_SECONDS;
+    
     /**
      * The name of the cluster.
      */

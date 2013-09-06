@@ -183,7 +183,7 @@ public class CatalogClasspathDo {
             } else {
                 throw new IllegalStateException("Unsupported catalog scan mode "+scanMode+" for "+this);
             }
-            log.info("Catalog '"+catalog.dto.name+"' classpath scan completed: loaded "+
+            log.debug("Catalog '"+catalog.dto.name+"' classpath scan completed: loaded "+
                     count+" item"+Strings.s(count)+" ("+countApps+" app"+Strings.s(countApps)+") in "+Time.makeTimeStringRounded(timer));
         }
         

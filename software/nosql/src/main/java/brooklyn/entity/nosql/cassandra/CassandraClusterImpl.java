@@ -6,26 +6,24 @@ package brooklyn.entity.nosql.cassandra;
 import java.util.Collection;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -34,9 +32,9 @@ import com.google.common.collect.Lists;
  * <p>
  * Serveral subtleties to note:
  * - a node may take some time after it is running and serving JMX to actually be contactable on its thrift port
- * - sometimes (I think if nodes are started very near in time to each other in time, with >=2 seeds)
- *   the subsequent node does not successfully peer with the first; have not explored why
- * - when subsequent node is part of seed group, even if started late, it can take 1m to get a consistent schema 
+ *   (so we wait for thrift port to be contactable)
+ * - sometimes new nodes take a while to peer, and/or take a while to get a consistent schema
+ *   (each up to 1m; often very close to the 1m) 
  */
 public class CassandraClusterImpl extends DynamicClusterImpl implements CassandraCluster {
 
@@ -46,6 +44,8 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     private final Object mutex = new Object[0];
 
     private AbstractMembershipTrackingPolicy policy;
+
+    private SshFeed sshFeed;
 
     public CassandraClusterImpl() {
     }
@@ -69,30 +69,8 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
                         return;
                 }
                 // node was removed, or added when we are not yet quorate; in either case let's find the seeds
-                
-                Iterable<Entity> members = getMembers();
-                List<String> availableHostnames = Lists.newArrayList();
-                for (Entity node : members) {
-                    Optional<String> hostname = Machines.findSubnetOrPublicHostname(node);
-                    if (hostname.isPresent()) {
-                        availableHostnames.add(hostname.get());
-                    }
-                }
-                
-                if (!availableHostnames.isEmpty()) {
-                    int quorumSize = getQuorumSize();
-                    if (availableHostnames.size()>=quorumSize) {
-                        while (availableHostnames.size()>quorumSize)
-                            availableHostnames.remove(availableHostnames.size()-1);
-                        setAttribute(CURRENT_SEEDS, Joiner.on(",").join(availableHostnames));
-                        return;
-                    }
-                }
-                
-                // not quorate
-                setAttribute(CURRENT_SEEDS, null);
+                setAttribute(CURRENT_SEEDS, gatherSeeds());
             }
-
         });
     }
     
@@ -101,8 +79,28 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         if (quorumSize!=null && quorumSize>0)
             return quorumSize;
         // default 2 is recommended, unless initial size is smaller
-        // trying 1 to see if this helps subsequent node to get agreeing schemas sooner
-        return Math.min(getConfig(INITIAL_SIZE), 1);
+        return Math.min(getConfig(INITIAL_SIZE), DEFAULT_SEED_QUORUM);
+    }
+
+    protected String gatherSeeds() {
+        Iterable<Entity> members = getMembers();
+        List<String> availableHostnames = Lists.newArrayList();
+        for (Entity node : members) {
+            Optional<String> hostname = Machines.findSubnetOrPublicHostname(node);
+            if (hostname.isPresent()) {
+                availableHostnames.add(hostname.get());
+            }
+        }
+        
+        if (!availableHostnames.isEmpty()) {
+            int quorumSize = getQuorumSize();
+            if (availableHostnames.size()>=quorumSize) {
+                return Joiner.on(",").join(Iterables.limit(availableHostnames, quorumSize));
+            }
+        }
+        
+        // not quorate
+        return null;
     }
 
     /**
@@ -122,8 +120,23 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     public void start(Collection<? extends Location> locations) {
         Machines.warnIfLocalhost(locations, "CassandraCluster does not support multiple nodes on localhost, " +
         		"due to assumptions Cassandra makes about the use of the same port numbers used across the cluster.");
+        
         super.start(locations);
 
+        connectSensors();
+
+        // TODO wait until all nodes which we think are up are consistent 
+        // i.e. all known nodes use the same schema, as reported by
+        // SshEffectorTasks.ssh("echo \"describe cluster;\" | /bin/cassandra-cli");
+        // once we've done that we can revert to using 2 seed nodes.
+        // see CassandraCluster.DEFAULT_SEED_QUORUM
+
+        update();
+    }
+
+    protected void connectSensors() {
+        // track members
+        
         policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Cassandra Cluster Tracker")) {
             @Override
             protected void onEntityChange(Entity member) {
@@ -143,53 +156,32 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         };
         addPolicy(policy);
         policy.setGroup(this);
-
-        setAttribute(Startable.SERVICE_UP, calculateServiceUp());
     }
-
-    // handled instead by using quorum size as seeds (more efficient, and the code below didn't work anyways)
-//    @Override
-//    protected Collection<Entity> grow(int delta) {
-//        if (getMembers().isEmpty() && delta>1) {
-//            // can get intermittent SchemaDisagreementErrors otherwise
-//            // more efficient would be to block on cassandra start (or even to ensure it is fixed in Cassandra);
-//            // http://stackoverflow.com/questions/6770894/schemadisagreementexception
-//            log.info("On initial creation of Cassandra cluster we are adding the first node before launching subsequent nodes");
-//            List<Entity> result = new ArrayList<Entity>();
-//            result.addAll(grow(1));
-//            result.addAll(grow(delta-1));
-//            return result;
-//        } else {
-//            return super.grow(delta);
-//        }
-//    }
     
     @Override
-    protected boolean calculateServiceUp() {
-        // TODO would be useful to have "n-up" semantics (policy?) available for groups ?
-        for (Entity member : getMembers()) {
-            if (Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) return true;
+    public void stop() {
+        disconnectSensors();
+        
+        super.stop();
+    }
+    
+    protected void disconnectSensors() {
+        if (sshFeed!=null && sshFeed.isActive()) {
+            sshFeed.stop();
+            sshFeed = null;
         }
-        return false;
     }
 
     @Override
     public void update() {
         synchronized (mutex) {
-            // Update the SERVICE_UP attribute
-            boolean up = calculateServiceUp();
-            setAttribute(SERVICE_UP, up);
+            // Choose the first available cluster member to set host and port (and compute one-up)
+            Optional<Entity> upNode = Iterables.tryFind(getMembers(), EntityPredicates.attributeEqualTo(SERVICE_UP, Boolean.TRUE));
+            setAttribute(SERVICE_UP, upNode.isPresent());
 
-            // Choose the first available cluster member to set host and port
-            if (up) {
-                CassandraNode node = (CassandraNode) Iterables.find(getMembers(), new Predicate<Entity>() {
-                    @Override
-                    public boolean apply(@Nullable Entity input) {
-                        return input.getAttribute(SERVICE_UP);
-                    }
-                });
-                setAttribute(HOSTNAME, node.getAttribute(Attributes.HOSTNAME));
-                setAttribute(THRIFT_PORT, node.getAttribute(CassandraNode.THRIFT_PORT));
+            if (upNode.isPresent()) {
+                setAttribute(HOSTNAME, upNode.get().getAttribute(Attributes.HOSTNAME));
+                setAttribute(THRIFT_PORT, upNode.get().getAttribute(CassandraNode.THRIFT_PORT));
             } else {
                 setAttribute(HOSTNAME, null);
                 setAttribute(THRIFT_PORT, null);

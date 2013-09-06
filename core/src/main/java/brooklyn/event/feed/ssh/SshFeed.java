@@ -22,6 +22,7 @@ import brooklyn.event.feed.Poller;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
@@ -87,6 +88,9 @@ public class SshFeed extends AbstractFeed {
         public Builder machine(SshMachineLocation val) {
             this.machine = val;
             return this;
+        }
+        public Builder period(Duration period) {
+            return period(period.toMilliseconds(), TimeUnit.MILLISECONDS);
         }
         public Builder period(long millis) {
             return period(millis, TimeUnit.MILLISECONDS);

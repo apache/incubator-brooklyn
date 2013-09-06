@@ -82,7 +82,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-cassandra-%s", getVersion()));
         
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .build();
@@ -114,9 +114,14 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         log.debug("Customizing {} (Cluster {})", entity, getClusterName());
         Networking.checkPortsValid(getPortMap());
         
-        if (entity.getConfig(CassandraNode.INITIAL_SEEDS)==null)
-            entity.setConfig(CassandraNode.INITIAL_SEEDS, 
+        if (entity.getConfig(CassandraNode.INITIAL_SEEDS)==null) {
+            if (isClustered()) {
+                entity.setConfig(CassandraNode.INITIAL_SEEDS, 
                     DependentConfiguration.attributeWhenReady(entity.getParent(), CassandraCluster.CURRENT_SEEDS));
+            } else {
+                entity.setConfig(CassandraNode.INITIAL_SEEDS, Machines.findSubnetOrPublicHostname(entity).get());
+            }
+        }
 
         String logFileEscaped = getLogFileLocation().replace("/", "\\/"); // escape slashes
 
@@ -137,6 +142,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
     }
 
+    protected boolean isClustered() {
+        return entity.getParent() instanceof CassandraCluster;
+    }
+
     @Override
     public void launch() {
         String subnetHostname = Machines.findSubnetOrPublicHostname(entity).get();
@@ -147,10 +156,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         		"hostname (subnet) " + subnetHostname + ", " +
         		"seeds "+seeds);
         boolean isFirst = seeds.startsWith(subnetHostname);
-        if (!isFirst) {
-            // if they start at the same time, they seem sometimes not to come up properly :( 
+        if (isClustered() && !isFirst) {
+            // optionally force a delay before starting subsequent nodes; see comment at CassandraCluster.DELAY_AFTER_FIRST
             long firstStartTime = Entities.submit(entity, DependentConfiguration.attributeWhenReady(getEntity().getParent(), CassandraCluster.FIRST_NODE_STARTED_TIME_UTC)).getUnchecked();
-            Duration toWait = Duration.millis(firstStartTime + Duration.THIRTY_SECONDS.toMilliseconds() -  System.currentTimeMillis());
+            Duration toWait = Duration.millis(firstStartTime + CassandraCluster.DELAY_AFTER_FIRST.toMilliseconds() -  System.currentTimeMillis());
             if (toWait.toMilliseconds()>0) {
                 log.info("Launching " + entity + ": delaying launch of non-first node by "+toWait+" to prevent schema disagreements");
                 Tasks.setBlockingDetails("Pausing to ensure first node has time to start");
@@ -161,10 +170,11 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
                 .body.append(
                         // log the date to attempt to debug occasional http://wiki.apache.org/cassandra/FAQ#schema_disagreement
-                        "echo date on cassandra server `hostname` is `date`",
+                        // (can be caused by machines out of synch time-wise; but in our case it seems to be caused by other things!)
+                        "echo date on cassandra server `hostname` when launching is `date`",
                         String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
                 .execute();
-        if (isFirst) {
+        if (isClustered() && isFirst) {
             ((EntityLocal)getEntity().getParent()).setAttribute(CassandraCluster.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
         }
     }
