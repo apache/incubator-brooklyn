@@ -39,6 +39,7 @@ public class KnifeTaskFactory<RET> extends SystemProcessTaskFactory<KnifeTaskFac
     protected String knifeExecutable;
     protected List<String> knifeParameters = new ArrayList<String>();
     protected String knifeConfigFile;
+    protected String knifeSetupCommands;
     protected Boolean throwOnCommonKnifeErrors;
     
     public KnifeTaskFactory(String taskName) {
@@ -96,6 +97,9 @@ public class KnifeTaskFactory<RET> extends SystemProcessTaskFactory<KnifeTaskFac
     @Override
     public List<String> getCommands() {
         MutableList<String> result = new MutableList<String>();
+        String setupCommands = knifeSetupCommands();
+        if (setupCommands != null && Strings.isNonBlank(setupCommands))
+            result.add(setupCommands);
         int numKnifes = 0;
         for (String c: super.getCommands()) {
             if (c==KNIFE_PLACEHOLDER)
@@ -172,9 +176,25 @@ public class KnifeTaskFactory<RET> extends SystemProcessTaskFactory<KnifeTaskFac
     @Nullable
     protected String knifeConfigFileOption() {
         if (knifeConfigFile!=null) return "-c "+knifeConfigFile;
-        
+
         String knifeConfigFileFromConfig = entityConfig(ChefConfig.KNIFE_CONFIG_FILE);
         if (knifeConfigFileFromConfig!=null) return "-c "+BashStringEscapes.wrapBash(knifeConfigFileFromConfig);
+
+        // if not supplied will use global config
+        return null;
+    }
+
+    public KnifeTaskFactory<RET> knifeSetupCommands(String knifeSetupCommands) {
+        this.knifeSetupCommands = knifeSetupCommands;
+        return self();
+    }
+    
+    @Nullable
+    protected String knifeSetupCommands() {
+        if (knifeSetupCommands!=null) return knifeSetupCommands;
+        
+        String knifeSetupCommandsFromConfig = entityConfig(ChefConfig.KNIFE_SETUP_COMMANDS);
+        if (knifeSetupCommandsFromConfig!=null) return knifeSetupCommandsFromConfig;
         
         // if not supplied will use global config
         return null;
