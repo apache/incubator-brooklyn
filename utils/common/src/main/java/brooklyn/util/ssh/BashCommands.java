@@ -193,12 +193,12 @@ public class BashCommands {
      * to ensure exits are propagated. */
     public static String chainGroup(Collection<String> commands) {
         // spaces required around curly braces
-        return format("{ " + Strings.join(commands, " && ") + " ; }");
+        return "{ " + Strings.join(commands, " && ") + " ; }";
     }
 
     /** As {@link #chainGroup(Collection)} */
     public static String chainGroup(String ...commands) {
-        return format("{ " + Strings.join(commands, " && ") + " ; }");
+        return "{ " + Strings.join(commands, " && ") + " ; }";
     }
 
     /** As {@link #chain(Collection)}, but explicitly using ( ) grouping characters
@@ -206,19 +206,19 @@ public class BashCommands {
     public static String chainSubshell(Collection<String> commands) {
         // the spaces are not required, but it might be possible that a (( expr )) is interpreted differently
         // (won't hurt to have the spaces in any case!) 
-        return format("( " + Strings.join(commands, " && ") + " )");
+        return "( " + Strings.join(commands, " && ") + " )";
     }
 
     /** As {@link #chainSubshell(Collection)} */
     public static String chainSubshell(String ...commands) {
-        return format("( " + Strings.join(commands, " && ") + "  )");
+        return "( " + Strings.join(commands, " && ") + "  )";
     }
 
     /**
      * Returns a sequence of alternative commands that runs until one of the commands succeeds;
      * or if none succeed, it will run the failure command.
      * @deprecated since 0.6.0; this method just treats the failure command as another alternative so hardly seems worth it; 
-     * prefer {@link #alternatives(Collection)} or  
+     * prefer {@link #alternatives(Collection)}
      */ @Deprecated
     public static String alternatives(Collection<String> commands, String failureCommand) {
         return format("(%s || %s)", Strings.join(commands, " || "), failureCommand);
@@ -230,24 +230,24 @@ public class BashCommands {
      * (Use {@link #alternativesGroup(Collection)} or {@link #alternativesSubshell(Collection)} to be clear.)
      */
     public static String alternatives(Collection<String> commands) {
-        return format("( " + Strings.join(commands, " || ") + " )");
+        return "( " + Strings.join(commands, " || ") + " )";
     }
 
     /** As {@link #alternatives(Collection)} */
     public static String alternatives(String ...commands) {
-        return format("( " + Strings.join(commands, " || ") + " )");
+        return "( " + Strings.join(commands, " || ") + " )";
     }
 
     /** As {@link #alternatives(Collection)}, but explicitly using { } grouping characters
      * to ensure exits are propagated. */
     public static String alternativesGroup(Collection<String> commands) {
         // spaces required around curly braces
-        return format("{ " + Strings.join(commands, " || ") + " ; }");
+        return "{ " + Strings.join(commands, " || ") + " ; }";
     }
 
     /** As {@link #alternativesGroup(Collection)} */
     public static String alternativesGroup(String ...commands) {
-        return format("{ " + Strings.join(commands, " || ") + " ; }");
+        return "{ " + Strings.join(commands, " || ") + " ; }";
     }
 
     /** As {@link #alternatives(Collection)}, but explicitly using ( ) grouping characters
@@ -255,12 +255,12 @@ public class BashCommands {
     public static String alternativesSubshell(Collection<String> commands) {
         // the spaces are not required, but it might be possible that a (( expr )) is interpreted differently
         // (won't hurt to have the spaces in any case!) 
-        return format("( " + Strings.join(commands, " || ") + " )");
+        return "( " + Strings.join(commands, " || ") + " )";
     }
 
     /** As {@link #alternativesSubshell(Collection)} */
     public static String alternativesSubshell(String ...commands) {
-        return format("( " + Strings.join(commands, " || ") + "  )");
+        return "( " + Strings.join(commands, " || ") + "  )";
     }
 
     /** returns the pattern formatted with the given arg if the arg is not null, otherwise returns null */
@@ -271,37 +271,47 @@ public class BashCommands {
     
     /**
      * Returns a command for installing the given package.
+     * <p>
      * Warns, but does not fail or return non-zero if it ultimately fails.
-     * <p/>
-     * Flags can contain common overrides for deb, apt, yum, rpm and port
-     * as the package names can be different for each of those:
+     * <p>
+     * Flags can contain common overrides for {@code apt}, {@code yum}, {@code port} and {@code brew}
+     * as the package names can be different for each of those. Setting the default package name to
+     * {@literal null} will use only the overridden package manager values. The {@code onlyifmissing} flag
+     * adds a check for an executable, and only attempts to install packages if it is not found.
      * <pre>
-     * installPackage("libssl-devel", yum:"openssl-devel", apt:"openssl libssl-dev zlib1g-dev")
+     * installPackage(ImmutableMap.of("yum", "openssl-devel", "apt", "openssl libssl-dev zlib1g-dev"), "libssl-devel");
+     * installPackage(ImmutableMap.of("apt", "libaio1"), null);
+     * installPackage(ImmutableMap.of("onlyifmissing", "curl"), "curl");
      * </pre>
      */
     // TODO other variants, which fail if it can't install, or return non-zero (so callers can wrap in "ok" if it's not required)
     public static String installPackage(Map<?,?> flags, String packageDefaultName) {
-        String ifmissing = (String) flags.get("onlyifmissing");
-        
+        String ifMissing = (String) flags.get("onlyifmissing");
+
         String aptInstall = formatIfNotNull("apt-get install -y --allow-unauthenticated %s", getFlag(flags, "apt", packageDefaultName));
         String yumInstall = formatIfNotNull("yum -y --nogpgcheck install %s", getFlag(flags, "yum", packageDefaultName));
         String brewInstall = formatIfNotNull("brew install %s", getFlag(flags, "brew", packageDefaultName));
         String portInstall = formatIfNotNull("port install %s", getFlag(flags, "port", packageDefaultName));
-        
+
         List<String> commands = new LinkedList<String>();
-        if (ifmissing != null) commands.add(format("which %s", ifmissing));
-        commands.add(ifExecutableElse1("apt-get",
-                chainGroup(
-                "echo apt-get exists, doing update",
-                "export DEBIAN_FRONTEND=noninteractive",
-                sudo("apt-get update"), 
-                sudo(aptInstall))));
-        commands.add(ifExecutableElse1("yum", sudo(yumInstall)));
-        commands.add(ifExecutableElse1("brew", brewInstall));
-        commands.add(ifExecutableElse1("port", sudo(portInstall)));
-        
+        if (ifMissing != null)
+            commands.add(format("which %s", ifMissing));
+        if (aptInstall != null)
+            commands.add(ifExecutableElse1("apt-get",
+                    chainGroup(
+                        "echo apt-get exists, doing update",
+                        "export DEBIAN_FRONTEND=noninteractive",
+                        sudo("apt-get update"), 
+                        sudo(aptInstall))));
+        if (yumInstall != null)
+            commands.add(ifExecutableElse1("yum", sudo(yumInstall)));
+        if (brewInstall != null)
+            commands.add(ifExecutableElse1("brew", brewInstall));
+        if (portInstall != null)
+            commands.add(ifExecutableElse1("port", sudo(portInstall)));
+
         commands.add(warn("WARNING: no known/successful package manager to install " +
-                (packageDefaultName!=null ? packageDefaultName : flags.toString()) +
+                (packageDefaultName != null ? packageDefaultName : flags.toString()) +
                 ", may fail subsequently"));
         return alternatives(commands);
     }
