@@ -251,7 +251,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     public String getUser() {
         if (!truth(user)) {
-            return System.getProperty("user.name");
+            if (hasConfig(SshTool.PROP_USER, false)) {
+                LOG.warn("User configuration for "+this+" set after deployment; discouraged");
+            }
+            return getConfig(SshTool.PROP_USER);
         }
         return user;
     }
@@ -348,6 +351,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 args.putStringKey(key, entry.getValue());
             }
             if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
+            if (!user.equals(args.get(SshTool.PROP_USER))) {
+                LOG.warn("User mismatch configuring ssh for "+this+": preferring user "+args.get(SshTool.PROP_USER)+" over "+user);
+                user = args.get(SshTool.PROP_USER);
+            }
             
             // look up tool class
             String sshToolClass = args.get(SshTool.PROP_TOOL_CLASS);
