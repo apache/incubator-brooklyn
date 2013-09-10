@@ -26,6 +26,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class SingleMachineProvisioningLocationJcloudsTest {
@@ -99,8 +100,8 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
         
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         String expectedName = System.getProperty("user.name");
-        Map<?, ?> flags = ImmutableMap.of("out", outStream);
-        m2.run(flags, "whoami; exit");
+        Map<String, ?> flags = ImmutableMap.of("out", outStream);
+        m2.execScript(flags, "test", ImmutableList.of("whoami; exit"));
         String outString = new String(outStream.toByteArray());
 
         assertTrue(outString.contains(expectedName), outString);
@@ -129,8 +130,8 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
         
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         String expectedName = System.getProperty("user.name");
-        Map<?, ?> flags = ImmutableMap.of("out", outStream);
-        m2.run(flags, "whoami; exit");
+        Map<String, ?> flags = ImmutableMap.of("out", outStream);
+        m2.execScript(flags, "test", ImmutableList.of("whoami; exit"));
         String outString = new String(outStream.toByteArray());
 
         assertTrue(outString.contains(expectedName), outString);

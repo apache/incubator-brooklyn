@@ -40,10 +40,12 @@ public interface LocationRegistry {
     public Location resolve(String spec);
     
     /** Returns true/false depending whether spec seems like a valid location,
-     * that is it has a chance of being resolve (depending on the spec) */
+     * that is it has a chance of being resolved (depending on the spec) but NOT guaranteed;
+     * see {@link #resolveIfPossible(String)} which has stronger guarantees */
     public boolean canMaybeResolve(String spec);
     
-    /** @deprecated since 0.6.0, @see #canPossiblyResolve(String) as a "true" here does not mean it can actually resolve it */
+    /** @deprecated since 0.6.0, @see {@link #resolveIfPossible(String)} and 
+     * #canMaybeResolve(String) as a "true" here does not mean it can actually resolve it */
     @Deprecated
     public boolean canResolve(String spec);
     
@@ -52,7 +54,7 @@ public interface LocationRegistry {
      * @throws NoSuchElementException if the spec cannot be resolved */
     public Location resolve(String spec, Map locationFlags);
     
-    /** as {@link #resolve(String)} but returning null */
+    /** as {@link #resolve(String)} but returning null (never throwing) */
     public Location resolveIfPossible(String spec);
 
     /**

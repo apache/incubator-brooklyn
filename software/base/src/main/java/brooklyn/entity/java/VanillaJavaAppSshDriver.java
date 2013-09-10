@@ -10,6 +10,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
+
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -76,11 +78,11 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
             destName = destName.substring(destName.lastIndexOf('/') + 1);
 
             if (destName.toLowerCase().endsWith(".zip")) {
-                result = machine.run(format("cd %s/lib && unzip %s",getRunDir(),destName));
+                result = machine.execCommands("unzipping", ImmutableList.of(format("cd %s/lib && unzip %s",getRunDir(),destName)));
             } else if (destName.toLowerCase().endsWith(".tgz") || destName.toLowerCase().endsWith(".tar.gz")) {
-                result = machine.run(format("cd %s/lib && tar xvfz %s",getRunDir(),destName));
+                result = machine.execCommands("untarring gz", ImmutableList.of(format("cd %s/lib && tar xvfz %s",getRunDir(),destName)));
             } else if (destName.toLowerCase().endsWith(".tar")) {
-                result = machine.run(format("cd %s/lib && tar xvfz %s",getRunDir(),destName));
+                result = machine.execCommands("untarring", ImmutableList.of(format("cd %s/lib && tar xvfz %s",getRunDir(),destName)));
             }
             if (result != 0)
                 throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s (failed to expand archive)",f,entity,machine));

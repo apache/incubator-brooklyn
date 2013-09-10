@@ -220,7 +220,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
                 
                 ssh.copyTo(new StringReader(hadoopProxyForeverContent), "/tmp/hadoop-proxy-forever.sh");
                   
-                ssh.run("chmod 600 /tmp/hadoop-proxy-private-key ; chmod +x /tmp/hadoop-proxy-forever.sh ; nohup /tmp/hadoop-proxy-forever.sh &");
+                ssh.execCommands("chmod", ImmutableList.of("chmod 600 /tmp/hadoop-proxy-private-key ; chmod +x /tmp/hadoop-proxy-forever.sh ; nohup /tmp/hadoop-proxy-forever.sh &"));
 
                 URI updateConfigUri = new URI(e.getAttribute(JBoss7Server.ROOT_URL)+
                         "configure.jsp?key=brooklyn.example.hadoop.site.xml.url&value=file:///tmp/hadoop-site.xml");

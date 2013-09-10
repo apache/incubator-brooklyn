@@ -26,6 +26,7 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
@@ -199,7 +200,8 @@ public class SshFeed extends AbstractFeed {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
-        int exitStatus = machine.run(MutableMap.of("out", stdout, "err", stderr), command, env);
+        int exitStatus = machine.execScript(MutableMap.<String,Object>of("out", stdout, "err", stderr), 
+                "ssh-feed", ImmutableList.of(command), env);
 
         return new SshPollValue(machine, exitStatus, new String(stdout.toByteArray()), new String(stderr.toByteArray()));
     }

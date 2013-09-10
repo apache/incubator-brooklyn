@@ -15,11 +15,14 @@ import java.io.PipedOutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.security.KeyPair;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -253,35 +256,41 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return user;
     }
     
-    public int getPort() {
+    /** port for SSHing */
+    @Nonnull public int getPort() {
         return getConfig(SshTool.PROP_PORT);
     }
     
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(String command) {
         return run(MutableMap.of(), command, MutableMap.of());
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(Map props, String command) {
         return run(props, command, MutableMap.of());
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(String command, Map env) {
         return run(MutableMap.of(), command, env);
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(Map props, String command, Map env) {
         return run(props, ImmutableList.of(command), env);
     }
 
-    /**
-     * @deprecated in 1.4.1, @see execCommand and execScript
-     */
+    /** @deprecated in 1.4.1 (? - 0.4.1 ?, definitely by 0.6.0), @see execCommand and execScript */
     public int run(List<String> commands) {
         return run(MutableMap.of(), commands, MutableMap.of());
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(Map props, List<String> commands) {
         return run(props, commands, MutableMap.of());
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(List<String> commands, Map env) {
         return run(MutableMap.of(), commands, env);
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(final Map props, final List<String> commands, final Map env) {
         if (commands == null || commands.isEmpty()) return 0;
         return execSsh(props, new Function<ShellTool, Integer>() {
@@ -623,7 +632,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public boolean isSshable() {
         String cmd = "date";
         try {
-            int result = run(cmd);
+            try {
+                Socket s = new Socket(getAddress(), getPort());
+                s.close();
+            } catch (IOException e) {
+                if (LOG.isDebugEnabled()) LOG.debug(""+this+" not [yet] reachable (socket "+getAddress()+":"+getPort()+"): "+e);
+                return false;
+            }
+            // this should do execCommands because sftp subsystem might not be available (or sometimes seems to take a while for it to become so?)
+            int result = execCommands(MutableMap.<String,Object>of(), "isSshable", ImmutableList.of(cmd));
             if (result == 0) {
                 return true;
             } else {
