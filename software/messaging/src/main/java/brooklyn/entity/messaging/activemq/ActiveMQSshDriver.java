@@ -131,9 +131,10 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
 
     @Override
     public void launch() {
+        // Using nohup, as recommended at http://activemq.apache.org/run-broker.html
         newScript(ImmutableMap.of("usePidFile", false), LAUNCHING).
                 body.append(
-                "./bin/activemq start; sleep 10s; ps -ef; cat data/*; true"
+                "nohup ./bin/activemq start > ./data/activemq-extra.log 2>&1 &"
                 ).execute();
     }
 
