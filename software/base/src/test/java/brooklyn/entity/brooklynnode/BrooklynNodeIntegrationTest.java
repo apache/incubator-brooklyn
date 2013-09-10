@@ -81,7 +81,7 @@ public class BrooklynNodeIntegrationTest {
     public void testCanStartAndStopWithoutAuthentication() throws Exception {
         BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
                 .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, true)
-                .configure(BrooklynNode.MANAGEMENT_USER, null));
+                .configure(BrooklynNode.MANAGEMENT_USER, (String)null));
         app.start(locs);
 
         EntityTestUtils.assertAttributeEqualsEventually(brooklynNode, BrooklynNode.SERVICE_UP, true);
