@@ -65,11 +65,10 @@
             <releases> <enabled>false</enabled> </releases>
             <snapshots> <enabled>true</enabled> </snapshots>
         </repository>
-        <!-- Hazelcast snapshot repo, can be removed as soon as Hazelcast 3 is released-->
         <repository>
-            <id>snapshot-repository</id>
-            <name>Maven2 Snapshot Repository</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>cloudsoft-releases</id>
+            <name>Cloudsoft Repository</name>
+            <url>http://developers.cloudsoftcorp.com/maven/releases</url>
         </repository>
     </repositories>
 

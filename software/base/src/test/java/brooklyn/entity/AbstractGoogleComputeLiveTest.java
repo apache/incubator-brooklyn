@@ -1,5 +1,12 @@
 package brooklyn.entity;
 
+import java.util.List;
+import java.util.Map;
+
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
@@ -8,26 +15,17 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import java.util.Map;
 
 /**
  * Runs a test with many different distros and versions.
  */
 public abstract class AbstractGoogleComputeLiveTest {
     
-    // FIXME Currently have just focused on test_Debian_6; need to test the others as well!
-
-    // TODO No nice fedora VMs
-    
-    // TODO Instead of this sub-classing approach, we could use testng's "provides" mechanism
-    // to say what combo of provider/region/flags should be used. The problem with that is the
-    // IDE integration: one can't just select a single test to run.
+    // TODO See todos in AbstractEc2LiveTest
     
     public static final String PROVIDER = "google-compute-engine";
     public static final String REGION_NAME = null;//"us-central1";
@@ -43,13 +41,18 @@ public abstract class AbstractGoogleComputeLiveTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        // Don't let any defaults from brooklyn.properties (except credentials) interfere with test
+        List<String> propsToRemove = ImmutableList.of("imageId", "imageDescriptionRegex", "imageNameRegex", "inboundPorts", "hardwareId", "minRam");
+        
+     // Don't let any defaults from brooklyn.properties (except credentials) interfere with test
         brooklynProperties = BrooklynProperties.Factory.newDefault();
-        brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".image-description-regex");
-        brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".image-name-regex");
-        brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".image-id");
-        brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".inboundPorts");
-        brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".hardware-id");
+        for (String propToRemove : propsToRemove) {
+            for (String propVariant : ImmutableList.of(propToRemove, CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_HYPHEN, propToRemove))) {
+                brooklynProperties.remove("brooklyn.locations.jclouds."+PROVIDER+"."+propVariant);
+                brooklynProperties.remove("brooklyn.locations."+propVariant);
+                brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+"."+propVariant);
+                brooklynProperties.remove("brooklyn.jclouds."+propVariant);
+            }
+        }
 
         // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
         brooklynProperties.remove("brooklyn.ssh.config.scriptHeader");
