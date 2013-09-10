@@ -8,11 +8,5 @@ import brooklyn.entity.basic.SoftwareProcessDriver;
 public interface JavaSoftwareProcessDriver extends SoftwareProcessDriver {
 
     public boolean isJmxEnabled();
-    
-    Integer getJmxPort();
-
-    Integer getRmiPort();
-
-    String getJmxContext();
-    
+        
 }

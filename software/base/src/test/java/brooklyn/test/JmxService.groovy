@@ -43,6 +43,7 @@ class JmxService {
         this("localhost", 28000 + Math.floor(new Random().nextDouble() * 1000));
         logger.warn("use of deprecated default host and port in JmxService");
     }
+    /** @deprecated since 0.6.0; either needs abandoning, or updating to support JmxSupport (and JmxmpAgent, etc) */
     public JmxService(Entity e) {
         this(e.getAttribute(Attributes.HOSTNAME)?:"localhost", e.getAttribute(Attributes.JMX_PORT)?:null);
     }
@@ -51,7 +52,7 @@ class JmxService {
         this.jmxHost = jmxHost;
         Preconditions.checkNotNull(jmxPort, "JMX_PORT must be set when starting JmxService"); 
         this.jmxPort = jmxPort;
-        url = JmxHelper.toConnectorUrl(jmxHost, jmxPort, null, "jmxrmi")
+        url = JmxHelper.toConnectorUrl(jmxHost, jmxPort, jmxPort, "jmxrmi")
 
         JMXServiceURL address = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + jmxHost + ":" + jmxPort + "/jmxrmi");
         connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(address, null, null)

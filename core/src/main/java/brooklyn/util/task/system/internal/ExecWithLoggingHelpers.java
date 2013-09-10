@@ -16,6 +16,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
@@ -64,11 +65,14 @@ public abstract class ExecWithLoggingHelpers {
 
     @SuppressWarnings("resource")
     public int execWithLogging(Map<String,?> props, final String summaryForLogging, final List<String> commands, final Map<String,?> env, final ExecRunner execCommand) {
-        if (commandLogger!=null && commandLogger.isDebugEnabled()) commandLogger.debug("{}, initiating "+shortName.toLowerCase()+" on machine {}: {}", new Object[] {summaryForLogging, this, commands});
+        if (commandLogger!=null && commandLogger.isDebugEnabled()) {
+            commandLogger.debug("{}, initiating "+shortName.toLowerCase()+" on machine {}{}: {}", new Object[] {summaryForLogging, getTargetName(), 
+                env!=null && !env.isEmpty() ? " (env "+env+")": "", Strings.join(commands, " ; ")});
+        }
 
         if (commands.isEmpty()) {
             if (commandLogger!=null && commandLogger.isDebugEnabled())
-                commandLogger.debug("{}, on machine {} ,ending: no commands to run", summaryForLogging, this);
+                commandLogger.debug("{}, on machine {}, ending: no commands to run", summaryForLogging, getTargetName());
             return 0;
         }
 
@@ -144,6 +148,7 @@ public abstract class ExecWithLoggingHelpers {
     }
 
     protected abstract void preExecChecks();
+    protected abstract String getTargetName();
     protected abstract String constructDefaultLoggingPrefix(ConfigBag execFlags);
     
 }

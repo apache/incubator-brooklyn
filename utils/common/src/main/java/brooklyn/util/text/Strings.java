@@ -9,6 +9,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.CharMatcher;
@@ -599,6 +600,15 @@ public class Strings {
     /** returns "s" if the argument is not 1, empty string otherwise; useful when constructing plurals */
     public static String s(int count) {
         return count==1 ? "" : "s";
+    }
+
+    /** converts a map of any objects to a map of strings, preserving nulls and invoking toString where needed */
+    public static Map<String, String> toStringMap(Map<?,?> map) {
+        Map<String,String> result = MutableMap.<String, String>of();
+        for (Map.Entry<?,?> e: map.entrySet()) {
+            result.put(String.valueOf(e.getKey()), String.valueOf(e.getValue()));
+        }
+        return result;
     }
 
 }

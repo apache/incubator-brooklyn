@@ -2,7 +2,6 @@ package brooklyn.entity.basic;
 
 import groovy.time.TimeDuration;
 
-import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -17,19 +16,17 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
-import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
-import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.location.basic.Machines;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
@@ -232,7 +229,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
     
     public void waitForServiceUp() {
-        Integer timeout = getConfig(ConfigKeys.START_TIMEOUT);
+        Integer timeout = getConfig(BrooklynConfigKeys.START_TIMEOUT);
         waitForServiceUp(timeout, TimeUnit.SECONDS);
     }
     public void waitForServiceUp(Duration duration) {
@@ -320,20 +317,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         return ports;
     }
 
+    /** @deprecated since 0.6.0 use {@link Machines#findSubnetHostname(this)} */ @Deprecated
     public String getLocalHostname() {
-        Location where = Iterables.getFirst(getLocations(), null);
-	    String hostname = null;
-        if (where instanceof HasSubnetHostname) {
-            hostname = ((HasSubnetHostname) where).getSubnetHostname();
-        }
-        if (hostname == null && where instanceof MachineLocation) {
-            InetAddress addr = ((MachineLocation) where).getAddress();
-            if (addr != null) hostname = addr.getHostAddress();
-        }
-        log.debug("computed hostname {} for {}", hostname, this);
-        if (hostname == null)
-            throw new IllegalStateException("Cannot find hostname for "+this+" at location "+where);
-        return hostname;
+        return Machines.findSubnetHostname(this).get();
 	}
 
     void initDriver(MachineLocation machine) {

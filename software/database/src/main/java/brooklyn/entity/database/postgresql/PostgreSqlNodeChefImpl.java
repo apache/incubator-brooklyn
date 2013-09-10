@@ -29,8 +29,6 @@ import com.google.common.collect.Iterables;
 
 public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements PostgreSqlNode, SoftwareProcess {
 
-    private static final long serialVersionUID = -6172426032214683646L;
-
     private static final Logger LOG = LoggerFactory.getLogger(PostgreSqlNodeChefImpl.class);
 
     public static final Effector<String> EXECUTE_SCRIPT = Effectors.effector(String.class, "executeScript")

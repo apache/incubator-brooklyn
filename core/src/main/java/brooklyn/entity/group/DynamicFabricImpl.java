@@ -171,7 +171,8 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
             String displayName = "" + elvis(getDisplayNamePrefix(), "") + elvis(locationName, "unnamed") + elvis(getDisplayNameSuffix(),"");
             creation.put("displayName", displayName);
         }
-        logger.info("Creating and adding an entity to fabric {} in {} with properties {}", new Object[] {this, location, creation});
+        logger.info("Creating entity in fabric {} at {}{}", new Object[] {this, location, 
+                (creation!=null && !creation.isEmpty() ? ", properties "+creation : "") });
 
         Entity entity = createCluster(location, creation);
         

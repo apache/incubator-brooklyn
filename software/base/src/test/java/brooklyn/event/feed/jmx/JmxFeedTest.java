@@ -4,7 +4,6 @@ import static brooklyn.test.TestUtils.executeUntilSucceeds;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +35,9 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.java.JmxSupport;
+import brooklyn.entity.java.UsesJmx;
+import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
@@ -44,7 +46,8 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.location.Location;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.GeneralisedDynamicMBean;
@@ -60,9 +63,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Test the operation of the {@link OldJmxSensorAdapter} class.
- * 
- * TODO clarify test purpose
+ * Test the operation of the {@link JmxFeed} class.
+ * <p>
+ * Also confirm some of the JMX setup done by {@link JmxSupport} and {@link JmxHelper},
+ * based on ports in {@link UsesJmx}.
+ * <p>
+ * TODO tests of other JMX_AGENT_MODE are done in ActiveMqIntegrationTest; 
+ * would be nice to promote some to live here
  */
 public class JmxFeedTest {
     
@@ -90,12 +97,14 @@ public class JmxFeedTest {
     private String opName = "myop";
     
     public static class TestEntityWithJmx extends TestEntityImpl {
-        @Override public void start(Collection<? extends Location> locs) {
-            super.start(locs);
+        @Override public void init() {
             setAttribute(Attributes.HOSTNAME, "localhost");
-            setAttribute(Attributes.JMX_PORT, 40123);
-            setAttribute(Attributes.RMI_SERVER_PORT, 40124);
-            ConfigToAttributes.apply(this, Attributes.JMX_CONTEXT);
+            setAttribute(UsesJmx.JMX_PORT, 
+                    LocalhostMachineProvisioningLocation.obtainPort(PortRanges.fromString("40123+")));
+            // only supports no-agent, at the moment
+            setConfig(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.NONE);
+            setAttribute(UsesJmx.RMI_REGISTRY_PORT, -1);  // -1 means to use the JMX_PORT only
+            ConfigToAttributes.apply(this, UsesJmx.JMX_CONTEXT);
         }
     }
     

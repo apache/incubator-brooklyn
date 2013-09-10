@@ -10,6 +10,8 @@ import java.util.Map;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 
@@ -65,15 +67,15 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
     public void customize() {
         Map<String, Object> ports = new HashMap<String, Object>();
         ports.put("jmxPort", getJmxPort());
-        ports.put("rmiServerPort", getRmiServerPort());
+        ports.put("rmiServerPort", getRmiRegistryPort());
 
         Networking.checkPortsValid(ports);
         newScript(CUSTOMIZING).
                 body.append(
                 format("cd %s", getRunDir()),
                 format("cp -R %s/{bin,etc,lib,system,deploy} . || exit $!", getExpandedInstallDir()),
-                format("sed -i.bk 's/rmiRegistryPort = 1099/rmiRegistryPort = %s/g' etc/org.apache.karaf.management.cfg", getJmxPort()),
-                format("sed -i.bk 's/rmiServerPort = 44444/rmiServerPort = %s/g' etc/org.apache.karaf.management.cfg", getRmiServerPort())
+                format("sed -i.bk 's/rmiRegistryPort = 1099/rmiRegistryPort = %s/g' etc/org.apache.karaf.management.cfg", getRmiRegistryPort()),
+                format("sed -i.bk 's/rmiServerPort = 44444/rmiServerPort = %s/g' etc/org.apache.karaf.management.cfg", getJmxPort())
         ).execute();
     }
 
@@ -112,10 +114,10 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
 
     @Override
     public void stop() {
-        newScript(STOPPING).
-                body.append(
-                format("%s/bin/stop",getRunDir())
-        ).execute();
+        newScript(STOPPING)
+                .environmentVariablesReset()
+                .body.append(format("%s/bin/stop",getRunDir()))
+            .execute();
     }
 
     @Override
@@ -133,16 +135,4 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         return result;
     }
 
-    // FIXME Playing around / experimenting with these jmx system properties to try to get it to work!
-    // With com.sun.management.jmxremote.port, then the Karaf container won't start at all; with that one removed then we just get "Not connected to JMX for entity Venue[id=ad7a6e47-e738-4687-b3bf-b9ad3aae449d,displayName=Venue:ad7a]"
-    @Override
-    protected Map<String,?> getJmxJavaSystemProperties() {
-//        Map result = super.getJmxJavaSystemProperties()
-//        result.remove("com.sun.management.jmxremote.port")
-//        return result
-
-        Map<String,Object> result  = new HashMap<String,Object>();
-        result.put("java.rmi.server.hostname",getMachine().getAddress().getHostName());
-        return result;
-    }
 }

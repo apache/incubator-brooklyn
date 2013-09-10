@@ -6,6 +6,7 @@ import static org.testng.Assert.*
 
 import java.util.concurrent.TimeUnit
 
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -13,6 +14,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxying.EntitySpec
+import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.entity.trait.Startable
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -23,18 +25,20 @@ import brooklyn.util.text.Identifiers
 public class KarafContainerTest {
     static { TimeExtras.init() }
 
-    MachineProvisioningLocation localhost = new LocalhostMachineProvisioningLocation(name:'localhost', address:"localhost")
+    MachineProvisioningLocation localhost;
     TestApplication app
     KarafContainer karaf
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        localhost = app.newLocalhostProvisioningLocation();
     }
 
     @AfterMethod(alwaysRun=true)
     public void shutdown() {
         if (app != null) Entities.destroyAll(app.getManagementContext());
+        app = null;
     }
 
     // FIXME Test failing in jenkins; not sure why. The karaf log shows the mbeans never being
@@ -43,9 +47,54 @@ public class KarafContainerTest {
     public void canStartupAndShutdown() {
         karaf = app.createAndManageChild(EntitySpec.create(KarafContainer.class)
                 .configure("name", Identifiers.makeRandomId(8))
+                .configure("displayName", "Karaf Test"));
+        
+        app.start([ localhost ]);
+        executeUntilSucceeds(timeout:30 * SECONDS) {
+            assertNotNull karaf.getAttribute(Startable.SERVICE_UP)
+            assertTrue karaf.getAttribute(Startable.SERVICE_UP)
+        }
+        
+        Entities.dumpInfo(karaf);
+        int pid = karaf.getAttribute(KarafContainer.KARAF_PID);
+        Entities.submit(app, SshEffectorTasks.requirePidRunning(pid).machine(localhost.obtain())).get();
+        
+        karaf.stop();
+        executeUntilSucceeds(timeout:10 * SECONDS) {
+            assertFalse karaf.getAttribute(Startable.SERVICE_UP)
+        }
+        
+        Assert.assertFalse(Entities.submit(app, SshEffectorTasks.isPidRunning(pid).machine(localhost.obtain())).get());
+    }
+    
+    @Test(groups = ["Integration", "WIP"])
+    public void canStartupAndShutdownExplicitJmx() {
+        karaf = app.createAndManageChild(EntitySpec.create(KarafContainer.class)
+                .configure("name", Identifiers.makeRandomId(8))
+                .configure("displayName", "Karaf Test")
+                .configure("rmiRegistryPort", "8099+")
+                .configure("jmxPort", "9099+"));
+        
+        app.start([ localhost ]);
+        executeUntilSucceeds(timeout:30 * SECONDS) {
+            assertNotNull karaf.getAttribute(Startable.SERVICE_UP)
+            assertTrue karaf.getAttribute(Startable.SERVICE_UP)
+        }
+        
+        karaf.stop();
+        executeUntilSucceeds(timeout:10 * SECONDS) {
+            assertFalse karaf.getAttribute(Startable.SERVICE_UP)
+        }
+    }
+    
+    @Test(groups = ["Integration", "WIP"])
+    public void canStartupAndShutdownLegacyJmx() {
+        karaf = app.createAndManageChild(EntitySpec.create(KarafContainer.class)
+                .configure("name", Identifiers.makeRandomId(8))
                 .configure("displayName", "Karaf Test")
                 .configure("jmxPort", "8099+")
                 .configure("rmiServerPort", "9099+"));
+            // NB: now the above parameters have the opposite semantics to before
         
         app.start([ localhost ]);
         executeUntilSucceeds(timeout:30 * SECONDS) {

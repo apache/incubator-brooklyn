@@ -7,6 +7,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
 /**
  * Mock application for testing.
@@ -40,5 +41,7 @@ public interface TestApplication extends StartableApplication, EntityInternal {
      */
     @Deprecated
     public <T extends Entity> T manage(T entity);
+
+    public LocalhostMachineProvisioningLocation newLocalhostProvisioningLocation();
     
 }

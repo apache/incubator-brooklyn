@@ -22,6 +22,7 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.stream.Streams;
@@ -320,6 +321,19 @@ public class ScriptHelper {
         return setFlag(flag.getName(), value);
     }
     
+    /** ensures the script runs with no environment variables; by default they will be inherited */
+    public ScriptHelper environmentVariablesReset() {
+        return environmentVariablesReset(MutableMap.of());
+    }
+    
+    /** overrides the default environment variables to use the given set; by default they will be inherited.
+     * TODO would be nice to have a way to add just a few, but there is no way currently to access the
+     * getShellEnvironment() from the driver which is what gets inherited (at execution time) */
+    public ScriptHelper environmentVariablesReset(Map<?,?> envVarsToSet) {
+        setFlag("env", envVarsToSet);
+        return this;
+    }
+
     public List<String> getLines() {
         List<String> result = new LinkedList<String>();
         result.addAll(header.lines);

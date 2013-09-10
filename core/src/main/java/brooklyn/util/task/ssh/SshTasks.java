@@ -54,11 +54,11 @@ public class SshTasks {
             .allowingNonZeroExitCode()
             .returning(new Function<ProcessTaskWrapper<?>,Boolean>() { public Boolean apply(ProcessTaskWrapper<?> task) {
                 if (task.getExitCode()==0) return true;
+                Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
                 log.warn("Error setting up sudo for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+" "+
-                        " (exit code "+task.getExitCode()+")");
+                        " (exit code "+task.getExitCode()+(entity!=null ? ", entity "+entity : "")+")");
                 Streams.logStreamTail(log, "STDERR of sudo setup problem", Streams.byteArrayOfString(task.getStderr()), 1024);
                 if (requireSuccess) {
-                    Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
                     throw new IllegalStateException("Passwordless sudo is required for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+
                             (entity!=null ? " ("+entity+")" : ""));
                 }

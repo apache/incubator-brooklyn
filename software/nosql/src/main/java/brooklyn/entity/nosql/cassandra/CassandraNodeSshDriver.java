@@ -13,16 +13,24 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.BrooklynVersion;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.event.basic.SetConfigKey.SetModifications;
 import brooklyn.location.Location;
+import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -70,14 +78,14 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     
     @Override
     public void install() {
-        log.info("Installing {}", entity);
+        log.debug("Installing {}", entity);
         DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-cassandra-%s", getVersion()));
         
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .build();
@@ -97,7 +105,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     private Map<String, Integer> getPortMap() {
         return ImmutableMap.<String, Integer>builder()
                 .put("jmxPort", getJmxPort())
-                .put("rmiPort", getRmiServerPort())
+                .put("rmiPort", getRmiRegistryPort())
                 .put("gossipPort", getGossipPort())
                 .put("sslGossipPort:", getSslGossipPort())
                 .put("thriftPort", getThriftPort())
@@ -106,8 +114,17 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public void customize() {
-        log.info("Customizing {} (Cluster {})", entity, getClusterName());
+        log.debug("Customizing {} (Cluster {})", entity, getClusterName());
         Networking.checkPortsValid(getPortMap());
+        
+        if (entity.getConfig(CassandraNode.INITIAL_SEEDS)==null) {
+            if (isClustered()) {
+                entity.setConfig(CassandraNode.INITIAL_SEEDS, 
+                    DependentConfiguration.attributeWhenReady(entity.getParent(), CassandraCluster.CURRENT_SEEDS));
+            } else {
+                entity.setConfig(CassandraNode.INITIAL_SEEDS, MutableSet.<Entity>of(entity));
+            }
+        }
 
         String logFileEscaped = getLogFileLocation().replace("/", "\\/"); // escape slashes
 
@@ -126,30 +143,44 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         String configFileContents = processTemplate(getCassandraConfigTemplateUrl());
         String destinationConfigFile = String.format("%s/conf/%s", getRunDir(), getCassandraConfigFileName());
         getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
-
-        // Copy JMX agent Jar to server
-        // TODO do this based on config property in UsesJmx
-        getMachine().copyTo(new ResourceUtils(this).getResourceFromUrl(getJmxRmiAgentJarUrl()), getJmxRmiAgentJarDestinationFilePath());
     }
 
-    public String getJmxRmiAgentJarBasename() {
-        return "brooklyn-jmxrmi-agent-" + BrooklynVersion.get() + ".jar";
-    }
-
-    public String getJmxRmiAgentJarUrl() {
-        return "classpath://" + getJmxRmiAgentJarBasename();
-    }
-
-    public String getJmxRmiAgentJarDestinationFilePath() {
-        return getRunDir() + "/" + getJmxRmiAgentJarBasename();
+    protected boolean isClustered() {
+        return entity.getParent() instanceof CassandraCluster;
     }
 
     @Override
     public void launch() {
-        log.info("Launching  {}", entity);
+        String subnetHostname = Machines.findSubnetOrPublicHostname(entity).get();
+        Set<Entity> seeds = getEntity().getConfig(CassandraNode.INITIAL_SEEDS);
+        log.info("Launching " + entity + ": " +
+                "cluster "+getClusterName()+", " +
+        		"hostname (public) " + getEntity().getAttribute(Attributes.HOSTNAME) + ", " +
+        		"hostname (subnet) " + subnetHostname + ", " +
+        		"seeds "+((CassandraNode)entity).getSeeds()+" (from "+seeds+")");
+        boolean isFirst = seeds.iterator().next().equals(entity);
+        if (isClustered() && !isFirst && CassandraCluster.WAIT_FOR_FIRST) {
+            // wait for the first node
+            long firstStartTime = Entities.submit(entity, DependentConfiguration.attributeWhenReady(getEntity().getParent(), CassandraCluster.FIRST_NODE_STARTED_TIME_UTC)).getUnchecked();
+            // optionally force a delay before starting subsequent nodes; see comment at CassandraCluster.DELAY_AFTER_FIRST
+            Duration toWait = Duration.millis(firstStartTime + CassandraCluster.DELAY_AFTER_FIRST.toMilliseconds() -  System.currentTimeMillis());
+            if (toWait.toMilliseconds()>0) {
+                log.info("Launching " + entity + ": delaying launch of non-first node by "+toWait+" to prevent schema disagreements");
+                Tasks.setBlockingDetails("Pausing to ensure first node has time to start");
+                Time.sleep(toWait);
+                Tasks.resetBlockingDetails();
+            }
+        }
         newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
-                .body.append(String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
+                .body.append(
+                        // log the date to attempt to debug occasional http://wiki.apache.org/cassandra/FAQ#schema_disagreement
+                        // (can be caused by machines out of synch time-wise; but in our case it seems to be caused by other things!)
+                        "echo date on cassandra server `hostname` when launching is `date`",
+                        String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
                 .execute();
+        if (isClustered() && isFirst) {
+            ((EntityLocal)getEntity().getParent()).setAttribute(CassandraCluster.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
+        }
     }
 
     public String getPidFile() { return String.format("%s/cassandra.pid", getRunDir()); }
@@ -165,18 +196,19 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     }
 
     @Override
+    protected Map getCustomJavaSystemProperties() {
+        return MutableMap.<String, String>builder()
+                .putAll(super.getCustomJavaSystemProperties())
+                .put("cassandra.confing", getCassandraConfigFileName())
+                .build();
+    }
+    
+    @Override
     public Map<String, String> getShellEnvironment() {
-        // TODO do this based on config property in UsesJmx
-        String jvmOpts = String.format("-javaagent:%s -D%s=%d -D%s=%d -Djava.rmi.server.hostname=%s -Dcassandra.config=%s",
-                getJmxRmiAgentJarDestinationFilePath(),
-                JmxRmiAgent.JMX_SERVER_PORT_PROPERTY, getJmxPort(),
-                JmxRmiAgent.RMI_REGISTRY_PORT_PROPERTY, getRmiServerPort(),
-                getHostname(),
-                getCassandraConfigFileName());
         return MutableMap.<String, String>builder()
                 .putAll(super.getShellEnvironment())
                 .put("CASSANDRA_CONF", String.format("%s/conf", getRunDir()))
-                .put("JVM_OPTS", jvmOpts) // TODO see QPID_OPTS setting in QpidSshDriver
+                .renameKey("JAVA_OPTS", "JVM_OPTS")
                 .build();
     }
 }

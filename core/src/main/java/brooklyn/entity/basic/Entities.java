@@ -721,6 +721,10 @@ public class Entities {
             throw new NullPointerException("Key "+urlKey+" on "+entity+" should not be null");
         return new ResourceUtils(entity).checkUrlExists(url);
     }
+    /** as {@link #getRequiredUrlConfig(Entity, ConfigKey)} */
+    public static String getRequiredUrlConfig(Entity entity, HasConfigKey<String> urlKey) {
+        return getRequiredUrlConfig(entity, urlKey.getConfigKey());
+    }
     
     /** submits a task factory to construct its task at the entity (in a precursor task) and then to submit it;
      * important if e.g. task construction relies on an entity being in scope (in tags, via {@link BrooklynTasks}) */

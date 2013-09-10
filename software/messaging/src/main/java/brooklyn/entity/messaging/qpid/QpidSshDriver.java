@@ -82,7 +82,7 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
     @Override
     public void launch() {
         newScript(ImmutableMap.of("usePidFile", false), LAUNCHING)
-                .body.append("nohup ./bin/qpid-server -b '*' > /dev/null 2>&1 &")
+                .body.append("nohup ./bin/qpid-server -b '*' > qpid-server-launch.log 2>&1 &")
                 .execute();
     }
 
@@ -105,17 +105,15 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
     }
 
     public Map<String, Object> getCustomJavaSystemProperties() {
-        Map<String, Object> props = MutableMap.<String, Object>builder()
+        return MutableMap.<String, Object>builder()
+                .putAll(super.getCustomJavaSystemProperties())
                 .put("connector.port", getAmqpPort())
                 .put("management.enabled", "true")
-                .put("management.jmxport.registryServer", getJmxPort())
-                .put("management.jmxport.connectorServer", getRmiServerPort())
+                .put("management.jmxport.registryServer", getRmiRegistryPort())
+                .put("management.jmxport.connectorServer", getJmxPort())
                 .put("management.http.enabled",  getHttpManagementPort() != null ? "true" : "false")
+                .putIfNotNull("management.http.port", getHttpManagementPort())
                 .build();
-        if (getHttpManagementPort() != null) {
-            props.put("management.http.port", getHttpManagementPort());
-        }
-        return props;
     }
 
     public Map<String, String> getShellEnvironment() {
@@ -124,7 +122,8 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
                 .putAll(orig)
                 .put("QPID_HOME", getRunDir())
                 .put("QPID_WORK", getRunDir())
-                .put("QPID_OPTS", (orig.containsKey("JAVA_OPTS") ? orig.get("JAVA_OPTS") : ""))
+                .renameKey("JAVA_OPTS", "QPID_OPTS")
+                .putIfAbsent("QPID_OPTS", "")
                 .build();
     }
 }

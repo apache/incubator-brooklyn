@@ -301,6 +301,19 @@ public class ResourceUtils {
         return url;
     }
 
+    /** tests whether the url exists, returning true or false */
+    public boolean doesUrlExist(String url) {
+        InputStream s = null;
+        try {
+            s = getResourceFromUrl(url);
+            return true;
+        } catch (Exception e) {
+            return false;
+        } finally {
+            Closeables.closeQuietly(s);
+        }
+    }
+    
     /** returns the base directory or JAR from which the context is class-loaded, if possible;
      * throws exception if not found */
     public String getClassLoaderDir() {

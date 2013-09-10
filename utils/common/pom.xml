@@ -27,6 +27,12 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
         <dependency>
+        <!-- redirect java.util.logging messages to slf4j/logback -->
+            <groupId>org.slf4j</groupId>
+            <artifactId>jul-to-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.thoughtworks.xstream</groupId>
             <artifactId>xstream</artifactId>
         </dependency>

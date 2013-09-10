@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigUtils;
-import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicates;
@@ -57,7 +57,7 @@ public class LocationPropertiesFromBrooklynProperties {
         result.putAll(transformDeprecated(getGenericLocationSingleWordProperties(properties)));
         if (!Strings.isNullOrEmpty(provider)) result.putAll(transformDeprecated(getScopedLocationProperties(provider, properties)));
         if (!Strings.isNullOrEmpty(namedLocation)) result.putAll(transformDeprecated(getNamedLocationProperties(namedLocation, properties)));
-        String brooklynDataDir = (String) properties.get(ConfigKeys.BROOKLYN_DATA_DIR.getName());
+        String brooklynDataDir = (String) properties.get(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName());
         if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
             result.put("localTempDir", new File(brooklynDataDir));
         }

@@ -3,7 +3,11 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.util.Set;
+
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
@@ -23,7 +27,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface CassandraNode extends SoftwareProcess, UsesJmx {
 
     @SetFromFlag("version")
-    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.2");
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.9");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
@@ -69,20 +73,27 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
     AttributeSensor<Long> WRITE_PENDING = Sensors.newLongSensor("cassandra.write.pending", "Current pending MutationStage tasks");
     AttributeSensor<Integer> WRITE_ACTIVE = Sensors.newIntegerSensor("cassandra.write.active", "Current active MutationStage tasks");
     AttributeSensor<Long> WRITE_COMPLETED = Sensors.newLongSensor("cassandra.write.completed", "Total completed MutationStage tasks");
+    
+    AttributeSensor<Boolean> SERVICE_UP_JMX = Sensors.newBooleanSensor("cassandra.service.jmx.up", "Whether JMX is up for this service");
+    AttributeSensor<Long> THRIFT_PORT_LATENCY = Sensors.newLongSensor("cassandra.thrift.latency", "Latency for thrift port connection (ms) or -1 if down");
 
-    ConfigKey<String> SEEDS = CassandraCluster.SEEDS;
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    ConfigKey<Set<Entity>> INITIAL_SEEDS = (ConfigKey)ConfigKeys.newConfigKey(Set.class, "cassandra.cluster.seeds.initial", 
+            "List of cluster nodes to seed this node");
 
+    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.START_TIMEOUT, 3*60);
+    
+    /* Accessors used from template */
+    
     Integer getGossipPort();
-
     Integer getSslGossipPort();
-
     Integer getThriftPort();
-
     String getClusterName();
-
+    String getSubnetAddress();
     String getSeeds();
-
     Long getToken();
 
+    /* For configuration */
+    
     void setToken(String token);
 }

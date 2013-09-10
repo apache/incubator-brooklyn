@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.nosql.cassandra.AstyanaxSupport.AstyanaxSample;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.util.collections.MutableMap;
@@ -52,7 +53,7 @@ public class CassandraNodeLiveTest extends AbstractCassandraNodeTest {
         app.start(ImmutableList.of(testLocation));
         EntityTestUtils.assertAttributeEqualsEventually(cassandra, CassandraNode.SERVICE_UP, true);
 
-        AstyanaxSupport astyanax = new AstyanaxSupport(cassandra);
+        AstyanaxSample astyanax = new AstyanaxSample(cassandra);
         astyanax.astyanaxTest();
     }
 }

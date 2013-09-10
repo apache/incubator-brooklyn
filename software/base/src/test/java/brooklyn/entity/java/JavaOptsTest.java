@@ -280,17 +280,15 @@ public class JavaOptsTest {
     
     private static final List<String> EXPECTED_BASIC_JMX_OPTS = Arrays.asList(
             "-Dcom.sun.management.jmxremote",
-            "-Dcom.sun.management.jmxremote.port=1",
             "-Dcom.sun.management.jmxremote.ssl=false",
-            "-Dcom.sun.management.jmxremote.authenticate=false",
-            "-Djava.rmi.server.hostname="
+            "-Dcom.sun.management.jmxremote.authenticate=false"
         );
 
     private static final List<String> FORBIDDEN_BASIC_JMX_OPTS = Arrays.asList(
             "-Dcom.sun.management.jmxremote.ssl=true",
             
-            // not sure if this breaks things or not!
-            // (but without server wildcards property set false it listens on all interfaces anyway)
+            // often breaks things, as this is an advertised hostname usually;
+            // it typically listens on all interfaces anyway
             "-Djava.rmi.server.hostname=0.0.0.0"
         );
 

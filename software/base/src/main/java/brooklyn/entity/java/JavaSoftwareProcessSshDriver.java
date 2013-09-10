@@ -1,7 +1,5 @@
 package brooklyn.entity.java;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,6 +15,7 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
@@ -25,7 +24,10 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -202,31 +204,31 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         return Lists.newArrayList();
     }
 
-    @Override
+    /** @deprecated since 0.6.0, the config key is always used instead of this */ @Deprecated
     public Integer getJmxPort() {
         return !isJmxEnabled() ? Integer.valueOf(-1) : entity.getAttribute(UsesJmx.JMX_PORT);
     }
 
-    @Deprecated
-    // since 0.4, use getRmiServerPort
-    @Override
+    /** @deprecated since 0.4.0, see {@link #getRmiRegistryPort()} */ @Deprecated
     public Integer getRmiPort() {
-        return getRmiServerPort();
+        return getRmiRegistryPort();
     }
 
+    /** @deprecated since 0.4.0, see {@link #getRmiRegistryPort()} */ @Deprecated
     public Integer getRmiServerPort() {
         return !isJmxEnabled() ? -1 : entity.getAttribute(UsesJmx.RMI_SERVER_PORT);
     }
 
-    @Override
+    /** @deprecated since 0.6.0, the config key is always used instead of this */ @Deprecated
+    public Integer getRmiRegistryPort() {
+        return !isJmxEnabled() ? -1 : entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT);
+    }
+
+    /** @deprecated since 0.6.0, the config key is always used instead of this */ @Deprecated
     public String getJmxContext() {
         return !isJmxEnabled() ? null : entity.getAttribute(UsesJmx.JMX_CONTEXT);
     }
 
-    public JmxmpSslSupport getJmxSslSupport() {
-        return new JmxmpSslSupport(this);
-    }
-    
     /**
      * Return the configuration properties required to enable JMX for a Java application.
      * 
@@ -237,19 +239,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         MutableMap.Builder<String, Object> result = MutableMap.<String, Object> builder();
         
         if (isJmxEnabled()) {
-            Integer jmxRemotePort = checkNotNull(getJmxPort(), "jmxPort for entity " + entity);
-            String hostName = checkNotNull(getMachine().getAddress().getHostName(), "hostname for entity " + entity);
-            result.put("com.sun.management.jmxremote", null);
-            
-            if (!isJmxSslEnabled()) {
-                result.
-                    put("com.sun.management.jmxremote.port", jmxRemotePort).
-                    put("com.sun.management.jmxremote.ssl", false).
-                    put("com.sun.management.jmxremote.authenticate", false).
-                    put("java.rmi.server.hostname", hostName);
-            } else {
-                getJmxSslSupport().applyAgentJmxJavaSystemProperties(result);
-            }
+            new JmxSupport(getEntity(), getRunDir()).applyJmxJavaSystemProperties(result);
         }
         
         return result.build();
@@ -260,48 +250,57 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
      */
     protected List<String> getJmxJavaConfigOptions() {
         List<String> result = new ArrayList<String>();
-        if (isJmxEnabled() && isJmxSslEnabled()) {
-            getJmxSslSupport().applyAgentJmxJavaConfigOptions(result);            
+        if (isJmxEnabled()) {
+            result.addAll(new JmxSupport(getEntity(), getRunDir()).getJmxJavaConfigOptions());
         }
         return result;
     }
         
-    public void installJava() {
+    public boolean installJava() {
         try {
             getLocation().acquireMutex("install:" + getLocation().getDisplayName(), "installing Java at " + getLocation());
             log.debug("checking for java at " + entity + " @ " + getLocation());
             int result = getLocation().execCommands("check java", Arrays.asList("which java"));
             if (result == 0) {
                 log.debug("java detected at " + entity + " @ " + getLocation());
+                return true;
             } else {
-                log.debug("java not detected at " + entity + " @ " + getLocation() + ", installing");
-                // TODO support script-builder access?
-//                if (getLocation() instanceof JcloudsSshMachineLocation) {
-//                    log.debug("installing java at " + entity + " @ " + getLocation() + ", using jclouds");
-//                    ExecResponse result2 = ((JcloudsSshMachineLocation) getLocation()).submitRunScript(InstallJDK.fromOpenJDK()).get();
-//                    if (result2.getExitStatus() == 0)
-//                        return;
-//                    log.debug("invalid result code " + result2.getExitStatus() + " installing java using Jclouds routines, at " + entity + " @ "
-//                            + getLocation() + ":\n" + result2.getOutput() + "\n" + result2.getError());
-//                }
+                log.debug("java not detected at " + entity + " @ " + getLocation() + ", installing using BashCommands.installJava6");
                 
-                log.debug("installing java at " + entity + " @ " + getLocation() + ", using CommonCommands.installJava6");
                 result = newScript("INSTALL_OPENJDK").body.append(
-                        BashCommands.installJava6()
-                        // TODO the following complains about yum-install not defined
+                        BashCommands.installJava6OrFail()
+                        // could use Jclouds routines -- but the following complains about yum-install not defined
                         // even though it is set as an alias (at the start of the first file)
-                        //                            new ResourceUtils(this).getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
-                        //                            new ResourceUtils(this).getResourceAsString("classpath:///functions/installOpenJDK.sh"),
-                        //                            "installOpenJDK"
+                        //   new ResourceUtils(this).getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
+                        //   new ResourceUtils(this).getResourceAsString("classpath:///functions/installOpenJDK.sh"),
+                        //   "installOpenJDK"
                         ).execute();
                 if (result==0)
-                    return;
+                    return true;
+                
+                // some failures might want a delay and a retry; 
+                // NOT confirmed this is needed, so:
+                // if we don't see the warning then remove, 
+                // or if we do see the warning then just remove this comment!  3 Sep 2013
                 log.warn("Unable to install Java at " + getLocation() + " for " + entity +
                         " (and Java not detected); invalid result "+result+". " + 
-                        "Processes may fail to start.");
+                        "Will retry.");
+                Time.sleep(Duration.TEN_SECONDS);
+                
+                result = newScript("INSTALL_OPENJDK").body.append(
+                        BashCommands.installJava6OrFail()
+                        ).execute();
+                if (result==0) {
+                    log.info("Succeeded installing Java at " + getLocation() + " for " + entity + " after retry.");
+                    return true;
+                }
+                log.error("Unable to install Java at " + getLocation() + " for " + entity +
+                          " (and Java not detected), including one retry; invalid result "+result+". " + 
+                          "Processes may fail to start.");
+                return false;
             }
         } catch (Exception e) {
-            Throwables.propagate(e);
+            throw Throwables.propagate(e);
         } finally {
             getLocation().releaseMutex("install:" + getLocation().getDisplayName());
         }
@@ -313,22 +312,47 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
 
     public void installJmxSupport() {
-        if (isJmxEnabled() && isJmxSslEnabled()) {
+        if (isJmxEnabled()) {
             newScript("JMX_SETUP_PREINSTALL").body.append("mkdir -p "+getRunDir()).execute();
-            getJmxSslSupport().install();            
+            new JmxSupport(getEntity(), getRunDir()).install();
+        }
+    }
+    
+    public void checkJavaHostnameBug() {
+        try {
+            ProcessTaskWrapper<Integer> hostnameLen = DynamicTasks.queue(SshEffectorTasks.ssh("hostname -f | wc | awk '{print $3}'")).block();
+            if (hostnameLen.getExitCode()==0) {
+                Integer len = Integer.parseInt(hostnameLen.getStdout().trim());
+                if (len > 63) {
+                    // likely to cause a java crash due to java bug 7089443 -- set a new short hostname
+                    // http://mail.openjdk.java.net/pipermail/net-dev/2012-July/004603.html
+                    String newHostname = "br-"+getEntity().getId();
+                    log.info("Detected likelihood of Java hostname bug with hostname length "+len+" for "+getEntity()+"; renaming "+getMachine()+"  to hostname "+newHostname);
+                    DynamicTasks.queue(SshEffectorTasks.ssh(
+                            "hostname "+newHostname,
+                            "echo 127.0.0.1 "+newHostname+" > /etc/hosts").runAsRoot()).block();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Error checking/fixing Java hostname bug: "+e, e);
         }
     }
     
     @Override
     public void start() {
-        DynamicTasks.queue("install java)", new Runnable() { public void run() {
+        DynamicTasks.queue("install java", new Runnable() { public void run() {
             installJava(); }});
             
         if (isJmxEnabled()) {
             DynamicTasks.queue("install jmx", new Runnable() { public void run() {
                 installJmxSupport(); }}); 
         }
-        
+
+        if (getEntity().getConfig(UsesJava.CHECK_JAVA_HOSTNAME_BUG)) {
+            DynamicTasks.queue("check java hostname bug", new Runnable() { public void run() {
+                checkJavaHostnameBug(); }});
+        }
+
         super.start();
     }
 

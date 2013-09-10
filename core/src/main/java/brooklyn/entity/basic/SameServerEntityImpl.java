@@ -2,7 +2,6 @@ package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -20,9 +19,9 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.PortRange;
-import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
@@ -157,20 +156,9 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
         return ports;
     }
 
+    /** @deprecated since 0.6.0 use {@link Machines#findSubnetHostname(this)} */ @Deprecated
     public String getLocalHostname() {
-        Location where = Iterables.getFirst(getLocations(), null);
-        String hostname = null;
-        if (where instanceof HasSubnetHostname) {
-            hostname = ((HasSubnetHostname) where).getSubnetHostname();
-        }
-        if (hostname == null && where instanceof MachineLocation) {
-            InetAddress addr = ((MachineLocation) where).getAddress();
-            if (addr != null) hostname = addr.getHostAddress();
-        }
-        log.debug("computed hostname {} for {}", hostname, this);
-        if (hostname == null)
-            throw new IllegalStateException("Cannot find hostname for "+this+" at location "+where);
-        return hostname;
+        return Machines.findSubnetHostname(this).get();
     }
 
     protected void startInLocation(MachineLocation machine) {

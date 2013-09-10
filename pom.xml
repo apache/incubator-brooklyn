@@ -609,6 +609,11 @@
                             <token>**</token>
                             <value></value>
                         </replacement>
+                        <replacement>
+                            <xpath>/classpath/classpathentry[@path='src/test/resources' and @kind='src' and @excluding='**']/@excluding</xpath>
+                            <token>**</token>
+                            <value></value>
+                        </replacement>
                     </replacements>
                 </configuration>
             </plugin>

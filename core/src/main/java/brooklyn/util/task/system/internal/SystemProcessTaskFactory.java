@@ -69,6 +69,10 @@ public class SystemProcessTaskFactory<T extends SystemProcessTaskFactory<T,RET>,
             protected String constructDefaultLoggingPrefix(ConfigBag execFlags) {
                 return "system.exec";
             }
+            @Override
+            protected String getTargetName() {
+                return "local host";
+            }
         }.logger(log);
     }
 

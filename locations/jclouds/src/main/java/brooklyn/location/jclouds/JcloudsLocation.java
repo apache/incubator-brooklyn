@@ -666,10 +666,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             LOG.debug(""+this+" got template "+template+" (image "+template.getImage()+")");
             if (template.getImage()==null) throw new NullPointerException("Template does not contain an image (templateBuilder.build returned invalid template)");
             if (isBadTemplate(template.getImage())) {
-                // release candidates might break things :(   TODO get the list and score them
+                // release candidates might break things :(
+                // TODO make jclouds TemplateBuilderImpl support a configurable orderer / scorer
                 if (templateBuilder instanceof PortableTemplateBuilder) {
                     if (((PortableTemplateBuilder<?>)templateBuilder).getOsFamily()==null) {
-                        templateBuilder.osFamily(OsFamily.UBUNTU).osVersionMatches("11.04").os64Bit(true);
+                        // NB: 11.04 on AWS us-east-1 returns an image where apt-get hits a 403 forbidden
+                        templateBuilder.osFamily(OsFamily.UBUNTU).osVersionMatches("12.04").os64Bit(true);
                         Template template2 = templateBuilder.build();
                         if (template2!=null) {
                             LOG.debug(""+this+" preferring template {} over {}", template2, template);
@@ -878,6 +880,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (description != null && description.contains("-alpha"))
                 return true;
         }
+        
+        // specific black-listed images
+        
+        // bad natty image - causes 403 on attempts to apt-get; https://bugs.launchpad.net/ubuntu/+bug/987182
+        if ("us-east-1/ami-1cb30875".equals(image.getId())) return true;
+        
         return false;
     }
 

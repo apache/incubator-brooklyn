@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -215,9 +214,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
 
     /**
-     * Increases the cluster size by the given number.
+     * Increases the cluster size by the given number. Returns successfully added nodes.
      */
-    private Collection<Entity> grow(int delta) {
+    protected Collection<Entity> grow(int delta) {
         Collection<Entity> addedEntities = Lists.newArrayList();
         for (int i = 0; i < delta; i++) {
             addedEntities.add(addNode());
@@ -240,7 +239,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return MutableList.<Entity>builder().addAll(addedEntities).removeAll(errors.keySet()).build();
     }
     
-    private void shrink(int delta) {
+    protected void shrink(int delta) {
         Collection<Entity> removedEntities = Lists.newArrayList();
         
         for (int i = 0; i < (delta*-1); i++) { removedEntities.add(pickAndRemoveMember()); }
@@ -259,7 +258,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
     }
     
-    private void quarantineFailedNodes(Collection<Entity> failedEntities) {
+    protected void quarantineFailedNodes(Collection<Entity> failedEntities) {
         for (Entity entity : failedEntities) {
             emit(ENTITY_QUARANTINED, entity);
             getQuarantineGroup().addMember(entity);
@@ -267,7 +266,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
     }
     
-    private void cleanupFailedNodes(Collection<Entity> failedEntities) {
+    protected void cleanupFailedNodes(Collection<Entity> failedEntities) {
         // TODO Could also call stop on them?
         for (Entity entity : failedEntities) {
             discardNode(entity);

@@ -5,6 +5,8 @@ package brooklyn.entity.nosql.cassandra;
 
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.nosql.cassandra.AstyanaxSupport.AstyanaxSample;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.test.EntityTestUtils;
@@ -27,6 +29,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
         app.start(ImmutableList.of(testLocation));
 
         EntityTestUtils.assertAttributeEqualsEventually(cassandra, Startable.SERVICE_UP, true);
+        Entities.dumpInfo(app);
 
         cassandra.stop();
 
@@ -61,7 +64,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
 
         EntityTestUtils.assertAttributeEqualsEventually(cassandra, Startable.SERVICE_UP, true);
 
-        AstyanaxSupport astyanax = new AstyanaxSupport(cassandra);
+        AstyanaxSample astyanax = new AstyanaxSample(cassandra);
         astyanax.astyanaxTest();
     }
 }

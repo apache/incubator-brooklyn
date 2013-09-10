@@ -7,7 +7,6 @@ import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -58,20 +57,22 @@ public interface KarafContainer extends SoftwareProcess, UsesJava, UsesJmx {
 
     @SetFromFlag("jmxUser")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
-            Attributes.JMX_USER, "karaf");
+            UsesJmx.JMX_USER, "karaf");
     
     @SetFromFlag("jmxPassword")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(
-            Attributes.JMX_PASSWORD, "karaf");
+            UsesJmx.JMX_PASSWORD, "karaf");
         
     @SetFromFlag("jmxPort")
     public static final PortAttributeSensorAndConfigKey JMX_PORT = new PortAttributeSensorAndConfigKey(
-            UsesJmx.JMX_PORT, "1099+");
+            UsesJmx.JMX_PORT, "44444+");
 
+    @SetFromFlag("rmiRegistryPort")
+    public static final PortAttributeSensorAndConfigKey RMI_REGISTRY_PORT = UsesJmx.RMI_REGISTRY_PORT;
     @SetFromFlag("rmiServerPort")
-    public static final PortAttributeSensorAndConfigKey RMI_SERVER_PORT = new PortAttributeSensorAndConfigKey(
-            UsesJmx.RMI_SERVER_PORT, "44444+");
-    @Deprecated // since 0.4 use RMI_SERVER_PORT
+    /* @deprecated since 0.6 use RMI_REGISTRY_PORT */ @Deprecated
+    public static final PortAttributeSensorAndConfigKey RMI_SERVER_PORT = RMI_REGISTRY_PORT;
+    /* @deprecated since 0.4 use RMI_REGISTRY_PORT */ @Deprecated
     public static final PortAttributeSensorAndConfigKey RMI_PORT = RMI_SERVER_PORT;
     
     @SetFromFlag("jmxContext")

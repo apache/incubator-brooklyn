@@ -12,6 +12,8 @@ import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.Queue;
 import brooklyn.entity.messaging.Topic;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -66,11 +68,13 @@ public abstract class JMSBrokerImpl<Q extends JMSDestination & Queue, T extends 
         setBrokerUrl();
     }
 
-    // FIXME Need this to be "really" post-start, so called after sensor-polling is activated etc
+    // should be called after sensor-polling is activated etc
     @Override
     protected void postStart() {
 		super.postStart();
-		
+		// stupid to do this here, but there appears to be a race where sometimes the
+		// broker throws a BrokerStopped exception, even though the sensor indicates it is up
+		Time.sleep(Duration.FIVE_SECONDS);
         for (String name : queueNames) {
             addQueue(name);
         }
