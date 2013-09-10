@@ -9,6 +9,17 @@ _scripts/build.sh
     will build the site in _site including javadoc for offline browsing
 
 
+
+###############################################################################
+# Deprecation Warning                                                         #
+#                                                                             #
+# The following content has been superseded, and will be removed shortly      #
+# Please view /dev/tips/release.md or see:                                    #
+# http://brooklyncentral.github.io/v/0.6.0-SNAPSHOT/dev/tips/release.html     #
+#                                                                             #
+###############################################################################
+
+
 GO LIVE (SNAPSHOT)
 ------------------
 

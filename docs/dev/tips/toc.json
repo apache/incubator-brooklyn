@@ -8,5 +8,7 @@
 { "title": "Local Artifact Repo",
   "file":  "{{ site.url }}/dev/tips/local-artifact-repo.html" },
 { "title": "Updating Docs",
-  "file":  "{{ site.url }}/dev/tips/update-docs.html" }
+  "file":  "{{ site.url }}/dev/tips/update-docs.html" },
+{ "title": "Release Process",
+  "file":  "{{ site.url }}/dev/tips/release.html" }
 ]
