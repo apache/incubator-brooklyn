@@ -8,7 +8,11 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
 
@@ -17,6 +21,8 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Sets;
 
 public class BasicEntityTypeRegistry implements EntityTypeRegistry {
+
+    private static final Logger LOG = LoggerFactory.getLogger(BasicEntityTypeRegistry.class);
 
     private final BiMap<Class<?>, Class<?>> registry = HashBiMap.create();
     private final BiMap<Class<?>, Class<?>> cache = HashBiMap.create();
@@ -36,6 +42,7 @@ public class BasicEntityTypeRegistry implements EntityTypeRegistry {
                 throw new IllegalArgumentException("Implementation "+implClazz+" already registered against type "+existingType+"; cannot also register against "+type);
             }
             
+            LOG.debug("Implementation {} registered against type {}", implClazz, type);
             registry.put(type, implClazz);
             cache.forcePut(type, implClazz);
         }
@@ -48,6 +55,7 @@ public class BasicEntityTypeRegistry implements EntityTypeRegistry {
         synchronized (mutex) {
             Class<?> result = cache.get(type);
             if (result != null) {
+                if (LOG.isTraceEnabled()) LOG.trace("Implementation {} returned for type {}", result, type);
                 return (Class<? extends T>) result;
             }
             result = getFromAnnotation(type);
@@ -59,6 +67,7 @@ public class BasicEntityTypeRegistry implements EntityTypeRegistry {
                     throw new IllegalArgumentException("Interface "+type+" is not annotated with @"+ImplementedBy.class.getSimpleName()+", and no implementation is registered");
                 }
             }
+            if (LOG.isTraceEnabled()) LOG.trace("Implementation {} returned for type {}", result, type);
             cache.put(type, result);
             return (Class<? extends T>) result;
         }
