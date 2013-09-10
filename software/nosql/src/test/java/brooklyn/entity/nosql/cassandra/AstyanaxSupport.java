@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -172,7 +173,7 @@ public class AstyanaxSupport {
                 context.shutdown();
             }
         }
-
+        
         /**
          * Read from a {@link CassandraNode} using the Astyanax API.
          * @throws ConnectionException 
@@ -205,6 +206,34 @@ public class AstyanaxSupport {
                 context.shutdown();
             }
         }
+        
+
+        public void writeData(int numRetries) throws ConnectionException {
+            while (true) {
+                try {
+                    writeData();
+                    return;
+                } catch (Exception e) {
+                    log.warn("Error writing data - num retries = "+numRetries+": "+e, e);
+                    if (--numRetries <= 0)
+                        throw Exceptions.propagate(e);
+                }
+            }
+        }
+
+        public void readData(int numRetries) throws ConnectionException {
+            while (true) {
+                try {
+                    readData();
+                    return;
+                } catch (Exception e) {
+                    log.warn("Error reading data - num retries = "+numRetries+": "+e, e);
+                    if (--numRetries <= 0)
+                        throw Exceptions.propagate(e);
+                }
+            }
+        }
+
     }
 
     public static void main(String[] args) throws Exception {

@@ -13,16 +13,19 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.event.basic.SetConfigKey.SetModifications;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.Tasks;
@@ -119,7 +122,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 entity.setConfig(CassandraNode.INITIAL_SEEDS, 
                     DependentConfiguration.attributeWhenReady(entity.getParent(), CassandraCluster.CURRENT_SEEDS));
             } else {
-                entity.setConfig(CassandraNode.INITIAL_SEEDS, Machines.findSubnetOrPublicHostname(entity).get());
+                entity.setConfig(CassandraNode.INITIAL_SEEDS, MutableSet.<Entity>of(entity));
             }
         }
 
@@ -149,16 +152,17 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     @Override
     public void launch() {
         String subnetHostname = Machines.findSubnetOrPublicHostname(entity).get();
-        String seeds = ((CassandraNode)getEntity()).getSeeds();
+        Set<Entity> seeds = getEntity().getConfig(CassandraNode.INITIAL_SEEDS);
         log.info("Launching " + entity + ": " +
                 "cluster "+getClusterName()+", " +
         		"hostname (public) " + getEntity().getAttribute(Attributes.HOSTNAME) + ", " +
         		"hostname (subnet) " + subnetHostname + ", " +
-        		"seeds "+seeds);
-        boolean isFirst = seeds.startsWith(subnetHostname);
-        if (isClustered() && !isFirst) {
-            // optionally force a delay before starting subsequent nodes; see comment at CassandraCluster.DELAY_AFTER_FIRST
+        		"seeds "+((CassandraNode)entity).getSeeds()+" (from "+seeds+")");
+        boolean isFirst = seeds.iterator().next().equals(entity);
+        if (isClustered() && !isFirst && CassandraCluster.WAIT_FOR_FIRST) {
+            // wait for the first node
             long firstStartTime = Entities.submit(entity, DependentConfiguration.attributeWhenReady(getEntity().getParent(), CassandraCluster.FIRST_NODE_STARTED_TIME_UTC)).getUnchecked();
+            // optionally force a delay before starting subsequent nodes; see comment at CassandraCluster.DELAY_AFTER_FIRST
             Duration toWait = Duration.millis(firstStartTime + CassandraCluster.DELAY_AFTER_FIRST.toMilliseconds() -  System.currentTimeMillis());
             if (toWait.toMilliseconds()>0) {
                 log.info("Launching " + entity + ": delaying launch of non-first node by "+toWait+" to prevent schema disagreements");

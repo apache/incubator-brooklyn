@@ -3,7 +3,10 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.util.Set;
+
 import brooklyn.catalog.Catalog;
+import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.DynamicCluster;
@@ -30,7 +33,8 @@ public interface CassandraCluster extends DynamicCluster {
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "cassandra.cluster.name", "Name of the Cassandra cluster", "BrooklynCluster");
 
-    AttributeSensor<String> CURRENT_SEEDS = Sensors.newStringSensor("cassandra.cluster.seeds.current", "Current set of seeds to use to bootstrap the cluster");
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    AttributeSensor<Set<Entity>> CURRENT_SEEDS = (AttributeSensor)Sensors.newSensor(Set.class, "cassandra.cluster.seeds.current", "Current set of seeds to use to bootstrap the cluster");
     
     AttributeSensor<String> HOSTNAME = Sensors.newStringSensor("cassandra.cluster.hostname", "Hostname to connect to cluster with");
 
@@ -45,16 +49,28 @@ public interface CassandraCluster extends DynamicCluster {
     MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraCluster.class, "update");
 
     /** sets the number of nodes used to seed the cluster;
-     *  currently more than 1 causes consistency problems on cluster start.
+     *  v1.2.2 is buggy and requires a big delay for 2 nodes both seeds to reconcile, 
      *  see http://stackoverflow.com/questions/6770894/schemadisagreementexception/18639005
-     *  and post to cassandra mailing list.  (Alex, 6 Sept 2013)
-     */
-    public static final int DEFAULT_SEED_QUORUM = 1;
-    /** can insert a delay after the first node comes up 
-     * (does not seem to make much difference to consistency behaviour above, AFAICT) */
-    public static final Duration DELAY_AFTER_FIRST =
-            Duration.ZERO;
-//            Duration.THIRTY_SECONDS;
+     *  and posts to cassandra mailing list. (Alex, 9 Sept 2013)
+     *  <p>
+     *  with v1.2.9 this seems fine, with just a few seconds' delay after starting */
+    public static final int DEFAULT_SEED_QUORUM = 2;
+    
+    /** can insert a delay after the first node comes up;
+     * is not needed with 1.2.9 (and does not help with the bug in 1.2.2) */
+    public static final Duration DELAY_AFTER_FIRST = Duration.ZERO;
+    
+    /** whether to wait for the first node to start up */
+    // not sure whether this is needed or not; need to test in env where not all nodes are seed nodes,
+    // what happens if non-seed nodes start before the seed nodes ?
+    public static final boolean WAIT_FOR_FIRST = true;
+    
+    /** Additional time after the nodes in the cluster are up when starting before announcing the cluster as up;
+     * Useful to ensure nodes have synchronized.  */
+    // on 1.2.2 this could be as much as 120s when using 2 seed nodes, 
+    // or just a few seconds with 1 seed node;
+    // on 1.2.9 it seems a few seconds is sufficient even with 2 seed nodes
+    public static final Duration DELAY_BEFORE_ADVERTISING_CLUSTER = Duration.TEN_SECONDS;
     
     /**
      * The name of the cluster.

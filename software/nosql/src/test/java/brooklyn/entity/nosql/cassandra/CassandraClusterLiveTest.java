@@ -111,17 +111,17 @@ public class CassandraClusterLiveTest {
             EntityTestUtils.assertAttributeEquals(first, CassandraNode.PEERS, 2);
             EntityTestUtils.assertAttributeEquals(second, CassandraNode.PEERS, 2);
 
-            checkConnectionRepeatedly(1, first, second);
+            checkConnectionRepeatedly(2, 5, first, second);
         } catch (Throwable e) {
             throw Throwables.propagate(e);
         }
     }
 
-    protected void checkConnectionRepeatedly(int totalAttemptsAllowed, CassandraNode first, CassandraNode second) throws Exception {
+    protected void checkConnectionRepeatedly(int totalAttemptsAllowed, int numRetriesPerAttempt, CassandraNode first, CassandraNode second) throws Exception {
         int attemptNum = 0;
         while (true) {
             try {
-                checkConnection(first, second);
+                checkConnection(numRetriesPerAttempt, first, second);
                 return;
             } catch (Exception e) {
                 attemptNum++;
@@ -135,7 +135,7 @@ public class CassandraClusterLiveTest {
         }
     }
 
-    protected void checkConnection(CassandraNode first, CassandraNode second) throws ConnectionException {
+    protected void checkConnection(int numRetries, CassandraNode first, CassandraNode second) throws ConnectionException {
         // have been seeing intermittent SchemaDisagreementException errors on AWS, probably due to Astyanax / how we are using it
         // (confirmed that clocks are in sync)
         AstyanaxSample astyanaxFirst = new AstyanaxSample(first);
@@ -145,10 +145,10 @@ public class CassandraClusterLiveTest {
             Assert.fail("Inconsistent versions on Cassandra start: "+versions);
         }
 
-        astyanaxFirst.writeData();
+        astyanaxFirst.writeData(numRetries);
 
         AstyanaxSample astyanaxSecond = new AstyanaxSample(second);
-        astyanaxSecond.readData();
+        astyanaxSecond.readData(numRetries);
     }
 
     protected Boolean areVersionsConsistent(CassandraNode node) {

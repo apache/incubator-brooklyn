@@ -13,6 +13,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.ListConfigKey.ListModification;
 import brooklyn.event.basic.ListConfigKey.ListModifications;
 import brooklyn.management.ExecutionContext;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.Sets;
@@ -90,7 +91,7 @@ public class SetConfigKey<V> extends BasicConfigKey<Set<? extends V>> implements
     public Object applyValueToMap(Object value, Map target) {
         if (value instanceof StructuredModification) {
             return ((StructuredModification)value).applyToKeyInMap(this, target);
-        } else  if (value instanceof Collection) {
+        } else if (value instanceof Collection) {
             String warning = "Discouraged undecorated setting of a collection to SetConfigKey "+this+": use SetModification.{set,add}. " +
             		"Defaulting to 'add'. Look at debug logging for call stack.";
             log.warn(warning);
@@ -98,6 +99,13 @@ public class SetConfigKey<V> extends BasicConfigKey<Set<? extends V>> implements
                 log.debug("Trace for: "+warning, new Throwable("Trace for: "+warning));
             for (Object v: (Collection)value) 
                 applyValueToMap(v, target);
+            return null;
+        } else if (value instanceof TaskAdaptable) {
+            String warning = "Discouraged undecorated setting of a task to SetConfigKey "+this+": use SetModification.{set,add}. " +
+                    "Defaulting to 'add'. Look at debug logging for call stack.";
+            log.warn(warning);
+            // just add to set, using anonymous key
+            target.put(subKey(), value);
             return null;
         } else {
             // just add to set, using anonymous key

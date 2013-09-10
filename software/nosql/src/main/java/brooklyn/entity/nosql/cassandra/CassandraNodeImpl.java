@@ -16,6 +16,7 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.function.FunctionFeed;
@@ -24,6 +25,8 @@ import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.location.basic.Machines;
+import brooklyn.util.collections.MutableSet;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -50,7 +53,21 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @Override public String getClusterName() { return getAttribute(CassandraNode.CLUSTER_NAME); }
     @Override public String getSubnetAddress() { return Machines.findSubnetOrPublicHostname(this).get(); }
     @Override public Long getToken() { return getAttribute(CassandraNode.TOKEN); }
-    @Override public String getSeeds() { return getConfig(CassandraNode.INITIAL_SEEDS); }
+    
+    @Override public String getSeeds() { 
+        Set<Entity> seeds = getConfig(CassandraNode.INITIAL_SEEDS);
+        if (seeds==null) {
+            log.warn("No seeds available when requested for "+this, new Throwable("source of no Cassandra seeds when requested"));
+            return null;
+        }
+        MutableSet<String> seedsHostnames = MutableSet.of();
+        for (Entity e: seeds) {
+            // tried removing ourselves if there are other nodes, but that is a BAD idea!
+            // blows up with a "java.lang.RuntimeException: No other nodes seen!"
+            seedsHostnames.add(Machines.findSubnetOrPublicHostname(e).get());
+        }
+        return Strings.join(seedsHostnames, ",");
+    }
 
     @Override
     public Class<CassandraNodeDriver> getDriverInterface() {

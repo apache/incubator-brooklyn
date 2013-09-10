@@ -5,6 +5,7 @@ package brooklyn.entity.nosql.cassandra;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +22,9 @@ import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
+import brooklyn.util.time.Time;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -82,20 +84,20 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         return Math.min(getConfig(INITIAL_SIZE), DEFAULT_SEED_QUORUM);
     }
 
-    protected String gatherSeeds() {
+    protected Set<Entity> gatherSeeds() {
         Iterable<Entity> members = getMembers();
-        List<String> availableHostnames = Lists.newArrayList();
+        List<Entity> availableEntities = Lists.newArrayList();
         for (Entity node : members) {
             Optional<String> hostname = Machines.findSubnetOrPublicHostname(node);
             if (hostname.isPresent()) {
-                availableHostnames.add(hostname.get());
+                availableEntities.add(node);
             }
         }
         
-        if (!availableHostnames.isEmpty()) {
+        if (!availableEntities.isEmpty()) {
             int quorumSize = getQuorumSize();
-            if (availableHostnames.size()>=quorumSize) {
-                return Joiner.on(",").join(Iterables.limit(availableHostnames, quorumSize));
+            if (availableEntities.size()>=quorumSize) {
+                return MutableSet.copyOf(Iterables.limit(availableEntities, quorumSize));
             }
         }
         
@@ -130,6 +132,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         // SshEffectorTasks.ssh("echo \"describe cluster;\" | /bin/cassandra-cli");
         // once we've done that we can revert to using 2 seed nodes.
         // see CassandraCluster.DEFAULT_SEED_QUORUM
+        Time.sleep(DELAY_BEFORE_ADVERTISING_CLUSTER);
 
         update();
     }
