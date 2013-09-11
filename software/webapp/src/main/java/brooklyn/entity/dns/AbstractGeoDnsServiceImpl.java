@@ -31,6 +31,7 @@ import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.net.Networking;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -180,11 +181,29 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             HostGeoInfo geoH = (hostname == null) ? null : HostGeoInfo.fromIpAddress(InetAddress.getByName(hostname));
             HostGeoInfo geoE = HostGeoInfo.fromEntity(e);
 
+            // Switch to IP address if that's what we're configured to use, and it's available
+            if (!getConfig(USE_HOSTNAMES) && ip != null) {
+                geoH = HostGeoInfo.create(ip, geoH.displayName, geoH.latitude, geoH.longitude);
+            }
+            
+            if (hostname == null || (!getConfig(USE_HOSTNAMES) && ip!=null)) hostname = ip;
+            
             if (hostname == null) {
                 if (entitiesWithoutGeoInfo.add(e)) {
                     log.debug("GeoDns ignoring {}, will continue scanning (no hostname or URL available)", e);
                 }
                 return false;
+            }
+            
+            if (Networking.isPrivateSubnet(hostname)) {
+                if (getConfig(INCLUDE_HOMELESS_ENTITIES)) {
+                    log.info("GeoDns including {}, even though {} is a private subnet (homeless entities included)", e, hostname);
+                } else {
+                    if (entitiesWithoutGeoInfo.add(e)) {
+                        log.warn("GeoDns ignoring {} (private subnet detected for {})", e, hostname);
+                    }
+                    return false;
+                }
             }
             
             if (geoH == null) {
@@ -199,11 +218,6 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                     }
                     return false;
                 }
-            }
-            
-            // Switch to IP address if that's what we're configured to use, and it's available
-            if (!getConfig(USE_HOSTNAMES) && ip != null) {
-                geoH = HostGeoInfo.create(ip, geoH.displayName, geoH.latitude, geoH.longitude);
             }
             
             // If we already knew about it, and it hasn't changed, then nothing to do
