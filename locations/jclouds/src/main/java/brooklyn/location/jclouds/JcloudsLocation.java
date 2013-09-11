@@ -766,25 +766,26 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 // set the password + authorize the key for that user. Presumably the caller knows that this
                 // user pre-exists on the given VM image.
                 LOG.info("Not creating user {}, and not setting its password or authorizing keys (temporarily using loginUser {})", user, loginUser);
-            }
+            } else {
             
-            // For subsequent ssh'ing, we'll be using the loginUser
-            if (!truth(user)) {
-                config.put(USER, loginUser);
-            }
-            
-            // Using loginUser; setup the publicKey/password so can login as expected
-            if (password != null) {
-                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), loginUser, password));
-                result = LoginCredentials.builder().user(loginUser).password(password).build();
-            }
-            if (publicKeyData!=null) {
-                template.getOptions().authorizePublicKey(publicKeyData);
-                if (privateKeyData != null) {
-                    result = LoginCredentials.builder().user(loginUser).privateKey(privateKeyData).build();
+                // For subsequent ssh'ing, we'll be using the loginUser
+                if (!truth(user)) {
+                    config.put(USER, loginUser);
                 }
-            }
 
+                // Using loginUser; setup the publicKey/password so can login as expected
+                if (password != null) {
+                    statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), loginUser, password));
+                    result = LoginCredentials.builder().user(loginUser).password(password).build();
+                }
+                if (publicKeyData!=null) {
+                    template.getOptions().authorizePublicKey(publicKeyData);
+                    if (privateKeyData != null) {
+                        result = LoginCredentials.builder().user(loginUser).privateKey(privateKeyData).build();
+                    }
+                }
+
+            }
         } else if (truth(dontCreateUser)) {
             // Expect user to already exist; setup the publicKey/password so can login as expected
             if (password != null) {
