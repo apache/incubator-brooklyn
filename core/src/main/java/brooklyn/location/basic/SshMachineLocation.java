@@ -253,7 +253,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public String getUser() {
         if (!truth(user)) {
             if (hasConfig(SshTool.PROP_USER, false)) {
-                LOG.warn("User configuration for "+this+" set after deployment; discouraged");
+                LOG.warn("User configuration for "+this+" set after deployment; deprecated behaviour may not be supported in future versions");
             }
             return getConfig(SshTool.PROP_USER);
         }
