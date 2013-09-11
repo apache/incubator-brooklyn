@@ -64,6 +64,28 @@ public class LocationRegistryTest {
     }
 
     @Test
+    public void testLocationGetsDisplayName() {
+        BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
+        properties.put("brooklyn.location.named.foo", "byon:(hosts=\"root@192.168.1.{1,2,3,4}\")");
+        properties.put("brooklyn.location.named.foo.displayName", "My Foo");
+        mgmt = new LocalManagementContext(properties);
+        Location l = mgmt.getLocationRegistry().resolve("foo");
+        Assert.assertEquals(l.getDisplayName(), "My Foo");
+    }
+    
+    @Test
+    public void testLocationGetsDefaultDisplayName() {
+        BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
+        properties.put("brooklyn.location.named.foo", "byon:(hosts=\"root@192.168.1.{1,2,3,4}\")");
+        mgmt = new LocalManagementContext(properties);
+        Location l = mgmt.getLocationRegistry().resolve("foo");
+        Assert.assertEquals(l.getDisplayName(), null);
+        // TODO currently it gives null; it would be nice to use 'foo', 
+        // or at least to have access to the spec (and use it e.g. in places such as DynamicFabric)
+//        Assert.assertEquals(l.getDisplayName(), "foo");
+    }
+    
+    @Test
     public void testSetupForTesting() {
         mgmt = new LocalManagementContext();
         BasicLocationRegistry.setupLocationRegistryForTesting(mgmt);
