@@ -15,9 +15,9 @@ import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.enricher.basic.SensorTransformingEnricher;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.JavaWebAppService;
@@ -91,7 +91,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(WebClusterDatabaseExample.class).displayName("Brooklyn WebApp Cluster with Database example"))
+                .application(EntitySpec.create(StartableApplication.class, WebClusterDatabaseExample.class).displayName("Brooklyn WebApp Cluster with Database example"))
                 .webconsolePort(port)
                 .location(location)
                 .start();

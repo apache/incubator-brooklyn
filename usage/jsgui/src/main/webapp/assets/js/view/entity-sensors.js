@@ -91,7 +91,7 @@ define([
         },
 
         toggleFilterEmpty: function() {
-            ViewUtils.toggleFilterEmpty(this.$('#sensors-table'), 3);
+            ViewUtils.toggleFilterEmpty(this.$('#sensors-table'), 2);
             return this;
         },
 

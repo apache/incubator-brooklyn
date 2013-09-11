@@ -31,6 +31,7 @@ import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
@@ -115,8 +116,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @Deprecated
     public static final String SSHCONFIG_PREFIX = "sshconfig";
     
-    public static final ConfigKey<String> SSH_HOST = ConfigKeys.SSH_CONFIG_HOST;
-    public static final ConfigKey<Integer> SSH_PORT = ConfigKeys.SSH_CONFIG_PORT;
+    public static final ConfigKey<String> SSH_HOST = BrooklynConfigKeys.SSH_CONFIG_HOST;
+    public static final ConfigKey<Integer> SSH_PORT = BrooklynConfigKeys.SSH_CONFIG_PORT;
     
     public static final ConfigKey<String> SSH_EXECUTABLE = ConfigKeys.newStringConfigKey("sshExecutable", "Allows an `ssh` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
     public static final ConfigKey<String> SCP_EXECUTABLE = ConfigKeys.newStringConfigKey("scpExecutable", "Allows an `scp` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
@@ -252,7 +253,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public String getUser() {
         if (!truth(user)) {
             if (hasConfig(SshTool.PROP_USER, false)) {
-                LOG.warn("User configuration for "+this+" set after deployment; discouraged");
+                LOG.warn("User configuration for "+this+" set after deployment; deprecated behaviour may not be supported in future versions");
             }
             return getConfig(SshTool.PROP_USER);
         }

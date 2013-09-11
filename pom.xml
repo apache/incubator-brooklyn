@@ -106,7 +106,7 @@
         <jetty.version>8.1.4.v20120524</jetty.version>
         <git-like-cli.version>0.3</git-like-cli.version>
         <mockwebserver.version>20121111</mockwebserver.version>
-        <httpclient.version>4.1.3</httpclient.version>
+        <httpclient.version>4.2.5</httpclient.version>
         <freemarker.version>2.3.19</freemarker.version>
         <osgi-core.version>4.3.0</osgi-core.version>
         <commons-io.version>2.4</commons-io.version>

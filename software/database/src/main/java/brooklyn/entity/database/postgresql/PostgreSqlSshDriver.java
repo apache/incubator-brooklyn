@@ -78,6 +78,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
 
         newScript(INSTALLING).body.append(
                 dontRequireTtyForSudo(),
+                "rm -f bin", // if left over from previous incomplete/failed install (not sure why that keeps happening!)
                 alternativesGroup(findOrInstall),
                 alternativesGroup(linkFromHere))
                 .failOnNonZeroResultCode().queue();
