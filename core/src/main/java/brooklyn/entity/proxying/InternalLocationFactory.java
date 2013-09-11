@@ -5,11 +5,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
@@ -113,6 +115,9 @@ public class InternalLocationFactory {
             
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
                 ((AbstractLocation)loc).setConfig((ConfigKey)entry.getKey(), entry.getValue());
+            }
+            for (Entry<Class<?>, Object> entry : spec.getExtensions().entrySet()) {
+                ((LocationInternal)loc).addExtension((Class)entry.getKey(), entry.getValue());
             }
             ((AbstractLocation)loc).init();
             

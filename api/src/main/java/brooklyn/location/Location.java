@@ -153,4 +153,24 @@ public interface Location extends Serializable, Rebindable{
 
     @Override
     RebindSupport<LocationMemento> getRebindSupport();
+
+    /**
+     * Whether this location has support for the given extension type.
+     * See additional comments in {@link #getExtension(Class)}.
+     * 
+     * @throws NullPointerException if extensionType is null
+     */
+    boolean hasExtension(Class<?> extensionType);
+
+    /**
+     * Returns an extension of the given type. Note that the type must be an exact match for
+     * how the extension was registered (e.g. {@code getExtension(Object.class)} will not match
+     * anything, even though registered extension extend {@link Object}.
+     * <p>
+     * This will not look at extensions of {@link #getParent()}.
+     * 
+     * @throws IllegalArgumentException if this location does not support the given extension type
+     * @throws NullPointerException if extensionType is null
+     */
+    <T> T getExtension(Class<T> extensionType);
 }

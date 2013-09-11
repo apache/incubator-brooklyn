@@ -1,6 +1,8 @@
 package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Closeable;
 import java.util.Collection;
@@ -47,7 +49,7 @@ import com.google.common.io.Closeables;
  * 
  * Override {@link #configure(Map)} to add special initialization logic.
  */
-public abstract class AbstractLocation implements Location, HasHostGeoInfo, Configurable {
+public abstract class AbstractLocation implements LocationInternal, HasHostGeoInfo, Configurable {
     
     public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class);
 
@@ -76,6 +78,8 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
 
     private boolean inConstruction;
 
+    private final Map<Class<?>, Object> extensions = Maps.newConcurrentMap();
+    
     /**
      * Construct a new instance of an AbstractLocation.
      */
@@ -504,5 +508,28 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
     @Override
     public RebindSupport<LocationMemento> getRebindSupport() {
         return new BasicLocationRebindSupport(this);
+    }
+    
+    @Override
+    public boolean hasExtension(Class<?> extensionType) {
+        return extensions.containsKey(checkNotNull(extensionType, "extensionType"));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getExtension(Class<T> extensionType) {
+        Object extension = extensions.get(checkNotNull(extensionType, "extensionType"));
+        if (extension == null) {
+            throw new IllegalArgumentException("No extension of type "+extensionType+" registered for location "+this);
+        }
+        return (T) extension;
+    }
+    
+    @Override
+    public <T> void addExtension(Class<T> extensionType, T extension) {
+        checkNotNull(extensionType, "extensionType");
+        checkNotNull(extension, "extension");
+        checkArgument(extensionType.isInstance(extension), "extension %s does not implement %s", extension, extensionType);
+        extensions.put(extensionType, extension);
     }
 }
