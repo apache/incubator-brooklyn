@@ -31,6 +31,8 @@ import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -131,6 +133,8 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     @Override
     public abstract String getHostname();
     
+    long lastUpdate = -1;
+    
     // TODO: remove group member polling once locations can be determined via subscriptions
     protected void refreshGroupMembership() {
         try {
@@ -148,13 +152,14 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 previousOnes.remove(e);
                 changed |= addTargetHost(e);
             }
-            //anything left in previousOnes is no longer applicable
+            // anything left in previousOnes is no longer applicable
             for (Entity e: previousOnes) {
                 changed = true;
                 removeTargetHost(e, false);
             }
             
-            if (changed)
+            // do a periodic full update in case URL is passed in
+            if (changed || Time.hasElapsedSince(lastUpdate, Duration.TWO_MINUTES))
                 update();
             
         } catch (Exception e) {
@@ -236,6 +241,9 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     }
     
     protected void update() {
+        log.debug("Full update of "+this);
+        lastUpdate = System.currentTimeMillis();
+        
         Map<Entity, HostGeoInfo> m;
         synchronized(targetHosts) { m = ImmutableMap.copyOf(targetHosts); }
         
