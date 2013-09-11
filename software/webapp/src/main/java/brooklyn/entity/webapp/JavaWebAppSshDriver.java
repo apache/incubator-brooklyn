@@ -9,6 +9,8 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 
+import com.google.common.collect.ImmutableList;
+
 public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver implements JavaWebAppDriver {
 
     public JavaWebAppSshDriver(JavaWebAppSoftwareProcessImpl entity, SshMachineLocation machine) {
@@ -129,7 +131,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         String dest = getDeployDir() + "/" + canonicalTargetName;
         log.info("{} deploying {} to {}:{}", new Object[]{entity, url, getHostname(), dest});
         // create a backup
-        getMachine().run(String.format("mv -f %s %s.bak > /dev/null 2>&1", dest, dest)); //back up old file/directory
+        getMachine().execCommands("backing up old war", ImmutableList.of(String.format("mv -f %s %s.bak > /dev/null 2>&1", dest, dest))); //back up old file/directory
         int result = copyResource(url, dest);
         log.debug("{} deployed {} to {}:{}: result {}", new Object[]{entity, url, getHostname(), dest, result});
         if (result!=0) log.warn("Problem deploying {} to {}:{} for {}: result {}", new Object[]{url, getHostname(), dest, entity, result}); 
@@ -140,7 +142,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
     public void undeploy(String targetName) {
         String dest = getDeployDir() + "/" + getFilenameContextMapper().convertDeploymentTargetNameToFilename(targetName);
         log.info("{} undeploying {}:{}", new Object[]{entity, getHostname(), dest});
-        int result = getMachine().run(String.format("rm -f %s", dest));
+        int result = getMachine().execCommands("removing war on undeploy", ImmutableList.of(String.format("rm -f %s", dest)));
         log.debug("{} undeployed {}:{}: result {}", new Object[]{entity, getHostname(), dest, result});
     }
     

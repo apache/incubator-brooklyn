@@ -13,6 +13,7 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
 
@@ -107,7 +108,7 @@ public class InternalLocationFactory {
             
             if (isNewStyleLocation(clazz)) {
                 ((AbstractLocation)loc).setManagementContext(managementContext);
-                ((AbstractLocation)loc).configure(MutableMap.copyOf(spec.getFlags()));
+                ((AbstractLocation)loc).configure(ConfigBag.newInstance().putAll(spec.getFlags()).putAll(spec.getConfig()).getAllConfig());
             }
             
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {

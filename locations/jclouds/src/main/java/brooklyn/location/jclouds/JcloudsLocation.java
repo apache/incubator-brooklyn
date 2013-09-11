@@ -1264,9 +1264,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errStream = new ByteArrayOutputStream();
-            int exitcode = sshLocByIp.run(
-                    MutableMap.of("out", outStream, "err", errStream), 
-                    "echo `curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`; exit");
+            int exitcode = sshLocByIp.execCommands(
+                    MutableMap.of("out", outStream, "err", errStream),
+                    "get public AWS hostname",
+                    ImmutableList.of("echo `curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`; exit"));
             String outString = new String(outStream.toByteArray());
             String[] outLines = outString.split("\n");
             for (String line : outLines) {
