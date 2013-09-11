@@ -112,7 +112,7 @@ public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
     public void disconnectSensors() {
         super.disconnectSensors();
         disconnectServiceUpIsRunning();
-        if (sshFeed != null && sshFeed.isActivated()) sshFeed.stop();
+        if (sshFeed != null) sshFeed.stop();
     }
 
     @Override

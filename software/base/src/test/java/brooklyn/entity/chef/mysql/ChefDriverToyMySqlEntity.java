@@ -47,7 +47,7 @@ public class ChefDriverToyMySqlEntity extends SoftwareProcessImpl implements Che
     @Override
     protected void disconnectSensors() {
         // TODO nicer way to disconnect
-        if (upFeed!=null && upFeed.isActivated()) upFeed.stop();
+        if (upFeed != null) upFeed.stop();
         super.disconnectSensors();
     }
     

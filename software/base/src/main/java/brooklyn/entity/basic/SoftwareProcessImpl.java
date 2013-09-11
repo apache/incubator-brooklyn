@@ -145,7 +145,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      * @see #connectServiceUpIsRunning()
      */
     protected void disconnectServiceUpIsRunning() {
-        if (serviceUp != null && serviceUp.isActivated()) serviceUp.stop();
+        if (serviceUp != null) serviceUp.stop();
     }
 
     /**
