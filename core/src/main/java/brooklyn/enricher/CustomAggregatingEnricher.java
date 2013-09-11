@@ -17,6 +17,7 @@ import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Subscribes to events from producers with a sensor of type T, aggregates them with the 
@@ -40,11 +41,12 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
      * @param source
      * @param target
      * @param aggregator   Aggregates a collection of values, to return a single value for the target sensor
-     * @param defaultValue Default value to populate the collection given to aggregator, defaults to null
+     * @param defaultIniitalValueForUnreportedSensors Default value to populate the collection given to aggregator, 
+     * where sensors are null or not present initially, defaults to null (note however that subsequent null reports will put an explicit null)
      */
     public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<? extends S> source, AttributeSensor<T> target,
-            Function<Collection<S>, T> aggregator, S defaultValue) {
-        super(flags, source, target, defaultValue);
+            Function<Collection<S>, T> aggregator, S defaultIniitalValueForUnreportedSensors) {
+        super(flags, source, target, defaultIniitalValueForUnreportedSensors);
         this.aggregator = aggregator;
     }
     
@@ -68,22 +70,22 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
      * @param source
      * @param target
      * @param aggregator   Should take a collection of values and return a single, aggregate value
-     * @param defaultValue
+     * @param defaultValueForUnreportedSensors
      * 
      * @see #CustomAggregatingEnricher(Map, AttributeSensor, AttributeSensor, Function, Object)
      */
     @SuppressWarnings("unchecked")
     public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<? extends S> source, AttributeSensor<T> target,
-            Closure<?> aggregator, S defaultValue) {
-        this(flags, source, target, GroovyJavaMethods.<Collection<S>, T>functionFromClosure((Closure<T>)aggregator), defaultValue);
+            Closure<?> aggregator, S defaultValueForUnreportedSensors) {
+        this(flags, source, target, GroovyJavaMethods.<Collection<S>, T>functionFromClosure((Closure<T>)aggregator), defaultValueForUnreportedSensors);
     }
 
     public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<? extends S> source, AttributeSensor<T> target, Closure<?> aggregator) {
         this(flags, source, target, aggregator, null);
     }
 
-    public CustomAggregatingEnricher(AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator, S defaultValue) {
-        this(Collections.<String,Object>emptyMap(), source, target, aggregator, defaultValue);
+    public CustomAggregatingEnricher(AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator, S defaultValueForUnreportedSensors) {
+        this(Collections.<String,Object>emptyMap(), source, target, aggregator, defaultValueForUnreportedSensors);
     }
 
     public CustomAggregatingEnricher(AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator) {
@@ -143,61 +145,117 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         return newEnricher(Collections.<String,Object>emptyMap(), source, target, aggregator, null);
     }
     
+    /** creates an enricher which sums over all children/members, 
+     * defaulting to excluding sensors which have not published anything (or published null), and null if there are no sensors; 
+     * this behaviour can be customised, both default value for sensors, and what to report if no sensors
+     */
     public static <N extends Number, T extends Number> CustomAggregatingEnricher<N,T> newSummingEnricher(
-            Map<String,?> flags, AttributeSensor<N> source, final AttributeSensor<T> target) {
-        
+            Map<String,?> flags, AttributeSensor<N> source, final AttributeSensor<T> target, 
+            final N defaultValueForUnreportedSensors, final T valueToReportIfNoSensors) {
         Function<Collection<N>, T> aggregator = new Function<Collection<N>, T>() {
             @Override public T apply(Collection<N> vals) {
-                Object result = (vals == null || vals.isEmpty()) ? 0 : sum(vals);
-                return TypeCoercions.castPrimitive(result, (Class<T>)target.getType());
+                return sum(vals, defaultValueForUnreportedSensors, valueToReportIfNoSensors, target.getTypeToken());
             }
         };
-        return new CustomAggregatingEnricher<N,T>(flags, source, target, aggregator);
+        return new CustomAggregatingEnricher<N,T>(flags, source, target, aggregator, defaultValueForUnreportedSensors);
     }
+    /** @see {@link #newSummingEnricher(Map, AttributeSensor, AttributeSensor, Number, Number)}  
+     * @deprecated since 0.6.0 to prevent sprawl, use one of the fuller methods */ @Deprecated
+    public static <N extends Number, T extends Number> CustomAggregatingEnricher<N,T> newSummingEnricher(
+            Map<String,?> flags, AttributeSensor<N> source, final AttributeSensor<T> target) {
+        return newSummingEnricher(flags, source, target, null, null);
+    }
+    /** @see {@link #newSummingEnricher(Map, AttributeSensor, AttributeSensor, Number, Number)}  
+     * @deprecated since 0.6.0 to prevent sprawl, use one of the fuller methods */ @Deprecated
+    public static <N extends Number> CustomAggregatingEnricher<N,N> newSummingEnricher(
+            Map<String,?> flags, AttributeSensor<N> source, final AttributeSensor<N> target, N defaultValue) {
+        return newSummingEnricher(flags, source, target,  
+                cast(defaultValue, source.getTypeToken()),
+                cast(defaultValue, target.getTypeToken()));
+    }
+    /** @see {@link #newSummingEnricher(Map, AttributeSensor, AttributeSensor, Number, Number)} */
     public static <N extends Number> CustomAggregatingEnricher<N,N> newSummingEnricher(
             AttributeSensor<N> source, AttributeSensor<N> target) {
         return newSummingEnricher(Collections.<String,Object>emptyMap(), source, target);
     }
-
-    // TODO semantics of ZERO default seem very odd for an average (okay for summing)
-    /** creates an enricher which averages over all children/members, 
-     * counting ZERO for sensors which have not yet published anything;
-     * to have those sensors excluded, pass null as an additional argument (defaultValue)
-     */
-    // this function can't strictly return <N,Double> like the others because 
-    // we have to supply a 0 of instance of N
-    public static CustomAggregatingEnricher<Number,Double> newAveragingEnricher(
-            Map<String,?> flags, AttributeSensor<? extends Number> source, AttributeSensor<Double> target) {
-        return newAveragingEnricher(flags, source, target, 0);
+    /** @see {@link #newSummingEnricher(Map, AttributeSensor, AttributeSensor, Number, Number)}  
+     * @deprecated since 0.6.0 to prevent sprawl, use one of the fuller methods */ @Deprecated
+    public static <N extends Number> CustomAggregatingEnricher<N,N> newSummingEnricher(
+            AttributeSensor<N> source, AttributeSensor<N> target, N defaultValue) {
+        return newSummingEnricher(Collections.<String,Object>emptyMap(), source, target, 
+                cast(defaultValue, source.getTypeToken()),
+                cast(defaultValue, target.getTypeToken()));
     }
-    /** defaultValue of null means that the sensor is excluded */
+
+    /** creates an enricher which averages over all children/members, 
+     * defaulting to excluding sensors which have not published anything (or published null), and null if there are no sensors; 
+     * this behaviour can be customised, both default value for sensors, and what to report if no sensors
+     */
     public static <N extends Number> CustomAggregatingEnricher<N,Double> newAveragingEnricher(
-            Map<String,?> flags, AttributeSensor<? extends N> source, AttributeSensor<Double> target,
-            N defaultValue) {
+            Map<String,?> flags, AttributeSensor<? extends N> source, final AttributeSensor<Double> target,
+            final N defaultValueForUnreportedSensors, final Double valueToReportIfNoSensors) {
         
         Function<Collection<N>, Double> aggregator = new Function<Collection<N>, Double>() {
             @Override public Double apply(Collection<N> vals) {
-                int count = count(vals);
-                return (count==0) ? 0d : ((Double) sum(vals) / count);
+                int count = count(vals, defaultValueForUnreportedSensors!=null);
+                return (count==0) ? valueToReportIfNoSensors : 
+                    (Double) ((sum(vals, defaultValueForUnreportedSensors, 0, TypeToken.of(Double.class)) / count));
             }
         };
-        return new CustomAggregatingEnricher<N,Double>(flags, source, target, aggregator, defaultValue);
+        return new CustomAggregatingEnricher<N,Double>(flags, source, target, aggregator, defaultValueForUnreportedSensors);
     }
-    /** averages the given source sensor over all children/members, storing in target */
-    public static <N extends Number> CustomAggregatingEnricher<Number,Double> newAveragingEnricher(
+    
+    /** @see #newAveragingEnricher(Map, AttributeSensor, AttributeSensor, Number, Double) 
+     * @deprecated since 0.6.0 to prevent sprawl, use one of the fuller methods */ @Deprecated
+    public static <N extends Number> CustomAggregatingEnricher<N,Double> newAveragingEnricher(
+            Map<String,?> flags, AttributeSensor<? extends N> source, AttributeSensor<Double> target) {
+        return newAveragingEnricher(flags, source, target, null, null);
+    }
+
+    /** @see #newAveragingEnricher(Map, AttributeSensor, AttributeSensor, Number, Double) 
+     * @deprecated since 0.6.0 to prevent sprawl, use one of the fuller methods */ @Deprecated
+    public static <N extends Number> CustomAggregatingEnricher<N,Double> newAveragingEnricher(
+            Map<String,?> flags, AttributeSensor<? extends N> source, AttributeSensor<Double> target,
+            Number defaultValue) {
+        return newAveragingEnricher(flags, source, target, 
+                cast(defaultValue, source.getTypeToken()),
+                cast(defaultValue, target.getTypeToken()));
+    }
+
+    /** @see #newAveragingEnricher(Map, AttributeSensor, AttributeSensor, Number, Double) */
+    public static <N extends Number> CustomAggregatingEnricher<N,Double> newAveragingEnricher(
             AttributeSensor<N> source, AttributeSensor<Double> target) {
         return newAveragingEnricher(Collections.<String,Object>emptyMap(), source, target);
     }
 
-    private static <N extends Number> double sum(Iterable<N> vals) {
+    @SuppressWarnings("unchecked")
+    private static <N extends Number> N cast(Number n, TypeToken<? extends N> numberType) {
+        return (N) TypeCoercions.castPrimitive(n, numberType.getRawType());
+    }
+
+    private static <N extends Number> N sum(Iterable<? extends Number> vals, Number valueIfNull, Number valueIfNone, TypeToken<N> type) {
         double result = 0d;
-        if (vals!=null) for (Number val : vals) if (val!=null) result += val.doubleValue();
-        return result;
+        int count = 0;
+        if (vals!=null) {
+            for (Number val : vals) { 
+                if (val!=null) {
+                    result += val.doubleValue();
+                    count++;
+                } else if (valueIfNull!=null) {
+                    result += valueIfNull.doubleValue();
+                    count++;
+                }
+            }
+        }
+        if (count==0) return cast(valueIfNone, type);
+        return cast(result, type);
     }
     
-    private static int count(Iterable<? extends Object> vals) {
+    private static int count(Iterable<? extends Object> vals, boolean includeNullValues) {
         int result = 0;
-        if (vals!=null) for (Object val : vals) if (val!=null) result++;
+        if (vals!=null) 
+            for (Object val : vals) 
+                if (val!=null || includeNullValues) result++;
         return result;
     }
 
