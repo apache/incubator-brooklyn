@@ -1,4 +1,4 @@
-package brooklyn.location.jclouds;
+package brooklyn.location.cloud;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,31 +26,12 @@ public class CloudMachineNamerTest {
     }
 
     @Test
-    public void testGenerateGroupIdInVcloud() {
-        ConfigBag cfg = new ConfigBag()
-            .configure(JcloudsLocationConfig.CLOUD_PROVIDER, "vcloud")
-            .configure(JcloudsLocationConfig.CALLER_CONTEXT, "!mycontext!");
-        
-        String result = new CloudMachineNamer(cfg).generateNewGroupId();
-        
-        log.info("test mycontext vcloud group id gives: "+result);
-        // brooklyn-user-mycontext!-1234
-        // br-user-myco-1234
-        Assert.assertTrue(result.length() <= 15);
-        
-        String user = Strings.maxlen(System.getProperty("user.name"), 2).toLowerCase();
-        // (length 2 will happen if user is brooklyn)
-        Assert.assertTrue(result.indexOf(user) >= 0);
-        Assert.assertTrue(result.indexOf("-myc") >= 0);
-    }
-
-    @Test
     public void testGenerateGroupIdWithEntity() {
         app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"));
         TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("TestEnt"));
 
         ConfigBag cfg = new ConfigBag()
-            .configure(JcloudsLocationConfig.CALLER_CONTEXT, child);
+            .configure(CloudLocationConfig.CALLER_CONTEXT, child);
 
         String result = new CloudMachineNamer(cfg).generateNewGroupId();
 

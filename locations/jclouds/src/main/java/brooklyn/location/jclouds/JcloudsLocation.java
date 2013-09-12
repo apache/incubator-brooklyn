@@ -329,7 +329,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         setCreationString(setup);
         
         final ComputeService computeService = JcloudsUtil.findComputeService(setup);
-        String groupId = elvis(setup.get(GROUP_ID), new CloudMachineNamer(setup).generateNewGroupId());
+        String groupId = elvis(setup.get(GROUP_ID), new JcloudsMachineNamer(setup).generateNewGroupId());
         NodeMetadata node = null;
         JcloudsSshMachineLocation sshMachineLocation = null;
         
