@@ -3,8 +3,14 @@ package brooklyn.management.internal;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.location.basic.LocationEvent;
+import brooklyn.location.basic.LocationInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,7 +122,8 @@ public class LocalLocationManager implements LocationManager {
                 boolean result = manageNonRecursive(it);
                 if (result) {
                     it.setManagementContext(managementContext);
-                    it.onManagementStarted(); 
+                    it.onManagementStarted();
+                    storeLocationEvent(Lifecycle.CREATED, it);
                     managementContext.getRebindManager().getChangeListener().onManaged(it);
                 }
                 return result;
@@ -135,10 +142,25 @@ public class LocalLocationManager implements LocationManager {
             if (result) {
                 it.onManagementStopped(); 
                 managementContext.getRebindManager().getChangeListener().onUnmanaged(it);
+                storeLocationEvent(Lifecycle.DESTROYED, it);
                 if (managementContext.gc != null) managementContext.gc.onUnmanaged(it);
             }
             return result;
         } });
+    }
+    
+    private void storeLocationEvent(Lifecycle state, LocationInternal loc) {
+        System.err.println(state + " = " + loc);
+        if (state != null && loc != null && loc.getId() != null && managementContext.getStorage() != null) {
+            Object o = loc.getConfig(LocationConfigKeys.CALLER_CONTEXT);
+            System.err.println(state + " entity= " + o);
+            if (o != null && o instanceof Entity) {
+                Entity caller = (Entity) o;
+//                LocationEvent event = new LocationEvent(state, caller.getId(), caller.getEntityType() == null ? null : caller.getEntityType().getName(), caller.getApplicationId(), loc.toMetadataRecord());
+                LocationEvent event = new LocationEvent(state, caller.getId(), null, null, loc.toMetadataRecord());
+                managementContext.getStorage().<String, LocationEvent>getMap("location-usage").put(loc.getId(), event);
+            }
+        }
     }
     
     private void recursively(Location e, Predicate<AbstractLocation> action) {

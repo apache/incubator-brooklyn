@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -531,5 +532,12 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         checkNotNull(extension, "extension");
         checkArgument(extensionType.isInstance(extension), "extension %s does not implement %s", extension, extensionType);
         extensions.put(extensionType, extension);
+    }
+    @Override
+    public Map<String, String> toMetadataRecord() {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+        builder.put("id", getId());
+        if (getDisplayName() != null) builder.put("displayName", getDisplayName());
+        return builder.build();
     }
 }

@@ -1,8 +1,12 @@
 package brooklyn.entity.basic;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
+import brooklyn.internal.storage.BrooklynStorage;
+import brooklyn.management.internal.ManagementContextInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +26,8 @@ import brooklyn.util.flags.SetFromFlag;
  */
 public abstract class AbstractApplication extends AbstractEntity implements StartableApplication {
     public static final Logger log = LoggerFactory.getLogger(AbstractApplication.class);
+    
+    public static final String APPLICATION_USAGE_KEY = "application-usage";
     
     @SetFromFlag("mgmt")
     private volatile ManagementContext mgmt;
@@ -116,6 +122,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
         deployed = true;
 
+        putApplicationEvent(Lifecycle.CREATED);
+
         log.info("Started application " + this);
     }
 
@@ -150,6 +158,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         }
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPED);
 
+        putApplicationEvent(Lifecycle.DESTROYED);
+
         synchronized (this) {
             deployed = false;
             //TODO review mgmt destroy lifecycle
@@ -166,5 +176,26 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 
     public void restart() {
         throw new UnsupportedOperationException();
+    }
+
+    private void putApplicationEvent(Lifecycle event) {
+        List<ApplicationEvent> list = getApplicationEvents();
+        if (list != null) {
+            list.add(new ApplicationEvent(event, getId(), getDisplayName(), getEntityTypeName()));
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected List<ApplicationEvent> getApplicationEvents() {
+        if (getManagementContext() != null) {
+            BrooklynStorage storage = ((ManagementContextInternal) getManagementContext()).getStorage();
+
+            Map<String, List<ApplicationEvent>> usageMap = storage.getMap(APPLICATION_USAGE_KEY);
+            if (!usageMap.containsKey(getId())) {
+                usageMap.put(getId(), new ArrayList<ApplicationEvent>());
+            }
+            return usageMap.get(getId());
+        }
+        return null;
     }
 }
