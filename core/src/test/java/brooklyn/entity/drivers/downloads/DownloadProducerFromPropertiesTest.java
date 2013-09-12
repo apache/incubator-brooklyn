@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
@@ -79,7 +79,7 @@ public class DownloadProducerFromPropertiesTest {
     @Test
     public void testSubstitutionsAppliedToFallbackUrl() throws Exception {
         brooklynProperties.put("brooklyn.downloads.all.fallbackurl", "version=${version}");
-        entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         assertResolves(ImmutableList.<String>of(), ImmutableList.of("version=myversion"));
     }
 
@@ -93,7 +93,7 @@ public class DownloadProducerFromPropertiesTest {
     @Test
     public void testReturnsGlobalUrlWithEntitySubstituions() throws Exception {
         brooklynProperties.put("brooklyn.downloads.all.url", "version=${version}");
-        entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         assertResolves("version=myversion");
     }
     
@@ -101,7 +101,7 @@ public class DownloadProducerFromPropertiesTest {
     public void testEntitySpecificUrlOverridesGlobalUrl() throws Exception {
         brooklynProperties.put("brooklyn.downloads.all.url", "version=${version}");
         brooklynProperties.put("brooklyn.downloads.entity.TestEntity.url", "overridden,version=${version}");
-        entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         assertResolves("overridden,version=myversion", "version=myversion");
     }
     

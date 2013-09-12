@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
@@ -135,7 +135,7 @@ public class ByonLocationResolver implements LocationResolver {
         if (user != null) flags.put("user", user);
         if (name != null) flags.put("name", name);
         if (registry != null) {
-            String brooklynDataDir = (String) registry.getProperties().get(ConfigKeys.BROOKLYN_DATA_DIR.getName());
+            String brooklynDataDir = (String) registry.getProperties().get(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName());
             if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
                 flags.put("localTempDir", new File(brooklynDataDir));
             }

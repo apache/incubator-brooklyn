@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
@@ -92,14 +92,14 @@ public class DownloadSubstituters {
         Entity entity = driver.getEntity();
         String type = entity.getEntityType().getName();
         String simpleType = type.substring(type.lastIndexOf(".")+1);
-        String version = entity.getConfig(ConfigKeys.SUGGESTED_VERSION);
+        String version = entity.getConfig(BrooklynConfigKeys.SUGGESTED_VERSION);
         
         String v2 = entity.getAttribute(Attributes.VERSION);
         if (v2!=null && !v2.equals(version)) {
             // Attributes.VERSION was deprecated in 0.5.0 but was preferred here without warning in 0.6.0
             // now warn on use of deprecated key when it is different
             LOG.warn("Using deprecated key "+Attributes.VERSION+", value "+v2+", which differs from the " +
-            		"preferred key "+ConfigKeys.SUGGESTED_VERSION+", value "+version+"; old key will be retired shortly!");
+            		"preferred key "+BrooklynConfigKeys.SUGGESTED_VERSION+", value "+version+"; old key will be retired shortly!");
             version = v2;
         }
         

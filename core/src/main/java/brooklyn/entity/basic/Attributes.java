@@ -28,7 +28,7 @@ public interface Attributes {
     /**
      * Application information sensors.
      * 
-     * @deprecated since 0.5; see {@link ConfigKeys#SUGGESTED_VERSION}
+     * @deprecated since 0.5; see {@link BrooklynConfigKeys#SUGGESTED_VERSION}
      */
     @Deprecated
     AttributeSensor<String> VERSION = Sensors.newStringSensor( "version", "Version information");

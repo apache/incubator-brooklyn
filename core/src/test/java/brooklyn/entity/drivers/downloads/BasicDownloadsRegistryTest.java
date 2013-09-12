@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
@@ -89,7 +89,7 @@ public class BasicDownloadsRegistryTest {
         brooklynProperties.put("brooklyn.downloads.all.url", "http://fromprops/${version}.allprimary");
         brooklynProperties.put("brooklyn.downloads.all.fallbackurl", "http://fromfallback/${version}.allfallback");
         entity.setAttribute(Attributes.DOWNLOAD_URL, "http://fromattrib/${version}.default");
-        entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         String expectedFilename = "myversion.allprimary";
 
         String expectedLocalRepo = String.format("file://$HOME/.brooklyn/repository/%s/%s/%s", "TestEntity", "myversion", expectedFilename);
