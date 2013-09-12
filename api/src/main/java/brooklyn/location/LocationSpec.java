@@ -78,6 +78,7 @@ public class LocationSpec<T extends Location> implements Serializable {
     private Location parent;
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
+    private final Map<Class<?>, Object> extensions = Maps.newLinkedHashMap();
 
     protected LocationSpec(Class<T> type) {
         checkIsImplementation(type);
@@ -136,6 +137,11 @@ public class LocationSpec<T extends Location> implements Serializable {
         return this;
     }
 
+    public <E> LocationSpec<T> extension(Class<E> extensionType, E extension) {
+        extensions.put(checkNotNull(extensionType, "extensionType"), checkNotNull(extension, "extension"));
+        return this;
+    }
+
     /**
      * @return The type of the location
      */
@@ -170,6 +176,13 @@ public class LocationSpec<T extends Location> implements Serializable {
      */
     public Map<ConfigKey<?>, Object> getConfig() {
         return Collections.unmodifiableMap(config);
+    }
+        
+    /**
+     * @return Read-only extension values
+     */
+    public Map<Class<?>, Object> getExtensions() {
+        return Collections.unmodifiableMap(extensions);
     }
         
     
