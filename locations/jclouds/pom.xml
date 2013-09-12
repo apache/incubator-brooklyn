@@ -39,11 +39,16 @@
         <dependency>
             <groupId>org.apache.jclouds</groupId>
             <artifactId>jclouds-allcompute</artifactId>
-	</dependency>
+        </dependency>
         <dependency>
             <groupId>org.apache.jclouds.labs</groupId>
             <artifactId>abiquo</artifactId>
             <version>${jclouds.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jclouds.labs</groupId>
+            <artifactId>google-compute-engine</artifactId>
+            <version>1.6.1-cloudsoft.1</version>
         </dependency>
         <!-- these two seem needed here to prevent Eclipse IDE from getting wrong version of logback-core -->
         <dependency>

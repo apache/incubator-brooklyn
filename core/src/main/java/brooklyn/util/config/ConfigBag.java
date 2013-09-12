@@ -315,6 +315,14 @@ public class ConfigBag {
         return this;
     }
 
+    public int size() {
+        return config.size();
+    }
+    
+    public boolean isEmpty() {
+        return config.isEmpty();
+    }
+    
     public ConfigBag markAll(Iterable<String> usedFlags) {
         for (String flag: usedFlags)
             markUsed(flag);

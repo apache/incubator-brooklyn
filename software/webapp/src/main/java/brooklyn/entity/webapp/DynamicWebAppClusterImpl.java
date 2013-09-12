@@ -63,7 +63,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         for (List<? extends AttributeSensor<? extends Number>> es : averagingEnricherSetup) {
             AttributeSensor<Number> t = (AttributeSensor<Number>) es.get(0);
             AttributeSensor<Double> average = (AttributeSensor<Double>) es.get(1);
-            CustomAggregatingEnricher<?,?> averager = CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), t, average);
+            CustomAggregatingEnricher<?,?> averager = CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), t, average, null);
             addEnricher(averager);
         }
 

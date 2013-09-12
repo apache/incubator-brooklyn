@@ -12,9 +12,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigUtils;
-import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
@@ -24,7 +22,6 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.KeyValueParser;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -96,7 +93,7 @@ public class LocalhostResolver implements LocationResolver {
             flags.put("name", namePart);
         }
         if (registry != null) {
-            String brooklynDataDir = (String) registry.getProperties().get(ConfigKeys.BROOKLYN_DATA_DIR.getName());
+            String brooklynDataDir = (String) registry.getProperties().get(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName());
             if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
                 flags.put("localTempDir", new File(brooklynDataDir));
             }

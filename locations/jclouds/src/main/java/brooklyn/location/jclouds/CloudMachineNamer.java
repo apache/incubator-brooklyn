@@ -92,6 +92,8 @@ public class CloudMachineNamer {
             return 24;
         if ("abiquo".equals( setup.peek(JcloudsLocationConfig.CLOUD_PROVIDER) )) 
             return 39;
+        if ("google-compute-engine".equals( setup.peek(JcloudsLocationConfig.CLOUD_PROVIDER) ))
+            return 39;
         // TODO other cloud max length rules
         
         // return the default

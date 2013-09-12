@@ -12,8 +12,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
-import brooklyn.entity.basic.ConfigKeys
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.BrooklynConfigKeys
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestApplicationImpl
@@ -22,7 +21,7 @@ import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.internal.ssh.SshTool
 import brooklyn.util.internal.ssh.cli.SshCliTool
 import brooklyn.util.internal.ssh.sshj.SshjTool
-import brooklyn.util.stream.StreamGobbler;
+import brooklyn.util.stream.StreamGobbler
 
 class StartStopSshDriverTest {
 
@@ -69,7 +68,7 @@ class StartStopSshDriverTest {
 
     @Test(groups = [ "Integration" ])
     public void testSshScriptHeaderUsedWhenSpecified() {
-        entity.setConfig(ConfigKeys.SSH_CONFIG_SCRIPT_HEADER, "#!/bin/bash -e\necho hello world");
+        entity.setConfig(BrooklynConfigKeys.SSH_CONFIG_SCRIPT_HEADER, "#!/bin/bash -e\necho hello world");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         driver.execute(out: out, Arrays.asList("echo goodbye"), "test");
         String s = out.toString();
@@ -81,7 +80,7 @@ class StartStopSshDriverTest {
 
     @Test(groups = [ "Integration" ])
     public void testSshCliPickedUpWhenSpecified() {
-        entity.setConfig(ConfigKeys.SSH_TOOL_CLASS, SshCliTool.class.getName());
+        entity.setConfig(BrooklynConfigKeys.SSH_TOOL_CLASS, SshCliTool.class.getName());
         driver.execute(Arrays.asList("echo hi"), "test");
         assertTrue(sshMachineLocation.lastTool instanceof SshCliTool, "expect CLI tool, got "+
                         (sshMachineLocation.lastTool!=null ? ""+sshMachineLocation.lastTool.getClass()+":" : "") + sshMachineLocation.lastTool);

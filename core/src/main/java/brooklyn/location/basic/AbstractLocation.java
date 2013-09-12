@@ -1,6 +1,8 @@
 package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Closeable;
 import java.util.Collection;
@@ -47,7 +49,7 @@ import com.google.common.io.Closeables;
  * 
  * Override {@link #configure(Map)} to add special initialization logic.
  */
-public abstract class AbstractLocation implements Location, HasHostGeoInfo, Configurable {
+public abstract class AbstractLocation implements LocationInternal, HasHostGeoInfo, Configurable {
     
     public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class);
 
@@ -76,6 +78,8 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
 
     private boolean inConstruction;
 
+    private final Map<Class<?>, Object> extensions = Maps.newConcurrentMap();
+    
     /**
      * Construct a new instance of an AbstractLocation.
      */
@@ -181,13 +185,13 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
             //'displayName' is a legacy way to refer to a location's name
             //FIXME could this be a GString?
             Preconditions.checkArgument(properties.get("displayName") instanceof String, "'displayName' property should be a string");
-            name = (String) properties.remove("displayName");
+            name = (String) removeIfPossible(properties, "displayName");
         }
         
         // TODO Explicitly dealing with iso3166 here because want custom splitter rule comma-separated string.
         // Is there a better way to do it (e.g. more similar to latitude, where configKey+TypeCoercion is enough)?
         if (truth(properties.get("iso3166"))) {
-            Object rawCodes = properties.remove("iso3166");
+            Object rawCodes = removeIfPossible(properties, "iso3166");
             Set<String> codes;
             if (rawCodes instanceof CharSequence) {
                 codes = ImmutableSet.copyOf(Splitter.on(",").trimResults().split((CharSequence)rawCodes));
@@ -198,6 +202,16 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
         }
     }
 
+    // TODO ensure no callers rely on 'remove' semantics, and don't remove;
+    // or perhaps better use a config bag so we know what is used v unused
+    private static Object removeIfPossible(Map map, Object key) {
+        try {
+            return map.remove(key);
+        } catch (Exception e) {
+            return map.get(key);
+        }
+    }
+    
     /**
      * Called by framework (in new-style locations) after configuring, setting parent, etc,
      * but before a reference to this location is shared with other locations.
@@ -494,5 +508,28 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
     @Override
     public RebindSupport<LocationMemento> getRebindSupport() {
         return new BasicLocationRebindSupport(this);
+    }
+    
+    @Override
+    public boolean hasExtension(Class<?> extensionType) {
+        return extensions.containsKey(checkNotNull(extensionType, "extensionType"));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getExtension(Class<T> extensionType) {
+        Object extension = extensions.get(checkNotNull(extensionType, "extensionType"));
+        if (extension == null) {
+            throw new IllegalArgumentException("No extension of type "+extensionType+" registered for location "+this);
+        }
+        return (T) extension;
+    }
+    
+    @Override
+    public <T> void addExtension(Class<T> extensionType, T extension) {
+        checkNotNull(extensionType, "extensionType");
+        checkNotNull(extension, "extension");
+        checkArgument(extensionType.isInstance(extension), "extension %s does not implement %s", extension, extensionType);
+        extensions.put(extensionType, extension);
     }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJava;
@@ -31,7 +32,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
             Map.class, "brooklynnode.copytorundir", "URLs of resources to be copied across to the server, giving the path they are to be copied to", MutableMap.of());
     
     @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(ConfigKeys.SUGGESTED_VERSION, "0.6.0-SNAPSHOT"); // BROOKLYN_VERSION
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.SUGGESTED_VERSION, "0.6.0-SNAPSHOT"); // BROOKLYN_VERSION
 
     // Takes presidence over downloadUrl, if non-null
     @SetFromFlag("distroUploadUrl")

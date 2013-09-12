@@ -766,25 +766,26 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 // set the password + authorize the key for that user. Presumably the caller knows that this
                 // user pre-exists on the given VM image.
                 LOG.info("Not creating user {}, and not setting its password or authorizing keys (temporarily using loginUser {})", user, loginUser);
-            }
+            } else {
             
-            // For subsequent ssh'ing, we'll be using the loginUser
-            if (!truth(user)) {
-                config.put(USER, loginUser);
-            }
-            
-            // Using loginUser; setup the publicKey/password so can login as expected
-            if (password != null) {
-                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), loginUser, password));
-                result = LoginCredentials.builder().user(loginUser).password(password).build();
-            }
-            if (publicKeyData!=null) {
-                template.getOptions().authorizePublicKey(publicKeyData);
-                if (privateKeyData != null) {
-                    result = LoginCredentials.builder().user(loginUser).privateKey(privateKeyData).build();
+                // For subsequent ssh'ing, we'll be using the loginUser
+                if (!truth(user)) {
+                    config.put(USER, loginUser);
                 }
-            }
 
+                // Using loginUser; setup the publicKey/password so can login as expected
+                if (password != null) {
+                    statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), loginUser, password));
+                    result = LoginCredentials.builder().user(loginUser).password(password).build();
+                }
+                if (publicKeyData!=null) {
+                    template.getOptions().authorizePublicKey(publicKeyData);
+                    if (privateKeyData != null) {
+                        result = LoginCredentials.builder().user(loginUser).privateKey(privateKeyData).build();
+                    }
+                }
+
+            }
         } else if (truth(dontCreateUser)) {
             // Expect user to already exist; setup the publicKey/password so can login as expected
             if (password != null) {
@@ -1264,9 +1265,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errStream = new ByteArrayOutputStream();
-            int exitcode = sshLocByIp.run(
-                    MutableMap.of("out", outStream, "err", errStream), 
-                    "echo `curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`; exit");
+            int exitcode = sshLocByIp.execCommands(
+                    MutableMap.of("out", outStream, "err", errStream),
+                    "get public AWS hostname",
+                    ImmutableList.of("echo `curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`; exit"));
             String outString = new String(outStream.toByteArray());
             String[] outLines = outString.split("\n");
             for (String line : outLines) {

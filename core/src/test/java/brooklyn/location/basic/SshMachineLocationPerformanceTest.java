@@ -67,7 +67,7 @@ public class SshMachineLocationPerformanceTest {
         
         Runnable task = new Runnable() {
             @Override public void run() {
-                machine.run(ImmutableMap.of("out", stdout, "err", stderr), ImmutableList.of("true"));
+                machine.execScript(ImmutableMap.of("out", stdout, "err", stderr), "test", ImmutableList.of("true"));
             }};
         runMany(task, "small-cmd-custom-stdout", 1, 10);
     }

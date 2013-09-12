@@ -1,7 +1,7 @@
 package brooklyn.entity.brooklynnode;
 
-import static java.lang.String.format;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -22,6 +22,7 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Strings;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -171,11 +172,11 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
             destName = destName.substring(destName.lastIndexOf('/') + 1);
 
             if (destName.toLowerCase().endsWith(".zip")) {
-                result = machine.run(format("cd %s/lib && unzip %s",getRunDir(),destName));
+                result = machine.execCommands("unzipping", ImmutableList.of(format("cd %s/lib && unzip %s",getRunDir(),destName)));
             } else if (destName.toLowerCase().endsWith(".tgz") || destName.toLowerCase().endsWith(".tar.gz")) {
-                result = machine.run(format("cd %s/lib && tar xvfz %s",getRunDir(),destName));
+                result = machine.execCommands("untarring gz", ImmutableList.of(format("cd %s/lib && tar xvfz %s",getRunDir(),destName)));
             } else if (destName.toLowerCase().endsWith(".tar")) {
-                result = machine.run(format("cd %s/lib && tar xvfz %s",getRunDir(),destName));
+                result = machine.execCommands("untarring", ImmutableList.of(format("cd %s/lib && tar xvfz %s",getRunDir(),destName)));
             }
             if (result != 0)
                 throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s (failed to expand archive)",f,entity,machine));

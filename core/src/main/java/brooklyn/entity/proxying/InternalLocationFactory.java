@@ -5,14 +5,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
 
@@ -107,11 +110,14 @@ public class InternalLocationFactory {
             
             if (isNewStyleLocation(clazz)) {
                 ((AbstractLocation)loc).setManagementContext(managementContext);
-                ((AbstractLocation)loc).configure(MutableMap.copyOf(spec.getFlags()));
+                ((AbstractLocation)loc).configure(ConfigBag.newInstance().putAll(spec.getFlags()).putAll(spec.getConfig()).getAllConfig());
             }
             
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
                 ((AbstractLocation)loc).setConfig((ConfigKey)entry.getKey(), entry.getValue());
+            }
+            for (Entry<Class<?>, Object> entry : spec.getExtensions().entrySet()) {
+                ((LocationInternal)loc).addExtension((Class)entry.getKey(), entry.getValue());
             }
             ((AbstractLocation)loc).init();
             

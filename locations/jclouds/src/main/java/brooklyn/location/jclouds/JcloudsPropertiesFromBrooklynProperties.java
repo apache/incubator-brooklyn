@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigUtils;
-import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.location.basic.DeprecatedKeysMappingBuilder;
 import brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
 
@@ -74,7 +74,7 @@ public class JcloudsPropertiesFromBrooklynProperties extends LocationPropertiesF
         jcloudsProperties.putAll(transformDeprecated(getProviderOrApiJcloudsProperties(providerOrApi, properties)));
         jcloudsProperties.putAll(transformDeprecated(getRegionJcloudsProperties(providerOrApi, regionName, properties)));
         if (!Strings.isNullOrEmpty(namedLocation)) jcloudsProperties.putAll(transformDeprecated(getNamedJcloudsProperties(namedLocation, properties)));
-        String brooklynDataDir = (String) properties.get(ConfigKeys.BROOKLYN_DATA_DIR.getName());
+        String brooklynDataDir = (String) properties.get(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName());
         if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
             jcloudsProperties.put("localTempDir", new File(brooklynDataDir));
         }

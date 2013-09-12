@@ -129,7 +129,7 @@ public class Networking {
     /**
      * Check if this is a private address, not exposed on the public Internet.
      *
-     * For IPV4 addresses this is an RFC1918 subnet (site local) address ({code 10.0.0.0/8},
+     * For IPV4 addresses this is an RFC1918 subnet (site local) address ({@code 10.0.0.0/8},
      * {@code 172.16.0.0/12} and {@code 192.168.0.0/16}), a link-local address
      * ({@code 169.254.0.0/16}) or a loopback address ({@code 127.0.0.1/0}).
      * <p>
@@ -168,7 +168,7 @@ public class Networking {
         }
     }
 
-    /** As {@link #isPrivateSubnet(InetAddress) but taking a string; sepcifically local-only address ARE treated as private. 
+    /** As {@link #isPrivateSubnet(InetAddress)} but taking a string; sepcifically local-only address ARE treated as private. 
      * does not require the string to be resolvable, and things which aren't resolvable are treated as private 
      * unless they are known to be local-only */
     public static boolean isPrivateSubnet(String hostnameOrIp) {

@@ -136,44 +136,4 @@ public class ConfigKeys {
     public static ConfigKey<Boolean> newBooleanConfigKey(String name, String description, Boolean defaultValue) {
         return newConfigKey(Boolean.class, name, description, defaultValue);
     }
-
-    /* Key definitions were deprecated here in 0.6.0 because they introduce nasty circular dependencies on the
-     * methods in this class, causing some final fields to be null when they are accessed. 
-     */
-
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<String> BROOKLYN_DATA_DIR = BrooklynConfigKeys.BROOKLYN_DATA_DIR;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<String> SUGGESTED_VERSION = BrooklynConfigKeys.SUGGESTED_VERSION;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = BrooklynConfigKeys.SUGGESTED_INSTALL_DIR;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<Boolean> START_LATCH = BrooklynConfigKeys.START_LATCH;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<Boolean> INSTALL_LATCH = BrooklynConfigKeys.INSTALL_LATCH;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<Boolean> CUSTOMIZE_LATCH = BrooklynConfigKeys.CUSTOMIZE_LATCH;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<Integer> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<String> SSH_TOOL_CLASS = BrooklynConfigKeys.SSH_TOOL_CLASS;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<String> SSH_CONFIG_HOST = BrooklynConfigKeys.SSH_CONFIG_HOST;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<Integer> SSH_CONFIG_PORT = BrooklynConfigKeys.SSH_CONFIG_PORT;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<String> SSH_CONFIG_USER = BrooklynConfigKeys.SSH_CONFIG_USER;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<String> SSH_CONFIG_PASSWORD = BrooklynConfigKeys.SSH_CONFIG_PASSWORD;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<String> SSH_CONFIG_SCRIPT_DIR = BrooklynConfigKeys.SSH_CONFIG_SCRIPT_DIR;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<String> SSH_CONFIG_SCRIPT_HEADER = BrooklynConfigKeys.SSH_CONFIG_SCRIPT_HEADER;
-    /** @deprecated since 0.6.0; use {@link BrooklynConfigKeys} to prevent classload ordering problems */ @Deprecated
-    public static final ConfigKey<String> SSH_CONFIG_DIRECT_HEADER = BrooklynConfigKeys.SSH_CONFIG_DIRECT_HEADER;
-
 }

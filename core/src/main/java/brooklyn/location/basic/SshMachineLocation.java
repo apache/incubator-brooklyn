@@ -15,11 +15,14 @@ import java.io.PipedOutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.security.KeyPair;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +31,7 @@ import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
@@ -112,8 +116,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @Deprecated
     public static final String SSHCONFIG_PREFIX = "sshconfig";
     
-    public static final ConfigKey<String> SSH_HOST = ConfigKeys.SSH_CONFIG_HOST;
-    public static final ConfigKey<Integer> SSH_PORT = ConfigKeys.SSH_CONFIG_PORT;
+    public static final ConfigKey<String> SSH_HOST = BrooklynConfigKeys.SSH_CONFIG_HOST;
+    public static final ConfigKey<Integer> SSH_PORT = BrooklynConfigKeys.SSH_CONFIG_PORT;
     
     public static final ConfigKey<String> SSH_EXECUTABLE = ConfigKeys.newStringConfigKey("sshExecutable", "Allows an `ssh` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
     public static final ConfigKey<String> SCP_EXECUTABLE = ConfigKeys.newStringConfigKey("scpExecutable", "Allows an `scp` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
@@ -248,40 +252,49 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     public String getUser() {
         if (!truth(user)) {
-            return System.getProperty("user.name");
+            if (hasConfig(SshTool.PROP_USER, false)) {
+                LOG.warn("User configuration for "+this+" set after deployment; deprecated behaviour may not be supported in future versions");
+            }
+            return getConfig(SshTool.PROP_USER);
         }
         return user;
     }
     
-    public int getPort() {
+    /** port for SSHing */
+    @Nonnull public int getPort() {
         return getConfig(SshTool.PROP_PORT);
     }
     
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(String command) {
         return run(MutableMap.of(), command, MutableMap.of());
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(Map props, String command) {
         return run(props, command, MutableMap.of());
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(String command, Map env) {
         return run(MutableMap.of(), command, env);
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(Map props, String command, Map env) {
         return run(props, ImmutableList.of(command), env);
     }
 
-    /**
-     * @deprecated in 1.4.1, @see execCommand and execScript
-     */
+    /** @deprecated in 1.4.1 (? - 0.4.1 ?, definitely by 0.6.0), @see execCommand and execScript */
     public int run(List<String> commands) {
         return run(MutableMap.of(), commands, MutableMap.of());
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(Map props, List<String> commands) {
         return run(props, commands, MutableMap.of());
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(List<String> commands, Map env) {
         return run(MutableMap.of(), commands, env);
     }
+    /** @deprecated in 0.6.0, @see execCommand and execScript */
     public int run(final Map props, final List<String> commands, final Map env) {
         if (commands == null || commands.isEmpty()) return 0;
         return execSsh(props, new Function<ShellTool, Integer>() {
@@ -339,6 +352,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 args.putStringKey(key, entry.getValue());
             }
             if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
+            if (!user.equals(args.get(SshTool.PROP_USER))) {
+                LOG.warn("User mismatch configuring ssh for "+this+": preferring user "+args.get(SshTool.PROP_USER)+" over "+user);
+                user = args.get(SshTool.PROP_USER);
+            }
             
             // look up tool class
             String sshToolClass = args.get(SshTool.PROP_TOOL_CLASS);
@@ -623,7 +640,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public boolean isSshable() {
         String cmd = "date";
         try {
-            int result = run(cmd);
+            try {
+                Socket s = new Socket(getAddress(), getPort());
+                s.close();
+            } catch (IOException e) {
+                if (LOG.isDebugEnabled()) LOG.debug(""+this+" not [yet] reachable (socket "+getAddress()+":"+getPort()+"): "+e);
+                return false;
+            }
+            // this should do execCommands because sftp subsystem might not be available (or sometimes seems to take a while for it to become so?)
+            int result = execCommands(MutableMap.<String,Object>of(), "isSshable", ImmutableList.of(cmd));
             if (result == 0) {
                 return true;
             } else {

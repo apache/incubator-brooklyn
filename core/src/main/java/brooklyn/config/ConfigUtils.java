@@ -92,19 +92,19 @@ public class ConfigUtils {
     @SuppressWarnings("rawtypes")
     public static Set<HasConfigKey<?>> getStaticKeysOnClass(Class<?> type) {
         Set<HasConfigKey<?>> result = new LinkedHashSet<ConfigKey.HasConfigKey<?>>();
-        try {
-            for (Field f: type.getFields()) {
+        for (Field f: type.getFields()) {
+            try {
                 if ((f.getModifiers() & Modifier.STATIC)==0)
                     continue;
                 if (ConfigKey.class.isAssignableFrom(f.getType()))
                     result.add(new WrappedConfigKey((ConfigKey<?>) f.get(null)));
                 else if (HasConfigKey.class.isAssignableFrom(f.getType()))
                     result.add((HasConfigKey<?>) f.get(null));
+            } catch (Exception e) {
+                log.error("Error retrieving config key for field "+f+" on class "+type+"; rethrowing", e);
+                throw Exceptions.propagate(e);
             }
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
         }
         return Collections.unmodifiableSet(result);
     }
-
 }

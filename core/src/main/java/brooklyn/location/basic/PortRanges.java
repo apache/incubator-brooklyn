@@ -53,6 +53,7 @@ public class PortRanges {
         }
     }
 
+    /** @deprecated since 0.6.0; use LinearPortRange */
     @Deprecated
     public static class BasicPortRange extends LinearPortRange {
 		private static final long serialVersionUID = 2604690520893353582L;
@@ -228,6 +229,7 @@ public class PortRanges {
     }
 
     /** performs the language extensions required for this project */
+    @SuppressWarnings("rawtypes")
     public static void init() {
         TypeCoercions.registerAdapter(Integer.class, PortRange.class, new Function<Integer,PortRange>() {
             public PortRange apply(Integer x) { return fromInteger(x); }

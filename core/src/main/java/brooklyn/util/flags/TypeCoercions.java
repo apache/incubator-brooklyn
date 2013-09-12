@@ -168,6 +168,7 @@ public class TypeCoercions {
      */
     @SuppressWarnings("unchecked")
     public static <T> T castPrimitive(Object value, Class<T> targetType) {
+        if (value==null) return null;
         assert isPrimitiveOrBoxer(targetType) : "targetType="+targetType;
         assert isPrimitiveOrBoxer(value.getClass()) : "value="+targetType+"; valueType="+value.getClass();
 
