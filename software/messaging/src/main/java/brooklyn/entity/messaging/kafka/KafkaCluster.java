@@ -19,6 +19,7 @@ import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
@@ -30,7 +31,6 @@ import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -56,7 +56,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface KafkaCluster extends Entity, Startable, Resizable, Group  {
 
     @SetFromFlag("startTimeout")
-    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.START_TIMEOUT;
+    ConfigKey<Integer> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
 
     @SetFromFlag("initialSize")
     ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(Cluster.INITIAL_SIZE, 1);

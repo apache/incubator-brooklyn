@@ -56,17 +56,17 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 	@Override
 	public void start() {
 	    DynamicTasks.queue("install", new Runnable() { public void run() {
-            waitForConfigKey(ConfigKeys.INSTALL_LATCH);
+            waitForConfigKey(BrooklynConfigKeys.INSTALL_LATCH);
             install();
         }});
         
 	    DynamicTasks.queue("customize", new Runnable() { public void run() {
-            waitForConfigKey(ConfigKeys.CUSTOMIZE_LATCH);
+            waitForConfigKey(BrooklynConfigKeys.CUSTOMIZE_LATCH);
             customize();
         }});
         
 	    DynamicTasks.queue("launch", new Runnable() { public void run() {
-            waitForConfigKey(ConfigKeys.LAUNCH_LATCH);
+            waitForConfigKey(BrooklynConfigKeys.LAUNCH_LATCH);
             launch();
         }});
         
@@ -113,9 +113,11 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
         }});
 	}
 	
-	public EntityLocal getEntity() { return entity; } 
+	@Override
+    public EntityLocal getEntity() { return entity; } 
 
-	public Location getLocation() { return location; } 
+	@Override
+    public Location getLocation() { return location; } 
     
     public InputStream getResource(String url) {
         return new ResourceUtils(entity).getResourceFromUrl(url);

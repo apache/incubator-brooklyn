@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.launcher.config.CustomResourceLocator;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -147,7 +147,7 @@ public class BrooklynWebServer {
         if (!leftovers.isEmpty())
             log.warn("Ignoring unknown flags " + leftovers);
         
-        String brooklynDataDir = checkNotNull(managementContext.getConfig().getConfig(ConfigKeys.BROOKLYN_DATA_DIR));
+        String brooklynDataDir = checkNotNull(managementContext.getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR));
         this.webappTempDir = new File(brooklynDataDir, "jetty");
     }
 
