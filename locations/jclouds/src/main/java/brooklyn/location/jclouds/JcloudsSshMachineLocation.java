@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.google.common.collect.ImmutableMap;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.callables.RunScriptOnNode;
 import org.jclouds.compute.domain.ExecResponse;
@@ -29,6 +30,8 @@ import brooklyn.util.net.Networking;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import javax.annotation.Nullable;
 
 public class JcloudsSshMachineLocation extends SshMachineLocation implements HasSubnetHostname {
     
@@ -170,4 +173,25 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         }
         return super.getOsDetails();
     }
+    
+    @Override
+    public Map<String, String> toMetadataRecord() {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+        builder.putAll(super.toMetadataRecord());
+        putIfNotNull(builder, "providerId", node.getProviderId());
+        putIfNotNull(builder, "imageId", node.getImageId());
+        putIfNotNull(builder, "instanceTypeName", node.getHardware().getName());
+        putIfNotNull(builder, "instanceTypeId", node.getHardware().getProviderId());
+        putIfNotNull(builder, "ram", "" + node.getHardware().getRam());
+        putIfNotNull(builder, "cpus", "" + node.getHardware().getProcessors().size());
+        putIfNotNull(builder, "osName", getOsDetails().getName());
+        putIfNotNull(builder, "osArch", getOsDetails().getArch());
+        putIfNotNull(builder, "64bit", getOsDetails().is64bit() ? "true" : "false");
+        return builder.build();
+    }
+    
+    private void putIfNotNull(ImmutableMap.Builder<String, String> builder, String key, @Nullable String value) {
+        if (value != null) builder.put(key, value);
+    }
+
 }
