@@ -155,7 +155,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
     @Override
     public void destroy() {
         super.destroy();
-        httpFeed.stop();
+        if (httpFeed != null) httpFeed.stop();
     }
 
     public static Builder builder() {

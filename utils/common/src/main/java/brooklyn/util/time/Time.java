@@ -285,16 +285,20 @@ public class Time {
     }
     
 	/** parses a string eg '5s' or '20m 22.123ms', returning the number of milliseconds it represents (rounded);
-	 * -1 on blank or never or off or false;
-	 * number of millis if no units specified;
-	 * otherwise throws Parse exception (including on null */
+	 * -1 on blank or "never" or "off" or "false";
+	 * number of millis if no units specified.
+	 * 
+	 * @throws NumberFormatException if cannot be parsed (or if null)
+	 */
 	public static long parseTimeString(String timeString) {
 		return (long) parseTimeStringAsDouble(timeString);
 	}
 
 	/** parses a string eg '5s' or '20m 22.123ms', returning the number of milliseconds it represents; -1 on blank or never or off or false;
-	 * number of millis if no units specified;
-	 * otherwise throws Parse exception (including on null */
+	 * number of millis if no units specified.
+	 * 
+     * @throws NumberFormatException if cannot be parsed (or if null)
+	 */
 	public static double parseTimeStringAsDouble(String timeString) {
 		if (timeString==null)
 			throw new NumberFormatException("GeneralHelper.parseTimeString cannot parse a null string");

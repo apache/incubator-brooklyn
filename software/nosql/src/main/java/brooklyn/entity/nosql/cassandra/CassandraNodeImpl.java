@@ -186,9 +186,9 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     public void disconnectSensors() {
         super.disconnectSensors();
 
-        if (jmxFeed != null && jmxFeed.isActivated()) jmxFeed.stop();
+        if (jmxFeed != null) jmxFeed.stop();
         if (jmxHelper.isConnected()) jmxHelper.disconnect();
-        if (functionFeed != null && functionFeed.isActivated()) functionFeed.stop();
+        if (functionFeed != null) functionFeed.stop();
     }
 
     @Override

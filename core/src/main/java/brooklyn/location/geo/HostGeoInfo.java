@@ -66,9 +66,14 @@ public class HostGeoInfo implements Serializable {
             longitude = geo.longitude;
         }
         if (latitude instanceof BigDecimal) latitude = ((BigDecimal) latitude).doubleValue();
+        if (latitude instanceof String) latitude = Double.parseDouble((String)latitude);
         if (longitude instanceof BigDecimal) longitude = ((BigDecimal) longitude).doubleValue();
+        if (longitude instanceof String) longitude = Double.parseDouble((String)longitude);
+        
         if (!(latitude instanceof Double) || !(longitude instanceof Double))
-            throw new IllegalArgumentException("Passed location specifies invalid type of lat/long");
+            throw new IllegalArgumentException("Location "+l+" specifies invalid type of lat/long: " +
+                    "lat="+latitude+" (type "+(latitude==null ? null : latitude.getClass())+"); " +
+                    "lon="+longitude+" (type "+(longitude==null ? null : longitude.getClass())+")");
         
         HostGeoInfo result = new HostGeoInfo(address.getHostAddress(), l.getDisplayName(), (Double) latitude, (Double) longitude);
         if (l instanceof AbstractLocation) {

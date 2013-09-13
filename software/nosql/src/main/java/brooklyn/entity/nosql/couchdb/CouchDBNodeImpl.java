@@ -88,7 +88,7 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
     @Override
     public void disconnectSensors() {
         super.disconnectSensors();
-        if (httpFeed != null && httpFeed.isActivated()) httpFeed.stop();
+        if (httpFeed != null) httpFeed.stop();
         disconnectServiceUpIsRunning();
     }
 
