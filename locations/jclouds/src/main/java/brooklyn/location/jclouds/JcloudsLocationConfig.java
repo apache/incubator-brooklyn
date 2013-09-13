@@ -120,10 +120,6 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "customizers", "Optional location customizers", null);
 
     public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
-
-    // default is just shy of common 64-char boundary (could perhaps increase slightly...)
-    public static final ConfigKey<Integer> VM_NAME_MAX_LENGTH = ConfigKeys.newIntegerConfigKey(
-            "vmNameMaxLength", "Maximum length of VM name", 61);
     
     public static final ConfigKey<Integer> OVERRIDE_RAM = ConfigKeys.newIntegerConfigKey("overrideRam", "Custom ram value");    
     

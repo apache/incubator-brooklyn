@@ -59,4 +59,11 @@ public class SensorTransformingEnricher<T,U> extends AbstractTypeTransformingEnr
         return new SensorTransformingEnricher<U,V>(producer, source, target, transformation);
     }
 
+    /** as {@link #newInstanceTransforming(Entity, AttributeSensor, Function, AttributeSensor)}
+     * using the same sensor as the source and the target */
+    public static <T> SensorTransformingEnricher<T,T> newInstanceTransforming(Entity producer, AttributeSensor<T> sensor,
+            Function<T,T> transformation) {
+        return newInstanceTransforming(producer, sensor, transformation, sensor);
+    }
+
 }

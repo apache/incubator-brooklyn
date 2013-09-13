@@ -25,6 +25,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -50,7 +51,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     public void init() {
         super.init();
         
-        fabricSizeEnricher = CustomAggregatingEnricher.newSummingEnricher(Changeable.GROUP_SIZE, FABRIC_SIZE);
+        fabricSizeEnricher = CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), Changeable.GROUP_SIZE, FABRIC_SIZE);
         addEnricher(fabricSizeEnricher);
         
         setAttribute(SERVICE_UP, false);

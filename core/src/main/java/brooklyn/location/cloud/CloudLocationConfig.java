@@ -35,6 +35,10 @@ public interface CloudLocationConfig {
     /** @deprecated since 0.6.0; included here so it gets picked up in auto-detect routines */ @Deprecated
     public static final ConfigKey<String> LEGACY_PRIVATE_KEY_PASSPHRASE = LocationConfigKeys.LEGACY_PRIVATE_KEY_PASSPHRASE;
 
+    // default is just shy of common 64-char boundary (could perhaps increase slightly...)
+    public static final ConfigKey<Integer> VM_NAME_MAX_LENGTH = ConfigKeys.newIntegerConfigKey(
+            "vmNameMaxLength", "Maximum length of VM name", 61);
+
     public static final ConfigKey<Object> CALLER_CONTEXT = LocationConfigKeys.CALLER_CONTEXT;
 
     public static final ConfigKey<Boolean> DESTROY_ON_FAILURE = ConfigKeys.newBooleanConfigKey("destroyOnFailure", "Whether to destroy the VM if provisioningLocation.obtain() fails", true);

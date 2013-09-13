@@ -159,8 +159,8 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 removeTargetHost(e, false);
             }
             
-            // do a periodic full update in case URL is passed in
-            if (changed || Time.hasElapsedSince(lastUpdate, Duration.TWO_MINUTES))
+            // do a periodic full update hourly (probably not needed)
+            if (changed || Time.hasElapsedSince(lastUpdate, Duration.ONE_HOUR))
                 update();
             
         } catch (Exception e) {
