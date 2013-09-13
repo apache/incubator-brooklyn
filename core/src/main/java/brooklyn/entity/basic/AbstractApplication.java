@@ -1,12 +1,12 @@
 package brooklyn.entity.basic;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.management.internal.ManagementContextInternal;
+import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,7 +122,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
         deployed = true;
 
-        putApplicationEvent(Lifecycle.CREATED);
+        putApplicationEvent(Lifecycle.RUNNING);
 
         log.info("Started application " + this);
     }
@@ -178,24 +178,16 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         throw new UnsupportedOperationException();
     }
 
-    private void putApplicationEvent(Lifecycle event) {
-        List<ApplicationEvent> list = getApplicationEvents();
-        if (list != null) {
-            list.add(new ApplicationEvent(event, getId(), getDisplayName(), getEntityTypeName()));
+    private void putApplicationEvent(Lifecycle state) {
+        log.debug("Location lifecycle event: application {} in state {};", new Object[] {this, state});
+        BrooklynStorage storage = ((ManagementContextInternal) getManagementContext()).getStorage();
+        ConcurrentMap<String, ApplicationUsage> eventMap = storage.getMap(APPLICATION_USAGE_KEY);
+        ApplicationUsage usage = eventMap.get(getId());
+        if (usage == null) {
+            usage = new ApplicationUsage(getId(), getDisplayName(), getEntityTypeName(), ImmutableMap.<String,String>of());
         }
+        usage.addEvent(new ApplicationUsage.ApplicationEvent(state));        
+        eventMap.put(getId(), usage);
     }
 
-    @SuppressWarnings("unchecked")
-    protected List<ApplicationEvent> getApplicationEvents() {
-        if (getManagementContext() != null) {
-            BrooklynStorage storage = ((ManagementContextInternal) getManagementContext()).getStorage();
-
-            Map<String, List<ApplicationEvent>> usageMap = storage.getMap(APPLICATION_USAGE_KEY);
-            if (!usageMap.containsKey(getId())) {
-                usageMap.put(getId(), new ArrayList<ApplicationEvent>());
-            }
-            return usageMap.get(getId());
-        }
-        return null;
-    }
 }

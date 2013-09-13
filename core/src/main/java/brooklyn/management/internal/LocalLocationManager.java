@@ -182,7 +182,7 @@ public class LocalLocationManager implements LocationManager {
         
         try {
             Object callerContext = loc.getConfig(LocationConfigKeys.CALLER_CONTEXT);
-            log.info("Location lifecycle event: location {} in state {}; caller context {}", new Object[] {loc, state, callerContext}); // FIXME decrease logging level?
+            log.debug("Location lifecycle event: location {} in state {}; caller context {}", new Object[] {loc, state, callerContext});
             
             if (callerContext != null && callerContext instanceof Entity) {
                 Entity caller = (Entity) callerContext;
