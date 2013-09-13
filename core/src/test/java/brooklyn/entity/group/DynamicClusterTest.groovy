@@ -338,7 +338,7 @@ class DynamicClusterTest {
     }
 
     @Test
-    public void testInitialQuorumSizeDeafultsToInitialSize() throws Exception {
+    public void testInitialQuorumSizeDefaultsToInitialSize() throws Exception {
         final int failNum = 1;
         final AtomicInteger counter = new AtomicInteger(0)
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)

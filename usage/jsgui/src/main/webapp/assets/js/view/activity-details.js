@@ -2,18 +2,41 @@
  * Displays details on an activity/task
  */
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils", "view/viewutils", "formatJson",
+    "underscore", "jquery", "backbone", "brooklyn-utils", "view/viewutils", "formatJson", "moment",
     "model/task-summary",
     "text!tpl/apps/activity-details.html", "text!tpl/apps/activity-table.html", 
-    "text!tpl/apps/activity-row-details.html", "text!tpl/apps/activity-row-details-main.html",
-    "text!tpl/apps/activity-full-details.html", 
-    "bootstrap", "formatJson", "jquery-datatables", "datatables-extensions", "moment"
-], function (_, $, Backbone, Util, ViewUtils, FormatJSON,
+
+    "bootstrap", "jquery-datatables", "datatables-extensions"
+], function (_, $, Backbone, Util, ViewUtils, FormatJSON, moment,
     TaskSummary,
-    ActivityDetailsHtml, ActivityTableHtml, ActivityRowDetailsHtml, ActivityRowDetailsMainHtml, ActivityFullDetailsHtml) {
+    ActivityDetailsHtml, ActivityTableHtml) {
+
+    var activityTableTemplate = _.template(ActivityTableHtml),
+        activityDetailsTemplate = _.template(ActivityDetailsHtml);
+
+    function makeActivityTable($el) {
+        $el.html(_.template(ActivityTableHtml));
+        var $subTable = $('.activity-table', $el);
+        $subTable.attr('width', 569-6-6 /* subtract padding */)
+
+        return ViewUtils.myDataTable($subTable, {
+            "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                $(nRow).attr('id', aData[0])
+                $(nRow).addClass('activity-row')
+            },
+            "aoColumnDefs": [ {
+                    "mRender": function ( data, type, row ) { return Util.escape(data) },
+                    "aTargets": [ 1, 2, 3 ]
+                 }, {
+                    "bVisible": false,
+                    "aTargets": [ 0 ]
+                 } ],
+            "aaSorting":[]  // default not sorted (server-side order)
+        });
+    }
 
     var ActivityDetailsView = Backbone.View.extend({
-        template:_.template(ActivityDetailsHtml),
+        template: activityDetailsTemplate,
         taskLink: '',
         task: null,
         /* children of this task; see HasTaskChildren for difference between this and sub(mitted)Tasks */
@@ -43,45 +66,10 @@ define([
 
             this.$el.html(this.template({ taskLink: this.taskLink, task: this.task, breadcrumbs: this.breadcrumbs }))
             this.$el.addClass('activity-detail-panel')
-                        
-            this.$('#activities-children-table').html(_.template(ActivityTableHtml))
-            var that = this,
-                $childrenTable = this.$('#activities-children-table .activity-table');
-            $childrenTable.attr('width', 569-6-6 /* subtract padding */)
-            this.childrenTable = ViewUtils.myDataTable($childrenTable, {
-                "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
-                    $(nRow).attr('id', aData[0])
-                    $(nRow).addClass('activity-row')
-                },
-                "aoColumnDefs": [ {
-                        "mRender": function ( data, type, row ) { return Util.prep(data) },
-                        "aTargets": [ 1, 2, 3 ]
-                     }, { 
-                        "bVisible": false, 
-                        "aTargets": [ 0 ] 
-                     } ],
-                "aaSorting":[]  // default not sorted (server-side order)
-            });
 
-            this.$('#activities-submitted-table').html(_.template(ActivityTableHtml))
-            var that = this,
-                $subtasksTable = this.$('#activities-submitted-table .activity-table');
-            $subtasksTable.attr('width', 569-6-6 /* subtract padding */)
-            this.subtasksTable = ViewUtils.myDataTable($subtasksTable, {
-                "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
-                    $(nRow).attr('id', aData[0])
-                    $(nRow).addClass('activity-row')
-                },
-                "aoColumnDefs": [ {
-                        "mRender": function ( data, type, row ) { return Util.prep(data) },
-                        "aTargets": [ 1, 2, 3 ]
-                     }, { 
-                        "bVisible": false, 
-                        "aTargets": [ 0 ] 
-                     } ],
-                "aaSorting":[]  // default not sorted (server-side order)
-            });
-        
+            this.childrenTable = makeActivityTable(this.$('#activities-children-table'));
+            this.subtasksTable = makeActivityTable(this.$('#activities-submitted-table'));
+
             ViewUtils.attachToggler(this.$el)
         
             if (this.task) {
@@ -93,7 +81,7 @@ define([
             this.renderSubtasks()
         
             this.callPeriodically("refreshNow", function () {
-                that.refreshNow()
+                this.refreshNow()
             }, 1000);
 
             if (this.collection) {
@@ -114,12 +102,7 @@ define([
             // update task fields
             var that = this
             
-            this.updateField('displayName')
-            this.updateField('entityDisplayName')
-            this.updateField('id')
-            this.updateField('description')
-            this.updateField('currentStatus')
-            this.updateField('blockingDetails')
+            this.updateFields('displayName', 'entityDisplayName', 'id', 'description', 'currentStatus', 'blockingDetails');
             this.updateFieldWith('blockingTask',
                 function(v) { 
                     return "<a class='showDrillDownBlockerOfAnchor handy' link='"+_.escape(v.link)+"'>"+
@@ -142,7 +125,7 @@ define([
             this.updateFieldWith('streams',
                 function(v) {
                     var result = "";
-                    for (si in v) {
+                    for (var si in v) {
                         var sv = v[si];
                         result += "<div class='activity-stream-div'>"+
                                   "<span class='activity-label'>"+
@@ -220,7 +203,7 @@ define([
             // find tasks submitted by this one which aren't included as children
             // this uses collections -- which is everything in the current execution context
             var subtasks = []
-            for (taskI in this.collection.models) {
+            for (var taskI in this.collection.models) {
                 var task = this.collection.models[taskI]
                 var submittedBy = task.get("submittedByTask")
                 if (submittedBy!=null && submittedBy.metadata!=null && submittedBy.metadata["id"] == this.task.id &&
@@ -251,7 +234,10 @@ define([
                     _.escape(v.link)
         },
         updateField: function(field) {
-            return this.updateFieldWith(field, function(v) { return _.escape(v) })
+            return this.updateFieldWith(field, _.escape)
+        },
+        updateFields: function() {
+            _.map(arguments, this.updateField, this);
         },
         updateFieldWith: function(field, f) {
             var v = this.task.get(field)
@@ -261,7 +247,7 @@ define([
                 $('.ifField-'+field, this.$el).show();
             } else {
                 // blank if there is no value
-                $('.updateField-'+field, this.$el).html( '' );;
+                $('.updateField-'+field, this.$el).empty();
                 $('.ifField-'+field, this.$el).hide();
             }
             return v
@@ -292,11 +278,11 @@ define([
         },
         showDrillDownTask: function(relation, newTaskLink, newTask) {
             log("activities deeper drill down - "+newTaskLink)
-            var $t = this.$el.closest('.slide-panel')
-            $t2 = $t.after('<div>').next()
+            var $t = this.$el.closest('.slide-panel'),
+                $t2 = $t.after('<div>').next()
             $t2.addClass('slide-panel')
             
-            newBreadcrumbs = [ relation + ' ' +
+            var newBreadcrumbs = [ relation + ' ' +
                 this.task.get('entityDisplayName') + ' ' +
                 this.task.get('displayName') ].concat(this.breadcrumbs)
             var activityDetailsPanel = new ActivityDetailsView({
@@ -331,7 +317,7 @@ define([
             $t2.animate({
                     left: 569 //prevTable.width()
                 }, 300, function() {
-                    that.$el.html('')
+                    that.$el.empty()
                     $t2.remove()
                     that.remove()
                 });
