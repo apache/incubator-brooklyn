@@ -1,7 +1,8 @@
 define([
     "model/effector-summary", "model/effector-param"
 ], function (EffectorSummary, EffectorParam) {
-
+    $.ajaxSetup({ async:false });
+    
     describe("effector-spec: EffectorSummary model", function () {
         var effectorCollection = new EffectorSummary.Collection
         effectorCollection.url = "fixtures/effector-summary-list.json"

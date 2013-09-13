@@ -24,7 +24,6 @@ define([
         },
         initialize:function () {
             this.$el.html(this.template({ }));
-            $.ajaxSetup({ async:true });
             var that = this;
             // fetch the list of policies and create a view for each one
             that._policies = new PolicySummary.Collection();

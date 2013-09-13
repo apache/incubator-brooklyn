@@ -2,6 +2,8 @@ define([
     "model/application", "model/entity"
 ], function (Application, Entity) {
 
+    $.ajaxSetup({ async:false });
+
     describe('model/application Application model', function () {
 
         var application = new Application.Model()

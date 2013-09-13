@@ -28,7 +28,6 @@ define([
         initialize:function () {
             this.$el.html(this.template({ }));
             this.$('#activities-root').html(_.template(ActivityTableHtml))
-            $.ajaxSetup({ async:true });
             var that = this,
                 $table = that.$('#activities-root .activity-table');
             that.collection.url = that.model.getLinkByName("activities");

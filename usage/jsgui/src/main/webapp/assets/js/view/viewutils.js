@@ -229,10 +229,18 @@ define([
         fadeToIndicateInitialLoad: function($table) {
             // in case the server response time is low, fade out while it refreshes
             // (since we can't show updated details until we've retrieved app + entity details)
-            $table.fadeTo(1000, 0.3);
+            try {                
+                $table.fadeTo(1000, 0.3);
+            } catch (e) {
+                // ignore - normal during tests
+            }
         },
         cancelFadeOnceLoaded: function($table) {
-            $table.stop().fadeTo(200, 1);
+            try {
+                $table.stop().fadeTo(200, 1);
+            } catch (e) {
+                // ignore - normal during tests
+            }
         }
     };
     return ViewUtils;

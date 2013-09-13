@@ -23,6 +23,9 @@
         <maven-replacer-plugin.version>1.5.2</maven-replacer-plugin.version>
         <nodejs-maven-plugin.version>1.0.3</nodejs-maven-plugin.version>
         <jasmine-maven-plugin.version>1.2.0.0</jasmine-maven-plugin.version>
+<!-- see comment about fixtures below
+        <jasmine-maven-plugin.version>1.3.1.2</jasmine-maven-plugin.version>
+-->
         <requirejs-maven-plugin.version>2.0.0</requirejs-maven-plugin.version>
 
         <!-- The maven-war-plugin 2.1+ and the replacer plugin don't work well together. -->
@@ -108,21 +111,18 @@
                 <extensions>true</extensions>
                 <executions>
                     <execution>
-                        <id>FIREFOX_3</id>
-                        <phase>test</phase>
                         <goals>
                             <goal>test</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <!--Tests simulate Firefox 3-->
+<!-- Tests simulate Firefox 3 - does not seem supported on latest jasmine
                     <browserVersion>FIREFOX_3</browserVersion>
-
-                    <!--Configures output file names-->
                     <junitXmlReportFileName>TEST-FIREFOX_3-jasmine.xml</junitXmlReportFileName>
                     <manualSpecRunnerHtmlFileName>FIREFOX_3-ManualSpecRunner.html</manualSpecRunnerHtmlFileName>
                     <specRunnerHtmlFileName>FIREFOX_3-SpecRunner.html</specRunnerHtmlFileName>
+-->
 
                     <!--Uses the require.js test spec-->
                     <specRunnerTemplate>REQUIRE_JS</specRunnerTemplate>

@@ -20,7 +20,6 @@ define([
         },
         initialize:function () {
         	this.$el.html(this.template({ }));
-            $.ajaxSetup({ async:true });
             var that = this,
                 $table = this.$('#config-table');
             that.table = ViewUtils.myDataTable($table, {
