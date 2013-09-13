@@ -151,8 +151,13 @@ define([
             app.url = "/v1/applications/" + appName
             entitySummary.url = "/v1/applications/" + appName + "/entities/" + id;
 
+            // in case the server response time is low, fade out while it refreshes
+            // (since we can't show updated details until we've retrieved app + entity details)
+            $("div#details").fadeTo(1000, 0.3)
+            
             $.when(app.fetch(), entitySummary.fetch())
                 .done(function() {
+                    $("div#details").stop().fadeTo(200, 1)
                     that.showDetails(app, entitySummary);
                 })
                 .fail(entityLoadFailed);
@@ -179,8 +184,9 @@ define([
                     this.detailsView.close()
                 }
             }
-            if (this.detailsView)
+            if (this.detailsView) {
                 this.detailsView.close()
+            }
             this.detailsView = new EntityDetailsView({
                 model:entitySummary,
                 application:app

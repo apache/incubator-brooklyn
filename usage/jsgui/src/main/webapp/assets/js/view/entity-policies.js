@@ -24,11 +24,14 @@ define([
         },
         initialize:function () {
             this.$el.html(this.template({ }));
-            $.ajaxSetup({ async:false });
+            $.ajaxSetup({ async:true });
             var that = this;
             // fetch the list of policies and create a view for each one
             that._policies = new PolicySummary.Collection();
             that._policies.url = that.model.getLinkByName("policies");
+            
+            this.loadedData = false;
+            ViewUtils.fadeToIndicateInitialLoad(this.$('#policies-table'));
             that.callPeriodically("entity-policies", function() {
                 that.refresh();
             }, 3000);
@@ -39,15 +42,20 @@ define([
             var that = this;
             that.render();
             that._policies.fetch({ success:function () {
+                that.loadedData = true;
                 that.render();
+                ViewUtils.cancelFadeOnceLoaded(that.$('#policies-table'));
             }});
         },
 
         render:function () {
+            if (this.viewIsClosed)
+                return;
             var that = this,
                 $tbody = this.$('#policies-table tbody').empty();
             if (that._policies.length==0) {
-                this.$(".has-no-policies").show();
+                if (this.loadedData)
+                    this.$(".has-no-policies").show();
                 this.$("#policy-config").hide();
                 this.$("#policy-config-none-selected").hide();
             } else {
@@ -149,9 +157,11 @@ define([
         },
 
         refreshPolicyConfig:function (that) {
+            if (that.viewIsClosed) return;
             var $table = that.$('#policy-config-table').dataTable(),
                 $rows = that.$("tr.policy-config-row");
             $.get(that.currentStateUrl, function (data) {
+                if (that.viewIsClosed) return;
                 // iterate over the sensors table and update each sensor
                 $rows.each(function (index, row) {
                     var key = $(this).find(".policy-config-name").text();

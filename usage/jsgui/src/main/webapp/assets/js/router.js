@@ -11,6 +11,7 @@ define([
 	//  see "close" called below in "showView") 
     Backbone.View.prototype.close = function () {
         // call user defined close method if exists
+        this.viewIsClosed = true
         if (this.beforeClose) {
             this.beforeClose()
         }
@@ -20,6 +21,7 @@ define([
         this.remove()
         this.unbind()
     }
+    Backbone.View.prototype.viewIsClosed = false
 
     /**
      * Registers a callback (cf setInterval) that is unregistered cleanly when the view

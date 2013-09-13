@@ -149,9 +149,12 @@ define([
                 $table = this.$('#sensors-table'),
                 that = this;
             $.get(url, function (data) {
+                if (that.viewIsClosed) {
+                    return
+                }
                 ViewUtils.updateMyDataTable($table, data, function(value, name) {
                     var metadata = that.sensorMetadata[name]
-                    if (metadata==null) {                        
+                    if (metadata==null) {
                         // TODO should reload metadata when this happens (new sensor for which no metadata known)
                         // (currently if we have dynamic sensors, their metadata won't appear
                         // until the page is refreshed; don't think that's a bit problem -- mainly tooltips

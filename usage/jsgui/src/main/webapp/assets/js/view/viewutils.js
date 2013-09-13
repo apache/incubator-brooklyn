@@ -4,6 +4,7 @@ define([
 
     var ViewUtils = {
         myDataTable:function($table, extra) {
+            $.fn.dataTableExt.sErrMode = 'throw';
             var settings = {
                 "bDestroy": true,
                 "iDisplayLength": 25,
@@ -31,6 +32,9 @@ define([
                 }
             };
             _.extend(settings, extra);
+            
+            ViewUtils.fadeToIndicateInitialLoad($table);
+ 
             return $table.dataTable(settings);
         },
         myDataTableToolbarAddHtml: function($table,html) {
@@ -56,7 +60,17 @@ define([
          */ 
         updateMyDataTable: function(table, collection, fnConvertData) {
             if (table==null) return;
-            var oldDisplayDataList = table.dataTable().fnGetData();
+            var oldDisplayDataList = []
+            try {
+                oldDisplayDataList = table.dataTable().fnGetData();
+            } catch (e) {
+                // (used to) sometimes get error acessing column 1 of row 0, though table seems empty
+                // caused by previous attempt to refresh from a closed view
+                log("WARNING: could not fetch data; clearing")
+                log(e)
+                log(e.stack)
+                table.dataTable().fnClearTable()
+            }
             var oldDisplayIndexMap = {}
             var oldDisplayData = {}
             for (var idx in oldDisplayDataList) {
@@ -88,8 +102,17 @@ define([
                     var v = rowProps[idx]
                     if (!_.isEqual(v,oldProps[idx])) {
                         // update individual columns as values change
-//                        log("updating "+v+" in "+prop+"["+idx+"]")
-                        table.fnUpdate( v, Number(prop), idx, false, false )
+                        try {
+                            table.fnUpdate( v, Number(prop), idx, false, false )
+                        } catch (e) {
+                            // sometimes get async errors
+                            log("WARNING: cannot update row")
+                            log(e)
+                            log(e.stack)
+                            log(v)
+                            log(prop)
+                            log(idx)
+                        }
                     } else {
 //                        log("NO CHANGE")
                     }
@@ -104,10 +127,26 @@ define([
             // and now add new ones
             for (var prop in newDisplayData) {
 //                log("adding "+newDisplayData[prop])
-                table.fnAddData( newDisplayData[prop] )
+                try {
+                    table.fnAddData( newDisplayData[prop] )
+                } catch (e) {
+                    // errors sometimes if we load async
+                    log("WARNING: cannot add to row")
+                    log(e)
+                    log(e.stack)
+                    log(prop)
+                    log(newDisplayData[prop])
+                }
             }
 //            table.fnAdjustColumnSizing();
-            table.fnStandingRedraw();
+            try {
+                table.fnStandingRedraw();
+            } catch (e) {
+                log("WARNING: could not redraw")
+                log(e)
+                log(e.stack)                
+            }
+            ViewUtils.cancelFadeOnceLoaded(table)
         },
         toggleFilterEmpty: function($table, column) {
             var hideEmpties = $('.filterEmpty', $table.parent().parent()).toggleClass('icon-eye-open icon-eye-close').hasClass('icon-eye-close');
@@ -186,6 +225,14 @@ define([
         // but NB if the html is updated the tooltip can remain visible until page refresh
         processTooltips: function($el) {
             $el.find('*[rel="tooltip"]').tooltip();
+        },
+        fadeToIndicateInitialLoad: function($table) {
+            // in case the server response time is low, fade out while it refreshes
+            // (since we can't show updated details until we've retrieved app + entity details)
+            $table.fadeTo(1000, 0.3);
+        },
+        cancelFadeOnceLoaded: function($table) {
+            $table.stop().fadeTo(200, 1);
         }
     };
     return ViewUtils;

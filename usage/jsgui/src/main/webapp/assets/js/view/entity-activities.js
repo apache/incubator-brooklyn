@@ -28,7 +28,7 @@ define([
         initialize:function () {
             this.$el.html(this.template({ }));
             this.$('#activities-root').html(_.template(ActivityTableHtml))
-            $.ajaxSetup({ async:false });
+            $.ajaxSetup({ async:true });
             var that = this,
                 $table = that.$('#activities-root .activity-table');
             that.collection.url = that.model.getLinkByName("activities");
@@ -52,7 +52,8 @@ define([
             ViewUtils.addAutoRefreshButton(that.table);
             ViewUtils.addRefreshButton(that.table);
             
-            that.collection.on("reset", that.render, that);
+            ViewUtils.fadeToIndicateInitialLoad($table);
+            that.collection.on("reset", that.renderOnLoad, that);
             that.callPeriodically("entity-activities", function () {
                 if (that.refreshActive)
                     that.collection.fetch({reset: true});
@@ -67,7 +68,11 @@ define([
             return this;
         },
         beforeClose:function () {
-            this.collection.off("reset", this.render);
+            this.collection.off("reset", this.renderOnLoad);
+        },
+        renderOnLoad: function() {
+            this.render();
+            ViewUtils.cancelFadeOnceLoaded(this.table);
         },
         toggleAutoRefresh:function () {
             ViewUtils.toggleAutoRefresh(this);
@@ -81,7 +86,7 @@ define([
         },
         updateActivitiesNow: function() {
             var that = this;
-            if (this.table == null || this.collection.length==0) {
+            if (this.table == null || this.collection.length==0 || this.viewIsClosed) {
                 // nothing to do
             } else {
                 var topLevelTasks = []

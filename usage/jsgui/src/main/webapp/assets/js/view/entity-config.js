@@ -20,7 +20,7 @@ define([
         },
         initialize:function () {
         	this.$el.html(this.template({ }));
-            $.ajaxSetup({ async:false });
+            $.ajaxSetup({ async:true });
             var that = this,
                 $table = this.$('#config-table');
             that.table = ViewUtils.myDataTable($table, {
@@ -120,7 +120,11 @@ define([
         updateConfigNow:function (that) {
             var url = that.model.getConfigUpdateUrl(),
                 $table = that.$('#config-table');
+            if (that.viewIsClosed) {
+                return
+            }
             $.get(url, function (data) {
+                if (that.viewIsClosed) return
                 ViewUtils.updateMyDataTable($table, data, function(value, name) {
                     var metadata = that.configMetadata[name]
                     if (metadata==null) {                        
