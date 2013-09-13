@@ -117,7 +117,7 @@ public abstract class ExecWithLoggingHelpers {
                     public Integer apply(ShellTool tool) {
                         int result = execCommand.exec(tool, MutableMap.copyOf(execFlags.getAllConfig()), commands, env);
                         if (commandLogger!=null && commandLogger.isDebugEnabled()) 
-                            commandLogger.debug("{}, on machine {}, completed: return status {}", new Object[] {summaryForLogging, this, result});
+                            commandLogger.debug("{}, on machine {}, completed: return status {}", new Object[] {summaryForLogging, getTargetName(), result});
                         return result;
                     }});
 
@@ -127,7 +127,7 @@ public abstract class ExecWithLoggingHelpers {
 
         } catch (IOException e) {
             if (commandLogger!=null && commandLogger.isDebugEnabled()) 
-                commandLogger.debug("{}, on machine {}, failed: {}", new Object[] {summaryForLogging, this, e});
+                commandLogger.debug("{}, on machine {}, failed: {}", new Object[] {summaryForLogging, getTargetName(), e});
             throw Throwables.propagate(e);
         } finally {
             // Must close the pipedOutStreams, otherwise input will never read -1 so StreamGobbler thread would never die

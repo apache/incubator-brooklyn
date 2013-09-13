@@ -159,6 +159,7 @@ textarea {
     background: url(../images/application-icon-refresh-hover.png) top left
         !important;
 }
+
 .table-toolbar-icon:hover {
 	opacity: .7;
 }
