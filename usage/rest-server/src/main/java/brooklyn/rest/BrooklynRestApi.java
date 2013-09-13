@@ -20,6 +20,7 @@ import brooklyn.rest.resources.PolicyConfigResource;
 import brooklyn.rest.resources.PolicyResource;
 import brooklyn.rest.resources.ScriptResource;
 import brooklyn.rest.resources.SensorResource;
+import brooklyn.rest.resources.UsageResource;
 import brooklyn.rest.resources.VersionResource;
 import brooklyn.rest.util.DefaultExceptionMapper;
 
@@ -41,6 +42,7 @@ public class BrooklynRestApi {
         resources.add(new ActivityResource());
         resources.add(new AccessResource());
         resources.add(new ScriptResource());
+        resources.add(new UsageResource());
         resources.add(new VersionResource());
         return resources;
     }

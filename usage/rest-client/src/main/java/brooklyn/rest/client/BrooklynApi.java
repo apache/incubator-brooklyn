@@ -14,6 +14,7 @@ import brooklyn.rest.api.PolicyApi;
 import brooklyn.rest.api.PolicyConfigApi;
 import brooklyn.rest.api.ScriptApi;
 import brooklyn.rest.api.SensorApi;
+import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.api.VersionApi;
 
 
@@ -72,6 +73,10 @@ public class BrooklynApi {
         return ProxyFactory.create(SensorApi.class, target);
     }
 
+    public UsageApi getUsageApi() {
+        return ProxyFactory.create(UsageApi.class, target);
+    }
+    
     public VersionApi getVersionApi() {
         return ProxyFactory.create(VersionApi.class, target);
     }
