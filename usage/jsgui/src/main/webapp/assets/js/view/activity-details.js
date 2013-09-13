@@ -107,7 +107,12 @@ define([
                 function(v) { 
                     return "<a class='showDrillDownBlockerOfAnchor handy' link='"+_.escape(v.link)+"'>"+
                         that.displayTextForLinkedTask(v)+"</a>" })
-            this.updateFieldWith('tags', function(tags) { return _.escape(tags.join(", ")) })
+            this.updateFieldWith('tags', function(tags) {
+                var tagBody = "";
+                for (var tag in tags)
+                    tagBody += "<div class='activity-tag-giftlabel'>"+_.escape(tags[tag])+"</div>";
+                return tagBody;
+            })
             
             var submitTimeUtc = this.updateFieldWith('submitTimeUtc',
                 function(v) { return v <= 0 ? "-" : moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).fromNow()+"</i>" })

@@ -1166,3 +1166,15 @@ input[type="file"] {
 .activity-detail-panel .toggler-region.tasks-children .table-scroll-wrapper {
 	margin-bottom: 18px;
 }
+
+.activity-tag-giftlabel {
+    background-color: #E0E4E0;
+    padding: 2px 4px 2px 4px;
+    margin-bottom: 4px;
+    margin-right: 5px;
+    -webkit-border-radius: 3px 3px 3px 3px !important;
+    -moz-border-radius: 3px 3px 3px 3px !important;
+    border-radius: 3px 3px 3px 3px !important;
+    display: inline-block;
+    white-space: nowrap;
+}
