@@ -99,14 +99,12 @@ textarea {
 .row-fluid .span4 {
     width: 300px !important;
     margin-left: 34px !important;
-    float: left !important;
     margin-top: 10px !important
 }
 
 .row-fluid .span8 {
-    width: 607px !important;
+    width: 618px !important;
     margin-right: -26px !important;
-    float: left !important;
     margin-top: 10px !important
 }
 
