@@ -112,6 +112,9 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<JcloudsLocationCustomizer> JCLOUDS_LOCATION_CUSTOMIZER = new BasicConfigKey<JcloudsLocationCustomizer>(
             JcloudsLocationCustomizer.class, "customizer", "Optional location customizer", null);
 
+    public static final ConfigKey<String> JCLOUDS_LOCATION_CUSTOMIZER_TYPE = ConfigKeys.newStringConfigKey(
+            "customizerType", "Optional location customizer type (to be class-loaded and constructed with no-arg constructor)", null);
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static final ConfigKey<Collection<JcloudsLocationCustomizer>> JCLOUDS_LOCATION_CUSTOMIZERS = 
             new BasicConfigKey<Collection<JcloudsLocationCustomizer>>(

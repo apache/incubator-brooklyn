@@ -219,10 +219,20 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected Collection<JcloudsLocationCustomizer> getCustomizers(ConfigBag setup) {
         JcloudsLocationCustomizer customizer = setup.get(JCLOUDS_LOCATION_CUSTOMIZER);
         Collection<JcloudsLocationCustomizer> customizers = setup.get(JCLOUDS_LOCATION_CUSTOMIZERS);
-        if (customizer==null && customizers==null) return Collections.emptyList();
+        String customizerType = setup.get(JCLOUDS_LOCATION_CUSTOMIZER_TYPE);
+        
         List<JcloudsLocationCustomizer> result = new ArrayList<JcloudsLocationCustomizer>();
-        if (customizer!=null) result.add(customizer);
-        if (customizers!=null) result.addAll(customizers);
+        if (customizer != null) result.add(customizer);
+        if (customizers != null) result.addAll(customizers);
+        if (Strings.isNonBlank(customizerType)) {
+            try {
+                Class<?> customizerClazz = getClass().getClassLoader().loadClass(customizerType);
+                JcloudsLocationCustomizer customizerByType = (JcloudsLocationCustomizer) customizerClazz.getConstructor().newInstance();
+                result.add(customizerByType);
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to load customizer "+customizerType+" for location "+this);
+            }
+        }
         return result;
     }
 
