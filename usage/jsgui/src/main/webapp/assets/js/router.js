@@ -1,10 +1,10 @@
 define([
     'brooklyn', 'underscore', 'jquery', 'backbone', "model/application", "model/app-tree", "model/location",
     "view/home", "view/application-explorer", "view/catalog", "view/apidoc", "view/script-groovy", 
-    "text!tpl/help/page.html"
+    "text!tpl/help/page.html","text!tpl/labs/page.html"
 ], function (Brooklyn, _, $, Backbone, Application, AppTree, Location,
         HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView, 
-        HelpHtml) {
+        HelpHtml, LabsHtml) {
 
     // add close method to all views for clean-up
 	// (NB we have to update the prototype _here_ before any views are instantiated;
@@ -59,6 +59,7 @@ define([
             'v1/apidoc':'apidocPage',
             'v1/script/groovy':'scriptGroovyPage',
             'v1/help':'helpPage',
+            'labs':'labsPage',
             '*path':'defaultRoute'
         },
 
@@ -137,6 +138,10 @@ define([
             $("#application-content").html(_.template(HelpHtml, {}))
             $(".nav1").removeClass("active")
             $(".nav1_help").addClass("active")
+        },
+        labsPage:function () {
+            $("#application-content").html(_.template(LabsHtml, {}))
+            $(".nav1").removeClass("active")
         }
     })
 

@@ -1,0 +1,79 @@
+<!-- labs page : this is not included in the menu, but by entering the url
+     http://localhost:8081/#/labs
+     this page will load, showing colours and doing other experiments -->
+<div class="container container-fluid">
+<div id="labs-page">
+
+<!--  -->
+<!-- demo the colour themese we use -->
+
+<style media="screen" type="text/css">
+.swatch {
+    padding: 10px 10px 10px 5px;
+    margin: 10px 5px;
+    display: inline-block;
+    border: 2px solid #A0A0A0;
+}
+</style>
+
+<script>
+var swatch = function(bg, fg, bo) {
+    var bgR = bg ? bg : '#808080';
+    var fgR = fg ? fg : '#202020';
+    var boR = bo ? bo : '#A0A0A0';
+     $('#swatches').append('<div class="swatch" style="background-color: '+bgR+'; color: '+fgR+'; border: 2px solid '+boR+';">'
+    +'<div>'+(bg ? 'bg:'+bg : '&nbsp;')+'</div>'
+    +'<div>'+(fg ? 'fg:'+fg : '&nbsp;')+'</div>'
+    +'<div>'+(bo ? 'bo:'+bo : '&nbsp;')+'</div>'
+    +'</div>');
+}
+
+$(document).ready(function() {
+    // display stadard colours
+    var colors = [
+           // border colors
+           //'#EEE', '#CCC', '#793',
+           // text colors
+           //'#F0F4E8'
+           // background colors
+           //'#A8B8B0', '#e0f0e0', '#e0e8e0', 
+           ];
+    
+    swatch('#492')
+    swatch('#58AA33')
+    swatch('#77AA3E')
+    swatch('#98B890')  // selected alt
+    swatch('#A8B8B0')  // paging numbers
+    swatch('#A8B8B0', null, '#CCC')
+    swatch('#A8B8B0', null, '#EEE')
+    swatch('#B8C8B0')  // selected
+    swatch('#d0d8d0') // app content
+    swatch('#D8E0D4') // opened row
+    swatch('#d8e4d0') // table body
+    swatch('#E0E4E0')  // table row hover, table header
+    swatch('#e8e8e8') // app content
+    swatch('#f0f4f0') // app content
+    swatch('#F9F9F9')  // table odd
+    swatch('#FFFFFF')  // table even
+    swatch('#261', '#F0F4E8', null)
+    swatch(null, '#182018') // tree node
+    swatch(null, '#382')    // links
+    swatch(null, '#65AA34') // hover for above
+    swatch(null, '#273')
+    swatch('#f9f9f9', null, '#d4d4d4')  // tabs
+    swatch('#f9f9f9', '#505050', '#a1cb8c')  // add app
+    swatch('#f9f9f9', '#58a82e', '#58a82e')  // add app hover
+
+
+
+    for (c in colors) {
+//        $('#swatches').append('<div class="swatch" style="background-color: '+colors[c]+';">'+colors[c]+'</div>');
+    }
+})
+</script>
+
+<div id="swatches">
+</div>
+
+</div>
+</div>
