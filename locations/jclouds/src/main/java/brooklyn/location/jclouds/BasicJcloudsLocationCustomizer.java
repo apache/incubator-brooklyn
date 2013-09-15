@@ -18,16 +18,40 @@ import com.google.common.annotations.Beta;
 public class BasicJcloudsLocationCustomizer implements JcloudsLocationCustomizer {
 
     @Override
-    public void customize(ComputeService computeService, TemplateBuilder templateBuilder) {
-        // no-op
+    public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
+        customize(computeService, templateBuilder);
     }
 
     @Override
+    public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
+        customize(computeService, templateOptions);
+    }
+
+    @Override
+    public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
+        customize(computeService, machine);
+    }
+    
+    /**
+     * @deprecated since 0.6; use {@link #customize(JcloudsLocation, ComputeService, TemplateBuilder)
+     */
+    @Deprecated
+    protected void customize(ComputeService computeService, TemplateBuilder templateBuilder) {
+        // no-op
+    }
+
+    /**
+     * @deprecated since 0.6; use {@link #customize(JcloudsLocation, ComputeService, TemplateOptions)
+     */
+    @Deprecated
     public void customize(ComputeService computeService, TemplateOptions templateOptions) {
         // no-op
     }
 
-    @Override
+    /**
+     * @deprecated since 0.6; use {@link #customize(JcloudsLocation, ComputeService, JcloudsSshMachineLocation)
+     */
+    @Deprecated
     public void customize(ComputeService computeService, JcloudsSshMachineLocation machine) {
         // no-op
     }

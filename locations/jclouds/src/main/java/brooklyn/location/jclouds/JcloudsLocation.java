@@ -340,7 +340,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             Template template = buildTemplate(computeService, setup);
             LoginCredentials initialCredentials = initUserTemplateOptions(template, setup);
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
-                customizer.customize(computeService, template.getOptions());
+                customizer.customize(this, computeService, template.getOptions());
             }
             LOG.debug("jclouds using template {} / options {} to provision machine in {}", new Object[] {
                     template, template.getOptions(), setup.getDescription()});
@@ -416,7 +416,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
-                customizer.customize(computeService, sshMachineLocation);
+                customizer.customize(this, computeService, sshMachineLocation);
             }
             
             return sshMachineLocation;
@@ -656,7 +656,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         // Then apply any optional app-specific customization.
         for (JcloudsLocationCustomizer customizer : getCustomizers(config)) {
-            customizer.customize(computeService, templateBuilder);
+            customizer.customize(this, computeService, templateBuilder);
         }
         
         // Finally try to build the template
