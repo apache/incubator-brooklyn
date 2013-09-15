@@ -28,7 +28,7 @@ define([
             this.treeView = new ApplicationTreeView({
                 collection:this.collection
             })
-            this.$('div#tree-list').html(this.treeView.render().el)
+            this.$('div#app-tree').html(this.treeView.render().el)
             this.treeView.render()
         },
         beforeClose:function () {

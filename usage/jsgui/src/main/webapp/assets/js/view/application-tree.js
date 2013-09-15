@@ -5,17 +5,15 @@
 define([
     "underscore", "jquery", "backbone",
     "model/app-tree", "./entity-details", "model/entity-summary", "model/application",
-    "text!tpl/apps/tree-item.html", "text!tpl/apps/details.html", "text!tpl/apps/entity-not-found.html"
+    "text!tpl/apps/tree-item.html", "text!tpl/apps/tree-empty.html", "text!tpl/apps/details.html", "text!tpl/apps/entity-not-found.html"
 ], function (_, $, Backbone,
              AppTree, EntityDetailsView, EntitySummary, Application,
-             TreeItemHtml, EntityDetailsEmptyHtml, EntityNotFoundHtml) {
+             TreeItemHtml, TreeEmptyHtml, EntityDetailsEmptyHtml, EntityNotFoundHtml) {
 
     var treeViewTemplate = _.template(TreeItemHtml),
         notFoundTemplate = _.template(EntityNotFoundHtml);
 
     var ApplicationTreeView = Backbone.View.extend({
-        tagName: "ol",
-        className: "tree applications",
         template: treeViewTemplate,
 
         events:{
@@ -38,10 +36,16 @@ define([
 
             // Display tree and highlight the selected entity.
             if (this.collection.isEmpty()) {
-                this.$el.append("<li><i>No applications</i></li>")
+                that.$el.append(_.template(TreeEmptyHtml))
             } else {
+                that.$el.append(
+                        '<div class="navbar_main_wrapper treelist cssninja">'+
+                        '<div id="tree-list" class="navbar_main treelist">'+
+                        '<ol class="tree applications"/>');
+                var node = $('ol.tree.applications', that.$el);
+                
                 this.collection.each(function (app) {
-                    that.$el.append(that.buildTree(app))
+                    node.append(that.buildTree(app))
                 })
             }
             this.highlightEntity();
