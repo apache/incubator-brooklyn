@@ -14,8 +14,7 @@ import com.google.common.annotations.Beta;
 @Beta
 public interface JcloudsLocationCustomizer { 
     
-    void customize(ComputeService computeService, TemplateBuilder templateBuilder);
-    void customize(ComputeService computeService, TemplateOptions templateOptions);
-    void customize(ComputeService computeService, JcloudsSshMachineLocation machine);
-    
+    void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder);
+    void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions);
+    void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine);
 }
