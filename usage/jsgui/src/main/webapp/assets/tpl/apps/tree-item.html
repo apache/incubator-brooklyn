@@ -1,3 +1,40 @@
+<div class="toggler-group tree-box <%= depth==0 ? "outer" : "inner "+(depth%2==1 ? "depth-odd" : "depth-even") %>">
+  <div class="tree-node">
+    <span class="entity_tree_node name entity" id="<%= id %>" data-entity-type="<%= type %>" data-parent-app="<%= parentApp %>">
+      <a href="#/v1/applications/<%= parentApp %>/entities/<%= id %>">
+      
+    <div style="min-width: 16px; max-width: 16px; max-height: 16px; display: inline-block; margin-right: 6px;">
+        <% if (hasChildren) { %>
+        <div style="position: absolute; left: 3px; top: 3px;">
+            <div class="toggler-icon icon-chevron-right tree-node-state tree-change">
+                <div class="light-popup">
+                    <div class="light-popup-body">
+                        <div class="light-popup-menu-item tree-change tr-toggle tr-default">Toggle Children</div>
+                        <div class="light-popup-menu-item tree-change tr-expand">Expand</div>
+                        <div class="light-popup-menu-item tree-change tr-expand-all">Expand All</div>
+                        <div class="light-popup-menu-item tree-change tr-collapse">Collapse</div>
+                        <div class="light-popup-menu-item tree-change tr-collapse-all">Collapse All</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% } else { %>
+        <div style="position: absolute; left: 39px; top: 24px;">
+            &nbsp;
+        </div>
+        <% } %>
+    </div><%=
+     
+        displayName
+         
+      %></a>
+    </span>
+  </div>
+  <div id="children" class="toggler-target hide">
+  </div>
+</div>
+
+<!-- 
 <li class="<%= type %>">
     <% if (type != "leaf") { %> <label> <% } %>
       <span id="<%= id %>" class="name entity entity_tree_node<%
@@ -5,7 +42,7 @@
         if (type == "application") { %> application<% } 
         %>" data-entity-type="<%= type %>" data-parent-app="<%= parentApp %>">
         <a href="#/v1/applications/<%= parentApp %>/entities/<%= id %>">
-            <%= displayName %>
+            
         </a>
     </span>
     <% if (type != "leaf") { %> </label> <% } %>
@@ -14,3 +51,4 @@
     <ol class="tree entities"/>
     <% } %>
 </li>
+ -->

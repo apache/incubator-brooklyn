@@ -533,8 +533,11 @@ ol.tree {
 	cursor: hand; cursor: pointer;
 }
 .entity_tree_node:hover {
-	text-decoration: underline;
 	cursor: hand; cursor: pointer;
+}
+.entity_tree_node a:hover {
+	color: #54932b !important;
+	text-decoration: none;
 }
 .entity_tree_node.active {
     font-weight: bold;
@@ -548,6 +551,95 @@ line-height: 18px;
 .cssninja ol.tree {
     padding: 0;
     width: auto;
+}
+
+/* new lozenge-style tree-list */
+.navbar_main_wrapper .treeloz {
+    padding: 12px 0px 20px 0px;
+}
+.navbar_main .treeloz {
+    padding: 0px 0px 0px 0px;
+}
+.lozenge-app-tree-wrapper {
+    min-width: 100%;
+    min-height: 240px;
+    padding-bottom: 60px; /* for popup menu */
+    margin-top: -2px;
+    position: relative; 
+    float: left;
+}
+
+.tree-box {
+    border: 1px solid #AAA;
+    border-right: 0px;
+    margin-top: 3px;
+    padding-top: 2px;
+    background-color: #EAECEA;
+}
+.tree-box.outer {
+    margin-left: 12px;
+    margin-right: 0px;
+    margin-bottom: 9px;
+    -webkit-border-radius: 4px 0 0 4px !important;
+    -moz-border-radius: 4px 0 0 4px !important;
+    border-radius: 4px 0 0 4px  !important;
+    padding-left: 4px;
+    padding-bottom: 4px;
+}
+.tree-box.inner {
+    margin-bottom: 2px;
+    border: 1px solid #BBB;
+    border-right: 0px;
+    -webkit-border-radius: 3px 0 0 3px !important;
+    -moz-border-radius: 3px 0 0 3px !important;
+    border-radius: 3px 0 0 3px  !important;
+    padding-left: 6px;
+    padding-bottom: 2px;
+}
+.tree-box.inner.depth-odd {
+    background-color: #D8DAD8;
+}
+.tree-box.inner.depth-even {
+    background-color: #EAECEA;
+}
+.tree-node {
+    position: relative;
+    padding-top: 2px;
+    padding-bottom: 1px;
+    padding-right: 8px;
+}
+.light-popup {
+    display: none;
+    position: relative;
+    float: left;
+    z-index: 1;
+}
+.toggler-icon .light-popup {
+    padding-top: 16px;
+}
+.light-popup-body {
+    padding: 3px 0px;
+	background-color: #606060;
+	color: #CDC;
+	font-weight: 300;
+	font-size: 85%;
+    border: 1px dotted #CDC;
+    -webkit-border-radius: 2px 2px 2px 2px !important;
+    -moz-border-radius: 2px 2px 2px 2px !important;
+    border-radius: 2px 2px 2px 2px !important;
+}
+.light-popup-menu-item {
+	color: #D0D4D0;
+}
+.light-popup-menu-item.tr-default {
+    color: #E0E4E0;
+}
+.light-popup-menu-item {
+    padding: 1px 6px;
+}
+.light-popup-menu-item:hover {
+    background-color: #58AA33;
+    color: #000;
 }
 
 .app-summary .inforow > div { display: inline-block; }
