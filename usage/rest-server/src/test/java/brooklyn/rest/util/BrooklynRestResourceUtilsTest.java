@@ -12,23 +12,18 @@ import org.testng.annotations.Test;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.entity.Application;
-import brooklyn.entity.Effector;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.rest.domain.ApplicationSpec;
-import brooklyn.rest.domain.EntitySpec;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class BrooklynRestResourceUtilsTest {

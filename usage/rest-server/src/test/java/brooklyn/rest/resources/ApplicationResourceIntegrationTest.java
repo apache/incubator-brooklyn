@@ -11,7 +11,6 @@ import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Lifecycle;
@@ -43,13 +42,6 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     @Override
     protected void setUpResources() throws Exception {
         addResources();
-    }
-
-    @AfterClass(alwaysRun=true)
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-        stopManager();
     }
 
     @Test(groups="Integration")

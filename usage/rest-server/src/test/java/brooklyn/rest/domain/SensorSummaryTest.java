@@ -19,6 +19,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.Sensors;
+import brooklyn.management.ManagementContext;
 import brooklyn.rest.transform.SensorTransformer;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -33,16 +34,18 @@ public class SensorSummaryTest {
 
   private TestApplication app;
   private TestEntity entity;
+  private ManagementContext mgmt;
   
   @BeforeMethod(alwaysRun=true)
   public void setUp() throws Exception {
       app = ApplicationBuilder.newManagedApp(TestApplication.class);
+      mgmt = app.getManagementContext();
       entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
   }
   
   @AfterMethod(alwaysRun=true)
   public void tearDown() throws Exception {
-      if (app != null) Entities.destroy(app);
+      if (mgmt != null) Entities.destroyAll(mgmt);
   }
   
   @Test

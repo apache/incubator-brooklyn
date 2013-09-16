@@ -1,25 +1,28 @@
 package brooklyn.rest.resources;
 
-import brooklyn.location.Location;
-import brooklyn.location.LocationDefinition;
-import brooklyn.location.basic.BasicLocationDefinition;
-import brooklyn.rest.api.LocationApi;
-import brooklyn.rest.transform.LocationTransformer;
-import brooklyn.rest.domain.LocationSpec;
-import brooklyn.rest.domain.LocationSummary;
-import brooklyn.rest.util.EntityLocationUtils;
-import brooklyn.rest.util.WebResourceUtils;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.Identifiers;
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.ws.rs.core.Response;
+
+import brooklyn.location.Location;
+import brooklyn.location.LocationDefinition;
+import brooklyn.location.basic.BasicLocationDefinition;
+import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.rest.api.LocationApi;
+import brooklyn.rest.domain.LocationSpec;
+import brooklyn.rest.domain.LocationSummary;
+import brooklyn.rest.transform.LocationTransformer;
+import brooklyn.rest.util.EntityLocationUtils;
+import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.text.Identifiers;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class LocationResource extends AbstractBrooklynRestResource implements LocationApi {
 
@@ -60,8 +63,8 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
           Map<String,Object> m = MutableMap.<String,Object>of(
                   "name", l.getDisplayName(),
                   "leafEntityCount", count.getValue(),
-                  "latitude", l.getLocationProperty("latitude"),
-                  "longitude", l.getLocationProperty("longitude")
+                  "latitude", l.getConfig(LocationConfigKeys.LATITUDE),
+                  "longitude", l.getConfig(LocationConfigKeys.LONGITUDE)
               );
           result.put(l.getId(), m);
       }

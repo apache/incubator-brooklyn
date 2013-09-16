@@ -10,7 +10,6 @@ import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -61,13 +60,6 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
                 .post(ClientResponse.class, Maps.newHashMap());
         policyId = pResponse.getEntity(String.class);
 
-    }
-
-    @AfterClass
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-        stopManager();
     }
 
     @Test

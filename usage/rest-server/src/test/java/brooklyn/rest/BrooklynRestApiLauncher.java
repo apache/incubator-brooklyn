@@ -62,8 +62,9 @@ public class BrooklynRestApiLauncher {
     final static int FAVOURITE_PORT = 8081;
     
     public static Server startRestResourcesViaFilter() throws Exception {
-        ManagementContext managementContext = new LocalManagementContext();
-        
+        return startRestResourcesViaFilter(new LocalManagementContext());
+    }
+    public static Server startRestResourcesViaFilter(ManagementContext managementContext) throws Exception {
         WebAppContext context = new WebAppContext();
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
         context.setContextPath("/");
@@ -77,8 +78,9 @@ public class BrooklynRestApiLauncher {
     }
 
     public static Server startRestResourcesViaServlet() throws Exception {
-        ManagementContext managementContext = new LocalManagementContext();
-        
+        return startRestResourcesViaServlet(new LocalManagementContext());
+    }
+    public static Server startRestResourcesViaServlet(ManagementContext managementContext) throws Exception {
         ResourceConfig config = new DefaultResourceConfig();
         for (Object r: BrooklynRestApi.getAllResources())
             config.getSingletons().add(r);
@@ -117,11 +119,11 @@ public class BrooklynRestApiLauncher {
     }
 
     public static Server startRestResourcesViaWebXml() throws Exception {
+        return startRestResourcesViaWebXml(new LocalManagementContext());
+    }
+    public static Server startRestResourcesViaWebXml(ManagementContext managementContext) throws Exception {
         // TODO add security to web.xml
-        ManagementContext managementContext = new LocalManagementContext();
-
         WebAppContext context;
-        
         if (findMatchingFile("src/main/webapp")!=null) {
             // running in source mode; need to use special classpath
             context = new WebAppContext("src/main/webapp", "/");

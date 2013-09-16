@@ -31,11 +31,11 @@ public class RestMockSimpleEntity extends SoftwareProcessImpl {
         super(parent);
     }
 
-    public RestMockSimpleEntity(Map flags, Entity parent) {
+    public RestMockSimpleEntity(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
         super(flags, parent);
     }
 
-    public RestMockSimpleEntity(Map flags) {
+    public RestMockSimpleEntity(@SuppressWarnings("rawtypes") Map flags) {
         super(flags);
     }
 
@@ -62,6 +62,7 @@ public class RestMockSimpleEntity extends SoftwareProcessImpl {
         return;
     }
     
+    @SuppressWarnings("rawtypes")
     @Override
     public Class getDriverInterface() {
         return MockSshDriver.class;

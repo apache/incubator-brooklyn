@@ -1,5 +1,24 @@
 package brooklyn.rest.client;
 
+import static brooklyn.rest.BrooklynRestApiLauncher.startServer;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
+import java.util.Collection;
+
+import javax.ws.rs.core.Response;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractApplication;
@@ -8,31 +27,20 @@ import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
-import brooklyn.rest.domain.*;
+import brooklyn.rest.domain.ApplicationSpec;
+import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.EntitySpec;
+import brooklyn.rest.domain.EntitySummary;
+import brooklyn.rest.domain.SensorSummary;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.jboss.resteasy.client.ClientResponseFailure;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.Collection;
-
-import static brooklyn.rest.BrooklynRestApiLauncher.startServer;
-import static org.testng.Assert.*;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceIntegrationTest {
 
-    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceIntegrationTest.class);
 
     private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app").
@@ -95,6 +103,7 @@ public class ApplicationResourceIntegrationTest {
     @Test(groups = "Integration", dependsOnMethods = "testDeployRedisApplication")
     public void testListEntities() {
         Collection<EntitySummary> entities = api.getEntityApi().list("redis-app");
+        Assert.assertFalse(entities.isEmpty());
     }
 
     @Test(groups = "Integration", dependsOnMethods = "testDeployRedisApplication")
@@ -125,6 +134,7 @@ public class ApplicationResourceIntegrationTest {
     public void testDeleteRedisApplication() throws Exception {
         int size = getManagementContext().getApplications().size();
         Response response = api.getApplicationApi().delete("redis-app");
+        Assert.assertNotNull(response);
         ApplicationSummary summary = null;
         try {
             for (int i = 0; i < 100 && summary == null; i++) {
@@ -132,7 +142,10 @@ public class ApplicationResourceIntegrationTest {
                 Thread.sleep(500);
             }
             fail("Redis app failed to disappear!");
-        } catch (ClientResponseFailure failure) {
+        } catch (Exception failure) {
+            // expected -- it will be a ClientResponseFailure but that class is deprecated so catching all
+            // and asserting contains the word 404
+            Assert.assertTrue(failure.toString().indexOf("404") >= 0);
         }
 
         assertNull(summary);

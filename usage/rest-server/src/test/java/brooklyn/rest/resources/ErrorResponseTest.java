@@ -6,13 +6,8 @@ import static org.testng.Assert.assertTrue;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.sun.jersey.api.client.ClientResponse;
 
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.ApplicationSpec;
@@ -20,6 +15,10 @@ import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import brooklyn.rest.testing.mocks.RestMockSimplePolicy;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
+import com.sun.jersey.api.client.ClientResponse;
 
 public class ErrorResponseTest extends BrooklynRestResourceTest {
 
@@ -49,13 +48,6 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
                 .queryParam("type", RestMockSimplePolicy.class.getCanonicalName())
                 .post(ClientResponse.class, Maps.newHashMap());
         policyId = pResponse.getEntity(String.class);
-    }
-
-    @AfterClass
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-        stopManager();
     }
 
     @Test

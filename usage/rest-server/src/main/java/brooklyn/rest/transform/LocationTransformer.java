@@ -1,21 +1,18 @@
 package brooklyn.rest.transform;
 
-import brooklyn.entity.basic.Entities;
-import brooklyn.location.LocationDefinition;
-import brooklyn.rest.domain.LocationSpec;
-import brooklyn.rest.domain.LocationSummary;
-import com.google.common.collect.ImmutableMap;
-import org.slf4j.LoggerFactory;
-
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.entity.basic.Entities;
+import brooklyn.location.LocationDefinition;
+import brooklyn.rest.domain.LocationSpec;
+import brooklyn.rest.domain.LocationSummary;
+
+import com.google.common.collect.ImmutableMap;
+
 public class LocationTransformer {
 
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(LocationTransformer.class);
-
-    
     // LocationSummary
     public static LocationSummary newInstance(String id, LocationSpec locationSpec) {
         return new LocationSummary(

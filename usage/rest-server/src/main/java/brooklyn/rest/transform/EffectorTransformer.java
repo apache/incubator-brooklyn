@@ -1,22 +1,21 @@
 package brooklyn.rest.transform;
 
+import java.net.URI;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
 import brooklyn.entity.Effector;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EffectorSummary;
+
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.net.URI;
-import java.util.Set;
 
 public class EffectorTransformer {
-
-  private static final org.slf4j.Logger log = LoggerFactory.getLogger(EffectorTransformer.class);
 
     public static EffectorSummary effectorSummary(EntityLocal entity, Effector<?> effector) {
         String applicationUri = "/v1/applications/" + entity.getApplicationId();

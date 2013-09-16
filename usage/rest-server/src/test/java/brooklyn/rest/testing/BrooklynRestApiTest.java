@@ -1,11 +1,8 @@
 package brooklyn.rest.testing;
 
-import brooklyn.rest.util.DefaultExceptionMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
 
-import brooklyn.entity.Application;
-import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
@@ -14,6 +11,7 @@ import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
 import brooklyn.rest.resources.AbstractBrooklynRestResource;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
+import brooklyn.rest.util.DefaultExceptionMapper;
 import brooklyn.rest.util.NullHttpServletRequestProvider;
 import brooklyn.rest.util.NullServletConfigProvider;
 
@@ -21,8 +19,6 @@ import com.yammer.dropwizard.testing.ResourceTest;
 
 public abstract class BrooklynRestApiTest extends ResourceTest {
 
-    private static final Logger log = LoggerFactory.getLogger(BrooklynRestApiTest.class);
-    
     private ManagementContext manager;
     
     protected synchronized ManagementContext getManagementContext() {
@@ -32,6 +28,14 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
             BasicLocationRegistry.setupLocationRegistryForTesting(manager);
         }
         return manager;
+    }
+    
+    @AfterClass
+    public void tearDown() throws Exception {
+        if (manager!=null) {
+            Entities.destroyAll(manager);
+            manager = null;
+        }
     }
     
     public LocationRegistry getLocationRegistry() {
@@ -57,13 +61,4 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
             addResource(r);
     }
 
-    protected void stopManager() {
-        for (Application app: getManagementContext().getApplications()) {
-            try {
-                ((AbstractApplication)app).stop();
-            } catch (Exception e) {
-                log.debug("Error stopping app "+app+" during test teardown: "+e);
-            }
-        }
-    }
 }
