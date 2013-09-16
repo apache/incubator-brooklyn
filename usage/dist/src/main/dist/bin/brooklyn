@@ -20,7 +20,7 @@ if [ -z "${JAVA_OPTS}" ] ; then
 fi
 
 # set up the classpath
-INITIAL_CLASSPATH=${BROOKLYN_HOME}/conf:${BROOKLYN_HOME}/lib/*
+INITIAL_CLASSPATH=${BROOKLYN_HOME}/conf:${BROOKLYN_HOME}/patch/*:${BROOKLYN_HOME}/lib/*:${BROOKLYN_HOME}/dropin/*
 # specify additional CP args in BROOKLYN_CLASSPATH
 if [ ! -z "${BROOKLYN_CLASSPATH}" ]; then
     INITIAL_CLASSPATH=${BROOKLYN_CLASSPATH}:${INITIAL_CLASSPATH}
