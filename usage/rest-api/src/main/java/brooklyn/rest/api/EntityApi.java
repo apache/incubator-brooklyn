@@ -11,6 +11,8 @@ import com.wordnik.swagger.core.ApiParam;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import java.util.List;
 
 @Path("/v1/applications/{application}/entities")
@@ -77,4 +79,12 @@ public interface EntityApi {
           @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId
   );
 
+  @GET
+  @ApiOperation(value = "Returns an icon for the entity, if defined")
+  @Path("/{entity}/icon")
+  public Response getIcon(
+          @PathParam("application") final String application,
+          @PathParam("entity") final String entity
+  );
+  
 }

@@ -1,15 +1,14 @@
 package brooklyn.rest.resources;
 
-import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
-import brooklyn.management.Task;
-import brooklyn.rest.api.ApplicationApi;
-import brooklyn.rest.domain.*;
-import brooklyn.rest.transform.ApplicationTransformer;
-import brooklyn.rest.transform.TaskTransformer;
-import brooklyn.rest.util.BrooklynRestResourceUtils;
-import brooklyn.rest.util.WebResourceUtils;
-import com.google.common.collect.Collections2;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static javax.ws.rs.core.Response.created;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.ACCEPTED;
+
+import java.net.URI;
+
+import javax.ws.rs.core.Response;
+
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -17,13 +16,21 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response;
-import java.net.URI;
+import brooklyn.entity.Application;
+import brooklyn.entity.Entity;
+import brooklyn.management.Task;
+import brooklyn.rest.api.ApplicationApi;
+import brooklyn.rest.domain.ApplicationSpec;
+import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.EntitySpec;
+import brooklyn.rest.domain.TaskSummary;
+import brooklyn.rest.transform.ApplicationTransformer;
+import brooklyn.rest.transform.EntityTransformer;
+import brooklyn.rest.transform.TaskTransformer;
+import brooklyn.rest.util.BrooklynRestResourceUtils;
+import brooklyn.rest.util.WebResourceUtils;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static javax.ws.rs.core.Response.Status.ACCEPTED;
-import static javax.ws.rs.core.Response.created;
-import static javax.ws.rs.core.Response.status;
+import com.google.common.collect.Collections2;
 
 
 public class ApplicationResource extends AbstractBrooklynRestResource implements ApplicationApi {
@@ -46,6 +53,13 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     aRoot.put("type", entity.getEntityType().getName());
     if (entity.getChildren().size() != 0) {
       aRoot.put("children", childEntitiesAsArray(entity));
+    }
+    String iconUrl = entity.getIconUrl();
+    if (iconUrl!=null) {
+        if (brooklyn().isUrlServerSideAndSafe(iconUrl)) 
+            // route to server if it is a server-side url
+            iconUrl = EntityTransformer.entityUri(entity)+"/icon";
+        aRoot.put("iconUrl", iconUrl);
     }
     return aRoot;
   }

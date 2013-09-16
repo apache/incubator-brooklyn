@@ -59,6 +59,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     
     @Override
     public CatalogItem<?> getCatalogItem(String id) {
+        if (id==null) return null;
         CatalogItemDo<?> itemDo = getCatalogItemDo(id);
         if (itemDo==null) return null;
         return itemDo.getDto();

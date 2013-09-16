@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
@@ -204,10 +205,12 @@ public class BrooklynRestResourceUtils {
                 
                 log.info("REST placing '{}' under management", spec.getName());
                 appBuilder.configure( convertFlagsToKeys(appBuilder.getType(), configO) );
+                configureRenderingMetadata(spec, appBuilder);
                 instance = appBuilder.manage(mgmt);
                 
             } else if (Application.class.isAssignableFrom(clazz)) {
                 brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
+                configureRenderingMetadata(spec, coreSpec);
                 instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
                 for (EntitySpec entitySpec : entities) {
                     log.info("REST creating instance for entity {}", entitySpec.getType());
@@ -221,10 +224,14 @@ public class BrooklynRestResourceUtils {
                 if (entities.size() > 0) log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);
                 
                 brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO);
+                configureRenderingMetadata(spec, coreSpec);
+                
                 instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
                 
                 final Class<? extends Entity> eclazz = getCatalog().loadClassByType(spec.getType(), Entity.class);
-                instance.addChild(mgmt.getEntityManager().createEntity(toCoreEntitySpec(eclazz, name, configO)));
+                Entity soleChild = mgmt.getEntityManager().createEntity(toCoreEntitySpec(eclazz, name, configO));
+                instance.addChild(soleChild);
+                instance.addEnricher(SensorPropagatingEnricher.newInstanceListeningToAllSensors(soleChild));
                 
                 log.info("REST placing '{}' under management", spec.getName());
                 Entities.startManagement(instance, mgmt);
@@ -283,6 +290,28 @@ public class BrooklynRestResourceUtils {
         }
         if (!Strings.isEmpty(name)) result.displayName(name);
         result.configure( convertFlagsToKeys(result.getType(), config) );
+        configureRenderingMetadata(spec, result);
+        return result;
+    }
+    
+    protected void configureRenderingMetadata(ApplicationSpec spec, ApplicationBuilder appBuilder) {
+        appBuilder.configure(getRenderingConfigurationFor(spec.getType()));
+    }
+
+    protected void configureRenderingMetadata(ApplicationSpec input, brooklyn.entity.proxying.EntitySpec<?> entity) {
+        entity.configure(getRenderingConfigurationFor(input.getType()));
+    }
+
+    protected void configureRenderingMetadata(EntitySpec input, brooklyn.entity.proxying.EntitySpec<?> entity) {
+        entity.configure(getRenderingConfigurationFor(input.getType()));
+    }
+
+    protected Map<?, ?> getRenderingConfigurationFor(String catalogId) {
+        MutableMap<Object, Object> result = MutableMap.of();
+        CatalogItem<?> item = mgmt.getCatalog().getCatalogItem(catalogId);
+        if (item==null) return result;
+        
+        result.addIfNotNull("iconUrl", item.getIconUrl());
         return result;
     }
     
