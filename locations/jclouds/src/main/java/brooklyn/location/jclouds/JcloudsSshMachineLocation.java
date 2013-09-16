@@ -178,7 +178,9 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
     public Map<String, String> toMetadataRecord() {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         builder.putAll(super.toMetadataRecord());
-        putIfNotNull(builder, "providerId", node.getProviderId());
+        putIfNotNull(builder, "provider", getParent().getProvider());
+        putIfNotNull(builder, "account", getParent().getIdentity());
+        putIfNotNull(builder, "serverId", node.getProviderId());
         putIfNotNull(builder, "imageId", node.getImageId());
         putIfNotNull(builder, "instanceTypeName", node.getHardware().getName());
         putIfNotNull(builder, "instanceTypeId", node.getHardware().getProviderId());

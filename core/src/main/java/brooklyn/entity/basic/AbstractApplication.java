@@ -184,10 +184,14 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         ConcurrentMap<String, ApplicationUsage> eventMap = storage.getMap(APPLICATION_USAGE_KEY);
         ApplicationUsage usage = eventMap.get(getId());
         if (usage == null) {
-            usage = new ApplicationUsage(getId(), getDisplayName(), getEntityTypeName(), ImmutableMap.<String,String>of());
+            usage = new ApplicationUsage(getId(), getDisplayName(), getEntityTypeName(), toMetadataRecord());
         }
         usage.addEvent(new ApplicationUsage.ApplicationEvent(state));        
         eventMap.put(getId(), usage);
+    }
+    
+    public Map<String, String> toMetadataRecord() {
+        return ImmutableMap.of();
     }
 
 }

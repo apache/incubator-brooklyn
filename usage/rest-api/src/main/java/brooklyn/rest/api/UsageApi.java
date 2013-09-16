@@ -27,17 +27,18 @@ public interface UsageApi {
     @ApiErrors(value = {})
     public List<Statistic> listApplicationUsage(
             @ApiParam(
-                    name = "application",
-                    value = "Application id",
+                    name = "start",
+                    value = "timestamp of start marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
             @QueryParam("start") String startDate,
             @ApiParam(
-                    name = "application",
-                    value = "Application id",
+                    name = "end",
+                    value = "timestamp of end marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
-            @QueryParam("stop") String stopDate) ;
+            @QueryParam("end") String endDate) ;
+
     @GET
     @Path("/applications/{application}")
     @ApiOperation(
@@ -56,16 +57,16 @@ public interface UsageApi {
             @PathParam("application") String applicationId,
             @ApiParam(
                     name = "start",
-                    value = "timestamp of start marker for usage reporting",
+                    value = "timestamp of start marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
             @QueryParam("start") String startDate,
             @ApiParam(
                     name = "end",
-                    value = "timestamp of end marker for usage reporting",
+                    value = "timestamp of end marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
-            @QueryParam("stop") String stopDate) ;
+            @QueryParam("end") String endDate) ;
 
     @GET
     @Path("/machines")
@@ -85,15 +86,15 @@ public interface UsageApi {
             @QueryParam("application") String application,
             @ApiParam(
                     name = "start",
-                    value = "timestamp of start marker for usage reporting",
+                    value = "timestamp of start marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
             @QueryParam("start") String startDate,
             @ApiParam(
                     name = "end",
-                    value = "timestamp of end marker for usage reporting",
+                    value = "timestamp of end marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
-            @QueryParam("stop") String stopDate) ;
+            @QueryParam("end") String endDate) ;
 
 }

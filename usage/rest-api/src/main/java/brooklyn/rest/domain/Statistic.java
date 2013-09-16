@@ -4,35 +4,31 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * @author Adam Lowe
  */
 public class Statistic {
-    @JsonProperty
     private final Status status;
-    @JsonProperty
     private final String id;
-    @JsonProperty
-    private final String name;
-    @JsonProperty
+    private final String applicationId;
     private final String start;
-    @JsonProperty
     private final String end;
-    @JsonProperty
     private final long duration;
-    @JsonProperty
     private final Map<String,String> metadata;
 
-    public Statistic(@JsonProperty("status") Status status, @JsonProperty("id") String id, @JsonProperty("name") String name,
-                            @JsonProperty("start") String start, @JsonProperty("end") String end,
-                            @JsonProperty("duration") long duration, @JsonProperty("metadata") Map<String, String> metadata) {
-        this.status = status;
-        this.id = id;
-        this.name = name;
+    public Statistic(@JsonProperty("status") Status status, @JsonProperty("id") String id, @JsonProperty("applicationId") String applicationId,
+                     @JsonProperty("start") String start,
+                     @JsonProperty("end") String end,
+                     @JsonProperty("duration") long duration, @JsonProperty("metadata") Map<String, String> metadata) {
+        this.status = checkNotNull(status, "status");
+        this.id = checkNotNull(id, "id");
+        this.applicationId = applicationId;
         this.start = start;
         this.end = end;
         this.duration = duration;
-        this.metadata = metadata;
+        this.metadata = checkNotNull(metadata, "metadata");
     }
 
     public Status getStatus() {
@@ -43,8 +39,8 @@ public class Statistic {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public String getApplicationId() {
+        return applicationId;
     }
 
     public String getStart() {
@@ -68,37 +64,38 @@ public class Statistic {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Statistic usage = (Statistic) o;
+        Statistic statistic = (Statistic) o;
 
-        if (status != usage.status) return false;
-        if (duration != usage.duration) return false;
-        if (end != null ? !end.equals(usage.end) : usage.end != null) return false;
-        if (!id.equals(usage.id)) return false;
-        if (name != null ? !name.equals(usage.name) : usage.name != null) return false;
-        if (start != null ? !start.equals(usage.start) : usage.start != null) return false;
+        if (applicationId != null ? !applicationId.equals(statistic.applicationId) : statistic.applicationId != null)
+            return false;
+        if (end != null ? !end.equals(statistic.end) : statistic.end != null) return false;
+        if (!id.equals(statistic.id)) return false;
+        if (!metadata.equals(statistic.metadata)) return false;
+        if (start != null ? !start.equals(statistic.start) : statistic.start != null) return false;
+        if (status != statistic.status) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (status != null ? status.hashCode() : 0);
+        int result = status.hashCode();
+        result = 31 * result + id.hashCode();
+        result = 31 * result + (applicationId != null ? applicationId.hashCode() : 0);
         result = 31 * result + (start != null ? start.hashCode() : 0);
         result = 31 * result + (end != null ? end.hashCode() : 0);
-        result = 31 * result + (int) (duration ^ (duration >>> 32));
+        result = 31 * result + metadata.hashCode();
         return result;
     }
 
     @Override
     public String toString() {
-        return "Usage{" +
+        return "Statistic{" +
+                "status=" + status +
                 ", id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", status='" + status + '\'' +
-                ", start=" + start +
-                ", end=" + end +
+                ", applicationId='" + applicationId + '\'' +
+                ", start='" + start + '\'' +
+                ", end='" + end + '\'' +
                 ", duration=" + duration +
                 ", metadata=" + metadata +
                 '}';
