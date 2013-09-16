@@ -38,7 +38,13 @@
         },
         "datatables-extensions":{
             deps:[ "jquery", "jquery-datatables" ]
-        }
+        },
+        "jquery-form": { deps: [ "jquery" ] },
+        "jquery-slideto": { deps: [ "jquery" ] },
+        "jquery-wiggle": { deps: [ "jquery" ] },
+        "jquery-ba-bbq": { deps: [ "jquery" ] },
+        "handlebars": { deps: [ "jquery" ] },
+        "bootstrap": { deps: [ "jquery" ] /* http://stackoverflow.com/questions/9227406/bootstrap-typeerror-undefined-is-not-a-function-has-no-method-tab-when-us */ }
     },
     // Seconds require will wait before timing out. Defaults to seven seconds.
     waitSeconds: 300

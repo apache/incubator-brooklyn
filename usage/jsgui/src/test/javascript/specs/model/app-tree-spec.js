@@ -2,10 +2,11 @@ define([
     "model/app-tree"
 ], function (AppTree) {
 
+    $.ajaxSetup({ async:false });
     var apps = new AppTree.Collection
     apps.url = "fixtures/application-tree.json"
-    apps.fetch({async:false})
-
+    apps.fetch({ async:false })
+    
     describe("model/app-tree", function () {
 
         it("loads fixture data", function () {

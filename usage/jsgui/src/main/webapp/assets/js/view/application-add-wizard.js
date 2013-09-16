@@ -414,7 +414,7 @@ define([
         updateForState: function () {
             var that = this
             this.renderName()
-            this.locations.fetch({async:false,
+            this.locations.fetch({
                 success:function () {
                     if (that.model.spec.get("locations").length==0)
                         that.addLocation()

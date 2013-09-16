@@ -2,6 +2,9 @@
  * set the require.js configuration for your application
  */
 require.config({
+    /* Give 30s (default is 7s) in case it's a very poor slow network */
+    waitSeconds:30,
+    
     /* Libraries */
     baseUrl:"assets/js",
     paths:{
@@ -25,6 +28,7 @@ require.config({
         "text":"libs/text",
         "tpl":"../tpl"
     },
+    
     shim:{
         "underscore":{
             exports:"_"
@@ -38,7 +42,13 @@ require.config({
         },
         "datatables-extensions":{
             deps:[ "jquery", "jquery-datatables" ]
-        }
+        },
+        "jquery-form": { deps: [ "jquery" ] },
+        "jquery-slideto": { deps: [ "jquery" ] },
+        "jquery-wiggle": { deps: [ "jquery" ] },
+        "jquery-ba-bbq": { deps: [ "jquery" ] },
+        "handlebars": { deps: [ "jquery" ] },
+        "bootstrap": { deps: [ "jquery" ] /* http://stackoverflow.com/questions/9227406/bootstrap-typeerror-undefined-is-not-a-function-has-no-method-tab-when-us */ }
     }
 });
 

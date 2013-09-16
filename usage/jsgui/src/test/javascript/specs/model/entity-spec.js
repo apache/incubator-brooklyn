@@ -1,12 +1,13 @@
 define([
     "underscore", "model/entity"
 ], function (_, Entity) {
-
+    $.ajaxSetup({ async:false });
+    
     describe("model/entity", function () {
         // keep these in describe so jasmine-maven will load them from the file pointed by URL
         var entityFixture = new Entity.Collection
         entityFixture.url = 'fixtures/entity.json'
-        entityFixture.fetch({async:true})
+        entityFixture.fetch()
 
         it('loads all model properties defined in fixtures/entity.json', function () {
             expect(entityFixture.length).toEqual(1)

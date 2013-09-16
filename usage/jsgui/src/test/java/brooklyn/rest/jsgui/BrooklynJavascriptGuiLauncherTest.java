@@ -1,9 +1,13 @@
 package brooklyn.rest.jsgui;
 
 import org.eclipse.jetty.server.Server;
-import org.testng.annotations.AfterTest;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.BrooklynServiceAttributes;
+import brooklyn.entity.basic.Entities;
+import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
 import brooklyn.test.HttpTestUtils;
 
@@ -12,10 +16,12 @@ public class BrooklynJavascriptGuiLauncherTest {
 
     Server server = null;
     
-    @AfterTest
+    @AfterMethod(alwaysRun=true)
     public void stopServer() throws Exception {
         if (server!=null) {
+            ManagementContext mgmt = getManagementContextFromJettyServerAttributes(server);
             server.stop();
+            if (mgmt!=null) Entities.destroyAll(mgmt);
             server = null;
         }
     }
@@ -38,6 +44,11 @@ public class BrooklynJavascriptGuiLauncherTest {
     protected void checkUrlContains(String path, String text) {
         String rootUrl = "http://localhost:"+server.getConnectors()[0].getLocalPort();
         HttpTestUtils.assertContentContainsText(rootUrl+path, text);
+    }
+
+    public static ManagementContext getManagementContextFromJettyServerAttributes(Server server) {
+        ManagementContext mgmt = (ManagementContext) ((ContextHandler)server.getHandler()).getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        return mgmt;
     }
 
 }

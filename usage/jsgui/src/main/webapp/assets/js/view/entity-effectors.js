@@ -5,9 +5,9 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone", "model/effector-summary",
+    "underscore", "jquery", "backbone", "view/viewutils", "model/effector-summary",
     "view/effector-invoke", "text!tpl/apps/effector.html", "text!tpl/apps/effector-row.html", "bootstrap"
-], function (_, $, Backbone, EffectorSummary, EffectorInvokeView, EffectorHtml, EffectorRowHtml) {
+], function (_, $, Backbone, ViewUtils, EffectorSummary, EffectorInvokeView, EffectorHtml, EffectorRowHtml) {
 
     var EntityEffectorsView = Backbone.View.extend({
         template:_.template(EffectorHtml),
@@ -21,15 +21,24 @@ define([
             this._effectors = new EffectorSummary.Collection()
             // fetch the list of effectors and create a view for each one
             this._effectors.url = this.model.getLinkByName("effectors")
+            that.loadedData = false;
+            ViewUtils.fadeToIndicateInitialLoad(this.$('#effectors-table'));
+            this.$(".has-no-effectors").hide();
+            
             this._effectors.fetch({success:function () {
+                that.loadedData = true;
                 that.render()
+                ViewUtils.cancelFadeOnceLoaded(that.$('#effectors-table'));
             }})
         },
         render:function () {
+            if (this.viewIsClosed)
+                return;
             var that = this
             var $tableBody = this.$('#effectors-table tbody').empty()
             if (this._effectors.length==0) {
-                this.$(".has-no-effectors").show();
+                if (that.loadedData)
+                    this.$(".has-no-effectors").show();
             } else {                
                 this.$(".has-no-effectors").hide();
                 this._effectors.each(function (effector) {

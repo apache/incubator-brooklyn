@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServiceAttributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -22,7 +23,10 @@ public class BrooklynRestApiLauncherTest {
     @AfterTest
     public void stopServer() throws Exception {
         if (server!=null) {
+            ManagementContext mgmt = getManagementContextFromJettyServerAttributes(server);
             server.stop();
+            if (mgmt!=null) Entities.destroyAll(mgmt);
+            
             server = null;
         }
     }

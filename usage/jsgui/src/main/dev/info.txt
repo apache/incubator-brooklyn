@@ -13,6 +13,3 @@ To use non-minimised JS during dev/test/debug install the non-minimised versions
 
 But be careful not to git commit the non-minimised js!
 
-
-
-
