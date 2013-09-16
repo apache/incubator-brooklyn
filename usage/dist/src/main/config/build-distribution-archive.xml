@@ -24,6 +24,26 @@
             <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
+            <!-- Add an empty dropin folder (so need to reference an existing dir, and exclude everything -->
+            <directory>${project.basedir}/src/main/dist</directory>
+            <outputDirectory>/dropin</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+            <excludes>
+                <exclude>**/*</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <!-- Add an empty patch folder (so need to reference an existing dir, and exclude everything) -->
+            <directory>${project.basedir}/src/main/dist/bin</directory>
+            <outputDirectory>/patch</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+            <excludes>
+                <exclude>**/*</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
             <directory>${project.basedir}/src/main/dist</directory>
             <outputDirectory>/</outputDirectory>
             <excludes>
