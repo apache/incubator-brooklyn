@@ -61,10 +61,14 @@ define([
         },
         tabSelected: function(event) {
             var tabName = $(event.currentTarget).attr("href").slice(1)
-            var entityId = $(".applications span.active").attr("id")
-            var entityHref = $(".applications span.active a").attr("href")
-            window.history.pushState(entityId+"/"+tabName, "", 
+            var entityId = $("#app-tree span.active").attr("id")
+            var entityHref = $("#app-tree span.active a").attr("href")
+            if (entityId && entityHref) {                
+                window.history.pushState(entityId+"/"+tabName, "", 
                     entityHref+"/"+tabName);
+            } else {
+                window.history.pushState("notfound", "", "#/v1/applications")
+            }
         }
     });
     return EntityDetailsView;

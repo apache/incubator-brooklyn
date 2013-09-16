@@ -182,9 +182,9 @@ define([
                 next.slideDown('fast');
             }
         },
-        updateTextareaWithData: function($div, data, alwaysShow, minPx, maxPx) {
+        updateTextareaWithData: function($div, data, showIfEmpty, doSlideDown, minPx, maxPx) {
             var $ta = $("textarea", $div);
-            var show = alwaysShow;
+            var show = showIfEmpty;
             if (data !== undefined) {
                 $ta.val(data);
                 show = true;
@@ -193,7 +193,7 @@ define([
             }
             if (show) {
                 ViewUtils.setHeightAutomatically($ta, minPx, maxPx, false)
-                if (alwaysShow) { $div.show(100); }
+                if (doSlideDown) { $div.slideDown(100); }
             } else {
                 $div.hide();
             }

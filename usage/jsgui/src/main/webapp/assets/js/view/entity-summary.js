@@ -18,7 +18,7 @@ define([
                 entityJson:ej,
                 applicationJson:FormatJSON(this.options.application.toJSON())
             }))
-            ViewUtils.updateTextareaWithData($(".for-textarea", this.$el), ej, true, 150, 400)
+            ViewUtils.updateTextareaWithData($(".for-textarea", this.$el), ej, true, false, 150, 400)
             ViewUtils.attachToggler(this.$el)
             that.callPeriodically("entity-summary-sensors", 
                     function() { that.updateSensorsNow(that) }, 3000)
@@ -32,8 +32,10 @@ define([
                 url: that.model.getLinkByName("sensors")+"/"+sensor,
                 contentType:"application/json",
                 success:function (data) {
-                    $(".value", $div).html(_.escape(data))
-                    $div.show()
+                    if (data || data===false) {
+                        $(".value", $div).html(_.escape(data))
+                        $div.show()
+                    }
                 }})            
         },
         updateSensorsNow: function(that) {

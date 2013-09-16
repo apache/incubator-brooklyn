@@ -122,10 +122,10 @@ define([
                 function(v) { return v <= 0 ? "-" : moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).from(startTimeUtc, true)+" later</i>" })
 
             ViewUtils.updateTextareaWithData($(".task-json .for-textarea", this.$el), 
-                FormatJSON(this.task.toJSON()), false, 150, 400)
+                FormatJSON(this.task.toJSON()), false, false, 150, 400)
 
             ViewUtils.updateTextareaWithData($(".task-detail .for-textarea", this.$el), 
-                this.task.get('detailedStatus'), false, 30, 100)
+                this.task.get('detailedStatus'), false, false, 30, 100)
 
             this.updateFieldWith('streams',
                 function(v) {
