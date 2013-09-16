@@ -117,13 +117,6 @@
                     </execution>
                 </executions>
                 <configuration>
-<!-- Tests simulate Firefox 3 - does not seem supported on latest jasmine
-                    <browserVersion>FIREFOX_3</browserVersion>
-                    <junitXmlReportFileName>TEST-FIREFOX_3-jasmine.xml</junitXmlReportFileName>
-                    <manualSpecRunnerHtmlFileName>FIREFOX_3-ManualSpecRunner.html</manualSpecRunnerHtmlFileName>
-                    <specRunnerHtmlFileName>FIREFOX_3-SpecRunner.html</specRunnerHtmlFileName>
--->
-
                     <!--Uses the require.js test spec-->
                     <specRunnerTemplate>REQUIRE_JS</specRunnerTemplate>
                     <scriptLoaderPath>js/libs/require.js</scriptLoaderPath>
