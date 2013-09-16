@@ -1,17 +1,27 @@
 <div class="app-summary">
 
-  <div class="name">
-    <h2><%= entity.get('name') %></h2>
+ <div id="title-and-info-row">
+  <% if (entity.getLinkByName('iconUrl')) { %>
+  <div style="display: inline-block; vertical-align: top; padding-top: 12px;">
+    <img src="<%= entity.getLinkByName('iconUrl') %>"
+        style="max-width: 128px; max-height: 128px;"/>
   </div>
+  <% } %>
 
-  <div class="inforow">
-<!-- 
+  <div style="display: inline-block; vertical-align: top;">
+  
+   <div class="name" style="margin-bottom: 12px;">
+     <h2><%= entity.get('name') %></h2>
+   </div>
+
+   <div class="inforow">
+    <!-- 
     <div class="left">
         TODO nice big icon for status here; derived as:
         running (with optional overlay if service-not-(yet)-up)
         starting, stopping, stopped, on-fire (all with optional overlay if service-up)
     </div>
--->
+     -->
     <div class="right">
         <div class="info-name-value id">
             <div class="name">ID</div>
@@ -34,20 +44,21 @@
         </div>
         <!-- TODO parent, app, children -->
     </div>
+   </div>
   </div>
-
-
+ </div>
+ 
   <!-- TODO
     map
   -->
 
   <!-- TODO hide the json -->  
   <div class="toggler-region json">
-    <div class="toggler-header">
-      <div class="toggler-icon icon-chevron-down"></div>
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
       <div><b>JSON</b></div>
     </div>
-    <div class="for-textarea">
+    <div class="for-textarea hide">
       <textarea id="json-textrea" readonly="readonly"><%= entityJson %></textarea>
     </div>
   </div>
