@@ -9,6 +9,7 @@ define([
             return {
                 id:"",
                 name:"",
+                iconUrl:"",
                 children:[]
             }
         },

@@ -80,6 +80,7 @@ define([
                     hasChildren: application.hasChildren(),
                     parentApp:application.get("id"),
                     displayName:application.get("name"),
+                    iconUrl:application.get("iconUrl"),
                     depth: 0
                 })),
                 treeFromEntity = function (entity, depth) {
@@ -92,6 +93,7 @@ define([
                             hasChildren: true,
                             parentApp:application.get("id"),
                             displayName:entity.getDisplayName(),
+                            iconUrl:entity.get("iconUrl"),
                             depth: depth
                         }))
                         var $parentTpl = $entityTpl.find("#children")
@@ -105,6 +107,7 @@ define([
                             hasChildren: false,
                             parentApp:application.get("id"),
                             displayName:entity.getDisplayName(),
+                            iconUrl:entity.get("iconUrl"),
                             depth: depth
                         }))
                     }

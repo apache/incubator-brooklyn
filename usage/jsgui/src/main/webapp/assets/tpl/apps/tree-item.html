@@ -2,10 +2,20 @@
   <div class="tree-node">
     <span class="entity_tree_node name entity" id="<%= id %>" data-entity-type="<%= type %>" data-parent-app="<%= parentApp %>">
       <a href="#/v1/applications/<%= parentApp %>/entities/<%= id %>">
-      
-    <div style="min-width: 16px; max-width: 16px; max-height: 16px; display: inline-block; margin-right: 6px;">
+    
+    <% 
+        var isApp = type == "application";
+        var iconSize = isApp ? 36 : 24;
+        var iconsDivWidth = iconUrl ? iconSize * 3 / 2 : 16;
+        var chevronLeft = (iconUrl ? iconSize : 0) + 3;
+        var chevronTop = 3;
+    %>
+    <div style="min-width: <%= iconsDivWidth %>px; max-width: <%= iconsDivWidth %>px; max-height: <%= iconSize %>px; display: inline-block; margin-right: 6px;">
+    <% if (iconUrl) { %>
+        <img src="<%= iconUrl %>" style="max-width: <%= iconSize %>px; max-height: <%= iconSize %>px;">
+    <% } %>
         <% if (hasChildren) { %>
-        <div style="position: absolute; left: 3px; top: 3px;">
+        <div style="position: absolute; left: <%= chevronLeft %>px; top: <%= chevronTop %>px;">
             <div class="toggler-icon icon-chevron-right tree-node-state tree-change">
                 <div class="light-popup">
                     <div class="light-popup-body">
@@ -19,7 +29,7 @@
             </div>
         </div>
         <% } else { %>
-        <div style="position: absolute; left: 39px; top: 24px;">
+        <div style="position: absolute; left: <%= chevronLeft %>px; top: <%= chevronTop + 21 %>px;">
             &nbsp;
         </div>
         <% } %>
