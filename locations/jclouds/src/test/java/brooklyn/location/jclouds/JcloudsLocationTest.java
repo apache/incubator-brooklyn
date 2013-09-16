@@ -7,9 +7,14 @@ import javax.annotation.Nullable;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Template;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.basic.Entities;
+import brooklyn.location.LocationSpec;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
@@ -91,29 +96,33 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
          }
      }
     
-    public static BailOutJcloudsLocation newSampleBailOutJcloudsLocationForTesting() {
-        BailOutJcloudsLocation jcl = new BailOutJcloudsLocation(MutableMap.of(
-                IMAGE_ID, "bogus",
-                CLOUD_PROVIDER, "aws-ec2",
-                ACCESS_IDENTITY, "bogus",
-                CLOUD_REGION_ID, "bogus",
-                ACCESS_CREDENTIAL, "bogus",
-                USER, "fred",
-                MIN_RAM, 16));
-        return jcl;
+    protected BailOutJcloudsLocation newSampleBailOutJcloudsLocationForTesting() {
+        return managementContext.getLocationManager().createLocation(LocationSpec.create(BailOutJcloudsLocation.class)
+                .configure(MutableMap.of(
+                        IMAGE_ID, "bogus",
+                        CLOUD_PROVIDER, "aws-ec2",
+                        ACCESS_IDENTITY, "bogus",
+                        CLOUD_REGION_ID, "bogus",
+                        ACCESS_CREDENTIAL, "bogus",
+                        USER, "fred",
+                        MIN_RAM, 16)));
     }
     
-    public static BailOutWithTemplateJcloudsLocation newSamplBailOutWithTemplateJcloudsLocation() {
-        BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
-        BailOutWithTemplateJcloudsLocation jcloudsLocation = new BailOutWithTemplateJcloudsLocation(MutableMap.of(
-                CLOUD_PROVIDER, "aws-ec2",
-                CLOUD_REGION_ID, "eu-west-1",
-                ACCESS_IDENTITY, properties.get("brooklyn.jclouds.aws-ec2.identity"),
-                ACCESS_CREDENTIAL, properties.get("brooklyn.jclouds.aws-ec2.credential"),
-                USER, "fred",
-                INBOUND_PORTS, "[22, 80, 9999]"
-            ));
-        return jcloudsLocation;
+    protected BailOutWithTemplateJcloudsLocation newSampleBailOutWithTemplateJcloudsLocation() {
+        String identity = (String) brooklynProperties.get("brooklyn.location.jclouds.aws-ec2.identity");
+        if (identity == null) identity = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.identity");
+        String credential = (String) brooklynProperties.get("brooklyn.location.jclouds.aws-ec2.credential");
+        if (credential == null) identity = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.credential");
+        
+        return managementContext.getLocationManager().createLocation(LocationSpec.create(BailOutWithTemplateJcloudsLocation.class)
+                .configure(MutableMap.of(
+                        CLOUD_PROVIDER, "aws-ec2",
+                        CLOUD_REGION_ID, "eu-west-1",
+                        IMAGE_ID, "us-east-1/ami-7d7bfc14", // so it runs faster, without loading all EC2 images
+                        ACCESS_IDENTITY, identity,
+                        ACCESS_CREDENTIAL, credential,
+                        USER, "fred",
+                        INBOUND_PORTS, "[22, 80, 9999]")));
     }
     
     public static Predicate<ConfigBag> checkerFor(final String user, final Integer minRam, final Integer minCores) {
@@ -136,6 +145,19 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
                 return false;
             }
         };
+    }
+    private BrooklynProperties brooklynProperties;
+    private LocalManagementContext managementContext;
+    
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        brooklynProperties = BrooklynProperties.Factory.newDefault();
+        managementContext = new LocalManagementContext(brooklynProperties);
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearUp() throws Exception {
+        if (managementContext != null) Entities.destroyAll(managementContext);
     }
     
     @Test
@@ -198,7 +220,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     
     @Test(groups="Live")
     public void testCreateWithInboundPorts() {
-        BailOutWithTemplateJcloudsLocation jcloudsLocation = newSamplBailOutWithTemplateJcloudsLocation();
+        BailOutWithTemplateJcloudsLocation jcloudsLocation = newSampleBailOutWithTemplateJcloudsLocation();
         jcloudsLocation = (BailOutWithTemplateJcloudsLocation) jcloudsLocation.newSubLocation(MutableMap.of());
         jcloudsLocation.tryObtainAndCheck(MutableMap.of(), templateCheckerFor("[22, 80, 9999]"));
         int[] ports = new int[] {22, 80, 9999};
@@ -207,7 +229,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     
     @Test(groups="Live")
     public void testCreateWithInboundPortsOverride() {
-        BailOutWithTemplateJcloudsLocation jcloudsLocation = newSamplBailOutWithTemplateJcloudsLocation();
+        BailOutWithTemplateJcloudsLocation jcloudsLocation = newSampleBailOutWithTemplateJcloudsLocation();
         jcloudsLocation = (BailOutWithTemplateJcloudsLocation) jcloudsLocation.newSubLocation(MutableMap.of());
         jcloudsLocation.tryObtainAndCheck(MutableMap.of(INBOUND_PORTS, "[23, 81, 9998]"), templateCheckerFor("[23, 81, 9998]"));
         int[] ports = new int[] {23, 81, 9998};

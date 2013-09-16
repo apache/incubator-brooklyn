@@ -12,6 +12,7 @@ import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.management.AccessController;
 import brooklyn.management.LocationManager;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -89,20 +90,26 @@ public class LocalLocationManager implements LocationManager {
     
     // TODO synchronization issues here: see comment in LocalEntityManager.manage(Entity)
     @Override
-    public Location manage(Location e) {
-        if (isManaged(e)) {
+    public Location manage(Location loc) {
+        if (isManaged(loc)) {
             // TODO put log.warn back in if/when manage(Location) becomes private; or could even have assert.
             // Can be stricter about contract.
-            return e;
+            return loc;
         }
-        Location parent = e.getParent();
+        
+        AccessController.Response access = managementContext.getAccessManager().getAccessController().canManageLocation(loc);
+        if (!access.isAllowed()) {
+            throw new IllegalStateException("Access controller forbids management of "+loc+": "+access.getMsg());
+        }
+        
+        Location parent = loc.getParent();
         if (parent != null && !managementContext.getLocationManager().isManaged(parent)) {
 //            throw new IllegalStateException("Can't manage "+e+" because its parent is not yet managed ("+parent+")");
-            log.warn("Parent location "+parent+" of "+e+" is not managed; attempting to manage it (in future this may be disallowed)");
+            log.warn("Parent location "+parent+" of "+loc+" is not managed; attempting to manage it (in future this may be disallowed)");
             manage(parent);
         }
         
-        recursively(e, new Predicate<AbstractLocation>() { public boolean apply(AbstractLocation it) {
+        recursively(loc, new Predicate<AbstractLocation>() { public boolean apply(AbstractLocation it) {
             if (it.isManaged()) {
                 return false;
             } else {
@@ -115,7 +122,7 @@ public class LocalLocationManager implements LocationManager {
                 return result;
             }
         } });
-        return e;
+        return loc;
     }
     
     @Override

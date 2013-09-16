@@ -65,6 +65,7 @@ import brooklyn.location.basic.LocationCreationUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
+import brooklyn.management.AccessController;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -336,6 +337,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      * plus any further properties to specify e.g. images, hardware profiles, accessing user
      * (for initial login, and a user potentially to create for subsequent ie normal access) */
     public JcloudsSshMachineLocation obtain(Map<?,?> flags) throws NoMachinesAvailableException {
+        AccessController.Response access = getManagementContext().getAccessController().canProvisionLocation(this);
+        if (!access.isAllowed()) {
+            throw new IllegalStateException("Access controller forbids provisioning in "+this+": "+access.getMsg());
+        }
+
         ConfigBag setup = ConfigBag.newInstanceExtending(getConfigBag(), flags);
         setCreationString(setup);
         

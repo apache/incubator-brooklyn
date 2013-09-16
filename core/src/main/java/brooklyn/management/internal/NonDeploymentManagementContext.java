@@ -25,6 +25,7 @@ import brooklyn.entity.rebind.ChangeListener;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.LocationRegistry;
+import brooklyn.management.AccessController;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
@@ -59,6 +60,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     private final NonDeploymentExecutionContext executionContext;
     private NonDeploymentEntityManager entityManager;
     private NonDeploymentLocationManager locationManager;
+    private NonDeploymentAccessManager accessManager;
 
     public NonDeploymentManagementContext(AbstractEntity entity, NonDeploymentManagementContextMode mode) {
         this.entity = checkNotNull(entity, "entity");
@@ -68,12 +70,14 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         executionContext = new NonDeploymentExecutionContext();
         entityManager = new NonDeploymentEntityManager(null);
         locationManager = new NonDeploymentLocationManager(null);
+        accessManager = new NonDeploymentAccessManager(null);
     }
     
     public void setManagementContext(ManagementContextInternal val) {
         this.initialManagementContext = checkNotNull(val, "initialManagementContext");
         this.entityManager = new NonDeploymentEntityManager(val);
         this.locationManager = new NonDeploymentLocationManager(val);
+        this.accessManager = new NonDeploymentAccessManager(val);
     }
 
     @Override
@@ -107,6 +111,16 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     @Override
     public LocationManager getLocationManager() {
         return locationManager;
+    }
+
+    @Override
+    public AccessManager getAccessManager() {
+        return accessManager;
+    }
+
+    @Override
+    public AccessController getAccessController() {
+        return getAccessManager().getAccessController();
     }
 
     @Override
