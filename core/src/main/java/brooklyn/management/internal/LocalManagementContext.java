@@ -21,6 +21,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.internal.storage.BrooklynStorageFactory;
 import brooklyn.location.Location;
+import brooklyn.management.AccessController;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
@@ -73,7 +74,8 @@ public class LocalManagementContext extends AbstractManagementContext {
     private SubscriptionManager subscriptions;
     private LocalEntityManager entityManager;
     private final LocalLocationManager locationManager;
-
+    private final LocalAccessManager accessManager;
+    
     private final String shortid = Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5);
     private final String tostring = "LocalManagementContext("+shortid+")";
 
@@ -103,7 +105,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         super(brooklynProperties,storageFactory);
         configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
         this.locationManager = new LocalLocationManager(this);
-
+        this.accessManager = new LocalAccessManager();
         INSTANCES.add(this);
     }
 
@@ -151,6 +153,17 @@ public class LocalManagementContext extends AbstractManagementContext {
         return locationManager;
     }
 
+    @Override
+    public synchronized LocalAccessManager getAccessManager() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        return accessManager;
+    }
+
+    @Override
+    public synchronized AccessController getAccessController() {
+        return getAccessManager().getAccessController();
+    }
+    
     @Override
     public synchronized  SubscriptionManager getSubscriptionManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");

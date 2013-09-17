@@ -1,7 +1,20 @@
 package brooklyn.rest.client;
 
-import brooklyn.rest.api.*;
 import org.jboss.resteasy.client.ProxyFactory;
+
+import brooklyn.rest.api.AccessApi;
+import brooklyn.rest.api.ActivityApi;
+import brooklyn.rest.api.ApplicationApi;
+import brooklyn.rest.api.CatalogApi;
+import brooklyn.rest.api.EffectorApi;
+import brooklyn.rest.api.EntityApi;
+import brooklyn.rest.api.EntityConfigApi;
+import brooklyn.rest.api.LocationApi;
+import brooklyn.rest.api.PolicyApi;
+import brooklyn.rest.api.PolicyConfigApi;
+import brooklyn.rest.api.ScriptApi;
+import brooklyn.rest.api.SensorApi;
+import brooklyn.rest.api.VersionApi;
 
 
 /**
@@ -63,4 +76,8 @@ public class BrooklynApi {
         return ProxyFactory.create(VersionApi.class, target);
     }
     
+    public AccessApi getAccessApi() {
+        return ProxyFactory.create(AccessApi.class, target);
+    }
+
 }

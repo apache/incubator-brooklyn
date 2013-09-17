@@ -44,4 +44,6 @@ public interface ManagementContextInternal extends ManagementContext {
     BrooklynStorage getStorage();
     
     BrooklynProperties getBrooklynProperties();
+    
+    AccessManager getAccessManager();
 }

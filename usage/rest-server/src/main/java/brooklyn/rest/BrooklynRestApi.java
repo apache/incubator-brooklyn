@@ -7,6 +7,7 @@ import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 
 import brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
 import brooklyn.rest.resources.AbstractBrooklynRestResource;
+import brooklyn.rest.resources.AccessResource;
 import brooklyn.rest.resources.ActivityResource;
 import brooklyn.rest.resources.ApidocResource;
 import brooklyn.rest.resources.ApplicationResource;
@@ -38,6 +39,7 @@ public class BrooklynRestApi {
         resources.add(new PolicyResource());
         resources.add(new PolicyConfigResource());
         resources.add(new ActivityResource());
+        resources.add(new AccessResource());
         resources.add(new ScriptResource());
         resources.add(new VersionResource());
         return resources;

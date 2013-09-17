@@ -152,4 +152,11 @@ public interface ManagementContext {
     void unmanage(Entity e);
 
     LocationManager getLocationManager();
+
+    /**
+     * For controlling access to operations - can be queried to find if an operation is allowed.
+     * Callers should *not* cache the result of this method, but should instead always call
+     * again to get the {@link AccessController}.
+     */
+    AccessController getAccessController();
 }

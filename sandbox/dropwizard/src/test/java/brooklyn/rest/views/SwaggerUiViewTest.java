@@ -11,6 +11,7 @@ import javax.ws.rs.Path;
 
 import org.testng.annotations.Test;
 
+import brooklyn.rest.resources.AccessResource;
 import brooklyn.rest.resources.ActivityResource;
 import brooklyn.rest.resources.ApplicationResource;
 import brooklyn.rest.resources.CatalogResource;
@@ -35,6 +36,7 @@ public class SwaggerUiViewTest {
       EffectorResource.class, 
       PolicyResource.class, 
       ActivityResource.class, 
+      AccessResource.class, 
       
       CatalogResource.class,
       LocationResource.class, 

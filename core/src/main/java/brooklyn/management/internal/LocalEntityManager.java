@@ -21,6 +21,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.trait.Startable;
+import brooklyn.management.AccessController;
 import brooklyn.management.EntityManager;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.util.exceptions.Exceptions;
@@ -138,6 +139,11 @@ public class LocalEntityManager implements EntityManager {
             return;
         }
         
+        AccessController.Response access = managementContext.getAccessController().canManageEntity(e);
+        if (!access.isAllowed()) {
+            throw new IllegalStateException("Access controller forbids management of "+e+": "+access.getMsg());
+        }
+
         final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
         recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
             if (it.getManagementSupport().isDeployed()) {
