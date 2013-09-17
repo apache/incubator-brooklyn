@@ -61,8 +61,8 @@ define([
         },
         tabSelected: function(event) {
             var tabName = $(event.currentTarget).attr("href").slice(1)
-            var entityId = $("#app-tree span.active").attr("id")
-            var entityHref = $("#app-tree span.active a").attr("href")
+            var entityId = $("#app-tree .entity_tree_node_wrapper.active").attr("id")
+            var entityHref = $("#app-tree .entity_tree_node_wrapper.active a").attr("href")
             if (entityId && entityHref) {                
                 window.history.pushState(entityId+"/"+tabName, "", 
                     entityHref+"/"+tabName);

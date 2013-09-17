@@ -6,6 +6,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -207,20 +208,46 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   @Test(dependsOnMethods = "testDeployApplication")
   public void testListApplications() {
     Set<ApplicationSummary> applications = client().resource("/v1/applications")
-        .get(new GenericType<Set<ApplicationSummary>>() {
-        });
-    log.info("Applications are: "+applications);
+        .get(new GenericType<Set<ApplicationSummary>>() { });
+    log.info("Applications listed are: "+applications);
     for (ApplicationSummary app: applications) {
         if (simpleSpec.getName().equals(app.getSpec().getName())) return;
     }
     Assert.fail("simple-app not found in list of applications: "+applications);
   }
 
+  @SuppressWarnings("rawtypes")
+  @Test(dependsOnMethods = "testDeployApplication")
+  public void testFetchApplicationsAndEntity() {
+    Collection apps = client().resource("/v1/applications/fetch").get(Collection.class);
+    log.info("Applications fetched are: "+apps);
+    
+    Map app = null;
+    for (Object appI: apps) {
+        Object name = ((Map)appI).get("name");
+        if ("simple-app".equals( name )) {
+            app = (Map) appI;
+        }
+        if ("simple-ent".equals(name))
+            Assert.fail("simple-ent should not be listed at high level: "+apps);
+    }
+    
+    Assert.assertNotNull(app);
+    Collection childrenIds = (Collection) app.get("childrenIds");
+    Assert.assertEquals(childrenIds.size(), 1);
+    String entityId = (String) childrenIds.iterator().next();
+    
+    Collection entities = client().resource("/v1/applications/fetch?items="+app.get("id")+","+entityId).
+            get(Collection.class);
+    log.info("Applications+Entity fetched are: "+entities);
+    
+    Assert.assertEquals(entities.size(), apps.size()+1);
+  }
+
   @Test(dependsOnMethods = "testDeployApplication")
   public void testListSensors() {
     Set<SensorSummary> sensors = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors")
-        .get(new GenericType<Set<SensorSummary>>() {
-        });
+        .get(new GenericType<Set<SensorSummary>>() { });
     assertTrue(sensors.size() > 0);
     SensorSummary sample = Iterables.find(sensors, new Predicate<SensorSummary>() {
       @Override
@@ -234,8 +261,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   @Test(dependsOnMethods = "testDeployApplication")
   public void testListConfig() {
     Set<EntityConfigSummary> config = client().resource("/v1/applications/simple-app/entities/simple-ent/config")
-        .get(new GenericType<Set<EntityConfigSummary>>() {
-        });
+        .get(new GenericType<Set<EntityConfigSummary>>() { });
     assertTrue(config.size() > 0);
     System.out.println(("CONFIG: "+config));
   }
@@ -366,7 +392,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     assertEquals(details.get("leafEntityCount"), 1);
   }
 
-  @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes","testLocatedLocation"})
+  @Test(dependsOnMethods = {"testListEffectors", "testFetchApplicationsAndEntity", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes","testLocatedLocation"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
     int size = getManagementContext().getApplications().size();
     ClientResponse response = client().resource("/v1/applications/simple-app")

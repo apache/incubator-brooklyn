@@ -3,6 +3,8 @@ package brooklyn.management;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
@@ -42,9 +44,10 @@ public interface EntityManager {
     Collection<Entity> getEntities();
 
     /**
-     * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote)
+     * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote),
+     * or null.
      */
-    Entity getEntity(String id);
+    @Nullable Entity getEntity(String id);
     
     /** whether the entity is under management by this management context */
     boolean isManaged(Entity entity);

@@ -226,18 +226,18 @@ define([
         processTooltips: function($el) {
             $el.find('*[rel="tooltip"]').tooltip();
         },
-        fadeToIndicateInitialLoad: function($table) {
+        fadeToIndicateInitialLoad: function($el) {
             // in case the server response time is low, fade out while it refreshes
             // (since we can't show updated details until we've retrieved app + entity details)
             try {                
-                $table.fadeTo(1000, 0.3);
+                $el.fadeTo(1000, 0.3);
             } catch (e) {
                 // ignore - normal during tests
             }
         },
-        cancelFadeOnceLoaded: function($table) {
+        cancelFadeOnceLoaded: function($el) {
             try {
-                $table.stop().fadeTo(200, 1);
+                $el.stop(true, false).fadeTo(200, 1);
             } catch (e) {
                 // ignore - normal during tests
             }

@@ -80,7 +80,7 @@ define([
             }
             this.renderSubtasks()
         
-            this.callPeriodically("refreshNow", function () {
+            this.callPeriodically("refresh-activities-now", function () {
                 this.refreshNow()
             }, 1000);
 
@@ -158,7 +158,7 @@ define([
                 this.children = new TaskSummary.Collection()
                 this.children.url = this.task.get("links").children
                 this.children.on("reset", this.renderChildren, this)
-                this.callPeriodically("refreshChildren", function () {
+                this.callPeriodically("refresh-activity-children", function () {
                     that.children.fetch({reset: true});
                 }, 3000);
                 that.children.fetch({reset: true});
@@ -169,7 +169,7 @@ define([
                         that.collection = new TaskSummary.Collection()
                         that.collection.url = entity.links.activities
                         that.collection.on("reset", this.renderSubtasks, this)
-                        that.callPeriodically("refreshSubmittedTasks", function () {
+                        that.callPeriodically("refresh-activity-bgtasks", function () {
                             that.collection.fetch({reset: true});
                         }, 3000);
                         that.collection.fetch({reset: true});

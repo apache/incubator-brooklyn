@@ -6,6 +6,7 @@ import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
 
 import java.net.URI;
+import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
@@ -31,6 +32,7 @@ import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.Collections2;
 
@@ -41,6 +43,8 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
   
   private final ObjectMapper mapper = new ObjectMapper();
 
+  /** @deprecated since 0.6.0 use {@link #fetch(String)} (with slightly different, but better semantics) */
+  @Deprecated
   @Override
   public JsonNode applicationTree() {
     ArrayNode apps = mapper.createArrayNode();
@@ -48,29 +52,56 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
       apps.add(recursiveTreeFromEntity(application));
     return apps;
   }
+  
+  private ObjectNode entityBase(Entity entity) {
+      ObjectNode aRoot = mapper.createObjectNode();
+      aRoot.put("name", entity.getDisplayName());
+      aRoot.put("id", entity.getId());
+      aRoot.put("type", entity.getEntityType().getName());
+      
+      Boolean serviceUp = entity.getAttribute(Attributes.SERVICE_UP);
+      if (serviceUp!=null) aRoot.put("serviceUp", serviceUp);
+      
+      Lifecycle serviceState = entity.getAttribute(Attributes.SERVICE_STATE);
+      if (serviceState!=null) aRoot.put("serviceState", serviceState.toString());
+      
+      String iconUrl = entity.getIconUrl();
+      if (iconUrl!=null) {
+          if (brooklyn().isUrlServerSideAndSafe(iconUrl)) 
+              // route to server if it is a server-side url
+              iconUrl = EntityTransformer.entityUri(entity)+"/icon";
+          aRoot.put("iconUrl", iconUrl);
+      }
+      
+      return aRoot;
+  }
+  
   private JsonNode recursiveTreeFromEntity(Entity entity) {
-    ObjectNode aRoot = mapper.createObjectNode();
-    aRoot.put("name", entity.getDisplayName());
-    aRoot.put("id", entity.getId());
-    aRoot.put("type", entity.getEntityType().getName());
-    if (entity.getChildren().size() != 0) {
-      aRoot.put("children", childEntitiesAsArray(entity));
-    }
-    String iconUrl = entity.getIconUrl();
-    if (iconUrl!=null) {
-        if (brooklyn().isUrlServerSideAndSafe(iconUrl)) 
-            // route to server if it is a server-side url
-            iconUrl = EntityTransformer.entityUri(entity)+"/icon";
-        aRoot.put("iconUrl", iconUrl);
-    }
-    Boolean serviceUp = entity.getAttribute(Attributes.SERVICE_UP);
-    if (serviceUp!=null) aRoot.put("serviceUp", serviceUp);
-    Lifecycle serviceState = entity.getAttribute(Attributes.SERVICE_STATE);
-    if (serviceState!=null) aRoot.put("serviceState", serviceState.toString());
+    ObjectNode aRoot = entityBase(entity);
+
+    if (!entity.getChildren().isEmpty())
+      aRoot.put("children", childEntitiesRecursiveAsArray(entity));
     
     return aRoot;
   }
-  private ArrayNode childEntitiesAsArray(Entity entity) {
+  
+  // TODO when applicationTree can be removed, replace this with an extension to EntitySummary (without links)
+  private JsonNode fromEntity(Entity entity) {
+    ObjectNode aRoot = entityBase(entity);
+    
+    aRoot.put("applicationId", entity.getApplicationId());
+    
+    if (entity.getParent()!=null) {
+        aRoot.put("parentId", entity.getParent().getId());
+    }
+
+    if (!entity.getChildren().isEmpty())
+        aRoot.put("childrenIds", childEntitiesIdAsArray(entity));
+
+    return aRoot;
+  }
+  
+  private ArrayNode childEntitiesRecursiveAsArray(Entity entity) {
     ArrayNode node = mapper.createArrayNode();
     for (Entity e : entity.getChildren()) {
       node.add(recursiveTreeFromEntity(e));
@@ -78,6 +109,34 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     return node;
   }
 
+  private ArrayNode childEntitiesIdAsArray(Entity entity) {
+      ArrayNode node = mapper.createArrayNode();
+      for (Entity e : entity.getChildren()) {
+        node.add(e.getId());
+      }
+      return node;
+  }
+
+  public JsonNode fetch(String items) {
+      Map<String,JsonNode> resultM = MutableMap.<String, JsonNode>of();
+      for (Application application : mgmt().getApplications())
+        resultM.put(application.getId(), fromEntity(application));
+      if (items!=null) {
+          String[] itemsO = items.split(",");
+          for (String item: itemsO) {
+              Entity itemE = mgmt().getEntityManager().getEntity( item.trim() );
+              while (itemE != null && !(itemE instanceof Application)) {
+                  resultM.put(itemE.getId(), fromEntity(itemE));
+                  itemE= itemE.getParent();
+              }
+          }
+      }
+      
+      ArrayNode result = mapper.createArrayNode();
+      for (JsonNode n: resultM.values()) result.add(n);
+      return result;
+  }
+  
   @Override
   public Iterable<ApplicationSummary> list() {
     return Collections2.transform(mgmt().getApplications(), ApplicationTransformer.FROM_APPLICATION);

@@ -539,7 +539,7 @@ ol.tree {
 	color: #54932b !important;
 	text-decoration: none;
 }
-.entity_tree_node.active {
+.entity_tree_node_wrapper.active .entity_tree_node {
     font-weight: bold;
 }
 #tree label {
@@ -568,7 +568,9 @@ line-height: 18px;
     position: relative; 
     float: left;
 }
-
+.entity_tree_node_wrapper {
+	position: relative;
+}
 .tree-box {
     border: 1px solid #AAA;
     border-right: 0px;

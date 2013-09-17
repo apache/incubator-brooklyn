@@ -15,11 +15,12 @@ define([
         id:'application-explorer',
         template:_.template(PageHtml),
         events:{
-            'click .application-tree-refresh': 'refreshApplications',
+            'click .application-tree-refresh': 'refreshApplicationsInPlace',
             'click #add-new-application':'createApplication',
             'click .delete':'deleteApplication'
         },
         initialize:function () {
+            var that = this;
             this.$el.html(this.template({}))
             $(".nav1").removeClass("active");
             $(".nav1_apps").addClass("active");
@@ -28,8 +29,10 @@ define([
             this.treeView = new ApplicationTreeView({
                 collection:this.collection
             })
-            this.$('div#app-tree').html(this.treeView.render().el)
-            this.treeView.render()
+            this.$('div#app-tree').html(this.treeView.renderFull().el)
+            this.refreshApplications();
+            that.callPeriodically("entity-tree-apps", 
+                    function() { that.refreshApplicationsInPlace() }, 3000)
         },
         beforeClose:function () {
             this.collection.off("reset", this.render)
@@ -41,6 +44,10 @@ define([
         
         refreshApplications:function () {
             this.collection.fetch({reset: true})
+            return false
+        },
+        refreshApplicationsInPlace:function () {
+            this.collection.fetch()
             return false
         },
         show: function(entityId) {
@@ -57,7 +64,7 @@ define([
             }
             var wizard = new AppAddWizard({
             	appRouter:that.options.appRouter,
-            	callback:function() { that.refreshApplications() }
+            	callback:function() { that.refreshApplicationsInPlace() }
         	})
             this._modal = wizard
             this.$(".add-app #modal-container").html(wizard.render().el)

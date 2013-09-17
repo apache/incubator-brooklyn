@@ -1,26 +1,34 @@
-<div class="toggler-group tree-box <%= 
-    depth==0 ? "outer" : "inner "+(depth%2==1 ? "depth-odd" : "depth-even")+(depth==1 ? " depth-first" : "") %>">
-  <div class="tree-node">
-    <span class="entity_tree_node name entity" id="<%= id %>" data-entity-type="<%= type %>" data-parent-app="<%= parentApp %>">
-      <a href="#/v1/applications/<%= parentApp %>/entities/<%= id %>">
+<%
+    var isLoaded = (model ? true : false);
+    var isApp = (parentId ? false : true);
     
-    <%
-        var isApp = type == "application";
+    if (!isLoaded) {
+%>
+        <i>Loading... (<%= id %>)</i>
+<%  } else {
+        var hasChildren = model.hasChildren();
+        var iconUrl = model.get('iconUrl');
+                 
         var entityIconSize = isApp ? 40 : 30;
         var statusIconSize = isApp ? 24 : 16;
         
-        var chevronLeft = isApp ? 5.5 : 1.5;
+        var chevronLeft = (isApp ? 5.5 : 1.5);
         var minHeight = hasChildren && statusIconUrl ? entityIconSize : 24;
         var statusColumnWidth = hasChildren || statusIconUrl || (!isApp && !iconUrl /* for children, insert space so things line up */) ? statusIconSize : 0;
-    %>
-    <div style="min-width: <%= statusColumnWidth + (iconUrl ? entityIconSize : 6)%>px; min-height: <%= minHeight %>px; max-height: 40px; display: inline-block; margin-right: 4px; vertical-align: middle;">
+%>
+  
+  <span class="entity_tree_node name entity" id="span-<%= id %>" 
+        data-entity-type="<%= model.get('type') %>" data-parent-id="<%= parentId %>" data-app-id="<%= model.get('applicationId') %>">
+    <a href="#/v1/applications/<%= model.get('applicationId') %>/entities/<%= id %>">
+    
+      <div style="min-width: <%= statusColumnWidth + (iconUrl ? entityIconSize : 6)%>px; min-height: <%= minHeight %>px; max-height: 40px; display: inline-block; margin-right: 4px; vertical-align: middle;">
         <% if (statusIconUrl) { %>
         <div style="position: absolute; left: 0px; margin: auto; top: <%= isApp && hasChildren ? 3 : 2 %>px;<% if (!hasChildren) { %> bottom: 0px;<% } %>">
-            <img src="<%= statusIconUrl %>" style="max-width: <%= statusIconSize %>px; max-height: <%= statusIconSize %>px; margin: auto; position: absolute; top: 0px;<% if (!hasChildren) { %> bottom: 0px;<% } %>">
+            <img src="<%= statusIconUrl %>" style="max-width: <%= statusIconSize %>px; max-height: <%= statusIconSize %>px; margin: auto; position: absolute; top: -1px;<% if (!hasChildren) { %> bottom: 0px;<% } %>">
         </div>
         <% } %>
         <% if (hasChildren) { %>
-        <div style="position: absolute; left: <%= chevronLeft %>px; margin: auto; <%= statusIconUrl ? "bottom: 1px;" : isApp ? "top: 6px;" : "top: 6px;" %>">
+        <div style="position: absolute; left: <%= chevronLeft %>px; margin: auto; <%= statusIconUrl ? "bottom: -1px;" : isApp ? "top: 6px;" : "top: 6px;" %>">
             <div class="toggler-icon icon-chevron-right tree-node-state tree-change">
                 <div class="light-popup">
                     <div class="light-popup-body">
@@ -34,16 +42,14 @@
             </div>
         </div>
         <% } %>
-    <% if (iconUrl) { %>
-        <img src="<%= iconUrl %>" style="max-width: <%= entityIconSize %>px; max-height: <%= entityIconSize %>px; position: absolute; left: <%= statusColumnWidth %>px; top: 0; bottom: 0; margin: auto;">
-    <% } %>
-    </div>
+        <% if (iconUrl) { %>
+            <img src="<%= iconUrl %>" style="max-width: <%= entityIconSize %>px; max-height: <%= entityIconSize %>px; position: absolute; left: <%= statusColumnWidth %>px; top: 0; bottom: 0; margin: auto;">
+        <% } %>
+      </div>
      
-        <span style="max-height: 18px; position: relative; margin: auto; top: 2px; bottom: 0;"><%= displayName %></span>
+      <span style="max-height: 18px; padding-right: 6px; position: relative; margin: auto; top: 2px; bottom: 0;"><%= model.get('name') %></span>
          
-      </a>
-    </span>
-  </div>
-  <div id="children" class="toggler-target hide">
-  </div>
-</div>
+    </a>
+  </span>
+
+<% } %>
