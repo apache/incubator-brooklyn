@@ -4,9 +4,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
-import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.management.internal.ManagementContextInternal;
-import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,10 +11,14 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.StartableMethods;
+import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Users can extend this to define the entities in their application, and the relationships between
@@ -178,16 +179,28 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void onManagementStopped() {
+        super.onManagementStopped();
+        putApplicationEvent(Lifecycle.DESTROYED);
+    }
+    
     private void putApplicationEvent(Lifecycle state) {
-        log.debug("Location lifecycle event: application {} in state {};", new Object[] {this, state});
-        BrooklynStorage storage = ((ManagementContextInternal) getManagementContext()).getStorage();
-        ConcurrentMap<String, ApplicationUsage> eventMap = storage.getMap(APPLICATION_USAGE_KEY);
-        ApplicationUsage usage = eventMap.get(getId());
-        if (usage == null) {
-            usage = new ApplicationUsage(getId(), getDisplayName(), getEntityTypeName(), toMetadataRecord());
+        log.debug("Storing location lifecycle event: application {} in state {};", new Object[] {this, state});
+        try {
+            BrooklynStorage storage = ((ManagementContextInternal) getManagementContext()).getStorage();
+            ConcurrentMap<String, ApplicationUsage> eventMap = storage.getMap(APPLICATION_USAGE_KEY);
+            ApplicationUsage usage = eventMap.get(getId());
+            if (usage == null) {
+                usage = new ApplicationUsage(getId(), getDisplayName(), getEntityTypeName(), toMetadataRecord());
+            }
+            usage.addEvent(new ApplicationUsage.ApplicationEvent(state));        
+            eventMap.put(getId(), usage);
+        } catch (Exception e) {
+            if (getManagementContext().isRunning()) {
+                log.warn("Problem storing application event "+state+" for "+this, e);
+            }
         }
-        usage.addEvent(new ApplicationUsage.ApplicationEvent(state));        
-        eventMap.put(getId(), usage);
     }
     
     public Map<String, String> toMetadataRecord() {

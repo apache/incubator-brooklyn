@@ -9,6 +9,7 @@ public enum Status {
     RUNNING,
     STOPPING,
     STOPPED,
+    TERMINATED,
     ERROR,
     UNKNOWN
 }

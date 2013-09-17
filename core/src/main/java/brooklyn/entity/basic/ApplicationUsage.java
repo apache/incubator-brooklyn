@@ -1,14 +1,15 @@
 package brooklyn.entity.basic;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -29,6 +30,11 @@ public class ApplicationUsage {
 
         public Lifecycle getState() {
             return state;
+        }
+        
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("date", date).add("state", state).toString();
         }
     }
     

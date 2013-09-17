@@ -28,13 +28,13 @@ public interface UsageApi {
     public List<Statistic> listApplicationUsage(
             @ApiParam(
                     name = "start",
-                    value = "timestamp of start marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
+                    value = "timestamp of start marker for usage reporting, in format UTC millis or yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
             @QueryParam("start") String startDate,
             @ApiParam(
                     name = "end",
-                    value = "timestamp of end marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
+                    value = "timestamp of end marker for usage reporting in format UTC millis or yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
             @QueryParam("end") String endDate) ;
@@ -57,13 +57,13 @@ public interface UsageApi {
             @PathParam("application") String applicationId,
             @ApiParam(
                     name = "start",
-                    value = "timestamp of start marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
+                    value = "timestamp of start marker for usage reporting in format UTC millis or yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
             @QueryParam("start") String startDate,
             @ApiParam(
                     name = "end",
-                    value = "timestamp of end marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
+                    value = "timestamp of end marker for usage reporting in format UTC millis or yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
             @QueryParam("end") String endDate) ;
@@ -86,13 +86,13 @@ public interface UsageApi {
             @QueryParam("application") String application,
             @ApiParam(
                     name = "start",
-                    value = "timestamp of start marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
+                    value = "timestamp of start marker for usage reporting in format UTC millis or yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
             @QueryParam("start") String startDate,
             @ApiParam(
                     name = "end",
-                    value = "timestamp of end marker for usage reporting in format yyyy-MM-dd'T'HH:mm:ssZ",
+                    value = "timestamp of end marker for usage reporting in format UTC millis or yyyy-MM-dd'T'HH:mm:ssZ",
                     required = false
             )
             @QueryParam("end") String endDate) ;

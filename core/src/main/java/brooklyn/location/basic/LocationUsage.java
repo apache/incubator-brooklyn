@@ -54,7 +54,7 @@ public class LocationUsage {
         
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("state", state).add("date", date).add("entityId", entityId)
+            return Objects.toStringHelper(this).add("date", date).add("state", state).add("entityId", entityId)
                     .add("appId", applicationId).toString();
         }
     }

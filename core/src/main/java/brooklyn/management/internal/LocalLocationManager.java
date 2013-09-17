@@ -31,7 +31,7 @@ import com.google.common.collect.Sets;
 
 public class LocalLocationManager implements LocationManager {
 
-    private static final String LOCATION_USAGE_KEY = "location-usage";
+    public static final String LOCATION_USAGE_KEY = "location-usage";
 
     private static final Logger log = LoggerFactory.getLogger(LocalLocationManager.class);
 
@@ -182,7 +182,7 @@ public class LocalLocationManager implements LocationManager {
         
         try {
             Object callerContext = loc.getConfig(LocationConfigKeys.CALLER_CONTEXT);
-            log.debug("Location lifecycle event: location {} in state {}; caller context {}", new Object[] {loc, state, callerContext});
+            log.debug("Storing location lifecycle event: location {} in state {}; caller context {}", new Object[] {loc, state, callerContext});
             
             if (callerContext != null && callerContext instanceof Entity) {
                 Entity caller = (Entity) callerContext;

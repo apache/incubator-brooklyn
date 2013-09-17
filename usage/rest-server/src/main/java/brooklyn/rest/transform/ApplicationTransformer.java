@@ -66,6 +66,7 @@ public class ApplicationTransformer {
             case STOPPED:
                 return STOPPED;
             case DESTROYED:
+                return TERMINATED;
             case ON_FIRE:
             default:
                 return UNKNOWN;
