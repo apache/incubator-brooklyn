@@ -1,39 +1,30 @@
 <div class="app-summary">
 
- <div id="title-and-info-row">
+ <div id="title-and-info-row" style="white-space: nowrap;">
   <% if (entity.getLinkByName('iconUrl')) { %>
-  <div style="display: inline-block; vertical-align: top; padding-top: 12px;">
+  <div style="display: inline-block; vertical-align: bottom; padding-top: 12px; padding-bottom: 18px;">
     <img src="<%= entity.getLinkByName('iconUrl') %>"
         style="max-width: 128px; max-height: 128px;"/>
   </div>
   <% } %>
 
-  <div style="display: inline-block; vertical-align: top;">
+  <div style="display: inline-block; vertical-align: bottom;">
   
-   <div class="name" style="margin-bottom: 12px;">
+   <div class="name" style="margin-bottom: 12px; padding-right: 12px;">
      <h2><%= entity.get('name') %></h2>
    </div>
 
-   <div class="inforow">
-    <!-- 
-    <div class="left">
-        TODO nice big icon for status here; derived as:
-        running (with optional overlay if service-not-(yet)-up)
-        starting, stopping, stopped, on-fire (all with optional overlay if service-up)
-    </div>
-     -->
-    <div class="right">
-        <div class="info-name-value id">
-            <div class="name">ID</div>
-            <div class="value"><%= entity.get('id') %></div>
-        </div>
-<!-- TODO
-        <div class="info-name-value location">
-            <div class="name">Location</div>
-            <div class="value"><i>Loading...</i></div>
-        </div>
- -->
-        
+  </div>
+ </div>
+
+ <div class="toggler-region">
+  <div class="toggler-header">
+    <div class="toggler-icon icon-chevron-down"></div>
+    <div><b>Status</b></div>
+  </div>
+  <div class="inforow" style="position: relative;">
+     
+    <div style="display: inline-block; padding-left: 8px; padding-right: 24px; padding-top: 6px;">
         <div class="info-name-value serviceUp hide">
             <div class="name">Service Up</div>
             <div class="value"><i>Loading...</i></div>
@@ -42,18 +33,41 @@
             <div class="name">Expected State</div>
             <div class="value"><i>Loading...</i></div>
         </div>
-        <!-- TODO parent, app, children -->
-    </div>
+        
+        <div class="info-name-value url hide" style="margin-top: 12px;">
+            <div class="name">URL</div>
+            <div class="value"><i>Loading...</i></div>
+        </div>
+        
+        <div class="info-name-value type" style="margin-top: 12px;">
+            <div class="name">Type</div>
+            <div class="value"><%= entity.get('type') %></div>
+        </div>
+        <div class="info-name-value id">
+            <div class="name">ID</div>
+            <div class="value"><%= entity.get('id') %></div>
+        </div>
+ 
+     <div id="status-icon" style="display: inline-block; padding-top: 12px; padding-bottom: 18px; padding-right: 8px; position: absolute; right: 0; top: 0;"></div>
+        
    </div>
   </div>
  </div>
  
-  <!-- TODO
-    map
+  <!-- TODO - include much more info in summary (following values not readily available)
+    parent, app (above?)
+    children, members (above? new section here ?)
+    active tasks (new section here)
+    locations / map (new section here ?)
   -->
+<!-- TODO
+        <div class="info-name-value location">
+            <div class="name">Location</div>
+            <div class="value"><i>Loading...</i></div>
+        </div>
+-->
 
-  <!-- TODO hide the json -->  
-  <div class="toggler-region json">
+  <div class="toggler-region json" style="margin-top: 18px;">
     <div class="toggler-header user-hidden">
       <div class="toggler-icon icon-chevron-left"></div>
       <div><b>JSON</b></div>

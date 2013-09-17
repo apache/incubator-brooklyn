@@ -241,6 +241,46 @@ define([
             } catch (e) {
                 // ignore - normal during tests
             }
+        },
+        computeStatusIcon: function(serviceUp, lifecycleState) {
+            if (serviceUp==false || serviceUp=="false") serviceUp=false;
+            else if (serviceUp===true || serviceUp=="true") serviceUp=true;
+            else {
+                if (serviceUp!=null && serviceUp !== "" && serviceUp !== undefined) {
+                    log("Unknown 'serviceUp' value:")
+                    log(serviceUp)
+                }
+                serviceUp = null;
+            }
+            var PATH = "/assets/img/";
+            
+            if (lifecycleState=="running") {
+                if (serviceUp==false) return PATH+"icon-status-running-onfire.png";
+                return PATH+"icon-status-running.png";
+            }
+            if (lifecycleState=="stopped") {
+                if (serviceUp==true) return PATH+"icon-status-stopped-onfire.png";
+                return PATH+"icon-status-stopped.png";
+            }
+            if (lifecycleState=="starting") {
+                return PATH+"icon-status-starting.gif";
+            }
+            if (lifecycleState=="stopping") {
+                return PATH+"icon-status-stopping.gif";
+            }
+            if (lifecycleState=="onfire") {
+                return PATH+"icon-status-onfire.gif";
+            }
+            if (lifecycleState!=null && lifecycleState !== "" && lifecycleState !== undefined) {
+                log("Unknown 'lifecycleState' value:")
+                log(lifecycleState)
+                return null;
+            }
+            // no lifecycle state, rely on serviceUp
+            if (serviceUp) return PATH+"icon-status-running.png"; 
+            if (serviceUp===false) return PATH+"icon-status-stopped.png";
+            // no status info at all
+            return null;
         }
     };
     return ViewUtils;

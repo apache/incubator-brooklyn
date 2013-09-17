@@ -27,20 +27,41 @@ define([
         render:function () {
             return this
         },
-        revealIfHasValue: function(that, sensor, $div) {
+        revealIfHasValue: function(that, sensor, $div, renderer) {
+            var that = this;
+            if (!renderer) renderer = function(data) { return _.escape(data); }
             $.ajax({
                 url: that.model.getLinkByName("sensors")+"/"+sensor,
                 contentType:"application/json",
                 success:function (data) {
                     if (data || data===false) {
-                        $(".value", $div).html(_.escape(data))
+                        $(".value", $div).html(renderer(data))
                         $div.show()
+                    } else {
+                        $div.hide();
                     }
+                    that.updateStatusIcon();
                 }})            
         },
         updateSensorsNow: function(that) {
+            <!-- hard-coded values for most commonly used sensors -->
+            
             that.revealIfHasValue(that, "service.isUp", that.$(".serviceUp"))
             that.revealIfHasValue(that, "service.state", that.$(".status"))
+            
+            that.revealIfHasValue(that, "webapp.url", that.$(".url"),
+                    function(data) { return "<a href='"+_.escape(data)+"'>"+_.escape(data)+"</img>" })
+        },
+        
+        updateStatusIcon: function() {
+            // currently we use the string values from the page; messy, but it works
+            var statusIconUrl = ViewUtils.computeStatusIcon(this.$(".serviceUp .value:visible").html(), this.$(".status .value:visible").html());
+            if (statusIconUrl) {
+                this.$('#status-icon').html('<img src="'+statusIconUrl+'" '+
+                        'style="max-width: 64px; max-height: 64px;"/>')
+            } else {
+                this.$('#status-icon').html('');
+            }
         }
     })
 

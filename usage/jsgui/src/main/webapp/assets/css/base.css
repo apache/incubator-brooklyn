@@ -645,10 +645,6 @@ line-height: 18px;
 .app-summary .inforow > div { display: inline-block; }
 .app-summary .inforow .info-name-value > div { display: inline-block; }
 .app-summary .inforow .info-name-value .name { font-weight: 700; width: 120px; padding-right: 12px;}
-.app-summary .inforow .info-name-value.id { margin-bottom: 6px; }
-.app-summary .inforow .info-name-value.serviceUp { margin-top: 6px; }
-.app-summary > .name { margin-bottom: 12px; }
-.app-summary .json { margin-top: 18px; }
 
 table.dataTable tbody td.row-expansion {
     background: #D8E4D0;
