@@ -44,8 +44,10 @@ define([
                 }})            
         },
         updateSensorsNow: function(that) {
-            <!-- hard-coded values for most commonly used sensors -->
+            // hard-coded values for most commonly used sensors
             
+            // this is redundant with values now returned from REST ApplicationResource.applicationTree
+            // but leaving them here until we more cleanly model that in javascript (e.g. lazy loading)
             that.revealIfHasValue(that, "service.isUp", that.$(".serviceUp"))
             that.revealIfHasValue(that, "service.state", that.$(".status"))
             

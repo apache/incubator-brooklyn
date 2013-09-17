@@ -579,7 +579,7 @@ line-height: 18px;
 .tree-box.outer {
     margin-left: 12px;
     margin-right: 0px;
-    margin-bottom: 9px;
+    margin-bottom: 14px;
     -webkit-border-radius: 4px 0 0 4px !important;
     -moz-border-radius: 4px 0 0 4px !important;
     border-radius: 4px 0 0 4px  !important;
@@ -595,6 +595,10 @@ line-height: 18px;
     border-radius: 3px 0 0 3px  !important;
     padding-left: 6px;
     padding-bottom: 2px;
+    margin-left: 3px;
+}
+.tree-box.inner.depth-first {
+	margin-left: 8px;
 }
 .tree-box.inner.depth-odd {
     background-color: #D8DAD8;

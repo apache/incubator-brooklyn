@@ -1,21 +1,26 @@
-<div class="toggler-group tree-box <%= depth==0 ? "outer" : "inner "+(depth%2==1 ? "depth-odd" : "depth-even") %>">
+<div class="toggler-group tree-box <%= 
+    depth==0 ? "outer" : "inner "+(depth%2==1 ? "depth-odd" : "depth-even")+(depth==1 ? " depth-first" : "") %>">
   <div class="tree-node">
     <span class="entity_tree_node name entity" id="<%= id %>" data-entity-type="<%= type %>" data-parent-app="<%= parentApp %>">
       <a href="#/v1/applications/<%= parentApp %>/entities/<%= id %>">
     
-    <% 
+    <%
         var isApp = type == "application";
-        var iconSize = isApp ? 36 : 24;
-        var iconsDivWidth = iconUrl ? iconSize * 3 / 2 : 16;
-        var chevronLeft = (iconUrl ? iconSize : 0) + 3;
-        var chevronTop = 3;
+        var entityIconSize = isApp ? 40 : 30;
+        var statusIconSize = isApp ? 24 : 16;
+        
+        var chevronLeft = isApp ? 5.5 : 1.5;
+        var minHeight = hasChildren && statusIconUrl ? entityIconSize : 24;
+        var statusColumnWidth = hasChildren || statusIconUrl || (!isApp && !iconUrl /* for children, insert space so things line up */) ? statusIconSize : 0;
     %>
-    <div style="min-width: <%= iconsDivWidth %>px; max-width: <%= iconsDivWidth %>px; max-height: <%= iconSize %>px; display: inline-block; margin-right: 6px;">
-    <% if (iconUrl) { %>
-        <img src="<%= iconUrl %>" style="max-width: <%= iconSize %>px; max-height: <%= iconSize %>px;">
-    <% } %>
+    <div style="min-width: <%= statusColumnWidth + (iconUrl ? entityIconSize : 6)%>px; min-height: <%= minHeight %>px; max-height: 40px; display: inline-block; margin-right: 4px; vertical-align: middle;">
+        <% if (statusIconUrl) { %>
+        <div style="position: absolute; left: 0px; margin: auto; top: <%= isApp && hasChildren ? 3 : 2 %>px;<% if (!hasChildren) { %> bottom: 0px;<% } %>">
+            <img src="<%= statusIconUrl %>" style="max-width: <%= statusIconSize %>px; max-height: <%= statusIconSize %>px; margin: auto; position: absolute; top: 0px;<% if (!hasChildren) { %> bottom: 0px;<% } %>">
+        </div>
+        <% } %>
         <% if (hasChildren) { %>
-        <div style="position: absolute; left: <%= chevronLeft %>px; top: <%= chevronTop %>px;">
+        <div style="position: absolute; left: <%= chevronLeft %>px; margin: auto; <%= statusIconUrl ? "bottom: 1px;" : isApp ? "top: 6px;" : "top: 6px;" %>">
             <div class="toggler-icon icon-chevron-right tree-node-state tree-change">
                 <div class="light-popup">
                     <div class="light-popup-body">
@@ -28,37 +33,17 @@
                 </div>
             </div>
         </div>
-        <% } else { %>
-        <div style="position: absolute; left: <%= chevronLeft %>px; top: <%= chevronTop + 21 %>px;">
-            &nbsp;
-        </div>
         <% } %>
-    </div><%=
+    <% if (iconUrl) { %>
+        <img src="<%= iconUrl %>" style="max-width: <%= entityIconSize %>px; max-height: <%= entityIconSize %>px; position: absolute; left: <%= statusColumnWidth %>px; top: 0; bottom: 0; margin: auto;">
+    <% } %>
+    </div>
      
-        displayName
+        <span style="max-height: 18px; position: relative; margin: auto; top: 2px; bottom: 0;"><%= displayName %></span>
          
-      %></a>
+      </a>
     </span>
   </div>
   <div id="children" class="toggler-target hide">
   </div>
 </div>
-
-<!-- 
-<li class="<%= type %>">
-    <% if (type != "leaf") { %> <label> <% } %>
-      <span id="<%= id %>" class="name entity entity_tree_node<%
-        if (type == "leaf") { %> leaf<% } 
-        if (type == "application") { %> application<% } 
-        %>" data-entity-type="<%= type %>" data-parent-app="<%= parentApp %>">
-        <a href="#/v1/applications/<%= parentApp %>/entities/<%= id %>">
-            
-        </a>
-    </span>
-    <% if (type != "leaf") { %> </label> <% } %>
-    <% if (type != "leaf") { %>
-    <input type="checkbox" checked="true"/>
-    <ol class="tree entities"/>
-    <% } %>
-</li>
- -->

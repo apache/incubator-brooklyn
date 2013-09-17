@@ -3,18 +3,20 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone",
+    "underscore", "jquery", "backbone", "view/viewutils",
     "model/app-tree", "./entity-details", "model/entity-summary", "model/application",
     "text!tpl/apps/tree-item.html", "text!tpl/apps/tree-empty.html", "text!tpl/apps/details.html", "text!tpl/apps/entity-not-found.html"
-], function (_, $, Backbone,
+], function (_, $, Backbone, ViewUtils,
              AppTree, EntityDetailsView, EntitySummary, Application,
              TreeItemHtml, TreeEmptyHtml, EntityDetailsEmptyHtml, EntityNotFoundHtml) {
 
     var treeViewTemplate = _.template(TreeItemHtml),
         notFoundTemplate = _.template(EntityNotFoundHtml);
 
+    
     var ApplicationTreeView = Backbone.View.extend({
         template: treeViewTemplate,
+        hoverTimer: null,
 
         events:{
             'click span.entity_tree_node .tree-change':'treeChange',
@@ -81,6 +83,7 @@ define([
                     parentApp:application.get("id"),
                     displayName:application.get("name"),
                     iconUrl:application.get("iconUrl"),
+                    statusIconUrl: ViewUtils.computeStatusIcon(application.get("serviceUp"),application.get("serviceState")),
                     depth: 0
                 })),
                 treeFromEntity = function (entity, depth) {
@@ -94,6 +97,7 @@ define([
                             parentApp:application.get("id"),
                             displayName:entity.getDisplayName(),
                             iconUrl:entity.get("iconUrl"),
+                            statusIconUrl: ViewUtils.computeStatusIcon(entity.get("serviceUp"),entity.get("serviceState")),
                             depth: depth
                         }))
                         var $parentTpl = $entityTpl.find("#children")
@@ -108,6 +112,7 @@ define([
                             parentApp:application.get("id"),
                             displayName:entity.getDisplayName(),
                             iconUrl:entity.get("iconUrl"),
+                            statusIconUrl: ViewUtils.computeStatusIcon(entity.get("serviceUp"),entity.get("serviceState")),
                             depth: depth
                         }))
                     }
@@ -123,29 +128,29 @@ define([
             
             // show the "light-popup" (expand / expand all / etc) menu
             // if user hovers for 500ms. surprising there is no option for this.
-            var hoverTimer;
             $('.light-popup', $template).parent().parent().hover(
                     function (parent) {
-                        if (hoverTimer!=null) {
-                            clearTimeout(hoverTimer);
-                            hoverTimer = null;
-                        }
-                        hoverTimer = setTimeout(function() {
+                        that.cancelHoverTimer();
+                        that.hoverTimer = setTimeout(function() {
                             var menu = $(parent.currentTarget).find('.light-popup')
                             menu.show()
                         }, 500);
                     },
                     function (parent) {
-                        if (hoverTimer!=null) {
-                            clearTimeout(hoverTimer);
-                            hoverTimer = null;
-                        }
+                        that.cancelHoverTimer();
                         var menu = $(parent.currentTarget).find('.light-popup')
                         menu.hide()
                         $('.light-popup').hide()
                     })
 
             return $template
+        },
+        cancelHoverTimer: function() {
+            var that = this;
+            if (that.hoverTimer!=null) {
+                clearTimeout(that.hoverTimer);
+                that.hoverTimer = null;
+            }            
         },
 
         displayEntity: function(event) {
@@ -213,8 +218,6 @@ define([
         },
 
         treeChange: function(event) {
-            log("changing")
-            log(event)
             var $target = $(event.currentTarget);
             var $treeBox = $target.closest('.tree-box');
             if ($target.hasClass('tr-expand')) {
@@ -234,6 +237,7 @@ define([
                 }
             }
             // hide the popup menu
+            this.cancelHoverTimer();
             $('.light-popup').hide()
             // don't let other events interfere
             return false
@@ -294,8 +298,9 @@ define([
         	$("span.entity_tree_node").removeClass("active")
         	if (id) {
         	    var $selectedNode = $("span.entity_tree_node#"+id);
-        		this.showChildrenOf($selectedNode.parents('#app-tree .tree-box'), false)
         		$selectedNode.addClass("active")
+        		// if we wanted to auto-expand the children of the selected node:
+//        		this.showChildrenOf($selectedNode.parents('#app-tree .tree-box'), false)
         	}
         }
     })

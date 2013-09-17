@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.management.Task;
 import brooklyn.rest.api.ApplicationApi;
 import brooklyn.rest.domain.ApplicationSpec;
@@ -61,6 +63,11 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
             iconUrl = EntityTransformer.entityUri(entity)+"/icon";
         aRoot.put("iconUrl", iconUrl);
     }
+    Boolean serviceUp = entity.getAttribute(Attributes.SERVICE_UP);
+    if (serviceUp!=null) aRoot.put("serviceUp", serviceUp);
+    Lifecycle serviceState = entity.getAttribute(Attributes.SERVICE_STATE);
+    if (serviceState!=null) aRoot.put("serviceState", serviceState.toString());
+    
     return aRoot;
   }
   private ArrayNode childEntitiesAsArray(Entity entity) {
