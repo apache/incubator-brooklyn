@@ -197,6 +197,9 @@ public class LocalLocationManager implements LocationManager {
                 }
                 usage.addEvent(event);
                 usageMap.put(loc.getId(), usage);
+                
+            } else {
+                log.debug("Not recording location-event for {} in state {}, because no caller context", new Object[] {loc, state});
             }
         } catch (RuntimeException e) {
             log.warn("Failed to store location lifecycle event for "+loc, e);

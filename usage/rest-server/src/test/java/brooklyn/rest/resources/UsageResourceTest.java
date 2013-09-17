@@ -1,29 +1,47 @@
 package brooklyn.rest.resources;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.rest.domain.*;
-import brooklyn.rest.testing.BrooklynRestResourceTest;
-import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
-import brooklyn.rest.util.JsonUtils;
-import brooklyn.test.entity.TestApplication;
-import com.google.common.collect.ImmutableSet;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
-import javax.ws.rs.core.Response;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
-import static org.testng.Assert.*;
+import javax.ws.rs.core.Response;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
+
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.SoftwareProcessEntityTest;
+import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.rest.domain.ApplicationSpec;
+import brooklyn.rest.domain.EntitySpec;
+import brooklyn.rest.domain.Statistic;
+import brooklyn.rest.domain.Status;
+import brooklyn.rest.domain.TaskSummary;
+import brooklyn.rest.testing.BrooklynRestResourceTest;
+import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
+import brooklyn.rest.util.JsonUtils;
+import brooklyn.test.entity.TestApplication;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
 
 public class UsageResourceTest extends BrooklynRestResourceTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(UsageResourceTest.class);
 
     private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").
             entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
@@ -53,23 +71,25 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     }
 
     @Test
+    public void testGetApplicationUsagesEmptyForNonExistantApp() {
+        ClientResponse response = client().resource("/v1/usage/applications/x").get(ClientResponse.class);
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        List<Statistic> usages = response.getEntity(new GenericType<List<Statistic>>() {});
+        assertTrue(usages.isEmpty());
+    }
+    
+    @Test
     public void testGetApplicationUsages() {
         ClientResponse response = client().resource("/v1/applications")
                 .post(ClientResponse.class, simpleSpec);
         assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
         TaskSummary createTask = response.getEntity(TaskSummary.class);
         
-        response = client().resource("/v1/usage/applications/x").get(ClientResponse.class);
-
-        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
-        List<Statistic> usages = response.getEntity(new GenericType<List<Statistic>>() {
-        });
-        assertTrue(usages.isEmpty());
-
         response = client().resource("/v1/usage/applications/" + createTask.getEntityId()).get(ClientResponse.class);
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
-        usages = response.getEntity(new GenericType<List<Statistic>>() {});
+        List<Statistic> usages = response.getEntity(new GenericType<List<Statistic>>() {});
         assertFalse(usages.isEmpty());
         
         Statistic usage = usages.get(0);
@@ -105,7 +125,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     }
 
     @Test
-    public void testGetMachineUsages() {
+    public void testGetMachineUsagesInitiallyEmpty() {
         ClientResponse response = client().resource("/v1/usage/machines").get(ClientResponse.class);
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
@@ -113,33 +133,66 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertTrue(usage.isEmpty());
     }
 
-    @Test(enabled=false)
+    @Test(dependsOnMethods="testGetMachineUsagesInitiallyEmpty")
     public void testGetMachineUsageWithMachines() {
-        Location location = getManagementContext().getLocationRegistry().resolve("localhost");
-        assertTrue(location instanceof LocalhostMachineProvisioningLocation);
-        ((LocalhostMachineProvisioningLocation) location).provisionMore(5);
+        Location location = getManagementContext().getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class));
+        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, getManagementContext());
+        SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(brooklyn.entity.proxying.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
+        app.start(ImmutableList.of(location));
+        Location machine = Iterables.getOnlyElement(entity.getLocations());
         
-        ClientResponse response = client().resource("/v1/applications").post(ClientResponse.class, simpleSpec);
-        assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
-        
-        response = client().resource("/v1/usage/machines").get(ClientResponse.class);
+        ClientResponse response = client().resource("/v1/usage/machines").get(ClientResponse.class);
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        
         List<Statistic> usage = response.getEntity(new GenericType<List<Statistic>>() {});
-        assertFalse(usage.isEmpty());
+        assertEquals(usage.size(), 1, "usage="+usage);
+        assertEquals(usage.get(0).getId(), machine.getId(), "usage="+usage);
+        assertEquals(usage.get(0).getStatus(), Status.ACCEPTED, "usage="+usage);
+        assertTrue(usage.get(0).getDuration() >= 0, "usage="+usage);
+
+        LOG.info("usage="+usage);
     }
 
-    @Test
+    @Test(dependsOnMethods={"testGetMachineUsagesInitiallyEmpty", "testGetMachineUsageWithMachines"})
     public void testGetMachineUsageForApp() {
-        ClientResponse response = client().resource("/v1/usage/machines?application=x").get(ClientResponse.class);
+        Location location = getManagementContext().getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class));
+        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, getManagementContext());
+        SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(brooklyn.entity.proxying.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
+        app.start(ImmutableList.of(location));
+        Location machine = Iterables.getOnlyElement(entity.getLocations());
+        
+        ClientResponse response = client().resource("/v1/usage/machines?application="+app.getId()).get(ClientResponse.class);
 
+        
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        
         List<Statistic> usage = response.getEntity(new GenericType<List<Statistic>>() {});
-        assertTrue(usage.isEmpty());
+        assertEquals(usage.size(), 1, "usage="+usage);
+        assertEquals(usage.get(0).getId(), machine.getId(), "usage="+usage);
+        assertEquals(usage.get(0).getStatus(), Status.ACCEPTED, "usage="+usage);
+        assertTrue(usage.get(0).getDuration() >= 0, "usage="+usage);
+
+        LOG.info("usage="+usage);
     }
 
     @Override
     protected void setUpResources() throws Exception {
         addResources();
+    }
+    
+    public static class DynamicLocalhostMachineProvisioningLocation extends LocalhostMachineProvisioningLocation {
+        @Override
+        public SshMachineLocation obtain(Map<?, ?> flags) throws NoMachinesAvailableException {
+            System.out.println("called DynamicLocalhostMachineProvisioningLocation.obtain");
+            return super.obtain(flags);
+        }
+        
+        @Override
+        public void release(SshMachineLocation machine) {
+            System.out.println("called DynamicLocalhostMachineProvisioningLocation.release");
+            super.release(machine);
+            super.machines.remove(machine);
+        }
     }
 }

@@ -21,6 +21,7 @@ import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -168,8 +169,17 @@ implements MachineProvisioningLocation<T>, Closeable {
         return super.removeChild(child);
     }
 
-    public boolean canProvisionMore() { return false; }
-    public void provisionMore(int size) { throw new IllegalStateException("more not permitted"); }
+    protected boolean canProvisionMore() {
+        return false;
+    }
+    
+    protected void provisionMore(int size) {
+        provisionMore(size, ImmutableMap.of());
+    }
+
+    protected void provisionMore(int size, Map<?,?> flags) {
+        throw new IllegalStateException("more not permitted");
+    }
 
     public T obtain() throws NoMachinesAvailableException {
         return obtain(Maps.<String,Object>newLinkedHashMap());
@@ -184,7 +194,7 @@ implements MachineProvisioningLocation<T>, Closeable {
             Set<T> a = getAvailable();
             if (a.isEmpty()) {
                 if (canProvisionMore()) {
-                    provisionMore(1);
+                    provisionMore(1, flags);
                     a = getAvailable();
                 }
                 if (a.isEmpty())

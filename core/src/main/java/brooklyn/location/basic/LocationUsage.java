@@ -9,6 +9,7 @@ import java.util.Map;
 
 import brooklyn.entity.basic.Lifecycle;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -49,6 +50,12 @@ public class LocationUsage {
 
         public String getApplicationId() {
             return applicationId;
+        }
+        
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("state", state).add("date", date).add("entityId", entityId)
+                    .add("appId", applicationId).toString();
         }
     }
     

@@ -120,22 +120,25 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         return canProvisionMore;
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void provisionMore(int size) {
+    @Override
+    protected void provisionMore(int size, Map<?,?> flags) {
         for (int i=0; i<size; i++) {
-            Map flags = MutableMap.of("address", elvis(address, Networking.getLocalHost()),
-                    "mutexSupport", LocalhostMachine.mutexSupport);
+            Map<Object,Object> flags2 = MutableMap.<Object,Object>builder()
+                    .putAll(flags)
+                    .put("address", elvis(address, Networking.getLocalHost()))
+                    .put("mutexSupport", LocalhostMachine.mutexSupport)
+                    .build();
             // TODO is this necessary? since they are inherited anyway? 
             // (probably, since inheritance is only respected for a small subset) 
             for (String k: SshMachineLocation.ALL_SSH_CONFIG_KEY_NAMES) {
                 Object v = findLocationProperty(k);
-                if (v!=null) flags.put(k, v);
+                if (v!=null) flags2.put(k, v);
             }
             
             if (isManaged()) {
-                addChild(LocationSpec.create(LocalhostMachine.class).configure(flags));
+                addChild(LocationSpec.create(LocalhostMachine.class).configure(flags2));
             } else {
-                addChild(new LocalhostMachine(flags)); // TODO legacy way
+                addChild(new LocalhostMachine(flags2)); // TODO legacy way
             }
        }
     }

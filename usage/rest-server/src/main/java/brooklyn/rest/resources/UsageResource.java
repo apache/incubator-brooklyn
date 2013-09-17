@@ -127,7 +127,7 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
     
     @Override
     public List<Statistic> listMachineUsages(final String application, final String start, final String end) {
-        log.warn("Determining machine usage from events for application " + application);
+        log.warn("Determining machine usage from events for application {}, between {} and {}", new Object[] {application, start, end});
         final Date startDate = parseSafely(start, new Date(0));
         final Date endDate = parseSafely(end, new Date());
 
