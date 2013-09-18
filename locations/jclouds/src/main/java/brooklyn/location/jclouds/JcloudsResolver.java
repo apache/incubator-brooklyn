@@ -184,11 +184,16 @@ public class JcloudsResolver implements LocationResolver {
         jcloudsProperties.putAll(locationFlags);
         
         if (isProvider) {
-            // providers from ServiceLoader take a location (endpoint already configured)
-            jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionName);
+            // providers from ServiceLoader take a location (endpoint already configured), and optionally a region name
+            // NB blank might be supplied if spec string is "mycloud:" -- that should be respected, 
+            // whereas no parameter/regionName ie null value -- "mycloud" -- means don't set
+            if (regionName!=null)
+                jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionName);
         } else {
-            // other "providers" are APIs so take an _endpoint_ (but not a location)
-            jcloudsProperties.put(JcloudsLocationConfig.CLOUD_ENDPOINT.getName(), regionName);
+            // other "providers" are APIs so take an _endpoint_ (but not a location);
+            // see note above re null here
+            if (regionName!=null)
+                jcloudsProperties.put(JcloudsLocationConfig.CLOUD_ENDPOINT.getName(), regionName);
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(JcloudsLocation.class)
