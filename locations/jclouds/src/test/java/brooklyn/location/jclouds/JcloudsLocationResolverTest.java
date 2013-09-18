@@ -14,6 +14,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.internal.LocalManagementContext;
 
 public class JcloudsLocationResolverTest {
@@ -157,11 +158,29 @@ public class JcloudsLocationResolverTest {
         assertEquals(loc.getEndpoint(), "http://foo/api");
     }
 
-    @Test(groups = "WIP")
-    public void testJcloudsEndpointLoadFails() {
+    @Test
+    public void testJcloudsEndpointLoadsAsProperty() {
         brooklynProperties.put("brooklyn.jclouds.openstack-nova.endpoint", "myendpoint");
         JcloudsLocation loc = resolve("jclouds:openstack-nova");
+        // just checking
+        assertEquals(loc.getRawLocalConfigBag().getStringKey("endpoint"), "myendpoint");
+        assertEquals(loc.getConfig(CloudLocationConfig.CLOUD_ENDPOINT), "myendpoint");
+        // this is the one we really care about!:
         assertEquals(loc.getEndpoint(), "myendpoint");
+    }
+
+    @Test
+    public void testJcloudsLegacyRandomProperty() {
+        brooklynProperties.put("brooklyn.jclouds.openstack-nova.foo", "bar");
+        JcloudsLocation loc = resolve("jclouds:openstack-nova");
+        assertEquals(loc.getRawLocalConfigBag().getStringKey("foo"), "bar");
+    }
+
+    @Test
+    public void testJcloudsRandomProperty() {
+        brooklynProperties.put("brooklyn.location.jclouds.openstack-nova.foo", "bar");
+        JcloudsLocation loc = resolve("jclouds:openstack-nova");
+        assertEquals(loc.getRawLocalConfigBag().getStringKey("foo"), "bar");
     }
 
     @Test
