@@ -36,8 +36,9 @@ public interface SoftwareProcessDriver extends EntityDriver {
     void start();
 
     /**
-     * Performs software restart (or queues tasks to do this); implementations should update SERVICE_STATE for STOPPING and STARTING
-     * as appropriate (but framework will set RUNNING afterwards)
+     * Performs software restart (or queues tasks to do this).
+     * Unlike stop/start implementations here are expected to update SERVICE_STATE for STOPPING and STARTING
+     * as appropriate (but framework will set RUNNING afterwards, after detecting it is running).
      * @see Startable#restart()
      */
     void restart();

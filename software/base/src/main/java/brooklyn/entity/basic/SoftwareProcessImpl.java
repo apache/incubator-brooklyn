@@ -29,10 +29,12 @@ import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Functions;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -60,7 +62,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     public static final Effector<Void> RESTART = LIFECYCLE_TASKS.newRestartEffector();
     public static final Effector<Void> STOP = LIFECYCLE_TASKS.newStopEffector();
     
-	public SoftwareProcessImpl() {
+    protected boolean connectedSensors = false;
+    
+    public SoftwareProcessImpl() {
         super(MutableMap.of(), null);
     }
     public SoftwareProcessImpl(Entity parent) {
@@ -112,8 +116,13 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     /**
      * For binding to the running app (e.g. connecting sensors to registry). Will be called
      * on start() and on rebind().
+     * <p>
+     * Implementations should be idempotent (ie tell whether sensors already connected),
+     * though the framework is pretty good about not calling when already connected. 
+     * TODO improve the framework's feed system to detect duplicate additions
      */
     protected void connectSensors() {
+        connectedSensors = true;
     }
 
     /**
@@ -154,22 +163,20 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     protected void postStart() {
     }
     
-    protected void postDriverRestart() {
-        waitForEntityStart();
-    }
-    
-    protected void postRestart() {
-        waitForServiceUp();
-    }
-    
     protected void preStop() {
+        // note asymmetry that disconnectSensors is done in the entity not the driver
+        // whereas on start the *driver* calls connectSensors, before calling postStart,
+        // ie waiting for the entity truly to be started before calling postStart;
+        // TODO feels like that confusion could be eliminated with a single place for pre/post logic!)
+        log.debug("disconnecting sensors for "+this+" in entity.preStop");
         disconnectSensors();
     }
 
     /**
-     * For disconneting from the running app. Will be called on stop.
+     * For disconnecting from the running app. Will be called on stop.
      */
     protected void disconnectSensors() {
+        connectedSensors = false;
     }
 
     /**
@@ -350,11 +357,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	// TODO Find a better way to detect early death of process.
 	public void waitForEntityStart() {
 		if (log.isDebugEnabled()) log.debug("waiting to ensure {} doesn't abort prematurely", this);
-		long startTime = System.currentTimeMillis();
-		long waitTime = startTime + 2*60*1000; // FIXME magic number; should be config key with default value?
+		Duration startTimeout = Duration.seconds(getConfig(START_TIMEOUT));
+        CountdownTimer timer = startTimeout.countdownTimer();
 		boolean isRunningResult = false;
-		while (!isRunningResult && System.currentTimeMillis() < waitTime) {
-		    Time.sleep(1000); // FIXME magic number; should be config key with default value?
+		long delay = 100;
+		while (!isRunningResult && !timer.isExpired()) {
+		    Time.sleep(delay);
             try {
                 isRunningResult = driver.isRunning();
             } catch (Exception  e) {
@@ -364,12 +372,13 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                 throw new IllegalStateException("Error detecting whether "+this+" is running: "+e, e);
             }
 			if (log.isDebugEnabled()) log.debug("checked {}, is running returned: {}", this, isRunningResult);
+			// slow exponential delay -- 1.1^N means after 40 tries and 50s elapsed, it reaches the max of 5s intervals  
+			delay = Math.min(delay*11/10, 5000);
 		}
 		if (!isRunningResult) {
-            String msg = "Software process entity "+this+" did not appear to start within "+
-                    Time.makeTimeStringRounded(System.currentTimeMillis()-startTime)+
-                    "; setting state to indicate problem and throwing; consult logs for more details";
-            log.warn(msg);
+            String msg = "Software process entity "+this+" did not pass is-running check within "+
+                    "the required "+startTimeout+" limit ("+timer.getDurationElapsed()+" elapsed)";
+            log.warn(msg+" (throwing)");
 			setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
             throw new IllegalStateException(msg);
 		}

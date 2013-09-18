@@ -9,6 +9,7 @@ import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Supplier;
@@ -19,18 +20,28 @@ import com.google.common.base.Supplier;
 @Beta
 public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycleEffectorTasks {
     
-    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(SoftwareProcessDriverLifecycleEffectorTasks.class);
     
     @Override
     protected void restart() {
-        if (((SoftwareProcessImpl)entity()).getDriver() == null) 
-            throw new IllegalStateException("entity "+this+" not set up for operations (restart)");
+        if (((SoftwareProcessImpl)entity()).getDriver() == null) { 
+            log.debug("restart of "+entity()+" has no driver - doing machine-level restart");
+            super.restart();
+            return;
+        }
+        
+        if (Strings.isEmpty(entity().getAttribute(Attributes.HOSTNAME))) {
+            log.debug("restart of "+entity()+" has no hostname - doing machine-level restart");
+            super.restart();
+            return;
+        }
+        
+        log.debug("restart of "+entity()+" appears to have driver and hostname - doing driver-level restart");
         ((SoftwareProcessImpl)entity()).getDriver().restart();
         DynamicTasks.queue("post-restart", new Runnable() { public void run() {
-            ((SoftwareProcessImpl)entity()).postDriverRestart();
-            DynamicTasks.waitForLast();
-            entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
+            postStartCustom();
+            if (entity().getAttribute(Attributes.SERVICE_STATE) == Lifecycle.STARTING) 
+                entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
         }});
     }
     
@@ -64,7 +75,13 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
     @Override
     protected void postStartCustom() {
         entity().postDriverStart();
-        entity().connectSensors();
+        if (entity().connectedSensors) {
+            // many impls aren't idempotent - though they should be!
+            log.debug("skipping connecting sensors for "+entity()+" in driver-tasks postStartCustom because already connected (e.g. restarting)");
+        } else {
+            log.debug("connecting sensors for "+entity()+" in driver-tasks postStartCustom because already connected (e.g. restarting)");
+            entity().connectSensors();
+        }
         entity().waitForServiceUp();
         entity().postStart();
     }

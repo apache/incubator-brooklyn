@@ -58,6 +58,8 @@ import com.google.common.collect.Iterables;
  *  <li> {@link #preStartCustom(MachineLocation)}
  *  <li> {@link #postStartCustom(MachineLocation)}
  *  <li> {@link #preStopCustom(MachineLocation)}
+ *
+ * Note methods at this level typically look after the {@link Attributes#SERVICE_STATE} sensor.
  *  
  * @since 0.6.0
  **/
@@ -260,16 +262,17 @@ public abstract class MachineLifecycleEffectorTasks {
         }});
     }
 
-    /** default post-start hooks, can be extended by subclasses, and typically will do to wait for confirmation of start 
-     * (service not set to running until after this) */
+    /** default post-start hooks, can be extended by subclasses, and typically will wait for confirmation of start 
+     * (the service not set to running until after this); also invoked following a restart */
     protected void postStartCustom() {
         // nothing by default
     }
-    
+
     // ---------------------
     
     /** default restart impl, stops processes if possible, then starts the entity again */
     protected void restart() {
+        entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
         DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
             try {
                 stopProcessesAtMachine();
@@ -285,7 +288,11 @@ public abstract class MachineLifecycleEffectorTasks {
         DynamicTasks.queue("starting", new Runnable() { public void run() {
             // startInLocations will look up the location, and provision a machine if necessary
             // (if it remembered the provisioning location)
+            entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
             startInLocations(null);
+            DynamicTasks.waitForLast();
+            if (entity().getAttribute(Attributes.SERVICE_STATE) == Lifecycle.STARTING) 
+                entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
         }});
     }
 

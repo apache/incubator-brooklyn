@@ -32,7 +32,7 @@ public class BrooklynConfigKeys {
     public static final ConfigKey<Boolean> LAUNCH_LATCH = newBooleanConfigKey("launch.latch", "Latch for blocking launch until ready");
 
     public static final ConfigKey<Integer> START_TIMEOUT = newConfigKey(
-            "start.timeout", "Time to wait for SERVICE_UP to be set before failing (in seconds, default 60)", 60);
+            "start.timeout", "Time to wait for process and for SERVICE_UP before failing (in seconds, default 2m)", 120);
         
     /* selected properties from SshTool for external public access (e.g. putting on entities) */
     
