@@ -109,13 +109,21 @@ public class Duration implements Comparable<Duration> {
         return new Duration(Time.parseTimeString(textualDescription), TimeUnit.MILLISECONDS);
     }
 
+    /** creates new {@link Duration} instance of the given length of time */
+    public static Duration seconds(Number n) {
+        return new Duration( n.longValue(), TimeUnit.SECONDS );
+    }
+    
+    /** creates new {@link Duration} instance of the given length of time */
     public static Duration millis(Number n) {
         return new Duration( n.longValue(), TimeUnit.MILLISECONDS );
     }
 
+    /** creates new {@link Duration} instance of the given length of time */
     public static Duration nanos(Number n) {
         return new Duration( n.longValue(), TimeUnit.NANOSECONDS );
     }
+    
     
 
     /** tries to convert given object to a Duration, parsing strings, treating numbers as millis, etc;
@@ -152,9 +160,23 @@ public class Duration implements Comparable<Duration> {
         return multiply(x);
     }
 
+    /** as #multiply(long), but approximate due to the division (nano precision) */
+    public Duration multiply(double d) {
+        return nanos(nanos() * d);
+    }
+    
+    public Duration half() {
+        return multiply(0.5);
+    }
+
     /** see {@link Time#sleep(long)} */
     public static void sleep(Duration duration) {
         Time.sleep(duration);
+    }
+
+    /** returns a new started {@link CountdownTimer} with this duration */
+    public CountdownTimer countdownTimer() {
+        return CountdownTimer.newInstanceStarted(this);
     }
 
 }

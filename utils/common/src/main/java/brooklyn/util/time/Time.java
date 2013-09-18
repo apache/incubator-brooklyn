@@ -375,4 +375,9 @@ public class Time {
         return elapsedSince(timestamp).compareTo(duration) > 0;
     }
 
+    /** more readable and shorter convenience for System.currentTimeMillis() */
+    public static long now() {
+        return System.currentTimeMillis();
+    }
+    
 }
