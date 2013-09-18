@@ -38,7 +38,6 @@ public class AccessResourceTest extends BrooklynRestResourceTest {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        stopManager();
     }
 
     @Test

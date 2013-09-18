@@ -22,7 +22,7 @@ define([
             'click span.entity_tree_node .tree-change':'treeChange',
             'click span.entity_tree_node':'displayEntity'
         },
-
+        
         initialize:function () {
             this.collection.on('all', this.modelEvent, this)
             this.collection.on('change', this.modelChange, this)
@@ -71,6 +71,7 @@ define([
         },
         
         updateNode: function(id, parentId, isApp) {
+//            log("updating node "+id)
             var that = this;
             var nModel = that.collection.get(id);
             var nEl = $('#'+id, that.$el)
@@ -147,7 +148,13 @@ define([
                 this.addEventsToNode($(pElC))
             } else {
                 // updating
-                $(nEl).html(nEl2)
+                var $nEl = $(nEl), $nEl2 = $(nEl2);
+                
+                // preserve old display status (just chevron direction at present)
+                if ($nEl.find('.tree-node-state').hasClass('icon-chevron-down'))
+                    $nEl2.find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down')
+
+                $(nEl).html($nEl2)
                 this.addEventsToNode($(nEl))
             }
             return true
@@ -194,11 +201,14 @@ define([
         addEventsToNode: function($node) {
             var that = this;
             
-            // prevent default click-handling (not sure needed?)
-            $('a', $node).click(function(e) { e.preventDefault(); })
+            // prevent default click-handling
+            // don't think this is needed, 18 Sep 2013; but leaving for a few weeks just in case
+//            $('a', $node).click(function(e) { e.preventDefault(); })
             
             // show the "light-popup" (expand / expand all / etc) menu
-            // if user hovers for 500ms. surprising there is no option for this.
+            // if user hovers for 500ms. surprising there is no option for this (hover delay).
+            // also, annoyingly, clicks around the time the animation starts don't seem to get handled
+            // if the click is in an overlapping reason; this is why we position relative top: 12px in css
             $('.light-popup', $node).parent().parent().hover(
                     function (parent) {
                         that.cancelHoverTimer();
@@ -211,6 +221,7 @@ define([
                         that.cancelHoverTimer();
                         var menu = $(parent.currentTarget).find('.light-popup')
                         menu.hide()
+                        // hide all others too
                         $('.light-popup').hide()
                     })
         },
@@ -339,7 +350,11 @@ define([
                 return;
             }
             var childrenIds = model.get('childrenIds');
-            _.each(childrenIds, function(id) { that.updateNode(id, idToExpand) })
+            _.each(childrenIds, function(id) {
+                if (!$('#'+id, that.$el).length)
+                    // load, but only if necessary
+                    that.updateNode(id, idToExpand) 
+            })
             if (this.collection.includeEntities(childrenIds)) {
                 // we have to load entities before we can proceed
                 this.collection.fetch({

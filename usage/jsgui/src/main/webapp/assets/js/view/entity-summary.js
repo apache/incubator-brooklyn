@@ -23,8 +23,14 @@ define([
 
             // TODO we should have a backbone object exported from the sensors view which we can listen to here
             // (currently we just take the URL from that view) - and do the same for active tasks;
-            ViewUtils.getRepeatedlyWithDelay(this, this.options.sensors.getSensorUpdateUrl(), 
+            if (this.options.sensors) {
+                ViewUtils.getRepeatedlyWithDelay(this, this.options.sensors.getSensorUpdateUrl(), 
                     function(data) { that.updateWithData(that, data) });
+            } else {
+                // e.g. in tests
+                log("no sensors available to EntitySummaryView")
+            }
+            
 
             // however if we only use external objects we must either subscribe to their errors also
             // or do our own polling against the server, so we know when to disable ourselves

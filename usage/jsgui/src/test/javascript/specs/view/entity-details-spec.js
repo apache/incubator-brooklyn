@@ -53,7 +53,8 @@ define([
             view = new EntitySummaryView({
                 model:entity,
                 application:app
-            }).render()
+            });
+            view.render()
         })
 
         // Restore $.ajax

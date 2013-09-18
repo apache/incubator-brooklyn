@@ -440,7 +440,7 @@ define([
             if (lifecycleState=="stopping") {
                 return PATH+"icon-status-stopping.gif";
             }
-            if (lifecycleState=="onfire") {
+            if (lifecycleState=="on-fire" || /* just in case */ lifecycleState=="onfire") {
                 return PATH+"icon-status-onfire.gif";
             }
             if (lifecycleState!=null && lifecycleState !== "" && lifecycleState !== undefined) {

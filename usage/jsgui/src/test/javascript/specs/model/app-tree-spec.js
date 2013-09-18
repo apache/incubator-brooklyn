@@ -2,6 +2,9 @@ define([
     "model/app-tree"
 ], function (AppTree) {
 
+    /** TODO the application-tree.json is hacked together and out of date, 
+     *  reflects a combo of what comes back from server and what used to come back and was expected */
+    
     $.ajaxSetup({ async:false });
     var apps = new AppTree.Collection
     apps.url = "fixtures/application-tree.json"
@@ -14,11 +17,12 @@ define([
             var app1 = apps.at(0)
             expect(app1.get("name")).toBe("test")
             expect(app1.get("id")).toBe("riBZUjMq")
-            expect(app1.get("type")).toBe(null)
+            expect(app1.get("type")).toBe("")
             expect(app1.get("children").length).toBe(1)
             expect(app1.get("children")[0].name).toBe("tomcat1")
             expect(app1.get("children")[0].type).toBe("brooklyn.entity.webapp.tomcat.TomcatServer")
             expect(apps.at(1).get("children").length).toBe(2)
+            expect(app1.get("childrenIds").length).toBe(1)
         })
 
         it("has working getDisplayName", function () {

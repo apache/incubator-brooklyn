@@ -32,6 +32,11 @@ define([
             this.collection.fetch({reset: true})
             ViewUtils.fetchRepeatedlyWithDelay(this, this.collection)
         },
+        refreshApplicationsInPlace: function() {
+            // fetch without reset sets of change events, which now get handled correctly
+            // (not a full visual recompute, which reset does - both in application-tree.js)
+            this.collection.fetch();
+        },
         beforeClose:function () {
             this.collection.off("reset", this.render)
             this.treeView.close()
@@ -50,7 +55,7 @@ define([
             }
             var wizard = new AppAddWizard({
             	appRouter:that.options.appRouter,
-            	callback:function() { that.collection.fetch() }
+            	callback:function() { that.refreshApplicationsInPlace() }
         	})
             this._modal = wizard
             this.$(".add-app #modal-container").html(wizard.render().el)

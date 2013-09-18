@@ -617,11 +617,12 @@ line-height: 18px;
 .light-popup {
     display: none;
     position: relative;
+    top: 12px;
     float: left;
     z-index: 1;
 }
 .toggler-icon .light-popup {
-    padding-top: 16px;
+    padding-top: 4px;
 }
 .light-popup-body {
     padding: 3px 0px;

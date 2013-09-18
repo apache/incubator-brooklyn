@@ -45,8 +45,8 @@ define([
                 expect(view.$("#tree i.application-tree-refresh").length).toBe(1)
             })
 
-            it("must have div#tree-list for rendering the applications", function () {
-                expect(view.$("div#tree-list").length).toBe(1)
+            it("must have div#app-tree for rendering the applications", function () {
+                expect(view.$("div#app-tree").length).toBe(1)
             })
 
             it("triggers collection fetch on application refresh", function () {
