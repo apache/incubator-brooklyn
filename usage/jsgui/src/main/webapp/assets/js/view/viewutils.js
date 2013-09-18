@@ -441,7 +441,7 @@ define([
                 return PATH+"icon-status-stopping.gif";
             }
             if (lifecycleState=="on-fire" || /* just in case */ lifecycleState=="onfire") {
-                return PATH+"icon-status-onfire.gif";
+                return PATH+"icon-status-onfire.png";
             }
             if (lifecycleState!=null && lifecycleState !== "" && lifecycleState !== undefined) {
                 log("Unknown 'lifecycleState' value:")
