@@ -455,14 +455,55 @@ public class Strings {
 			return s;
 	}
 
+	/** returns the first word (whitespace delimited text), or null if there is none (input null or all whitespace) */
+    public static String getFirstWord(String s) {
+        if (s==null) return null;
+        int start = 0;
+        while (start<s.length()) {
+            if (!Character.isWhitespace(s.charAt(start)))
+                break;
+            start++;
+        }
+        int end = start;
+        if (end >= s.length())
+            return null;
+        while (end<s.length()) {
+            if (Character.isWhitespace(s.charAt(end)))
+                break;
+            end++;
+        }
+        return s.substring(start, end);
+    }
 	
+    /** returns the last word (whitespace delimited text), or null if there is none (input null or all whitespace) */
 	public static String getLastWord(String s) {
-		if (s==null) return null;
-		s = s.trim();
-		int x = s.lastIndexOf(' ');
-		if (x==-1) return s;
-		return s.substring(x+1);
+        if (s==null) return null;
+        int end = s.length()-1;
+        while (end >= 0) {
+            if (!Character.isWhitespace(s.charAt(end)))
+                break;
+            end--;
+        }
+        int start = end;
+        if (start < 0)
+            return null;
+        while (start >= 0) {
+            if (Character.isWhitespace(s.charAt(start)))
+                break;
+            start--;
+        }
+        return s.substring(start+1, end+1);
 	}
+
+    /** returns the first word after the given phrase, or null if no such phrase;
+     * if the character immediately after the phrase is not whitespace, the non-whitespace 
+     * sequence starting with that character will be returned */
+    public static String getFirstWordAfter(String context, String phrase) {
+        if (context==null || phrase==null) return null;
+        int index = context.indexOf(phrase);
+        if (index<0) return null;
+        return getFirstWord(context.substring(index + phrase.length()));
+    }
 
 	/** @deprecated use {@link Time#makeTimeStringRounded(long)} */
 	@Deprecated

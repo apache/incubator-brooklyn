@@ -13,6 +13,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -72,4 +73,6 @@ public interface MySqlNode extends DatabaseNode, HasShortName {
             "mysql.template.configuration.url", "Template file (in freemarker format) for the mysql.conf file",
             "classpath://brooklyn/entity/database/mysql/mysql.conf");
 
+    public static final AttributeSensor<Double> QUERIES_PER_SECOND_FROM_MYSQL = Sensors.newDoubleSensor("mysql.queries.perSec.fromMysql");
+    
 }
