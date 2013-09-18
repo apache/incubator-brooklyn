@@ -4,10 +4,10 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone", 
+    "underscore", "jquery", "backbone", "view/viewutils", 
     "./application-add-wizard", "model/app-tree", "./application-tree", 
     "text!tpl/apps/page.html"
-], function (_, $, Backbone, AppAddWizard, AppTree, ApplicationTreeView, PageHtml) {
+], function (_, $, Backbone, ViewUtils, AppAddWizard, AppTree, ApplicationTreeView, PageHtml) {
 
     var ApplicationExplorerView = Backbone.View.extend({
         tagName:"div",
@@ -25,30 +25,16 @@ define([
             $(".nav1").removeClass("active");
             $(".nav1_apps").addClass("active");
 
-            this.collection.on('reset', this.render, this)
             this.treeView = new ApplicationTreeView({
                 collection:this.collection
             })
             this.$('div#app-tree').html(this.treeView.renderFull().el)
-            this.refreshApplications();
-            that.callPeriodically("entity-tree-apps", 
-                    function() { that.refreshApplicationsInPlace() }, 3000)
+            this.collection.fetch({reset: true})
+            ViewUtils.fetchRepeatedlyWithDelay(this, this.collection)
         },
         beforeClose:function () {
             this.collection.off("reset", this.render)
             this.treeView.close()
-        },
-        render:function () {
-            return this
-        },
-        
-        refreshApplications:function () {
-            this.collection.fetch({reset: true})
-            return false
-        },
-        refreshApplicationsInPlace:function () {
-            this.collection.fetch()
-            return false
         },
         show: function(entityId) {
             this.treeView.displayEntityId(entityId)
@@ -64,7 +50,7 @@ define([
             }
             var wizard = new AppAddWizard({
             	appRouter:that.options.appRouter,
-            	callback:function() { that.refreshApplicationsInPlace() }
+            	callback:function() { that.collection.fetch() }
         	})
             this._modal = wizard
             this.$(".add-app #modal-container").html(wizard.render().el)

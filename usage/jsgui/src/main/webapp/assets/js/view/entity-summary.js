@@ -20,17 +20,35 @@ define([
             }))
             ViewUtils.updateTextareaWithData($(".for-textarea", this.$el), ej, true, false, 150, 400)
             ViewUtils.attachToggler(this.$el)
-            that.callPeriodically("entity-summary-sensors", 
-                    function() { that.updateSensorsNow(that) }, 3000)
-            that.updateSensorsNow(that)
+
+            // TODO we should have a backbone object exported from the sensors view which we can listen to here
+            // (currently we just take the URL from that view) - and do the same for active tasks;
+            ViewUtils.getRepeatedlyWithDelay(this, this.options.sensors.getSensorUpdateUrl(), 
+                    function(data) { that.updateWithData(that, data) });
+
+            // however if we only use external objects we must either subscribe to their errors also
+            // or do our own polling against the server, so we know when to disable ourselves
+//            ViewUtils.fetchRepeatedlyWithDelay(this, this.model, { period: 10*1000 })
         },
         render:function () {
             return this
         },
-        revealIfHasValue: function(that, sensor, $div, renderer) {
+        revealIfHasValue: function(sensor, $div, renderer, values) {
             var that = this;
             if (!renderer) renderer = function(data) { return _.escape(data); }
-            $.ajax({
+            
+            if (values) {
+                var data = values[sensor]
+                if (data || data===false) {
+                    $(".value", $div).html(renderer(data))
+                    $div.show()
+                } else {
+                    $div.hide();
+                }
+                that.updateStatusIcon();
+            } else {
+              // direct ajax call not used anymore - but left just in case
+              $.ajax({
                 url: that.model.getLinkByName("sensors")+"/"+sensor,
                 contentType:"application/json",
                 success:function (data) {
@@ -41,22 +59,27 @@ define([
                         $div.hide();
                     }
                     that.updateStatusIcon();
-                }})            
+                }})
+            }
         },
-        updateSensorsNow: function(that) {
-            // hard-coded values for most commonly used sensors
+        updateWithData: function (that, data) {
+            that.revealIfHasValue("service.isUp", that.$(".serviceUp"), null, data)
+            that.revealIfHasValue("service.state", that.$(".status"), null, data)
             
-            // this is redundant with values now returned from REST ApplicationResource.applicationTree
-            // but leaving them here until we more cleanly model that in javascript (e.g. lazy loading)
-            that.revealIfHasValue(that, "service.isUp", that.$(".serviceUp"))
-            that.revealIfHasValue(that, "service.state", that.$(".status"))
+            that.revealIfHasValue("webapp.url", that.$(".url"),
+                    function(data) { return "<a href='"+_.escape(data)+"'>"+_.escape(data)+"</img>" }, data)
+        },
+        updateSensorsNow: function() {
+            // hard-coded display of the most commonly used sensors
             
-            that.revealIfHasValue(that, "webapp.url", that.$(".url"),
+            this.revealIfHasValue("service.isUp", this.$(".serviceUp"))
+            this.revealIfHasValue("service.state", this.$(".status"))
+            
+            this.revealIfHasValue("webapp.url", this.$(".url"),
                     function(data) { return "<a href='"+_.escape(data)+"'>"+_.escape(data)+"</img>" })
         },
         
         updateStatusIcon: function() {
-            // currently we use the string values from the page; messy, but it works
             var statusIconUrl = ViewUtils.computeStatusIcon(this.$(".serviceUp .value:visible").html(), this.$(".status .value:visible").html());
             if (statusIconUrl) {
                 this.$('#status-icon').html('<img src="'+statusIconUrl+'" '+

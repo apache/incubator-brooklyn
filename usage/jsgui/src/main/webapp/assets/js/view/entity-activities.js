@@ -53,11 +53,9 @@ define([
             
             ViewUtils.fadeToIndicateInitialLoad($table);
             that.collection.on("reset", that.renderOnLoad, that);
-            that.callPeriodically("entity-activities", function () {
-                if (that.refreshActive)
-                    that.collection.fetch({reset: true});
-            }, 3000);
-            that.collection.fetch({reset: true});
+            ViewUtils.fetchRepeatedlyWithDelay(this, this.collection, 
+                    { fetchOptions: { reset: true }, doitnow: true, 
+                    enablement: function() { return that.refreshActive }  });
         },
         refreshNow: function() {
             this.collection.fetch({reset: true});

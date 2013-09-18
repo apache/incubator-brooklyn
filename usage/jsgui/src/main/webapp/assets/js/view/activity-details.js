@@ -57,6 +57,7 @@ define([
         },
         // requires taskLink or task; breadcrumbs is optional
         initialize:function () {
+            var that = this
             this.taskLink = this.options.taskLink
             if (this.options.task) {
                 this.task = this.options.task
@@ -73,32 +74,31 @@ define([
             ViewUtils.attachToggler(this.$el)
         
             if (this.task) {
-                this.renderTask(true)
+                this.renderTask()
+                this.setUpPolling()
             } else {                
                 this.$el.css('cursor', 'wait')
-                this.refreshNow(true)
+                $.get(this.taskLink, function(data) {
+                    that.task = new TaskSummary.Model(data)
+                    that.renderTask()
+                    that.setUpPolling();
+                })
             }
-            this.renderSubtasks()
-        
-            this.callPeriodically("refresh-activities-now", function () {
-                this.refreshNow()
-            }, 1000);
 
-            if (this.collection) {
-                this.collection.on("reset", this.renderSubtasks, this);
-                // could lean on parent's poll for the task itself, but instead we poll (and more often)
-//                this.collection.on("reset", this.renderTask, this);
-            }
+            // initial subtasks may be available from parent, so try to render those
+            // (reliable polling for subtasks, and for children, is set up in setUpPolling ) 
+            this.renderSubtasks()
         },
         
         refreshNow: function(initial) {
             var that = this
             $.get(this.taskLink, function(data) {
                 that.task = new TaskSummary.Model(data)
-                that.renderTask(initial)
+                that.renderTask()
+                if (initial) that.setUpPolling();
             })
         },
-        renderTask: function(initial) {
+        renderTask: function() {
             // update task fields
             var that = this
             
@@ -149,19 +149,23 @@ define([
 
             if (this.task.get("children").length==0)
                 $('.toggler-region.tasks-children', this.$el).hide();
-            
-            if (initial) {
+        },
+        setUpPolling: function() {
+                var that = this
+                
                 // on first load, clear any funny cursor
                 this.$el.css('cursor', 'auto')
+                
+                this.task.url = this.taskLink;
+                this.task.on("all", this.renderTask, this)
+                ViewUtils.fetchRepeatedlyWithDelay(this, this.task, { doitnow: true });
                 
                 // and set up to load children (now that the task is guaranteed to be loaded)
                 this.children = new TaskSummary.Collection()
                 this.children.url = this.task.get("links").children
                 this.children.on("reset", this.renderChildren, this)
-                this.callPeriodically("refresh-activity-children", function () {
-                    that.children.fetch({reset: true});
-                }, 3000);
-                that.children.fetch({reset: true});
+                ViewUtils.fetchRepeatedlyWithDelay(this, this.children, { 
+                    fetchOptions: { reset: true }, doitnow: true, fadeTarget: $('.tasks-children') });
                 
                 $.get(this.task.get("links").entity, function(entity) {
                     if (that.collection==null || entity.links.activities != that.collection.url) {
@@ -169,14 +173,12 @@ define([
                         that.collection = new TaskSummary.Collection()
                         that.collection.url = entity.links.activities
                         that.collection.on("reset", this.renderSubtasks, this)
-                        that.callPeriodically("refresh-activity-bgtasks", function () {
-                            that.collection.fetch({reset: true});
-                        }, 3000);
-                        that.collection.fetch({reset: true});
+                        ViewUtils.fetchRepeatedlyWithDelay(that, that.collection, { 
+                            fetchOptions: { reset: true }, doitnow: true, fadeTarget: $('.tasks-submitted') });
                     }
                 });
-            }
         },
+        
         renderChildren: function() {
             var that = this
             var children = this.children

@@ -30,6 +30,9 @@ define([
                 that.render()
                 ViewUtils.cancelFadeOnceLoaded(that.$('#effectors-table'));
             }})
+            // attach a fetch simply to fade this tab when not available
+            // (the table is statically rendered)
+            ViewUtils.fetchRepeatedlyWithDelay(this, this._effectors, { period: 10*1000 })
         },
         render:function () {
             if (this.viewIsClosed)

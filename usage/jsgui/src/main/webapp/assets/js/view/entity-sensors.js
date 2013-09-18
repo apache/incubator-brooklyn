@@ -71,8 +71,8 @@ define([
             ViewUtils.addAutoRefreshButton(this.table);
             ViewUtils.addRefreshButton(this.table);
             this.loadSensorMetadata()
-                .updateSensorsPeriodically()
-                .toggleFilterEmpty();
+            this.updateSensorsPeriodically()
+            this.toggleFilterEmpty();
             return this;
         },
 
@@ -104,13 +104,33 @@ define([
             this.refreshActive = isEnabled
             return this;
         },
-
-        updateSensorsPeriodically: function() {
-            this.callPeriodically("entity-sensors", function() {
-                if (this.refreshActive)
-                    this.updateSensorsNow();
-            }, 3000);
-            return this;
+        
+        /**
+         * Loads current values for all sensors on an entity and updates sensors table.
+         */
+        updateSensorsNow:function () {
+            var that = this
+            ViewUtils.get(that, that.model.getSensorUpdateUrl(), function(data) { that.updateWithData(that, data) },
+                    { enablement: function() { return that.refreshActive } });
+        },
+        updateSensorsPeriodically:function () {
+            var that = this
+            ViewUtils.getRepeatedlyWithDelay(that, that.model.getSensorUpdateUrl(), function(data) { that.updateWithData(that, data) },
+                    { enablement: function() { return that.refreshActive } });
+        },
+        updateWithData: function (that, data) {
+            $table = that.$('#sensors-table');
+            ViewUtils.updateMyDataTable($table, data, function(value, name) {
+                var metadata = that.sensorMetadata[name]
+                if (metadata==null) {                        
+                    // TODO should reload metadata when this happens (new sensor for which no metadata known)
+                    // (currently if we have dynamic sensors, their metadata won't appear
+                    // until the page is refreshed; don't think that's a big problem -- mainly tooltips
+                    // for now, we just return the partial value
+                    return [name, {'name':name}, value]
+                } 
+                return [name, metadata, value];
+            });
         },
 
         /**
@@ -137,32 +157,6 @@ define([
                 });
                 that.updateSensorsNow();
                 that.table.find('*[rel="tooltip"]').tooltip();
-            });
-            return this;
-        },
-
-        /**
-         * Loads current values for all sensors on an entity and updates sensors table.
-         */
-        updateSensorsNow: function() {
-            var url = this.model.getSensorUpdateUrl(),
-                $table = this.$('#sensors-table'),
-                that = this;
-            $.get(url, function (data) {
-                if (that.viewIsClosed) {
-                    return
-                }
-                ViewUtils.updateMyDataTable($table, data, function(value, name) {
-                    var metadata = that.sensorMetadata[name]
-                    if (metadata==null) {
-                        // TODO should reload metadata when this happens (new sensor for which no metadata known)
-                        // (currently if we have dynamic sensors, their metadata won't appear
-                        // until the page is refreshed; don't think that's a bit problem -- mainly tooltips
-                        // for now, we just return the partial value
-                        return [name, {'name':name}, value]
-                    }
-                    return [name, metadata, value];
-                });
             });
             return this;
         }

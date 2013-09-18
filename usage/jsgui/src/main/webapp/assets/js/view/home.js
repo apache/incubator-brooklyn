@@ -3,12 +3,15 @@
  */
 
 define([
-    "underscore", "jquery", "backbone", "./application-add-wizard", "model/location",
+    "underscore", "jquery", "backbone", "view/viewutils", 
+    "./application-add-wizard", "model/location",
     "text!tpl/home/applications.html",
     "text!tpl/home/summaries.html",
     "text!tpl/home/app-entry.html",
     "bootstrap"
-], function (_, $, Backbone, AppAddWizard, Location, ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
+], function (_, $, Backbone, ViewUtils,
+        AppAddWizard, Location, 
+        ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
 
     var HomeView = Backbone.View.extend({
         tagName:"div",
@@ -33,8 +36,15 @@ define([
             	locations:this.options.locations
         	})
             this.renderSummaries()
+            
             this.collection.on('reset', this.render, this)
             this.options.locations.on('reset', this.renderSummaries, this)
+
+            ViewUtils.fetchRepeatedlyWithDelay(this, this.collection, 
+                    { fetchOptions: { reset: true }, doitnow: true, 
+                    /* max is short here so the console becomes usable quickly */
+                    backoffMaxPeriod: 10*1000 });
+            ViewUtils.fetchRepeatedlyWithDelay(this, this.options.locations, { fetchOptions: { reset: true }, doitnow: true });
 
             id = $(this.$el).find("#circles-map");
             if (this.options.offline) {
@@ -42,7 +52,7 @@ define([
             } else {
             	requirejs(["googlemaps"], function (GoogleMaps) {
             	    _.defer( function() {
-            	        console.debug("loading google maps")
+            	        log("loading google maps")
             			var map = GoogleMaps.addMapToCanvas(id[0],
             			        // brooklyn bridge
 //            			        40.7063, -73.9971, 14
@@ -60,18 +70,9 @@ define([
             	}, function (error) {
             			id.find("#circles-map-message").html("(map not available)"); 
             	});
-            }
-            
-            this.callPeriodically("home", function() {
-            	that.refresh(that);	            	
-            }, 5000)
-            this.refresh(this)
+            }            
         },
         
-        refresh:function (that) {
-        	that.collection.fetch({reset: true})
-        	that.options.locations.fetch({reset: true})
-        },
         updateCircles: function(that, locatedLocations, GoogleMaps, map) {
             locatedLocations.fetch({success:function() {
                 GoogleMaps.drawCircles(map, locatedLocations.attributes)
@@ -128,7 +129,7 @@ define([
                 this.$(".add-app #modal-container .modal")
                     .on("hidden",function () {
                         wizard.close()
-                        that.refresh(that)
+                        that.collection.fetch({reset:true});
                     }).modal('show')
             }
         },

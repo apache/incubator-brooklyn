@@ -15,10 +15,6 @@ define([
         },
         initialize:function () {
             this.$el.html(this.template({}))
-            this.summaryView = new SummaryView({
-                model:this.model,
-                application:this.options.application
-            })
             this.configView = new ConfigView({
                 model:this.model
             })
@@ -34,6 +30,11 @@ define([
             this.activitiesView = new ActivitiesView({
                 model:this.model,
                 collection:new TaskSummary.Collection
+            })
+            this.summaryView = new SummaryView({
+                model:this.model,
+                application:this.options.application,
+                sensors:this.sensorsView.model
             })
             this.$("#summary").html(this.summaryView.render().el)
             this.$("#config").html(this.configView.render().el)

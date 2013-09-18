@@ -47,12 +47,18 @@ define([
             this.removeNode(child.id)
         },
         modelEvent: function (eventName, event, x) {
-            if (eventName == "change" || eventName == "remove" || eventName == "add" ||
+            if (/^change/i.test(eventName) || eventName == "remove" || eventName == "add" ||
                     eventName == "reset" ||
                     // above are handled; below is no-op
                     eventName == "sync" || eventName == "request")
                 return;
 
+            if (eventName == "error") {
+                log("model error in application-tree - has the internet vanished?")
+                // ignore; app-explorer should clear the view
+                return;
+            }
+            
             // don't think we get other events, but just in case:
             log("unhandled model event")
             log(eventName)

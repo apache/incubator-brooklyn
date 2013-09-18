@@ -242,6 +242,178 @@ define([
                 // ignore - normal during tests
             }
         },
+        /* variant of $.get with automatic failure handling and recovery;
+         * options should be omitted except by getRepeatedlyWithDelay */
+        get: function(view, url, success, options) {
+            if (view.viewIsClosed) return ;
+            if (options['enablement'] && !options['enablement']()) {
+                // not enabled, just requeue
+                if (options['period']) 
+                    setTimeout(function() { ViewUtils.get(view, url, success, options)}, options['period'])
+                return;
+            }
+            
+            /* inspects the status object returned from an ajax call in a view;
+             * if not valid, it fades the view and increases backoff delays and resubmits;
+             * if it is valid, it returns true so the caller can continue
+             * (restoring things such as the view, timer, etc, if they were disabled);
+             * 
+             * takes some of the options as per fetchRepeatedlyWithDelay
+             * (though they are less well tested here)
+             * 
+             * note that the status text object is rarely useful; normally the fail(handler) is invoked,
+             * as above (#get)
+             */
+            var checkAjaxStatusObject = function(status, view, options) {
+                if (view.viewIsClosed) return false;
+                if (status == "success" || status == "notmodified") {
+                    // unfade and restore
+                    if (view._loadingProblem) {
+                        log("getting view data is back to normal - "+url)
+                        log(view)
+                        view._loadingProblem = false;
+                        
+                        var fadeTarget = view.$el;
+                        if ("fadeTarget" in options) {
+                            fadeTarget = options["fadeTarget"]
+                        }
+                        if (fadeTarget) ViewUtils.cancelFadeOnceLoaded(fadeTarget)
+                        
+                        if (options['originalPeriod']) 
+                            options.period = options['originalPeriod']; 
+                    }
+                    
+                    return true;
+                }
+                if (status == "error" || status == "timeout" || status == "parsererror") {
+                    // fade and log problem
+                    if (!view._loadingProblem) {
+                        log("error getting view data from "+url+" - is the server reachable?")
+                        view._loadingProblem = true;
+                    }
+                    // fade the view, on error
+                    var fadeTarget = view.$el;
+                    if ("fadeTarget" in options) {
+                        fadeTarget = options["fadeTarget"]
+                    }
+                    if (fadeTarget) ViewUtils.fadeToIndicateInitialLoad(fadeTarget)
+
+                    if (options['period']) {
+                        if (!options['originalPeriod']) options.originalPeriod = options['period'];
+                        var period = options['period'];
+                        
+                        // attempt exponential backoff up to every 15m
+                        period *= 2;
+                        var max = (options['backoffMaxPeriod'] || 15*60*1000);
+                        if (period > max) period = max;
+                        options.period = period
+                        setTimeout(function() { ViewUtils.get(view, url, success, options)}, period)
+                    } 
+                    
+                    return false;
+                }
+                return true;
+            }
+            
+            return $.get(url, function(data, status) {
+                if (!checkAjaxStatusObject(status, view, options)) {
+                    return;
+                }
+                if (success) success(data);
+                if (options['period']) 
+                    setTimeout(function() { ViewUtils.get(view, url, success, options)}, options['period'])
+            }).fail(function() {
+                checkAjaxStatusObject("error", view, options)
+            })
+        },
+        /** invokes a get against the given url repeatedly, with fading and backoff on failures,
+         * cf fetchRepeatedlyWithDelay, but here the user's callback function is invoked on success
+         */
+        getRepeatedlyWithDelay: function(view, url, success, options) {
+            if (!options) options = {}
+            if (!options['period']) options.period = 3000
+            ViewUtils.get(view, url, success, options)
+        },
+        /* invokes fetch on the model, associated with the view.
+         * automatically closes when view closes, 
+         * and fades display and exponentially-backs off on problems.
+         * options include:
+         * 
+         *   enablement (function returning t/f whether the invocation is enabled)
+         *   period (millis, currently 3000 = 3s default);
+         *   originalPeriod (millis, becomes the period if successful; primarily for internal use);
+         *   backoffMaxPeriod (millis, max time to wait between retries, currently 15*60*1000 = 10m default);
+         *    
+         *   doitnow (if true, kicks off a run immediately, else only after the timer)
+         *   
+         *   fadeTarget (jquery element to fade; defaults to view.$el; null can be set to prevent fade);
+         *   
+         *   fetchOptions (additional options to pass to fetch; however success and error should not be present);
+         *   success (function to invoke on success, before re-queueing);
+         *   error (optional function to invoke on error, before requeueing);
+         */
+        fetchRepeatedlyWithDelay: function(view, model, options) {
+            if (!options) options = {}
+            var period = options['period'] || 3000
+            var originalPeriod = options['originalPeriod'] || period
+//            log("fetching "+model.url+" with delay "+period)
+            var fetcher = function() {
+                if (view.viewIsClosed) return;
+                if (options['enablement'] && !options['enablement']()) {
+                    // not enabled, just requeue
+                    ViewUtils.fetchRepeatedlyWithDelay(view, model, options);
+                    return;
+                }
+                var fetchOptions = options['fetchOptions'] ? _.clone(options['fetchOptions']) : {}
+                fetchOptions.success = function(modelR,response,optionsR) {
+                        var fn = options['success']
+                        if (fn) fn(modelR,response,optionsR);
+                        if (view._loadingProblem) {
+                            log("fetching view data is back to normal - "+model.url)
+                            view._loadingProblem = false;
+                            
+                            var fadeTarget = view.$el;
+                            if ("fadeTarget" in options) {
+                                fadeTarget = options["fadeTarget"]
+                            }
+                            if (fadeTarget) ViewUtils.cancelFadeOnceLoaded(fadeTarget)
+                        }
+                        options.period = originalPeriod;
+                        ViewUtils.fetchRepeatedlyWithDelay(view, model, options);
+                }
+                fetchOptions.error = function(modelR,response,optionsR) {
+                        var fn = options['error']
+                        if (fn) fn(modelR,response,optionsR);
+                        if (!view._loadingProblem) {
+                            log("error fetching view data from "+model.url+" - is the server reachable?")
+                            log(response)
+                            view._loadingProblem = true;
+                        }
+                        // fade the view, on error
+                        var fadeTarget = view.$el;
+                        if ("fadeTarget" in options) {
+                            fadeTarget = options["fadeTarget"]
+                        }
+                        if (fadeTarget) ViewUtils.fadeToIndicateInitialLoad(fadeTarget)
+                        
+                        // attempt exponential backoff up to every 15m
+                        period *= 2;
+                        var max = (options['backoffMaxPeriod'] || 15*60*1000);
+                        if (period > max) period = max;
+                        options = _.clone(options)
+                        options.originalPeriod = originalPeriod;
+                        options.period = period;
+                        ViewUtils.fetchRepeatedlyWithDelay(view, model, options);
+                };
+                model.fetch(fetchOptions)
+            };
+            if (options['doitnow']) {
+                options.doitnow = false;
+                fetcher();
+            } else {
+                setTimeout(fetcher, period);
+            }
+        },
         computeStatusIcon: function(serviceUp, lifecycleState) {
             if (serviceUp==false || serviceUp=="false") serviceUp=false;
             else if (serviceUp===true || serviceUp=="true") serviceUp=true;

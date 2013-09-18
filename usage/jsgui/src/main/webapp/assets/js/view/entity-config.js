@@ -93,12 +93,31 @@ define([
         refreshNow:function () {
             this.updateConfigNow(this);  
         },
+        updateConfigNow:function (that) {
+            ViewUtils.get(that, that.model.getConfigUpdateUrl(), function(data) { that.updateWithData(that, data) },
+                    { enablement: function() { return that.refreshActive } });
+        },
         updateConfigPeriodically:function (that) {
-            var self = this;
-            that.callPeriodically("entity-config", function() {
-                if (self.refreshActive)
-                    self.updateConfigNow(that);
-            }, 3000);
+            ViewUtils.getRepeatedlyWithDelay(that, that.model.getConfigUpdateUrl(), function(data) { that.updateWithData(that, data) },
+                    { enablement: function() { return that.refreshActive } });
+        },
+        updateWithData: function (that, data) {
+            $table = that.$('#config-table');
+            ViewUtils.updateMyDataTable($table, data, function(value, name) {
+                var metadata = that.configMetadata[name]
+                if (metadata==null) {                        
+                    // TODO should reload metadata when this happens (new sensor for which no metadata known)
+                    // (currently if we have dynamic sensors, their metadata won't appear
+                    // until the page is refreshed; don't think that's a big problem -- mainly tooltips
+                    // for now, we just return the partial value
+                    return [name, {'name':name}, "", value]
+                } 
+                return [name, metadata,
+                    metadata["actionGetData"],
+                    value
+                ];
+            });
+            ViewUtils.processTooltips($table)
         },
         loadConfigMetadata: function(that) {
             var url =  that.model.getLinkByName('config');
@@ -114,32 +133,11 @@ define([
                 }
                 that.updateConfigNow(that);
                 that.table.find('*[rel="tooltip"]').tooltip();
-            });
+            }).fail(that.onConfigMetadataFailure);
         },
-        updateConfigNow:function (that) {
-            var url = that.model.getConfigUpdateUrl(),
-                $table = that.$('#config-table');
-            if (that.viewIsClosed) {
-                return
-            }
-            $.get(url, function (data) {
-                if (that.viewIsClosed) return
-                ViewUtils.updateMyDataTable($table, data, function(value, name) {
-                    var metadata = that.configMetadata[name]
-                    if (metadata==null) {                        
-                        // TODO should reload metadata when this happens (new sensor for which no metadata known)
-                        // (currently if we have dynamic sensors, their metadata won't appear
-                        // until the page is refreshed; don't think that's a bit problem -- mainly tooltips
-                        // for now, we just return the partial value
-                        return [name, {'name':name}, "", value]
-                    } 
-                    return [name, metadata,
-                        metadata["actionGetData"],
-                        value
-                    ];
-                });
-                ViewUtils.processTooltips($table)
-            });
+        onConfigMetadataFailure: function() {
+            log("unable to load config metadata")
+            ViewUtils.fadeToIndicateInitialLoad()
         }
     });
     return EntityConfigView;
