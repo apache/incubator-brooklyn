@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -59,5 +60,11 @@ public class ReflectionsTest {
     
     private void assertNoDuplicates(List<?> actual) {
         assertEquals(actual.size(), Sets.newLinkedHashSet(actual).size(), "actual="+actual);
+    }
+    
+    @SuppressWarnings("deprecation")
+    @Test(enabled=false)
+    public void testGetCaller() {
+        Assert.assertEquals(Reflections.getCaller().getClassName(), ReflectionsTest.class.getName());
     }
 }

@@ -611,4 +611,13 @@ public class Strings {
         return result;
     }
 
+    /** returns base repeated count times */
+    public static String times(String base, int count) {
+        if (base==null) return null;
+        StringBuilder result = new StringBuilder();
+        for (int i=0; i<count; i++)
+            result.append(base);
+        return result.toString();
+    }
+    
 }
