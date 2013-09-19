@@ -6,7 +6,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Closeable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +35,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -61,8 +61,8 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
     // _not_ set from flag; configured explicitly in configure, because we also need to update the parent's list of children
     private Location parentLocation;
     
-    private final Collection<Location> childLocations = Collections.synchronizedList(Lists.<Location>newArrayList());
-    private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations);
+    // NB: all accesses should be synchronized
+    private final Collection<Location> childLocations = Lists.<Location>newArrayList();
     
     @SetFromFlag
     protected String name;
@@ -271,7 +271,9 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
     
     @Override
     public Collection<Location> getChildren() {
-        return childLocationsReadOnly;
+        synchronized (childLocations) {
+            return ImmutableList.copyOf(childLocations);
+        }
     }
 
     @Override
@@ -418,14 +420,17 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
     	// We continue to use a list to allow identical-looking locations, but they must be different 
     	// instances.
     	
-    	for (Location contender : childLocations) {
-    		if (contender == child) {
-    			// don't re-add; no-op
-    			return;
-    		}
-    	}
-    	
-        childLocations.add(child);
+        synchronized (childLocations) {
+            for (Location contender : childLocations) {
+                if (contender == child) {
+                    // don't re-add; no-op
+                    return;
+                }
+            }
+
+            childLocations.add(child);
+        }
+        
         child.setParent(this);
         
         if (isManaged()) {
@@ -443,7 +448,10 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
     }
     
     protected boolean removeChild(Location child) {
-        boolean removed = childLocations.remove(child);
+        boolean removed;
+        synchronized (childLocations) {
+            removed = childLocations.remove(child);
+        }
         if (removed) {
             if (child instanceof Closeable) {
                 Closeables.closeQuietly((Closeable)child);
