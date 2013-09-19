@@ -33,6 +33,16 @@ public class DurationTest {
                 Duration.of("4h 3m 30s").toMilliseconds());
     }
 
+    public void testConvesion() {
+        Assert.assertEquals(1, Duration.nanos(1).toNanoseconds());
+        Assert.assertEquals(1, Duration.nanos(1.1).toNanoseconds());
+        Assert.assertEquals(1, Duration.millis(1).toMilliseconds());
+        Assert.assertEquals(1, Duration.millis(1.0).toMilliseconds());
+        Assert.assertEquals(1, Duration.millis(1.1).toMilliseconds());
+        Assert.assertEquals(1100000, Duration.millis(1.1).toNanoseconds());
+        Assert.assertEquals(500, Duration.seconds(0.5).toMilliseconds());
+    }
+
     public void testToString() {
         Assert.assertEquals("4h 3m 30s", 
                 Duration.of("4h 3m 30s").toString());

@@ -355,14 +355,14 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
     
 	// TODO Find a better way to detect early death of process.
-	public void waitForEntityStart() {
-		if (log.isDebugEnabled()) log.debug("waiting to ensure {} doesn't abort prematurely", this);
-		Duration startTimeout = Duration.seconds(getConfig(START_TIMEOUT));
+    public void waitForEntityStart() {
+        if (log.isDebugEnabled()) log.debug("waiting to ensure {} doesn't abort prematurely", this);
+        Duration startTimeout = Duration.seconds(getConfig(START_TIMEOUT));
         CountdownTimer timer = startTimeout.countdownTimer();
-		boolean isRunningResult = false;
-		long delay = 100;
-		while (!isRunningResult && !timer.isExpired()) {
-		    Time.sleep(delay);
+        boolean isRunningResult = false;
+        long delay = 100;
+        while (!isRunningResult && !timer.isExpired()) {
+            Time.sleep(delay);
             try {
                 isRunningResult = driver.isRunning();
             } catch (Exception  e) {
@@ -371,18 +371,18 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                 if (driver==null) throw new IllegalStateException(this+" concurrent start and shutdown detected");
                 throw new IllegalStateException("Error detecting whether "+this+" is running: "+e, e);
             }
-			if (log.isDebugEnabled()) log.debug("checked {}, is running returned: {}", this, isRunningResult);
-			// slow exponential delay -- 1.1^N means after 40 tries and 50s elapsed, it reaches the max of 5s intervals  
-			delay = Math.min(delay*11/10, 5000);
-		}
-		if (!isRunningResult) {
+            if (log.isDebugEnabled()) log.debug("checked {}, is running returned: {}", this, isRunningResult);
+            // slow exponential delay -- 1.1^N means after 40 tries and 50s elapsed, it reaches the max of 5s intervals  
+            delay = Math.min(delay*11/10, 5000);
+        }
+        if (!isRunningResult) {
             String msg = "Software process entity "+this+" did not pass is-running check within "+
                     "the required "+startTimeout+" limit ("+timer.getDurationElapsed()+" elapsed)";
             log.warn(msg+" (throwing)");
-			setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
             throw new IllegalStateException(msg);
-		}
-	}
+        }
+    }
 
     @Override
 	public void stop() {

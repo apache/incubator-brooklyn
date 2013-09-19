@@ -111,12 +111,12 @@ public class Duration implements Comparable<Duration> {
 
     /** creates new {@link Duration} instance of the given length of time */
     public static Duration seconds(Number n) {
-        return new Duration( n.longValue(), TimeUnit.SECONDS );
+        return new Duration( (long)(n.doubleValue() * TimeUnit.SECONDS.toNanos(1)), TimeUnit.NANOSECONDS );
     }
     
     /** creates new {@link Duration} instance of the given length of time */
     public static Duration millis(Number n) {
-        return new Duration( n.longValue(), TimeUnit.MILLISECONDS );
+        return new Duration( (long)(n.doubleValue() * TimeUnit.MILLISECONDS.toNanos(1)), TimeUnit.NANOSECONDS );
     }
 
     /** creates new {@link Duration} instance of the given length of time */
