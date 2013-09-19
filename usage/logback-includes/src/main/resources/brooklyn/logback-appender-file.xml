@@ -8,4 +8,8 @@
     </encoder>
   </appender>
 
+  <root>
+    <appender-ref ref="FILE" />
+  </root>
+
 </included>

@@ -25,11 +25,8 @@
     <!-- 'STDOUT' gets INFO and higher -->
     <include resource="brooklyn/logback-appender-stdout.xml"/>
     
-    <!-- set default root logger threshhold (to info, for the appenders we have configured) -->
-    <root level="INFO">
-        <appender-ref ref="STDOUT" />
-        <appender-ref ref="FILE" />
-    </root>
+    <!-- set default root logger threshhold to info; some categories may get debug -->
+    <root level="INFO"/>
     
     <!-- some loggers are very noisy however, exclude them, or make them file only -->
     <include resource="brooklyn/logback-logger-excludes.xml"/>
