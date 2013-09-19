@@ -15,7 +15,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.thoughtworks.xstream.XStream
 
 /**
  * Useful Groovy utility methods.
@@ -64,12 +63,6 @@ public class LanguageUtils {
                 //new ObjectInputStreamWithLoader(new FastByteArrayInputStream(bytes, bytes.length), classLoader);
                 new ObjectInputStream(new ByteArrayInputStream(bytes));
         (T) ins.readObject();
-    }
-
-    public static <T> T clone(T src) {
-        XStream xstream = new XStream();
-        xstream.setClassLoader(src.getClass().getClassLoader())
-        xstream.fromXML(xstream.toXML(src))
     }
 
     /**
