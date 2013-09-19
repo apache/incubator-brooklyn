@@ -61,7 +61,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
     // _not_ set from flag; configured explicitly in configure, because we also need to update the parent's list of children
     private Location parentLocation;
     
-    private final Collection<Location> childLocations = Lists.newArrayList();
+    private final Collection<Location> childLocations = Collections.synchronizedList(Lists.<Location>newArrayList());
     private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations);
     
     @SetFromFlag
