@@ -95,7 +95,7 @@ public class JavaClassNames {
     }
 
     /** returns a cleaned stack trace; caller is usually at the top */
-    public static StackTraceElement[] currentStackTrace() {
+    public static StackTraceElement[] currentStackTraceCleaned() {
         return STACK_TRACE_SIMPLIFIER_EXCLUDING_UTIL_JAVALANG.clean(
                 Thread.currentThread().getStackTrace());
     }
