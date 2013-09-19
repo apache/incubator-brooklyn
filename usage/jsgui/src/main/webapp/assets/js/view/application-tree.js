@@ -68,23 +68,25 @@ define([
 
         removeNode: function(id) {
             $('#'+id, this.$el).parent().remove()
+            if (this.collection.isEmpty())
+                this.renderFull();
         },
         
         updateNode: function(id, parentId, isApp) {
 //            log("updating node "+id)
             var that = this;
             var nModel = that.collection.get(id);
-            var nEl = $('#'+id, that.$el)
+            var node = $('#'+id, that.$el)
             
             if (!isApp) {
                 // autodiscover whether this is an app, looking at the model and the tree
                 // (at least one should be available -- probably always the former, but...)
                 if (nModel) { isApp = (id == nModel.get('applicationId')); }
-                else if (!isApp && nEl && nEl.parent().data('depth')==0) isApp = true;
+                else if (!isApp && node && node.parent().data('depth')==0) isApp = true;
             }
 
             if (!isApp && !parentId && nModel) parentId = nModel.get('parentId');
-            if (!isApp && !parentId && nEl) parentId = nEl.closest("entity_tree_node_wrapper").data('parentId');
+            if (!isApp && !parentId && node) parentId = node.closest("entity_tree_node_wrapper").data('parentId');
             if (!isApp && !parentId) {
                 log("no parentId yet available for "+id+"; skipping;")
                 return false;                
@@ -92,36 +94,36 @@ define([
             
             var statusIconUrl = nModel ? ViewUtils.computeStatusIcon(nModel.get("serviceUp"),nModel.get("serviceState")) : null;
             
-            var nEl2 = this.template({
+            var newNode = this.template({
                 id:id,
                 parentId:parentId,
                 model:nModel,
                 statusIconUrl:statusIconUrl
             })
 
-            if (!nEl.length) {
+            if (!node.length) {
                 // node does not exist, so add it
-                var pElC, depth;
+                var parentsChildren, depth;
                 
                 if (isApp) {
-                    pElC = $('.lozenge-app-tree-wrapper', that.$el);
-                    if (!pElC.length) {
+                    parentsChildren = $('.lozenge-app-tree-wrapper', that.$el);
+                    if (!parentsChildren.length) {
                         // entire view must be created
                         that.$el.html(
                                 '<div class="navbar_main_wrapper treeloz">'+
                                 '<div id="tree-list" class="navbar_main treeloz">'+
                                 '<div class="lozenge-app-tree-wrapper">'+
                                 '</div></div></div>');
-                        pElC = $('.lozenge-app-tree-wrapper', that.$el);
+                        parentsChildren = $('.lozenge-app-tree-wrapper', that.$el);
                     }
                     depth = 0;
                 } else {
-                    var pEl = $('#'+parentId, that.$el)
-                    if (!pEl.length) {
+                    var parent = $('#'+parentId, that.$el)
+                    if (!parent.length) {
                         // see if we can load the parent
                         if (this.updateNode(parentId)) {
-                            pEl = $('#'+parentId, that.$el);
-                            if (!pEl.length) {
+                            parent = $('#'+parentId, that.$el);
+                            if (!parent.length) {
                                 log("no parent element yet available for "+id+" ("+parentId+") after parent load; skipping")
                                 return false;                                
                             }
@@ -130,12 +132,12 @@ define([
                             return false;
                         }
                     }
-                    pElC = pEl.parent().children('.node-children')
-                    depth = pEl.parent().data("depth")+1
+                    parentsChildren = parent.parent().children('.node-children')
+                    depth = parent.parent().data("depth")+1
                 }
 
                 // add it, with surrounding html, in parent's node-children child
-                var nEl3 = $(
+                var newNodeWrapper = $(
                         '<div class="toggler-group tree-box '+
                             (depth==0 ? "outer" : "inner "+(depth%2==1 ? "depth-odd" : "depth-even")+
                                 (depth==1 ? " depth-first" : "")) + '" data-depth="'+depth+'">'+
@@ -143,19 +145,19 @@ define([
                         '<div class="toggler-target hide node-children"></div>'+
                         '</div>')
                         
-                $('#'+id, nEl3).html(nEl2);
-                $(pElC).append(nEl3);
-                this.addEventsToNode($(pElC))
+                $('#'+id, newNodeWrapper).html(newNode);
+                $(parentsChildren).append(newNodeWrapper);
+                this.addEventsToNode($(parentsChildren))
             } else {
                 // updating
-                var $nEl = $(nEl), $nEl2 = $(nEl2);
+                var $node = $(node), $newNode = $(newNode);
                 
                 // preserve old display status (just chevron direction at present)
-                if ($nEl.find('.tree-node-state').hasClass('icon-chevron-down'))
-                    $nEl2.find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down')
+                if ($node.find('.tree-node-state').hasClass('icon-chevron-down'))
+                    $newNode.find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down')
 
-                $(nEl).html($nEl2)
-                this.addEventsToNode($(nEl))
+                $(node).html($newNode)
+                this.addEventsToNode($(node))
             }
             return true
         },

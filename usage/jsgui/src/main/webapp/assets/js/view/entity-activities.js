@@ -26,6 +26,7 @@ define([
             'click #activities-root .toggleFullDetail':'toggleFullDetail'
         },
         initialize:function () {
+            _.bindAll(this)
             this.$el.html(this.template({ }));
             this.$('#activities-root').html(_.template(ActivityTableHtml))
             var that = this,
@@ -61,7 +62,7 @@ define([
             this.collection.fetch({reset: true});
         },
         render:function () {
-            this.updateActivitiesNow(this);
+            this.updateActivitiesNow();
             return this;
         },
         beforeClose:function () {

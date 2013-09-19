@@ -28,9 +28,6 @@
 add-app .tab-content-scroller {
     overflow: auto !important;
 }
-#application-content div#application-explorer {
-    /* padding-left: 52px; */
-}
 #application-content div#details {
 	margin-left: 8px !important;
 }

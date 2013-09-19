@@ -19,6 +19,7 @@ define([
             'click .toggleAutoRefresh':'toggleAutoRefresh'
         },
         initialize:function () {
+            _.bindAll(this)
         	this.$el.html(this.template({ }));
             var that = this,
                 $table = this.$('#config-table');
@@ -73,12 +74,12 @@ define([
             ViewUtils.addFilterEmptyButton(that.table);
             ViewUtils.addAutoRefreshButton(that.table);
             ViewUtils.addRefreshButton(that.table);
-            that.loadConfigMetadata(that);
-            that.updateConfigPeriodically(that);
+            that.loadConfigMetadata();
+            that.updateConfigPeriodically();
             that.toggleFilterEmpty();
         },
         render:function () {
-            this.updateConfigNow(this);
+            this.updateConfigNow();
             return this;
         },
         toggleFilterEmpty:function () {
@@ -91,17 +92,21 @@ define([
             this.refreshActive = isEnabled
         },
         refreshNow:function () {
-            this.updateConfigNow(this);  
+            this.updateConfigNow();  
         },
-        updateConfigNow:function (that) {
-            ViewUtils.get(that, that.model.getConfigUpdateUrl(), function(data) { that.updateWithData(that, data) },
-                    { enablement: function() { return that.refreshActive } });
+        isRefreshActive: function() { return this.refreshActive; },
+        updateConfigNow:function () {
+            var that = this
+            ViewUtils.get(that, that.model.getConfigUpdateUrl(), function(data) { that.updateWithData(data) },
+                    { enablement: that.isRefreshActive });
         },
-        updateConfigPeriodically:function (that) {
-            ViewUtils.getRepeatedlyWithDelay(that, that.model.getConfigUpdateUrl(), function(data) { that.updateWithData(that, data) },
-                    { enablement: function() { return that.refreshActive } });
+        updateConfigPeriodically:function () {
+            var that = this
+            ViewUtils.getRepeatedlyWithDelay(that, that.model.getConfigUpdateUrl(), function(data) { that.updateWithData(data) },
+                    { enablement: that.isRefreshActive });
         },
-        updateWithData: function (that, data) {
+        updateWithData: function (data) {
+            var that = this
             $table = that.$('#config-table');
             ViewUtils.updateMyDataTable($table, data, function(value, name) {
                 var metadata = that.configMetadata[name]
@@ -119,7 +124,8 @@ define([
             });
             ViewUtils.processTooltips($table)
         },
-        loadConfigMetadata: function(that) {
+        loadConfigMetadata: function() {
+            var that = this
             var url =  that.model.getLinkByName('config');
             $.get(url, function (data) {
                 for (d in data) {
@@ -131,7 +137,7 @@ define([
                           type:config["type"]
                     }
                 }
-                that.updateConfigNow(that);
+                that.updateConfigNow();
                 that.table.find('*[rel="tooltip"]').tooltip();
             }).fail(that.onConfigMetadataFailure);
         },

@@ -23,6 +23,7 @@ define([
             "click .show-policy-config-modal":"showPolicyConfigModal"
         },
         initialize:function () {
+            _.bindAll(this)
             this.$el.html(this.template({ }));
             var that = this;
             // fetch the list of policies and create a row for each one
@@ -63,7 +64,7 @@ define([
                     if (that.activePolicy) {
                         that.$("#policies-table tr[id='"+that.activePolicy+"']").addClass("selected");
                         that.showPolicyConfig(that.activePolicy);
-                        that.refreshPolicyConfig(that);
+                        that.refreshPolicyConfig();
                     } else {
                         that.$("#policy-config").hide();
                         that.$("#policy-config-none-selected").show();
@@ -78,7 +79,7 @@ define([
         },
 
         refreshPolicyConfigNow:function () {
-            this.refreshPolicyConfig(this);  
+            this.refreshPolicyConfig();  
         },
 
         rowClick:function(evt) {
@@ -148,10 +149,10 @@ define([
                     $table.dataTable().fnAdjustColumnSizing();
                 }
             }
-            that.refreshPolicyConfig(that);
+            that.refreshPolicyConfig();
         },
 
-        refreshPolicyConfig:function (that) {
+        refreshPolicyConfig:function() {
             if (that.viewIsClosed) return;
             var $table = that.$('#policy-config-table').dataTable(),
                 $rows = that.$("tr.policy-config-row");

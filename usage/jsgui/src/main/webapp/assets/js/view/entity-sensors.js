@@ -25,8 +25,8 @@ define([
         },
 
         initialize:function () {
-            this.$el.html(this.template());
             _.bindAll(this);
+            this.$el.html(this.template());
 
             var $table = this.$('#sensors-table'),
                 that = this;
@@ -70,8 +70,8 @@ define([
             ViewUtils.addFilterEmptyButton(this.table);
             ViewUtils.addAutoRefreshButton(this.table);
             ViewUtils.addRefreshButton(this.table);
-            this.loadSensorMetadata()
-            this.updateSensorsPeriodically()
+            this.loadSensorMetadata();
+            this.updateSensorsPeriodically();
             this.toggleFilterEmpty();
             return this;
         },
@@ -108,17 +108,19 @@ define([
         /**
          * Loads current values for all sensors on an entity and updates sensors table.
          */
+        isRefreshActive: function() { return this.refreshActive; },
         updateSensorsNow:function () {
             var that = this
-            ViewUtils.get(that, that.model.getSensorUpdateUrl(), function(data) { that.updateWithData(that, data) },
-                    { enablement: function() { return that.refreshActive } });
+            ViewUtils.get(that, that.model.getSensorUpdateUrl(), function(data) { that.updateWithData(data) },
+                    { enablement: that.isRefreshActive });
         },
         updateSensorsPeriodically:function () {
             var that = this
-            ViewUtils.getRepeatedlyWithDelay(that, that.model.getSensorUpdateUrl(), function(data) { that.updateWithData(that, data) },
-                    { enablement: function() { return that.refreshActive } });
+            ViewUtils.getRepeatedlyWithDelay(that, that.model.getSensorUpdateUrl(), function(data) { that.updateWithData(data) },
+                    { enablement: that.isRefreshActive });
         },
-        updateWithData: function (that, data) {
+        updateWithData: function (data) {
+            var that = this
             $table = that.$('#sensors-table');
             ViewUtils.updateMyDataTable($table, data, function(value, name) {
                 var metadata = that.sensorMetadata[name]

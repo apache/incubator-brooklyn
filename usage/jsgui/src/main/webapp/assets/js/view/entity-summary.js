@@ -10,6 +10,7 @@ define([
     var EntitySummaryView = Backbone.View.extend({
         template:_.template(SummaryHtml),
         initialize: function() {
+            _.bindAll(this)
             var that = this
             var ej = FormatJSON(this.model.toJSON());
             this.$el.html(this.template({
@@ -25,7 +26,7 @@ define([
             // (currently we just take the URL from that view) - and do the same for active tasks;
             if (this.options.sensors) {
                 ViewUtils.getRepeatedlyWithDelay(this, this.options.sensors.getSensorUpdateUrl(), 
-                    function(data) { that.updateWithData(that, data) });
+                    function(data) { that.updateWithData(data) });
             } else {
                 // e.g. in tests
                 log("no sensors available to EntitySummaryView")
@@ -68,7 +69,8 @@ define([
                 }})
             }
         },
-        updateWithData: function (that, data) {
+        updateWithData: function (data) {
+            var that = this
             that.revealIfHasValue("service.isUp", that.$(".serviceUp"), null, data)
             that.revealIfHasValue("service.state", that.$(".status"), null, data)
             
