@@ -9,15 +9,21 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.time.Time;
 
 public class NetworkingUtilsTest {
 
+    private static final Logger log = LoggerFactory.getLogger(NetworkingUtilsTest.class);
+    
     @Test
     public void testValidIp() throws Exception {
         assertTrue(Networking.isValidIp4("127.0.0.1"));
@@ -77,18 +83,28 @@ public class NetworkingUtilsTest {
     
     @Test
     public void testIsPortAvailableReportsFalseWhenPortIsInUse() throws Exception {
-        int port = 58768;
+        int port = 58767;
         ServerSocket ss = null;
-        try {
-            ss = new ServerSocket(port);
-            assertFalse(Networking.isPortAvailable(port));
-        } finally {
-            if (ss != null) {
-                ss.close();
+        do {
+            port ++;
+            if (Networking.isPortAvailable(port)) {
+                try {
+                    ss = new ServerSocket(port);
+                    log.info("acquired port on "+port+" for test "+JavaClassNames.niceClassAndMethod());
+                    assertFalse(Networking.isPortAvailable(port), "port mistakenly reported as available");
+                } finally {
+                    if (ss != null) {
+                        ss.close();
+                    }
+                }
             }
-        }
-
-        assertTrue(Networking.isPortAvailable(port));
+            // repeat until we can get a port
+        } while (ss == null && port < 60000);
+        Assert.assertNotNull(ss, "could not get a port");
+        for (int i=0; i<100; i++)
+            if (!Networking.isPortAvailable(port))
+                Time.sleep(100);
+        assertTrue(Networking.isPortAvailable(port), "port not made available afterwards");
     }
     
     //just some system health-checks... localhost may not resolve properly elsewhere

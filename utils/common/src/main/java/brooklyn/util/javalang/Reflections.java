@@ -427,13 +427,16 @@ public class Reflections {
 		return classLoader;
 	}
 	
-	// FIXME I thought this method already existed somewhere? If so, remove duplication. 
+	/** @deprecated since 0.6.0; this is sloppy, and rarely does the right thing.
+	 * fortunately don't think it is used.
+	 * use methods in {@link StackTraceSimplifier} or {@link JavaClassNames} */
+	@Deprecated
 	public static StackTraceElement getCaller() {
 	    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
 	    // 0 is Thread.getStackTrace()
-	    // 1 is ReflectionUtils.getCaller()
-	    // 2 is caller of getCaller();
-	    // 3 is caller of method that requested the caller
+	    // 1 is Reflections.getCaller()
+	    // 2 is our caller in pure java -- or a groovy/interceptor in some cases
+	    // 3 is our caller in groovy sometimes
 	    return stackTrace[3];
 	}
 	
