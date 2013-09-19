@@ -24,6 +24,8 @@ import brooklyn.test.HttpTestUtils
 import brooklyn.test.WebAppMonitor
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 /**
  * Test the operation of the {@link NginxController} class.
  */
@@ -312,5 +314,41 @@ public class NginxIntegrationTest {
         
         t2.join();
     }
+
+    /**
+     * Test that the Nginx proxy starts up and sets SERVICE_UP correctly.
+     */
+    @Test(groups = "Integration")
+    public void testCanRestart() {
+        nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
+                .configure("serverPool", serverPool)
+                .configure("domain", "localhost")
+                .configure("portNumberSensor", WebAppService.HTTP_PORT));
+        
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+        
+        // App-servers and nginx has started
+        assertEventually {
+            assertTrue nginx.getAttribute(SoftwareProcess.SERVICE_UP);
+        }
+
+        log.info("started, will restart soon");
+        Time.sleep(Duration.ONE_SECOND);
+        
+        nginx.restart()
+
+        Time.sleep(Duration.ONE_SECOND);
+        assertEventually {
+            assertTrue nginx.getAttribute(SoftwareProcess.SERVICE_UP);
+        }
+        log.info("restarted and got service up");
+    }
+    
+//    public static void main(String[] args) {
+//        NginxIntegrationTest t = new NginxIntegrationTest();
+//        t.setup();
+//        t.testCanRestart();
+//        t.shutdown();        
+//    }
 
 }

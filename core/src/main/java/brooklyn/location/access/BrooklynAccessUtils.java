@@ -62,7 +62,7 @@ public class BrooklynAccessUtils {
         host = entity.getAttribute(Attributes.HOSTNAME);
         if (host!=null) return HostAndPort.fromParts(host, port);
         
-        throw new IllegalStateException("Cannot find way to access port "+port+" on "+entity+" from Brooklyn");
+        throw new IllegalStateException("Cannot find way to access port "+port+" on "+entity+" from Brooklyn (no host.name)");
     }
 
 }

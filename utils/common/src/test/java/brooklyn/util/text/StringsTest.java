@@ -239,5 +239,41 @@ public class StringsTest {
     public void testSurround() {
         Assert.assertEquals(StringFunctions.surround("hello ", " world").apply("new"), "hello new world");
     }
-        
+
+    @Test
+    public void testFirstWord() {
+        Assert.assertEquals(Strings.getFirstWord("hello world"), "hello");
+        Assert.assertEquals(Strings.getFirstWord("   hello world"), "hello");
+        Assert.assertEquals(Strings.getFirstWord("   hello   "), "hello");
+        Assert.assertEquals(Strings.getFirstWord("hello"), "hello");
+        Assert.assertEquals(Strings.getFirstWord("  "), null);
+        Assert.assertEquals(Strings.getFirstWord(""), null);
+        Assert.assertEquals(Strings.getFirstWord(null), null);
+    }
+
+    @Test
+    public void testLastWord() {
+        Assert.assertEquals(Strings.getLastWord("hello world"), "world");
+        Assert.assertEquals(Strings.getLastWord("   hello world  "), "world");
+        Assert.assertEquals(Strings.getLastWord("   hello   "), "hello");
+        Assert.assertEquals(Strings.getLastWord("hello"), "hello");
+        Assert.assertEquals(Strings.getLastWord("  "), null);
+        Assert.assertEquals(Strings.getLastWord(""), null);
+        Assert.assertEquals(Strings.getLastWord(null), null);
+    }
+    
+    @Test
+    public void testFirstWordAfter() {
+        Assert.assertEquals(Strings.getFirstWordAfter("hello world", "hello"), "world");
+        Assert.assertEquals(Strings.getFirstWordAfter("   hello world", "hello"), "world");
+        Assert.assertEquals(Strings.getFirstWordAfter("   hello world: is not enough", "world:"), "is");
+        Assert.assertEquals(Strings.getFirstWordAfter("   hello world: is not enough", "world"), ":");
+        Assert.assertEquals(Strings.getFirstWordAfter("   hello   ", "hello"), null);
+        Assert.assertEquals(Strings.getFirstWordAfter("hello", "hello"), null);
+        Assert.assertEquals(Strings.getFirstWordAfter("  ", "x"), null);
+        Assert.assertEquals(Strings.getFirstWordAfter("", "x"), null);
+        Assert.assertEquals(Strings.getFirstWordAfter(null, "x"), null);
+    }
+
+    
 }

@@ -2,6 +2,8 @@ package brooklyn.entity.database.mysql;
 
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,12 +11,15 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
+import brooklyn.event.feed.ssh.SshPollValue;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 
 public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
@@ -62,14 +67,23 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
         
         if (machine instanceof SshMachineLocation) {
             String cmd = getDriver().getStatusCmd();
-            
             feed = SshFeed.builder()
                     .entity(this)
+                    .period(Duration.FIVE_SECONDS)
                     .machine((SshMachineLocation)machine)
                     .poll(new SshPollConfig<Boolean>(SERVICE_UP)
                             .command(cmd)
                             .setOnSuccess(true)
                             .setOnFailureOrException(false))
+                    .poll(new SshPollConfig<Double>(QUERIES_PER_SECOND_FROM_MYSQL)
+                            .command(cmd)
+                            .onSuccess(new Function<SshPollValue, Double>() {
+                                public Double apply(SshPollValue input) {
+                                    String q = Strings.getFirstWordAfter(input.getStdout(), "Queries per second avg:");
+                                    if (q==null) return null;
+                                    return Double.parseDouble(q);
+                                }})
+                            .setOnFailureOrException(null) )
                     .build();
         } else {
             LOG.warn("Location(s) %s not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());

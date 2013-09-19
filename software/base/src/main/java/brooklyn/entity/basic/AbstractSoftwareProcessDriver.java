@@ -15,6 +15,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.text.TemplateProcessor;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -107,10 +108,29 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 	            }
 	        }
 	    }});
-	    DynamicTasks.queue("launch", new Runnable() { public void run() {
+
+	    if (doFullStartOnRestart()) {
+	        DynamicTasks.waitForLast();
 	        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
-	        launch();
-        }});
+	        start();
+	    } else {
+	        DynamicTasks.queue("launch", new Runnable() { public void run() {
+	            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+	            launch();
+	        }});
+	        DynamicTasks.queue("post-launch", new Runnable() { public void run() {
+	            postLaunch();
+	        }});
+	    }
+	}
+	
+	@Beta
+	/** ideally restart() would take options, e.g. whether to do full start, skip installs, etc;
+	 * however in the absence here is a toggle - not sure how well it works;
+	 * default is false which is similar to previous behaviour (with some seemingly-obvious tidies),
+	 * meaning install and configure will NOT be done on restart. */
+	protected boolean doFullStartOnRestart() {
+	    return false;
 	}
 	
 	@Override
