@@ -46,7 +46,7 @@ public class JavaClassNames {
                 result = ct.getName();
             }
         }
-        return result+Strings.times("[]", arrayCount);
+        return result+Strings.repeat("[]", arrayCount);
     }
     
     /** as {@link #simpleClassName(Class)} but taking the type of the object if it is not already a class

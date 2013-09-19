@@ -612,7 +612,7 @@ public class Strings {
     }
 
     /** returns base repeated count times */
-    public static String times(String base, int count) {
+    public static String repeat(String base, int count) {
         if (base==null) return null;
         StringBuilder result = new StringBuilder();
         for (int i=0; i<count; i++)
