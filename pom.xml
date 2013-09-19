@@ -150,6 +150,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>brooklyn-logback-includes</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>brooklyn-logback-xml</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -670,6 +675,7 @@
             <id>Usage</id>
             <activation> <property><name> !brooklyn.explicitModules </name></property> </activation>
             <modules>
+                <module>usage/logback-includes</module>
                 <module>usage/logback-xml</module>
                 <module>utils/rest-swagger</module>
                 <module>usage/rest-api</module>

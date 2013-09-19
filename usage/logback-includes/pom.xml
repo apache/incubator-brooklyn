@@ -1,0 +1,22 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>brooklyn-logback-includes</artifactId>
+    <packaging>bundle</packaging>
+    <name>Brooklyn Logback Includable Configuration</name>
+    <description>
+        This project contains various "include" files which can be included by logback configuration,
+        setting up logging for brooklyn. This project does *not* contain a logback.xml so is safe to
+        include without causing errors, and if it is included you can then include any of the files
+        provided here in your logback.xml.
+    </description>
+
+    <parent>
+        <groupId>io.brooklyn</groupId>
+        <artifactId>brooklyn-parent</artifactId>
+        <version>0.6.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+</project>

@@ -24,7 +24,6 @@ import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.JavaWebAppService;
@@ -136,7 +135,7 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                 .application(EntitySpecs.appSpec(WebClusterDatabaseExampleApp.class)
+                 .application(EntitySpec.create(StartableApplication.class, WebClusterDatabaseExampleApp.class)
                          .displayName("Brooklyn WebApp Cluster with Database example"))
                  .webconsolePort(port)
                  .location(location)

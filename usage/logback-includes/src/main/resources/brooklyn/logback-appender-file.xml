@@ -1,7 +1,7 @@
 <included>
 
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>brooklyn-tests.log</file>
+    <file>${logging.dir:-./}${logging.basename:-brooklyn}.log</file>
     <append>true</append>
     <encoder>
       <pattern>%d %-5level %logger{30} [%thread{15}]: %msg%n</pattern>

@@ -1,20 +1,21 @@
 <configuration>
 
-  <!-- the only point of this file (and this project) is to supply a logback.xml suitable for extension.
-       you'll note below it simply points to a logback-default.xml (from brooklyn-core) with common includes.
-       
-       the main advantage of this is that a developer can supply their own logback-default.xml
-       earlier on the classpath which will safely trump the default, allowing preferred includes/settings
-       (i.e. without the tons of logback WARNs you get if you supply two logback.xml files)
-       
-       it is recommended that this project is included carefully via maven so that the above scheme is only
-       applied in IDE's and for projects which don't build assemblies (and don't want a per-project logback.xml);
-       when an assembly is built, this project should be excluded and the "logback-default" scheme bypassed.
-       
-       to do this, your pom dependency on this project should:
-       * "optional" so it is not passed down to dependent projects; and
-       * "compile" only so it runs in the IDE (experimental)
+  <!-- the point of this file (and this project) is to supply a logging framework which:
+  
+       - makes it easy for a project to get the default logging 
+         (include this project, perhaps as an optional dependency (not passed to downstream projects))
+         
+       - makes it easy for projects to customise that logging
+         (override the logback-main.xml file this includes, or any of the files that includes;
+         NB those files are in brooklyn-logback-includes)
+         
+       - makes it easy for projects to opt-out of this type of logging
+         (ensure it does not include this project as a dependency)
+         
+       the core problem this solves is that logback does not like it if there are multiple 
+       `logback.xml` files. this restriction does not apply to files included by logback.xml.
   -->
-  <include resource="brooklyn/logback-default.xml"/>
+  
+  <include resource="logback-main.xml"/>
 
 </configuration>

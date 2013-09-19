@@ -1,37 +1,24 @@
-<configuration>
+<included>
 
-  <!-- 
-       this file demonstrates how you can customise logging,
-       the FILE used as an appender (brooklyn-examples.log), with
-       default INFO level but with standard favourites (included)
-       and brooklyn.demo (logging from these examples) 
+    <!--
+     
+        this file demonstrates how to customise logging, base on the placeholder 
+        logging-custom.xml included in brooklyn-logging-includes.
 
-       to use, either specify -Dlogback.configurationFile=/path/to/this/logback-custom.xml;
-       or rename this as logback.xml (so it is included on the classpath)
-       and remove the brooklyn-logback-xml optional dependency (so the default logback.xml is not included);
-       or if using the brooklyn CLI to run, replace the conf/logback.xml used there with this file
+    -->        
+  
+    <!-- include this category -->
+    <logger name="brooklyn.demo" level="DEBUG"/>
+    
+    <!-- log to simple-web-cluster.log -->
+    <property name="logging.basename" scope="context" value="simple-web-cluster" />
 
-       NB: this file is not used unless you enable it by one of the steps listed just above!
-       NB2: if running from the IDE, some IDE's may prefer logback-tests.xml from brooklyn-test-support
-   -->
+  <!--
+  
+       more customisation is possible by overriding the default-included
+       configuration files, such as logback-main.xml (entirely replacing configuration),
+       or e.g. brooklyn/logback-appender-file.xml (replacing the FILE logger config).
+       
+  -->
 
-  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>brooklyn-examples.log</file>
-    <append>true</append>
-    <encoder>
-      <pattern>%d %-5level %logger{30} [%thread{15}]: %msg%n</pattern>
-    </encoder>
-  </appender>
-
-  <include resource="brooklyn/logback-stdout.xml"/>
-  <include resource="brooklyn/logback-excludes.xml"/>
-  <include resource="brooklyn/logback-favs.xml"/>
-
-  <root level="INFO">
-    <appender-ref ref="STDOUT" />
-    <appender-ref ref="FILE" />
-  </root>
-
-  <logger name="brooklyn.demo" level="DEBUG"/>
-
-</configuration>
+</included>

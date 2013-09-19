@@ -6,13 +6,16 @@
     <packaging>bundle</packaging>
     <name>Brooklyn Logback Configuration</name>
     <description>
-        This project contains a logback.xml which sets up logging for brooklyn. 
+        This project contains a logback.xml which sets up logging for brooklyn,
+        using files supplied in the upstream brooklyn-logback-includes project.
+        -
         One recommended way to configure logging on a project is to add this as an 
         *optional* *runtime* dependency in a project's pom.xml file, so that logback.xml
-        is on the classpath when that project is run, but it is *not* exported to 
-        dependendent projects thus allowing them to supply their own logging.
+        is on the classpath when that project is run but it is *not* exported to 
+        new/dependent projects thus allowing them to supply their own logging.
         -
-        See logback.xml for more information.
+        For more information see the logback.xml file in this project or the Logging
+        section of the web site / user guide.
     </description>
 
     <parent>

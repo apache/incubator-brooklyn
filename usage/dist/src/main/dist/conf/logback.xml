@@ -1,19 +1,13 @@
 <configuration>
 
-    <include resource="brooklyn/logback-stdout.xml"/>
-    <include resource="brooklyn/logback-file.xml"/>
-    
-    <include resource="brooklyn/logback-excludes.xml"/>
+    <!-- to supply custom logging, either change this file, supply your own logback-main.xml 
+         (overriding the default provided on the classpath) or any of the files it references; 
+         see the Logging section of the Brooklyn web site for more information -->
 
-    <!-- items above define STDOUT and FILE (brooklyn.log) appenders,
-         with INFO threshhold for STDOUT, and noisy categories excluded;
-         you can replace logback-file.xml with your own appender called FILE
-         (or of course replace entirely with your own logback.xml)
-         
-         the line below defines INFO for root and DEBUG for brooklyn and jclouds;
-         for less output, consider including  logback-info.xml  instead then
-         define your favourite categories (and/or include logback-favs.xml) -->
-         
-    <include resource="brooklyn/logback-debug.xml"/>
+    <property name="logging.basename" scope="context" value="brooklyn" />
+    <property name="logging.dir" scope="context" value="./" />
+
+    <include resource="logback-main.xml"/>
     
 </configuration>
+

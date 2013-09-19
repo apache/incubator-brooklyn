@@ -1,11 +1,12 @@
 package brooklyn.test;
 
-import java.lang.reflect.Method;
 import java.util.List;
+
 import org.testng.ITestContext;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 import org.testng.TestListenerAdapter;
+import org.testng.internal.ConstructorOrMethod;
 import org.testng.internal.Utils;
 
 /**
@@ -35,10 +36,15 @@ public class VerboseReporter extends TestListenerAdapter {
 
         SUCCESS(ITestResult.SUCCESS), FAILURE(ITestResult.FAILURE), SKIP(ITestResult.SKIP),
         SUCCESS_PERCENTAGE_FAILURE(ITestResult.SUCCESS_PERCENTAGE_FAILURE), STARTED(ITestResult.STARTED);
-        private int status;
+        private final int code;
 
         private Status(int i) {
-            status = i;
+            code = i;
+        }
+        
+        @SuppressWarnings("unused")
+        public int getCode() {
+            return code;
         }
     }
 
@@ -166,7 +172,6 @@ public class VerboseReporter extends TestListenerAdapter {
      */
     private void logTestResult(Status st, ITestResult itr, boolean isConfMethod) {
         StringBuilder sb = new StringBuilder();
-        StringBuilder succRate = null;
         String stackTrace = "";
         switch (st) {
             case STARTED:
@@ -201,7 +206,7 @@ public class VerboseReporter extends TestListenerAdapter {
         int identLevel = sb.length();
         sb.append(getMethodDeclaration(tm));
         Object[] params = itr.getParameters();
-        Class[] paramTypes = tm.getMethod().getParameterTypes();
+        Class<?>[] paramTypes = tm.getConstructorOrMethod().getParameterTypes();
         if (null != params && params.length > 0) {
             // The error might be a data provider parameter mismatch, so make
             // a special case here
@@ -267,7 +272,7 @@ public class VerboseReporter extends TestListenerAdapter {
     private String getMethodDeclaration(ITestNGMethod method) {
         //see Utils.detailedMethodName
         //perhaps should rather adopt the original method instead
-        Method m = method.getMethod();
+        ConstructorOrMethod m = method.getConstructorOrMethod();
         StringBuilder buf = new StringBuilder();
         buf.append("\"");
         if (suiteName != null) {

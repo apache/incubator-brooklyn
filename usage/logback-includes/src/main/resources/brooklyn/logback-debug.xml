@@ -1,0 +1,9 @@
+<included>
+
+    <!-- override this file to customise what debug categories are included
+         (favs is smaller and less noisy than all; leave empty for no debug logging) -->
+    
+    <include resource="brooklyn/logback-logger-debug-all.xml"/>
+    <include resource="brooklyn/logback-logger-debug-favs.xml"/>
+      
+</included>

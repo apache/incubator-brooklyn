@@ -1,0 +1,42 @@
+<included>
+
+    <!-- this file defines the default logging configuration for brooklyn projects,
+         in a way which is intended to be friendly to downstream projects.
+         
+         downstream projects may be routed to this file in two situations:
+         
+         * running tests (via brooklyn-test-support)
+         * dependency on `brooklyn-logback-xml` and running in IDE
+         
+         this file may be overridden in downstream projects, as may any of the files incldued here.
+         
+         for an _assembly_ (i.e. a redistributable binary) a project must supply
+         a logback.xml.  it can route to this file if they wish, or use some of
+         the files referenced herein, or ignore it altogether.  (the reason for
+         this is that assemblies usually want to declare their own logging anyway.) 
+    -->
+
+    <!-- if there is any customisation, load it first -->
+    <include resource="logback-custom.xml"/>
+
+    <!-- 'FILE' e.g. brooklyn.log gets all messages by default -->
+    <include resource="brooklyn/logback-appender-file.xml"/>
+    
+    <!-- 'STDOUT' gets INFO and higher -->
+    <include resource="brooklyn/logback-appender-stdout.xml"/>
+    
+    <!-- set default root logger threshhold (to info, for the appenders we have configured) -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+    
+    <!-- some loggers are very noisy however, exclude them, or make them file only -->
+    <include resource="brooklyn/logback-logger-excludes.xml"/>
+
+    <!-- brooklyn and selected others get debug treatment by default;
+         to customise what gets debug logging, see brooklyn/logback-debug.xml 
+         which of course can be overridden -->    
+    <include resource="brooklyn/logback-debug.xml"/>
+
+</included>
