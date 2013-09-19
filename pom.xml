@@ -82,23 +82,23 @@
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.4</ant.version>
 
+        <jclouds.version>1.6.1-incubating</jclouds.version>
+        <guava.version>14.0.1</guava.version>
         <groovy.version>1.8.6</groovy.version>
+        <logback.version>1.0.7</logback.version>
         <testng.version>6.8</testng.version>
         <mockito.version>1.9.5</mockito.version>
         <whirr.version>0.8.1</whirr.version>
-        <logback.version>1.0.7</logback.version>
-        <slf4j.version>1.6.6</slf4j.version>
+        <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
         <xstream.version>1.4.3</xstream.version>
         <jackson.version>1.9.13</jackson.version>
         <jersey.version>1.12</jersey.version>
         <swagger.version>1.0.1</swagger.version>
         <dropwizard.version>0.4.4</dropwizard.version>
         <jansi.version>1.2.1</jansi.version>
-        <guava.version>14.0.1</guava.version>
         <gson.version>2.2.2</gson.version>
         <jsr305.version>2.0.1</jsr305.version>
         <ivy.version>2.2.0</ivy.version>
-        <jclouds.version>1.6.1-incubating</jclouds.version>
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.46</bouncycastle.version>
         <sshj.version>0.8.1</sshj.version>
@@ -188,11 +188,6 @@
                 <groupId>com.google.code.findbugs</groupId>
                 <artifactId>jsr305</artifactId>
                 <version>${jsr305.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.groovy</groupId>
@@ -686,6 +681,7 @@
                 <module>usage/cli</module>
                 <module>usage/all</module>
                 <module>usage/dist</module>
+                <module>usage/archetype</module>
             </modules>
         </profile>
         <profile>
