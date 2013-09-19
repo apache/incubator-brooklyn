@@ -6,11 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.launcher.BrooklynLauncher;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
@@ -25,8 +28,8 @@ public class SingleWebServerExample extends AbstractApplication {
     @Override
     public void init() {
         addChild(EntitySpec.create(JBoss7Server.class)
-                .configure("war", WAR_PATH)
-                .configure("httpPort", "8080+"));
+                .configure(JavaWebAppService.ROOT_WAR, WAR_PATH)
+                .configure(Attributes.HTTP_PORT, PortRanges.fromString("8080+")));
     }
 
     // Shows how to use ApplicationBuilder without sub-classing, but for CLI usage one should sub-class

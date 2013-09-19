@@ -1,0 +1,180 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>brooklyn-archetype-quickstart</artifactId>
+  <packaging>maven-archetype</packaging>
+  <name>Brooklyn Quick-Start Project Archetype</name>
+  <description>
+        This project defines an archetype for creating new projects which consume brooklyn, 
+        including an example application and an example new entity type, 
+        able to build an OSGi JAR and a binary assembly, with logging and READMEs.
+    </description>
+
+  <parent>
+    <groupId>io.brooklyn</groupId>
+    <artifactId>brooklyn-parent</artifactId>
+    <version>0.6.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+    <relativePath>../../../pom.xml</relativePath>
+  </parent>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-archetype-plugin</artifactId>
+        <!-- all we want to do is skip _integration tests_ when skipTests is set, not other phases;
+             but for some reason this seems to do it, and it still builds the archetype (!?).
+             whereas setting skip inside the integration-test execution goal does NOT work.
+              
+             TODO promote to root pom.xml when we better understand why
+        -->
+        <configuration>
+          <skip>${skipTests}</skip>
+        </configuration>
+      </plugin>
+      
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset> 
+                <directory>src/test/resources/projects/integration-test-1/reference</directory> 
+                <includes><include>**/*</include></includes>
+            </fileset>
+            <fileset> 
+                <directory>src/main/resources/archetype-resources/</directory> 
+                <includes><include>**/*</include></includes>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>maven-replacer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-brooklyn-sample-to-integration-test-reference</id>
+            <phase>clean</phase>
+            <goals> <goal>replace</goal> </goals>
+            <configuration>
+              <basedir>src/brooklyn-sample</basedir> 
+              <includes> <include>**</include> </includes>
+              <excludes> 
+                <exclude>.*</exclude> 
+                <exclude>.*/**</exclude> 
+                <exclude>target/**</exclude> 
+                <exclude>*.log</exclude> 
+              </excludes>
+              
+              <outputBasedir>.</outputBasedir>
+              <outputDir>src/test/resources/projects/integration-test-1/reference</outputDir>
+              <replacements/>
+            </configuration>
+          </execution>
+          <!-- would be nice to reduce the repetion below, but don't see how;
+               have tried with valueTokenMap but it must lie beneath basedir;
+               and tried with {input,output}FilePattern but that doesn't apply to dirs  -->
+          <execution>
+            <!-- copy creating variables and unpackaged, for src/main/java -->
+            <id>copy-brooklyn-sample-to-archetype-src-main-java</id>
+            <phase>clean</phase>
+            <goals> <goal>replace</goal> </goals>
+            <configuration>
+              <basedir>src/brooklyn-sample/src/main/java/com/acme/sample/brooklyn</basedir>
+              <outputDir>src/main/resources/archetype-resources/src/main/java</outputDir>
+              <includes> <include>**/*</include> </includes>
+              <outputBasedir>.</outputBasedir>
+              <replacements>
+                <replacement> <token>brooklyn-sample</token> <value>\$\{artifactId}</value> </replacement>
+                <replacement> <token>com\.acme\.sample\.brooklyn</token> <value>\$\{package}</value> </replacement>
+                <replacement> <token>com/acme/sample/brooklyn</token> <value>\$\{packageInPathFormat}</value> </replacement>
+                <replacement> <token>com\.acme\.sample</token> <value>\$\{groupId}</value> </replacement>
+                <replacement> <token>0.1.0-SNAPSHOT</token> <value>\$\{version}</value> </replacement>
+              </replacements>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- copy creating variables and unpackaged, for src/test/java -->
+            <id>copy-brooklyn-sample-to-archetype-src-test-java</id>
+            <phase>clean</phase>
+            <goals> <goal>replace</goal> </goals>
+            <configuration>
+              <basedir>src/brooklyn-sample/src/test/java/com/acme/sample/brooklyn</basedir>
+              <outputDir>src/main/resources/archetype-resources/src/test/java</outputDir>
+              <includes> <include>**/*</include> </includes>
+              <outputBasedir>.</outputBasedir>
+              <replacements>
+                <replacement> <token>brooklyn-sample</token> <value>\$\{artifactId}</value> </replacement>
+                <replacement> <token>com\.acme\.sample\.brooklyn</token> <value>\$\{package}</value> </replacement>
+                <replacement> <token>com/acme/sample/brooklyn</token> <value>\$\{packageInPathFormat}</value> </replacement>
+                <replacement> <token>com\.acme\.sample</token> <value>\$\{groupId}</value> </replacement>
+                <replacement> <token>0.1.0-SNAPSHOT</token> <value>\$\{version}</value> </replacement>
+              </replacements>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- copy creating variables, for all other places -->
+            <id>copy-brooklyn-sample-to-archetype-resources</id>
+            <phase>clean</phase>
+            <goals> <goal>replace</goal> </goals>
+            <configuration>
+              <basedir>src/brooklyn-sample/</basedir>
+              <outputDir>src/main/resources/archetype-resources/</outputDir>
+              <includes> <include>**/*</include> </includes>
+              <excludes> 
+                <exclude>src/main/java/**</exclude> 
+                <exclude>src/test/java/**</exclude> 
+                <exclude>target/**</exclude> 
+                <exclude>test-output/**</exclude> 
+                <exclude>.*</exclude> 
+                <exclude>**/*.png</exclude> 
+                <exclude>.*/**</exclude> 
+                <exclude>*.log</exclude> 
+              </excludes>
+              <outputBasedir>.</outputBasedir>
+              <replacements>
+                <!-- special chars in velocity have to be escaped.
+                     fortunately we only use fairly simple examples so we don't need to solve the general case! -->
+                <!-- escaping # is ugly -->
+                <replacement> <token>(#+)</token> <value>#set\(\$H='$1'\)\${H}</value> </replacement>
+                <!-- and escaping $ doesn't even seem to work; perhaps an old version of velocity in use?
+                     (however velocity ignores $ except for variables which are defined, so we're okay)
+                <replacement> <token>\$</token> <value>\\\$</value> </replacement>
+                -->
+                
+                <replacement> <token>brooklyn-sample</token> <value>\$\{artifactId}</value> </replacement>
+                <replacement> <token>com\.acme\.sample\.brooklyn</token> <value>\$\{package}</value> </replacement>
+                <replacement> <token>com/acme/sample/brooklyn</token> <value>\$\{packageInPathFormat}</value> </replacement>
+                <replacement> <token>com\.acme\.sample</token> <value>\$\{groupId}</value> </replacement>
+                <replacement> <token>0.1.0-SNAPSHOT</token> <value>\$\{version}</value> </replacement>
+              </replacements>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- copy creating variables, for all other places -->
+            <id>copy-brooklyn-sample-to-archetype-resources-binary</id>
+            <phase>clean</phase>
+            <goals> <goal>replace</goal> </goals>
+            <configuration>
+              <basedir>src/brooklyn-sample/</basedir>
+              <outputDir>src/main/resources/archetype-resources/</outputDir>
+              <includes> <include>**/*.png</include> </includes>
+              <excludes> 
+                <exclude>target/**</exclude> 
+                <exclude>test-output/**</exclude> 
+                <exclude>.*</exclude> 
+                <exclude>.*/**</exclude> 
+              </excludes>
+              <outputBasedir>.</outputBasedir>
+              <!-- no replacements for binary (put one just so we can use this plugin for consistency) -->
+              <replacements><replacement> <token>NONCE_123456789XYZ</token> <value>NONCE_123456789XYZ</value> </replacement></replacements>
+            </configuration>
+          </execution>
+          
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>

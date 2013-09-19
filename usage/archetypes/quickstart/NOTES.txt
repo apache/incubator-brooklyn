@@ -1,0 +1,58 @@
+
+This file contains notes for anyone working on the archetype.
+
+
+Some things to keep in mind:
+
+* The sample project in `src/brooklyn-sample` is what populates the
+  archetype source (in `src/main/resources/archetype-resources`, 
+  copied there by the `pom.xml` in this directory, in `clean` phase).
+  (You can open and edit it in your IDE.)
+  
+* That archetype source then becomes the archetype (in `install` phase)
+  according to the copy and filter rules in `src/main/resources/META-INF/maven/archetype-metadata.xml`
+
+* For any changes to the project:
+
+  * ensure `brooklyn-sample` builds as you would like
+  * ensure the resulting archetype builds as you would like
+    (should be reasonably safe and automated, but check that the 2 sets of 
+    copy/translation rules above do what you intended!)
+  * update the `README.*` files in the root of `brooklyn-sample` and the
+    `src/main/assembly/files` within that
+  * update the instructions in the quickstart / user guide at use/guide/quickstart/index.md
+
+
+To build:
+
+    mvn clean install
+
+
+To test a build:
+
+    pushd /tmp
+    rm -rf brooklyn-sample
+    export BV=0.6.0-SNAPSHOT    # BROOKLYN_VERSION
+    
+    mvn archetype:generate                                  \
+                                                            \
+      -DarchetypeGroupId=io.brooklyn                        \
+      -DarchetypeArtifactId=brooklyn-archetype-quickstart   \
+      -DarchetypeVersion=${BV} \
+      \
+      -DgroupId=com.acme.sample                             \
+      -DartifactId=brooklyn-sample                          \
+      -Dversion=0.1.0-SNAPSHOT                              \
+      -Dpackage=com.acme.sample.brooklyn                    \
+      \
+      --batch-mode
+    
+    cd brooklyn-sample
+    mvn clean assembly:assembly
+    cd target/brooklyn-sample-0.1.0-SNAPSHOT-dist/brooklyn-sample-0.1.0-SNAPSHOT/
+    ./start.sh cluster
+
+
+References
+
+ * http://stackoverflow.com/questions/4082643/how-can-i-test-a-maven-archetype-that-ive-just-created/18916065#18916065
