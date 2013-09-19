@@ -9,8 +9,10 @@ categories: [use, guide]
 
 This guide will get you up and running with Brooklyn quickly. You will become familiar with launching Brooklyn from the command line, using the web interface and deploying an application (to a public cloud).
 
+
 ### Before We Start
 You are going to need some basic tools (that are normally installed by default). You will need `curl`, `wget`, `tar`, `ssh` and `ssh-keygen`.
+
 
 ### Download Brooklyn
 
@@ -21,24 +23,33 @@ Save the [Distro tgz]({{ this_dist_url_tgz }}) file to your home directory `~/`,
 Expand the `tar.gz` archive. {% if site.brooklyn-version contains 'SNAPSHOT' %}Each Distro is timestamped, so your filename will be different.{% endif %}
 
 {% if site.brooklyn-version contains 'SNAPSHOT' %}
-	$ tar -zxf brooklyn-dist-{{ site.version }}-timestamp-dist.tar.gz
+{% highlight bash %}
+$ tar -zxf brooklyn-dist-{{ site.version }}-timestamp-dist.tar.gz
+{% endhighlight %}
 {% else %}
-	$ tar -zxf brooklyn-dist-{{ site.version }}-dist.tar.gz
+{% highlight bash %}
+$ tar -zxf brooklyn-dist-{{ site.version }}-dist.tar.gz
+{% endhighlight %}
 {% endif %}
 
 This will create a `brooklyn-{{ site.version }}` folder.
 
 Let's setup some paths for easy commands.
 
-	$ cd brooklyn-{{ site.version }}
-	$ BROOKLYN_HOME=$(pwd)
-	$ export PATH=$PATH:$BROOKLYN_HOME/bin/
+{% highlight bash %}
+$ cd brooklyn-{{ site.version }}
+$ BROOKLYN_HOME=$(pwd)
+$ export PATH=$PATH:$BROOKLYN_HOME/bin/
+{% endhighlight %}
+
 
 ### A Quick Test Drive
 
 Running Brooklyn now will launch the web interface, but there will be little to do, as we haven't configured any deployment locations or added a service catalog. Check your progress by running:
 
-	$ brooklyn launch
+{% highlight bash %}
+$ brooklyn launch
+{% endhighlight %}
 
 Brooklyn will output the address of the management interface:
 
@@ -46,49 +57,62 @@ Brooklyn will output the address of the management interface:
 
 Stop Brooklyn with ctrl-c.
 
+
 ### Setting up Locations and Applications
 
 By default Brooklyn loads configuration parameters from `~/.brooklyn/brooklyn.properties` and a service catalog from `~/.brooklyn/catalog.xml`. 
 
-Create a .brooklyn folder:
 
-	$ mkdir ~/.brooklyn
+Create a `.brooklyn` folder in your home directory:
 
-Then download the following default/template files.
+{% highlight bash %}
+$ mkdir ~/.brooklyn
+{% endhighlight %}
 
-### brooklyn.properties
-Download the template [brooklyn.properties](brooklyn.properties) (to `~/.brooklyn`).
 
-brooklyn.properties is a standard java .properties file. 
+Next, set up the following default/template files in that directory:
 
-Edit this file (in any text editor) to add credentials for your favorite cloud.
+* **`brooklyn.properties`**: Download the template [brooklyn.properties](brooklyn.properties) 
+  and place this in `~/.brooklyn`.  This is a standard java `.properties` file,
+  which you can edit in your favourite text editor to add credentials for your favorite clouds.
 
-### catalog.xml
-Download the template [catalog.xml](catalog.xml) (to `~/.brooklyn`).
+* **`catalog.xml`**: Download the template [catalog.xml](catalog.xml) (also to`~/.brooklyn`).
+  This is a catalog of application blueprints. The example file contains some blueprints which will 
+  be automatically downloaded from the web if you run them.
+  You may need to edit this file (text editor) to ensure that the links to the demo application `.jar` files 
+  are correct for your version of Brooklyn.
 
-catalog.xml is catalog of application or service blueprints. The example file contains two demos which will be automatically downloaded from the web if you run them.
 
-Edit this file (text editor) and check that the links to the demo applications' .jars are valid. At the time of writing these were for version `0.5.0-SNAPSHOT`, but if this has changed you may need to update the links. <!-- BROOKLYN VERSION -->
+Finally, if you do not already have SSH keys installed (in `~/.ssh`, either `id_rsa` and `id_rsa.pub` or the 
+same for `id_dsa`), you will need to create keys for Brooklyn to use.
+If you're deploying to localhost, these should be added to your `authorized_keys` file.
 
-### SSH Key
-If this is a new machine, or you haven't used SSH before, you will need to create keys for Brooklyn to use, and add them your list of authorized_keys (for deployment to localhost). 
+{% highlight bash %}
+$ ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+$ cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+{% endhighlight %}
 
-	$ ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
-	$ cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+(*Existing SSH keys?*: If you are using an existing key SSH that has a passphrase, 
+or is not located at `~/.ssh/id_rsa`, you can point Brooklyn at these by setting 
+`brooklyn.location.localhost.privateKeyFile` and `brooklyn.location.localhost.privateKeyPassphrase` 
+in your `brooklyn.properties` file.)
 
-(Existing SSH keys?: If you are using an existing key SSH that has a password, or is not located at `~/.ssh/id_rsa`, please supply the `brooklyn.location.localhost.privateKeyFile` and `brooklyn.location.localhost.privateKeyPassphrase` in your `brooklyn.properties` file.)
+(*MacOSx user?*: To allow SSH access to localhost please enable 'Remote Login' in System Preferences > Sharing.)
 
-(MacOSx user?: To allow SSH access to localhost please enable 'Remote Login' in System Preferences > Sharing.)
 
 ### 3-2-1 Go!
 
 Now when we launch Brooklyn:
 
-	$ brooklyn launch
+{% highlight bash %}
+$ brooklyn launch
+{% endhighlight %}
 
-Brooklyn will use the `brooklyn.properties` and `catalog.xml` files. There will be more locations available in the management interface at [localhost:8081](http://localhost:8081), and the blueprints from the service catalog will be available for deployment.
+Brooklyn will use the `brooklyn.properties` and `catalog.xml` files. 
+The new locations will be available in the management interface at [localhost:8081](http://localhost:8081), 
+and the blueprints from the service catalog will be available for deployment.
 
-Click "add application". The Create Application dialog will appear.
+Start opening the "Create Application" dialog.  (This may open automatically, but if it does not, click "Add Application".)
 
 Select the "Demo Web Cluster with DB", then "Next".
 
@@ -97,6 +121,7 @@ For the time being we'll use "localhost" as our deployment location. Click "Fini
 You will see Brooklyn create an Application with status "STARTING".
 
 It make take some time for Brooklyn to download everything and configure the application's initial topography, so lets have a look at the web interface while we wait.
+
 
 ### Exploring the Hierarchy of Web Cluster with DB
 
@@ -107,6 +132,7 @@ Exploring the hierarchy tree, you will see that the Demo Web Cluster with DB is 
 Clicking on the `ControlledDynamicWebAppCluster` and then the Sensor tab will show if the cluster is ready to serve and, when ready, will provide a web address for the front of the loadbalancer.
 
 If the `service.isUp`, you can view the demo web application in your browser at the `webapp.url.`
+
 
 ### Testing the Policies
 
@@ -123,7 +149,9 @@ Sitting idle, your cluster will only contain one server, but you can check that 
 
 Brooklyn's policies are configurable, customizable, and can be completely bespoke to your needs. As an example, the `AutoScalerPolicy` is tunable, can be applied to any relevant metric (here, average requests per second), and is a sufficiently complex piece of math that it understand hysteresis and prevents thrashing.
 
+
 ### REST API Browser
+
 Click on the Script tab at the top of the web interface and select REST API. Brooklyn supports a REST, JSON and Java API to allow you to integrate it with (pretty much) anything.
 
 The Script tab allows you to explore the API.
@@ -132,12 +160,16 @@ Try: Locations > GET:/v1/locations > Try it out!
 
 You will be presented with a json response of the currently configured locations.
 
+
 ### Stopping the Web Cluster with DB
+
 By now the Web Cluster with DB should have started, and you will have been able to view the application in your browser. 
 
 Returning to the "Applications" tab, and selecting the `WebClusterDatabaseExample`'s Effectors, we can Invoke the Stop Effector. This will cleanly shutdown the Web Cluster with DB example.
 
+
 ### Deploying to Cloud
+
 The user experience of using the service catalog to deploy an application to a cloud is exactly the same as deploying to localhost. Brooklyn transparently handles the differences between locations and environments.
 
 Return to the Create Application dialog, reselect the Web Cluster with DB Demo, and select your public cloud of choice.
@@ -146,12 +178,15 @@ Return to the Create Application dialog, reselect the Web Cluster with DB Demo, 
 
 Remember to invoke the stop method when you are finished.
 
+
 ### Closing Thoughts
+
 This guide has shown two aspects of Brooklyn in action: policy driven management capability, and the service catalog/web interface. Additionally, we briefly explored Brooklyn's API.
 
 It is worth noting that Brooklyn could be included as a library in your own applications (no command line required), or it could be used just as a management plane (without a service catalog). 
 
 During this guide we have been using Brooklyn's web interface, but Brooklyn's APIs are extensive and powerful. Brooklyn can be used with (controlled by and make data available to) your existing management UI. Brooklyn is intended to complement (not replace) your existing technologies and tooling.
+
 
 ### Next 
 
