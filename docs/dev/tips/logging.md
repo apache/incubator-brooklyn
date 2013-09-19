@@ -44,13 +44,15 @@ For the most common customizations, simply create a ``logback-custom.xml`` on yo
 (ensuring it is loaded *before* brooklyn classes in classpath ordering in the pom)
 and supply your customizations there:  
 
-    <included>
-        <!-- filename to log to -->           
-        <property name="logging.basename" scope="context" value="acme-app" />
+{% highlight xml %}
+<included>
+    <!-- filename to log to -->           
+    <property name="logging.basename" scope="context" value="acme-app" />
     
-        <!-- additional loggers -->
-        <logger name="com.acme.app" level="DEBUG"/>
-    </included>
+    <!-- additional loggers -->
+    <logger name="com.acme.app" level="DEBUG"/>
+</included>
+{% endhighlight %}
 
 For other configuration, you can override individual files listed above.
 For example:
@@ -72,7 +74,10 @@ If you wish to supply your own ``logback.xml``, do **not** include ``brooklyn-lo
 
 You can set a specific logback config file to use with:
 
-    -Dlogback.configurationFile=/path/to/config.xml
+{% highlight bash %}
+-Dlogback.configurationFile=/path/to/config.xml
+{% endhighlight %}
+
 
 ## Assemblies
 
@@ -93,7 +98,7 @@ both in the IDE and in the assembly.
 
 ## Tests
 
-Brooklyn projects ``test`` scope includes the ``brooklyn--utils-test-support`` project
+Brooklyn projects ``test`` scope includes the ``brooklyn-utils-test-support`` project
 which supplies a ``logback-test.xml``. logback uses this file in preference to ``logback.xml``
 when available (ie when running tests). However the ``logback-test.xml`` Brooklyn uses
 includes the same ``logback-main.xml`` call path above, so your configurations should still work.
