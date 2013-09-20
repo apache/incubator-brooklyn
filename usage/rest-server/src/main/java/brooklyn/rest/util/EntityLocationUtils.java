@@ -5,6 +5,7 @@ import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
+import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.management.ManagementContext;
 
 public class EntityLocationUtils {
@@ -61,7 +62,7 @@ public class EntityLocationUtils {
         return false;
     }
     protected boolean isLocatedLocation(Location l) {
-        return l.getLocationProperty("latitude")!=null && l.getLocationProperty("longitude")!=null;
+        return l.getConfig(LocationConfigKeys.LATITUDE)!=null && l.getConfig(LocationConfigKeys.LONGITUDE)!=null;
     }
 
 }

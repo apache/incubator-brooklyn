@@ -88,7 +88,13 @@ public class SetFromFlagTest {
         MyEntity entity = new MyEntity(int1:"123")
         assertEquals(entity.int1, 123)
     }
-    
+
+    @Test
+    public void testSetIconUrl() {
+        MyEntity entity = new MyEntity(iconUrl:"/img/myicon.gif")
+        assertEquals(entity.getIconUrl(), "/img/myicon.gif")
+    }
+
     @Test(expectedExceptions=IllegalArgumentException.class)
     public void testFailsFastOnInvalidCoercion() {
         MyEntity entity = new MyEntity(int1:"thisisnotanint")

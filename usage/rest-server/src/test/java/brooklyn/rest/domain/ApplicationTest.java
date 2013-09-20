@@ -65,10 +65,14 @@ public class ApplicationTest {
   public void testAppInAppTest() throws IOException {
       TestApplicationImpl app = new TestApplicationImpl();
       ManagementContext mgmt = Entities.startManagement(app);
-      Entity e2 = app.addChild(new TestApplicationImpl());
-      Entities.manage(e2);
-      if (mgmt.getApplications().size()!=1)
-          Assert.fail("Apps in Apps should not be listed at top level: "+mgmt.getApplications());
+      try {
+          Entity e2 = app.addChild(new TestApplicationImpl());
+          Entities.manage(e2);
+          if (mgmt.getApplications().size()!=1)
+              Assert.fail("Apps in Apps should not be listed at top level: "+mgmt.getApplications());
+      } finally {
+          Entities.destroyAll(mgmt);
+      }
   }
 
 }

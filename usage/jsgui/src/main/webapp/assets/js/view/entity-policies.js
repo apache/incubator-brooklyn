@@ -23,28 +23,22 @@ define([
             "click .show-policy-config-modal":"showPolicyConfigModal"
         },
         initialize:function () {
+            _.bindAll(this)
             this.$el.html(this.template({ }));
             var that = this;
-            // fetch the list of policies and create a view for each one
+            // fetch the list of policies and create a row for each one
             that._policies = new PolicySummary.Collection();
             that._policies.url = that.model.getLinkByName("policies");
             
             this.loadedData = false;
             ViewUtils.fadeToIndicateInitialLoad(this.$('#policies-table'));
-            that.callPeriodically("entity-policies", function() {
-                that.refresh();
-            }, 3000);
-            that.refresh();
-        },
-
-        refresh:function() {
-            var that = this;
             that.render();
-            that._policies.fetch({ success:function () {
-                that.loadedData = true;
-                that.render();
-                ViewUtils.cancelFadeOnceLoaded(that.$('#policies-table'));
-            }});
+            this._policies.on("all", this.render, this)
+            ViewUtils.fetchRepeatedlyWithDelay(this, this._policies,
+                    { doitnow: true, success: function() {
+                        that.loadedData = true;
+                        ViewUtils.cancelFadeOnceLoaded(that.$('#policies-table'));
+                    }})
         },
 
         render:function () {
@@ -70,7 +64,7 @@ define([
                     if (that.activePolicy) {
                         that.$("#policies-table tr[id='"+that.activePolicy+"']").addClass("selected");
                         that.showPolicyConfig(that.activePolicy);
-                        that.refreshPolicyConfig(that);
+                        that.refreshPolicyConfig();
                     } else {
                         that.$("#policy-config").hide();
                         that.$("#policy-config-none-selected").show();
@@ -85,7 +79,7 @@ define([
         },
 
         refreshPolicyConfigNow:function () {
-            this.refreshPolicyConfig(this);  
+            this.refreshPolicyConfig();  
         },
 
         rowClick:function(evt) {
@@ -107,8 +101,11 @@ define([
                 // fetch the list of policy config entries
                 that._config = new PolicyConfigSummary.Collection();
                 that._config.url = policy.getLinkByName("config");
+                ViewUtils.fadeToIndicateInitialLoad($('#policy-config-table'))
+                that.showPolicyConfig(id);
                 that._config.fetch({ success:function () {
                     that.showPolicyConfig(id);
+                    ViewUtils.cancelFadeOnceLoaded($('#policy-config-table'))
                 }});
             }
         },
@@ -152,10 +149,10 @@ define([
                     $table.dataTable().fnAdjustColumnSizing();
                 }
             }
-            that.refreshPolicyConfig(that);
+            that.refreshPolicyConfig();
         },
 
-        refreshPolicyConfig:function (that) {
+        refreshPolicyConfig:function() {
             if (that.viewIsClosed) return;
             var $table = that.$('#policy-config-table').dataTable(),
                 $rows = that.$("tr.policy-config-row");
@@ -195,7 +192,7 @@ define([
                 type:"POST",
                 url:url,
                 success:function() {
-                    that.refresh();
+                    that._policies.fetch();
                 }
             });
         }

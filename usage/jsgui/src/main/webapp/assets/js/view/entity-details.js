@@ -15,10 +15,6 @@ define([
         },
         initialize:function () {
             this.$el.html(this.template({}))
-            this.summaryView = new SummaryView({
-                model:this.model,
-                application:this.options.application
-            })
             this.configView = new ConfigView({
                 model:this.model
             })
@@ -34,6 +30,11 @@ define([
             this.activitiesView = new ActivitiesView({
                 model:this.model,
                 collection:new TaskSummary.Collection
+            })
+            this.summaryView = new SummaryView({
+                model:this.model,
+                application:this.options.application,
+                sensors:this.sensorsView.model
             })
             this.$("#summary").html(this.summaryView.render().el)
             this.$("#config").html(this.configView.render().el)
@@ -61,10 +62,14 @@ define([
         },
         tabSelected: function(event) {
             var tabName = $(event.currentTarget).attr("href").slice(1)
-            var entityId = $(".applications span.active").attr("id")
-            var entityHref = $(".applications span.active a").attr("href")
-            window.history.pushState(entityId+"/"+tabName, "", 
+            var entityId = $("#app-tree .entity_tree_node_wrapper.active").attr("id")
+            var entityHref = $("#app-tree .entity_tree_node_wrapper.active a").attr("href")
+            if (entityId && entityHref) {                
+                window.history.pushState(entityId+"/"+tabName, "", 
                     entityHref+"/"+tabName);
+            } else {
+                window.history.pushState("notfound", "", "#/v1/applications")
+            }
         }
     });
     return EntityDetailsView;

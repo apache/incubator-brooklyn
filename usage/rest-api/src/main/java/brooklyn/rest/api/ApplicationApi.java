@@ -25,12 +25,23 @@ public interface ApplicationApi {
   @ApiOperation(
       value = "Fetch applications and entities tree hierarchy"
   )
+  /** @deprecated since 0.6.0 use {@link #fetch(String)} (with slightly different, but better semantics) */
+  @Deprecated
   public JsonNode applicationTree();
    
+  @GET
+  @Path("/fetch")
+  @ApiOperation(
+      value = "Fetch display details for all applications and optionally selected additional entities"
+  )
+  public JsonNode fetch(
+          @ApiParam(value="Selected additional entity ID's to include, comma-separated", required=false)
+          @DefaultValue("")
+          @QueryParam("items") String items);
 
   @GET
   @ApiOperation(
-      value = "Fetch list of applications",
+      value = "Fetch list of applications, as ApplicationSummary objects",
       responseClass = "brooklyn.rest.domain.ApplicationSummary"
   )
   public Iterable<ApplicationSummary> list() ;

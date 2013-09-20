@@ -157,7 +157,9 @@ public class RebindEntityTest {
     
     @Test
     public void testRestoresEntityIdAndDisplayName() throws Exception {
-        MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).displayName("mydisplayname"));
+        MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class)
+                .displayName("mydisplayname")
+                .configure("iconUrl", "file:///tmp/myicon.png"));
         String eId = origE.getId();
         
         newApp = rebind();

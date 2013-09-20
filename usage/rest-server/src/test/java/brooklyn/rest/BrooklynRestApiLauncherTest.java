@@ -3,7 +3,8 @@ package brooklyn.rest;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.reflections.util.ClasspathHelper;
-import org.testng.annotations.AfterTest;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
@@ -20,7 +21,7 @@ public class BrooklynRestApiLauncherTest {
 
     Server server = null;
     
-    @AfterTest
+    @AfterMethod(alwaysRun=true)
     public void stopServer() throws Exception {
         if (server!=null) {
             ManagementContext mgmt = getManagementContextFromJettyServerAttributes(server);
@@ -33,19 +34,28 @@ public class BrooklynRestApiLauncherTest {
     
     @Test
     public void testFilterStart() throws Exception {
-        checkRestCatalogApplications(BrooklynRestApiLauncher.startRestResourcesViaFilter());
+        checkRestCatalogApplications(useServerForTest(BrooklynRestApiLauncher.startRestResourcesViaFilter()));
     }
 
     @Test
     public void testServletStart() throws Exception {
-        checkRestCatalogApplications(BrooklynRestApiLauncher.startRestResourcesViaServlet());
+        checkRestCatalogApplications(useServerForTest(BrooklynRestApiLauncher.startRestResourcesViaServlet()));
     }
 
     @Test
     public void testWebAppStart() throws Exception {
-        checkRestCatalogApplications(BrooklynRestApiLauncher.startRestResourcesViaWebXml());
+        checkRestCatalogApplications(useServerForTest(BrooklynRestApiLauncher.startRestResourcesViaWebXml()));
     }
 
+    protected Server useServerForTest(Server server) {
+        if (this.server!=null) {
+            Assert.fail("Test only meant for single server; already have "+server+" when checking "+server);
+        } else {
+            this.server = server;
+        }
+        return server;
+    }
+    
     private static void checkRestCatalogApplications(Server server) {
         enableAnyoneLogin(server);
         forceUseOfDefaultCatalogWithJavaClassPath(server);

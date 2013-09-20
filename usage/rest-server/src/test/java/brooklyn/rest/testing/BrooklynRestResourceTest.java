@@ -31,6 +31,7 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
     @AfterClass(alwaysRun = false)
     public void tearDown() throws Exception {
         tearDownJersey();
+        super.tearDown();
     }
 
     protected void waitForApplicationToBeRunning(final URI applicationRef) {

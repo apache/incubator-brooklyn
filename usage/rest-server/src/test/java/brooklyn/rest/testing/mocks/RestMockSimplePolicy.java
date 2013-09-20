@@ -19,6 +19,7 @@ public class RestMockSimplePolicy extends AbstractPolicy {
         super();
     }
 
+    @SuppressWarnings("rawtypes")
     public RestMockSimplePolicy(Map flags) {
         super(flags);
     }

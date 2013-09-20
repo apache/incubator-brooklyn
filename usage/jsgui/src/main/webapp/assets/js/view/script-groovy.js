@@ -61,10 +61,10 @@ define([
                 contentType:"application/text",
                 success:function (data) {
                     $(".output .throbber", that.$el).hide()
-                    that.updateTextareaWithData($(".output .result"), data.result, true);
-                    that.updateTextareaWithData($(".output .error"), data.problem, false);
-                    that.updateTextareaWithData($(".output .stdout"), data.stdout, false);
-                    that.updateTextareaWithData($(".output .stderr"), data.stderr, false);
+                    that.updateTextareaWithData($(".output .result"), data.result, true, true);
+                    that.updateTextareaWithData($(".output .error"), data.problem, false, true);
+                    that.updateTextareaWithData($(".output .stdout"), data.stdout, false, true);
+                    that.updateTextareaWithData($(".output .stderr"), data.stderr, false, true);
                 },
                 error: function(data) {
                     $(".output .throbber", that.$el).hide()

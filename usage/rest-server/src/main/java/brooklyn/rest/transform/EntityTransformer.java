@@ -1,17 +1,19 @@
 package brooklyn.rest.transform;
 
+import java.lang.reflect.Field;
+import java.net.URI;
+import java.util.Map;
+
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.util.JsonUtils;
-import com.google.common.collect.ImmutableMap;
 
-import java.lang.reflect.Field;
-import java.net.URI;
-import java.util.Map;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * @author Adam Lowe
@@ -34,6 +36,8 @@ public class EntityTransformer {
                 .put("policies", URI.create(entityUri + "/policies"))
                 .put("activities", URI.create(entityUri + "/activities"))
                 .put("catalog", URI.create("/v1/catalog/entities/" + type));
+        if (entity.getIconUrl()!=null)
+            lb.put("iconUrl", URI.create(entityUri + "/icon"));
 
         return new EntitySummary(entity.getId(), entity.getDisplayName(), type, lb.build());
     }
@@ -74,6 +78,14 @@ public class EntityTransformer {
         return entityConfigSummary(config, label, priority, links);
     }
 
+    public static String applicationUri(Application entity) {
+        return "/v1/applications/" + entity.getApplicationId();
+    }
+    
+    public static String entityUri(Entity entity) {
+        return applicationUri(entity.getApplication()) + "/entities/" + entity.getId();
+    }
+    
     protected static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, Field configKeyField) {
         CatalogConfig catalogConfig = configKeyField!=null ? configKeyField.getAnnotation(CatalogConfig.class) : null;
         String label = catalogConfig==null ? null : catalogConfig.label();

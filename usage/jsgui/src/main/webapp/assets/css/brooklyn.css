@@ -99,14 +99,12 @@ textarea {
 .row-fluid .span4 {
     width: 300px !important;
     margin-left: 34px !important;
-    float: left !important;
     margin-top: 10px !important
 }
 
 .row-fluid .span8 {
-    width: 607px !important;
+    width: 618px !important;
     margin-right: -26px !important;
-    float: left !important;
     margin-top: 10px !important
 }
 
@@ -227,3 +225,14 @@ textarea {
 /*APP PAGE*/
 
 /* END KROME STYLES */
+
+.view_not_available {
+	/*
+    // nothing yet; idea is to put CSS here which will show a 'Not Available' message.
+    // but it is hard to position it without assuming or introducing position-absolute on the parent.
+    // probably need to mess with the hierarchy, or make such an assumption.
+    // also there is the issue the (currently) the parent view has had opacity set to 0.2.
+    // used in viewutils.js fade/cancelFade methods (and should be only those!)
+    content: 'Not Available';
+	*/
+}

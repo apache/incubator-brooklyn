@@ -3,6 +3,8 @@ package brooklyn.entity;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.proxying.EntitySpec;
@@ -43,6 +45,11 @@ public interface Entity extends Rebindable {
      * A display name; recommended to be a concise single-line description.
      */
     String getDisplayName();
+    
+    /** 
+     * A URL pointing to an image which can be used to represent this icon.
+     */
+    @Nullable String getIconUrl();
     
     /**
      * Information about the type of this entity; analogous to Java's object.getClass.

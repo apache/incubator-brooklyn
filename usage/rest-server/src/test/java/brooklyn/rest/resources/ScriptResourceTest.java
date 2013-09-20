@@ -19,15 +19,18 @@ public class ScriptResourceTest {
         RestMockApp app = new RestMockApp();
         Entities.startManagement(app);
         ManagementContext mgmt = app.getManagementContext();
+        try {
         
-        Entities.start(app, Collections.<Location>emptyList());
+            Entities.start(app, Collections.<Location>emptyList());
+
+            ScriptResource s = new ScriptResource();
+            s.injectManagementContext(mgmt);
+
+            ScriptExecutionSummary result = s.groovy(null, "def apps = []; mgmt.applications.each { println 'app:'+it; apps << it.id }; apps");
+            Assert.assertEquals(Collections.singletonList(app.getId()).toString(), result.getResult());
+            Assert.assertTrue(result.getStdout().contains("app:RestMockApp"));
         
-        ScriptResource s = new ScriptResource();
-        s.injectManagementContext(mgmt);
-        
-        ScriptExecutionSummary result = s.groovy(null, "def apps = []; mgmt.applications.each { println 'app:'+it; apps << it.id }; apps");
-        Assert.assertEquals(Collections.singletonList(app.getId()).toString(), result.getResult());
-        Assert.assertTrue(result.getStdout().contains("app:RestMockApp"));
+        } finally { Entities.destroyAll(mgmt); }
     }
     
 }

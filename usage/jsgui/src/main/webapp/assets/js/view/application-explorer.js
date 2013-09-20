@@ -4,10 +4,10 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone", 
+    "underscore", "jquery", "backbone", "view/viewutils", 
     "./application-add-wizard", "model/app-tree", "./application-tree", 
     "text!tpl/apps/page.html"
-], function (_, $, Backbone, AppAddWizard, AppTree, ApplicationTreeView, PageHtml) {
+], function (_, $, Backbone, ViewUtils, AppAddWizard, AppTree, ApplicationTreeView, PageHtml) {
 
     var ApplicationExplorerView = Backbone.View.extend({
         tagName:"div",
@@ -15,33 +15,31 @@ define([
         id:'application-explorer',
         template:_.template(PageHtml),
         events:{
-            'click .application-tree-refresh': 'refreshApplications',
+            'click .application-tree-refresh': 'refreshApplicationsInPlace',
             'click #add-new-application':'createApplication',
             'click .delete':'deleteApplication'
         },
         initialize:function () {
+            var that = this;
             this.$el.html(this.template({}))
             $(".nav1").removeClass("active");
             $(".nav1_apps").addClass("active");
 
-            this.collection.on('reset', this.render, this)
             this.treeView = new ApplicationTreeView({
                 collection:this.collection
             })
-            this.$('div#tree-list').html(this.treeView.render().el)
-            this.treeView.render()
+            this.$('div#app-tree').html(this.treeView.renderFull().el)
+            this.collection.fetch({reset: true})
+            ViewUtils.fetchRepeatedlyWithDelay(this, this.collection)
+        },
+        refreshApplicationsInPlace: function() {
+            // fetch without reset sets of change events, which now get handled correctly
+            // (not a full visual recompute, which reset does - both in application-tree.js)
+            this.collection.fetch();
         },
         beforeClose:function () {
             this.collection.off("reset", this.render)
             this.treeView.close()
-        },
-        render:function () {
-            return this
-        },
-        
-        refreshApplications:function () {
-            this.collection.fetch({reset: true})
-            return false
         },
         show: function(entityId) {
             this.treeView.displayEntityId(entityId)
@@ -57,7 +55,7 @@ define([
             }
             var wizard = new AppAddWizard({
             	appRouter:that.options.appRouter,
-            	callback:function() { that.refreshApplications() }
+            	callback:function() { that.refreshApplicationsInPlace() }
         	})
             this._modal = wizard
             this.$(".add-app #modal-container").html(wizard.render().el)

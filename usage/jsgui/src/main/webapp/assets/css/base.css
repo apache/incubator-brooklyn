@@ -28,9 +28,6 @@
 add-app .tab-content-scroller {
     overflow: auto !important;
 }
-#application-content div#application-explorer {
-    padding-left: 52px;
-}
 #application-content div#details {
 	margin-left: 8px !important;
 }
@@ -158,6 +155,7 @@ ul.dropdown-menu {
 	border-bottom: 1px solid #DDD;
 	padding-left: 8px;
 	padding-right: 8px;
+	height: 35px;
 }
 
 .nav-tabs>li>a {
@@ -444,6 +442,27 @@ input[type="color"]:focus,.uneditable-input:focus {
     border-left: 1px solid #DDD;
     min-height: 300px;
 }
+
+.navbar_top {
+    background-color: #D0D8D0;
+    padding: 8px 12px 12px 12px;
+    -webkit-border-radius: 4px 4px 0 0;
+    -moz-border-radius: 4px 4px 0 0;
+    border-radius: 4px 4px 0 0;
+}
+.navbar_main_wrapper {
+    background-color: #F0F4F0;
+    -webkit-border-radius: 0 0 4px 4px;
+    -moz-border-radius: 0 0 4px 4px;
+    border-radius: 0 0 4px 4px;
+}
+.navbar_main {
+    overflow-x: auto;
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* traditional tree-style (clickable + icons) tree-list */
 #tree-list {
 }
 ol.tree {
@@ -470,25 +489,11 @@ ol.tree {
 #tree-list li input + ol {
     height: auto;
 }
-.navbar_top {
-	background-color: #D0D8D0;
-	padding: 8px 12px 12px 12px;
-    -webkit-border-radius: 4px 4px 0 0;
-    -moz-border-radius: 4px 4px 0 0;
-    border-radius: 4px 4px 0 0;
-}
-.navbar_main_wrapper {
-    background-color: #F0F4F0;
+.navbar_main_wrapper.treelist {
     padding: 12px 6px 4px 6px;
-    -webkit-border-radius: 0 0 4px 4px;
-    -moz-border-radius: 0 0 4px 4px;
-    border-radius: 0 0 4px 4px;
 }
-.navbar_main {
-	padding: 0px 8px 6px 2px;
-	overflow-x: auto;
-	margin: 0;
-	white-space: nowrap;
+.navbar_main.treelist {
+    padding: 0px 8px 6px 2px;
 }
 
 .label-message {
@@ -525,10 +530,13 @@ ol.tree {
 	cursor: hand; cursor: pointer;
 }
 .entity_tree_node:hover {
-	text-decoration: underline;
 	cursor: hand; cursor: pointer;
 }
-.entity_tree_node.active {
+.entity_tree_node a:hover {
+	color: #54932b !important;
+	text-decoration: none;
+}
+.entity_tree_node_wrapper.active .entity_tree_node {
     font-weight: bold;
 }
 #tree label {
@@ -542,13 +550,105 @@ line-height: 18px;
     width: auto;
 }
 
+/* new lozenge-style tree-list */
+.navbar_main_wrapper .treeloz {
+    padding: 12px 0px 20px 0px;
+}
+.navbar_main .treeloz {
+    padding: 0px 0px 0px 0px;
+}
+.lozenge-app-tree-wrapper {
+    min-width: 100%;
+    min-height: 240px;
+    padding-bottom: 60px; /* for popup menu */
+    margin-top: -2px;
+    position: relative; 
+    float: left;
+}
+.entity_tree_node_wrapper {
+	position: relative;
+}
+.tree-box {
+    border: 1px solid #AAA;
+    border-right: 0px;
+    margin-top: 3px;
+    padding-top: 2px;
+    background-color: #EAECEA;
+}
+.tree-box.outer {
+    margin-left: 12px;
+    margin-right: 0px;
+    margin-bottom: 14px;
+    -webkit-border-radius: 4px 0 0 4px !important;
+    -moz-border-radius: 4px 0 0 4px !important;
+    border-radius: 4px 0 0 4px  !important;
+    padding-left: 4px;
+    padding-bottom: 4px;
+}
+.tree-box.inner {
+    margin-bottom: 2px;
+    border: 1px solid #BBB;
+    border-right: 0px;
+    -webkit-border-radius: 3px 0 0 3px !important;
+    -moz-border-radius: 3px 0 0 3px !important;
+    border-radius: 3px 0 0 3px  !important;
+    padding-left: 6px;
+    padding-bottom: 2px;
+    margin-left: 3px;
+}
+.tree-box.inner.depth-first {
+	margin-left: 8px;
+}
+.tree-box.inner.depth-odd {
+    background-color: #D8DAD8;
+}
+.tree-box.inner.depth-even {
+    background-color: #EAECEA;
+}
+.tree-node {
+    position: relative;
+    padding-top: 2px;
+    padding-bottom: 1px;
+    padding-right: 8px;
+}
+.light-popup {
+    display: none;
+    position: relative;
+    top: 12px;
+    float: left;
+    z-index: 1;
+}
+.toggler-icon .light-popup {
+    padding-top: 4px;
+}
+.light-popup-body {
+    padding: 3px 0px;
+	background-color: #606060;
+	color: #CDC;
+	font-weight: 300;
+	font-size: 85%;
+    border: 1px dotted #CDC;
+    -webkit-border-radius: 2px 2px 2px 2px !important;
+    -moz-border-radius: 2px 2px 2px 2px !important;
+    border-radius: 2px 2px 2px 2px !important;
+}
+.light-popup-menu-item {
+	color: #D0D4D0;
+}
+.light-popup-menu-item.tr-default {
+    color: #E0E4E0;
+}
+.light-popup-menu-item {
+    padding: 1px 6px;
+}
+.light-popup-menu-item:hover {
+    background-color: #58AA33;
+    color: #000;
+}
+
 .app-summary .inforow > div { display: inline-block; }
 .app-summary .inforow .info-name-value > div { display: inline-block; }
 .app-summary .inforow .info-name-value .name { font-weight: 700; width: 120px; padding-right: 12px;}
-.app-summary .inforow .info-name-value.id { margin-bottom: 6px; }
-.app-summary .inforow .info-name-value.serviceUp { margin-top: 6px; }
-.app-summary > .name { margin-bottom: 12px; }
-.app-summary .json { margin-top: 18px; }
 
 table.dataTable tbody td.row-expansion {
     background: #D8E4D0;
@@ -924,7 +1024,6 @@ tr.app-add-wizard-config-entry {
 	width: 100%;
 	cursor: auto;
 	margin-bottom: 2px;
-	min-height: 500px;
 }
 
 /* catalog */
@@ -1026,9 +1125,16 @@ swagger-ui-container{
 }
 
 /** groovy script */
+#groovy-ui-container .hide {
+	display: none !important;
+}
+#groovy-ui-container .throbber {
+    padding-top: 8px;
+}
 #groovy-ui-container textarea {
 	width: 100%;
 	height: 8em;
+	margin-right: 4px;
 	font-family: Consolas, Lucida Console, Monaco, monospace;
 	white-space: pre;
 	word-wrap: normal; 
@@ -1072,7 +1178,8 @@ swagger-ui-container{
 
 /** trick for making textareas with width 100% line up (silly width 100% excludes padding) */
 div.for-textarea {
-	padding-left: 0.6em;
+	padding-left: 0.8em;
+	padding-right: 0.4em;
 }
 div.for-textarea > textarea {
 	padding-left: 0.3em;
@@ -1137,19 +1244,15 @@ input[type="file"] {
 	font-size: 120%;
 }
 
+.toggler-header {
+    background-color: #D8DCD8;
+    padding: 2px 6px 2px 6px;
+}
 .activity-detail-panel .subpanel-header-row {
 	margin-bottom: 12px;
 }
 .activity-detail-panel .toggler-region {
 	margin-bottom: 12px;
-}
-.activity-detail-panel .toggler-header {
-    background-color: #D8DCD8;
-    padding: 2px 6px 2px 6px;
-}
-.activity-detail-panel .toggler-header {
-    background-color: #D8DCD8;
-    padding: 2px 6px 2px 6px;
 }
 .activity-detail-panel .toggler-region .activity-details-section {
 	margin: 4px 6px 0px 6px;
@@ -1165,4 +1268,16 @@ input[type="file"] {
 .activity-detail-panel .toggler-region.tasks-submitted .table-scroll-wrapper,
 .activity-detail-panel .toggler-region.tasks-children .table-scroll-wrapper {
 	margin-bottom: 18px;
+}
+
+.activity-tag-giftlabel {
+    background-color: #E0E4E0;
+    padding: 2px 4px 2px 4px;
+    margin-bottom: 4px;
+    margin-right: 5px;
+    -webkit-border-radius: 3px 3px 3px 3px !important;
+    -moz-border-radius: 3px 3px 3px 3px !important;
+    border-radius: 3px 3px 3px 3px !important;
+    display: inline-block;
+    white-space: nowrap;
 }

@@ -1,5 +1,19 @@
 package brooklyn.rest.transform;
 
+import static brooklyn.rest.domain.Status.ACCEPTED;
+import static brooklyn.rest.domain.Status.RUNNING;
+import static brooklyn.rest.domain.Status.STARTING;
+import static brooklyn.rest.domain.Status.STOPPED;
+import static brooklyn.rest.domain.Status.STOPPING;
+import static brooklyn.rest.domain.Status.UNKNOWN;
+
+import java.net.URI;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
@@ -8,32 +22,12 @@ import brooklyn.location.Location;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.Status;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.net.URI;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-
-import static brooklyn.rest.domain.Status.*;
 
 public class ApplicationTransformer {
-
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(ApplicationTransformer.class);
-
-    private final static Map<Status, Status> validTransitions =
-            ImmutableMap.<Status, Status>builder()
-                    .put(Status.UNKNOWN, Status.ACCEPTED)
-                    .put(Status.ACCEPTED, Status.STARTING)
-                    .put(Status.STARTING, Status.RUNNING)
-                    .put(Status.RUNNING, Status.STOPPING)
-                    .put(Status.STOPPING, Status.STOPPED)
-                    .put(Status.STOPPED, Status.STARTING)
-                    .build();
 
     public static final Function<? super Application, ApplicationSummary> FROM_APPLICATION = new Function<Application, ApplicationSummary>() {
         @Override

@@ -3,6 +3,7 @@
         "name":"test",
         "id":"riBZUjMq",
         "type":null,
+        "childrenIds": ["tomcat1"],
         "children":[
             {
                 "name":"tomcat1",
@@ -15,6 +16,7 @@
         "name":"test2",
         "id":"app-002",
         "type":null,
+        "childrenIds": ["child-01", "child-02"],
         "children":[
             {
                 "name":"tomcat1",
