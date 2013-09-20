@@ -85,5 +85,55 @@ $(document).ready(function() {
 <img src="/assets/img/glyphicons-halflings.png"/>
 
 
+<br/><br/>
+<div><b>Debug Config</b></div><br/>
+
+<script>
+var updateGlobalRefreshDisplay = function() {
+    require(["brooklyn"], function(b) {
+        $('#globalRefresh').html(''+b.refresh)
+    })    
+}
+
+var toggleGlobalRefresh = function() {
+  require(["brooklyn"], function(b) {
+      b.toggleRefresh();
+      updateGlobalRefreshDisplay();
+  })    
+}
+
+$(document).ready(function() {
+    updateGlobalRefreshDisplay()
+})
+</script>
+
+Brooklyn Global Auto Refresh is: <b><span id="globalRefresh">?</span>
+<span onclick="javascript:toggleGlobalRefresh()"><i>[change]</i></span></b>
+<br/><span><i>(this setting controls whether things do auto refresh;
+disabling globally can be helpful when testing)</i></span>
+
+
+
+<br/><br/>
+<div><b>Debug Config</b></div><br/>
+
+<script>
+var fadeHello = function() {
+    require(["view/viewutils"], function(v) {
+        log('fading')
+        v.fadeToIndicateInitialLoad($('#hello'))
+    })    
+}
+var showHello = function() {
+    require(["view/viewutils"], function(v) {
+        log('unfading')
+        v.cancelFadeOnceLoaded($('#hello'))
+    })    
+}
+</script>
+<div id="hello">I'm a region which fades.</div>
+<div><span onclick="javascript:fadeHello()">fade</span>  <span onclick="javascript:showHello()">show</span></div>
+
+
 </div>
 </div>

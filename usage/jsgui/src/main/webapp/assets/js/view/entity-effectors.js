@@ -48,7 +48,9 @@ define([
                     $tableBody.append(that.effectorRow({
                         name:effector.get("name"),
                         description:effector.get("description"),
-                        cid:effector.cid
+                        // cid is mapped to id (here) which is mapped to name (in Effector.Summary), 
+                        // so it is consistent across resets
+                        cid:effector.id
                     }))
                 })
             }
@@ -57,9 +59,10 @@ define([
         showEffectorModal:function (eventName) {
             // get the model that we need to show, create its view and show it
             var cid = $(eventName.currentTarget).attr("id")
+            var effectorModel = this._effectors.get(cid);
             this._modal = new EffectorInvokeView({
                 el:"#effector-modal",
-                model:this._effectors.get(cid),
+                model:effectorModel,
                 entity:this.model
             })
             this._modal.render().$el.modal('show')

@@ -5,6 +5,7 @@ define([
     var EffectorSummary = {}
 
     EffectorSummary.Model = Backbone.Model.extend({
+        idAttribute: 'name',
         defaults:function () {
             return {
                 name:"",

@@ -68,7 +68,10 @@ define([
 
         removeNode: function(id) {
             $('#'+id, this.$el).parent().remove()
-            if (this.collection.isEmpty())
+            // collection seems sometimes to have children nodes;
+            // not sure why, but that's okay for now
+            if (this.collection.getApplications().length==0)
+//            if (this.collection.isEmpty() || $('lozenge-app-tree-wrapper').length==0)
                 this.renderFull();
         },
         
@@ -167,7 +170,7 @@ define([
             this.$el.empty()
 
             // Display tree and highlight the selected entity.
-            if (this.collection.isEmpty()) {
+            if (this.collection.getApplications().length==0) {
                 that.$el.append(_.template(TreeEmptyHtml))
             } else {
                 _.each(this.collection.getApplications(),

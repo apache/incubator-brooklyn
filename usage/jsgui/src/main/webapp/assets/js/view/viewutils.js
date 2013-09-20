@@ -1,6 +1,6 @@
 define([
-        "underscore", "jquery"
-], function (_, $) {
+        "underscore", "jquery", "brooklyn"
+], function (_, $, BrooklynConfig) {
 
     var ViewUtils = {
         myDataTable:function($table, extra) {
@@ -230,23 +230,48 @@ define([
             // in case the server response time is low, fade out while it refreshes
             // (since we can't show updated details until we've retrieved app + entity details)
             try {                
-                $el.fadeTo(1000, 0.3);
+                $el.fadeTo(1000, 0.3)
+//                    .queue(
+//                        function() {
+//                            // does nothing yet -- see comment in brooklyn.css on .view_not_available
+//                            $el.append('<div class="view_not_available"></div>')
+//                        });
+                // above works to insert the div, though we don't have styling on it
+                // but curiously it also causes the parent to go to opacity 0 !?! 
             } catch (e) {
                 // ignore - normal during tests
             }
         },
         cancelFadeOnceLoaded: function($el) {
             try {
+//                $el.children('.view_not_available').remove();
                 $el.stop(true, false).fadeTo(200, 1);
             } catch (e) {
                 // ignore - normal during tests
             }
         },
+        
+        
+        
+        // TODO the get and fetch methods below should possibly be on a BrooklynView prototype
+        // see also notes in router.js
+        // (perhaps as part of that introduce a callWithFixedDelay method which does the tracking, 
+        // so we can cleanly unregister, and perhaps an onServerFailure method, and with that we 
+        // could perhaps get rid of, or at least dramatically simplify, the get/fetch)
+        
         /* variant of $.get with automatic failure handling and recovery;
          * options should be omitted except by getRepeatedlyWithDelay */
         get: function(view, url, success, options) {
             if (view.viewIsClosed) return ;
-            if (options['enablement'] && !options['enablement']()) {
+            
+            if (!options) options = {}
+            if (!options.count) options.count = 1
+            else options.count++;
+//          log("getting, count "+options.count+", delay "+period+": "+url)
+            
+            var disabled = (options['enablement'] && !options['enablement']()) 
+                || !BrooklynConfig.refresh
+            if (options.count > 1 && disabled) {
                 // not enabled, just requeue
                 if (options['period']) 
                     setTimeout(function() { ViewUtils.get(view, url, success, options)}, options['period'])
@@ -353,13 +378,21 @@ define([
          *   error (optional function to invoke on error, before requeueing);
          */
         fetchRepeatedlyWithDelay: function(view, model, options) {
+            if (view.viewIsClosed) return;
+            
             if (!options) options = {}
+            if (!options.count) options.count = 1
+            else options.count++;
+            
             var period = options['period'] || 3000
             var originalPeriod = options['originalPeriod'] || period
-//            log("fetching "+model.url+" with delay "+period)
+//            log("fetching, count "+options.count+", delay "+period+": "+model.url)
+            
             var fetcher = function() {
                 if (view.viewIsClosed) return;
-                if (options['enablement'] && !options['enablement']()) {
+                var disabled = (options['enablement'] && !options['enablement']()) 
+                    || !BrooklynConfig.refresh
+                if (options.count > 1 && disabled) {
                     // not enabled, just requeue
                     ViewUtils.fetchRepeatedlyWithDelay(view, model, options);
                     return;
