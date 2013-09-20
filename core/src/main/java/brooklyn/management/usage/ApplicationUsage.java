@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.management.usage;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import brooklyn.entity.basic.Lifecycle;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;

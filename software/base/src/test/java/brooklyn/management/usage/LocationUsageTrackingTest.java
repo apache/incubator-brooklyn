@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.management.usage;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -11,14 +11,17 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.SoftwareProcessEntityTest;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.LocationUsage;
-import brooklyn.location.basic.LocationUsage.LocationEvent;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.usage.LocationUsage.LocationEvent;
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.base.Predicates;
@@ -46,7 +49,7 @@ public class LocationUsageTrackingTest {
 
     @Test
     public void testUsageInitiallyEmpty() {
-        Set<LocationUsage> usage = managementContext.getLocationManager().getLocationUsage(Predicates.alwaysTrue());
+        Set<LocationUsage> usage = managementContext.getUsageManager().getLocationUsage(Predicates.alwaysTrue());
         assertEquals(usage, ImmutableSet.of());
     }
 
@@ -60,7 +63,7 @@ public class LocationUsageTrackingTest {
         long postStart = System.currentTimeMillis();
         SshMachineLocation machine = Iterables.getOnlyElement(loc.getAllMachines());
         
-        Set<LocationUsage> usages1 = managementContext.getLocationManager().getLocationUsage(Predicates.alwaysTrue());
+        Set<LocationUsage> usages1 = managementContext.getUsageManager().getLocationUsage(Predicates.alwaysTrue());
         LocationUsage usage1 = Iterables.getOnlyElement(usages1);
         List<LocationEvent> events1 = usage1.getEvents();
         LocationEvent event1 = Iterables.getOnlyElement(events1);
@@ -76,7 +79,7 @@ public class LocationUsageTrackingTest {
         app.stop();
         long postStop = System.currentTimeMillis();
 
-        Set<LocationUsage> usages2 = managementContext.getLocationManager().getLocationUsage(Predicates.alwaysTrue());
+        Set<LocationUsage> usages2 = managementContext.getUsageManager().getLocationUsage(Predicates.alwaysTrue());
         LocationUsage usage2 = Iterables.getOnlyElement(usages2);
         List<LocationEvent> events2 = usage2.getEvents();
         LocationEvent event2 = events2.get(1);

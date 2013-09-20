@@ -95,4 +95,5 @@ public interface EntityInternal extends EntityLocal {
     @Beta
     Effector<?> getEffector(String effectorName);
     
+    Map<String, String> toMetadataRecord();
 }

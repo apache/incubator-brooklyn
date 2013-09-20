@@ -4,34 +4,26 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.InternalLocationFactory;
-import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocation;
-import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationInternal;
-import brooklyn.location.basic.LocationUsage;
 import brooklyn.management.AccessController;
 import brooklyn.management.LocationManager;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class LocalLocationManager implements LocationManager {
-
-    public static final String LOCATION_USAGE_KEY = "location-usage";
 
     private static final Logger log = LoggerFactory.getLogger(LocalLocationManager.class);
 
@@ -128,7 +120,7 @@ public class LocalLocationManager implements LocationManager {
                 if (result) {
                     it.setManagementContext(managementContext);
                     it.onManagementStarted();
-                    storeLocationEvent(Lifecycle.CREATED, it);
+                    recordLocationEvent(it, Lifecycle.CREATED);
                     managementContext.getRebindManager().getChangeListener().onManaged(it);
                 }
                 return result;
@@ -147,7 +139,7 @@ public class LocalLocationManager implements LocationManager {
             if (result) {
                 it.onManagementStopped(); 
                 managementContext.getRebindManager().getChangeListener().onUnmanaged(it);
-                storeLocationEvent(Lifecycle.DESTROYED, it);
+                recordLocationEvent(it, Lifecycle.DESTROYED);
                 if (managementContext.gc != null) managementContext.gc.onUnmanaged(it);
             }
             return result;
@@ -158,83 +150,16 @@ public class LocalLocationManager implements LocationManager {
      * Adds this location event to the usage record for the given location (creating the usage 
      * record if one does not already exist).
      */
-    private void storeLocationEvent(Lifecycle state, LocationInternal loc) {
-        // TODO This approach (i.e. recording events on manage/unmanage would not work for
-        // locations that are reused. For example, in a FixedListMachineProvisioningLocation
-        // the ssh machine location is returned to the pool and handed back out again.
-        // But maybe the solution there is to hand out different instances so that one user
-        // can't change the config of the SshMachineLocation to subsequently affect the next 
-        // user.
-        //
-        // TODO Should perhaps extract the location storage methods into their own class,
-        // but no strong enough feelings yet...
-        
-        checkNotNull(state, "state of location %s", loc);
-        checkNotNull(loc, "location");
-        if (loc.getId() == null) {
-            log.error("Ignoring location lifecycle event for {} (state {}), because location has no id", loc, state);
-            return;
-        }
-        if (managementContext.getStorage() == null) {
-            log.warn("Cannot store location lifecycle event for {} (state {}), because storage not available", loc, state);
-            return;
-        }
-        
+    private void recordLocationEvent(LocationInternal loc, Lifecycle state) {
         try {
-            Object callerContext = loc.getConfig(LocationConfigKeys.CALLER_CONTEXT);
-            log.debug("Storing location lifecycle event: location {} in state {}; caller context {}", new Object[] {loc, state, callerContext});
-            
-            if (callerContext != null && callerContext instanceof Entity) {
-                Entity caller = (Entity) callerContext;
-                String entityTypeName = caller.getEntityType().getName();
-                String appId = caller.getApplicationId();
-                LocationUsage.LocationEvent event = new LocationUsage.LocationEvent(state, caller.getId(), entityTypeName, appId);
-                
-                ConcurrentMap<String, LocationUsage> usageMap = managementContext.getStorage().<String, LocationUsage>getMap(LOCATION_USAGE_KEY);
-                LocationUsage usage = usageMap.get(loc.getId());
-                if (usage == null) {
-                    usage = new LocationUsage(loc.getId(), loc.toMetadataRecord());
-                }
-                usage.addEvent(event);
-                usageMap.put(loc.getId(), usage);
-                
-            } else {
-                log.debug("Not recording location-event for {} in state {}, because no caller context", new Object[] {loc, state});
-            }
+            managementContext.getUsageManager().recordLocationEvent(loc, state);
+        } catch (RuntimeInterruptedException e) {
+            throw e;
         } catch (RuntimeException e) {
             log.warn("Failed to store location lifecycle event for "+loc, e);
         }
     }
 
-    /**
-     * Returns the usage info for the location with the given id, or null if unknown.
-     */
-    public LocationUsage getLocationUsage(String locationId) {
-        BrooklynStorage storage = managementContext.getStorage();
-
-        Map<String, LocationUsage> usageMap = storage.getMap(LOCATION_USAGE_KEY);
-        return usageMap.get(locationId);
-    }
-    
-    /**
-     * Returns the usage info that matches the given predicate.
-     * For example, could be used to find locations used within a given time period.
-     */
-    public Set<LocationUsage> getLocationUsage(Predicate<? super LocationUsage> filter) {
-        // TODO could do more efficient indexing, to more easily find locations in use during a given period.
-        // But this is good enough for first-pass.
-
-        Map<String, LocationUsage> usageMap = managementContext.getStorage().getMap(LOCATION_USAGE_KEY);
-        Set<LocationUsage> result = Sets.newLinkedHashSet();
-        
-        for (LocationUsage usage : usageMap.values()) {
-            if (filter.apply(usage)) {
-                result.add(usage);
-            }
-        }
-        return result;
-    }
-    
     private void recursively(Location e, Predicate<AbstractLocation> action) {
         boolean success = action.apply( (AbstractLocation)e );
         if (!success) {

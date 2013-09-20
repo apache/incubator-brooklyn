@@ -1,4 +1,4 @@
-package brooklyn.location.basic;
+package brooklyn.management.usage;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

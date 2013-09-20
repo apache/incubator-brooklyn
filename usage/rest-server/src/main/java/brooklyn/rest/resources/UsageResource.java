@@ -1,30 +1,36 @@
 package brooklyn.rest.resources;
 
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.ApplicationUsage;
-import brooklyn.entity.basic.ApplicationUsage.ApplicationEvent;
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.location.basic.LocationUsage;
-import brooklyn.management.internal.LocalLocationManager;
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.rest.api.UsageApi;
-import brooklyn.rest.domain.Statistic;
-import brooklyn.rest.transform.ApplicationTransformer;
-import brooklyn.rest.util.JsonUtils;
-import com.google.common.base.Objects;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static brooklyn.rest.util.WebResourceUtils.notFound;
 
-import javax.annotation.Nullable;
-import java.text.ParseException;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.management.usage.ApplicationUsage;
+import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;
+import brooklyn.management.usage.LocationUsage;
+import brooklyn.rest.api.UsageApi;
+import brooklyn.rest.domain.UsageStatistic;
+import brooklyn.rest.domain.UsageStatistics;
+import brooklyn.rest.transform.ApplicationTransformer;
+import brooklyn.rest.util.JsonUtils;
+import brooklyn.util.time.Time;
+
+import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 
 public class UsageResource extends AbstractBrooklynRestResource implements UsageApi {
@@ -42,47 +48,50 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
     };
     
     @Override
-    public List<Statistic> listApplicationUsage(@Nullable String start, @Nullable String end) {
+    public Iterable<UsageStatistics> listApplicationsUsage(@Nullable String start, @Nullable String end) {
         log.debug("REST call to get application usage for all applications: dates {} -> {}", new Object[] {start, end});
         
-        List<Statistic> response = Lists.newArrayList();
+        List<UsageStatistics> response = Lists.newArrayList();
         
-        Date startDate = parseSafely(start, new Date(0));
-        Date endDate = parseSafely(end, new Date());
-        Map<String, ApplicationUsage> usages = getApplicationUsage();
+        Date startDate = parseDate(start, new Date(0));
+        Date endDate = parseDate(end, new Date());
         
         checkDates(startDate, endDate);
 
-        for (ApplicationUsage usage : usages.values()) {
-            retrieveApplicationUsage(usage, startDate, endDate, response);
+        Set<ApplicationUsage> usages = ((ManagementContextInternal) mgmt()).getUsageManager().getApplicationUsage(Predicates.alwaysTrue());
+
+        for (ApplicationUsage usage : usages) {
+            List<UsageStatistic> statistics = retrieveApplicationUsage(usage, startDate, endDate);
+            if (statistics.size() > 0) {
+                response.add(new UsageStatistics(statistics, ImmutableMap.<String,URI>of()));
+            }
         }
         return response;
     }
     
     @Override
-    public List<Statistic> getApplicationUsage(String application, String start, String end) {
+    public UsageStatistics getApplicationUsage(String application, String start, String end) {
         log.debug("REST call to get application usage for application {}: dates {} -> {}", new Object[] {application, start, end});
         
-        Date startDate = parseSafely(start, new Date(0));
-        Date endDate = parseSafely(end, new Date());
+        Date startDate = parseDate(start, new Date(0));
+        Date endDate = parseDate(end, new Date());
 
         checkDates(startDate, endDate);
-        
-        List<Statistic> response = Lists.newArrayList();
-        retrieveApplicationUsage(application,  startDate, endDate, response);
-        return response;
-    }
 
-    private void retrieveApplicationUsage(String application, Date startDate, Date endDate, List<Statistic> list) {
-        ApplicationUsage usage = getApplicationUsage().get(application);
+        ApplicationUsage usage = ((ManagementContextInternal) mgmt()).getUsageManager().getApplicationUsage(application);
         if (usage != null) {
-            retrieveApplicationUsage(usage, startDate, endDate, list);
+            List<UsageStatistic> statistics = retrieveApplicationUsage(usage, startDate, endDate);
+            return new UsageStatistics(statistics, ImmutableMap.<String,URI>of());
+        } else {
+            throw notFound("Application '%s' not found", application);
         }
     }
-    
-    private void retrieveApplicationUsage(ApplicationUsage usage, Date startDate, Date endDate, List<Statistic> list) {
+
+    private List<UsageStatistic> retrieveApplicationUsage(ApplicationUsage usage, Date startDate, Date endDate) {
         log.debug("Determining application usage for application {}: dates {} -> {}", new Object[] {usage.getApplicationId(), startDate, endDate});
         log.trace("Considering application usage events of {}: {}", usage.getApplicationId(), usage.getEvents());
+
+        List<UsageStatistic> result = Lists.newArrayList();
 
         // Getting duration of state by comparing with next event (if next event is of same type, we just generate two statistics)...
         for (int i = 0; i < usage.getEvents().size(); i++) {
@@ -110,23 +119,25 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
                 eventEndDate = endDate;
             }
             long duration = eventEndDate.getTime() - eventStartDate.getTime();
-            Statistic statistic = new Statistic(ApplicationTransformer.statusFromLifecycle(current.getState()), usage.getApplicationId(), usage.getApplicationId(), format(eventStartDate), format(eventEndDate), duration, usage.getMetadata());
+            UsageStatistic statistic = new UsageStatistic(ApplicationTransformer.statusFromLifecycle(current.getState()), usage.getApplicationId(), usage.getApplicationId(), format(eventStartDate), format(eventEndDate), duration, usage.getMetadata());
             log.trace("Adding application usage statistic to response for app {}: {}", usage.getApplicationId(), statistic);
-            list.add(statistic);
+            result.add(statistic);
         }
+        
+        return result;
     }
 
     @Override
-    public List<Statistic> listMachineUsages(final String application, final String start, final String end) {
+    public Iterable<UsageStatistics> listMachinesUsage(final String application, final String start, final String end) {
         log.debug("REST call to get machine usage for application {}: dates {} -> {}", new Object[] {application, start, end});
         
-        final Date startDate = parseSafely(start, new Date(0));
-        final Date endDate = parseSafely(end, new Date());
+        final Date startDate = parseDate(start, new Date(0));
+        final Date endDate = parseDate(end, new Date());
 
         checkDates(startDate, endDate);
         
         // Note currently recording ALL metrics for a machine that contains an Event from given Application
-        Set<LocationUsage> matches = ((LocalLocationManager) mgmt().getLocationManager()).getLocationUsage(new Predicate<LocationUsage>() {
+        Set<LocationUsage> matches = ((ManagementContextInternal) mgmt()).getUsageManager().getLocationUsage(new Predicate<LocationUsage>() {
             @Override
             public boolean apply(LocationUsage input) {
                 LocationUsage.LocationEvent first = input.getEvents().get(0);
@@ -149,16 +160,41 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
             }
         });
         
-        List<Statistic> results = Lists.newArrayList();
+        List<UsageStatistics> response = Lists.newArrayList();
         for (LocationUsage usage : matches) {
-            retrieveMachineUsage(usage, startDate, endDate, results);
+            List<UsageStatistic> statistics = retrieveMachineUsage(usage, startDate, endDate);
+            if (statistics.size() > 0) {
+                response.add(new UsageStatistics(statistics, ImmutableMap.<String,URI>of()));
+            }
         }
-        return results;
+        return response;
     }
 
-    private void retrieveMachineUsage(LocationUsage usage, Date startDate, Date endDate, List<Statistic> list) {
+    @Override
+    public UsageStatistics getMachineUsage(final String machine, final String start, final String end) {
+        log.debug("REST call to get machine usage for machine {}: dates {} -> {}", new Object[] {machine, start, end});
+        
+        final Date startDate = parseDate(start, new Date(0));
+        final Date endDate = parseDate(end, new Date());
+
+        checkDates(startDate, endDate);
+        
+        // Note currently recording ALL metrics for a machine that contains an Event from given Application
+        LocationUsage usage = ((ManagementContextInternal) mgmt()).getUsageManager().getLocationUsage(machine);
+        
+        if (usage == null) {
+            throw notFound("Machine '%s' not found", machine);
+        }
+        
+        List<UsageStatistic> statistics = retrieveMachineUsage(usage, startDate, endDate);
+        return new UsageStatistics(statistics, ImmutableMap.<String,URI>of());
+    }
+
+    private List<UsageStatistic> retrieveMachineUsage(LocationUsage usage, Date startDate, Date endDate) {
         log.debug("Determining machine usage for location {}", usage.getLocationId());
         log.trace("Considering machine usage events of {}: {}", usage.getLocationId(), usage.getEvents());
+
+        List<UsageStatistic> result = Lists.newArrayList();
 
         // Getting duration of state by comparing with next event (if next event is of same type, we just generate two statistics)...
         for (int i = 0; i < usage.getEvents().size(); i++) {
@@ -186,14 +222,12 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
                 eventEndDate = endDate;
             }
             long duration = eventEndDate.getTime() - eventStartDate.getTime();
-            Statistic statistic = new Statistic(ApplicationTransformer.statusFromLifecycle(current.getState()), usage.getLocationId(), current.getApplicationId(), format(eventStartDate), format(eventEndDate), duration, usage.getMetadata());
+            UsageStatistic statistic = new UsageStatistic(ApplicationTransformer.statusFromLifecycle(current.getState()), usage.getLocationId(), current.getApplicationId(), format(eventStartDate), format(eventEndDate), duration, usage.getMetadata());
             log.trace("Adding machine usage statistic to response for app {}: {}", usage.getLocationId(), statistic);
-            list.add(statistic);
+            result.add(statistic);
         }
-    }
-    
-    private Map<String, ApplicationUsage> getApplicationUsage() {
-        return ((ManagementContextInternal) mgmt()).getStorage().<String, ApplicationUsage>getMap(AbstractApplication.APPLICATION_USAGE_KEY);
+        
+        return result;
     }
     
     private void checkDates(Date startDate, Date endDate) {
@@ -203,25 +237,8 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
         }
     }
 
-    private Date parseSafely(String toParse, Date def) {       
-        if (toParse == null) {
-            return def;
-        }
-        if (!toParse.contains("-")) {
-            // doesn't look like date-format; try UTC millis number
-            try {
-                return new Date(Long.parseLong(toParse.trim()));
-            } catch (NumberFormatException e) {
-                // continue; try as date-format
-            }
-        }
-        try {
-            // fix the usual + => ' ' nonsense when passing dates as query params
-            toParse = toParse.replace(" ", "+");
-            return DATE_FORMATTER.get().parse(toParse);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Date " + toParse + " cannot be parsed as UTC millis or using format " + JsonUtils.DATE_FORMAT);
-        }
+    private Date parseDate(String toParse, Date def) {
+        return (toParse == null) ? def : Time.parseDateString(toParse, DATE_FORMATTER.get());
     }
     
     private String format(Date date) {
