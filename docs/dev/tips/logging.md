@@ -123,3 +123,18 @@ The only differences of the ``logback-test.xml`` configuration is that:
 * You may find that your IDE logs to a file ``brooklyn-tests.log`` 
   if it doesn't distinguish between test build classpaths and normal classpaths.
 
+* Logging configuration using file overrides such as this is very sensitive to
+  classpath order. To get a separate `brooklyn-tests.log` file during testing,
+  for example, the `brooklyn-test-support` project with scope `test` must be
+  declared as a dependency *before* `brooklyn-logback-includes`, due to the way
+  both files declare `logback-appender-file.xml`.
+  
+* Similarly note that the `logback-custom.xml` file is included *after* 
+  logging categories and levels are declared, but before appenders are declared,
+  so that logging levels declared in that file dominate, and that 
+  properties from that file apply to appenders.
+
+* Finally remember this is open to improvement. It's the best system we've found
+  so far but we welcome advice. In particular if it could be possible to include
+  files from the classpath with wildcards in alphabetical order, we'd be able
+  to remove some of the quirks listed above (though at a cost of some complexity!).

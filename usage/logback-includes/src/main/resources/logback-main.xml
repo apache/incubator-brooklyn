@@ -16,7 +16,17 @@
          this is that assemblies usually want to declare their own logging anyway.) 
     -->
 
-    <!-- if there is any customisation, load it first -->
+    <!-- set default root logger threshhold to info; some categories may get debug -->
+    <root level="INFO"/>
+
+    <!-- brooklyn and selected others get debug treatment by default;
+         to customise what gets debug logging, see brooklyn/logback-debug.xml 
+         which of course can be overridden -->    
+    <include resource="brooklyn/logback-debug.xml"/>
+
+    <!-- if there is any customisation, load it after setting above categories
+         (so things in custom take priority) but before appenders 
+         (so the properties e.g. log filename set in this file are used) -->
     <include resource="logback-custom.xml"/>
 
     <!-- 'FILE' e.g. brooklyn.log gets all messages by default -->
@@ -25,15 +35,8 @@
     <!-- 'STDOUT' gets INFO and higher -->
     <include resource="brooklyn/logback-appender-stdout.xml"/>
     
-    <!-- set default root logger threshhold to info; some categories may get debug -->
-    <root level="INFO"/>
-    
-    <!-- some loggers are very noisy however, exclude them, or make them file only -->
+    <!-- some loggers are very noisy however, exclude them, or make them file only;
+         must be declared after the FILE appender above -->
     <include resource="brooklyn/logback-logger-excludes.xml"/>
-
-    <!-- brooklyn and selected others get debug treatment by default;
-         to customise what gets debug logging, see brooklyn/logback-debug.xml 
-         which of course can be overridden -->    
-    <include resource="brooklyn/logback-debug.xml"/>
 
 </included>

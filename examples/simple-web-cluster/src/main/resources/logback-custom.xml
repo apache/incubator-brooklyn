@@ -11,7 +11,7 @@
     <logger name="brooklyn.demo" level="DEBUG"/>
     
     <!-- log to simple-web-cluster.log -->
-    <property name="logging.basename" scope="context" value="simple-web-cluster" />
+    <property name="logging.basename" scope="context" value="brooklyn-simple-web-cluster" />
 
   <!--
   
