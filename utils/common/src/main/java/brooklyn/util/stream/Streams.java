@@ -7,6 +7,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +76,14 @@ public class Streams {
             return true;
         }
         return false;
+    }
+
+    public static Reader reader(InputStream stream) {
+        return new InputStreamReader(stream);
+    }
+    
+    public static Reader reader(InputStream stream, Charset charset) {
+        return new InputStreamReader(stream, charset);
     }
 
 }

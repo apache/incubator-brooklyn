@@ -1,5 +1,0 @@
-<configuration>
-
-    <include resource="brooklyn/logback-test.xml"/>
-
-</configuration>

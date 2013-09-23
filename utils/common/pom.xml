@@ -33,14 +33,11 @@
             <version>${slf4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.thoughtworks.xstream</groupId>
-            <artifactId>xstream</artifactId>
-        </dependency>
-        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>${commons-io.version}</version>
         </dependency>
+        
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
@@ -51,6 +48,12 @@
             <artifactId>brooklyn-utils-test-support</artifactId>
             <version>${brooklyn.version}</version>
             <scope>test</scope>
+        </dependency>
+        <!-- common includes are always included, but test-support logging config files above 
+             take precedance when running tests -->
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-logback-includes</artifactId>
         </dependency>
 
         <dependency>

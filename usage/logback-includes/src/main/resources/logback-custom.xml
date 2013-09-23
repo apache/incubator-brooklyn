@@ -1,0 +1,22 @@
+<included>
+
+    <!--
+     
+        this file is a placeholder for contexts which wish to supply additional logging.
+        
+        simply create a file with this name on your classpath, 
+        ensuring your project is first on the classpath,
+        and the settings here and additional categories will be included.
+        for example, you might wish debug logging for your packages:
+        
+    <logger name="com.acme.app" level="DEBUG"/>
+      
+        in addition, two variables are used to define the log file name and dir;
+        to set a different name or location, simply define the following (with the right values):
+      
+    <property name="logging.basename" scope="context" value="acme-app" />
+    <property name="logging.dir" scope="context" value="./" />
+    
+      -->
+          
+</included>

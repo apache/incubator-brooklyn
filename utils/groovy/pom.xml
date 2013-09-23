@@ -20,13 +20,14 @@
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-utils-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-utils-test-support</artifactId>
             <version>${brooklyn.version}</version>
             <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-utils-common</artifactId>
         </dependency>
 
         <dependency>

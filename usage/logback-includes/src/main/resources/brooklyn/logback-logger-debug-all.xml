@@ -1,0 +1,10 @@
+<included>
+
+    <!-- log all brooklyn at debug -->
+    <logger name="brooklyn" level="DEBUG"/>
+
+    <!-- jclouds uses org.jclouds.* class logging as well as special jclouds.* logger categories -->
+    <logger name="org.jclouds" level="DEBUG"/>
+    <logger name="jclouds" level="DEBUG"/>
+      
+</included>

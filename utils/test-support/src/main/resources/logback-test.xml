@@ -1,0 +1,12 @@
+<configuration>
+
+    <!-- tests get normal logging by default,
+         with two exceptions:
+         - brooklyn/logback-appender-file.xml is overridden to log to brooklyn-tests.log
+         - debug for all brooklyn loggers is exlicitly included
+    -->
+    
+    <include resource="logback-main.xml"/>
+    <include resource="brooklyn/logback-logger-debug-all.xml"/>
+
+</configuration>

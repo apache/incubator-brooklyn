@@ -41,7 +41,7 @@ These include:
 - **PaaS**: Cloud Foundry, Stackato; OpenShift
 
 
-### Off-the-Shelf Locations
+### <a id="locations"></a> Off-the-Shelf Locations
 
 Brooklyn supports deploying to any machine which admits SSH access, as well as to
 a huge variety of external and on-premise clouds.  You can also connect to services,
@@ -49,23 +49,23 @@ or use whatever technique for deployment suits you best (such as Xebia Overthere
 
 Configuration is typically set in `~/.brooklyn/brooklyn.properties` using keys such as the following:
 
-{% highlight java %}
-    # use this key for localhost (this is the default, although if you have a passphrase you must set it)
-    brooklyn.location.localhost.privateKeyFile=~/.ssh/id_rsa
-    
-    brooklyn.location.localhost.privateKeyPassphrase=s3cr3tPASSPHRASE
-       
-    # use a special key when connecting to public clouds, and a particularly special one for AWS
-    brooklyn.location.jclouds.privateKeyFile=~/.ssh/public_clouds/id_rsa
-    brooklyn.location.jclouds.aws-ec2.privateKeyFile=~/.ssh/public_clouds/aws_id_rsa
-        
-    # AWS credentials (when deploying to location jclouds:aws-ec2)
-    brooklyn.location.jclouds.aws-ec2.identity=ABCDEFGHIJKLMNOPQRST      
-    brooklyn.location.jclouds.aws-ec2.credential=s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
-    
-    # credentials for 'geoscaling' service
-    brooklyn.geoscaling.username=cloudsoft                      
-    brooklyn.geoscaling.password=xxx
+{% highlight bash %}
+# use this key for localhost (this is the default, although if you have a passphrase you must set it)
+brooklyn.location.localhost.privateKeyFile=~/.ssh/id_rsa
+
+brooklyn.location.localhost.privateKeyPassphrase=s3cr3tPASSPHRASE
+   
+# use a special key when connecting to public clouds, and a particularly special one for AWS
+brooklyn.location.jclouds.privateKeyFile=~/.ssh/public_clouds/id_rsa
+brooklyn.location.jclouds.aws-ec2.privateKeyFile=~/.ssh/public_clouds/aws_id_rsa
+
+# AWS credentials (when deploying to location jclouds:aws-ec2)
+brooklyn.location.jclouds.aws-ec2.identity=ABCDEFGHIJKLMNOPQRST  
+brooklyn.location.jclouds.aws-ec2.credential=s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
+
+# credentials for 'geoscaling' service
+brooklyn.geoscaling.username=cloudsoft  
+brooklyn.geoscaling.password=xxx
 {% endhighlight %}
 
 These can also be set as environment variables (in the shell) or system properties (java command line).
@@ -119,19 +119,19 @@ These can be accessed at runtime using the syntax ``named:your-group-name`` as t
 
 Some more advanced examples showing the syntax and properties above are as follows:
 
-{% highlight java %}
-    # Production pool of machines for my application (deploy to named:prod1)
-    brooklyn.location.named.prod1=byon:(hosts="10.9.1.1,10.9.1.2,produser2@10.9.2.{10,11,20-29}")
-    brooklyn.location.named.prod1.user=produser1
-    brooklyn.location.named.prod1.privateKeyFile=~/.ssh/produser_id_rsa
-    brooklyn.location.named.prod1.privateKeyPassphrase=s3cr3tCOMPANYpassphrase
-    
-    # AWS using my company's credentials and image standard, then labelling images so others know they're mine
-    brooklyn.location.named.company-jungle=jclouds:aws-ec2:us-west-1
-    brooklyn.location.named.company-jungle.identity=BCDEFGHIJKLMNOPQRSTU      
-    brooklyn.location.named.company-jungle.privateKeyFile=~/.ssh/public_clouds/company_aws_id_rsa
-    brooklyn.location.named.company-jungle.imageId=ami-12345
-    brooklyn.location.named.company-jungle.minRam=2048
-    brooklyn.location.named.company-jungle.userMetadata=application=my-jungle-app,owner="Bob Johnson"
+{% highlight bash %}
+# Production pool of machines for my application (deploy to named:prod1)
+brooklyn.location.named.prod1=byon:(hosts="10.9.1.1,10.9.1.2,produser2@10.9.2.{10,11,20-29}")
+brooklyn.location.named.prod1.user=produser1
+brooklyn.location.named.prod1.privateKeyFile=~/.ssh/produser_id_rsa
+brooklyn.location.named.prod1.privateKeyPassphrase=s3cr3tCOMPANYpassphrase
+
+# AWS using my company's credentials and image standard, then labelling images so others know they're mine
+brooklyn.location.named.company-jungle=jclouds:aws-ec2:us-west-1
+brooklyn.location.named.company-jungle.identity=BCDEFGHIJKLMNOPQRSTU  
+brooklyn.location.named.company-jungle.privateKeyFile=~/.ssh/public_clouds/company_aws_id_rsa
+brooklyn.location.named.company-jungle.imageId=ami-12345
+brooklyn.location.named.company-jungle.minRam=2048
+brooklyn.location.named.company-jungle.userMetadata=application=my-jungle-app,owner="Bob Johnson"
 {% endhighlight %}
 
