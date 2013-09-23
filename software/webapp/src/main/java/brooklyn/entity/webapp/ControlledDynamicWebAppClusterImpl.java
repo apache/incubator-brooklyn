@@ -21,6 +21,7 @@ import brooklyn.entity.trait.StartableMethods;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
+import brooklyn.management.Task;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -124,10 +125,17 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         if (getController().getParent() == null) {
             addChild(getController());
         }
+        
         // And only start controller if we are parent
         if (this.equals(getController().getParent())) childrenToStart.add(getController());
+        
         try {
-            Entities.invokeEffector(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations)).get();
+            Entities.invokeEffectorList(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations))
+                .get();
+            
+            // wait for everything to start, then update controller, to ensure it is up to date
+            // (will happen asynchronously as members come online, but we want to force it to happen)
+            getController().update();
         } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         } catch (ExecutionException e) {

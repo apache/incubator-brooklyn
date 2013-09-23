@@ -125,14 +125,14 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
             // Listen to the targets of each url-mapping changing
             subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, new SensorEventListener<Collection<String>>() {
                     @Override public void onEvent(SensorEvent<Collection<String>> event) {
-                        update(); 
+                        updateNeeded(); 
                     }});
             
             // Listen to url-mappings being added and removed
             AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy() {
-                @Override protected void onEntityChange(Entity member) { update(); }
-                @Override protected void onEntityAdded(Entity member) { update(); }
-                @Override protected void onEntityRemoved(Entity member) { update(); }
+                @Override protected void onEntityChange(Entity member) { updateNeeded(); }
+                @Override protected void onEntityAdded(Entity member) { updateNeeded(); }
+                @Override protected void onEntityRemoved(Entity member) { updateNeeded(); }
             };
             addPolicy(policy);
             policy.setGroup(urlMappings);
