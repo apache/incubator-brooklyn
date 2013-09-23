@@ -57,6 +57,7 @@ import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -662,8 +663,12 @@ public class Entities {
     }
 
     public static DownloadResolver newDownloader(EntityDriver driver) {
+        return newDownloader(driver, ImmutableMap.<String,Object>of());
+    }
+
+    public static DownloadResolver newDownloader(EntityDriver driver, Map<String,?> properties) {
         EntityInternal internal = (EntityInternal) driver.getEntity();
-        return internal.getManagementContext().getEntityDownloadsManager().newDownloader(driver);
+        return internal.getManagementContext().getEntityDownloadsManager().newDownloader(driver, properties);
     }
 
     public static <T> Supplier<T> attributeSupplier(final Entity entity, final AttributeSensor<T> sensor) {
