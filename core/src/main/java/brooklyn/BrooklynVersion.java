@@ -10,6 +10,10 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.Beta;
+
+import brooklyn.util.text.Strings;
+
 public class BrooklynVersion {
 
   private static final Logger log = LoggerFactory.getLogger(BrooklynVersion.class);
@@ -50,6 +54,10 @@ public class BrooklynVersion {
     return versionFromStatic;
   }
 
+  public boolean isSnapshot() {
+      return (getVersion().indexOf("-SNAPSHOT")>=0);
+  }
+  
   private static boolean isValid(String v) {
     if (v==null) return false;
     if (v.equals("0.0.0") || v.equals("0.0")) return false;
@@ -73,4 +81,29 @@ public class BrooklynVersion {
     return INSTANCE.version;
   }
 
+  /** returns a URL for access brooklyn artifacts 
+   * (or any artifact in sonatype for snapshots and maven central for releases)
+   */
+  @Beta
+  public static String getBrooklynMavenArtifactUrl(String groupId, String artifactId, String artifactType) {
+      return getMavenArtifactUrl(groupId, artifactId, artifactType, INSTANCE.getVersion());
+  }
+
+  // does not belong here -- but not sure where it belongs!
+  @Beta
+  public static String getMavenArtifactUrl(String groupId, String artifactId, String artifactType, String version) {
+      if (INSTANCE.isSnapshot())
+          return "https://oss.sonatype.org/service/local/artifact/maven/redirect?" +
+          		"r=snapshots&" +
+          		"v="+version+"&" +
+          		"g="+groupId+"&" +
+          		"a="+artifactId+"&" +
+          		"e="+artifactType;
+      else
+          return "http://search.maven.org/remotecontent?filepath="+
+              Strings.replaceAllNonRegex(groupId, ".", "/")+"/"+artifactId+"/"+version+"/"+
+              artifactId+"-"+version+"."+artifactType;
+          
+  }
+  
 }
