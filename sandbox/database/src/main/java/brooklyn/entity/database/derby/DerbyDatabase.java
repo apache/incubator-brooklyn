@@ -2,7 +2,6 @@ package brooklyn.entity.database.derby;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import javax.management.ObjectName;
 
@@ -12,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.SoftwareProcess;
-import brooklyn.entity.SoftwareProcessImpl;
+import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.database.Database;
 import brooklyn.entity.database.Schema;
 import brooklyn.entity.java.UsesJava;

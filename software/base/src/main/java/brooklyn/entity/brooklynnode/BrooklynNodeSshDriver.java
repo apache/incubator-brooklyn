@@ -60,7 +60,11 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
     @Override
     public void install() {
         String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
-        DownloadResolver resolver = Entities.newDownloader(this);
+        
+        // Need to explicitly give file, because for snapshot URLs you don't get a clean filename from the URL.
+        // This filename is used to generate the first URL to try: 
+        // file://$HOME/.brooklyn/repository/BrooklynNode/0.6.0-SNAPSHOT/brooklyn-dist-0.6.0-SNAPSHOT-dist.tar.gz
+        DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", "brooklyn-dist-"+getVersion()+"-dist.tar.gz"));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("brooklyn-%s", getVersion()));

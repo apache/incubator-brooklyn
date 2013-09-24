@@ -1,7 +1,6 @@
 package brooklyn.entity.nosql.infinispan;
 
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +9,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -60,12 +58,12 @@ public class Infinispan5Server extends SoftwareProcessImpl implements UsesJmx {
     @Override
     protected void connectSensors() {
 		super.connectSensors();
-		
-        FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new FunctionSensorAdapter(
-                MutableMap.of("period", 10*1000),
-                new Callable<Boolean>() {
-                        @Override public Boolean call() {
-                            return getDriver().isRunning();
-                        }}));
+		super.connectServiceUpIsRunning();
+    }
+    
+    @Override
+    protected void disconnectSensors() {
+        super.disconnectServiceUpIsRunning();
+        super.disconnectSensors();
     }
 }
