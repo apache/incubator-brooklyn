@@ -4,13 +4,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
+import brooklyn.event.feed.shell.ShellFeed;
+
 /**
  * The ExecUtils
  *
+ * @deprecated since 0.6; use {@link brooklyn.util.stream.StreamGobbler}, and see {@link ShellFeed} 
  * @author aled
  **/
+@Deprecated
 public class ExecUtils {
 
+    // TODO Do we need to extract code from ShellFeed to make it reusable as direct calls,
+    // rather than just for polling to populate an attribute? e.g. have ShellHelper?
+    
     public static class StreamGobbler extends Thread {
         protected final InputStream stream;
         protected final PrintStream out;
