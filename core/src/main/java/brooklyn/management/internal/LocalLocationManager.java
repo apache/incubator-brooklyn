@@ -8,13 +8,16 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.AccessController;
 import brooklyn.management.LocationManager;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -116,7 +119,8 @@ public class LocalLocationManager implements LocationManager {
                 boolean result = manageNonRecursive(it);
                 if (result) {
                     it.setManagementContext(managementContext);
-                    it.onManagementStarted(); 
+                    it.onManagementStarted();
+                    recordLocationEvent(it, Lifecycle.CREATED);
                     managementContext.getRebindManager().getChangeListener().onManaged(it);
                 }
                 return result;
@@ -135,12 +139,27 @@ public class LocalLocationManager implements LocationManager {
             if (result) {
                 it.onManagementStopped(); 
                 managementContext.getRebindManager().getChangeListener().onUnmanaged(it);
+                recordLocationEvent(it, Lifecycle.DESTROYED);
                 if (managementContext.gc != null) managementContext.gc.onUnmanaged(it);
             }
             return result;
         } });
     }
     
+    /**
+     * Adds this location event to the usage record for the given location (creating the usage 
+     * record if one does not already exist).
+     */
+    private void recordLocationEvent(LocationInternal loc, Lifecycle state) {
+        try {
+            managementContext.getUsageManager().recordLocationEvent(loc, state);
+        } catch (RuntimeInterruptedException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            log.warn("Failed to store location lifecycle event for "+loc, e);
+        }
+    }
+
     private void recursively(Location e, Predicate<AbstractLocation> action) {
         boolean success = action.apply( (AbstractLocation)e );
         if (!success) {

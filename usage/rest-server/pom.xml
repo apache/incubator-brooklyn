@@ -97,6 +97,13 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>brooklyn-software-base</artifactId>
+            <version>${brooklyn.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-rest-api</artifactId>
             <version>${brooklyn.version}</version>
             <classifier>tests</classifier>

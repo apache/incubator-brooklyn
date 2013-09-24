@@ -50,6 +50,7 @@
                 brooklyn.rest.resources.PolicyResource;
                 brooklyn.rest.resources.ScriptResource;
                 brooklyn.rest.resources.SensorResource;
+                brooklyn.rest.resources.UsageResource;
                 brooklyn.rest.resources.VersionResource;
             </param-value>
         </init-param>

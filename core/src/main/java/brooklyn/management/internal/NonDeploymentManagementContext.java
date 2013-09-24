@@ -61,6 +61,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     private NonDeploymentEntityManager entityManager;
     private NonDeploymentLocationManager locationManager;
     private NonDeploymentAccessManager accessManager;
+    private NonDeploymentUsageManager usageManager;
 
     public NonDeploymentManagementContext(AbstractEntity entity, NonDeploymentManagementContextMode mode) {
         this.entity = checkNotNull(entity, "entity");
@@ -71,6 +72,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         entityManager = new NonDeploymentEntityManager(null);
         locationManager = new NonDeploymentLocationManager(null);
         accessManager = new NonDeploymentAccessManager(null);
+        usageManager = new NonDeploymentUsageManager(null);
     }
     
     public void setManagementContext(ManagementContextInternal val) {
@@ -78,6 +80,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         this.entityManager = new NonDeploymentEntityManager(val);
         this.locationManager = new NonDeploymentLocationManager(val);
         this.accessManager = new NonDeploymentAccessManager(val);
+        this.usageManager = new NonDeploymentUsageManager(val);
     }
 
     @Override
@@ -116,6 +119,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     @Override
     public AccessManager getAccessManager() {
         return accessManager;
+    }
+
+    @Override
+    public UsageManager getUsageManager() {
+        return usageManager;
     }
 
     @Override

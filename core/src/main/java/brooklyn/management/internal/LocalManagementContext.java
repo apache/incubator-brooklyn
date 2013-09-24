@@ -75,6 +75,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     private LocalEntityManager entityManager;
     private final LocalLocationManager locationManager;
     private final LocalAccessManager accessManager;
+    private final LocalUsageManager usageManager;
     
     private final String shortid = Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5);
     private final String tostring = "LocalManagementContext("+shortid+")";
@@ -106,6 +107,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
         this.locationManager = new LocalLocationManager(this);
         this.accessManager = new LocalAccessManager();
+        this.usageManager = new LocalUsageManager(this);
         INSTANCES.add(this);
     }
 
@@ -157,6 +159,12 @@ public class LocalManagementContext extends AbstractManagementContext {
     public synchronized LocalAccessManager getAccessManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
         return accessManager;
+    }
+
+    @Override
+    public synchronized LocalUsageManager getUsageManager() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        return usageManager;
     }
 
     @Override

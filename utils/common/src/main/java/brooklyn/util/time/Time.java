@@ -5,6 +5,8 @@
  */
 package brooklyn.util.time;
 
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -12,10 +14,10 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Stopwatch;
-
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
+
+import com.google.common.base.Stopwatch;
 
 public class Time {
 
@@ -358,6 +360,38 @@ public class Time {
 			return d*multiplier + dd;
 		}
 	}
+
+	/**
+	 * Parses the given date, accepting either a UTC timestamp (i.e. a long), or a formatted date.
+	 * @param dateString
+	 * @param format
+	 * @return
+	 */
+    public static Date parseDateString(String dateString, DateFormat format) {
+        if (dateString == null) 
+            throw new NumberFormatException("GeneralHelper.parseDateString cannot parse a null string");
+
+        try {
+            return format.parse(dateString);
+        } catch (ParseException e) {
+            // continue trying
+        }
+        
+        try {
+            // fix the usual ' ' => '+' nonsense when passing dates as query params
+            // note this is not URL unescaping, but converting to the date format that wants "+" in the middle and not spaces
+            String transformedDateString = dateString.replace(" ", "+");
+            return format.parse(transformedDateString);
+        } catch (ParseException e) {
+            // continue trying
+        }
+        
+        try {
+            return new Date(Long.parseLong(dateString.trim())); // try UTC millis number
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Date " + dateString + " cannot be parsed as UTC millis or using format " + format);
+        }
+    }
 
     /** removes milliseconds from the date object; needed if serializing to ISO-8601 format 
      * and want to serialize back and get the same data */

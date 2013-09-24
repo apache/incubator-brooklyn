@@ -62,6 +62,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -434,6 +435,11 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
                 attributesInternal.update(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    @Override
+    public Map<String, String> toMetadataRecord() {
+        return ImmutableMap.of();
     }
 
     @Override

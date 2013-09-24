@@ -12,7 +12,9 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -89,6 +91,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         super.setApplication(app);
     }
     
+    @Override
     public AbstractApplication setParent(Entity parent) {
         super.setParent(parent);
         return this;
@@ -98,16 +101,19 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
      * Default start will start all Startable children (child.start(Collection<? extends Location>)),
      * calling preStart(locations) first and postStart(locations) afterwards.
      */
+    @Override
     public void start(Collection<? extends Location> locations) {
         this.addLocations(locations);
 
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+        recordApplicationEvent(Lifecycle.STARTING);
         try {
             preStart(locations);
             StartableMethods.start(this, locations);
             postStart(locations);
         } catch (Exception e) {
             setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            recordApplicationEvent(Lifecycle.ON_FIRE);
             // no need to log here; the effector invocation should do that
             throw Exceptions.propagate(e);
         }
@@ -115,6 +121,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         setAttribute(SERVICE_UP, true);
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
         deployed = true;
+
+        recordApplicationEvent(Lifecycle.RUNNING);
 
         log.info("Started application " + this);
     }
@@ -136,19 +144,23 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     /**
      * Default stop will stop all Startable children
      */
+    @Override
     public void stop() {
         log.info("Stopping application " + this);
 
         setAttribute(SERVICE_UP, false);
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+        recordApplicationEvent(Lifecycle.STOPPING);
         try {
             StartableMethods.stop(this);
         } catch (Exception e) {
             setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            recordApplicationEvent(Lifecycle.ON_FIRE);
             log.warn("Error stopping application " + this + " (rethrowing): "+e);
             throw Exceptions.propagate(e);
         }
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPED);
+        recordApplicationEvent(Lifecycle.STOPPED);
 
         synchronized (this) {
             deployed = false;
@@ -164,7 +176,26 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         log.info("Stopped application " + this);
     }
 
+    @Override
     public void restart() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void onManagementStopped() {
+        super.onManagementStopped();
+        recordApplicationEvent(Lifecycle.DESTROYED);
+    }
+    
+    private void recordApplicationEvent(Lifecycle state) {
+        try {
+            ((ManagementContextInternal)getManagementContext()).getUsageManager().recordApplicationEvent(this, state);
+        } catch (RuntimeInterruptedException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            if (getManagementContext().isRunning()) {
+                log.warn("Problem storing application event "+state+" for "+this, e);
+            }
+        }
     }
 }

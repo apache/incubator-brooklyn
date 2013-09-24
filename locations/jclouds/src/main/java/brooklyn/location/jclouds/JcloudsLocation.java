@@ -999,7 +999,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             // FIXME remove "config" -- inserted directly, above
                             .configure("config", sshConfig)
                             .configure("jcloudsParent", this)
-                            .configure("node", node));
+                            .configure("node", node)
+                            .configure(CALLER_CONTEXT, setup.get(CALLER_CONTEXT)));
         } else {
             LOG.warn("Using deprecated JcloudsSshMachineLocation constructor because "+this+" is not managed");
             return new JcloudsSshMachineLocation(MutableMap.builder()
@@ -1010,6 +1011,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     .putAll(sshConfig)
                     // FIXME remove "config" -- inserted directly, above
                     .put("config", sshConfig)
+                    .put("callerContext", setup.get(CALLER_CONTEXT))
                     .build(),
                     this,
                     node);

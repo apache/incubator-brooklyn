@@ -27,6 +27,10 @@ public class AccessSummary {
         return locationProvisioningAllowed;
     }
 
+    public Map<String, URI> getLinks() {
+        return links;
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof AccessSummary)) return false;

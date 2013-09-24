@@ -4,6 +4,8 @@ import com.google.common.primitives.Primitives;
 
 public class JsonUtils {
 
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
+    
     /** returns a representation of x which can be serialized as a json object */
     public static Object toJsonable(Object x) {
         if (x==null) return null;
