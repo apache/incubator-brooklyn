@@ -153,6 +153,7 @@ define([
         },
 
         refreshPolicyConfig:function() {
+            var that = this;
             if (that.viewIsClosed) return;
             var $table = that.$('#policy-config-table').dataTable(),
                 $rows = that.$("tr.policy-config-row");
