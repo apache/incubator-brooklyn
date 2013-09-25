@@ -6,6 +6,7 @@ import static brooklyn.rest.domain.Status.STARTING;
 import static brooklyn.rest.domain.Status.STOPPED;
 import static brooklyn.rest.domain.Status.STOPPING;
 import static brooklyn.rest.domain.Status.UNKNOWN;
+import static brooklyn.rest.domain.Status.DESTROYED;
 
 import java.net.URI;
 import java.util.Collection;
