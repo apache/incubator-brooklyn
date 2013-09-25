@@ -5,7 +5,9 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.trait.HasShortName;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -24,4 +26,8 @@ public interface MonitNode extends HasShortName {
     
     @SetFromFlag("daemonIntervalSeconds")
     public static final ConfigKey<Integer> DAEMON_INTERVAL_SECONDS = ConfigKeys.newIntegerConfigKey("monit.daemon.interval", "Interval in seconds on which the daemon will run", 30);
+    
+    public static final AttributeSensor<String> MONIT_TARGET_PROCESS_NAME = Sensors.newStringSensor("monit.target.process.name");
+    
+    public static final AttributeSensor<String> MONIT_TARGET_PROCESS_STATUS = Sensors.newStringSensor("monit.target.process.status");
 }
