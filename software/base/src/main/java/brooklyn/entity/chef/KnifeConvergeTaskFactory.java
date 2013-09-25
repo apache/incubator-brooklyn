@@ -7,6 +7,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,7 @@ public class KnifeConvergeTaskFactory<RET> extends KnifeTaskFactory<RET> {
     protected List<String> extraBootstrapParameters = MutableList.of();
     protected Boolean sudo;
     protected Boolean runTwice;
+    protected String nodeName;
     protected Integer port;
     /** null means nothing specified, use user supplied or machine default;
      * false means use machine default (disallow user supplied);
@@ -71,7 +73,12 @@ public class KnifeConvergeTaskFactory<RET> extends KnifeTaskFactory<RET> {
         else result.add("-P "+checkNotNull(machine.findPassword(), "No password or private key data for "+machine));
         
         if (sudo != Boolean.FALSE) result.add("--sudo");
-        
+
+        if (!Strings.isNullOrEmpty(nodeName)) {
+            result.add("--node-name");
+            result.add(nodeName);
+        }
+
         result.add("-r "+wrapBash(runList.apply(entity())));
         
         if (!knifeAttributes.isEmpty())
@@ -91,6 +98,12 @@ public class KnifeConvergeTaskFactory<RET> extends KnifeTaskFactory<RET> {
     /** whether to pass --sudo to knife; default true */
     public KnifeConvergeTaskFactory<RET> knifeSudo(boolean sudo) {
         this.sudo = sudo;
+        return self();
+    }
+
+    /** what node name to pass to knife; default = null, meaning chef-client will pick the node name */
+    public KnifeConvergeTaskFactory<RET> knifeNodeName(String nodeName) {
+        this.nodeName = nodeName;
         return self();
     }
 
