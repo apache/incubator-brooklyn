@@ -57,7 +57,9 @@
             <phase>clean</phase>
             <goals> <goal>replace</goal> </goals>
             <configuration>
-              <basedir>src/brooklyn-sample</basedir> 
+              <basedir>${basedir}/src/brooklyn-sample</basedir> 
+              <outputBasedir>${basedir}</outputBasedir>
+              <outputDir>src/test/resources/projects/integration-test-1/reference</outputDir>
               <includes> <include>**</include> </includes>
               <excludes> 
                 <exclude>.*</exclude> 
@@ -66,8 +68,6 @@
                 <exclude>*.log</exclude> 
               </excludes>
               
-              <outputBasedir>.</outputBasedir>
-              <outputDir>src/test/resources/projects/integration-test-1/reference</outputDir>
               <replacements/>
             </configuration>
           </execution>
@@ -80,10 +80,10 @@
             <phase>clean</phase>
             <goals> <goal>replace</goal> </goals>
             <configuration>
-              <basedir>src/brooklyn-sample/src/main/java/com/acme/sample/brooklyn</basedir>
+              <basedir>${basedir}/src/brooklyn-sample/src/main/java/com/acme/sample/brooklyn</basedir>
+              <outputBasedir>${basedir}</outputBasedir>
               <outputDir>src/main/resources/archetype-resources/src/main/java</outputDir>
               <includes> <include>**/*</include> </includes>
-              <outputBasedir>.</outputBasedir>
               <replacements>
                 <replacement> <token>brooklyn-sample</token> <value>\$\{artifactId}</value> </replacement>
                 <replacement> <token>com\.acme\.sample\.brooklyn</token> <value>\$\{package}</value> </replacement>
@@ -99,10 +99,10 @@
             <phase>clean</phase>
             <goals> <goal>replace</goal> </goals>
             <configuration>
-              <basedir>src/brooklyn-sample/src/test/java/com/acme/sample/brooklyn</basedir>
+              <basedir>${basedir}/src/brooklyn-sample/src/test/java/com/acme/sample/brooklyn</basedir>
+              <outputBasedir>${basedir}</outputBasedir>
               <outputDir>src/main/resources/archetype-resources/src/test/java</outputDir>
               <includes> <include>**/*</include> </includes>
-              <outputBasedir>.</outputBasedir>
               <replacements>
                 <replacement> <token>brooklyn-sample</token> <value>\$\{artifactId}</value> </replacement>
                 <replacement> <token>com\.acme\.sample\.brooklyn</token> <value>\$\{package}</value> </replacement>
@@ -118,7 +118,8 @@
             <phase>clean</phase>
             <goals> <goal>replace</goal> </goals>
             <configuration>
-              <basedir>src/brooklyn-sample/</basedir>
+              <basedir>${basedir}/src/brooklyn-sample/</basedir>
+              <outputBasedir>${basedir}</outputBasedir>
               <outputDir>src/main/resources/archetype-resources/</outputDir>
               <includes> <include>**/*</include> </includes>
               <excludes> 
@@ -131,7 +132,6 @@
                 <exclude>.*/**</exclude> 
                 <exclude>*.log</exclude> 
               </excludes>
-              <outputBasedir>.</outputBasedir>
               <replacements>
                 <!-- special chars in velocity have to be escaped.
                      fortunately we only use fairly simple examples so we don't need to solve the general case! -->
@@ -156,7 +156,8 @@
             <phase>clean</phase>
             <goals> <goal>replace</goal> </goals>
             <configuration>
-              <basedir>src/brooklyn-sample/</basedir>
+              <basedir>${basedir}/src/brooklyn-sample/</basedir>
+              <outputBasedir>${basedir}</outputBasedir>
               <outputDir>src/main/resources/archetype-resources/</outputDir>
               <includes> <include>**/*.png</include> </includes>
               <excludes> 
@@ -165,7 +166,6 @@
                 <exclude>.*</exclude> 
                 <exclude>.*/**</exclude> 
               </excludes>
-              <outputBasedir>.</outputBasedir>
               <!-- no replacements for binary (put one just so we can use this plugin for consistency) -->
               <replacements><replacement> <token>NONCE_123456789XYZ</token> <value>NONCE_123456789XYZ</value> </replacement></replacements>
             </configuration>
