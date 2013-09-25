@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.BrooklynVersion;
 import brooklyn.catalog.Catalog;
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
@@ -35,6 +34,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
+import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.CommandLineUtil;
 import brooklyn.util.ResourceUtils;
 
@@ -64,9 +64,10 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     public static final String DEFAULT_LOCATION = "localhost";
 
     public static final String DEFAULT_WAR_PATH = new ResourceUtils(WebClusterDatabaseExampleApp.class).
+            // take this war, from the classpath, or via maven if not on the classpath
             firstAvailableUrl(
                     "classpath://hello-world-sql-webapp.war",
-                    BrooklynVersion.getBrooklynMavenArtifactUrl("io.brooklyn.example", "brooklyn-example-hello-world-sql-webapp", "war"))
+                    BrooklynMavenArtifacts.localUrl("example", "brooklyn-example-hello-world-sql-webapp", "war"))
             .or("classpath://hello-world-sql-webapp.war");
     
     @CatalogConfig(label="WAR (URL)", priority=2)

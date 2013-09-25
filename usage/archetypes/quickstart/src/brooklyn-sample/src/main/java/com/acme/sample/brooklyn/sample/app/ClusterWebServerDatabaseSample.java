@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.BrooklynVersion;
 import brooklyn.catalog.Catalog;
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
@@ -32,6 +31,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
+import brooklyn.util.BrooklynMavenArtifacts;
 
 import com.google.common.base.Functions;
 
@@ -54,7 +54,7 @@ public class ClusterWebServerDatabaseSample extends AbstractApplication {
     
     public static final String DEFAULT_WAR_URL =
             // can supply any URL -- this loads a stock example from maven central / sonatype
-            BrooklynVersion.getBrooklynMavenArtifactUrl("io.brooklyn.example", "brooklyn-example-hello-world-sql-webapp", "war");
+            BrooklynMavenArtifacts.localUrl("example", "brooklyn-example-hello-world-sql-webapp", "war");
 
     @CatalogConfig(label="WAR (URL)", priority=2)
     public static final ConfigKey<String> WAR_URL = ConfigKeys.newConfigKey(

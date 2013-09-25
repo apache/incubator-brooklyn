@@ -283,6 +283,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
+                    <!-- NB: if this version is changed, update the MavenArtifactTest -->
                     <version>2.4</version>
                 </plugin>
                 <plugin>

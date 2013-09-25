@@ -87,17 +87,20 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
     public MutableMap() {}
     @SuppressWarnings("unchecked")
     public MutableMap(@SuppressWarnings("rawtypes") Map source) { super(source); }
-    
+
+    /** as {@link #put(Object, Object)} but fluent style */
     public MutableMap<K,V> add(K key, V value) {
         put(key, value);
         return this;
     }
 
+    /** as {@link #putAll(Map)} but fluent style */
     public MutableMap<K,V> add(Map<K,V> m) {
         putAll(m);
         return this;
     }
 
+    /** as {@link #put(Object, Object)} but excluding null values, and fluent style */
     public MutableMap<K,V> addIfNotNull(K key, V value) {
         if (value!=null) add(key, value);
         return this;

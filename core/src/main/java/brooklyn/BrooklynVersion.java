@@ -10,10 +10,6 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.Beta;
-
-import brooklyn.util.text.Strings;
-
 public class BrooklynVersion {
 
   private static final Logger log = LoggerFactory.getLogger(BrooklynVersion.class);
@@ -79,31 +75,6 @@ public class BrooklynVersion {
 
   public static String get() {
     return INSTANCE.version;
-  }
-
-  /** returns a URL for access brooklyn artifacts 
-   * (or any artifact in sonatype for snapshots and maven central for releases)
-   */
-  @Beta
-  public static String getBrooklynMavenArtifactUrl(String groupId, String artifactId, String artifactType) {
-      return getMavenArtifactUrl(groupId, artifactId, artifactType, INSTANCE.getVersion());
-  }
-
-  // does not belong here -- but not sure where it belongs!
-  @Beta
-  public static String getMavenArtifactUrl(String groupId, String artifactId, String artifactType, String version) {
-      if (INSTANCE.isSnapshot())
-          return "https://oss.sonatype.org/service/local/artifact/maven/redirect?" +
-          		"r=snapshots&" +
-          		"v="+version+"&" +
-          		"g="+groupId+"&" +
-          		"a="+artifactId+"&" +
-          		"e="+artifactType;
-      else
-          return "http://search.maven.org/remotecontent?filepath="+
-              Strings.replaceAllNonRegex(groupId, ".", "/")+"/"+artifactId+"/"+version+"/"+
-              artifactId+"-"+version+"."+artifactType;
-          
   }
   
 }

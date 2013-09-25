@@ -118,8 +118,8 @@ public class JavaClassNames {
         return simplifyClassName(st.getClassName())+"."+st.getMethodName();
     }
 
-    /** returns nice class name and method for the caller, going up the stack,
-     * with 0 typically being the caller of this method */
+    /** returns nice class name and method for the caller, going up the stack (filtered to remove invocation etc),
+     * with 0 typically being the context where this method is called, 1 being its caller, etc */
     public static String callerNiceClassAndMethod(int depth) {
         return niceClassAndMethod(callerStackElement(depth));
     }
