@@ -2,6 +2,7 @@ package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatform;
+import io.brooklyn.camp.brooklyn.HasBrooklynManagementContext;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
@@ -51,7 +52,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
 
     // note: based on BrooklynRestResourceUtils, but modified to not allow child entities (yet)
     // (will want to revise that when building up from a non-brooklyn template)
-    @SuppressWarnings("unchecked")
     public Application create(AssemblyTemplate template, CampPlatform platform) {
         log.debug("CAMP creating application instance for {} ({})", template.getId(), template);
         
@@ -60,10 +60,22 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         CatalogItem<?> item = catalog.getCatalogItem(template.getId());
 
         if (item==null) {
-            // TODO support AssemblyTemplates created via PDP, _specifying_ then entities to put in 
-            throw new UnsupportedOperationException("Assembly template "+template+" is not a brooklyn blueprint");
+            createApplicationFromNonCatalogCampTemplate(template);
         }
-        
+                
+        return createApplicationFromCatalog(platform, item, template);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Application createApplicationFromCatalog(CampPlatform platform, CatalogItem<?> item, AssemblyTemplate template) {
+        ManagementContext mgmt = getBrooklynManagementContext(platform);
+        BrooklynCatalog catalog = mgmt.getCatalog();
+
+        if (!template.getApplicationComponentTemplates().isEmpty() ||
+                !template.getPlatformComponentTemplates().isEmpty())
+            log.warn("CAMP AssemblyTemplate was not empty when creating from catalog spec; ignoring templates declared within it " +
+                    "("+template+")");
+
         // TODO name (and description) -- not prescribed by camp spec (cf discussion with gil)
         String name = null;
         
@@ -129,8 +141,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
     }
 
     private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
-        // TODO if brooklyn is _part_ of the catalog we need a way to get a handle on it from platform
-        ManagementContext mgmt = ((BrooklynCampPlatform)platform).getBrooklynManagementContext();
+        ManagementContext mgmt = ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
         return mgmt;
     }
     
@@ -149,12 +160,12 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         List<Location> locations = 
                 getBrooklynManagementContext(platform).getLocationRegistry().resolve(Arrays.asList("localhost"));
         
-        return Entities.invokeEffectorWithMap((EntityLocal)app, app, Startable.START,
+        return Entities.invokeEffector((EntityLocal)app, app, Startable.START,
                 MutableMap.of("locations", locations));
     }
 
     // TODO exact copy of BrooklynRestResoureUtils
-    private Map<?,?> convertFlagsToKeys(Class<? extends Entity> javaType, Map<?, ?> config) {
+    private static Map<?,?> convertFlagsToKeys(Class<? extends Entity> javaType, Map<?, ?> config) {
         if (config==null || config.isEmpty() || javaType==null) return config;
         
         Map<String, ConfigKey<?>> configKeys = EntityTypes.getDefinedConfigKeys(javaType);
@@ -190,6 +201,11 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         if (!Strings.isEmpty(name)) result.displayName(name);
         result.configure( convertFlagsToKeys(result.getImplementation(), config) );
         return result;
+    }
+
+    protected void createApplicationFromNonCatalogCampTemplate(AssemblyTemplate template) {
+        // TODO support AssemblyTemplates created via PDP, _specifying_ then entities to put in 
+        throw new UnsupportedOperationException("Assembly template "+template+" is not a brooklyn blueprint");
     }
 
 }

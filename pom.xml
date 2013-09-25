@@ -92,7 +92,7 @@
         <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
         <xstream.version>1.4.3</xstream.version>
         <jackson.version>1.9.13</jackson.version>
-        <jersey.version>1.12</jersey.version>
+        <jersey.version>1.12</jersey.version> <!-- NB: 1.17 requires changes to how we hanlde multipart in CatalogApi -->
         <swagger.version>1.0.1</swagger.version>
         <dropwizard.version>0.4.4</dropwizard.version>
         <jansi.version>1.2.1</jansi.version>
