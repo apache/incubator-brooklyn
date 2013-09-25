@@ -3,6 +3,7 @@ layout: page
 title: Walkthrough
 toc: /toc.json
 ---
+{% include fields.md %}
 
 ## Intro
 
@@ -15,11 +16,30 @@ composed of:
 * a cluster of JBoss appservers
 * a MySQL database
 
-Here's the essential code which creates these and sets them up
-for management:
+A sample project can be created using the Brooklyn maven quickstart archetype:
+
+{% highlight bash %}
+export BROOKLYN_VERSION=0.6.0-SNAPSHOT
+mvn archetype:generate \
+    -DarchetypeGroupId=io.brooklyn -DarchetypeArtifactId=brooklyn-archetype-quickstart -DarchetypeVersion=${BROOKLYN_VERSION} \
+    -DgroupId=com.acme.sample -DartifactId=brooklyn-sample -Dversion=0.1.0-SNAPSHOT -Dpackage=com.acme.sample.brooklyn
+cd brooklyn-sample
+{% endhighlight %}
+
+{% if SNAPSHOT %}
+For a snapshot version, you must either have a local `mvn install` of Brooklyn as described 
+[here]({{site.url}}/dev/code/index.html) or include the following additional `-D` define in 
+in the `mvn archetype:generate` command:
+
+{% highlight bash %}
+    -DarchetypeCatalog=https://oss.sonatype.org/content/repositories/snapshots/archetype-catalog.xml
+{% endhighlight %}
+{% endif %}
+
+An application blueprint can then be defined as a class as follows:
 
 {% highlight java %}
-public class WebClusterDatabaseExample extends AbstractApplication {
+public class ClusterWebServerDatabaseSample extends AbstractApplication {
     @Override
     public void init() {
         MySqlNode mysql = addChild(EntitySpec.create(MySqlNode.class));
@@ -29,18 +49,22 @@ public class WebClusterDatabaseExample extends AbstractApplication {
 {% endhighlight %}
 
 
-## Runtime: the Web Console
+## Runtime
 
-Build and run this Brooklyn "Application", specifying a target location, and our application is deployed.
+To launch this application, simply build the project and run the `start.sh` script
+in the resulting assembly:
 
 {% highlight bash %}
-export BROOKLYN_CLASSPATH=/path/to/your/project/target/classes
-brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location jclouds:aws-ec2:eu-west-1
+mvn clean assembly:assembly
+cd target/brooklyn-sample-0.1.0-SNAPSHOT-dist/brooklyn-sample-0.1.0-SNAPSHOT/
+./start.sh application --class com.acme.sample.brooklyn.ClusterWebServerDatabaseSample \
+    --location jclouds:aws-ec2:eu-west-1
 {% endhighlight %}
 
-Amazon is used in these screenshots, but lots of targets are supported (using [jclouds](http://jclouds.org))
-including fixed IP addresses and private clouds, 
-or just localhost (very handy for dev/test, and with port conflicts resolved automatically!).
+Amazon is used in these screenshots, but lots of targets are supported,
+including `--location localhost`, fixed IP addresses, and 
+everything supported by [jclouds](http://jclouds.org), from OpenStack to Google Compute.
+**It is necessary to set up credentials and/or access, as described [here]({{ site.url }}/use/guide/defining-applications/common-usage#locations).**
 
 [![Web Console](walkthrough-webconsole-map-w700.png "Web Console")](walkthrough-webconsole-map.png) 
 
@@ -53,7 +77,7 @@ and exposes operations ("effectors") that can be performed on entities.
 [![Web Console Details](walkthrough-webconsole-details-w700.png "Web Console Details")](walkthrough-webconsole-details.png) 
 
 
-## Some Configuration and Management
+## Topology, Dependencies, and Management Policies
 
 Of course in the real world, application deployments are more interesting;
 they do things and need configuration.  For instance you might need to:
@@ -76,7 +100,7 @@ block "at the last moment" when the value is needed
 (but after e.g. the VMs have been provisioned, to speed things up).
 
 {% highlight java %}
-public class WebClusterDatabaseExample extends AbstractApplication {
+public class ClusterWebServerDatabaseSample extends AbstractApplication {
     @Override
     public void init() {
         MySqlNode mysql = addChild(EntitySpec.create(MySqlNode.class)
@@ -86,7 +110,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
                 .configure("memberSpec", EntitySpec.create(JBoss7Server.class)
                         .configure("httpPort", "8080+")
                         .configure("war", WAR_PATH)
-                        .configure(javaSysProp("brooklyn.example.db.url"), 
+                        .configure(JavaEntityMethods.javaSysProp("brooklyn.example.db.url"), 
                                 formatString("jdbc:%s%s?user=%s\\&password=%s", 
                                         attributeWhenReady(mysql, MySqlNode.MYSQL_URL), DB_TABLE, DB_USERNAME, DB_PASSWORD))));
     }
@@ -125,15 +149,16 @@ A separate policy operates at the ``Controlled`` cluster to ensure the
 load-balancer is updated as the pool of web servers expands and contracts.
 
 Fire up a JMeter session and blast the Nginx address.
-The resizer policy scales up our cluster:
+The auto-scaler policy scales up our cluster:
 
-[![Web Cluster Scaling with the Resizer Policy](walkthrough-webconsole-scaling-w700.png "Screenshot of Web Cluster Scaling with the Resizer Policy")](walkthrough-webconsole-scaling.png) 
+[![Web Cluster Scaling with the Auto-Scaler Policy](walkthrough-webconsole-scaling-w700.png "Screenshot of Web Cluster Scaling with the Resizer Policy")](walkthrough-webconsole-scaling.png) 
 
 
-## Run it Yourself
+## What Next?
  
-All the code for this walkthrough (and even the JMeter script) is included with
-Brooklyn as the ``simple-web-cluster`` example,
+In addition to the sample project created by the archetype, with its README and
+`assembly` build, you can find additional code related to this example
+(and even the JMeter script) included with Brooklyn as the ``simple-web-cluster`` example,
 described [in detail here]({{site.url}}/use/examples/webcluster).
 
 For your applications, you might want to mix in other data stores, messaging systems, or on-line services including PaaS.
