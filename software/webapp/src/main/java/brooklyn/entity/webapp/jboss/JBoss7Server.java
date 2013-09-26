@@ -79,5 +79,5 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
     AttributeSensor<Boolean> MANAGEMENT_URL_UP = 
             Sensors.newBooleanSensor("webapp.jboss.managementUp", "Management server is responding with OK");
     
-    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor( "mysql.pid.file", "PID file");
+    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor( "jboss.pid.file", "PID file");
 }
