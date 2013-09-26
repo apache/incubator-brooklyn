@@ -8,6 +8,7 @@ define([
             var settings = {
                 "bDestroy": true,
                 "iDisplayLength": 25,
+                "bDeferRender": true,
                 "sPaginationType": "full_numbers",
                 "sDom": "fp<'brook-db-top-toolbar'>tilp<'brook-db-bot-toolbar'>",
                 "oLanguage": {
@@ -57,9 +58,13 @@ define([
          * whose first element is the ID (hidden first column of table)
          * and other elements are the other columns in the table;
          * alternatively it can return null if the entry should be excluded
+         * 
+         * option refreshAllRows can be passed to force all rows to be re-rendered;
+         * useful if rendering data may have changed even if value has not
          */ 
-        updateMyDataTable: function(table, collection, fnConvertData) {
+        updateMyDataTable: function(table, collection, fnConvertData, options) {
             if (table==null) return;
+            if (options==null) options = {}
             var oldDisplayDataList = []
             try {
                 oldDisplayDataList = table.dataTable().fnGetData();
@@ -100,7 +105,7 @@ define([
                 var oldProps = oldDisplayData[rowProps[0]]
                 for (idx in rowProps) {
                     var v = rowProps[idx]
-                    if (!_.isEqual(v,oldProps[idx])) {
+                    if (options['refreshAllRows'] || !_.isEqual(v,oldProps[idx])) {
                         // update individual columns as values change
                         try {
                             table.fnUpdate( v, Number(prop), idx, false, false )
@@ -138,8 +143,8 @@ define([
                     log(newDisplayData[prop])
                 }
             }
-//            table.fnAdjustColumnSizing();
             try {
+                // redraw, but keeping pagination
                 table.fnStandingRedraw();
             } catch (e) {
                 log("WARNING: could not redraw")
