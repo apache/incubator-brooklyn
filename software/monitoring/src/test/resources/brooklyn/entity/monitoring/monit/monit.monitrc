@@ -3,6 +3,8 @@
 set httpd port 2812 and use address localhost
 allow localhost
 set daemon 5
+set pidfile ${driver.runDir}/monit.pid
+set logfile ${driver.runDir}/monit.log
 
 check process cron
 	matching "cron"

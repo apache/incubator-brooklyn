@@ -57,7 +57,7 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
             .execute();  //create the directory
         String controlFileUrl = getEntity().getConfig(MonitNode.CONTROL_FILE_URL);
         remoteControlFilePath = getRunDir() + "/monit.monitrc";
-        copyTemplate(controlFileUrl, remoteControlFilePath);
+        copyTemplate(controlFileUrl, remoteControlFilePath, getEntity().getConfig(MonitNode.CONTROL_FILE_SUBSTITUTIONS));
         // Monit demands the control file has permissions <= 0700
         newScript(CUSTOMIZING)
             .body.append("chmod 600 " + remoteControlFilePath)
@@ -66,13 +66,8 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void launch() {
-        String args = Joiner.on(" ").join(
-            "-c", remoteControlFilePath,
-            "-p", getMonitPidFile(),
-            "-l", getMonitLogFile()
-            );
-        String command = format("touch %s && %s/bin/monit %s > out.log 2> err.log < /dev/null", getMonitPidFile(),
-            expandedInstallDir, args);
+        String command = format("touch %s && %s/bin/monit -c %s > out.log 2> err.log < /dev/null", getMonitPidFile(),
+            expandedInstallDir, remoteControlFilePath);
         newScript(LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
             .body.append(command)
@@ -117,5 +112,10 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
     @Override
     public String getStatusCmd() {
         return format("%s/bin/monit -c %s status", expandedInstallDir, remoteControlFilePath);
+    }
+    
+    @Override
+    public String getExpandedInstallDir() {
+        return expandedInstallDir;
     }
 }

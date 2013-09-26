@@ -1,5 +1,10 @@
 package brooklyn.entity.monitoring.monit;
 
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
@@ -27,6 +32,9 @@ public interface MonitNode extends SoftwareProcess, HasShortName {
     
     @SetFromFlag("controlFileUrl")
     public static final ConfigKey<String> CONTROL_FILE_URL = ConfigKeys.newStringConfigKey("monit.control.url", "URL where monit control (.monitrc) file can be found", "");
+
+    public static final ConfigKey<Map<String, Object>> CONTROL_FILE_SUBSTITUTIONS = ConfigKeys.newConfigKey(new TypeToken<Map<String, Object>>(){}, "monit.control.substitutions", 
+        "Additional substitutions to be used in the control file template", ImmutableMap.<String, Object>of());
     
     public static final AttributeSensor<String> MONIT_TARGET_PROCESS_NAME = Sensors.newStringSensor("monit.target.process.name");
     

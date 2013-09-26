@@ -43,7 +43,6 @@ public class MonitIntegrationTest {
     @Test(groups = "Integration")
     public void test_localhost() {
         MonitNode monitNode = app.createAndManageChild(EntitySpec.create(MonitNode.class)
-            .configure(MonitNode.DAEMON_INTERVAL_SECONDS, 2)
             .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monit.monitrc"));
         LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
         app.start(ImmutableSet.of(location));

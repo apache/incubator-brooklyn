@@ -6,4 +6,5 @@ public interface MonitDriver extends SoftwareProcessDriver {
 
     String getStatusCmd();
 
+    String getExpandedInstallDir();
 }
