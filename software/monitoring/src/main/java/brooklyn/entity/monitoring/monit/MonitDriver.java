@@ -1,4 +1,4 @@
-package brooklyn.entity.monit;
+package brooklyn.entity.monitoring.monit;
 
 import brooklyn.entity.basic.SoftwareProcessDriver;
 

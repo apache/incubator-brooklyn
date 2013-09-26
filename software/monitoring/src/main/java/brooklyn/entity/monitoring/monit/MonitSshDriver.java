@@ -1,4 +1,4 @@
-package brooklyn.entity.monit;
+package brooklyn.entity.monitoring.monit;
 
 import static java.lang.String.format;
 
@@ -30,13 +30,12 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public MonitSshDriver(MonitNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
-
     @Override
     public void install() {
         DownloadResolver resolver = ((EntityInternal)entity).getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("mmonit-%s-%s", getVersion(), getOsTag()));
+        expandedInstallDir = getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("monit-%s", getVersion()));
         List<String> commands = ImmutableList.<String>builder()
             .add(BashCommands.INSTALL_TAR)
             .add(BashCommands.INSTALL_CURL)
@@ -53,6 +52,9 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void customize() {
+        newScript(CUSTOMIZING)
+            .body.append("echo copying control file")
+            .execute();  //create the directory
         String controlFileUrl = getEntity().getConfig(MonitNode.CONTROL_FILE_URL);
         remoteControlFilePath = getRunDir() + "/monit.monitrc";
         copyTemplate(controlFileUrl, remoteControlFilePath);
@@ -66,7 +68,6 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public void launch() {
         String args = Joiner.on(" ").join(
             "-c", remoteControlFilePath,
-            "-d", getEntity().getConfig(MonitNode.DAEMON_INTERVAL_SECONDS),
             "-p", getMonitPidFile(),
             "-l", getMonitLogFile()
             );
@@ -115,6 +116,6 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     @Override
     public String getStatusCmd() {
-        return format("%s/bin/monit status", expandedInstallDir);
+        return format("%s/bin/monit -c %s status", expandedInstallDir, remoteControlFilePath);
     }
 }

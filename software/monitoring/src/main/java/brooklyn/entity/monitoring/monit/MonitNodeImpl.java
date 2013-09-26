@@ -1,4 +1,4 @@
-package brooklyn.entity.monit;
+package brooklyn.entity.monitoring.monit;
 
 import java.util.Map;
 
@@ -24,13 +24,20 @@ public class MonitNodeImpl extends SoftwareProcessImpl implements MonitNode {
     
     private SshFeed feed;
     
+    public MonitNodeImpl() {
+    }
+    
+    public MonitNodeImpl(Map flags) {
+        super(flags, null);
+    }
+    
     public MonitNodeImpl(Map flags, Entity parent) {
         super(flags, parent);
     }
 
     @Override
     public Class getDriverInterface() {
-        return MonitNode.class;
+        return MonitDriver.class;
     }
     
     @Override
