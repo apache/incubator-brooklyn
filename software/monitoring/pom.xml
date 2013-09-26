@@ -46,6 +46,12 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-database</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <!-- bring in jclouds for testing -->
         <dependency>
             <groupId>io.brooklyn</groupId>

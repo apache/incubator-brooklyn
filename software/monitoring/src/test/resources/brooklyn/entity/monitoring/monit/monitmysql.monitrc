@@ -1,0 +1,8 @@
+[#ftl]
+set httpd port 2812 and use address localhost
+allow localhost
+	
+check process mysql with pidfile ${targetPidFile}
+	group database
+	mode active
+	
