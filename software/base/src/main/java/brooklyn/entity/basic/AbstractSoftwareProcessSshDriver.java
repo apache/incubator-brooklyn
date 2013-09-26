@@ -28,6 +28,7 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -231,13 +232,17 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return copyTemplate(template.toURI().toASCIIString(), target);
     }
     public int copyTemplate(String template, String target) {
+        return copyTemplate(template, target, ImmutableMap.<String, String>of());
+    }
+    
+    public int copyTemplate(String template, String target, Map<String,? extends Object> extraSubstitutions) {
         // prefix with runDir if relative target
         String dest = target;
         if (!new File(target).isAbsolute()) {
             dest = getRunDir() + "/" + target;
         }
-
-        String data = processTemplate(template);
+        
+        String data = processTemplate(template, extraSubstitutions);
         int result = getMachine().copyTo(new StringReader(data), dest);
         if (log.isDebugEnabled())
             log.debug("Copied filtered template for {}: {} to {} - result {}", new Object[] { entity, template, dest, result });
