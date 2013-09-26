@@ -88,6 +88,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1150,11 +1151,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             delayMs = Time.parseTimeString(WAIT_FOR_SSHABLE.getDefaultValue());
         
         String user = expectedCredentialsRef.getUser();
-        LOG.info("Started VM in {}; waiting {} for it to be sshable on {}@{}{}",
-                new Object[] {
-                        setup.getDescription(),Time.makeTimeString(delayMs),
-                        user, vmIp, Objects.equal(user, getUser(setup)) ? "" : " (setup user is different: "+getUser(setup)+")"
-                });
+        LOG.info("Started VM {}; waiting {} for it to be sshable on {}@{}{}", new Object[] {
+                setup.getDescription(), Time.makeTimeStringRounded(delayMs),
+                user, vmIp, Objects.equal(user, getUser(setup)) ? "" : " (setup user is different: "+getUser(setup)+")"});
+        Stopwatch stopwatch = new Stopwatch().start();
         
         boolean reachable = new Repeater()
             .repeat()
@@ -1173,8 +1173,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (!reachable) {
             throw new IllegalStateException("SSH failed for "+
                     user+"@"+vmIp+" ("+setup.getDescription()+") after waiting "+
-                    Time.makeTimeString(delayMs));
+                    Time.makeTimeStringRounded(delayMs));
         }
+        
+        LOG.info("VM {}; is sshable after {} on {}@{}",new Object[] {
+                setup.getDescription(), Time.makeTimeStringRounded(stopwatch),
+                user, vmIp});
     }
     
     // -------------------- hostnames ------------------------
