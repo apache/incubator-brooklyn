@@ -72,5 +72,7 @@ public interface MySqlNode extends SoftwareProcess, HasShortName, DatastoreCommo
     public static final AttributeSensor<Double> QUERIES_PER_SECOND_FROM_MYSQL = Sensors.newDoubleSensor("mysql.queries.perSec.fromMysql");
 
     public String executeScript(String commands);
+
+    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor( "mysql.pid.file", "PID file");;
     
 }

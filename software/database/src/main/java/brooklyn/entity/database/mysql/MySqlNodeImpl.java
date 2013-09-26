@@ -101,7 +101,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
             setAttribute(SERVICE_UP, true);
         }
     }
-         
+    
     @Override
     protected void disconnectSensors() {
         if (feed != null) feed.stop();
