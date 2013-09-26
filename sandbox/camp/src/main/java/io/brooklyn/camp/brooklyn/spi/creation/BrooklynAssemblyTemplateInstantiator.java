@@ -2,9 +2,11 @@ package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatform;
-import io.brooklyn.camp.brooklyn.HasBrooklynManagementContext;
+import io.brooklyn.camp.brooklyn.spi.platform.HasBrooklynManagementContext;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.PlatformComponentTemplate;
+import io.brooklyn.camp.spi.collection.ResolvableLink;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.lang.reflect.Constructor;
@@ -24,9 +26,12 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicApplication;
+import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityTypes;
+import brooklyn.entity.basic.StartableApplication;
+import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
@@ -60,13 +65,12 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         CatalogItem<?> item = catalog.getCatalogItem(template.getId());
 
         if (item==null) {
-            createApplicationFromNonCatalogCampTemplate(template);
+            return createApplicationFromNonCatalogCampTemplate(template, platform);
+        } else {
+            return createApplicationFromCatalog(platform, item, template);
         }
-                
-        return createApplicationFromCatalog(platform, item, template);
     }
 
-    @SuppressWarnings("unchecked")
     protected Application createApplicationFromCatalog(CampPlatform platform, CatalogItem<?> item, AssemblyTemplate template) {
         ManagementContext mgmt = getBrooklynManagementContext(platform);
         BrooklynCatalog catalog = mgmt.getCatalog();
@@ -90,19 +94,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         if (Strings.isEmpty(type)) {
             clazz = BasicApplication.class;
         } else {
-            Class<? extends Entity> tempclazz;
-            try {
-                tempclazz = catalog.loadClassByType(type, Entity.class);
-            } catch (NoSuchElementException e) {
-                try {
-                    tempclazz = (Class<? extends Entity>) catalog.getRootClassLoader().loadClass(type);
-                    log.info("Catalog does not contain item for type {}; loaded class directly instead", type);
-                } catch (ClassNotFoundException e2) {
-                    log.warn("No catalog item for type {}, and could not load class directly; rethrowing", type);
-                    throw e;
-                }
-            }
-            clazz = tempclazz;
+            clazz = loadEntityType(catalog, type);
         }
         
         try {
@@ -120,11 +112,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                 brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
                 instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
                 
-//                for (EntitySpec entitySpec : entities) {
-//                    log.info("REST creating instance for entity {}", entitySpec.getType());
-//                    instance.addChild(mgmt.getEntityManager().createEntity(toCoreEntitySpec(entitySpec)));
-//                }
-                
                 log.info("REST placing '{}' under management", instance);
                 Entities.startManagement(instance, mgmt);
                 
@@ -138,6 +125,25 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             log.error("CAMP failed to create application: "+e, e);
             throw Exceptions.propagate(e);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Class<? extends Entity> loadEntityType(BrooklynCatalog catalog, String type) {
+        final Class<? extends Entity> clazz;
+        Class<? extends Entity> tempclazz;
+        try {
+            tempclazz = catalog.loadClassByType(type, Entity.class);
+        } catch (NoSuchElementException e) {
+            try {
+                tempclazz = (Class<? extends Entity>) catalog.getRootClassLoader().loadClass(type);
+                log.debug("Catalog does not contain item for type {}; loaded class directly instead", type);
+            } catch (ClassNotFoundException e2) {
+                log.warn("No catalog item for type {}, and could not load class directly; rethrowing", type);
+                throw e;
+            }
+        }
+        clazz = tempclazz;
+        return clazz;
     }
 
     private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
@@ -203,9 +209,37 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         return result;
     }
 
-    protected void createApplicationFromNonCatalogCampTemplate(AssemblyTemplate template) {
-        // TODO support AssemblyTemplates created via PDP, _specifying_ then entities to put in 
-        throw new UnsupportedOperationException("Assembly template "+template+" is not a brooklyn blueprint");
+    protected Application createApplicationFromNonCatalogCampTemplate(AssemblyTemplate template, CampPlatform platform) {
+        // AssemblyTemplates created via PDP, _specifying_ then entities to put in
+        ManagementContext mgmt = getBrooklynManagementContext(platform);
+        BrooklynCatalog catalog = mgmt.getCatalog();
+
+        EntitySpec<StartableApplication> appSpec = EntitySpec.create(StartableApplication.class, BasicApplicationImpl.class);
+
+        for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
+            final PlatformComponentTemplate ct = ctl.resolve();
+            final String bTypeName = Strings.removeFromStart(ct.getType(), "brooklyn:");
+            final Class<? extends Entity> bType = loadEntityType(catalog, bTypeName);
+            
+            appSpec.addInitializer(new EntityInitializer() {
+                @Override
+                public void apply(EntityLocal entity) {
+                    EntitySpec<? extends Entity> child = EntitySpec.create(bType);
+                    
+                    @SuppressWarnings("unchecked")
+                    Map<String,?> config = (Map<String, ?>) ct.getCustomAttributes().get("brooklyn.config");
+                    if (config!=null)
+                        child.configure(config);
+                    
+                    entity.addChild(child);
+                }
+            });
+        }
+        
+        log.info("REST placing '{}' under management", appSpec);
+        StartableApplication app = mgmt.getEntityManager().createEntity(appSpec);
+        Entities.startManagement(app, mgmt);
+        return app;
     }
 
 }

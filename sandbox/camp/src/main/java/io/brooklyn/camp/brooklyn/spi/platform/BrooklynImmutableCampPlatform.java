@@ -1,4 +1,4 @@
-package io.brooklyn.camp.brooklyn;
+package io.brooklyn.camp.brooklyn.spi.platform;
 
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.spi.lookup.AssemblyBrooklynLookup;

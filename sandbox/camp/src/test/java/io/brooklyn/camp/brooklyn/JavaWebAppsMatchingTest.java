@@ -32,18 +32,10 @@ public class JavaWebAppsMatchingTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-//        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-//              .start();
-//        ((BrooklynProperties)launcher.getServerDetails().getManagementContext().getConfig()).
-//          put(BrooklynUrlLookup.BROOKLYN_ROOT_URL, launcher.getServerDetails().getWebServerUrl());
-//        brooklynMgmt = launcher.getServerDetails().getManagementContext();
-      
         brooklynMgmt = new LocalManagementContext();
         platform = new BrooklynCampPlatform(
               PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(),
               brooklynMgmt);
-        
-//        new CampServer(platform, "").start();
     }
     
     @AfterMethod
