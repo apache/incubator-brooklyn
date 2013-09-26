@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp.jboss;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -206,6 +206,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
 
     @Override
     public void launch() {
+        entity.setAttribute(JBoss7Server.PID_FILE, getRunDir() + "/" + PID_FILENAME);
         Map flags = MutableMap.of("usePidFile", false);
 
         // We wait for evidence of JBoss running because, using
