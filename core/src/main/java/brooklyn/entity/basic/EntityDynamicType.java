@@ -24,10 +24,10 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.entity.effector.EffectorAndBody;
 import brooklyn.entity.effector.EffectorBody;
-import brooklyn.entity.effector.EffectorWithBody;
-import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.effector.EffectorTasks.EffectorBodyTaskFactory;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
+import brooklyn.entity.effector.EffectorWithBody;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 import brooklyn.util.flags.FlagUtils;
@@ -87,15 +87,15 @@ public class EntityDynamicType {
         setName((clazz.getCanonicalName() == null) ? clazz.getName() : clazz.getCanonicalName());
         String id = entity==null ? clazz.getName() : entity.getId();
         
-        effectors.putAll(findEffectors(clazz, entity));
+        effectors.putAll(findEffectors(clazz, null));
         if (LOG.isTraceEnabled())
             LOG.trace("Entity {} effectors: {}", id, Joiner.on(", ").join(effectors.keySet()));
         
-        sensors.putAll(findSensors(clazz, entity));
+        sensors.putAll(findSensors(clazz, null));
         if (LOG.isTraceEnabled())
             LOG.trace("Entity {} sensors: {}", id, Joiner.on(", ").join(sensors.keySet()));
         
-        buildConfigKeys(clazz, entity, configKeys);
+        buildConfigKeys(clazz, null, configKeys);
         if (LOG.isTraceEnabled())
             LOG.trace("Entity {} config keys: {}", id, Joiner.on(", ").join(configKeys.keySet()));
 
