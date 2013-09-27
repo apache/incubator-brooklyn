@@ -30,7 +30,7 @@ GREP_ARGS="-r -l --exclude_dir=^\..*|\/\..* --exclude=.*\.(log|war)"
 # ... ${CURRENT_VERSION} ... BROOKLYN_VERSION
 # Repeatedly replace, until no more occurrences of current_version.*label
 
-FILES1=`pcregrep $GREP_ARGS "${CURRENT_VERSION}.*${LABEL1}" .`
+FILES1=`pcregrep $GREP_ARGS "${CURRENT_VERSION}.*${LABEL1}" *`
 for x in $FILES1 ; do
   while grep --quiet -E "${CURRENT_VERSION}.*${LABEL1}" $x; do
     sed -i .bak "s/${CURRENT_VERSION}\(.*\)${LABEL1}/${NEW_VERSION}\1${LABEL1}/" $x
@@ -46,7 +46,7 @@ echo "One-line pattern changed these files: $FILES1"
 # ... BROOKLYN_VERSION_BELOW ...
 # ... ${CURRENT_VERSION} ...
 
-FILES2=`pcregrep $GREP_ARGS -M "${LABEL2}.*\n.*${CURRENT_VERSION}" .`
+FILES2=`pcregrep $GREP_ARGS -M "${LABEL2}.*\n.*${CURRENT_VERSION}" *`
 for x in $FILES2 ; do
   sed -i .bak -e '/'"${LABEL2}"'/{n;s/'"${CURRENT_VERSION}"'/'"${NEW_VERSION}"'/g;}' $x
 done
