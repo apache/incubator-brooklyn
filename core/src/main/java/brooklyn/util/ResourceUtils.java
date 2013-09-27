@@ -26,6 +26,7 @@ import brooklyn.util.text.DataUriSchemeParser;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
@@ -312,6 +313,14 @@ public class ResourceUtils {
         } finally {
             Closeables.closeQuietly(s);
         }
+    }
+    
+    /** returns the first available URL */
+    public Optional<String> firstAvailableUrl(String ...urls) {
+        for (String url: urls) {
+            if (doesUrlExist(url)) return Optional.of(url);
+        }
+        return Optional.absent();
     }
     
     /** returns the base directory or JAR from which the context is class-loaded, if possible;

@@ -16,6 +16,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
@@ -26,8 +27,10 @@ import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.access.BrooklynAccessUtils;
+import brooklyn.management.Task;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -236,17 +239,39 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
      */
     protected abstract void reconfigureService();
     
+    public synchronized void updateNeeded() {
+        if (updateNeeded) return;
+        updateNeeded = true;
+        LOG.debug("queueing an update-needed task for "+this+"; update will occur shortly");
+        Entities.submit(this, Tasks.builder().name("update-needed").body(new Runnable() {
+            @Override
+            public void run() {
+                if (updateNeeded)
+                    AbstractControllerImpl.this.update();
+            } 
+        }).build());
+    }
+    
     @Override
-    public synchronized void update() {
+    public void update() {
+        Task<?> task = updateAsync();
+        task.getUnchecked();
+    }
+    
+    public synchronized Task<?> updateAsync() {
+        Task<?> result = null;
         if (!isActive()) updateNeeded = true;
         else {
             updateNeeded = false;
             LOG.debug("Updating {} in response to changes", this);
+            LOG.info("Updating {}, members {} with address {}", new Object[] {this, serverPoolTargets, serverPoolAddresses});
             reconfigureService();
             LOG.debug("Reloading {} in response to changes", this);
-            invoke(RELOAD);
+            // reload should happen synchronously
+            result = invoke(RELOAD);
         }
         setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
+        return result;
     }
 
     protected synchronized void resetServerPoolMemberTrackerPolicy() {
@@ -313,7 +338,9 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
 
         LOG.info("Adding to {}, new member {} with address {}", new Object[] {this, member, address});
         
-        update();
+        // TODO this does it synchronously; an async method leaning on `updateNeeded` and `update` might
+        // be more appropriate, especially when this is used in a listener
+        updateAsync();
         serverPoolTargets.put(member, address);
     }
     
@@ -330,7 +357,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         
         LOG.info("Removing from {}, member {} with address {}", new Object[] {this, member, address});
         
-        update();
+        updateAsync();
         serverPoolTargets.remove(member);
     }
     
@@ -355,6 +382,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             	flags.put("serverPoolTargets", MementoTransformer.transformEntitiesToIds(serverPoolTargets));
                 return super.getMementoWithProperties(flags);
             }
+            @SuppressWarnings({ "unchecked", "serial" })
             @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
             	super.doReconstruct(rebindContext, memento);
             	// TODO If pool-target entity couldn't be resolved, then  serverPoolAddresses and serverPoolTargets

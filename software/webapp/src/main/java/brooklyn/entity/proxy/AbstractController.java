@@ -15,6 +15,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.management.Task;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
@@ -83,6 +84,11 @@ public interface AbstractController extends SoftwareProcess, LoadBalancer {
     @Effector(description="Forces reload of the configuration")
     public void reload();
 
+    // TODO simplify update logic and tracking of targets (cf reload)
+    /** updates _synchronously_ */
     @Effector(description="Updates the entities configuration, and then forces reload of that configuration")
     public void update();
+    
+    /** indicates than an update is needed in the near future; does not do the update synchronously */
+    public void updateNeeded();
 }

@@ -34,7 +34,9 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
+import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.CommandLineUtil;
+import brooklyn.util.ResourceUtils;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.Lists;
@@ -61,17 +63,22 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     
     public static final String DEFAULT_LOCATION = "localhost";
 
-    public static final String DEFAULT_WAR_PATH = "classpath://hello-world-sql-webapp.war";
+    public static final String DEFAULT_WAR_PATH = new ResourceUtils(WebClusterDatabaseExampleApp.class).
+            // take this war, from the classpath, or via maven if not on the classpath
+            firstAvailableUrl(
+                    "classpath://hello-world-sql-webapp.war",
+                    BrooklynMavenArtifacts.localUrl("example", "brooklyn-example-hello-world-sql-webapp", "war"))
+            .or("classpath://hello-world-sql-webapp.war");
     
     @CatalogConfig(label="WAR (URL)", priority=2)
     public static final ConfigKey<String> WAR_PATH = ConfigKeys.newConfigKey(
         "app.war", "URL to the application archive which should be deployed", 
-        DEFAULT_WAR_PATH);
+        DEFAULT_WAR_PATH);    
 
     // TODO to expose in catalog we need to let the keystore url be specified (not hard)
     // and also confirm that this works for nginx (might be a bit fiddly);
     // booleans in the gui are working (With checkbox)
-//    @CatalogConfig(label="HTTPS")
+    @CatalogConfig(label="HTTPS")
     public static final ConfigKey<Boolean> USE_HTTPS = ConfigKeys.newConfigKey(
             "app.https", "Whether the application should use HTTPS only or just HTTP only (default)", false);
     

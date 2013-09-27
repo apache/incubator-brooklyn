@@ -2,6 +2,7 @@ package brooklyn.util.collections;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
@@ -58,11 +59,21 @@ public class MutableList<V> extends ArrayList<V> {
             return this;
         }
 
+        public Builder<V> add(V value1, V value2, V ...values) {
+            result.add(value1);
+            result.add(value2);
+            for (V v: values) result.add(v);
+            return this;
+        }
+
         public Builder<V> remove(V val) {
             result.remove(val);
             return this;
         }
         
+        /** @deprecated since 0.6.0 ambiguous with {@link #addAll(Iterable)}; 
+         * use {@link #add(Object, Object, Object...)} */ 
+        @Deprecated
         public Builder<V> addAll(V... values) {
             for (V v : values) {
                 result.add(v);
@@ -92,6 +103,9 @@ public class MutableList<V> extends ArrayList<V> {
             return this;
         }
 
+        /** @deprecated since 0.6.0 ambiguous with {@link #removeAll(Iterable)}; 
+         * use <code>removeAll(Arrays.asList(Object, Object, Object...))</code> */ 
+        @Deprecated
         public Builder<V> removeAll(V... values) {
             for (V v : values) {
                 result.remove(v);
@@ -108,11 +122,36 @@ public class MutableList<V> extends ArrayList<V> {
         }
     }
     
-    public MutableList<V> append(V ...items) {
+    /** as {@link List#add(Object)} but fluent style */
+    public MutableList<V> append(V item) {
+        add(item);
+        return this;
+    }
+
+    /** as {@link List#add(Object)} but excluding nulls, and fluent style */
+    public MutableList<V> appendIfNotNull(V item) {
+        if (item!=null) add(item);
+        return this;
+    }
+
+    /** as {@link List#add(Object)} but accepting multiple, and fluent style */
+    public MutableList<V> append(V item1, V item2, V ...items) {
+        add(item1);
+        add(item2);
         for (V item: items) add(item);
         return this;
     }
 
+    /** as {@link List#add(Object)} but excluding nulls, accepting multiple, and fluent style */
+    public MutableList<V> appendIfNotNull(V item1, V item2, V ...items) {
+        if (item1!=null) add(item1);
+        if (item2!=null) add(item2);
+        for (V item: items) 
+            if (item!=null) add(item);
+        return this;
+    }
+
+    /** as {@link List#addAll(Collection)} but fluent style */
     public MutableList<V> appendAll(Iterable<? extends V> items) {
         for (V item: items) add(item);
         return this;

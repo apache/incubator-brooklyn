@@ -50,7 +50,8 @@ public class BashCommands {
      * Returns a command for safely running as root, using {@code sudo}.
      * <p/>
      * Ensuring non-blocking if password not set by using 
-     * {@code -n} which means to exit if password required,
+     * {@code -n} which means to exit if password required
+     * (this is unsupported in Ubuntu 8 but all modern OS's seem okay with this!),
      * and (perhaps unnecessarily ?)
      * {@code -S} which reads from stdin (routed to {@code /dev/null}, it was claimed here previously, though I'm not sure?).
      * <p/>

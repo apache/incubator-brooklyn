@@ -69,6 +69,13 @@ public class MutableSet<V> extends LinkedHashSet<V> {
             return this;
         }
 
+        public Builder<V> add(V v1, V v2, V ...values) {
+            result.add(v1);
+            result.add(v2);
+            for (V value: values) result.add(value);
+            return this;
+        }
+
         public Builder<V> remove(V val) {
             result.remove(val);
             return this;
@@ -85,6 +92,8 @@ public class MutableSet<V> extends LinkedHashSet<V> {
             return this;
         }
 
+        /** @deprecated since 0.6.0 ambiguous with {@link #addAll(Iterable)}; 
+         * use {@link #add(Object, Object, Object...)} */ 
         public Builder<V> addAll(V... values) {
             for (V v : values) {
                 result.add(v);
@@ -103,6 +112,8 @@ public class MutableSet<V> extends LinkedHashSet<V> {
             return this;
         }
         
+        /** @deprecated since 0.6.0 ambiguous with {@link #removeAll(Iterable)}; 
+         * use <code>removeAll(Arrays.asList(Object, Object, Object...))</code> */ 
         public Builder<V> removeAll(V... values) {
             for (V v : values) {
                 result.remove(v);
@@ -114,4 +125,10 @@ public class MutableSet<V> extends LinkedHashSet<V> {
           return new MutableSet<V>(result);
         }
     }
+    
+    public boolean addIfNotNull(V e) {
+        if (e!=null) return add(e);
+        return false;
+    }
+    
 }

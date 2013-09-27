@@ -82,23 +82,23 @@
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.4</ant.version>
 
+        <jclouds.version>1.6.1-incubating</jclouds.version>
+        <guava.version>14.0.1</guava.version>
         <groovy.version>1.8.6</groovy.version>
+        <logback.version>1.0.7</logback.version>
         <testng.version>6.8</testng.version>
         <mockito.version>1.9.5</mockito.version>
         <whirr.version>0.8.1</whirr.version>
-        <logback.version>1.0.7</logback.version>
-        <slf4j.version>1.6.6</slf4j.version>
+        <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
         <xstream.version>1.4.3</xstream.version>
         <jackson.version>1.9.13</jackson.version>
         <jersey.version>1.12</jersey.version>
         <swagger.version>1.0.1</swagger.version>
         <dropwizard.version>0.4.4</dropwizard.version>
         <jansi.version>1.2.1</jansi.version>
-        <guava.version>14.0.1</guava.version>
         <gson.version>2.2.2</gson.version>
         <jsr305.version>2.0.1</jsr305.version>
         <ivy.version>2.2.0</ivy.version>
-        <jclouds.version>1.6.1-incubating</jclouds.version>
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.46</bouncycastle.version>
         <sshj.version>0.8.1</sshj.version>
@@ -188,11 +188,6 @@
                 <groupId>com.google.code.findbugs</groupId>
                 <artifactId>jsr305</artifactId>
                 <version>${jsr305.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.groovy</groupId>
@@ -288,6 +283,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
+                    <!-- NB: if this version is changed, update the MavenArtifactTest -->
                     <version>2.4</version>
                 </plugin>
                 <plugin>
@@ -441,6 +437,16 @@
                     <version>${cobertura.version}</version>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-archetype-plugin</artifactId>
+                    <version>2.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.google.code.maven-replacer-plugin</groupId>
+                    <artifactId>maven-replacer-plugin</artifactId>
+                    <version>1.4.0</version>
+                </plugin>
+                <plugin>
                     <!-- This configuration is used for Eclipse settings only. -->
                     <groupId>org.eclipse.m2e</groupId>
                     <artifactId>lifecycle-mapping</artifactId>
@@ -590,36 +596,37 @@
                 </dependencies>
             </plugin>
             <!--  workaround for src/main/resources excluding all in eclipse, as per
-                  https://issues.sonatype.org/browse/MNGECLIPSE-864 -->
+                  https://issues.sonatype.org/browse/MNGECLIPSE-864 
+            -->
             <plugin>
                 <groupId>com.google.code.maven-replacer-plugin</groupId>
                 <artifactId>maven-replacer-plugin</artifactId>
-                <version>1.4.0</version>
                 <executions>
                     <execution>
+                        <id>fix-eclipse-dot-classpath-mangling</id>
                         <phase>clean</phase>
                         <goals>
                             <goal>replace</goal>
                         </goals>
+                        <configuration>
+                            <ignoreMissingFile>true</ignoreMissingFile>
+                            <file>.classpath</file>
+                            <regex>false</regex>
+                            <replacements>
+                                <replacement>
+                                    <xpath>/classpath/classpathentry[@path='src/main/resources' and @kind='src' and @excluding='**']/@excluding</xpath>
+                                    <token>**</token>
+                                    <value></value>
+                                </replacement>
+                                <replacement>
+                                    <xpath>/classpath/classpathentry[@path='src/test/resources' and @kind='src' and @excluding='**']/@excluding</xpath>
+                                    <token>**</token>
+                                    <value></value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <ignoreMissingFile>true</ignoreMissingFile>
-                    <file>.classpath</file>
-                    <regex>false</regex>
-                    <replacements>
-                        <replacement>
-                            <xpath>/classpath/classpathentry[@path='src/main/resources' and @kind='src' and @excluding='**']/@excluding</xpath>
-                            <token>**</token>
-                            <value></value>
-                        </replacement>
-                        <replacement>
-                            <xpath>/classpath/classpathentry[@path='src/test/resources' and @kind='src' and @excluding='**']/@excluding</xpath>
-                            <token>**</token>
-                            <value></value>
-                        </replacement>
-                    </replacements>
-                </configuration>
             </plugin>
         </plugins>
         <extensions>
@@ -627,6 +634,11 @@
                 <groupId>org.apache.maven.wagon</groupId>
                 <artifactId>wagon-ssh-external</artifactId>
                 <version>1.0</version>
+            </extension>
+            <extension>
+                <groupId>org.apache.maven.archetype</groupId>
+                <artifactId>archetype-packaging</artifactId>
+                <version>2.2</version>
             </extension>
         </extensions>
     </build>
@@ -686,6 +698,7 @@
                 <module>usage/cli</module>
                 <module>usage/all</module>
                 <module>usage/dist</module>
+                <module>usage/archetypes/quickstart</module>
             </modules>
         </profile>
         <profile>
@@ -768,6 +781,8 @@
             <id>Bundle</id>
             <activation>
                 <file>
+                    <!-- NB - this is all the leaf projects, including logback-* (with no src);
+                         the archetype project neatly ignores this however -->
                     <exists>${basedir}/src</exists>
                 </file>
             </activation>

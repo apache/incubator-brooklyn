@@ -1,0 +1,332 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.acme.sample</groupId>
+  <artifactId>brooklyn-sample</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>Sample Brooklyn Project com.acme.sample:brooklyn-sample v0.1.0-SNAPSHOT</name>
+  <description>
+        Sample optional description goes here.
+    </description>
+
+<!-- Optional metadata (commented out in this sample) 
+
+  <url>https://github.com/sample/sample</url>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Sample Project Committers</name>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/sample/sample</connection>
+    <developerConnection>scm:git:git@github.com:sample/sample.git</developerConnection>
+    <url>http://github.com/sample/sample</url>
+  </scm>
+
+  -->
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <brooklyn.version>0.6.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+    <logback.version>1.0.7</logback.version>
+    <testng.version>6.3.1</testng.version>
+    <surefire.version>2.13</surefire.version>
+
+    <includedTestGroups />
+    <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <!-- this pulls in all brooklyn entities and clouds; 
+           you can cherry pick selected ones instead (for a smaller build) -->
+      <groupId>io.brooklyn</groupId>
+      <artifactId>brooklyn-all</artifactId>
+      <version>${brooklyn.version}</version>
+    </dependency>
+
+    <dependency>
+      <!-- includes testng and useful logging for tests -->
+      <groupId>io.brooklyn</groupId>
+      <artifactId>brooklyn-test-support</artifactId>
+      <version>${brooklyn.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <!-- this gives us flexible and easy-to-use logging; just edit logback-custom.xml! -->
+      <groupId>io.brooklyn</groupId>
+      <artifactId>brooklyn-logback-xml</artifactId>
+      <version>${brooklyn.version}</version>
+      <!-- optional so that this project has logging; dependencies may redeclare or supply their own; 
+           provided so that it isn't put into the assembly (as it supplies its own explicit logback.xml); 
+           see Logging in the Brooklyn website/userguide for more info -->
+      <optional>true</optional>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <repositories>
+    <!-- enable snapshots from sonatype -->
+    <repository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <build>
+    <testSourceDirectory>src/test/java</testSourceDirectory>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+      </testResource>
+    </testResources>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.3.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.5</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>1.0</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>2.9</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>2.4</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>2.3.4</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>2.4.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>2.1.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.8</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>2.2.2</version>
+        </plugin>        
+        <plugin>
+          <artifactId>maven-eclipse-plugin</artifactId>
+          <version>2.8</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${surefire.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <compilerId>groovy-eclipse-compiler</compilerId>
+          <fork>true</fork>
+          <verbose>false</verbose>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-eclipse-compiler</artifactId>
+            <version>2.6.0-01</version>
+          </dependency>
+          <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-eclipse-batch</artifactId>
+            <version>1.8.6-01</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/main/assembly/assembly.xml</descriptor>
+          </descriptors>
+        </configuration>
+      </plugin>
+      
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+      </plugin>
+      
+      <plugin>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <configuration>
+          <additionalProjectnatures>
+            <projectnature>org.eclipse.jdt.groovy.core.groovyNature</projectnature>
+            <projectnature>org.maven.ide.eclipse.maven2Nature</projectnature>
+          </additionalProjectnatures>
+        </configuration>
+      </plugin>
+        
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>-Xms256m -Xmx512m -XX:MaxPermSize=512m</argLine>
+          <properties>
+            <property>
+              <name>listener</name>
+              <value>brooklyn.test.LoggingVerboseReporter</value>
+            </property>
+          </properties>
+          <enableAssertions>true</enableAssertions>
+          <groups>${includedTestGroups}</groups>
+          <excludedGroups>${excludedTestGroups}</excludedGroups>
+          <testFailureIgnore>false</testFailureIgnore>
+          <systemPropertyVariables>
+            <verbose>-1</verbose>
+            <net.sourceforge.cobertura.datafile>${project.build.directory}/cobertura/cobertura.ser</net.sourceforge.cobertura.datafile>
+            <cobertura.user.java.nio>false</cobertura.user.java.nio>
+          </systemPropertyVariables>
+          <printSummary>true</printSummary>
+        </configuration>
+      </plugin>
+        
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- run Integration tests with -PIntegration -->
+    <profile>
+      <id>Integration</id>
+      <properties>
+        <includedTestGroups>Integration</includedTestGroups>
+        <excludedTestGroups>Acceptance,Live,WIP</excludedTestGroups>
+      </properties>
+    </profile>
+
+    <!-- run Live tests with -PLive -->
+    <profile>
+      <id>Live</id>
+      <properties>
+        <includedTestGroups>Live</includedTestGroups>
+        <excludedTestGroups>Acceptance,WIP</excludedTestGroups>
+      </properties>
+    </profile>
+
+    <!-- make sonatype-friendly deployment build with -PSonatype
+         (they require signed artifacts, javadoc and source jars; 
+         this snippet doesn't do everything, as you need to set up a key etc,
+         but it should get you a long way there (and prevent maven faffing).
+         if you don't deploy to sonatype you can delete this, or leave it
+         (it has no effect unless you enter -PSonatype ) -->
+    <profile>
+      <id>Sonatype</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-source-plugin</artifactId>
+            <inherited>true</inherited>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <inherited>true</inherited>
+            <configuration>
+              <!-- disable 'use' reporting because of NPE deploying to sonatype: 
+                   http://stackoverflow.com/questions/888199/why-does-maven-install-fail-during-javadoc-generation 
+                   http://bugs.sun.com/bugdatabase/view_bug.do;jsessionid=ac084ab7f47c4e7f1df2117cecd?bug_id=5101868 -->
+              <use>false</use>
+              <links>
+                <link>http://download.oracle.com/javaee/6/api</link>
+              </links>
+              <keywords>true</keywords>
+              <author>false</author>
+              <quiet>true</quiet>
+              <aggregate>false</aggregate>
+              <detectLinks />
+              <tags>
+                <tag>
+                  <name>todo</name>
+                  <placement>a</placement>
+                  <head>To-do:</head>
+                </tag>
+              </tags>
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.1</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+  </profiles>
+
+</project>

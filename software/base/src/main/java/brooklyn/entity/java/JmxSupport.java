@@ -11,7 +11,6 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.BrooklynVersion;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
@@ -23,11 +22,14 @@ import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
+import brooklyn.util.maven.MavenArtifact;
+import brooklyn.util.maven.MavenRetriever;
 import brooklyn.util.net.Urls;
 
 import com.google.common.base.Optional;
@@ -44,6 +46,8 @@ public class JmxSupport implements UsesJmx {
     private Boolean isSecure;
     private JmxAgentModes jmxAgentMode;
 
+    private static boolean warnedAboutNotOnClasspath = false;
+    
     /** run dir may be null if it is not accessed */
     public JmxSupport(Entity entity, @Nullable String runDir) {
         this.entity = Preconditions.checkNotNull(entity, "entity must be supplied");
@@ -216,19 +220,52 @@ public class JmxSupport implements UsesJmx {
         return Urls.mergePaths(getRunDir(), getJmxAgentJarBasename());
     }
 
-    public String getJmxAgentJarBasename() {
+    @Nullable public MavenArtifact getJmxAgentJarMavenArtifact() {
         switch (getJmxAgentMode()) {
-        case JMXMP: return "brooklyn-jmxmp-agent-shaded-" + BrooklynVersion.get() + ".jar";
-        case JMX_RMI_CUSTOM_AGENT: return "brooklyn-jmxrmi-agent-" + BrooklynVersion.get() + ".jar";
+        case JMXMP: 
+            MavenArtifact result = BrooklynMavenArtifacts.artifact(null, "brooklyn-jmxmp-agent", "jar", "with-dependencies");
+            // the "with-dependencies" variant is needed; however the filename then has the classifier segment _replaced_ by "shaded" when this filename is created
+            result.setCustomFileNameAfterArtifactMarker("shaded");
+            result.setClassifierFileNameMarker("");
+            return result;
+        case JMX_RMI_CUSTOM_AGENT: 
+            return BrooklynMavenArtifacts.jar("brooklyn-jmxrmi-agent");
         default:
+            return null;
+        }        
+    }
+
+    /** @deprecated since 0.6.0; use {@link #getJmxAgentJarMavenArtifact()} */
+    @Deprecated
+    public String getJmxAgentJarBasename() {
+        MavenArtifact artifact = getJmxAgentJarMavenArtifact();
+        if (artifact==null)
             throw new IllegalStateException("Either JMX is not enabled or there is an error in the configuration (JMX mode "+getJmxAgentMode()+" does not support agent JAR)");
-        }
+        return artifact.getFilename();
     }
 
+    /** returns URL for accessing the java agent, throwing if not applicable;
+     * prefers on classpath where it should be, but will fall back to taking from maven hosted 
+     * (known problem in Eclipse where JARs are not always copied) 
+     */
     public String getJmxAgentJarUrl() {
-        return "classpath://" + getJmxAgentJarBasename();
+        MavenArtifact artifact = getJmxAgentJarMavenArtifact();
+        if (artifact==null)
+            throw new IllegalStateException("Either JMX is not enabled or there is an error in the configuration (JMX mode "+getJmxAgentMode()+" does not support agent JAR)");
+        String jar = "classpath://" + artifact.getFilename();
+        if (new ResourceUtils(this).doesUrlExist(jar))
+            return jar;
+        
+        String result = MavenRetriever.localUrl(artifact);
+        if (warnedAboutNotOnClasspath) {
+            log.debug("JMX JAR for "+artifact+" is not on the classpath; taking from "+result);
+        } else {
+            log.warn("JMX JAR for "+artifact+" is not on the classpath; taking from "+result+" (subsequent similar messages will be logged at debug)");
+            warnedAboutNotOnClasspath = true;
+        }
+        return result;
     }
-
+    
     /** applies _some_ of the common settings needed to connect via JMX */
     public void applyJmxJavaSystemProperties(MutableMap.Builder<String,Object> result) {
         if (!isJmx()) return ;

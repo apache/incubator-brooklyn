@@ -1,0 +1,59 @@
+<assembly>
+    <id>dist</id>
+    <!-- Generates an archive and a dir containing the needed files; 
+         can add e.g. zip to the following
+         (but executable bit is not preserved) -->
+    <formats>
+        <format>dir</format>
+        <format>tar.gz</format>
+    </formats>
+
+    <!-- Adds dependencies to zip package under lib directory -->
+    <dependencySets>
+        <dependencySet>
+            <!--
+               Project artifact is not copied under library directory since
+               it is added to the root directory of the zip package.
+           -->
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>lib</outputDirectory>
+            <unpack>false</unpack>
+        </dependencySet>
+    </dependencySets>
+
+    <fileSets>
+        <!--
+           Adds startup scripts to the root directory of zip package. The startup
+           scripts are located to src/main/scripts directory as stated by Maven
+           conventions.
+        -->
+        <fileSet>
+            <directory>src/main/assembly/scripts</directory>
+            <outputDirectory></outputDirectory>
+            <fileMode>0755</fileMode>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
+	   <!-- add additional files (but not marked executable) -->
+        <fileSet>
+            <directory>src/main/assembly/files</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>**</include>
+            </includes>
+        </fileSet>
+        <!-- adds jar package to the root directory of zip package -->
+        <fileSet>
+            <directory>target</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+            <excludes>
+                <exclude>*-tests.jar</exclude>
+            </excludes>
+        </fileSet>
+    </fileSets>
+</assembly>
+

@@ -359,6 +359,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
          * Note that if conf file is invalid, you'll get no stdout/stderr from `kill` but you
          * do from using `nginx ... -s reload` so that can be handly when manually debugging.
          */
+        log.debug("reloading nginx by simularing restart (kill -HUP) - {}", entity);
         newScript(RESTARTING).
             body.append(
                 format("cd %s", getRunDir()),

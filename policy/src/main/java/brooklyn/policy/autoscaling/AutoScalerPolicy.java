@@ -564,6 +564,12 @@ public class AutoScalerPolicy extends AbstractPolicy {
     private void onMetricChanged(Number val) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-metric for {}: {}", new Object[] {this, poolEntity, val});
 
+        if (val==null) {
+            // occurs e.g. if using an aggregating enricher who returns null when empty, the sensor has gone away
+            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {}, inbound metric is null", new Object[] {this, poolEntity});
+            return;
+        }
+        
         double currentMetricD = val.doubleValue();
         double metricUpperBoundD = getMetricUpperBound().doubleValue();
         double metricLowerBoundD = getMetricLowerBound().doubleValue();

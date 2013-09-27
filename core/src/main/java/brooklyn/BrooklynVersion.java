@@ -50,6 +50,10 @@ public class BrooklynVersion {
     return versionFromStatic;
   }
 
+  public boolean isSnapshot() {
+      return (getVersion().indexOf("-SNAPSHOT")>=0);
+  }
+  
   private static boolean isValid(String v) {
     if (v==null) return false;
     if (v.equals("0.0.0") || v.equals("0.0")) return false;
@@ -72,5 +76,5 @@ public class BrooklynVersion {
   public static String get() {
     return INSTANCE.version;
   }
-
+  
 }

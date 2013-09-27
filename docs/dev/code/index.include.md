@@ -4,11 +4,30 @@ Brooklyn is available at [GitHub brooklyncentral/brooklyn](http://github.com/bro
 
 {% highlight bash %}
 git clone git@github.com:brooklyncentral/brooklyn.git
+cd brooklyn
 {% endhighlight %}
 
-You'll find versions in branches, and examples in the **examples** sub-dir.
-These examples are pushed to the [brooklyn-examples](http://github.com/brooklyncentral/brooklyn-examples) GitHub project when a version is released.
+Build it with:
 
+{% highlight bash %}
+mvn clean install
+{% endhighlight %}
+
+And launch it with:
+
+{% highlight bash %}
+cd usage/dist/target/brooklyn-dist/
+bin/brooklyn launch
+{% endhighlight %}
+
+Plenty of examples are in the **examples** sub-dir,
+described [here]({{site.url}}/use/examples),
+and pushed to the [brooklyn-examples](http://github.com/brooklyncentral/brooklyn-examples) 
+GitHub project when a version is released.
+
+Information on using Brooklyn -- configuring locations (in `brooklyn.properties`) 
+and adding new projects to a catalog -- can be found in the [User's Guide]({{site.url}}/use/guide/quickstart/index.html).
+This document is intended to help people become familiar with the codebase.
 
 ## Project Structure
 

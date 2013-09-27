@@ -1,0 +1,10 @@
+<configuration>
+
+  <!-- logging configuration for this project; edit this file as required, or override the files 
+       this includes as described in the Logging section of the brooklyn users guide.
+       this project already supplies a logback-custom.xml which gets included to log our
+       classes at debug level and write to a log file named after this project -->
+
+  <include resource="logback-main.xml"/>
+  
+</configuration>

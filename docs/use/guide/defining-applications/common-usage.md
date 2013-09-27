@@ -43,6 +43,8 @@ These include:
 
 ### <a id="locations"></a> Off-the-Shelf Locations
 
+<a id="locations"></a>
+
 Brooklyn supports deploying to any machine which admits SSH access, as well as to
 a huge variety of external and on-premise clouds.  You can also connect to services,
 or use whatever technique for deployment suits you best (such as Xebia Overthere, in development!).
