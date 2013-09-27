@@ -27,6 +27,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicApplicationImpl;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityTypes;
@@ -228,8 +229,16 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                     
                     @SuppressWarnings("unchecked")
                     Map<String,?> config = (Map<String, ?>) ct.getCustomAttributes().get("brooklyn.config");
-                    if (config!=null)
-                        child.configure(config);
+                    if (config!=null) {
+                        for (Map.Entry<String,?> entry: config.entrySet()) {
+                            // set as config key (rather than flags) so that it is inherited
+                            child.configure(ConfigKeys.newConfigKey(Object.class, entry.getKey()), entry.getValue());
+                        }
+                    }
+
+                    // FIXME id must be unique. but we need a way to correlate DP->template->item
+                    // template.planId component.{templateId,planId} ?
+                    child.configure(MutableMap.of("id", ct.getId()));
                     
                     entity.addChild(child);
                 }

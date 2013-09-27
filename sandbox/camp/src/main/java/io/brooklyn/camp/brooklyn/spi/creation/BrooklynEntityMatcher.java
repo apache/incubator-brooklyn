@@ -108,6 +108,9 @@ public class BrooklynEntityMatcher implements PdpMatcher {
             builder.customAttribute("brooklyn.config", brooklynConfig);
         }
         
+        if (attrs.containsKey("id"))
+            builder.id(attrs.remove("id").toString());
+        
         if (!attrs.isEmpty()) {
             log.warn("Ignoring PDP attributes on "+deploymentPlanItem+": "+attrs);
         }

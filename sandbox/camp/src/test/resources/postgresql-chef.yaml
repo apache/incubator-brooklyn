@@ -1,0 +1,19 @@
+name: postgresql-chef
+services:
+- type: ChefComponent
+  pid.file: /var/run/postgresql/*.pid
+  service: postgresql
+  chef:
+    converge:
+    - postgresql::server
+    attributes:
+      postgresql:
+        config:
+          port: 5432
+          listen_addresses: *
+        pg_hba:
+        - type: host
+          db: all
+          user: all
+          addr: 0.0.0.0/0
+          method: md5

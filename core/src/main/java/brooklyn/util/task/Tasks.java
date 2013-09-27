@@ -92,11 +92,11 @@ public class Tasks {
             return (T) v;
         try {
             //if it's a task or a future, we wait for the task to complete
-            if (v instanceof Task) {
+        	if (v instanceof TaskAdaptable<?>) {
                 //if it's a task, we make sure it is submitted
                 //(perhaps could run it here? ... tbd)
-                if (!((Task) v).isSubmitted() ) {
-                    exec.submit((Task) v);
+                if (!((TaskAdaptable<?>) v).asTask().isSubmitted() ) {
+                    exec.submit(((TaskAdaptable<?>) v).asTask());
                 }
             }
             

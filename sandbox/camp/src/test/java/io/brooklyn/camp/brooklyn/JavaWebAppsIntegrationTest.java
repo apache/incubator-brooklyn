@@ -4,10 +4,13 @@ import io.brooklyn.camp.CampServer;
 import io.brooklyn.camp.brooklyn.spi.lookup.BrooklynUrlLookup;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.PlatformComponent;
 import io.brooklyn.camp.spi.PlatformRootSummary;
+import io.brooklyn.camp.spi.collection.ResolvableLink;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -49,7 +52,6 @@ public class JavaWebAppsIntegrationTest {
           put(BrooklynUrlLookup.BROOKLYN_ROOT_URL, launcher.getServerDetails().getWebServerUrl());
         brooklynMgmt = launcher.getServerDetails().getManagementContext();
       
-        brooklynMgmt = new LocalManagementContext();
         platform = new BrooklynCampPlatform(
               PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(),
               brooklynMgmt);
@@ -108,6 +110,73 @@ public class JavaWebAppsIntegrationTest {
             Assert.assertTrue(url.contains("928"), "URL should be on port 9280+ based on config set in yaml");
             Assert.assertTrue(site.toLowerCase().contains("hello"), site);
             Assert.assertTrue(!platform.assemblies().isEmpty());
+        } catch (Exception e) {
+            log.warn("Unable to instantiate "+at+" (rethrowing): "+e);
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    public void testWithDbDeploy() throws IOException {
+        Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl("java-web-app-and-db-with-function.yaml"));
+        AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
+
+        try {
+            Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
+            log.info("Test - created "+assembly);
+            
+            Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
+            log.info("App - "+app);
+            
+            Iterator<ResolvableLink<PlatformComponent>> pcs = assembly.getPlatformComponents().links().iterator();
+            PlatformComponent pc1 = pcs.next().resolve();
+            Entity cluster = brooklynMgmt.getEntityManager().getEntity(pc1.getId());
+            log.info("pc1 - "+pc1+" - "+cluster);
+            
+            PlatformComponent pc2 = pcs.next().resolve();
+            log.info("pc2 - "+pc2);
+            // FIXME doesn't work -- 
+//            Object javaSysprops = ((EntityInternal)cluster).getConfigMap().getRawConfig(UsesJava.JAVA_SYSPROPS);
+//            Object dbUrl = ((Map<?,?>)javaSysprops).get("brooklyn.example.db.url");
+//            Assert.assertTrue(dbUrl instanceof DeferredSupplier, "dbUrl is "+dbUrl);
+            
+            Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
+            log.info("Waiting on "+tasks.size()+" task(s)");
+            for (Task<?> t: tasks) {
+                t.blockUntilEnded();
+            }
+
+            log.info("App started:");
+            Entities.dumpInfo(app);
+
+            String url = null;
+            CountdownTimer timer = Duration.TEN_SECONDS.countdownTimer();
+            String site = null;
+            while (url==null) {
+                url = app.getChildren().iterator().next().getAttribute(JavaWebAppService.ROOT_URL);
+                if (url!=null) {
+                    try {
+                        site = new ResourceUtils(this).getResourceAsString(url);
+                    } catch (Exception e) {
+                        // not ready yet
+                        log.debug("site not yet ready at "+url+": "+e);
+                        Exceptions.propagateIfFatal(e);
+                        url = null;
+                    }
+                }
+                if (url==null) {
+                    if (timer.isExpired())
+                        Assert.fail("ROOT_URL did not become available");
+                    log.debug("waiting on ROOT_URL for "+app);
+                    Time.sleep(100);
+                }
+            }
+            log.info("App URL for "+app+": "+url);
+            
+            Assert.assertTrue(url.contains("921"), "URL should be on port 9280+ based on config set in yaml");
+            Assert.assertTrue(site.toLowerCase().contains("hello"), site);
+            Assert.assertTrue(!platform.assemblies().isEmpty());
+            
+            // TODO assert DB is working (send visitors command, and get result)
         } catch (Exception e) {
             log.warn("Unable to instantiate "+at+" (rethrowing): "+e);
             throw Exceptions.propagate(e);

@@ -30,6 +30,28 @@ public class StringPredicates {
         return Predicates.containsPattern(regex);
     }
 
+    public static Predicate<CharSequence> startsWith(final String prefix) {
+        return new Predicate<CharSequence>() {
+            @Override
+            public boolean apply(CharSequence input) {
+                if (input==null) return false;
+                return input.toString().startsWith(prefix);
+            }
+        };
+    }
+
+    /** true if the object *is* a string starting with the given prefix */
+    public static Predicate<Object> isStringStartingWith(final String prefix) {
+        return new Predicate<Object>() {
+            @Override
+            public boolean apply(Object input) {
+                if (input==null) return false;
+                if (!(input instanceof CharSequence)) return false;
+                return input.toString().startsWith(prefix);
+            }
+        };
+    }
+
     // TODO globs, matches regex, etc ... add as you need them!
     
 }
