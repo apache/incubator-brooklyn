@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>bundle</packaging>
     
-	<artifactId>brooklyn-monitoring</artifactId>
+	<artifactId>brooklyn-software-monitoring</artifactId>
     
 	<name>Brooklyn Monitoring Software Entities</name>
 	<description>
