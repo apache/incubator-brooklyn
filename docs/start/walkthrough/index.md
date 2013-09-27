@@ -7,7 +7,8 @@ toc: /toc.json
 
 ## Intro
 
-Brooklyn makes it easy to describe the structure and management of sophisticated distributed applications, and then it makes it easy to launch them in a cloud, with on-going automated management.
+Brooklyn makes it easy to describe the structure and management of sophisticated distributed applications, 
+and then it makes it easy to launch them in a cloud, with on-going automated management.
 
 This walkthrough will set up a sample application which you can use as foundation for creating your own applications.
 
@@ -20,13 +21,16 @@ The sample application is a three tier web service, composed of:
 
 ## Download the Sample Project
 
-Use Maven to download the Brooklyn quickstart archetype, and to setup the 'brooklyn-sample' directory and project. (Maven will automatically download Brooklyn and all dependencies.)
+If you'd like to follow these steps on your machine, you can use Maven to 
+download the Brooklyn quickstart archetype and setup a `brooklyn-sample` directory and project. 
+Maven will automatically download Brooklyn and all dependencies.
+You can of course follow this walkthrough without installing it on your machine ... yet!
 
 {% if SNAPSHOT %}
 
 {% highlight bash %}
-export BROOKLYN_VERSION=0.6.0-SNAPSHOT
-mvn archetype:generate \
+$ export BROOKLYN_VERSION=0.6.0-SNAPSHOT
+$ mvn archetype:generate \
     -DarchetypeGroupId=io.brooklyn \
     -DarchetypeArtifactId=brooklyn-archetype-quickstart \
     -DarchetypeVersion=${BROOKLYN_VERSION} \
@@ -35,17 +39,17 @@ mvn archetype:generate \
     -DartifactId=brooklyn-sample \
     -Dversion=0.1.0-SNAPSHOT \
     -Dpackage=com.acme.sample.brooklyn
-cd brooklyn-sample
+$ cd brooklyn-sample
 {% endhighlight %}
 
 *Note*: As this is a snapshot version of Brooklyn, the code above includes a `-DarchetypeCatalog` specification.
-This can be omitted for full versions, or if you already have a local `mvn install` of Brooklyn installed as described [here]({{site.url}}/dev/code/index.html).
+This can be omitted for release versions, or if you already have a local `mvn install` of Brooklyn installed as described [here]({{site.url}}/dev/code/index.html).
 
 {% else %}
 
 {% highlight bash %}
-export BROOKLYN_VERSION=0.6.0-SNAPSHOT
-mvn archetype:generate \
+$ export BROOKLYN_VERSION=0.6.0-SNAPSHOT
+$ mvn archetype:generate \
     -DarchetypeGroupId=io.brooklyn \
     -DarchetypeArtifactId=brooklyn-archetype-quickstart \
     -DarchetypeVersion=${BROOKLYN_VERSION} \
@@ -53,7 +57,7 @@ mvn archetype:generate \
     -DartifactId=brooklyn-sample \
     -Dversion=0.1.0-SNAPSHOT \
     -Dpackage=com.acme.sample.brooklyn
-cd brooklyn-sample
+$ cd brooklyn-sample
 {% endhighlight %}
 
 {% endif %}
@@ -72,22 +76,25 @@ public class ClusterWebServerDatabaseSample extends AbstractApplication {
 }
 {% endhighlight %}
 
-`.../brooklyn-sample/src/main/java/com/acme/sample/brooklyn/sample/app/ClusterWebServerDatabaseSample.java` provides a template to follow.
+The file `ClusterWebServerDatabaseSample.java` in `src/main/java/com/acme/sample/brooklyn/sample/app/` 
+provides a template to follow.
 
 
 ## Deploying the Application
 
-If you have not already done so, follow the section in the [Getting Started Guide]({{site.url}}/use/guide/quickstart/index.html) to create a `brooklyn.properties` file containing credentials for your preferred cloud provider. 
+If you have not already done so, follow the section in the 
+[Getting Started Guide]({{site.url}}/use/guide/quickstart/index.html) to create a `brooklyn.properties` 
+file containing credentials for your preferred cloud provider. 
 
 To launch this application, build the project and run the `start.sh` script in the resulting assembly:
 
 {% highlight bash %}
-mvn clean assembly:assembly
+$ mvn clean assembly:assembly
 
-cd target/brooklyn-sample-0.1.0-SNAPSHOT-dist/brooklyn-sample-0.1.0-SNAPSHOT/
+$ cd target/brooklyn-sample-0.1.0-SNAPSHOT-dist/brooklyn-sample-0.1.0-SNAPSHOT/
 
-./start.sh application \
-	--class com.acme.sample.brooklyn.ClusterWebServerDatabaseSample \
+$ ./start.sh application \
+    --class com.acme.sample.brooklyn.ClusterWebServerDatabaseSample \
     --location jclouds:aws-ec2:eu-west-1
 {% endhighlight %}
 
