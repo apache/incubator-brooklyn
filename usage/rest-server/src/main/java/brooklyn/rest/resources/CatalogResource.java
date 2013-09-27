@@ -125,7 +125,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
             // paths (ie non-protocol) and 
             // NB, for security, file URL's are NOT served
             MediaType mime = WebResourceUtils.getImageMediaTypeFromExtension(Files.getFileExtension(url));
-            Object content = new ResourceUtils(this).getResourceFromUrl(url);
+            Object content = new ResourceUtils(brooklyn().getCatalog().getRootClassLoader()).getResourceFromUrl(url);
             return Response.ok(content, mime).build();
         }
         

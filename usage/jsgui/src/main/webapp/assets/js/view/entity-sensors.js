@@ -75,7 +75,7 @@ define([
             this.toggleFilterEmpty();
             return this;
         },
-
+        
         render: function() {
             return this;
         },
@@ -111,7 +111,7 @@ define([
         isRefreshActive: function() { return this.refreshActive; },
         updateSensorsNow:function () {
             var that = this
-            ViewUtils.get(that, that.model.getSensorUpdateUrl(), function(data) { that.updateWithData(data) },
+            ViewUtils.get(that, that.model.getSensorUpdateUrl(), that.updateWithData,
                     { enablement: that.isRefreshActive });
         },
         updateSensorsPeriodically:function () {
@@ -122,17 +122,21 @@ define([
         updateWithData: function (data) {
             var that = this
             $table = that.$('#sensors-table');
+            var options = {}
+            if (that.fullRedraw) {
+                options.refreshAllRows = true
+                that.fullRedraw = false
+            }
             ViewUtils.updateMyDataTable($table, data, function(value, name) {
                 var metadata = that.sensorMetadata[name]
                 if (metadata==null) {                        
-                    // TODO should reload metadata when this happens (new sensor for which no metadata known)
-                    // (currently if we have dynamic sensors, their metadata won't appear
-                    // until the page is refreshed; don't think that's a big problem -- mainly tooltips
-                    // for now, we just return the partial value
+                    // kick off reload metadata when this happens (new sensor for which no metadata known)
+                    // but only if we haven't loaded metadata for a while
+                    that.loadSensorMetadataIfStale(name, 10000);
                     return [name, {'name':name}, value]
                 } 
                 return [name, metadata, value];
-            });
+            }, options);
         },
 
         /**
@@ -142,6 +146,7 @@ define([
         loadSensorMetadata: function() {
             var url = this.model.getLinkByName('sensors'),
                 that = this;
+            that.lastSensorMetadataLoadTime = new Date().getTime();
             $.get(url, function (data) {
                 _.each(data, function(sensor) {
                     var actions = {};
@@ -157,10 +162,19 @@ define([
                         type: sensor.type
                     }
                 });
+                that.fullRedraw = true
                 that.updateSensorsNow();
                 that.table.find('*[rel="tooltip"]').tooltip();
             });
             return this;
+        },
+        
+        loadSensorMetadataIfStale: function(sensorName, recency) {
+            var that = this
+            if (!that.lastSensorMetadataLoadTime || that.lastSensorMetadataLoadTime + recency < new Date().getTime()) {
+//                log("reloading metadata because new sensor "+sensorName+" identified")
+                that.loadSensorMetadata();
+            }
         }
     });
 
