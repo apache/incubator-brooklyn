@@ -1,12 +1,12 @@
 package brooklyn.entity.basic;
 
+import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_ADDED;
+import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_CHANGED;
+import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_REMOVED;
 import static brooklyn.entity.basic.AbstractEntity.POLICY_ADDED;
 import static brooklyn.entity.basic.AbstractEntity.POLICY_REMOVED;
 import static brooklyn.entity.basic.AbstractEntity.SENSOR_ADDED;
 import static brooklyn.entity.basic.AbstractEntity.SENSOR_REMOVED;
-import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_ADDED;
-import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_REMOVED;
-import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_CHANGED;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -31,6 +31,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableSet;
 
@@ -220,5 +221,29 @@ public class EntityTypeTest {
     public void testHasSensor() throws Exception {
         assertTrue(entity.getEntityType().hasSensor("entity.sensor.added"));
         assertFalse(entity.getEntityType().hasSensor("does.not.exist"));
+    }
+    
+    // Previously EntityDynamicType's constructor when passed `entity` during the entity's construction (!)
+    // would pass this to EntityDynamicType.findEffectors, which would do log.warn in some cirumstances,
+    // with entity.toString as part of the log message. But if the toString called getConfig() this would 
+    // fail because we were still in the middle of constructing the entity.entityType!
+    @Test
+    public void testEntityDynamicTypeDoesNotCallToStringDuringConstruction() throws Exception {
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).impl(EntityWithToStringAccessingConfig.class));
+        entity.toString();
+    }
+    
+    public static class EntityWithToStringAccessingConfig extends TestEntityImpl {
+        
+        // to cause warning to be logged: non-static constant
+        public final MethodEffector<Void> NON_STATIC_EFFECTOR = new MethodEffector<Void>(EntityWithToStringAccessingConfig.class, "nonStaticEffector");
+
+        public void nonStaticEffector() {
+        }
+        
+        @Override
+        public String toString() {
+            return super.toString() + getConfig(CONF_NAME);
+        }
     }
 }

@@ -29,7 +29,6 @@ public class ApplicationCommandsTest extends BrooklynCommandTest {
   @AfterClass
   public void tearDown() throws Exception {
     super.tearDownJersey();
-    stopManager();
   }
 
   @Test
