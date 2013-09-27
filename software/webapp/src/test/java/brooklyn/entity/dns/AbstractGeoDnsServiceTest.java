@@ -166,7 +166,9 @@ public class AbstractGeoDnsServiceTest {
 
         @Override
         public Map<String, HostGeoInfo> getTargetHostsByName() {
-            return targetHostsByName;
+            synchronized (targetHostsByName) {
+                return targetHostsByName;
+            }
         }
         
         @Override
@@ -185,9 +187,11 @@ public class AbstractGeoDnsServiceTest {
         
         @Override
         protected void reconfigureService(Collection<HostGeoInfo> targetHosts) {
-            targetHostsByName.clear();
-            for (HostGeoInfo host : targetHosts) {
-                if (host != null) targetHostsByName.put(host.displayName, host);
+            synchronized (targetHostsByName) {
+                targetHostsByName.clear();
+                for (HostGeoInfo host : targetHosts) {
+                    if (host != null) targetHostsByName.put(host.displayName, host);
+                }
             }
         }
 
