@@ -9,7 +9,8 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.basic.PortRanges;
-import brooklyn.util.BrooklynMavenArtifacts;
+import brooklyn.util.maven.MavenArtifact;
+import brooklyn.util.maven.MavenRetriever;
 
 /** This example starts one web app on 8080. */
 public class SingleWebServerSample extends AbstractApplication {
@@ -18,7 +19,7 @@ public class SingleWebServerSample extends AbstractApplication {
 
     public static final String DEFAULT_WAR_URL =
             // can supply any URL -- this loads a stock example from maven central / sonatype
-            BrooklynMavenArtifacts.localUrl("example", "brooklyn-example-hello-world-sql-webapp", "war");
+            MavenRetriever.localUrl(MavenArtifact.fromCoordinate("io.brooklyn.example:brooklyn-example-hello-world-sql-webapp:war:0.5.0"));
 
     /** Initialize our application. In this case it consists of 
      *  a single JBoss entity, configured to run the WAR above. */
