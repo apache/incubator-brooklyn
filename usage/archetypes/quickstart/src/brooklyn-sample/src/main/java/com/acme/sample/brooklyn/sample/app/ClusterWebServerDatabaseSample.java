@@ -31,7 +31,8 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
-import brooklyn.util.BrooklynMavenArtifacts;
+import brooklyn.util.maven.MavenArtifact;
+import brooklyn.util.maven.MavenRetriever;
 
 import com.google.common.base.Functions;
 
@@ -54,7 +55,7 @@ public class ClusterWebServerDatabaseSample extends AbstractApplication {
     
     public static final String DEFAULT_WAR_URL =
             // can supply any URL -- this loads a stock example from maven central / sonatype
-            BrooklynMavenArtifacts.localUrl("example", "brooklyn-example-hello-world-sql-webapp", "war");
+            MavenRetriever.localUrl(MavenArtifact.fromCoordinate("io.brooklyn.example:brooklyn-example-hello-world-sql-webapp:war:0.5.0"));
 
     @CatalogConfig(label="WAR (URL)", priority=2)
     public static final ConfigKey<String> WAR_URL = ConfigKeys.newConfigKey(

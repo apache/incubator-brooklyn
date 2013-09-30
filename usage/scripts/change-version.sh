@@ -24,12 +24,15 @@ LABEL2=BROOKLYN_VERSION_BELOW
 CURRENT_VERSION=$1
 NEW_VERSION=$2
 
-GREP_ARGS="-r -l --exclude_dir=^\..*|\/\..* --exclude=.*\.(log|war)"
+# exclude dot files, and exclude log, war, and .min.js files
+# TODO not sure if the \/\..+ is needed
+GREP_ARGS="-r -l --exclude_dir=^\..+|\/\..+ --exclude=.*\.(log|war|min.js)"
 
 # look for lines (where we can put the literal $LABEL1 in an inline comment) matching
 # ... ${CURRENT_VERSION} ... BROOKLYN_VERSION
 # Repeatedly replace, until no more occurrences of current_version.*label
 
+# search for every file containing LABEL1
 FILES1=`pcregrep $GREP_ARGS "${CURRENT_VERSION}.*${LABEL1}" .`
 for x in $FILES1 ; do
   while grep --quiet -E "${CURRENT_VERSION}.*${LABEL1}" $x; do
@@ -37,7 +40,17 @@ for x in $FILES1 ; do
   done
 done
 
-echo "One-line pattern changed these files: $FILES1"
+echo "One-line pattern with label after changed these files: $FILES1"
+
+# search for every file containing LABEL1
+FILES1=`pcregrep $GREP_ARGS "${LABEL1}.*${CURRENT_VERSION}" .`
+for x in $FILES1 ; do
+  while grep --quiet -E "${LABEL1}.*${CURRENT_VERSION}" $x; do
+    sed -i .bak "s/${LABEL1}\(.*\)${CURRENT_VERSION}/${LABEL1}\1${NEW_VERSION}/" $x
+  done
+done
+
+echo "One-line pattern with label before changed these files: $FILES1"
 
 # or two-lines for situations where comments must be entire-line (e.g. scripts)
 # put the comment on the line before the version
