@@ -5,25 +5,20 @@ import static java.lang.String.format;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.BashCommands;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements MonitDriver {
     
-    private static final Logger LOG = LoggerFactory.getLogger(MonitSshDriver.class);
-
     private String expandedInstallDir;
     private String remoteControlFilePath;
     
@@ -66,9 +61,11 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void launch() {
-        String command = format("touch %s && %s/bin/monit -c %s > out.log 2> err.log < /dev/null", getMonitPidFile(),
-            expandedInstallDir, remoteControlFilePath);
-        newScript(LAUNCHING)
+        // NOTE: executing monit in daemon mode will spawn a separate process for the monit daemon so the value of $! cannot be used
+        // instead we use the -p argument
+        String command = format("touch %s && nohup %s/bin/monit -c %s -p %s > out.log 2> err.log < /dev/null &", getMonitPidFile(),
+            expandedInstallDir, remoteControlFilePath, getMonitPidFile());
+        newScript(MutableMap.of("usePidFile", false), LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
             .body.append(command)
             .execute();
@@ -89,7 +86,7 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     protected String getMonitPidFile() {
         // Monit seems to dislike starting with a relative path to a pid file.
-        return getRunDir() + "/monit.pid";
+        return getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME;
     }
     
     public String getMonitLogFile() {
