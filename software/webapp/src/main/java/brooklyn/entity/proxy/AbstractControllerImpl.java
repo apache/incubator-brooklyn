@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
@@ -100,7 +99,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         super.init();
         
         Map<?, ?> policyFlags = MutableMap.of("name", "Controller targets tracker",
-                "sensorsToTrack", ImmutableSet.of(Attributes.HOSTNAME, getConfig(PORT_NUMBER_SENSOR)));
+                "sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR), getConfig(PORT_NUMBER_SENSOR)));
         
         serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(policyFlags) {
             protected void onEntityChange(Entity member) { onServerPoolMemberChanged(member); }
@@ -165,6 +164,10 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     public AttributeSensor<Integer> getPortNumberSensor() {
         return getAttribute(PORT_NUMBER_SENSOR);
+    }
+
+    protected AttributeSensor<String> getHostnameSensor() {
+        return getAttribute(HOSTNAME_SENSOR);
     }
 
     @Override
@@ -383,7 +386,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
     
     protected String getAddressOfEntity(Entity member) {
-        String ip = member.getAttribute(Attributes.HOSTNAME);
+        String ip = member.getAttribute(getHostnameSensor());
         Integer port = member.getAttribute(getPortNumberSensor());
         if (ip!=null && port!=null) {
             return ip+":"+port;
