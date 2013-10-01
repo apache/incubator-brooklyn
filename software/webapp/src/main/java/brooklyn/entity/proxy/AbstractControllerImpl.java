@@ -33,6 +33,8 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
@@ -75,12 +77,6 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
     public AbstractControllerImpl(Map properties, Entity parent, Cluster cluster) {
         super(properties, parent);
-
-        serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Controller targets tracker")) {
-            protected void onEntityChange(Entity member) { onServerPoolMemberChanged(member); }
-            protected void onEntityAdded(Entity member) { onServerPoolMemberChanged(member); }
-            protected void onEntityRemoved(Entity member) { onServerPoolMemberChanged(member); }
-        };
     }
 
     @Override
@@ -97,6 +93,20 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         }
         
         return result;
+    }
+
+    @Override
+    public void init() {
+        super.init();
+        
+        Map<?, ?> policyFlags = MutableMap.of("name", "Controller targets tracker",
+                "sensorsToTrack", ImmutableSet.of(Attributes.HOSTNAME, getConfig(PORT_NUMBER_SENSOR)));
+        
+        serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(policyFlags) {
+            protected void onEntityChange(Entity member) { onServerPoolMemberChanged(member); }
+            protected void onEntityAdded(Entity member) { onServerPoolMemberChanged(member); }
+            protected void onEntityRemoved(Entity member) { onServerPoolMemberChanged(member); }
+        };
     }
     
     /**
@@ -326,22 +336,33 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
     
     protected synchronized void addServerPoolMember(Entity member) {
-        if (serverPoolTargets.containsKey(member)) {
-            if (LOG.isTraceEnabled()) LOG.trace("For {}, not adding as already have member {}", new Object[] {this, member});
-            return;
+        String oldAddress = serverPoolTargets.get(member);
+        String newAddress = getAddressOfEntity(member);
+        if (newAddress == null) {
+            if (oldAddress != null) {
+                LOG.info("Removing from {}, member {} with old address {}, because inferred address is now null", new Object[] {this, member, oldAddress});
+                serverPoolAddresses.remove(oldAddress);
+            }
+            
+        } else {
+            if (oldAddress != null) {
+                LOG.info("Replacing in  {}, member {} with old address {}, new address {}", new Object[] {this, member, oldAddress, newAddress});
+                serverPoolAddresses.remove(oldAddress);
+            } else {
+                LOG.info("Adding to {}, new member {} with address {}", new Object[] {this, member, newAddress});
+            }
+            serverPoolAddresses.add(newAddress);
         }
         
-        String address = getAddressOfEntity(member);
-        if (address != null) {
-            serverPoolAddresses.add(address);
+        if (Objects.equal(oldAddress, newAddress)) {
+            if (LOG.isTraceEnabled()) LOG.trace("For {}, ignoring change in member {} because address still {}", new Object[] {this, member, newAddress});
+            return;
         }
-
-        LOG.info("Adding to {}, new member {} with address {}", new Object[] {this, member, address});
         
         // TODO this does it synchronously; an async method leaning on `updateNeeded` and `update` might
         // be more appropriate, especially when this is used in a listener
         updateAsync();
-        serverPoolTargets.put(member, address);
+        serverPoolTargets.put(member, newAddress);
     }
     
     protected synchronized void removeServerPoolMember(Entity member) {
