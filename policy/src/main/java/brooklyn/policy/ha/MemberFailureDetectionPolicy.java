@@ -5,9 +5,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Changeable;
@@ -48,17 +50,21 @@ public class MemberFailureDetectionPolicy extends AbstractPolicy {
     // TODO Remove duplication between this and ServiceFailureDetection.
     // This could be re-written to use the latter. Or we could even deprecate
     // this in favour of the latter.
+    // 
+    // Tricky to use ServiceFailureDetector: obvious thing would be to create a ServiceFailureDetector
+    // on memberAdded, and let do the hard work. But policy.setEntity(...) wants an EntityLocal
+    // whereas the member here could be remote.
     
     private static final Logger LOG = LoggerFactory.getLogger(MemberFailureDetectionPolicy.class);
 
-    @SetFromFlag(defaultVal="true")
-    private boolean onlyReportIfPreviouslyUp;
+    @SetFromFlag("onlyReportIfPreviouslyUp")
+    public static final ConfigKey<Boolean> ONLY_REPORT_IF_PREVIOUSLY_UP = ConfigKeys.newBooleanConfigKey("onlyReportIfPreviouslyUp", "", true);
     
-    @SetFromFlag(defaultVal="true")
-    private boolean useServiceStateRunning;
-    
-    @SetFromFlag
-    private Predicate<? super Entity> memberFilter;
+    @SetFromFlag("useServiceStateRunning")
+    public static final ConfigKey<Boolean> USE_SERVICE_STATE_RUNNING = ConfigKeys.newBooleanConfigKey("useServiceStateRunning", "", true);
+
+    @SetFromFlag("memberFilter")
+    public static final ConfigKey<Predicate<? super Entity>> MEMBER_FILTER = (ConfigKey) ConfigKeys.newConfigKey(Predicate.class, "memberFilter", "", Predicates.alwaysTrue());
     
     private final Map<Entity, Long> memberFailures = Maps.newLinkedHashMap();
     private final Map<Entity, Long> memberLastUps = Maps.newLinkedHashMap();
@@ -71,18 +77,20 @@ public class MemberFailureDetectionPolicy extends AbstractPolicy {
     
     public MemberFailureDetectionPolicy(Map<String,?> flags) {
         super(flags);
-        
-        if (memberFilter == null) memberFilter = Predicates.alwaysTrue();
+    }
+    
+    protected boolean acceptsMember(Entity member) {
+        return getConfig(MEMBER_FILTER).apply(member);
     }
     
     @Override
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
         
-        if (useServiceStateRunning) {
+        if (getConfig(USE_SERVICE_STATE_RUNNING)) {
             subscribeToMembers((Group)entity, Attributes.SERVICE_STATE, new SensorEventListener<Lifecycle>() {
                 @Override public void onEvent(SensorEvent<Lifecycle> event) {
-                    if (!memberFilter.apply(event.getSource())) return;
+                    if (!acceptsMember(event.getSource())) return;
                     onMemberStatus(event.getSource(), event.getValue());
                 }
             });
@@ -90,7 +98,7 @@ public class MemberFailureDetectionPolicy extends AbstractPolicy {
         
         subscribeToMembers((Group)entity, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
             @Override public void onEvent(SensorEvent<Boolean> event) {
-                if (!memberFilter.apply(event.getSource())) return;
+                if (!acceptsMember(event.getSource())) return;
                 onMemberIsUp(event.getSource(), event.getValue());
             }
         });
@@ -103,13 +111,13 @@ public class MemberFailureDetectionPolicy extends AbstractPolicy {
         
         subscribe(entity, Changeable.MEMBER_ADDED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
-                if (!memberFilter.apply(event.getSource())) return;
+                if (!acceptsMember(event.getSource())) return;
                 onMemberAdded(event.getValue());
             }
         });
         
         for (Entity member : ((Group)entity).getMembers()) {
-            if (!memberFilter.apply(member)) continue;
+            if (!acceptsMember(member)) continue;
             onMemberAdded(member);
         }
     }
@@ -136,7 +144,7 @@ public class MemberFailureDetectionPolicy extends AbstractPolicy {
     }
     
     private synchronized void onMemberAdded(Entity member) {
-        if (useServiceStateRunning) {
+        if (getConfig(USE_SERVICE_STATE_RUNNING)) {
             Lifecycle status = member.getAttribute(Attributes.SERVICE_STATE);
             onMemberStatus(member, status);
         }
@@ -157,12 +165,12 @@ public class MemberFailureDetectionPolicy extends AbstractPolicy {
         Boolean isUp = memberIsUps.get(member);
         Lifecycle status = memberStates.get(member);
         boolean failed = 
-                (useServiceStateRunning && status == Lifecycle.ON_FIRE) ||
+                (getConfig(USE_SERVICE_STATE_RUNNING) && status == Lifecycle.ON_FIRE) ||
                 (Boolean.FALSE.equals(isUp) &&
-                        (useServiceStateRunning ? status == Lifecycle.RUNNING : true) && 
-                        (onlyReportIfPreviouslyUp ? lastUpTime != null : true));
+                        (getConfig(USE_SERVICE_STATE_RUNNING) ? status == Lifecycle.RUNNING : true) && 
+                        (getConfig(ONLY_REPORT_IF_PREVIOUSLY_UP) ? lastUpTime != null : true));
         boolean recovered = 
-                (useServiceStateRunning ? status == Lifecycle.RUNNING : true) && 
+                (getConfig(USE_SERVICE_STATE_RUNNING) ? status == Lifecycle.RUNNING : true) && 
                 Boolean.TRUE.equals(isUp);
 
         String description = String.format("location=%s; isUp=%s; status=%s; lastReportedUp=%s; timeNow=%s", 

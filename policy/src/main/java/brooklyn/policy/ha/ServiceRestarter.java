@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
@@ -15,10 +16,8 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.policy.ha.HASensors;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
@@ -39,20 +38,19 @@ public class ServiceRestarter extends AbstractPolicy {
             FailureDescriptor.class, "ha.entityFailed.restart", "Indicates that an entity restart attempt has failed");
 
     /** skips retry if a failure re-occurs within this time interval */
-    @SetFromFlag(defaultVal=""+(3*60*1000))
-    private long failOnRecurringFailuresInThisDuration;
+    @SetFromFlag("failOnRecurringFailuresInThisDuration")
+    public static final ConfigKey<Long> FAIL_ON_RECURRING_FAILURES_IN_THIS_DURATION = ConfigKeys.newLongConfigKey("failOnRecurringFailuresInThisDuration", "", 3*60*1000L);
 
-    @SetFromFlag(defaultVal="true")
-    protected boolean setOnFireOnFailure;
+    @SetFromFlag("setOnFireOnFailure")
+    public static final ConfigKey<Boolean> SET_ON_FIRE_ON_FAILURE = ConfigKeys.newBooleanConfigKey("setOnFireOnFailure", "", true);
 
-    @SuppressWarnings("rawtypes")
-    public static final ConfigKey<Sensor> FAILURE_SENSOR_TO_MONITOR = new BasicConfigKey<Sensor>(Sensor.class, "failureSensorToMonitor"); 
-    
     /** monitors this sensor, by default ENTITY_FAILED */
-    // FIXME shouldn't set flags set in constructor ?  that might get overwritten by this value
-    @SetFromFlag
-    private Sensor<?> failureSensorToMonitor = HASensors.ENTITY_FAILED;
+    @SetFromFlag("failureSensorToMonitor")
+    @SuppressWarnings("rawtypes")
+    public static final ConfigKey<Sensor<?>> FAILURE_SENSOR_TO_MONITOR = (ConfigKey) ConfigKeys.newConfigKey(Sensor.class, "failureSensorToMonitor", "", HASensors.ENTITY_FAILED); 
     
+    protected final AtomicReference<Long> lastFailureTime = new AtomicReference<Long>();
+
     public ServiceRestarter() {
         this(new ConfigBag());
     }
@@ -76,14 +74,12 @@ public class ServiceRestarter extends AbstractPolicy {
         
         super.setEntity(entity);
         
-        subscribe(entity, failureSensorToMonitor, new SensorEventListener<Object>() {
+        subscribe(entity, getConfig(FAILURE_SENSOR_TO_MONITOR), new SensorEventListener<Object>() {
                 @Override public void onEvent(SensorEvent<Object> event) {
                     onDetectedFailure(event);
                 }
             });
     }
-    
-    AtomicReference<Long> lastFailureTime = new AtomicReference<Long>();
     
     // TODO semaphores would be better to allow at-most-one-blocking behaviour
     // FIXME as this is called in message-dispatch (single threaded) we should do most of this in a new submitted task
@@ -93,7 +89,7 @@ public class ServiceRestarter extends AbstractPolicy {
         long current = System.currentTimeMillis();
         Long last = lastFailureTime.getAndSet(current);
         long elapsed = last==null ? -1 : current-last;
-        if (elapsed>=0 && elapsed <= failOnRecurringFailuresInThisDuration) {
+        if (elapsed>=0 && elapsed <= getConfig(FAIL_ON_RECURRING_FAILURES_IN_THIS_DURATION)) {
             onRestartFailed("Restart failure (failed again after "+Time.makeTimeStringRounded(elapsed)+") at "+entity+": "+event.getValue());
             return;
         }
@@ -106,10 +102,10 @@ public class ServiceRestarter extends AbstractPolicy {
     }
 
     protected void onRestartFailed(String msg) {
-        LOG.warn("ServiceRestarter failed. "+msg);
-        if (setOnFireOnFailure)
+        LOG.warn("ServiceRestarter failed for "+entity+": "+msg);
+        if (getConfig(SET_ON_FIRE_ON_FAILURE)) {
             entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+        }
         entity.emit(ENTITY_RESTART_FAILED, new FailureDescriptor(entity, msg));
     }
-    
 }

@@ -57,7 +57,7 @@ public class ServiceReplacer extends AbstractPolicy {
 
     @Override
     public void setEntity(EntityLocal entity) {
-        checkArgument(entity instanceof DynamicCluster, "Replacer must take a DynamicCluster, not "+entity);
+        checkArgument(entity instanceof DynamicCluster, "Replacer must take a DynamicCluster, not %s", entity);
         Sensor<?> failureSensorToMonitor = checkNotNull(getConfig(FAILURE_SENSOR_TO_MONITOR), "failureSensorToMonitor");
         
         super.setEntity(entity);
@@ -94,8 +94,7 @@ public class ServiceReplacer extends AbstractPolicy {
     }
 
     protected void onReplacementFailed(String msg) {
-        LOG.warn("ServiceReplacer failed. "+msg);
+        LOG.warn("ServiceReplacer failed for "+entity+": "+msg);
         entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
     }
-    
 }
