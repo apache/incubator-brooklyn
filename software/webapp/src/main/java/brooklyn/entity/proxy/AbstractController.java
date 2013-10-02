@@ -15,7 +15,6 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.management.Task;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
@@ -30,6 +29,11 @@ public interface AbstractController extends SoftwareProcess, LoadBalancer {
     @SetFromFlag("portNumberSensor")
     public static final BasicAttributeSensorAndConfigKey<AttributeSensor> PORT_NUMBER_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor>(
             AttributeSensor.class, "member.sensor.portNumber", "Port number sensor on members (defaults to http.port)", Attributes.HTTP_PORT);
+
+    /** sensor for hostname to forward to on target entities */
+    @SetFromFlag("hostnameSensor")
+    public static final BasicAttributeSensorAndConfigKey<AttributeSensor> HOSTNAME_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor>(
+            AttributeSensor.class, "member.sensor.hostname", "Port number sensor on members (defaults to host.name)", Attributes.HOSTNAME);
 
     @SetFromFlag("port")
     /** port where this controller should live */
