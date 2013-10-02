@@ -58,7 +58,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         }
 
         @Override
-        protected Template buildTemplate(ComputeService computeService, ConfigBag config) {
+        public Template buildTemplate(ComputeService computeService, ConfigBag config) {
             lastConfigBag = config;
             if (getConfig(BUILD_TEMPLATE_INTERCEPTOR) != null) getConfig(BUILD_TEMPLATE_INTERCEPTOR).apply(config);
             throw BAIL_OUT_FOR_TESTING;
@@ -80,7 +80,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     public static class CountingBailOutJcloudsLocation extends BailOutJcloudsLocation {
         int buildTemplateCount = 0;
         @Override
-        protected Template buildTemplate(ComputeService computeService, ConfigBag config) {
+        public Template buildTemplate(ComputeService computeService, ConfigBag config) {
             buildTemplateCount++;
             return super.buildTemplate(computeService, config);
         }
@@ -99,7 +99,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         }
 
         @Override
-        protected Template buildTemplate(ComputeService computeService, ConfigBag config) {
+        public Template buildTemplate(ComputeService computeService, ConfigBag config) {
             template = super.buildTemplate(computeService, config);
 
             lastConfigBag = config;
