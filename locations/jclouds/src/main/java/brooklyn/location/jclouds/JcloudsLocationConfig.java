@@ -5,8 +5,12 @@ import java.util.Collection;
 import java.util.concurrent.Semaphore;
 
 import org.jclouds.Constants;
+import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.domain.LoginCredentials;
+
+import com.google.common.base.Function;
+import com.google.common.reflect.TypeToken;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
@@ -149,6 +153,12 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
 
     public static final ConfigKey<Semaphore> MACHINE_CREATION_SEMAPHORE = ConfigKeys.newConfigKey(
             Semaphore.class, "machineCreationSemaphore", "Semaphore for controlling concurrent machine creation", null);
+
+    @SuppressWarnings("serial")
+    public static final ConfigKey<Function<Iterable<? extends Image>,Image>> IMAGE_CHOOSER = ConfigKeys.newConfigKey(
+        new TypeToken<Function<Iterable<? extends Image>,Image>>() {},
+        "imageChooser", "An image chooser function to control which images are preferred", 
+        ImageChoosers.BROOKLYN_DEFAULT_IMAGE_CHOOSER);
 
     // TODO
     

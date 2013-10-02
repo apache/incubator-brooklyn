@@ -38,8 +38,6 @@ import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.NodeMetadata.Status;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
-import org.jclouds.compute.domain.OperatingSystem;
-import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
@@ -419,7 +417,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      * plus any further properties to specify e.g. images, hardware profiles, accessing user
      * (for initial login, and a user potentially to create for subsequent ie normal access) */
     public JcloudsSshMachineLocation obtain(Map<?,?> flags) throws NoMachinesAvailableException {
-        ConfigBag setup = ConfigBag.newInstanceExtending(getConfigBag(), flags);
+        ConfigBag setup = ConfigBag.newInstanceExtending(getRawLocalConfigBag(), flags);
         Integer attempts = setup.get(MACHINE_CREATE_ATTEMPTS);
         List<Exception> exceptions = Lists.newArrayList();
         if (attempts == null || attempts < 1) attempts = 1;
@@ -779,14 +777,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     private static boolean listedAvailableTemplatesOnNoSuchTemplate = false;
 
-    /** returns the jclouds Template which describes the image to be built */
-    protected Template buildTemplate(ComputeService computeService, ConfigBag config) {
+    /** returns the jclouds Template which describes the image to be built, for the given config and compute service */
+    public Template buildTemplate(ComputeService computeService, ConfigBag config) {
         TemplateBuilder templateBuilder = (TemplateBuilder) config.get(TEMPLATE_BUILDER);
-        if (templateBuilder==null)
-            templateBuilder = new PortableTemplateBuilder();
-        else
+        if (templateBuilder==null) {
+            templateBuilder = new PortableTemplateBuilder<PortableTemplateBuilder<?>>();
+            templateBuilder.imageChooser(getConfig(JcloudsLocationConfig.IMAGE_CHOOSER));
+        } else {
             LOG.debug("jclouds using templateBuilder {} as base for provisioning in {} for {}", new Object[] {
                     templateBuilder, this, config.getDescription()});
+        }
 
         if (!Strings.isEmpty(config.get(CLOUD_REGION_ID))) {
             templateBuilder.locationId(config.get(CLOUD_REGION_ID));
@@ -822,21 +822,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (template==null) throw new NullPointerException("No template found (templateBuilder.build returned null)");
             LOG.debug(""+this+" got template "+template+" (image "+template.getImage()+")");
             if (template.getImage()==null) throw new NullPointerException("Template does not contain an image (templateBuilder.build returned invalid template)");
-            if (isBadTemplate(template.getImage())) {
-                // release candidates might break things :(
-                // TODO make jclouds TemplateBuilderImpl support a configurable orderer / scorer
-                if (templateBuilder instanceof PortableTemplateBuilder) {
-                    if (((PortableTemplateBuilder<?>)templateBuilder).getOsFamily()==null) {
-                        // NB: 11.04 on AWS us-east-1 returns an image where apt-get hits a 403 forbidden
-                        templateBuilder.osFamily(OsFamily.UBUNTU).osVersionMatches("12.04").os64Bit(true);
-                        Template template2 = templateBuilder.build();
-                        if (template2!=null) {
-                            LOG.debug(""+this+" preferring template {} over {}", template2, template);
-                            template = template2;
-                        }
-                    }
-                }
-            }
         } catch (AuthorizationException e) {
             LOG.warn("Error resolving template: not authorized (rethrowing: "+e+")");
             throw new IllegalStateException("Not authorized to access cloud "+this+" to resolve "+templateBuilder, e);
@@ -1023,29 +1008,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return result;
     }
 
-    // TODO we really need a better way to decide which images are preferred
-    // though to be fair this is similar to jclouds strategies
-    // we fall back to the "bad" images (^^^ above) if we can't find a good one above
-    // ---
-    // but in practice in AWS images name "rc-" and from "alphas" break things badly
-    // (apt repos don't work, etc)
-    private boolean isBadTemplate(Image image) {
-        String name = image.getName();
-        if (name != null && name.contains(".rc-")) return true;
-        OperatingSystem os = image.getOperatingSystem();
-        if (os!=null) {
-            String description = os.getDescription();
-            if (description != null && description.contains("-alpha"))
-                return true;
-        }
-        
-        // specific black-listed images
-        
-        // bad natty image - causes 403 on attempts to apt-get; https://bugs.launchpad.net/ubuntu/+bug/987182
-        if ("us-east-1/ami-1cb30875".equals(image.getId())) return true;
-        
-        return false;
-    }
 
     // ----------------- rebinding to existing machine ------------------------
 
