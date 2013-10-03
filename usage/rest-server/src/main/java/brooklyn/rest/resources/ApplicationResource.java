@@ -125,7 +125,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
           String[] itemsO = items.split(",");
           for (String item: itemsO) {
               Entity itemE = mgmt().getEntityManager().getEntity( item.trim() );
-              while (itemE != null && !(itemE instanceof Application)) {
+              while (itemE != null && itemE.getParent()!=null) {
                   resultM.put(itemE.getId(), fromEntity(itemE));
                   itemE= itemE.getParent();
               }

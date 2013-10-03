@@ -468,7 +468,7 @@ define([
                 if (serviceUp==false) return PATH+"icon-status-running-onfire.png";
                 return PATH+"icon-status-running.png";
             }
-            if (lifecycleState=="stopped") {
+            if (lifecycleState=="stopped" || lifecycleState=="created") {
                 if (serviceUp==true) return PATH+"icon-status-stopped-onfire.png";
                 return PATH+"icon-status-stopped.png";
             }
