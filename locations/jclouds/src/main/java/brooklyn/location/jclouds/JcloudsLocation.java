@@ -580,27 +580,35 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }})
             .put(LOGIN_USER, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
-                        t.overrideLoginUser(((CharSequence)v).toString());
+                        if (v != null) {
+                            t.overrideLoginUser(((CharSequence)v).toString());
+                        }
                     }})
             .put(LOGIN_USER_PASSWORD, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
-                        t.overrideLoginPassword(((CharSequence)v).toString());
+                        if (v != null) {
+                            t.overrideLoginPassword(((CharSequence)v).toString());
+                        }
                     }})
             .put(LOGIN_USER_PRIVATE_KEY_FILE, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
-                        String privateKeyFileName = ((CharSequence)v).toString();
-                        String privateKey;
-                        try {
-                            privateKey = Files.toString(new File(ResourceUtils.tidyFilePath(privateKeyFileName)), Charsets.UTF_8);
-                        } catch (IOException e) {
-                            LOG.error(privateKeyFileName + "not found", e);
-                            throw Exceptions.propagate(e);
+                        if (v != null) {
+                            String privateKeyFileName = ((CharSequence)v).toString();
+                            String privateKey;
+                            try {
+                                privateKey = Files.toString(new File(ResourceUtils.tidyFilePath(privateKeyFileName)), Charsets.UTF_8);
+                            } catch (IOException e) {
+                                LOG.error(privateKeyFileName + "not found", e);
+                                throw Exceptions.propagate(e);
+                            }
+                            t.overrideLoginPrivateKey(privateKey);
                         }
-                        t.overrideLoginPrivateKey(privateKey);
                     }})
             .put(LOGIN_USER_PRIVATE_KEY_DATA, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
-                        t.overrideLoginPrivateKey(((CharSequence)v).toString());
+                        if (v != null) {
+                            t.overrideLoginPrivateKey(((CharSequence)v).toString());
+                        }
                     }})                    
             .put(KEY_PAIR, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
