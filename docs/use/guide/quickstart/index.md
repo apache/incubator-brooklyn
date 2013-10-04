@@ -79,6 +79,8 @@ Create a `.brooklyn` folder in your home directory:
 $ mkdir ~/.brooklyn
 {% endhighlight %}
 
+**Note:** `~/.brooklyn` is an important directory, as this is where Brooklyn looks for configuration files and resources. It is **not** the
+same as the directory where Brooklyn is located (`$BROOKLYN_DIR` = `~/brooklyn-{{ site.brooklyn-version }}`, if you followed the commands above).
 
 Next, set up the following default/template files in that directory:
 
