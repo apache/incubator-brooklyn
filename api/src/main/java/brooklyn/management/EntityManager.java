@@ -5,6 +5,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
@@ -44,6 +45,11 @@ public interface EntityManager {
     Collection<Entity> getEntities();
 
     /**
+     * All entities managed as part of the given application
+     */
+    Iterable<Entity> getEntitiesInApplication(Application application);
+
+    /**
      * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote),
      * or null.
      */
@@ -66,4 +72,5 @@ public interface EntityManager {
      * (for instance because the entity is no longer relevant)
      */
     void unmanage(Entity e);
+
 }

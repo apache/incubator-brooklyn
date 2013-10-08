@@ -94,22 +94,27 @@ public class BrooklynEntityMatcher implements PdpMatcher {
             throw new IllegalStateException("Item "+item+" is not recognised here");
         }
         
-        // currently instatiator must be brooklyn at the ATC level; optionally we support multiple?
-        // and/or an instantiator at the component level, with the first one building the app
+        // currently instantiator must be brooklyn at the ATC level
+        // optionally would be nice to support multiple/mixed instantiators, 
+        // ie at the component level, perhaps with the first one responsible for building the app
         atc.instantiator(BrooklynAssemblyTemplateInstantiator.class);
-//        builder.instantiator(Brooklyn);
         
         // configuration
         Map<String, Object> attrs = MutableMap.copyOf( ((Service)deploymentPlanItem).getCustomAttributes() );
-        Object brooklynConfig = attrs.remove("brooklyn.config");
-        if (brooklynConfig!=null) {
-            if (!(brooklynConfig instanceof Map))
-                throw new IllegalArgumentException("brooklyn.config must be a map of brooklyn config keys");
-            builder.customAttribute("brooklyn.config", brooklynConfig);
-        }
-        
+
         if (attrs.containsKey("id"))
-            builder.id(attrs.remove("id").toString());
+            builder.customAttribute("planId", attrs.remove("id"));
+
+        Map<Object, Object> brooklynConfig = MutableMap.of();
+        Object origBrooklynConfig = attrs.remove("brooklyn.config");
+        if (origBrooklynConfig!=null) {
+            if (!(origBrooklynConfig instanceof Map))
+                throw new IllegalArgumentException("brooklyn.config must be a map of brooklyn config keys");
+            brooklynConfig.putAll((Map<?,?>)origBrooklynConfig);
+        }
+        // (any other brooklyn config goes here)
+        if (!brooklynConfig.isEmpty())
+            builder.customAttribute("brooklyn.config", brooklynConfig);
         
         if (!attrs.isEmpty()) {
             log.warn("Ignoring PDP attributes on "+deploymentPlanItem+": "+attrs);

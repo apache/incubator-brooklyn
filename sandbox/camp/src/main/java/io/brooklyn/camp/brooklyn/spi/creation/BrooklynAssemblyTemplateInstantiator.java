@@ -1,6 +1,7 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatform;
 import io.brooklyn.camp.brooklyn.spi.platform.HasBrooklynManagementContext;
 import io.brooklyn.camp.spi.Assembly;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
@@ -223,23 +225,32 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             final Class<? extends Entity> bType = loadEntityType(catalog, bTypeName);
             
             appSpec.addInitializer(new EntityInitializer() {
+                @SuppressWarnings({ "rawtypes", "unchecked" })
                 @Override
                 public void apply(EntityLocal entity) {
                     EntitySpec<? extends Entity> child = EntitySpec.create(bType);
+                    Map<String, Object> attrs = MutableMap.copyOf(ct.getCustomAttributes());
+
+                    child.configure(BrooklynCampConstants.TEMPLATE_ID, ct.getId());
                     
-                    @SuppressWarnings("unchecked")
-                    Map<String,?> config = (Map<String, ?>) ct.getCustomAttributes().get("brooklyn.config");
+                    String planId = (String) attrs.remove("planId");
+                    if (planId!=null)
+                        child.configure(BrooklynCampConstants.PLAN_ID, planId);
+                     
+                    Map<?,?> config = (Map<?, ?>) attrs.remove("brooklyn.config");
                     if (config!=null) {
-                        for (Map.Entry<String,?> entry: config.entrySet()) {
+                        for (Map.Entry<?,?> entry: config.entrySet()) {
                             // set as config key (rather than flags) so that it is inherited
-                            child.configure(ConfigKeys.newConfigKey(Object.class, entry.getKey()), entry.getValue());
+                            Object key = entry.getKey();
+                            if (key instanceof ConfigKey)
+                                child.configure( (ConfigKey)key, entry.getValue() );
+                            else if (key instanceof HasConfigKey)
+                                child.configure( (HasConfigKey)key, entry.getValue() );
+                            else
+                                child.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), entry.getValue());
                         }
                     }
-
-                    // FIXME id must be unique. but we need a way to correlate DP->template->item
-                    // template.planId component.{templateId,planId} ?
-                    child.configure(MutableMap.of("id", ct.getId()));
-                    
+                   
                     entity.addChild(child);
                 }
             });

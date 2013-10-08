@@ -125,7 +125,7 @@ public class JavaWebAppsMatchingTest {
         Assert.assertTrue(dbUrl instanceof DeferredSupplier<?>, "url is: "+dbUrl);
         Assert.assertTrue(j.indexOf("formatString") >= 0, "url json is: "+j);
         
-        Assert.assertEquals(pct2.getId(), "db");
+        Assert.assertEquals(pct2.getCustomAttributes().get("planId"), "db");
     }
 
 }

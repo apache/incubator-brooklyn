@@ -1,7 +1,9 @@
 package io.brooklyn.camp.brooklyn.spi.dsl.methods;
 
+import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
 
+import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
 
 import brooklyn.entity.Entity;
@@ -12,7 +14,9 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.management.Task;
 import brooklyn.util.task.TaskBuilder;
 
-import com.google.common.base.Preconditions;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 
@@ -26,7 +30,18 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
         return TaskBuilder.<Entity>builder().name("component("+componentId+")").body(new Callable<Entity>() {
             @Override
             public Entity call() throws Exception {
-                return Preconditions.checkNotNull(entity().getApplication().getManagementContext().getEntityManager().getEntity(componentId), "No entity matching id %s", componentId);
+                Iterable<Entity> entitiesInApp = entity().getApplication().getManagementContext().getEntityManager().getEntitiesInApplication( entity().getApplication() );
+                Optional<Entity> result = Iterables.tryFind(entitiesInApp, new Predicate<Entity>() {
+                    @Override
+                    public boolean apply(Entity input) {
+                        return componentId.equals(input.getConfig(BrooklynCampConstants.PLAN_ID));
+                    }
+                });
+                if (result.isPresent())
+                    return result.get();
+                
+                // TODO may want to block and repeat on new entities joining?
+                throw new NoSuchElementException("No entity matching id " + componentId);
             }
         }).build();
     }
