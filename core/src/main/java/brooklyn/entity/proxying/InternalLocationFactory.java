@@ -2,7 +2,6 @@ package brooklyn.entity.proxying;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,7 +18,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
 
-import com.google.common.collect.Maps;
+import com.google.common.base.Optional;
 
 /**
  * Creates locations of required types.
@@ -144,9 +143,9 @@ public class InternalLocationFactory {
         if (flags.containsKey("parentLocation")) {
             throw new IllegalArgumentException("Spec's flags must not contain parent or owner; use spec.parent() instead for "+clazz);
         }
-        Constructor<? extends T> c2 = Reflections.findCallabaleConstructor(clazz, new Object[] {flags});
-        if (c2 != null) {
-            return c2.newInstance(Maps.newLinkedHashMap(flags));
+        Optional<? extends T> v = Reflections.invokeConstructorWithArgs(clazz, new Object[] {MutableMap.copyOf(flags)}, true);
+        if (v.isPresent()) {
+            return v.get();
         } else {
             throw new IllegalStateException("No valid constructor defined for "+clazz+" (expected no-arg or single java.util.Map argument)");
         }

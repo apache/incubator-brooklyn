@@ -27,10 +27,13 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
+import brooklyn.management.TaskFactory;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicTask;
+import brooklyn.util.task.DeferredSupplier;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.TaskInternal;
 import brooklyn.util.task.Tasks;
@@ -194,38 +197,38 @@ public class DependentConfiguration {
     }
     
     /** @see #transform(Task, Function) */
-    public static <U,T> Task<T> transform(final Map flags, final Task<U> task, final Function<U,T> transformer) {
+    public static <U,T> Task<T> transform(final Map flags, final TaskAdaptable<U> task, final Function<U,T> transformer) {
         return new BasicTask<T>(flags, new Callable<T>() {
             public T call() throws Exception {
-                if (!task.isSubmitted()) {
+                if (!task.asTask().isSubmitted()) {
                     BasicExecutionContext.getCurrentExecutionContext().submit(task);
                 } 
-                return transformer.apply(task.get());
+                return transformer.apply(task.asTask().get());
             }});        
     }
      
     /** Returns a task which waits for multiple other tasks (submitting if necessary)
      * and performs arbitrary computation over the List of results.
      * @see #transform(Task, Function) but note argument order is reversed (counterintuitive) to allow for varargs */
-    public static <U,T> Task<T> transformMultiple(Function<List<U>,T> transformer, Task<U> ...tasks) {
+    public static <U,T> Task<T> transformMultiple(Function<List<U>,T> transformer, TaskAdaptable<U> ...tasks) {
         return transformMultiple(MutableMap.of("displayName", "transforming multiple"), transformer, tasks);
     }
 
     /** @see #transformMultiple(Function, Task...) */
-    public static <U,T> Task<T> transformMultiple(Closure transformer, Task<U> ...tasks) {
+    public static <U,T> Task<T> transformMultiple(Closure transformer, TaskAdaptable<U> ...tasks) {
         return transformMultiple(GroovyJavaMethods.functionFromClosure(transformer), tasks);
     }
 
     /** @see #transformMultiple(Function, Task...) */
-    public static <U,T> Task<T> transformMultiple(Map flags, Closure transformer, Task<U> ...tasks) {
+    public static <U,T> Task<T> transformMultiple(Map flags, Closure transformer, TaskAdaptable<U> ...tasks) {
         return transformMultiple(flags, GroovyJavaMethods.functionFromClosure(transformer), tasks);
     }
     
     /** @see #transformMultiple(Function, Task...) */
-    public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, Task<U> ...tasks) {
+    public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, TaskAdaptable<U> ...tasks) {
         return transformMultiple(flags, transformer, Arrays.asList(tasks));
     }
-    public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, List<Task<U>> tasks) {
+    public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, List<? extends TaskAdaptable<U>> tasks) {
         if (tasks.size()==1) {
             return transform(flags, tasks.get(0), new Function<U,T>() {
                 @Override @Nullable
@@ -254,9 +257,10 @@ public class DependentConfiguration {
      */
     @SuppressWarnings("unchecked")
     public static Task<String> formatString(final String spec, final Object ...args) {
-        List<Task<Object>> taskArgs = Lists.newArrayList();
+        List<TaskAdaptable<Object>> taskArgs = Lists.newArrayList();
         for (Object arg: args) {
-            if (arg instanceof Task) taskArgs.add((Task<Object>)arg);
+            if (arg instanceof TaskAdaptable) taskArgs.add((TaskAdaptable<Object>)arg);
+            else if (arg instanceof TaskFactory) taskArgs.add( ((TaskFactory<TaskAdaptable<Object>>)arg).newTask() );
         }
             
         return transformMultiple(
@@ -267,7 +271,8 @@ public class DependentConfiguration {
                 Object[] vv = new Object[args.length];
                 int i=0;
                 for (Object arg : args) {
-                    if (arg instanceof Task) vv[i] = tri.next();
+                    if (arg instanceof TaskAdaptable || arg instanceof TaskFactory) vv[i] = tri.next();
+                    else if (arg instanceof DeferredSupplier) vv[i] = ((DeferredSupplier<?>) arg).get();
                     else vv[i] = arg;
                     i++;
                 }

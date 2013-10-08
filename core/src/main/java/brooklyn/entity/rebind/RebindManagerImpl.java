@@ -2,7 +2,6 @@ package brooklyn.entity.rebind;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -29,9 +28,11 @@ import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -259,10 +260,13 @@ public class RebindManagerImpl implements RebindManager {
 
     private <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {
         for (Object[] args : possibleArgs) {
-            Constructor<T> constructor = Reflections.findCallabaleConstructor(clazz, args);
-            if (constructor != null) {
-                constructor.setAccessible(true);
-                return reflections.loadInstance(constructor, args);
+            try {
+                Optional<T> v = Reflections.invokeConstructorWithArgs(clazz, args, true);
+                if (v.isPresent()) {
+                    return v.get();
+                }
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
             }
         }
         throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");

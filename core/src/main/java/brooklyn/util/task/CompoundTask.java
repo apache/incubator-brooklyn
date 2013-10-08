@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableMap;
 
 
@@ -64,7 +65,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
         this.result = new ArrayList<Object>(jobs.size());
         this.children = new ArrayList<Task<? extends T>>(jobs.size());
         for (Object job : jobs) {
-            if (job instanceof Task)          { children.add((Task) job); }
+            if (job instanceof TaskAdaptable) { children.add(((TaskAdaptable)job).asTask()); }
             else if (job instanceof Closure)  { children.add(new BasicTask<T>((Closure) job)); }
             else if (job instanceof Callable) { children.add(new BasicTask<T>((Callable) job)); }
             else if (job instanceof Runnable) { children.add(new BasicTask<T>((Runnable) job)); }
@@ -82,8 +83,8 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
     protected abstract List<T> runJobs() throws InterruptedException, ExecutionException;
     
     @SuppressWarnings("deprecation")
-    protected void submitIfNecessary(Task<?> task) {
-        if (!task.isSubmitted()) {
+    protected void submitIfNecessary(TaskAdaptable<?> task) {
+        if (!task.asTask().isSubmitted()) {
             if (BasicExecutionContext.getCurrentExecutionContext() == null) {
                 if (em!=null) {
                     log.warn("Discouraged submission of compound task ({}) from {} without execution context; using execution manager", task, this);
