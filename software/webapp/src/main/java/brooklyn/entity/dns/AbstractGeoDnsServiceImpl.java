@@ -197,7 +197,9 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             
             if (Networking.isPrivateSubnet(hostname)) {
                 if (getConfig(INCLUDE_HOMELESS_ENTITIES)) {
-                    log.info("GeoDns including {}, even though {} is a private subnet (homeless entities included)", e, hostname);
+                    if (entitiesWithoutGeoInfo.add(e)) {
+                        log.info("GeoDns including {}, even though {} is a private subnet (homeless entities included)", e, hostname);
+                    }
                 } else {
                     if (entitiesWithoutGeoInfo.add(e)) {
                         log.warn("GeoDns ignoring {} (private subnet detected for {})", e, hostname);

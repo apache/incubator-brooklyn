@@ -453,7 +453,7 @@ define([
             }
         },
         computeStatusIcon: function(serviceUp, lifecycleState) {
-            if (serviceUp==false || serviceUp=="false") serviceUp=false;
+            if (serviceUp===false || serviceUp=="false") serviceUp=false;
             else if (serviceUp===true || serviceUp=="true") serviceUp=true;
             else {
                 if (serviceUp!=null && serviceUp !== "" && serviceUp !== undefined) {
@@ -468,7 +468,7 @@ define([
                 if (serviceUp==false) return PATH+"icon-status-running-onfire.png";
                 return PATH+"icon-status-running.png";
             }
-            if (lifecycleState=="stopped") {
+            if (lifecycleState=="stopped" || lifecycleState=="created") {
                 if (serviceUp==true) return PATH+"icon-status-stopped-onfire.png";
                 return PATH+"icon-status-stopped.png";
             }
