@@ -401,10 +401,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (!(waitForSshable!=null && "false".equalsIgnoreCase(waitForSshable))) {
                String setupScript = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_URL);
                 if(Strings.isNonBlank(setupScript)) {
-                   String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
-                   Map<String, String> substitutions = Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString);
-                   String script = TemplateProcessor.processTemplate(setupScript, substitutions);
-                   sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
+                    String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
+                    Map<String, String> substitutions = (setupVarsString != null)
+                            ? Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString)
+                            : Maps.<String, String>newHashMap();
+                    String script = TemplateProcessor.processTemplate(setupScript, substitutions);
+                    sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
                 }
                 
                 if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM))
