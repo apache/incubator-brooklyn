@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
@@ -115,8 +116,9 @@ public class EntityPollingTest {
          * for a JmxService that we can control in the test.        
          */
         entity = app.createAndManageChild(EntitySpec.create(SoftwareProcess.class).impl(SubVanillaJavaApp.class)
-                .configure("jmxPort", 40123)
-                .configure("mxbeanStatsEnabled", false));
+                .configure("rmiServerPort", 40123)
+                .configure("mxbeanStatsEnabled", false)
+                .configure(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.JMX_RMI_CUSTOM_AGENT));
     }
 
     @AfterMethod(alwaysRun=true)
