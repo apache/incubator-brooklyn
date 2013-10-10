@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Strings;
+import com.google.common.net.HostAndPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,12 +61,13 @@ public class KnifeConvergeTaskFactory<RET> extends KnifeTaskFactory<RET> {
         
         result.add("bootstrap");
         result.addAll(extraBootstrapParameters);
-        
-        result.add(wrapBash(machine.getAddress().getHostName()));
-        Integer whichPort = knifeWhichPort(machine);
+
+        HostAndPort hostAndPort = machine.getSshHostAndPort();
+        result.add(wrapBash(hostAndPort.getHostText()));
+        Integer whichPort = knifeWhichPort(hostAndPort);
         if (whichPort!=null)
             result.add("-p "+whichPort);
-        
+
         result.add("-x "+wrapBash(checkNotNull(machine.getUser(), "user")));
         
         File keyfile = ChefServerTasks.extractKeyFile(machine);
@@ -136,24 +138,24 @@ public class KnifeConvergeTaskFactory<RET> extends KnifeTaskFactory<RET> {
         return self();
     }
     
-    protected Integer knifeWhichPort(SshMachineLocation machine) {
+    protected Integer knifeWhichPort(HostAndPort hostAndPort) {
         if (port==null) {
             if (portOmittedToUseKnifeDefault==Boolean.TRUE)
                 // user has explicitly said to use knife default, omitting port here
                 return null;
             // default is to use the machine port
-            return machine.getPort();
+            return hostAndPort.getPort();
         }
         if (port==-1) {
             // port was supplied by user, then portDefault (true or false)
             port = null;
-            Integer whichPort = knifeWhichPort(machine);
-            log.warn("knife port conflicting instructions for "+this+" at entity "+entity()+" on "+machine+"; using default ("+whichPort+")");
+            Integer whichPort = knifeWhichPort(hostAndPort);
+            log.warn("knife port conflicting instructions for "+this+" at entity "+entity()+" on "+hostAndPort+"; using default ("+whichPort+")");
             return whichPort;
         }
         if (portOmittedToUseKnifeDefault!=null) {
             // portDefault was specified (true or false), then overridden with a port
-            log.warn("knife port conflicting instructions for "+this+" at entity "+entity()+" on "+machine+"; using supplied port "+port);
+            log.warn("knife port conflicting instructions for "+this+" at entity "+entity()+" on "+hostAndPort+"; using supplied port "+port);
         }
         // port was supplied by user, use that
         return port;

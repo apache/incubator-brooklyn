@@ -1,6 +1,8 @@
 package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
+
+import com.google.common.net.HostAndPort;
 import groovy.lang.Closure;
 
 import java.io.Closeable;
@@ -248,6 +250,16 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     public InetAddress getAddress() {
         return address;
+    }
+
+    public HostAndPort getSshHostAndPort() {
+        String host = getConfig(SSH_HOST);
+        if (host == null || Strings.isEmpty(host))
+            host = address.getHostName();
+        Integer port = getConfig(SSH_PORT);
+        if (port == null || port == 0)
+            port = 22;
+        return HostAndPort.fromParts(host, port);
     }
 
     public String getUser() {
