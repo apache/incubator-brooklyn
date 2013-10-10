@@ -80,6 +80,7 @@ public class SshFeed extends AbstractFeed {
         private long period = 500;
         private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
         private List<SshPollConfig<?>> polls = Lists.newArrayList();
+        private boolean execAsCommand = false;
         private volatile boolean built;
         
         public Builder entity(EntityLocal val) {
@@ -103,6 +104,14 @@ public class SshFeed extends AbstractFeed {
         }
         public Builder poll(SshPollConfig<?> config) {
             polls.add(config);
+            return this;
+        }
+        public Builder execAsCommand() {
+            execAsCommand = true;
+            return this;
+        }
+        public Builder execAsScript() {
+            execAsCommand = false;
             return this;
         }
         public SshFeed build() {
@@ -143,6 +152,7 @@ public class SshFeed extends AbstractFeed {
     }
     
     private final SshMachineLocation machine;
+    private final boolean execAsCommand;
     
     // Treat as immutable once built
     private final SetMultimap<SshPollIdentifier, SshPollConfig<?>> polls = HashMultimap.<SshPollIdentifier,SshPollConfig<?>>create();
@@ -158,6 +168,7 @@ public class SshFeed extends AbstractFeed {
     protected SshFeed(Builder builder) {
         super(builder.entity);
         machine = checkNotNull(builder.machine != null ? builder.machine : getMachineOfEntity(builder.entity), "machine");
+        execAsCommand = builder.execAsCommand;
         
         for (SshPollConfig<?> config : builder.polls) {
             SshPollConfig<?> configCopy = new SshPollConfig(config);
@@ -200,8 +211,14 @@ public class SshFeed extends AbstractFeed {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
-        int exitStatus = machine.execScript(MutableMap.<String,Object>of("out", stdout, "err", stderr), 
-                "ssh-feed", ImmutableList.of(command), env);
+        int exitStatus;
+        if (execAsCommand) {
+            exitStatus = machine.execCommands(MutableMap.<String,Object>of("out", stdout, "err", stderr),
+                    "ssh-feed", ImmutableList.of(command), env);
+        } else {
+            exitStatus = machine.execScript(MutableMap.<String,Object>of("out", stdout, "err", stderr),
+                    "ssh-feed", ImmutableList.of(command), env);
+        }
 
         return new SshPollValue(machine, exitStatus, new String(stdout.toByteArray()), new String(stderr.toByteArray()));
     }
