@@ -68,6 +68,24 @@ public class NginxIntegrationTest {
         assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 404);
     }
 
+    @Test(groups = "Integration")
+    public void testRestart() {
+        serverPool = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.FACTORY, { throw new UnsupportedOperationException(); })
+                .configure("initialSize", 0));
+        
+        nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
+                .configure("serverPool", serverPool)
+                .configure("domain", "localhost"));
+        
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+
+        nginx.restart();
+        
+        assertAttributeEventually(nginx, SoftwareProcess.SERVICE_UP, true);
+        assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 404);
+    }
+
     /**
      * Test that the Nginx proxy starts up and sets SERVICE_UP correctly.
      */

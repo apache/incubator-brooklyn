@@ -189,7 +189,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
                 port = accessible.getPort();
             }
         }
-        if (domain==null) domain = getAttribute(HOSTNAME);
+        if (domain==null) domain = getAttribute(LoadBalancer.HOSTNAME);
         if (domain==null) return null;
         return protocol+"://"+domain+":"+port+"/";
     }

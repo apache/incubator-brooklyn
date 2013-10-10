@@ -41,7 +41,13 @@ public class ConfigBag {
     public static ConfigBag newInstance() {
         return new ConfigBag();
     }
-    
+
+    public static ConfigBag newInstance(Map<?, ?> config) {
+        ConfigBag result = new ConfigBag();
+        result.putAll(config);
+        return result;
+    }
+
     /** creates a new ConfigBag instance which includes all of the supplied ConfigBag's values,
      * but which tracks usage separately (already used values are marked as such,
      * but uses in the original set will not be marked here, and vice versa) */

@@ -1,8 +1,10 @@
 package brooklyn.entity.proxy;
 
 import java.util.Collection;
+import java.util.Map;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.location.Location;
@@ -60,5 +62,33 @@ public class LoadBalancerClusterImpl extends DynamicClusterImpl implements LoadB
     protected boolean calculateServiceUp() {
         return super.calculateServiceUp() && getCurrentSize() > 0;
     }
+
+    /* NOTE The following methods come from {@link LoadBalancer} but are probably safe to ignore */
     
+    @Override
+    public void reload() {
+        for (Entity member : getMembers()) {
+            if (member instanceof LoadBalancer) {
+                ((LoadBalancer)member).reload();
+            }
+        }
+    }
+
+    @Override
+    public void update() {
+        for (Entity member : getMembers()) {
+            if (member instanceof LoadBalancer) {
+                ((LoadBalancer)member).update();
+            }
+        }
+    }
+
+    @Override
+    public void bind(Map flags) {
+        for (Entity member : getMembers()) {
+            if (member instanceof LoadBalancer) {
+                ((LoadBalancer)member).bind(flags);
+            }
+        }
+    }
 }
