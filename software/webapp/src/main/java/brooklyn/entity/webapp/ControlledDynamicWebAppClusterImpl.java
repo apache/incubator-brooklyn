@@ -14,6 +14,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.AbstractController;
+import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
@@ -80,9 +81,9 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         if (Entities.isManaged(this)) Entities.manage(cluster);
         setAttribute(CLUSTER, cluster);
         
-        AbstractController controller = getAttribute(CONTROLLER);
+        LoadBalancer controller = getAttribute(CONTROLLER);
         if (controller == null) {
-            EntitySpec<? extends AbstractController> controllerSpec = getAttribute(CONTROLLER_SPEC);
+            EntitySpec<? extends LoadBalancer> controllerSpec = getAttribute(CONTROLLER_SPEC);
             if (controllerSpec == null) {
                 log.debug("creating controller using default spec for {}", this);
                 controllerSpec = EntitySpec.create(NginxController.class);
@@ -96,7 +97,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         }
     }
     
-    public AbstractController getController() {
+    public LoadBalancer getController() {
         return getAttribute(CONTROLLER);
     }
 
@@ -118,7 +119,8 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         Iterables.getOnlyElement(locations); //assert just one
         addLocations(locations);
         
-        getController().bind(MutableMap.of("serverPool", getCluster()));
+        LoadBalancer loadBalancer = getController();
+        loadBalancer.bind(MutableMap.of("serverPool", getCluster()));
 
         List<Entity> childrenToStart = MutableList.<Entity>of(getCluster());
         // Set controller as child of cluster, if it does not already have a parent

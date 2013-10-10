@@ -16,6 +16,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.AbstractController;
+import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
@@ -82,7 +83,7 @@ public class ControlledDynamicWebAppClusterTest {
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, controllerSpec)
                 .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
         app.start(locs);
-        AbstractController controller = cluster.getController();
+        LoadBalancer controller = cluster.getController();
         
         EntityTestUtils.assertAttributeEqualsEventually(controller, NginxController.SERVICE_UP, true);
         assertEquals(controller.getDisplayName(), "mycustom");

@@ -1,6 +1,15 @@
 package brooklyn.entity.proxy;
 
+import java.util.Map;
+import java.util.Set;
+
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.trait.Startable;
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -18,13 +27,37 @@ import brooklyn.util.flags.SetFromFlag;
  * 
  * @author aled
  */
-public interface LoadBalancer {
+public interface LoadBalancer extends Entity, Startable {
 
     @SetFromFlag("serverPool")
-    public static final BasicConfigKey<Group> SERVER_POOL = new BasicConfigKey<Group>(
+    ConfigKey<Group> SERVER_POOL = new BasicConfigKey<Group>(
             Group.class, "loadbalancer.serverpool", "The default servers to route messages to");
 
     @SetFromFlag("urlMappings")
-    public static final BasicConfigKey<Group> URL_MAPPINGS = new BasicConfigKey<Group>(
-            Group.class, "loadbalancer.urlmappings", "Special mapping rules (e.g. for domain/path matching, rewrite, etc)");
+    ConfigKey<Group> URL_MAPPINGS = new BasicConfigKey<Group>(
+            Group.class, "loadbalancer.urlmappings", "Special mapping rules (e.g. for domain/path matching, rewrite, etc); not supported by all load balancers");
+    
+    public static final BasicAttributeSensor<Set<String>> SERVER_POOL_TARGETS = new BasicAttributeSensor(
+            Set.class, "proxy.serverpool.targets", "The downstream targets in the server pool");
+    
+    /**
+     * @deprecated since 0.6; Use SERVER_POOL_TARGETS
+     */
+    public static final BasicAttributeSensor<Set<String>> TARGETS = SERVER_POOL_TARGETS;
+    
+    public static final MethodEffector<Void> RELOAD = new MethodEffector<Void>(LoadBalancer.class, "reload");
+    
+    public static final MethodEffector<Void> UPDATE = new MethodEffector<Void>(LoadBalancer.class, "update");
+
+    @Effector(description="Forces reload of the configuration")
+    public void reload();
+
+    @Effector(description="Updates the entities configuration, and then forces reload of that configuration")
+    public void update();
+    
+    /**
+     * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
+     * Can pass in the 'serverPool'.
+     */
+    public void bind(Map flags);
 }

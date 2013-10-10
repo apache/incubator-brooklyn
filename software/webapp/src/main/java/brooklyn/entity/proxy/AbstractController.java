@@ -1,17 +1,11 @@
 package brooklyn.entity.proxy;
 
-import java.util.Map;
-import java.util.Set;
-
-import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -53,23 +47,7 @@ public interface AbstractController extends SoftwareProcess, LoadBalancer {
         new BasicConfigKey<ProxySslConfig>(ProxySslConfig.class, "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
 
     public static final AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
-    
-    public static final BasicAttributeSensor<Set<String>> SERVER_POOL_TARGETS = new BasicAttributeSensor(
-            Set.class, "proxy.serverpool.targets", "The downstream targets in the server pool");
-    
-    /**
-     * @deprecated Use SERVER_POOL_TARGETS
-     */
-    public static final BasicAttributeSensor<Set<String>> TARGETS = SERVER_POOL_TARGETS;
-    
-    public static final MethodEffector<Void> RELOAD = new MethodEffector(AbstractController.class, "reload");
-    public static final MethodEffector<Void> UPDATE = new MethodEffector(AbstractController.class, "update");
-    
-    /**
-     * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
-     * Can pass in the 'cluster'.
-     */
-    public void bind(Map flags);
+
 
     public boolean isActive();
     
@@ -84,15 +62,4 @@ public interface AbstractController extends SoftwareProcess, LoadBalancer {
     public String getUrl();
 
     public AttributeSensor getPortNumberSensor();
-
-    @Effector(description="Forces reload of the configuration")
-    public void reload();
-
-    // TODO simplify update logic and tracking of targets (cf reload)
-    /** updates _synchronously_ */
-    @Effector(description="Updates the entities configuration, and then forces reload of that configuration")
-    public void update();
-    
-    /** indicates than an update is needed in the near future; does not do the update synchronously */
-    public void updateNeeded();
 }

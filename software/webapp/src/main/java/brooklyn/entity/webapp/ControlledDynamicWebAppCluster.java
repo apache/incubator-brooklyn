@@ -8,6 +8,7 @@ import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.AbstractController;
+import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -16,7 +17,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -80,11 +80,11 @@ public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resiz
     public static ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(Cluster.INITIAL_SIZE, 1);
 
     @SetFromFlag("controller")
-    public static BasicAttributeSensorAndConfigKey<AbstractController> CONTROLLER = new BasicAttributeSensorAndConfigKey<AbstractController>(
-            AbstractController.class, "controlleddynamicweballcluster.controller", "Controller for the cluster; if null a default will created");
+    public static BasicAttributeSensorAndConfigKey<LoadBalancer> CONTROLLER = new BasicAttributeSensorAndConfigKey<LoadBalancer>(
+        LoadBalancer.class, "controlleddynamicweballcluster.controller", "Controller for the cluster; if null a default will created");
 
     @SetFromFlag("controllerSpec")
-    public static BasicAttributeSensorAndConfigKey<EntitySpec<? extends AbstractController>> CONTROLLER_SPEC = new BasicAttributeSensorAndConfigKey(
+    public static BasicAttributeSensorAndConfigKey<EntitySpec<? extends LoadBalancer>> CONTROLLER_SPEC = new BasicAttributeSensorAndConfigKey(
             EntitySpec.class, "controlleddynamicweballcluster.controllerSpec", "Spec for creating the cluster (if one not supplied explicitly); if null an NGINX instance will be created");
 
     /** factory (or closure) to create the web server, given flags */
@@ -102,7 +102,7 @@ public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resiz
 
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
 
-    public AbstractController getController();
+    public LoadBalancer getController();
     
     public ConfigurableEntityFactory<WebAppService> getFactory();
     
