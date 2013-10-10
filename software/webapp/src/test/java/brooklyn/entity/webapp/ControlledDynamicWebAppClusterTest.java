@@ -124,8 +124,8 @@ public class ControlledDynamicWebAppClusterTest {
                 .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
         app.start(locs);
 
-        String expectedHostname = cluster.getController().getAttribute(NginxController.HOSTNAME);
-        String expectedRootUrl = cluster.getController().getAttribute(NginxController.ROOT_URL);
+        String expectedHostname = cluster.getController().getAttribute(LoadBalancer.HOSTNAME);
+        String expectedRootUrl = cluster.getController().getAttribute(LoadBalancer.ROOT_URL);
         boolean expectedServiceUp = true;
         
         assertNotNull(expectedHostname);

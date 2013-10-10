@@ -7,7 +7,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
@@ -60,7 +59,7 @@ public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resiz
             return self();
         }
         
-        public S controller(AbstractController val) {
+        public S controller(LoadBalancer val) {
             configure(CONTROLLER, val);
             return self();
         }

@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.trait.Startable;
@@ -68,7 +67,7 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
             setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("serverPool"));
         } else if (flags.containsKey("cluster")) {
             // @deprecated since 0.5.0
-            LOG.warn("Deprecated use of AbstractController.cluster: entity {}; value {}", this, flags.get("cluster"));
+            LOG.warn("Deprecated use of AbstractNonProvisionedController.cluster: entity {}; value {}", this, flags.get("cluster"));
             setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("cluster"));
         }
     }
@@ -168,6 +167,10 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
         return getAttribute(PORT_NUMBER_SENSOR);
     }
     
+    protected AttributeSensor<String> getHostnameSensor() {
+        return getAttribute(HOSTNAME_SENSOR);
+    }
+
     protected synchronized void addServerPoolMember(Entity member) {
         if (serverPoolTargets.containsKey(member)) {
             if (LOG.isTraceEnabled()) LOG.trace("For {}, not adding as already have member {}", new Object[] {this, member});
@@ -203,7 +206,7 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
     }
     
     protected String getAddressOfEntity(Entity member) {
-        String ip = member.getAttribute(Attributes.HOSTNAME);
+        String ip = member.getAttribute(getHostnameSensor());
         Integer port = member.getAttribute(getPortNumberSensor());
         if (ip!=null && port!=null) {
             return ip+":"+port;

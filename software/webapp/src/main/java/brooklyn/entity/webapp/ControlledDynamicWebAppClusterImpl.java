@@ -13,7 +13,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
@@ -22,7 +21,6 @@ import brooklyn.entity.trait.StartableMethods;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
-import brooklyn.management.Task;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -171,7 +169,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
     void connectSensors() {
         SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(getCluster(), SERVICE_UP, ROOT_URL).
             addToEntityAndEmitAll(this);
-        SensorPropagatingEnricher.newInstanceListeningTo(getController(), AbstractController.HOSTNAME, SERVICE_UP, ROOT_URL).
+        SensorPropagatingEnricher.newInstanceListeningTo(getController(), LoadBalancer.HOSTNAME, SERVICE_UP, ROOT_URL).
             addToEntityAndEmitAll(this);
     }
 

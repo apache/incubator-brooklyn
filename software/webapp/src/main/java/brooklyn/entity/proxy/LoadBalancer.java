@@ -7,11 +7,18 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.trait.Startable;
+import brooklyn.entity.webapp.WebAppService;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * A load balancer that routes requests to set(s) of servers.
@@ -37,6 +44,29 @@ public interface LoadBalancer extends Entity, Startable {
     ConfigKey<Group> URL_MAPPINGS = new BasicConfigKey<Group>(
             Group.class, "loadbalancer.urlmappings", "Special mapping rules (e.g. for domain/path matching, rewrite, etc); not supported by all load balancers");
     
+    /** sensor for port to forward to on target entities */
+    @SetFromFlag("portNumberSensor")
+    public static final BasicAttributeSensorAndConfigKey<AttributeSensor> PORT_NUMBER_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor>(
+            AttributeSensor.class, "member.sensor.portNumber", "Port number sensor on members (defaults to http.port; not supported in all implementations)", Attributes.HTTP_PORT);
+
+    /** sensor for hostname to forward to on target entities */
+    @SetFromFlag("hostnameSensor")
+    public static final BasicAttributeSensorAndConfigKey<AttributeSensor> HOSTNAME_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor>(
+            AttributeSensor.class, "member.sensor.hostname", "Port number sensor on members (defaults to host.name; not supported in all implementations)", Attributes.HOSTNAME);
+
+    @SetFromFlag("port")
+    /** port where this controller should live */
+    public static final PortAttributeSensorAndConfigKey PROXY_HTTP_PORT = new PortAttributeSensorAndConfigKey(
+            "proxy.http.port", "Main HTTP port where this proxy listens", ImmutableList.of(8000,"8001+"));
+    
+    @SetFromFlag("protocol")
+    public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "proxy.protocol", "Main URL protocol this proxy answers (typically http or https)", null);
+    
+    public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
+    
+    public static final AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
+
     public static final BasicAttributeSensor<Set<String>> SERVER_POOL_TARGETS = new BasicAttributeSensor(
             Set.class, "proxy.serverpool.targets", "The downstream targets in the server pool");
     
