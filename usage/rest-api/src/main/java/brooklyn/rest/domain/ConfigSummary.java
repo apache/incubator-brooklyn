@@ -1,13 +1,21 @@
 package brooklyn.rest.domain;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
+import brooklyn.rest.util.JsonUtils;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import brooklyn.config.ConfigKey;
+
+import javax.annotation.Nullable;
 
 public abstract class ConfigSummary {
 
@@ -23,6 +31,8 @@ public abstract class ConfigSummary {
   private final String label;
   @JsonSerialize(include=Inclusion.NON_NULL)
   private final Double priority;
+  @JsonSerialize(include=Inclusion.NON_NULL)
+  private final List<Map<String, String>> possibleValues;
 
   protected ConfigSummary(
       @JsonProperty("name") String name,
@@ -31,7 +41,8 @@ public abstract class ConfigSummary {
       @JsonProperty("defaultValue") Object defaultValue,
       @JsonProperty("reconfigurable") boolean reconfigurable,
       @JsonProperty("label") String label,
-      @JsonProperty("priority") Double priority
+      @JsonProperty("priority") Double priority,
+      @JsonProperty("possibleValues") List<Map<String, String>> possibleValues
   ) {
     this.name = name;
     this.type = type;
@@ -40,23 +51,47 @@ public abstract class ConfigSummary {
     this.reconfigurable = reconfigurable;
     this.label = label;
     this.priority = priority;
+    this.possibleValues = possibleValues;
   }
 
   protected ConfigSummary(ConfigKey<?> config) {
+    this(config, null, null);
+  }
+
+  protected ConfigSummary(ConfigKey<?> config, String label, Double priority) {
     this.name = config.getName();
-    this.type = config.getTypeName();
     this.description = config.getDescription();
     this.reconfigurable = config.isReconfigurable();
-    
+
     /* Use String, to guarantee it is serializable; otherwise get:
      *   No serializer found for class brooklyn.policy.autoscaling.AutoScalerPolicy$3 and no properties discovered to create BeanSerializer (to avoid exception, disable SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS) ) (through reference chain: java.util.ArrayList[9]->brooklyn.rest.domain.PolicyConfigSummary["defaultValue"])
      *   at org.codehaus.jackson.map.ser.impl.UnknownSerializer.failForEmpty(UnknownSerializer.java:52)
      */
-    this.defaultValue = (config.getDefaultValue() == null) ? null : config.getDefaultValue().toString();
-    this.label = null;
-    this.priority = null;
+    this.label = label;
+    this.priority = priority;
+    if (config.getType().isEnum()) {
+      this.type = Enum.class.getName();
+      this.defaultValue = (config.getDefaultValue() == null) ? null : ((Enum)config.getDefaultValue()).name();
+      this.possibleValues = FluentIterable
+          .from(Arrays.asList((Enum[])(config.getType().getEnumConstants())))
+          .transform(new Function<Enum, Map<String, String>>() {
+              @Nullable
+              @Override
+              public Map<String, String> apply(@Nullable Enum input) {
+                  return ImmutableMap.of(
+                    "value", input != null ? input.name() : null,
+                    "description", input != null ? input.toString() : null
+                );
+            }
+          })
+          .toList();
+    } else {
+      this.type = config.getTypeName();
+      this.defaultValue = (config.getDefaultValue() == null) ? null : JsonUtils.toJsonable(config.getDefaultValue());
+      this.possibleValues = null;
+    }
   }
-  
+
   public String getName() {
     return name;
   }
@@ -85,7 +120,11 @@ public abstract class ConfigSummary {
   public Double getPriority() {
     return priority;
   }
-  
+
+  public List<Map<String, String>> getPossibleValues() {
+    return possibleValues;
+  }
+
   public abstract Map<String, URI> getLinks();
 
   @Override

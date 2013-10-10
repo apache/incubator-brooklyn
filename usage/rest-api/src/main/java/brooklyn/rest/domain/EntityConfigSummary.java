@@ -1,11 +1,13 @@
 package brooklyn.rest.domain;
 
+import brooklyn.config.ConfigKey;
 import com.google.common.collect.ImmutableMap;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 public class EntityConfigSummary extends ConfigSummary {
@@ -21,9 +23,15 @@ public class EntityConfigSummary extends ConfigSummary {
       @JsonProperty("reconfigurable") boolean reconfigurable,
       @JsonProperty("label") String label,
       @JsonProperty("priority") Double priority,
+      @JsonProperty("possibleValues") List<Map<String, String>> possibleValues,
       @JsonProperty("links") Map<String, URI> links
   ) {
-    super(name, type, description, defaultValue, reconfigurable, label, priority);
+    super(name, type, description, defaultValue, reconfigurable, label, priority, possibleValues);
+    this.links = links!=null ? ImmutableMap.copyOf(links) : null;
+  }
+
+  public EntityConfigSummary(ConfigKey<?> config, String label, Double priority, Map<String, URI> links) {
+    super(config, label, priority);
     this.links = links!=null ? ImmutableMap.copyOf(links) : null;
   }
 

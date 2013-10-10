@@ -45,9 +45,7 @@ public class EntityTransformer {
 
     protected static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, String label, Double priority, Map<String, URI> links) {
         Map<String, URI> mapOfLinks =  links==null ? null : ImmutableMap.copyOf(links);
-        return new EntityConfigSummary(config.getName(), config.getTypeName(),
-                config.getDescription(),
-                JsonUtils.toJsonable(config.getDefaultValue()), config.isReconfigurable(), label, priority, mapOfLinks);
+      return new EntityConfigSummary(config, label, priority, mapOfLinks);
     }
     /** generates a representation for a given config key, 
      * with label inferred from annoation in the entity class,
