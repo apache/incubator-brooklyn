@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Strings;
+import com.google.common.net.HostAndPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,11 +61,10 @@ public class KnifeConvergeTaskFactory<RET> extends KnifeTaskFactory<RET> {
         
         result.add("bootstrap");
         result.addAll(extraBootstrapParameters);
-        
-        result.add(wrapBash(machine.getAddress().getHostName()));
-        Integer whichPort = knifeWhichPort(machine);
-        if (whichPort!=null)
-            result.add("-p "+whichPort);
+
+        HostAndPort hostAndPort = machine.getSshHostAndPort();
+        result.add(wrapBash(hostAndPort.getHostText()));
+        result.add("-p "+hostAndPort.getPort());
         
         result.add("-x "+wrapBash(checkNotNull(machine.getUser(), "user")));
         
