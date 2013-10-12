@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
@@ -24,17 +23,17 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.Machines;
+import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.Repeater;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Functions;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -57,10 +56,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
     private static final SoftwareProcessDriverLifecycleEffectorTasks LIFECYCLE_TASKS =
             new SoftwareProcessDriverLifecycleEffectorTasks();
-    
-    public static final Effector<Void> START = LIFECYCLE_TASKS.newStartEffector();
-    public static final Effector<Void> RESTART = LIFECYCLE_TASKS.newRestartEffector();
-    public static final Effector<Void> STOP = LIFECYCLE_TASKS.newStopEffector();
     
     protected boolean connectedSensors = false;
     
@@ -269,12 +264,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         throw new IllegalStateException("Cannot configure entity "+this+" in state "+state);
     }
 
-    @Override
-	public final void start(Collection<? extends Location> locations) {
-        invoke(START, ConfigBag.newInstance().configure(SoftwareProcessDriverLifecycleEffectorTasks.LOCATIONS, locations).getAllConfig())
-            .getUnchecked();
-    }
-    
     /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
     protected final void startInLocation(Collection<? extends Location> locations) {}
 
@@ -384,8 +373,24 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         }
     }
 
+    /**
+     * If custom behaviour is required by sub-classes, consider overriding {@link #doStart()}.
+     */
     @Override
-	public void stop() {
+    public final void start(final Collection<? extends Location> locations) {
+        if (DynamicTasks.getTaskQueuingContext() != null) {
+            doStart(locations);
+        } else {
+            Task<?> task = Tasks.builder().name("stop").body(new Runnable() { public void run() { doStart(locations); } }).build();
+            Entities.submit(this, task).getUnchecked();
+        }
+    }
+
+    /**
+     * If custom behaviour is required by sub-classes, consider overriding {@link #doStop()}.
+     */
+    @Override
+	public final void stop() {
 	    // TODO There is a race where we set SERVICE_UP=false while sensor-adapter threads may still be polling.
         // The other thread might reset SERVICE_UP to true immediately after we set it to false here.
         // Deactivating adapters before setting SERVICE_UP reduces the race, and it is reduced further by setting
@@ -393,12 +398,49 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	    
 	    // Perhaps we should wait until all feeds have completed here, 
 	    // or do a SERVICE_STATE check before setting SERVICE_UP to true in a feed (?).
-        
-        invoke(STOP, MutableMap.<String,Object>of()).getUnchecked();
+
+        if (DynamicTasks.getTaskQueuingContext() != null) {
+            doStop();
+        } else {
+            Task<?> task = Tasks.builder().name("stop").body(new Runnable() { public void run() { doStop(); } }).build();
+            Entities.submit(this, task).getUnchecked();
+        }
 	}
 
-	@Override
-    public void restart() {
-        invoke(RESTART, MutableMap.<String,Object>of()).getUnchecked();
+    /**
+     * If custom behaviour is required by sub-classes, consider overriding {@link #doStop()}.
+     */
+    @Override
+    public final void restart() {
+        if (DynamicTasks.getTaskQueuingContext() != null) {
+            doRestart();
+        } else {
+            Task<?> task = Tasks.builder().name("restart").body(new Runnable() { public void run() { doRestart(); } }).build();
+            Entities.submit(this, task).getUnchecked();
+        }
+    }
+    
+    /**
+     * To be overridden instead of {@link #start()}; sub-classes should call {@code super.doStart(locations)} and should
+     * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
+     */
+    protected void doStart(Collection<? extends Location> locations) {
+        LIFECYCLE_TASKS.start(locations);
+    }
+    
+    /**
+     * To be overridden instead of {@link #stop()}; sub-classes should call {@code super.doStop()} and should
+     * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
+     */
+    protected void doStop() {
+        LIFECYCLE_TASKS.stop();
+    }
+	
+    /**
+     * To be overridden instead of {@link #doRestart()}; sub-classes should call {@code super.doRestart()} and should
+     * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
+     */
+    public void doRestart() {
+        LIFECYCLE_TASKS.restart();
     }
 }

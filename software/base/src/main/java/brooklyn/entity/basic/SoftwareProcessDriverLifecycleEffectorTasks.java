@@ -23,7 +23,7 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
     private static final Logger log = LoggerFactory.getLogger(SoftwareProcessDriverLifecycleEffectorTasks.class);
     
     @Override
-    protected void restart() {
+    public void restart() {
         if (((SoftwareProcessImpl)entity()).getDriver() == null) { 
             log.debug("restart of "+entity()+" has no driver - doing machine-level restart");
             super.restart();

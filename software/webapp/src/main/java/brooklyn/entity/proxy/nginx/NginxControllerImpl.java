@@ -140,10 +140,10 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     }
     
     @Override
-    public void stop() {
+    protected void doStop() {
         // TODO Want http.poll to set SERVICE_UP to false on IOException. How?
         // And don't want stop to race with the last poll.
-        super.stop();
+        super.doStop();
         setAttribute(SERVICE_UP, false);
     }
     
