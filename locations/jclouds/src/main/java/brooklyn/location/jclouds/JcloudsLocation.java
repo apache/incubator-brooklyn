@@ -70,6 +70,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.internal.ssh.SshTool;
@@ -332,18 +333,33 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public JcloudsSshMachineLocation obtain(Map<?,?> flags, TemplateBuilder tb) throws NoMachinesAvailableException {
         return obtain(MutableMap.builder().putAll(flags).put(TEMPLATE_BUILDER, tb).build());
     }
+
     /** core method for obtaining a VM using jclouds;
      * Map should contain CLOUD_PROVIDER and CLOUD_ENDPOINT or CLOUD_REGION, depending on the cloud,
      * as well as ACCESS_IDENTITY and ACCESS_CREDENTIAL,
      * plus any further properties to specify e.g. images, hardware profiles, accessing user
      * (for initial login, and a user potentially to create for subsequent ie normal access) */
     public JcloudsSshMachineLocation obtain(Map<?,?> flags) throws NoMachinesAvailableException {
+        ConfigBag setup = ConfigBag.newInstanceExtending(getConfigBag(), flags);
+        Integer attempts = setup.get(MACHINE_CREATE_ATTEMPTS);
+        if (attempts == null || attempts < 1) attempts = 1;
+        for (int i = 0; i < attempts; i++) {
+            try {
+                return obtainImpl(flags, setup);
+            } catch (PropagatedRuntimeException e) {
+                LOG.warn("Attempt #{}/{} to obtain machine threw error: {}", new Object[]{i, attempts, e});
+            }
+        }
+        LOG.error("Failed to get VM after {} attempts.", attempts);
+        throw new NoMachinesAvailableException("Failed to get VM after "+attempts+" attempts. See logs.");
+    }
+
+    protected JcloudsSshMachineLocation obtainImpl(Map<?,?> flags, ConfigBag setup) throws NoMachinesAvailableException {
         AccessController.Response access = getManagementContext().getAccessController().canProvisionLocation(this);
         if (!access.isAllowed()) {
             throw new IllegalStateException("Access controller forbids provisioning in "+this+": "+access.getMsg());
         }
 
-        ConfigBag setup = ConfigBag.newInstanceExtending(getConfigBag(), flags);
         setCreationString(setup);
         
         final ComputeService computeService = JcloudsUtil.findComputeService(setup);
