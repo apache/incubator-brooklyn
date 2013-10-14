@@ -36,13 +36,13 @@ public class TestJavaWebAppEntity extends VanillaJavaApp {
     }
 
     @Override
-	void stop() {
+	protected void doStop() {
         LOG.trace "Stopping {}", this
     }
 
     @Override
-    public void restart() {
-        throw new UnsupportedOperationException()
+    public void doRestart() {
+        throw new UnsupportedOperationException();
     }
 
 	@Override

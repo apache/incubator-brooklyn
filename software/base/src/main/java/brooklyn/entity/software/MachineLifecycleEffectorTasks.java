@@ -20,6 +20,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
@@ -79,7 +80,7 @@ public abstract class MachineLifecycleEffectorTasks {
     
     /** returns an effector suitable for setting in a public static final or attaching dynamically;
      * the effector overrides the corresponding effector from {@link Startable} with 
-     * the behaviour in this lifecycle class instance */ 
+     * the behaviour in this lifecycle class instance */
     public Effector<Void> newStartEffector() {
         return Effectors.effector(Startable.START).impl(newStartEffectorTask()).build();
     }
@@ -148,7 +149,7 @@ public abstract class MachineLifecycleEffectorTasks {
     // ---------------------
     
     /** runs the tasks needed to start, wrapped by setting {@link Attributes#SERVICE_STATE} appropriately */ 
-    protected void start(Collection<? extends Location> locations) {
+    public void start(Collection<? extends Location> locations) {
         entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
         try {
             startInLocations(locations);
@@ -271,7 +272,7 @@ public abstract class MachineLifecycleEffectorTasks {
     // ---------------------
     
     /** default restart impl, stops processes if possible, then starts the entity again */
-    protected void restart() {
+    public void restart() {
         entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
         DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
             try {
@@ -301,7 +302,7 @@ public abstract class MachineLifecycleEffectorTasks {
     /** default stop impl, aborts if already stopped, otherwise sets state STOPPING then
      * invokes {@link #preStopCustom()}, {@link #stopProcessesAtMachine()}, then finally
      * {@link #stopAnyProvisionedMachines()} and sets state STOPPED */
-    protected void stop() {
+    public void stop() {
         log.info("Stopping {} in {}", entity(), entity().getLocations());
         
         DynamicTasks.queue("pre-stop", new Callable<String>() { public String call() {

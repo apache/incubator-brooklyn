@@ -94,8 +94,8 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
 
     /** @see JavaWebAppSoftwareProcessImpl#stop() */
     @Override
-    public void stop() {
-        super.stop();
+    protected void doStop() {
+        super.doStop();
         // zero our workrate derived workrates.
         setAttribute(REQUESTS_PER_SECOND, 0D);
         setAttribute(AVG_REQUESTS_PER_SECOND, 0D);
