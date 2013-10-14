@@ -75,8 +75,8 @@ public class MonitNodeImpl extends SoftwareProcessImpl implements MonitNode {
                     .onSuccess(new Function<SshPollValue, String>() {
                         @Override
                         public String apply(SshPollValue input) {
-                            String process = Strings.getFirstWordAfter(input.getStdout(), "status");
-                            return process;
+                            String status = Strings.getFirstWordAfter(input.getStdout(), "status");
+                            return status;
                         }
                     })
                     .setOnFailureOrException(null))
