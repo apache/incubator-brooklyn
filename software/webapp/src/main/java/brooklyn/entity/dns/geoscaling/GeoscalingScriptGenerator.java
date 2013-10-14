@@ -11,7 +11,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.Strings;
 
-class GeoscalingScriptGenerator {
+public class GeoscalingScriptGenerator {
     
     private static final String PHP_SCRIPT_TEMPLATE_RESOURCE = JavaClassNames.resolveClasspathUrl(GeoscalingScriptGenerator.class, "template.php");
     private static final String HOSTS_DECLARATIONS_MARKER = "/* HOST DECLARATIONS TO BE SUBSTITUTED HERE */";
@@ -23,7 +23,7 @@ class GeoscalingScriptGenerator {
     }
     
     public static String generateScriptString(Date generationTime, Collection<HostGeoInfo> hosts) {
-        String template = new ResourceUtils(GeoscalingScriptGenerator.class).getResourceAsString(PHP_SCRIPT_TEMPLATE_RESOURCE);
+        String template = ResourceUtils.create(GeoscalingScriptGenerator.class).getResourceAsString(PHP_SCRIPT_TEMPLATE_RESOURCE);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'UTC'");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String datestamp = sdf.format(generationTime);

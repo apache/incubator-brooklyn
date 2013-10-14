@@ -73,7 +73,7 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
             String creationScript;
             String creationScriptUrl = entity().getConfig(PostgreSqlNode.CREATION_SCRIPT_URL);
             if (creationScriptUrl != null)
-                creationScript = new ResourceUtils(entity()).getResourceAsString(creationScriptUrl);
+                creationScript = ResourceUtils.create(entity()).getResourceAsString(creationScriptUrl);
             else creationScript = entity().getConfig(PostgreSqlNode.CREATION_SCRIPT_CONTENTS);
             entity().invoke(PostgreSqlNodeChefImpl.EXECUTE_SCRIPT, 
                     ConfigBag.newInstance().configure(ExecuteScriptEffectorBody.SCRIPT, creationScript).getAllConfig()).getUnchecked();

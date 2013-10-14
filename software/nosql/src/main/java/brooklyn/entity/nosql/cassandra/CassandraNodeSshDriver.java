@@ -167,7 +167,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
             int lastSlashIndex = customSnitchJarUrl.lastIndexOf("/");
             String customSnitchJarName = (lastSlashIndex > 0) ? customSnitchJarUrl.substring(lastSlashIndex+1) : "customBrooklynSnitch.jar";
             String jarDestinationFile = String.format("%s/lib/%s", getRunDir(), customSnitchJarName);
-            InputStream customSnitchJarStream = checkNotNull(new ResourceUtils(entity).getResourceFromUrl(customSnitchJarUrl), "%s could not be loaded", customSnitchJarUrl);
+            InputStream customSnitchJarStream = checkNotNull(resource.getResourceFromUrl(customSnitchJarUrl), "%s could not be loaded", customSnitchJarUrl);
             try {
                 getMachine().copyTo(customSnitchJarStream, jarDestinationFile);
             } finally {

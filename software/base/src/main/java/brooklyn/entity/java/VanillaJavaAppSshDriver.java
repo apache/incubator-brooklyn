@@ -1,6 +1,6 @@
 package brooklyn.entity.java;
 
-import static java.lang.String.format;
+import static java.lang.String.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,12 +10,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableList;
-
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * The SSH implementation of the {@link VanillaJavaAppDriver}.
@@ -48,7 +47,6 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
                 body.append(format("mkdir -p %s/lib", getRunDir())).
                 execute();
 
-        ResourceUtils r = new ResourceUtils(entity);
         SshMachineLocation machine = getMachine();
         VanillaJavaApp entity = getEntity();
         for (String f : entity.getClasspath()) {
@@ -67,7 +65,7 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
                 toinstall = f;
             }
             
-            int result = machine.installTo(new ResourceUtils(entity), toinstall, getRunDir() + "/" + "lib" + "/");
+            int result = machine.installTo(resource, toinstall, getRunDir() + "/" + "lib" + "/");
             if (result != 0)
                 throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s",f,entity,machine));
             

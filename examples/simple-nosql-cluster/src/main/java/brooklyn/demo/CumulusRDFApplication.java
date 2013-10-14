@@ -116,7 +116,7 @@ public class CumulusRDFApplication extends AbstractApplication {
                     // Process the YAML template given in the application config
                     String url = Entities.getRequiredUrlConfig(CumulusRDFApplication.this, CUMULUS_RDF_CONFIG_URL);
                     Map<String, Object> config = MutableMap.<String, Object>of("cassandraHostname", clusterEndpoint.getHostText(), "cassandraThriftPort", clusterEndpoint.getPort());
-                    String contents = TemplateProcessor.processTemplateContents(new ResourceUtils(this).getResourceAsString(url), config);
+                    String contents = TemplateProcessor.processTemplateContents(ResourceUtils.create(this).getResourceAsString(url), config);
 
                     // Copy the file contents to the remote machine
                     DynamicTasks.queue(SshEffectorTasks.put("/tmp/cumulus.yaml").contents(contents));

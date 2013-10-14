@@ -46,7 +46,7 @@ public class VanillaJavaAppRebindTest {
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
         
         if (BROOKLYN_THIS_CLASSPATH==null) {
-            BROOKLYN_THIS_CLASSPATH = new ResourceUtils(MAIN_CLASS).getClassLoaderDir();
+            BROOKLYN_THIS_CLASSPATH = ResourceUtils.create(MAIN_CLASS).getClassLoaderDir();
         }
         app = new TestApplicationImpl();
         loc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));

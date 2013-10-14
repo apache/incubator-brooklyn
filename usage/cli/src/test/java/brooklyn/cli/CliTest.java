@@ -112,7 +112,7 @@ public class CliTest {
     
     private Object loadApplicationFromClasspathOrParse(String appName) throws Exception {
         LaunchCommand launchCommand = new Main.LaunchCommand();
-        ResourceUtils resourceUtils = new ResourceUtils(this);
+        ResourceUtils resourceUtils = ResourceUtils.create(this);
         GroovyClassLoader loader = new GroovyClassLoader(CliTest.class.getClassLoader());
         return launchCommand.loadApplicationFromClasspathOrParse(resourceUtils, loader, appName);
     }
@@ -136,7 +136,7 @@ public class CliTest {
             Files.write(contents.getBytes(), groovyFile);
 
             LaunchCommand launchCommand = new Main.LaunchCommand();
-            ResourceUtils resourceUtils = new ResourceUtils(this);
+            ResourceUtils resourceUtils = ResourceUtils.create(this);
             GroovyClassLoader loader = new GroovyClassLoader(CliTest.class.getClassLoader());
             launchCommand.execGroovyScript(resourceUtils, loader, groovyFile.toURI().toString());
             assertTrue(GROOVY_INVOKED.get());

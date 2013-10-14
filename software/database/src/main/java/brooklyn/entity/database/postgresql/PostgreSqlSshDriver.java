@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
@@ -129,7 +128,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
         String creationScriptUrl = entity.getConfig(PostgreSqlNode.CREATION_SCRIPT_URL);
         Reader creationScript;
         if (creationScriptUrl != null)
-            creationScript = new InputStreamReader(new ResourceUtils(entity).getResourceFromUrl(creationScriptUrl));
+            creationScript = new InputStreamReader(resource.getResourceFromUrl(creationScriptUrl));
         else creationScript = new StringReader(entity.getConfig(PostgreSqlNode.CREATION_SCRIPT_CONTENTS));
 
         getMachine().copyTo(creationScript, getRunDir() + "/creation-script.sql");

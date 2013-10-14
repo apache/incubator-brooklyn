@@ -271,8 +271,8 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                         BashCommands.installJava6OrFail()
                         // could use Jclouds routines -- but the following complains about yum-install not defined
                         // even though it is set as an alias (at the start of the first file)
-                        //   new ResourceUtils(this).getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
-                        //   new ResourceUtils(this).getResourceAsString("classpath:///functions/installOpenJDK.sh"),
+                        //   resource.getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
+                        //   resource.getResourceAsString("classpath:///functions/installOpenJDK.sh"),
                         //   "installOpenJDK"
                         ).execute();
                 if (result==0)

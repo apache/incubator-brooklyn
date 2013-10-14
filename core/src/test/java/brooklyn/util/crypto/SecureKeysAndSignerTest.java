@@ -70,25 +70,25 @@ public class SecureKeysAndSignerTest {
 
     @Test
     public void testReadRsaKey() throws Exception {
-        KeyPair key = SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa.pem"), null);
+        KeyPair key = SecureKeys.readPem(ResourceUtils.create(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa.pem"), null);
         checkNonTrivial(key);
     }
 
     @Test
     public void testReadDsaKey() throws Exception {
-        KeyPair key = SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_dsa.pem"), null);
+        KeyPair key = SecureKeys.readPem(ResourceUtils.create(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_dsa.pem"), null);
         checkNonTrivial(key);
     }
 
     @Test(expectedExceptions=Exception.class)
     public void testCantReadRsaPassphraseKeyWithoutPassphrase() throws Exception {
-        KeyPair key = SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa_passphrase.pem"), null);
+        KeyPair key = SecureKeys.readPem(ResourceUtils.create(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa_passphrase.pem"), null);
         checkNonTrivial(key);
     }
 
     @Test
     public void testReadRsaPassphraseKeyAndWriteWithoutPassphrase() throws Exception {
-        KeyPair key = SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa_passphrase.pem"), "passphrase");
+        KeyPair key = SecureKeys.readPem(ResourceUtils.create(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa_passphrase.pem"), "passphrase");
         checkNonTrivial(key);
         File f = File.createTempFile("brooklyn-sample_rsa_passphrase_without_passphrase", "pem");
         f.deleteOnExit();

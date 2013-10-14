@@ -65,7 +65,7 @@ public class VanillaJavaAppTest {
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
         if (BROOKLYN_THIS_CLASSPATH==null) {
-            BROOKLYN_THIS_CLASSPATH = new ResourceUtils(MAIN_CLASS).getClassLoaderDir();
+            BROOKLYN_THIS_CLASSPATH = ResourceUtils.create(MAIN_CLASS).getClassLoaderDir();
         }
         app = new AbstractApplication() {};
         loc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));

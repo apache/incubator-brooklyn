@@ -1,6 +1,6 @@
 package brooklyn.entity.database.rubyrep;
 
-import static java.lang.String.format;
+import static java.lang.String.*;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -18,7 +18,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.database.mysql.MySqlSshDriver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.BashCommands;
 
@@ -68,7 +67,7 @@ public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements Ru
         Reader configContents;
         if (configScriptUrl != null) {
             // If set accept as-is
-            configContents = new InputStreamReader(new ResourceUtils(entity).getResourceFromUrl(configScriptUrl));
+            configContents = new InputStreamReader(resource.getResourceFromUrl(configScriptUrl));
         } else {
             String configScriptContents = processTemplate(entity.getAttribute(RubyRepNode.TEMPLATE_CONFIGURATION_URL));
             configContents = new StringReader(configScriptContents);

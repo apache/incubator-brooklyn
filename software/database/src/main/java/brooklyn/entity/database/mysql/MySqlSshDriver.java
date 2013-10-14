@@ -2,6 +2,7 @@ package brooklyn.entity.database.mysql;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
 import static brooklyn.util.ssh.BashCommands.installPackage;
 import static brooklyn.util.ssh.BashCommands.ok;
 import static java.lang.String.format;
@@ -22,7 +23,6 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails.OsVersions;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.ComparableVersion;
@@ -101,7 +101,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // these deps are needed on some OS versions but others don't need them so ignore failures (ok(...))
         commands.add(ok(installPackage(ImmutableMap.of("yum", "libaio", "apt", "ia32-libs"), null)));
         commands.add("echo finished installing extra packages");
-        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
+        commands.addAll(commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(format("tar xfvz %s", saveAs));
 
         newScript(INSTALLING).
@@ -146,7 +146,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         Reader creationScript;
         String url = entity.getConfig(MySqlNode.CREATION_SCRIPT_URL);
         if (!Strings.isBlank(url))
-            creationScript = new InputStreamReader(new ResourceUtils(entity).getResourceFromUrl(url));
+            creationScript = new InputStreamReader(resource.getResourceFromUrl(url));
         else creationScript =
                 new StringReader((String) elvis(entity.getConfig(MySqlNode.CREATION_SCRIPT_CONTENTS), ""));
         getMachine().copyTo(creationScript, getRunDir() + "/creation-script.cnf");

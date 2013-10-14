@@ -33,7 +33,7 @@ public class ResourceUtilsTest {
     
     @BeforeClass(alwaysRun=true)
     public void setUp() throws Exception {
-        utils = new ResourceUtils(this, "mycontext");
+        utils = ResourceUtils.create(this, "mycontext");
         tempFile = ResourceUtils.writeToTempFile(new ByteArrayInputStream(tempFileContents.getBytes()), "resourceutils-test", ".txt");
     }
     

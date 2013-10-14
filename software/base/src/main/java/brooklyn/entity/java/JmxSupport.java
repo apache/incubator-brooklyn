@@ -137,7 +137,7 @@ public class JmxSupport implements UsesJmx {
                     log.warn("Auto-detecting JMX configuration for "+entity+": cannot identify location so setting JMXMP");
                     jmxAgentMode = JmxAgentModes.JMXMP;                    
                 }
-                if (!new ResourceUtils(this).doesUrlExist(getJmxAgentJarUrl())) {
+                if (!ResourceUtils.create(this).doesUrlExist(getJmxAgentJarUrl())) {
                     // can happen e.g. if eclipse build
                     log.warn("JMX agent JAR not found ("+getJmxAgentJarUrl()+") when auto-detecting JMX settings for "+entity+"; " +
                             "likely cause is an incomplete build (e.g. from Eclipse; run a maven build then retry in the IDE); "+
@@ -253,7 +253,7 @@ public class JmxSupport implements UsesJmx {
         if (artifact==null)
             throw new IllegalStateException("Either JMX is not enabled or there is an error in the configuration (JMX mode "+getJmxAgentMode()+" does not support agent JAR)");
         String jar = "classpath://" + artifact.getFilename();
-        if (new ResourceUtils(this).doesUrlExist(jar))
+        if (ResourceUtils.create(this).doesUrlExist(jar))
             return jar;
         
         String result = MavenRetriever.localUrl(artifact);
@@ -319,7 +319,7 @@ public class JmxSupport implements UsesJmx {
     /** installs files needed for JMX, to the runDir given in constructor, assuming the runDir has been created */ 
     public void install() {
         if (getJmxAgentMode()!=JmxAgentModes.NONE) {
-            getMachine().get().copyTo(new ResourceUtils(this).getResourceFromUrl(
+            getMachine().get().copyTo(ResourceUtils.create(this).getResourceFromUrl(
                 getJmxAgentJarUrl()), getJmxAgentJarDestinationFilePath());
         }
         if (isSecure()) {

@@ -17,19 +17,19 @@ public class BrooklynMavenArtifactsTest {
     
     @Test(groups="Integration")
     public void testUtilsCommon() {
-        new ResourceUtils(this).checkUrlExists(BrooklynMavenArtifacts.localUrlForJar("brooklyn-utils-common"));
+        ResourceUtils.create(this).checkUrlExists(BrooklynMavenArtifacts.localUrlForJar("brooklyn-utils-common"));
     }
 
     @Test(groups="Integration")
     public void testExampleWar() {
         String url = BrooklynMavenArtifacts.localUrl("example", "brooklyn-example-hello-world-sql-webapp", "war");
-        new ResourceUtils(this).checkUrlExists(url);
+        ResourceUtils.create(this).checkUrlExists(url);
         log.info("found example war at: "+url);
     }
 
     public void testBadExampleWar() {
         String url = BrooklynMavenArtifacts.localUrl("example", "brooklyn-example-GOODBYE-world-sql-webapp", "war");
-        Assert.assertFalse(new ResourceUtils(this).doesUrlExist(url), "should not exist: "+url);
+        Assert.assertFalse(ResourceUtils.create(this).doesUrlExist(url), "should not exist: "+url);
     }
 
     public void testHostedIsHttp() {
@@ -44,7 +44,7 @@ public class BrooklynMavenArtifactsTest {
         String snapshot = MavenRetriever.hostedUrl(MavenArtifact.fromCoordinate("io.brooklyn:brooklyn-utils-common:jar:0.6.0-SNAPSHOT"));
         log.info("Sample snapshot URL is: "+snapshot);
         checkValidArchive(snapshot);
-        new ResourceUtils(this).checkUrlExists(snapshot);
+        ResourceUtils.create(this).checkUrlExists(snapshot);
         
         // NB: this should be a version known to be up at sonatype or maven central, NOT necessarily the current version!
         String release = MavenRetriever.hostedUrl(MavenArtifact.fromCoordinate("io.brooklyn:brooklyn-utils-common:jar:0.6.0-M1"));
@@ -54,7 +54,7 @@ public class BrooklynMavenArtifactsTest {
 
     private void checkValidArchive(String url) {
         try {
-            byte[] bytes = ResourceUtils.readFullyBytes(new ResourceUtils(this).getResourceFromUrl(url));
+            byte[] bytes = ResourceUtils.readFullyBytes(ResourceUtils.create(this).getResourceFromUrl(url));
             // confirm this follow redirects!
             Assert.assertTrue(bytes.length > 100*1000, "download of "+url+" is suspect ("+Strings.makeSizeString(bytes.length)+")");
             // (could also check it is a zip etc)

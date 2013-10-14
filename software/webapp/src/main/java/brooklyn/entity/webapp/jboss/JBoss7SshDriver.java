@@ -1,20 +1,6 @@
 package brooklyn.entity.webapp.jboss;
 
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
-import brooklyn.entity.webapp.JavaWebAppSshDriver;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.BashCommands;
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.hash.Hashing;
-import com.google.common.io.BaseEncoding;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.lang.String.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -23,17 +9,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static java.lang.String.format;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.entity.webapp.JavaWebAppSshDriver;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
+import brooklyn.util.ssh.BashCommands;
+
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
 
 public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver {
 
     public static final Logger LOG = LoggerFactory.getLogger(JBoss7SshDriver.class);
 
     /*
-      * TODO
-      * - expose log file location, or even support accessing them dynamically
-      * - more configurability of config files, java memory, etc
-      */
+     * TODO
+     * - expose log file location, or even support accessing them dynamically
+     * - more configurability of config files, java memory, etc
+     */
 
     public static final String SERVER_TYPE = "standalone";
     private static final String CONFIG_FILE = "standalone-brooklyn.xml";
@@ -110,13 +112,13 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     }
     
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
+        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("jboss-as-%s", getVersion()));
         
         List<String> commands = new LinkedList<String>();
-        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
 
@@ -186,7 +188,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
                 throw new NullPointerException("keystore URL must be specified if using HTTPS for "+entity);
             }
             String destinationSslKeystoreFile = getSslKeystoreFile();
-            InputStream keystoreStream = new ResourceUtils(this).getResourceFromUrl(keystoreUrl);
+            InputStream keystoreStream = resource.getResourceFromUrl(keystoreUrl);
             getMachine().copyTo(keystoreStream, destinationSslKeystoreFile);
         }
 

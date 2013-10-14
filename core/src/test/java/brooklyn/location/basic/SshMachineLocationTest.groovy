@@ -115,7 +115,7 @@ public class SshMachineLocationTest {
         File dest = new File(System.getProperty("java.io.tmpdir")+"/"+"sssMachineLocationTest_dir/");
         dest.mkdir();
         try {
-            int result = host.installTo(new ResourceUtils(this), "classpath://brooklyn/config/sample.properties", dest.getCanonicalPath()+"/");
+            int result = host.installTo(ResourceUtils.create(this), "classpath://brooklyn/config/sample.properties", dest.getCanonicalPath()+"/");
             assertEquals(result, 0);
             String contents = ResourceUtils.readFullyString(new FileInputStream(new File(dest, "sample.properties")));
             assertTrue(contents.contains("Property 1"), "contents missing expected phrase; contains:\n"+contents);

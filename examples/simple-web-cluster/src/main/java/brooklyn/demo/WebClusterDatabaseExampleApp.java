@@ -63,9 +63,9 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     
     public static final String DEFAULT_LOCATION = "localhost";
 
-    public static final String DEFAULT_WAR_PATH = new ResourceUtils(WebClusterDatabaseExampleApp.class).
+    public static final String DEFAULT_WAR_PATH = ResourceUtils.create(WebClusterDatabaseExampleApp.class)
             // take this war, from the classpath, or via maven if not on the classpath
-            firstAvailableUrl(
+            .firstAvailableUrl(
                     "classpath://hello-world-sql-webapp.war",
                     BrooklynMavenArtifacts.localUrl("example", "brooklyn-example-hello-world-sql-webapp", "war"))
             .or("classpath://hello-world-sql-webapp.war");

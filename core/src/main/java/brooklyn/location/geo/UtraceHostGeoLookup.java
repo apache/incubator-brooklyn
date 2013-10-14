@@ -71,7 +71,7 @@ Beyond this you get blacklisted and requests may time out, or return none.
                 public void run() {
                     try {
                         log.debug("Looking up external IP of this host in private thread "+Thread.currentThread());
-                        localExternalIp = new ResourceUtils(HostGeoLookup.class).getResourceAsString("http://api.externalip.net/ip/").trim();
+                        localExternalIp = ResourceUtils.create(HostGeoLookup.class).getResourceAsString("http://api.externalip.net/ip/").trim();
                         log.debug("Finished looking up external IP of this host in private thread, result "+localExternalIp);
                     } catch (Throwable t) {
                         log.debug("Not able to look up external IP of this host in private thread, probably offline ("+t+")");
