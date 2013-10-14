@@ -6,7 +6,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
@@ -37,20 +39,20 @@ public class ServiceFailureDetector extends AbstractPolicy {
 
     // TODO delay before reporting failure (give it time to fix itself, e.g. transient failures)
     
-    @SetFromFlag(defaultVal="true")
-    protected boolean onlyReportIfPreviouslyUp;
+    @SetFromFlag("onlyReportIfPreviouslyUp")
+    public static final ConfigKey<Boolean> ONLY_REPORT_IF_PREVIOUSLY_UP = ConfigKeys.newBooleanConfigKey("onlyReportIfPreviouslyUp", "", true);
     
-    @SetFromFlag(defaultVal="true")
-    protected boolean useServiceStateRunning;
+    @SetFromFlag("useServiceStateRunning")
+    public static final ConfigKey<Boolean> USE_SERVICE_STATE_RUNNING = ConfigKeys.newBooleanConfigKey("useServiceStateRunning", "", true);
 
-    @SetFromFlag(defaultVal="true")
-    protected boolean setOnFireOnFailure;
+    @SetFromFlag("setOnFireOnFailure")
+    public static final ConfigKey<Boolean> SET_ON_FIRE_ON_FAILURE = ConfigKeys.newBooleanConfigKey("setOnFireOnFailure", "", true);
 
-    protected AtomicReference<Boolean> serviceIsUp = new AtomicReference<Boolean>();
-    protected AtomicReference<Long> serviceLastUp = new AtomicReference<Long>();
-    protected AtomicReference<Lifecycle> serviceState = new AtomicReference<Lifecycle>();
+    protected final AtomicReference<Boolean> serviceIsUp = new AtomicReference<Boolean>();
+    protected final AtomicReference<Long> serviceLastUp = new AtomicReference<Long>();
+    protected final AtomicReference<Lifecycle> serviceState = new AtomicReference<Lifecycle>();
     
-    protected AtomicReference<Long> currentFailureStartTime = new AtomicReference<Long>();
+    protected final AtomicReference<Long> currentFailureStartTime = new AtomicReference<Long>();
 
     protected boolean weSetItOnFire = false;
 
@@ -72,7 +74,7 @@ public class ServiceFailureDetector extends AbstractPolicy {
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
         
-        if (useServiceStateRunning) {
+        if (getConfig(USE_SERVICE_STATE_RUNNING)) {
             subscribe(entity, Attributes.SERVICE_STATE, new SensorEventListener<Lifecycle>() {
                 @Override public void onEvent(SensorEvent<Lifecycle> event) {
                     onServiceState(event.getValue());
@@ -111,7 +113,7 @@ public class ServiceFailureDetector extends AbstractPolicy {
     }
     
     private synchronized void onMemberAdded() {
-        if (useServiceStateRunning) {
+        if (getConfig(USE_SERVICE_STATE_RUNNING)) {
             Lifecycle status = entity.getAttribute(Attributes.SERVICE_STATE);
             onServiceState(status);
         }
@@ -125,12 +127,12 @@ public class ServiceFailureDetector extends AbstractPolicy {
         Boolean isUp = serviceIsUp.get();
         Lifecycle status = serviceState.get();
         boolean failed = 
-                (useServiceStateRunning && status == Lifecycle.ON_FIRE && !weSetItOnFire) ||
+                (getConfig(USE_SERVICE_STATE_RUNNING) && status == Lifecycle.ON_FIRE && !weSetItOnFire) ||
                 (Boolean.FALSE.equals(isUp) &&
-                        (useServiceStateRunning ? status == Lifecycle.RUNNING : true) && 
-                        (onlyReportIfPreviouslyUp ? lastUpTime != null : true));
+                        (getConfig(USE_SERVICE_STATE_RUNNING) ? status == Lifecycle.RUNNING : true) && 
+                        (getConfig(ONLY_REPORT_IF_PREVIOUSLY_UP) ? lastUpTime != null : true));
         boolean healthy = 
-                (useServiceStateRunning ? (status == Lifecycle.RUNNING || (weSetItOnFire && status == Lifecycle.ON_FIRE)) : 
+                (getConfig(USE_SERVICE_STATE_RUNNING) ? (status == Lifecycle.RUNNING || (weSetItOnFire && status == Lifecycle.ON_FIRE)) : 
                     true) && 
                 Boolean.TRUE.equals(isUp);
 
@@ -160,7 +162,7 @@ public class ServiceFailureDetector extends AbstractPolicy {
         } else if (failed) {
             LOG.info("{} health-check for {}, component failed: {}", new Object[] {this, entity, description});
             currentFailureStartTime.set(System.currentTimeMillis());
-            if (useServiceStateRunning && setOnFireOnFailure && status != Lifecycle.ON_FIRE) {
+            if (getConfig(USE_SERVICE_STATE_RUNNING) && getConfig(SET_ON_FIRE_ON_FAILURE) && status != Lifecycle.ON_FIRE) {
                 weSetItOnFire = true;
                 entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
             }

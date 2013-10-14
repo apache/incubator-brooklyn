@@ -24,11 +24,17 @@ public interface FailingEntity extends TestEntity {
     @SetFromFlag("failOnStop")
     ConfigKey<Boolean> FAIL_ON_STOP = ConfigKeys.newBooleanConfigKey("failOnStop", "Whether to throw exception on call to stop", false);
     
+    @SetFromFlag("failOnRestart")
+    ConfigKey<Boolean> FAIL_ON_RESTART = ConfigKeys.newBooleanConfigKey("failOnRestart", "Whether to throw exception on call to restart", false);
+    
     @SetFromFlag("failOnStartCondition")
     ConfigKey<Predicate<? super FailingEntity>> FAIL_ON_START_CONDITION = (ConfigKey) ConfigKeys.newConfigKey(Predicate.class, "failOnStartCondition", "Whether to throw exception on call to start", null);
     
     @SetFromFlag("failOnStopCondition")
     ConfigKey<Predicate<? super FailingEntity>> FAIL_ON_STOP_CONDITION = (ConfigKey) ConfigKeys.newConfigKey(Predicate.class, "failOnStopCondition", "Whether to throw exception on call to stop", null);
+    
+    @SetFromFlag("failOnRestartCondition")
+    ConfigKey<Predicate<? super FailingEntity>> FAIL_ON_RESTART_CONDITION = (ConfigKey) ConfigKeys.newConfigKey(Predicate.class, "failOnRestartCondition", "Whether to throw exception on call to restart", null);
     
     @SetFromFlag("exceptionClazz")
     ConfigKey<Class<? extends RuntimeException>> EXCEPTION_CLAZZ = (ConfigKey) ConfigKeys.newConfigKey(Class.class, "exceptionClazz", "Type of exception to throw", IllegalStateException.class);

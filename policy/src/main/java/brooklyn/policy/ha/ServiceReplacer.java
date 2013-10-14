@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
@@ -20,7 +21,9 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
@@ -33,11 +36,17 @@ public class ServiceReplacer extends AbstractPolicy {
 
     // TODO if there are multiple failures perhaps we should abort quickly
     
+    public static final BasicNotificationSensor<FailureDescriptor> ENTITY_REPLACEMENT_FAILED = new BasicNotificationSensor<FailureDescriptor>(
+            FailureDescriptor.class, "ha.entityFailed.replacement", "Indicates that an entity replacement attempt has failed");
+
+    @SetFromFlag("setOnFireOnFailure")
+    public static final ConfigKey<Boolean> SET_ON_FIRE_ON_FAILURE = ConfigKeys.newBooleanConfigKey("setOnFireOnFailure", "", true);
+    
     /** monitors this sensor, by default ENTITY_RESTART_FAILED */
     @SetFromFlag("failureSensorToMonitor")
     @SuppressWarnings("rawtypes")
     public static final ConfigKey<Sensor> FAILURE_SENSOR_TO_MONITOR = new BasicConfigKey<Sensor>(Sensor.class, "failureSensorToMonitor", "", ServiceRestarter.ENTITY_RESTART_FAILED); 
-    
+
     public ServiceReplacer() {
         this(new ConfigBag());
     }
@@ -57,7 +66,7 @@ public class ServiceReplacer extends AbstractPolicy {
 
     @Override
     public void setEntity(EntityLocal entity) {
-        checkArgument(entity instanceof DynamicCluster, "Replacer must take a DynamicCluster, not "+entity);
+        checkArgument(entity instanceof DynamicCluster, "Replacer must take a DynamicCluster, not %s", entity);
         Sensor<?> failureSensorToMonitor = checkNotNull(getConfig(FAILURE_SENSOR_TO_MONITOR), "failureSensorToMonitor");
         
         super.setEntity(entity);
@@ -94,8 +103,10 @@ public class ServiceReplacer extends AbstractPolicy {
     }
 
     protected void onReplacementFailed(String msg) {
-        LOG.warn("ServiceReplacer failed. "+msg);
-        entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+        LOG.warn("ServiceReplacer failed for "+entity+": "+msg);
+        if (getConfig(SET_ON_FIRE_ON_FAILURE)) {
+            entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+        }
+        entity.emit(ENTITY_REPLACEMENT_FAILED, new FailureDescriptor(entity, msg));
     }
-    
 }
