@@ -82,7 +82,7 @@ public class MonitNodeImpl extends SoftwareProcessImpl implements MonitNode {
                     .setOnFailureOrException(null))
                 .build();
         } else {
-            LOG.warn("Location(s) %s not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
+            LOG.warn("Location(s) {} not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
             setAttribute(SERVICE_UP, true);
         }
     }
