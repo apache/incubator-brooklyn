@@ -92,6 +92,9 @@ public class GeoscalingIntegrationTest {
     
     @Test(groups={"Integration"})
     public void testRoutesToExpectedLocation() {
+        // Without this config, running on a home network (i.e. no public IP) the entity will have a private IP and will be ignored
+        ((EntityLocal)geoDns).setConfig(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, true);
+        
         target.setAttribute(Attributes.HOSTNAME,addrWithGeo.getHostName());
         
         app.start(ImmutableList.of(locWithGeo));
@@ -121,11 +124,13 @@ public class GeoscalingIntegrationTest {
     public void testIncludesAddressWithoutGeography() {
         System.setProperty(BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getPropertyName(), StubHostGeoLookup.class.getName());
         ((EntityLocal)geoDns).setConfig(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, true);
-        target.setAttribute(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
+        //target.setAttribute(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
         
         app.start(ImmutableList.of(locWithoutGeo));
         
         LOG.info("geo-scaling test, using {}.{}; expect to be wired to {}", new Object[] {subDomain, primaryDomain, addrWithoutGeo});
+        
+        target.setAttribute(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
         
         assertTargetHostsEventually(geoDns, 1);
     }
