@@ -156,8 +156,22 @@ define([
                 var $node = $(node), $newNode = $(newNode);
                 
                 // preserve old display status (just chevron direction at present)
-                if ($node.find('.tree-node-state').hasClass('icon-chevron-down'))
+                if ($node.find('.tree-node-state').hasClass('icon-chevron-down')) {
                     $newNode.find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down')
+                    // and if visible, see if any children have been added
+                    var children = nModel.get("childrenIds")
+                    var newChildren = []
+                    _.each(children, function(childId) { 
+                    	if (!that.collection.get(childId)) {
+                    		newChildren.push(childId);
+                    	}
+                    })
+                    if (newChildren.length) {
+                        // reload if new child ID we don't recognise
+                        this.collection.includeEntities(newChildren);
+                        this.collection.fetch()
+                    }
+                }
 
                 $(node).html($newNode)
                 this.addEventsToNode($(node))
