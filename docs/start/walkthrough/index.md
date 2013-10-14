@@ -34,7 +34,7 @@ $ mvn archetype:generate \
     -DarchetypeGroupId=io.brooklyn \
     -DarchetypeArtifactId=brooklyn-archetype-quickstart \
     -DarchetypeVersion=${BROOKLYN_VERSION} \
-    -DarchetypeCatalog=https://oss.sonatype.org/content/repositories/snapshots/archetype-catalog.xml
+    -DarchetypeCatalog=https://oss.sonatype.org/content/repositories/snapshots/archetype-catalog.xml \
     -DgroupId=com.acme.sample \
     -DartifactId=brooklyn-sample \
     -Dversion=0.1.0-SNAPSHOT \
