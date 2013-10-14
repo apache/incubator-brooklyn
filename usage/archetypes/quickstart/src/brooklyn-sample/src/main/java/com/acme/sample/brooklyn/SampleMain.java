@@ -80,7 +80,7 @@ public class SampleMain {
         if (applicationClass!=null) {
             launcher
                  .application(EntitySpec.create(StartableApplication.class, applicationClass)
-                         .displayName("Brooklyn WebApp Cluster with Database example"))
+                     .displayName("Brooklyn Sample App - "+applicationClass.getSimpleName()))
                  .location(location != null ? location : DEFAULT_LOCATION);
         } else {
             if (location!=null)

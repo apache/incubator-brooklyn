@@ -2,7 +2,6 @@ package brooklyn.entity.database.mysql;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
-import static brooklyn.util.ssh.BashCommands.downloadUrlAs;
 import static brooklyn.util.ssh.BashCommands.installPackage;
 import static brooklyn.util.ssh.BashCommands.ok;
 import static java.lang.String.format;
@@ -102,7 +101,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // these deps are needed on some OS versions but others don't need them so ignore failures (ok(...))
         commands.add(ok(installPackage(ImmutableMap.of("yum", "libaio", "apt", "ia32-libs"), null)));
         commands.add("echo finished installing extra packages");
-        commands.addAll(downloadUrlAs(urls, saveAs));
+        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(format("tar xfvz %s", saveAs));
 
         newScript(INSTALLING).
