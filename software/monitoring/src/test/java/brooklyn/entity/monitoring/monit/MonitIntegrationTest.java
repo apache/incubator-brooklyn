@@ -1,10 +1,12 @@
 package brooklyn.entity.monitoring.monit;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 
+import java.io.File;
 import java.util.Map;
 
-import org.testng.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -16,6 +18,8 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.database.mysql.MySqlNode;
+import brooklyn.entity.database.mysql.MySqlNodeImpl;
+import brooklyn.entity.database.mysql.MySqlSshDriver;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -23,11 +27,11 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
-import static org.testng.Assert.*;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Files;
 
 public class MonitIntegrationTest {
     
@@ -103,6 +107,66 @@ public class MonitIntegrationTest {
             }
         });
         mySqlNode.restart();
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
+                LOG.debug("MonitNode target status: {}", targetStatus);
+                assertEquals(elvis(targetStatus, ""), "Running");
+            }
+        });
+    }
+    
+    @Test(groups = "Integration")
+    public void test_monitorMySqlAutoRestart() throws InterruptedException {
+        // The monit node needs to know the installation and run directory of the mysql dir, so we need to specify it explicitly  
+        File tempDir = Files.createTempDir();
+        tempDir.deleteOnExit();
+        final String mySqlInstallDir = tempDir.getAbsolutePath() + "/install";
+        final String mySqlRunDir = tempDir.getAbsolutePath() + "/run";
+        final String mySqlDataDir = tempDir.getAbsolutePath() + "/data";
+        
+        SameServerEntity sameServerEntity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class));
+        LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
+        MySqlNode mySqlNode = sameServerEntity.addChild(EntitySpec.create(MySqlNode.class)
+            .configure(MySqlNode.SUGGESTED_INSTALL_DIR, mySqlInstallDir)
+            .configure(MySqlNode.SUGGESTED_RUN_DIR, mySqlRunDir)
+            .configure(MySqlNode.DATA_DIR, mySqlDataDir));
+        Entities.manage(mySqlNode);
+        Function controlFileSubstitutionsFunction = new Function<String, Map<String, Object>>() {
+            public Map<String, Object> apply(String input) {
+                return ImmutableMap.<String, Object>of(
+                    "targetPidFile", input,
+                    "mySqlInstallDir", mySqlInstallDir,
+                    "mySqlRunDir", mySqlRunDir
+                );
+            }
+        };
+        final MonitNode monitNode = sameServerEntity.addChild(EntitySpec.create(MonitNode.class)
+            .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monitmysqlwithrestart.monitrc")
+            .configure(MonitNode.CONTROL_FILE_SUBSTITUTIONS, DependentConfiguration.valueWhenAttributeReady(mySqlNode, 
+                MySqlNode.PID_FILE, controlFileSubstitutionsFunction)));
+        Entities.manage(monitNode);
+        app.start(ImmutableSet.of(location));
+        LOG.info("Monit and MySQL started");
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
+                LOG.debug("MonitNode target status: {}", targetStatus);
+                assertEquals(elvis(targetStatus, ""), "Running");
+            }
+        });
+        mySqlNode.stop();
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
+                LOG.debug("MonitNode target status: {}", targetStatus);
+                assertNotEquals(elvis(targetStatus, ""), "Running");
+            }
+        });
+        // NOTE: Do not manually restart the mySqlNode, it should be restarted by monit
         Asserts.succeedsEventually(new Runnable() {
             @Override
             public void run() {
