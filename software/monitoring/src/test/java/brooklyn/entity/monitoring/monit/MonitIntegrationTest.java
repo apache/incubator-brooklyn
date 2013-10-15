@@ -4,7 +4,7 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 
 import java.util.Map;
 
-import org.junit.Assert;
+import org.testng.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -21,7 +21,9 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
+import static org.testng.Assert.*;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -45,27 +47,24 @@ public class MonitIntegrationTest {
     @AfterMethod(alwaysRun = true)
     public void ensureShutDown() {
         if (app != null) {
-            Entities.destroyAll(app.getManagementContext());
+            Entities.destroyAll(managementContext);
             app = null;
         }
     }
     
     @Test(groups = "Integration")
     public void test_localhost() throws InterruptedException {
-        MonitNode monitNode = app.createAndManageChild(EntitySpec.create(MonitNode.class)
+        final MonitNode monitNode = app.createAndManageChild(EntitySpec.create(MonitNode.class)
             .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monit.monitrc"));
         LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
         app.start(ImmutableSet.of(location));
         LOG.info("Monit started");
-        boolean started = false;
-        for (int i = 1; i < 10; i++) {
-            if (monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS).equals("Running")) {
-                started = true;
-                break;
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                assertEquals(monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS), "Running");
             }
-            Thread.sleep(1000);
-        }
-        Assert.assertTrue("Expected monit target process to return status 'Running' within 10 seconds", started);
+        });
     }
     
     @Test(groups = "Integration")
@@ -79,23 +78,38 @@ public class MonitIntegrationTest {
                 return ImmutableMap.<String, Object>of("targetPidFile", input);
             }
         };
-        MonitNode monitNode = sameServerEntity.addChild(EntitySpec.create(MonitNode.class)
+        final MonitNode monitNode = sameServerEntity.addChild(EntitySpec.create(MonitNode.class)
             .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monitmysql.monitrc")
             .configure(MonitNode.CONTROL_FILE_SUBSTITUTIONS, DependentConfiguration.valueWhenAttributeReady(mySqlNode, 
                 MySqlNode.PID_FILE, controlFileSubstitutionsFunction)));
         Entities.manage(monitNode);
         app.start(ImmutableSet.of(location));
         LOG.info("Monit and MySQL started");
-        boolean started = false;
-        for (int i = 1; i < 10; i++) {
-            String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
-            LOG.debug("MonitNode target status: {}", targetStatus);
-            if (elvis(targetStatus, "").equals("Running")) {
-                started = true;
-                break;
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
+                LOG.debug("MonitNode target status: {}", targetStatus);
+                assertEquals(elvis(targetStatus, ""), "Running");
             }
-            Thread.sleep(1000);
-        }
-        Assert.assertTrue("Expected monit target process to return status 'Running' within 10 seconds", started);
+        });
+        mySqlNode.stop();
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
+                LOG.debug("MonitNode target status: {}", targetStatus);
+                assertNotEquals(elvis(targetStatus, ""), "Running");
+            }
+        });
+        mySqlNode.restart();
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
+                LOG.debug("MonitNode target status: {}", targetStatus);
+                assertEquals(elvis(targetStatus, ""), "Running");
+            }
+        });
     }
 }
