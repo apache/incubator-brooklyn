@@ -107,13 +107,13 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
         String cmd = getDriver().getStatusCmd();
         Optional<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
         SshFeed.builder()
-                .machine(machine.get())
                 .entity(this)
                 .period(Duration.FIVE_SECONDS)
+                .machine(machine.get())
                 .poll(new SshPollConfig<Boolean>(SERVICE_UP)
-                .command(cmd)
-                .setOnSuccess(true)
-                .setOnFailureOrException(false))
+                        .command(cmd)
+                        .setOnSuccess(true)
+                        .setOnFailureOrException(false))
                 .build();
     }
     
@@ -121,7 +121,6 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     protected void disconnectSensors() {
         super.disconnectSensors();
         if (feed != null) feed.stop();
-        disconnectServiceUpIsRunning();
     }
 
     public int getPort() {

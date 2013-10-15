@@ -5,6 +5,8 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -18,8 +20,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.database.mysql.MySqlNodeImpl;
-import brooklyn.entity.database.mysql.MySqlSshDriver;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -128,7 +128,7 @@ public class MonitIntegrationTest {
         
         SameServerEntity sameServerEntity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class));
         LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
-        MySqlNode mySqlNode = sameServerEntity.addChild(EntitySpec.create(MySqlNode.class)
+        final MySqlNode mySqlNode = sameServerEntity.addChild(EntitySpec.create(MySqlNode.class)
             .configure(MySqlNode.SUGGESTED_INSTALL_DIR, mySqlInstallDir)
             .configure(MySqlNode.SUGGESTED_RUN_DIR, mySqlRunDir)
             .configure(MySqlNode.DATA_DIR, mySqlDataDir));
@@ -149,12 +149,19 @@ public class MonitIntegrationTest {
         Entities.manage(monitNode);
         app.start(ImmutableSet.of(location));
         LOG.info("Monit and MySQL started");
+        final String[] initialPid = {""};
         Asserts.succeedsEventually(new Runnable() {
             @Override
             public void run() {
                 String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
                 LOG.debug("MonitNode target status: {}", targetStatus);
                 assertEquals(elvis(targetStatus, ""), "Running");
+                try {
+                	initialPid[0] = Files.readFirstLine(new File(mySqlNode.getAttribute(MySqlNode.PID_FILE)), Charset.defaultCharset());
+                	LOG.debug("Initial PID: {}", initialPid[0]);
+                } catch (IOException e) {
+                	Asserts.fail("Could not read PID file: " + e);
+                }
             }
         });
         mySqlNode.stop();
@@ -170,6 +177,14 @@ public class MonitIntegrationTest {
         Asserts.succeedsEventually(new Runnable() {
             @Override
             public void run() {
+            	try {
+            		String pidFileLocation = mySqlNode.getAttribute(MySqlNode.PID_FILE);
+            		String newPid = Files.readFirstLine(new File(pidFileLocation), Charset.defaultCharset());
+            		LOG.debug("Old PID: {}, New PID: {} read from PID file: {}", new String[] {initialPid[0], newPid, pidFileLocation});
+            		assertNotEquals(initialPid[0], newPid, "Process PID has not changed");
+            	} catch (IOException e) {
+            		Asserts.fail("Could not read PID file: " + e);
+            	}
                 String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
                 LOG.debug("MonitNode target status: {}", targetStatus);
                 assertEquals(elvis(targetStatus, ""), "Running");
