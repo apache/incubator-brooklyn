@@ -342,19 +342,22 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public JcloudsSshMachineLocation obtain(Map<?,?> flags) throws NoMachinesAvailableException {
         ConfigBag setup = ConfigBag.newInstanceExtending(getConfigBag(), flags);
         Integer attempts = setup.get(MACHINE_CREATE_ATTEMPTS);
+        Exception lastThrownException = null;
         if (attempts == null || attempts < 1) attempts = 1;
-        for (int i = 0; i < attempts; i++) {
+        for (int i = 1; i <= attempts; i++) {
             try {
-                return obtainImpl(flags, setup);
-            } catch (PropagatedRuntimeException e) {
+                return obtainOnce(flags, setup);
+            } catch (RuntimeException e) {
                 LOG.warn("Attempt #{}/{} to obtain machine threw error: {}", new Object[]{i, attempts, e});
+                lastThrownException = e;
             }
         }
-        LOG.error("Failed to get VM after {} attempts.", attempts);
-        throw new NoMachinesAvailableException("Failed to get VM after "+attempts+" attempts. See logs.");
+        throw new NoMachinesAvailableException(
+                String.format("Failed to get VM after %d attempt%s.", attempts, attempts == 1 ? "" : "s"),
+                lastThrownException);
     }
 
-    protected JcloudsSshMachineLocation obtainImpl(Map<?,?> flags, ConfigBag setup) throws NoMachinesAvailableException {
+    protected JcloudsSshMachineLocation obtainOnce(Map<?, ?> flags, ConfigBag setup) throws NoMachinesAvailableException {
         AccessController.Response access = getManagementContext().getAccessController().canProvisionLocation(this);
         if (!access.isAllowed()) {
             throw new IllegalStateException("Access controller forbids provisioning in "+this+": "+access.getMsg());
@@ -420,7 +423,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
                     Map<String, String> substitutions = (setupVarsString != null)
                             ? Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString)
-                            : Maps.<String, String>newHashMap();
+                            : ImmutableMap.<String, String>of();
                     String script = TemplateProcessor.processTemplate(setupScript, substitutions);
                     sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
                 }

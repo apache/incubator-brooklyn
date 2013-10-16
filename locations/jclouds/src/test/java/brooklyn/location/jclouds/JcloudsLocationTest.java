@@ -12,14 +12,19 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 /**
  * @author Shane Witbeck
@@ -30,17 +35,16 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             new RuntimeException("early termination for test");
     
     public static class BailOutJcloudsLocation extends JcloudsLocation {
-       ConfigBag lastConfigBag;
+        ConfigBag lastConfigBag;
 
-       public BailOutJcloudsLocation() {
-          super();
-       }
-       
-       public BailOutJcloudsLocation(Map<?, ?> conf) {
+        public BailOutJcloudsLocation() {
+            super();
+        }
+
+        public BailOutJcloudsLocation(Map<?, ?> conf) {
             super(conf);
         }
-        
-        
+
         @Override
         protected Template buildTemplate(ComputeService computeService, ConfigBag config) {
             lastConfigBag = config;
@@ -49,8 +53,8 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         protected synchronized void tryObtainAndCheck(Map<?,?> flags, Predicate<ConfigBag> test) {
             try {
                 obtain(flags);
-            } catch (Throwable e) {
-                if (e==BAIL_OUT_FOR_TESTING) {
+            } catch (NoMachinesAvailableException e) {
+                if (e.getCause()==BAIL_OUT_FOR_TESTING) {
                     test.apply(lastConfigBag);
                 } else {
                     throw Exceptions.propagate(e);
@@ -58,17 +62,25 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             }
         }
     }
+
+    public static class CountingBailOutJcloudsLocation extends BailOutJcloudsLocation {
+        int buildTemplateCount = 0;
+        @Override
+        protected Template buildTemplate(ComputeService computeService, ConfigBag config) {
+            buildTemplateCount++;
+            return super.buildTemplate(computeService, config);
+        }
+    }
     
     public static class BailOutWithTemplateJcloudsLocation extends JcloudsLocation {
-        ConfigBag lastConfigBag;
-        
-        Template template;
+         ConfigBag lastConfigBag;
+         Template template;
 
-        public BailOutWithTemplateJcloudsLocation() {
-           super();
-        }
+         public BailOutWithTemplateJcloudsLocation() {
+            super();
+         }
         
-        public BailOutWithTemplateJcloudsLocation(Map<?, ?> conf) {
+         public BailOutWithTemplateJcloudsLocation(Map<?, ?> conf) {
              super(conf);
          }
          
@@ -217,7 +229,24 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         String[] stringArray = new String[] {"1", "2", "3"};
         JcloudsLocation.toIntArray(stringArray);
     }
-    
+
+    @Test
+    public void testVMCreationIsRetriedOnFailure() {
+        Map<ConfigKey<?>, Object> flags = Maps.newHashMap();
+        flags.put(IMAGE_ID, "bogus");
+        flags.put(CLOUD_PROVIDER, "aws-ec2");
+        flags.put(ACCESS_IDENTITY, "bogus");
+        flags.put(CLOUD_REGION_ID, "bogus");
+        flags.put(ACCESS_CREDENTIAL, "bogus");
+        flags.put(USER, "fred");
+        flags.put(MIN_RAM, 16);
+        flags.put(MACHINE_CREATE_ATTEMPTS, 3);
+        CountingBailOutJcloudsLocation jcl = managementContext.getLocationManager().createLocation(
+                LocationSpec.create(CountingBailOutJcloudsLocation.class).configure(flags));
+        jcl.tryObtainAndCheck(ImmutableMap.of(), Predicates.<ConfigBag>alwaysTrue());
+        Assert.assertEquals(jcl.buildTemplateCount, 3);
+    }
+
     @Test(groups="Live")
     public void testCreateWithInboundPorts() {
         BailOutWithTemplateJcloudsLocation jcloudsLocation = newSampleBailOutWithTemplateJcloudsLocation();
