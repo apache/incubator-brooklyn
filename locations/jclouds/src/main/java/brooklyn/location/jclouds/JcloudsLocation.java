@@ -63,7 +63,9 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
+import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
+import brooklyn.location.jclouds.zone.AwsAvailabilityZoneExtension;
 import brooklyn.management.AccessController;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -160,6 +162,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         
         setCreationString(getConfigBag());
+    }
+    
+    @Override
+    public void init() {
+        super.init();
+        if ("aws-ec2".equals(getProvider())) {
+            addExtension(AvailabilityZoneExtension.class, new AwsAvailabilityZoneExtension(getManagementContext(), this));
+        }
     }
     
     @Override
