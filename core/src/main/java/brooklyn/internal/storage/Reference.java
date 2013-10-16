@@ -1,7 +1,7 @@
 package brooklyn.internal.storage;
 
 /**
- * A reference to a value, backed by the strage-medium.
+ * A reference to a value, backed by the storage-medium.
  * 
  * @see BrooklynStorage#getReference(String)
  * 

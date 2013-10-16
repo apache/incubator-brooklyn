@@ -114,6 +114,11 @@ The following is supported from the configuration file (with whatever customizat
   (It is useful in the case of ``loginUser.publicKeyFile``, where you shouldn't need,
   or might not even have, the private key of the ``root`` user in order to log in.)
 
+- You can specify the number of attempts Brooklyn should make to create
+  machines with ``machineCreateAttempts`` (jclouds only). This is useful for
+  working around the rare occasions in which cloud providers give machines that
+  are dead on arrival.
+
 You can also define named locations for commonly used groups of properties, 
 with the syntax ``brooklyn.location.named.your-group-name.``
 followed by the relevant properties.
@@ -135,5 +140,6 @@ brooklyn.location.named.company-jungle.privateKeyFile=~/.ssh/public_clouds/compa
 brooklyn.location.named.company-jungle.imageId=ami-12345
 brooklyn.location.named.company-jungle.minRam=2048
 brooklyn.location.named.company-jungle.userMetadata=application=my-jungle-app,owner="Bob Johnson"
+brooklyn.location.named.company-jungle.machineCreateAttempts=2
 {% endhighlight %}
 

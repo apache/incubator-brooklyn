@@ -70,6 +70,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.internal.ssh.SshTool;
@@ -332,18 +333,36 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public JcloudsSshMachineLocation obtain(Map<?,?> flags, TemplateBuilder tb) throws NoMachinesAvailableException {
         return obtain(MutableMap.builder().putAll(flags).put(TEMPLATE_BUILDER, tb).build());
     }
+
     /** core method for obtaining a VM using jclouds;
      * Map should contain CLOUD_PROVIDER and CLOUD_ENDPOINT or CLOUD_REGION, depending on the cloud,
      * as well as ACCESS_IDENTITY and ACCESS_CREDENTIAL,
      * plus any further properties to specify e.g. images, hardware profiles, accessing user
      * (for initial login, and a user potentially to create for subsequent ie normal access) */
     public JcloudsSshMachineLocation obtain(Map<?,?> flags) throws NoMachinesAvailableException {
+        ConfigBag setup = ConfigBag.newInstanceExtending(getConfigBag(), flags);
+        Integer attempts = setup.get(MACHINE_CREATE_ATTEMPTS);
+        Exception lastThrownException = null;
+        if (attempts == null || attempts < 1) attempts = 1;
+        for (int i = 1; i <= attempts; i++) {
+            try {
+                return obtainOnce(flags, setup);
+            } catch (RuntimeException e) {
+                LOG.warn("Attempt #{}/{} to obtain machine threw error: {}", new Object[]{i, attempts, e});
+                lastThrownException = e;
+            }
+        }
+        throw new NoMachinesAvailableException(
+                String.format("Failed to get VM after %d attempt%s.", attempts, attempts == 1 ? "" : "s"),
+                lastThrownException);
+    }
+
+    protected JcloudsSshMachineLocation obtainOnce(Map<?, ?> flags, ConfigBag setup) throws NoMachinesAvailableException {
         AccessController.Response access = getManagementContext().getAccessController().canProvisionLocation(this);
         if (!access.isAllowed()) {
             throw new IllegalStateException("Access controller forbids provisioning in "+this+": "+access.getMsg());
         }
 
-        ConfigBag setup = ConfigBag.newInstanceExtending(getConfigBag(), flags);
         setCreationString(setup);
         
         final ComputeService computeService = JcloudsUtil.findComputeService(setup);
@@ -401,10 +420,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (!(waitForSshable!=null && "false".equalsIgnoreCase(waitForSshable))) {
                String setupScript = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_URL);
                 if(Strings.isNonBlank(setupScript)) {
-                   String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
-                   Map<String, String> substitutions = Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString);
-                   String script = TemplateProcessor.processTemplate(setupScript, substitutions);
-                   sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
+                    String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
+                    Map<String, String> substitutions = (setupVarsString != null)
+                            ? Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString)
+                            : ImmutableMap.<String, String>of();
+                    String script = TemplateProcessor.processTemplate(setupScript, substitutions);
+                    sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
                 }
                 
                 if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM))
