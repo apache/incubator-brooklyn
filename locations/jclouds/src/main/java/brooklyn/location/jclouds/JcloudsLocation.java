@@ -61,7 +61,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocationConfigUtils;
-import brooklyn.location.basic.LocationCreationUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
@@ -165,7 +164,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     
     @Override
     public JcloudsLocation newSubLocation(Map<?,?> newFlags) {
-        return LocationCreationUtils.newSubLocation(newFlags, this);
+        // TODO should be able to use ConfigBag.newInstanceExtending; would require moving stuff around to api etc
+        return getManagementContext().getLocationManager().createLocation(LocationSpec.create(getClass())
+                .parent(this)
+                .configure(getRawLocalConfigBag().getAllConfig())
+                .configure(newFlags));
     }
 
     @Override
