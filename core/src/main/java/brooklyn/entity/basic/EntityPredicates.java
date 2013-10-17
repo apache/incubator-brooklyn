@@ -20,6 +20,15 @@ public class EntityPredicates {
         };
     }
     
+    public static Predicate<Entity> applicationIdEqualTo(final String val) {
+        return new Predicate<Entity>() {
+            @Override
+            public boolean apply(Entity input) {
+                return val.equals(input.getApplicationId());
+            }
+        };
+    }
+
     public static <T> Predicate<Entity> attributeEqualTo(final AttributeSensor<T> attribute, final T val) {
         return new Predicate<Entity>() {
             @Override
