@@ -18,6 +18,7 @@ public class FailingEntityImpl extends TestEntityImpl implements FailingEntity {
         if (getConfig(FAIL_ON_START) || (getConfig(FAIL_ON_START_CONDITION) != null && getConfig(FAIL_ON_START_CONDITION).apply(this))) {
             throw newException("Simulating entity start failure for test");
         }
+        super.start(locs);
     }
     
     @Override
@@ -27,6 +28,7 @@ public class FailingEntityImpl extends TestEntityImpl implements FailingEntity {
         if (getConfig(FAIL_ON_STOP) || (getConfig(FAIL_ON_STOP_CONDITION) != null && getConfig(FAIL_ON_STOP_CONDITION).apply(this))) {
             throw newException("Simulating entity stop failure for test");
         }
+        super.stop();
     }
     
     @Override

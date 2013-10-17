@@ -21,6 +21,8 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 @Beta
 public class Asserts {
@@ -45,8 +47,18 @@ public class Asserts {
      * Fails a test with the given message.
      * @param message the assertion error message
      */
-    static public void fail(String message) {
+    public static void fail(String message) {
         throw new AssertionError(message);
+    }
+
+    public static void assertEqualsIgnoringOrder(Iterable<?> actual, Iterable<?> expected) {
+        String errMsg = "actual="+actual+"; expected="+expected;
+        assertTrue(Iterables.size(actual) == Iterables.size(expected), errMsg);
+        List<?> expectedMutable = Lists.newLinkedList(expected);
+        for (Object element : actual) {
+            boolean removed = expectedMutable.remove(element);
+            assertTrue(removed, errMsg);
+        }        
     }
 
     // --- new routines

@@ -42,8 +42,11 @@ import com.google.common.collect.Maps;
 public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicCluster {
     private static final Logger LOG = LoggerFactory.getLogger(DynamicClusterImpl.class);
 
-    // Mutex for synchronizing during re-size operations
-    private final Object mutex = new Object[0];
+    /**
+     * Mutex for synchronizing during re-size operations.
+     * Sub-classes should use with great caution, to not introduce deadlocks!
+     */
+    protected final Object mutex = new Object[0];
     
     private static final Function<Collection<Entity>, Entity> defaultRemovalStrategy = new Function<Collection<Entity>, Entity>() {
         @Override public Entity apply(Collection<Entity> contenders) {
@@ -107,12 +110,23 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return Iterables.getOnlyElement(getLocations());
     }
     
-    private boolean isQuarantineEnabled() {
+    protected boolean isQuarantineEnabled() {
         return getConfig(QUARANTINE_FAILED_ENTITIES);
     }
     
-    private Group getQuarantineGroup() {
+    protected Group getQuarantineGroup() {
         return getAttribute(QUARANTINE_GROUP);
+    }
+    
+    protected int getInitialQuorumSize() {
+        int initialSize = getConfig(INITIAL_SIZE).intValue();
+        int initialQuorumSize = getConfig(INITIAL_QUORUM_SIZE).intValue();
+        if (initialQuorumSize < 0) initialQuorumSize = initialSize;
+        if (initialQuorumSize > initialSize) {
+            LOG.warn("On start of cluster {}, misconfigured initial quorum size {} greater than initial size{}; using {}", new Object[] {initialQuorumSize, initialSize, initialSize});
+            initialQuorumSize = initialSize;
+        }
+        return initialQuorumSize;
     }
     
     @Override
@@ -129,12 +143,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         
         int initialSize = getConfig(INITIAL_SIZE).intValue();
-        int initialQuorumSize = getConfig(INITIAL_QUORUM_SIZE).intValue();
-        if (initialQuorumSize < 0) initialQuorumSize = initialSize;
-        if (initialQuorumSize > initialSize) {
-            LOG.warn("On start of cluster {}, misconfigured initial quorum size {} greater than initial size{}; using {}", new Object[] {initialQuorumSize, initialSize, initialSize});
-            initialQuorumSize = initialSize;
-        }
+        int initialQuorumSize = getInitialQuorumSize();
         
         resize(initialSize);
         
@@ -215,11 +224,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     /**
      * Increases the cluster size by the given number. Returns successfully added nodes.
+     * Called when synchronized on mutex, so overriders beware!
      */
     protected Collection<Entity> grow(int delta) {
         Collection<Entity> addedEntities = Lists.newArrayList();
         for (int i = 0; i < delta; i++) {
-            addedEntities.add(addNode());
+            addedEntities.add(addNode(getLocation()));
         }
         Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
         for (Entity entity: addedEntities) {
@@ -239,6 +249,10 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return MutableList.<Entity>builder().addAll(addedEntities).removeAll(errors.keySet()).build();
     }
     
+    /**
+     * Decreases the cluster size by the given number.
+     * Called when synchronized on mutex, so overriders beware!
+     */
     protected void shrink(int delta) {
         Collection<Entity> removedEntities = Lists.newArrayList();
         
@@ -315,8 +329,15 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getConfig(CUSTOM_CHILD_FLAGS);
     }
     
+    protected Entity addNode(Location loc) {
+        return addNode();
+    }
+    
+    /**
+     * @deprecated since 0.6; use {@link #addNode(Location)}, so can take that location into account when configuring node
+     */
     protected Entity addNode() {
-        Map creation = Maps.newLinkedHashMap(getCustomChildFlags());
+        Map<?,?> creation = Maps.newLinkedHashMap(getCustomChildFlags());
         if (LOG.isDebugEnabled()) LOG.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] {this, getId(), creation});
 
         Entity entity = createNode(creation);
@@ -325,6 +346,13 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return entity;
     }
 
+    protected Entity createNode(Location loc, Map flags) {
+        return createNode(flags);
+    }
+    
+    /**
+     * @deprecated since 0.6; use {@link #createNode(Location, Map)}, so can take that location into account when configuring node
+     */
     protected Entity createNode(Map flags) {
         EntitySpec<?> memberSpec = getMemberSpec();
         if (memberSpec != null) {
