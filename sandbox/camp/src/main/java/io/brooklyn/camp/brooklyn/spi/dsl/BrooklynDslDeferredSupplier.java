@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.management.Task;
 import brooklyn.management.TaskFactory;
@@ -50,9 +51,9 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
     }
     
     /** returns the current entity; for use in implementations of {@link #get()} */
-    protected final Entity entity() {
+    protected final EntityInternal entity() {
         // rely on implicit ThreadLocal for now
-        return EffectorTasks.findEntity();
+        return (EntityInternal) EffectorTasks.findEntity();
     }
 
     @Override
