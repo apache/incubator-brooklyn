@@ -49,17 +49,17 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
         dsl = sourceNode!=null ? sourceNode.getOriginalValue() : null;
     }
     
-	/** returns the current entity; for use in implementations of {@link #get()} */
-	protected final Entity entity() {
-		// rely on implicit ThreadLocal for now
-		return EffectorTasks.findEntity();
-	}
+    /** returns the current entity; for use in implementations of {@link #get()} */
+    protected final Entity entity() {
+        // rely on implicit ThreadLocal for now
+        return EffectorTasks.findEntity();
+    }
 
-	@Override
+    @Override
     public final synchronized T get() {
-	    try {
-	        if (log.isDebugEnabled())
-	            log.debug("Queuing task to resolve "+dsl);
+        try {
+            if (log.isDebugEnabled())
+                log.debug("Queuing task to resolve "+dsl);
             T result = Entities.submit(entity(), newTask()).get();
             if (log.isDebugEnabled())
                 log.debug("Resolved "+result+" from "+dsl);
@@ -67,9 +67,9 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
-	}
-	
-	@Override
-	public abstract Task<T> newTask();
+    }
+    
+    @Override
+    public abstract Task<T> newTask();
 
 }
