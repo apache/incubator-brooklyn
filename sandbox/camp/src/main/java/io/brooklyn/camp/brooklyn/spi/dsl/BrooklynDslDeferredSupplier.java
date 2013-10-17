@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** provide an object suitable to resolve chained invocations in a parsed YAML / Deployment Plan DSL,
- * which also implements {@link DeferredSupplier} so that the can be resolved when needed
+ * which also implements {@link DeferredSupplier} so that they can be resolved when needed
  * (e.g. when entity-lookup and execution contexts are available).
  * <p>
  * implementations of this abstract class are expected to be immutable,
@@ -55,7 +55,8 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
 		return EffectorTasks.findEntity();
 	}
 
-	public final synchronized T get() {
+	@Override
+    public final synchronized T get() {
 	    try {
 	        if (log.isDebugEnabled())
 	            log.debug("Queuing task to resolve "+dsl);
