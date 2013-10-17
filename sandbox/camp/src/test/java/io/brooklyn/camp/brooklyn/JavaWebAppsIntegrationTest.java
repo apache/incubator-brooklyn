@@ -1,5 +1,6 @@
 package io.brooklyn.camp.brooklyn;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import io.brooklyn.camp.CampServer;
 import io.brooklyn.camp.brooklyn.spi.lookup.BrooklynUrlLookup;
 import io.brooklyn.camp.spi.Assembly;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +30,9 @@ import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
-import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.Asserts;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.time.CountdownTimer;
@@ -72,7 +75,7 @@ public class JavaWebAppsIntegrationTest {
             Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
             log.info("Test - created "+assembly);
             
-            Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
+            final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
             log.info("App - "+app);
             Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
             log.info("Waiting on "+tasks.size()+" task(s)");
@@ -83,31 +86,19 @@ public class JavaWebAppsIntegrationTest {
             log.info("App started:");
             Entities.dumpInfo(app);
 
-            String url = null;
-            CountdownTimer timer = Duration.TEN_SECONDS.countdownTimer();
-            String site = null;
-            while (url==null) {
-                url = app.getChildren().iterator().next().getAttribute(JavaWebAppService.ROOT_URL);
-                if (url!=null) {
-                    try {
-                        site = new ResourceUtils(this).getResourceAsString(url);
-                    } catch (Exception e) {
-                        // not ready yet
-                        log.debug("site not yet ready at "+url+": "+e);
-                        Exceptions.propagateIfFatal(e);
-                        url = null;
-                    }
-                }
-                if (url==null) {
-                    if (timer.isExpired())
-                        Assert.fail("ROOT_URL did not become available");
-                    log.debug("waiting on ROOT_URL for "+app);
-                    Time.sleep(100);
-                }
-            }
-            log.info("App URL for "+app+": "+url);
+            final String url = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
+                @Override public String call() throws Exception {
+                    String url = app.getChildren().iterator().next().getAttribute(JavaWebAppService.ROOT_URL);
+                    return checkNotNull(url, "url of %s", app);
+                }});
+        
+            String site = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
+                    @Override public String call() throws Exception {
+                        return new ResourceUtils(this).getResourceAsString(url);
+                    }});
             
-            Assert.assertTrue(url.contains("928"), "URL should be on port 9280+ based on config set in yaml");
+            log.info("App URL for "+app+": "+url);
+            Assert.assertTrue(url.contains("928"), "URL should be on port 9280+ based on config set in yaml, url "+url+", app "+app);
             Assert.assertTrue(site.toLowerCase().contains("hello"), site);
             Assert.assertTrue(!platform.assemblies().isEmpty());
         } catch (Exception e) {
@@ -124,7 +115,7 @@ public class JavaWebAppsIntegrationTest {
             Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
             log.info("Test - created "+assembly);
             
-            Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
+            final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
             log.info("App - "+app);
             
             Iterator<ResolvableLink<PlatformComponent>> pcs = assembly.getPlatformComponents().links().iterator();
@@ -148,31 +139,19 @@ public class JavaWebAppsIntegrationTest {
             log.info("App started:");
             Entities.dumpInfo(app);
 
-            String url = null;
-            CountdownTimer timer = Duration.TEN_SECONDS.countdownTimer();
-            String site = null;
-            while (url==null) {
-                url = app.getChildren().iterator().next().getAttribute(JavaWebAppService.ROOT_URL);
-                if (url!=null) {
-                    try {
-                        site = new ResourceUtils(this).getResourceAsString(url);
-                    } catch (Exception e) {
-                        // not ready yet
-                        log.debug("site not yet ready at "+url+": "+e);
-                        Exceptions.propagateIfFatal(e);
-                        url = null;
-                    }
-                }
-                if (url==null) {
-                    if (timer.isExpired())
-                        Assert.fail("ROOT_URL did not become available");
-                    log.debug("waiting on ROOT_URL for "+app);
-                    Time.sleep(100);
-                }
-            }
-            log.info("App URL for "+app+": "+url);
+            final String url = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
+                    @Override public String call() throws Exception {
+                        String url = app.getChildren().iterator().next().getAttribute(JavaWebAppService.ROOT_URL);
+                        return checkNotNull(url, "url of %s", app);
+                    }});
             
-            Assert.assertTrue(url.contains("921"), "URL should be on port 9280+ based on config set in yaml");
+            String site = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
+                    @Override public String call() throws Exception {
+                        return new ResourceUtils(this).getResourceAsString(url);
+                    }});
+            
+            log.info("App URL for "+app+": "+url);
+            Assert.assertTrue(url.contains("921"), "URL should be on port 9280+ based on config set in yaml, url "+url+", app "+app);
             Assert.assertTrue(site.toLowerCase().contains("hello"), site);
             Assert.assertTrue(!platform.assemblies().isEmpty());
             
