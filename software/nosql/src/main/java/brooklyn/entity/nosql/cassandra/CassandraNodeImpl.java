@@ -16,9 +16,13 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.RollingTimeWindowMeanEnricher;
+import brooklyn.enricher.TimeFractionDeltaEnricher;
+import brooklyn.enricher.TimeWeightedDeltaEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
@@ -27,6 +31,7 @@ import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.location.basic.Machines;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -129,46 +134,48 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 .pollAttribute(new JmxAttributePollConfig<Integer>(READ_ACTIVE)
                         .objectName(readStageMBean)
                         .attributeName("ActiveCount")
-                        .onException(Functions.constant(-1)))
+                        .onException(Functions.constant((Integer)null)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(READ_PENDING)
                         .objectName(readStageMBean)
                         .attributeName("PendingTasks")
-                        .onException(Functions.constant(-1l)))
+                        .onException(Functions.constant((Long)null)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(READ_COMPLETED)
                         .objectName(readStageMBean)
                         .attributeName("CompletedTasks")
-                        .onException(Functions.constant(-1l)))
+                        .onException(Functions.constant((Long)null)))
                 .pollAttribute(new JmxAttributePollConfig<Integer>(WRITE_ACTIVE)
                         .objectName(mutationStageMBean)
                         .attributeName("ActiveCount")
-                        .onException(Functions.constant(-1)))
+                        .onException(Functions.constant((Integer)null)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(WRITE_PENDING)
                         .objectName(mutationStageMBean)
                         .attributeName("PendingTasks")
-                        .onException(Functions.constant(-1l)))
+                        .onException(Functions.constant((Long)null)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(WRITE_COMPLETED)
                         .objectName(mutationStageMBean)
                         .attributeName("CompletedTasks")
-                        .onException(Functions.constant(-1l)))
+                        .onException(Functions.constant((Long)null)))
                 .build();
+        
         functionFeed = FunctionFeed.builder()
                 .entity(this)
                 .period(3000, TimeUnit.MILLISECONDS)
                 .poll(new FunctionPollConfig<Long, Long>(THRIFT_PORT_LATENCY)
-                        .onException(Functions.constant(-1L))
+                        .onException(Functions.constant((Long)null))
                         .callable(new Callable<Long>() {
                             public Long call() {
                                 try {
                                     long start = System.currentTimeMillis();
                                     Socket s = new Socket(getAttribute(Attributes.HOSTNAME), getThriftPort());
                                     s.close();
+                                    long latency = System.currentTimeMillis() - start;
                                     computeServiceUp();
-                                    return System.currentTimeMillis() - start;
+                                    return latency;
                                 } catch (Exception e) {
                                     if (log.isDebugEnabled())
                                         log.debug("Cassandra thrift port poll failure: "+e);
                                     setAttribute(SERVICE_UP, false);
-                                    return -1L;
+                                    return null;
                                 }
                             }
                             public void computeServiceUp() {
@@ -180,8 +187,31 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                             }
                         }))
                 .build();
+        
+        connectEnrichers();
     }
 
+    protected void connectEnrichers() {
+        connectEnrichers(Duration.TEN_SECONDS);
+    }
+    
+    protected void connectEnrichers(Duration windowPeriod) {
+        JavaAppUtils.connectMXBeanSensors(this);
+        JavaAppUtils.connectJavaAppServerPolicies(this);
+
+        addEnricher(TimeWeightedDeltaEnricher.<Long>getPerSecondDeltaEnricher(this, READ_COMPLETED, READS_PER_SECOND_LAST));
+        addEnricher(TimeWeightedDeltaEnricher.<Long>getPerSecondDeltaEnricher(this, WRITE_COMPLETED, WRITES_PER_SECOND_LAST));
+        
+        if (windowPeriod!=null) {
+            addEnricher(new RollingTimeWindowMeanEnricher<Long>(this, THRIFT_PORT_LATENCY, 
+                    THRIFT_PORT_LATENCY_IN_WINDOW, windowPeriod));
+            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, READS_PER_SECOND_LAST, 
+                    READS_PER_SECOND_IN_WINDOW, windowPeriod));
+            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, WRITES_PER_SECOND_LAST, 
+                    WRITES_PER_SECOND_IN_WINDOW, windowPeriod));
+        }
+    }
+    
     @Override
     public void disconnectSensors() {
         super.disconnectSensors();
