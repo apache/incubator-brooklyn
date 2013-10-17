@@ -3,7 +3,7 @@ package brooklyn.entity.group.zoneaware;
 import java.util.List;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.group.zoneaware.InterAvailabilityZoneDynamicCluster.ZoneFailureDetector;
+import brooklyn.entity.group.DynamicCluster.ZoneFailureDetector;
 import brooklyn.location.Location;
 
 import com.google.common.base.Predicate;

@@ -1,4 +1,4 @@
-package brooklyn.entity.group.zoneaware;
+package brooklyn.entity.group;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
@@ -14,7 +14,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.group.zoneaware.InterAvailabilityZoneDynamicCluster;
 import brooklyn.entity.group.zoneaware.ProportionalZoneFailureDetector;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.FailingEntity;
@@ -36,20 +35,21 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-public class InterAvailabilityZoneDynamicClusterTest {
+public class DynamicClusterWithAvailabilityZonesTest {
     
     private ManagementContext managementContext;
     private TestApplication app;
-    private InterAvailabilityZoneDynamicCluster cluster;
+    private DynamicCluster cluster;
     private SimulatedLocation loc;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         managementContext = app.getManagementContext();
-        cluster = app.createAndManageChild(EntitySpec.create(InterAvailabilityZoneDynamicCluster.class)
-                .configure(InterAvailabilityZoneDynamicCluster.INITIAL_SIZE, 0)
-                .configure(InterAvailabilityZoneDynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
+        cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.ENABLE_AVAILABILITY_ZONES, true)
+                .configure(DynamicCluster.INITIAL_SIZE, 0)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
         
         loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         loc.addExtension(AvailabilityZoneExtension.class, new SimulatedAvailabilityZoneExtension(managementContext, loc, ImmutableList.of("zone1", "zone2", "zone3", "zone4")));
@@ -57,25 +57,25 @@ public class InterAvailabilityZoneDynamicClusterTest {
 
     @Test
     public void testPicksCorrectNumSubLocations() throws Exception {
-        ((EntityLocal)cluster).setConfig(InterAvailabilityZoneDynamicCluster.NUM_AVAILABILITY_ZONES, 2);
+        ((EntityLocal)cluster).setConfig(DynamicCluster.NUM_AVAILABILITY_ZONES, 2);
         cluster.start(ImmutableList.of(loc));
-        List<Location> subLocations = cluster.getAttribute(InterAvailabilityZoneDynamicCluster.SUB_LOCATIONS);
+        List<Location> subLocations = cluster.getAttribute(DynamicCluster.SUB_LOCATIONS);
         List<String> subLocationNames = getLocationNames(subLocations);
         assertEquals(subLocationNames, ImmutableList.of("zone1", "zone2"));
     }
     
     @Test
     public void testPicksCorrectNamedSubLocations() throws Exception {
-        ((EntityLocal)cluster).setConfig(InterAvailabilityZoneDynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone2", "zone4"));
+        ((EntityLocal)cluster).setConfig(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone2", "zone4"));
         cluster.start(ImmutableList.of(loc));
-        List<Location> subLocations = cluster.getAttribute(InterAvailabilityZoneDynamicCluster.SUB_LOCATIONS);
+        List<Location> subLocations = cluster.getAttribute(DynamicCluster.SUB_LOCATIONS);
         List<String> subLocationNames = getLocationNames(subLocations);
         assertEquals(subLocationNames, ImmutableList.of("zone2", "zone4"));
     }
     
     @Test
     public void testSpreadsEntitiesAcrossZonesEvenly() throws Exception {
-        ((EntityLocal)cluster).setConfig(InterAvailabilityZoneDynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone1", "zone2"));
+        ((EntityLocal)cluster).setConfig(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone1", "zone2"));
         cluster.start(ImmutableList.of(loc));
         
         cluster.resize(4);
@@ -108,9 +108,9 @@ public class InterAvailabilityZoneDynamicClusterTest {
             }
         };
         
-        ((EntityLocal)cluster).setConfig(InterAvailabilityZoneDynamicCluster.ZONE_FAILURE_DETECTOR, new ProportionalZoneFailureDetector(2, Duration.ONE_HOUR, 0.9, ticker));
-        ((EntityLocal)cluster).setConfig(InterAvailabilityZoneDynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone1", "zone2"));
-        ((EntityLocal)cluster).setConfig(InterAvailabilityZoneDynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
+        ((EntityLocal)cluster).setConfig(DynamicCluster.ZONE_FAILURE_DETECTOR, new ProportionalZoneFailureDetector(2, Duration.ONE_HOUR, 0.9, ticker));
+        ((EntityLocal)cluster).setConfig(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone1", "zone2"));
+        ((EntityLocal)cluster).setConfig(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
                 .configure(FailingEntity.FAIL_ON_START_CONDITION, failurePredicate));
         cluster.start(ImmutableList.of(loc));
         

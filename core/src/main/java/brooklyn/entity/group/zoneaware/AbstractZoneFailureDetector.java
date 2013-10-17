@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.group.zoneaware.InterAvailabilityZoneDynamicCluster.ZoneFailureDetector;
+import brooklyn.entity.group.DynamicCluster.ZoneFailureDetector;
 import brooklyn.location.Location;
 
 import com.google.common.annotations.Beta;
