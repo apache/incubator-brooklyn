@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -29,6 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.collections.MutableList;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -66,6 +69,17 @@ public class Reflections {
 		this.classLoader = checkNotNull(classLoader);
 	}
 
+	public Object loadInstance(String classname, Object[] argValues) throws ReflectionNotFoundException, ReflectionAccessException {
+        Class<?> clazz = loadClass(classname);
+        Optional<?> v = null;
+        try {
+            v = invokeConstructorWithArgs(clazz, argValues);
+            if (v.isPresent()) return v.get();
+        } catch (Exception e) {
+            throw new IllegalStateException("Error invoking constructor for "+clazz+Arrays.toString(argValues)+": "+e);
+        }
+        throw new IllegalStateException("No suitable constructor for "+clazz+Arrays.toString(argValues));
+	}
 	public Object loadInstance(String classname, Class<?>[] argTypes, Object[] argValues) throws ReflectionNotFoundException, ReflectionAccessException {
 		Class<?> clazz = loadClass(classname);
 		Constructor<?> constructor = loadConstructor(clazz, argTypes);
@@ -176,40 +190,63 @@ public class Reflections {
 	/**
 	 * Returns a constructor that accepts the given arguments, or null if no such constructor is
 	 * accessible.
-	 */
+	 * <p>
+	 * This does not support varargs.
+	 * 
+	 * @deprecated since 0.6.0 use {@link #invokeConstructorWithArgs(Class, Object[])}
+	 */ @Deprecated
     @SuppressWarnings("unchecked")
     public static <T> Constructor<T> findCallabaleConstructor(Class<T> clazz, Object[] args) {
-        Class<?>[] argTypes = new Class<?>[args.length];
-        for (int i = 0; i < args.length; i++) {
-            argTypes[i] = (args[i] != null) ? args[i].getClass() : null;
-        }
-        
         for (Constructor<?> constructor : clazz.getConstructors()) {
-            if (isCallableConstructor(constructor, argTypes)) {
+            if (typesMatch(args, constructor.getParameterTypes())) {
                 return (Constructor<T>) constructor;
             }
         }
         return null;
     }
 
-	private static boolean isCallableConstructor(Constructor<?> constructor, Class<?>[] argTypes) {
-	    Class<?>[] expectedTypes = constructor.getParameterTypes();
-	    if (expectedTypes.length != argTypes.length) return false;
-	    
-	    for (int i = 0; i < argTypes.length; i++) {
-	        if (argTypes[i] == null) {
-	            // null usable anywhere
-	            continue;
-	        } else if (expectedTypes[i].isAssignableFrom(argTypes[i])) {
-	            continue;
-	        } else {
-	            // TODO auto-boxing
-	            return false;
-	        }
-	    }
-        return true;
+    /** Invokes a suitable constructor, supporting varargs and primitives */
+    public static <T> Optional<T> invokeConstructorWithArgs(Class<T> clazz, Object[] argsArray) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        return invokeConstructorWithArgs(clazz, argsArray, false);
     }
-
+    /** Invokes a suitable constructor, supporting varargs and primitives, additionally supporting setAccessible */
+    @SuppressWarnings("unchecked")
+    public static <T> Optional<T> invokeConstructorWithArgs(Class<T> clazz, Object[] argsArray, boolean setAccessible) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        for (Constructor<?> constructor : clazz.getConstructors()) {
+            Class<?>[] parameterTypes = constructor.getParameterTypes();
+            if (constructor.isVarArgs()) {
+                if (typesMatchUpTo(argsArray, parameterTypes, parameterTypes.length-1)) {
+                    Class<?> varargType = parameterTypes[parameterTypes.length-1].getComponentType();
+                    boolean varargsMatch = true;
+                    for (int i=parameterTypes.length-1; i<argsArray.length; i++) {
+                        if (!Boxing.boxedType(varargType).isInstance(argsArray[i]) ||
+                                                (varargType.isPrimitive() && argsArray[i]==null)) {
+                            varargsMatch = false;
+                            break;
+                        }
+                    }
+                    if (varargsMatch) {
+                        Object varargs = Array.newInstance(varargType, argsArray.length+1 - parameterTypes.length);
+                        for (int i=parameterTypes.length-1; i<argsArray.length; i++) {
+                            Boxing.setInArray(varargs, i+1-parameterTypes.length, argsArray[i], varargType);
+                        }
+                        Object[] newArgsArray = new Object[parameterTypes.length];
+                        System.arraycopy(argsArray, 0, newArgsArray, 0, parameterTypes.length-1);
+                        newArgsArray[parameterTypes.length-1] = varargs;
+                        if (setAccessible) constructor.setAccessible(true);
+                        return (Optional<T>) Optional.of(constructor.newInstance(newArgsArray));
+                    }
+                }
+            }
+            if (typesMatch(argsArray, parameterTypes)) {
+                if (setAccessible) constructor.setAccessible(true);
+                return (Optional<T>) Optional.of(constructor.newInstance(argsArray));
+            }
+        }
+        return Optional.absent();
+    }
+    
+    
     /** returns a single constructor in a given class, or throws an exception */
 	public Constructor<?> loadSingleConstructor(Class<?> clazz) {
 		Constructor<?>[] constructors = clazz.getConstructors();
@@ -616,4 +653,85 @@ public class Reflections {
             throw new IllegalArgumentException("Requires a "+type+", but had a "+candidate.getClass()+" ("+candidate+")");
         return (T)candidate;
     }
+
+    /** invokes the given method on the given clazz or instance, doing reasonably good matching on args etc 
+     * @throws InvocationTargetException 
+     * @throws IllegalAccessException 
+     * @throws IllegalArgumentException */
+    public static Optional<Object> invokeMethodWithArgs(Object clazzOrInstance, String method, List<Object> args) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+        return invokeMethodWithArgs(clazzOrInstance, method, args, false);
+    }
+    public static Optional<Object> invokeMethodWithArgs(Object clazzOrInstance, String method, List<Object> args, boolean setAccessible) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+        Preconditions.checkNotNull(clazzOrInstance, "clazz or instance");
+        Preconditions.checkNotNull(method, "method");
+        Preconditions.checkNotNull(args, "args to "+method);
+        
+        Class<?> clazz;
+        Object instance;
+        if (clazzOrInstance instanceof Class) {
+            clazz = (Class<?>)clazzOrInstance;
+            instance = null;
+        } else {
+            clazz = clazzOrInstance.getClass();
+            instance = clazzOrInstance;
+        }
+        
+        Object[] argsArray = args.toArray();
+
+        for (Method m: clazz.getMethods()) {
+            if (method.equals(m.getName())) {
+                Class<?>[] parameterTypes = m.getParameterTypes();
+                if (m.isVarArgs()) {
+                    if (typesMatchUpTo(argsArray, parameterTypes, parameterTypes.length-1)) {
+                        Class<?> varargType = parameterTypes[parameterTypes.length-1].getComponentType();
+                        boolean varargsMatch = true;
+                        for (int i=parameterTypes.length-1; i<argsArray.length; i++) {
+                            if (!Boxing.boxedType(varargType).isInstance(argsArray[i]) ||
+                                    (varargType.isPrimitive() && argsArray[i]==null)) {
+                                varargsMatch = false;
+                                break;
+                            }
+                        }
+                        if (varargsMatch) {
+                            Object varargs = Array.newInstance(varargType, argsArray.length+1 - parameterTypes.length);
+                            for (int i=parameterTypes.length-1; i<argsArray.length; i++) {
+                                Boxing.setInArray(varargs, i+1-parameterTypes.length, argsArray[i], varargType);
+                            }
+                            Object[] newArgsArray = new Object[parameterTypes.length];
+                            System.arraycopy(argsArray, 0, newArgsArray, 0, parameterTypes.length-1);
+                            newArgsArray[parameterTypes.length-1] = varargs;
+                            if (setAccessible) m.setAccessible(true);
+                            return Optional.of(m.invoke(instance, newArgsArray));
+                        }
+                    }
+                }
+                if (typesMatch(argsArray, parameterTypes)) {
+                    if (setAccessible) m.setAccessible(true);
+                    return Optional.of(m.invoke(instance, argsArray));
+                }
+            }
+        }
+        
+        return Optional.absent();
+    }
+
+    /** true iff all args match the corresponding types */
+    public static boolean typesMatch(Object[] argsArray, Class<?>[] parameterTypes) {
+        if (argsArray.length != parameterTypes.length)
+            return false;
+        return typesMatchUpTo(argsArray, parameterTypes, argsArray.length);
+    }
+    
+    /** true iff the initial N args match the corresponding types */
+    public static boolean typesMatchUpTo(Object[] argsArray, Class<?>[] parameterTypes, int lengthRequired) {
+        if (argsArray.length < lengthRequired || parameterTypes.length < lengthRequired)
+            return false;
+        for (int i=0; i<lengthRequired; i++) {
+            if (argsArray[i]==null) continue;
+            if (Boxing.boxedType(parameterTypes[i]).isInstance(argsArray[i])) continue;
+            return false;
+        }
+        return true;
+    }
+    
 }

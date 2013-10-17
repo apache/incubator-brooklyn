@@ -162,7 +162,8 @@ public class DynamicTasks {
             Preconditions.checkNotNull(task, "Task to queue cannot be null");
             Preconditions.checkState(!Tasks.isQueuedOrSubmitted(task), "Task to queue must not yet be submitted: %s", task);
             TaskQueueingContext adder = getTaskQueuingContext();
-            Preconditions.checkNotNull(adder, "Task %s cannot be queued here; no queueing context available", task);
+            if (adder==null) 
+                throw new IllegalStateException("Task "+task+" cannot be queued here; no queueing context available");
             adder.queue(task.asTask());
             return task;
         } catch (Throwable e) {

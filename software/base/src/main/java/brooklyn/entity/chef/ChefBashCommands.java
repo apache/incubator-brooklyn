@@ -36,7 +36,7 @@ public class ChefBashCommands {
     public static final String downloadAndExpandCookbook(String source, @Nullable String cookbookName, boolean force) {
         String dl = downloadAndExpandCookbook(source);
         if (cookbookName==null) return dl;
-        String tmpName = "tmp-"+Identifiers.makeValidJavaToken(cookbookName)+"-"+Identifiers.makeRandomId(4);
+        String tmpName = "tmp-"+Strings.makeValidFilename(cookbookName)+"-"+Identifiers.makeRandomId(4);
         String installCmd = BashCommands.chain("mkdir "+tmpName, "cd "+tmpName, dl, 
                 BashCommands.requireTest("`ls | wc -w` -eq 1", 
                         "The downloaded archive must contain exactly one directory; contained"),

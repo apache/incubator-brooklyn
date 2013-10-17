@@ -20,24 +20,24 @@
     </properties>
 
     <dependencies>
+        
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-launcher</artifactId>
+            <version>${brooklyn.version}</version>
+        </dependency>
+        
         <dependency>
             <groupId>io.brooklyn.camp</groupId>
             <artifactId>camp-server</artifactId>
             <version>${camp-impl.version}</version>
         </dependency>
 
-        <!-- has to be included here or logback is not installed; could replace with a camp.log -->
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-logback-xml</artifactId>
             <!-- optional so that this project has logging; dependencies may redeclare or supply their own -->
             <optional>true</optional>
-        </dependency>
-        
-        <dependency>
-            <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-launcher</artifactId>
-            <version>${brooklyn.version}</version>
         </dependency>
         
         <!-- demo... -->

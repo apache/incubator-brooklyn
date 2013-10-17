@@ -5,6 +5,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 
 import org.testng.Assert;
@@ -66,5 +67,31 @@ public class ReflectionsTest {
     @Test(enabled=false)
     public void testGetCaller() {
         Assert.assertEquals(Reflections.getCaller().getClassName(), ReflectionsTest.class.getName());
+    }
+    
+    public static class CI1 {
+        public static String m1(String x, int y) {
+            return x+y;
+        }
+        public static String m1(String x, int y0, int y1, int ...yy) {
+            int Y = y0 + y1;;
+            for (int yi: yy) Y += yi;
+            return x+Y;
+        }
+    }
+
+    @Test
+    public void testTypesMatch() throws Exception {
+        Assert.assertTrue(Reflections.typesMatch(new Object[] { 3 }, new Class[] { Integer.class } ));
+        Assert.assertTrue(Reflections.typesMatch(new Object[] { 3 }, new Class[] { int.class } ), "auto-boxing failure");
+    }
+    
+    @Test
+    public void testInvocation() throws Exception {
+        Method m = CI1.class.getMethod("m1", String.class, int.class, int.class, int[].class);
+        Assert.assertEquals(m.invoke(null, "hello", 1, 2, new int[] { 3, 4}), "hello10");
+        
+        Assert.assertEquals(Reflections.invokeMethodWithArgs(CI1.class, "m1", Arrays.<Object>asList("hello", 3)).get(), "hello3");
+        Assert.assertEquals(Reflections.invokeMethodWithArgs(CI1.class, "m1", Arrays.<Object>asList("hello", 3, 4, 5)).get(), "hello12");
     }
 }

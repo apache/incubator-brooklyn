@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
@@ -44,7 +45,16 @@ public class NonDeploymentEntityManager implements EntityManager {
     @Override
     public Collection<Entity> getEntities() {
         if (isInitialManagementContextReal()) {
-            return initialManagementContext.getEntities();
+            return initialManagementContext.getEntityManager().getEntities();
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public Iterable<Entity> getEntitiesInApplication(Application application) {
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getEntityManager().getEntitiesInApplication(application);
         } else {
             return Collections.emptyList();
         }
@@ -53,7 +63,7 @@ public class NonDeploymentEntityManager implements EntityManager {
     @Override
     public Entity getEntity(String id) {
         if (isInitialManagementContextReal()) {
-            return initialManagementContext.getEntity(id);
+            return initialManagementContext.getEntityManager().getEntity(id);
         } else {
             return null;
         }

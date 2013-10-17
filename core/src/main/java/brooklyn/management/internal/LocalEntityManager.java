@@ -28,6 +28,7 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -69,6 +70,7 @@ public class LocalEntityManager implements EntityManager {
         return entityTypeRegistry;
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends Entity> T createEntity(EntitySpec<T> spec) {
         try {
@@ -90,6 +92,17 @@ public class LocalEntityManager implements EntityManager {
     @Override
     public synchronized Collection<Entity> getEntities() {
         return ImmutableList.copyOf(entityProxiesById.values());
+    }
+    
+    @Override
+    public Iterable<Entity> getEntitiesInApplication(Application application) {
+        final String appId = application.getId();
+        return Iterables.filter(ImmutableList.copyOf(entityProxiesById.values()), new Predicate<Entity>() {
+            @Override
+            public boolean apply(Entity input) {
+                return appId.equals(input.getApplicationId());
+            }
+        });
     }
     
     @Override
