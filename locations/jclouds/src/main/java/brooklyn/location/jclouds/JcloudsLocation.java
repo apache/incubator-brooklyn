@@ -976,15 +976,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         try {
             if (setup.getDescription()==null) setCreationString(setup);
             
-            String id = (String) checkNotNull(setup.getStringKey("id"), "id");
+            String unqualifiedId = (String) checkNotNull(setup.getStringKey("id"), "id");
             String hostname = (String) setup.getStringKey("hostname");
             String user = checkNotNull(getUser(setup), "user");
+            String region = (String) setup.getStringKey("region");
+            String id = ((region != null) ? region+"/" : "") + unqualifiedId;
             
             LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {}", 
                     new Object[] {id, user, (hostname != null ? hostname : "<unspecified>"), getProvider()});
             
             // can we allow re-use ?  previously didn't
-            ComputeService computeService = JcloudsUtil.findComputeService(setup, false);
+            ComputeService computeService = JcloudsUtil.findComputeService(setup, true);
             NodeMetadata node = computeService.getNodeMetadata(id);
             if (node == null) {
                 throw new IllegalArgumentException("Node not found with id "+id);
