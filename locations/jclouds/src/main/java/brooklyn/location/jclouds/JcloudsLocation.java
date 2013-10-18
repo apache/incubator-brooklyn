@@ -41,6 +41,7 @@ import org.jclouds.compute.domain.TemplateBuilderSpec;
 import org.jclouds.compute.functions.Sha512Crypt;
 import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.domain.Credentials;
+import org.jclouds.domain.LocationScope;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
@@ -71,7 +72,6 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.internal.ssh.SshTool;
@@ -1025,6 +1025,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     protected JcloudsSshMachineLocation createJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, ConfigBag setup) throws IOException {
         Map<?,?> sshConfig = extractSshConfig(setup, node);
+        String nodeAvailabilityZone = extractAvailabilityZone(setup, node);
+        String nodeRegion = extractRegion(setup, node);
+        
         if (LOG.isDebugEnabled())
             LOG.debug("creating JcloudsSshMachineLocation representation for {}@{} for {} with {}", 
                     new Object[] {
@@ -1045,6 +1048,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             .configure("config", sshConfig)
                             .configure("jcloudsParent", this)
                             .configure("node", node)
+                            .configureIfNotNull(CLOUD_AVAILABILITY_ZONE_ID, nodeAvailabilityZone)
+                            .configureIfNotNull(CLOUD_REGION_ID, nodeRegion)
                             .configure(CALLER_CONTEXT, setup.get(CALLER_CONTEXT)));
         } else {
             LOG.warn("Using deprecated JcloudsSshMachineLocation constructor because "+this+" is not managed");
@@ -1057,6 +1062,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     // FIXME remove "config" -- inserted directly, above
                     .put("config", sshConfig)
                     .put("callerContext", setup.get(CALLER_CONTEXT))
+                    .putIfNotNull(CLOUD_AVAILABILITY_ZONE_ID.getName(), nodeAvailabilityZone)
+                    .putIfNotNull(CLOUD_REGION_ID.getName(), nodeRegion)
                     .build(),
                     this,
                     node);
@@ -1073,6 +1080,24 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         return extractSshConfig(setup, nodeConfig).getAllConfigRaw();
     }
+
+    protected String extractAvailabilityZone(ConfigBag setup, NodeMetadata node) {
+        return extractNodeLocationId(setup, node, LocationScope.ZONE);
+    }
+
+    protected String extractRegion(ConfigBag setup, NodeMetadata node) {
+        return extractNodeLocationId(setup, node, LocationScope.REGION);
+    }
+
+    protected String extractNodeLocationId(ConfigBag setup, NodeMetadata node, LocationScope scope) {
+        org.jclouds.domain.Location nodeLoc = node.getLocation();
+        do {
+            if (nodeLoc.getScope() == scope) return nodeLoc.getId();
+            nodeLoc = nodeLoc.getParent();
+        } while (nodeLoc != null);
+        return null;
+    }
+
 
     @Override
     public void release(SshMachineLocation machine) {

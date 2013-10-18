@@ -124,6 +124,10 @@ public class LocationSpec<T extends Location> implements Serializable {
         return this;
     }
 
+    public <V> LocationSpec<T> configureIfNotNull(ConfigKey<V> key, V val) {
+        return (val != null) ? configure(key, val) : this;
+    }
+
     public <V> LocationSpec<T> configure(ConfigKey<V> key, Task<? extends V> val) {
         config.put(checkNotNull(key, "key"), val);
         return this;

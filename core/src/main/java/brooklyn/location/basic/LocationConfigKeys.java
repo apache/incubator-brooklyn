@@ -23,6 +23,7 @@ public class LocationConfigKeys {
     public static final ConfigKey<String> CLOUD_PROVIDER = ConfigKeys.newStringConfigKey("provider");
     public static final ConfigKey<String> CLOUD_ENDPOINT = ConfigKeys.newStringConfigKey("endpoint");
     public static final ConfigKey<String> CLOUD_REGION_ID = ConfigKeys.newStringConfigKey("region");
+    public static final ConfigKey<String> CLOUD_AVAILABILITY_ZONE_ID = ConfigKeys.newStringConfigKey("availabilityZone");
 
     @SuppressWarnings("serial")
     public static final ConfigKey<Set<String>> ISO_3166 = ConfigKeys.newConfigKey(new TypeToken<Set<String>>() {}, "iso3166", "ISO-3166 or ISO-3166-2 location codes"); 
