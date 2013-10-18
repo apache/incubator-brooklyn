@@ -1,6 +1,6 @@
 [#ftl]
 storage-layout: "flat"
-cassandra-hosts: "${hostname}:${thriftPort}"
+cassandra-hosts: "${cassandraHostname}:${cassandraThriftPort?c}"
 cassandra-keyspace: "KeyspaceCumulus"
 proxy-mode: "true"
 triples-subject: -1

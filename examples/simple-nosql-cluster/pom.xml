@@ -1,8 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
     <artifactId>brooklyn-example-simple-nosql-cluster</artifactId>
+
     <name>Brooklyn NoSQL Cluster Examples</name>
+    <description>
+        Various NoSQL cluster-based applications, managed by Brooklyn.
+    </description>
 
     <parent>
         <groupId>io.brooklyn.example</groupId>
@@ -16,7 +21,6 @@
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -33,7 +37,7 @@
                     <filesets>
                         <fileset>
                             <directory>${project.basedir}</directory>
-							<includes>
+                            <includes>
                                 <include>${project.artifactId}/</include>
                                 <include>brooklyn*.log</include>
                                 <include>brooklyn*.log.*</include>
@@ -42,6 +46,16 @@
                             </includes>
                         </fileset>
                     </filesets>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/assembly.xml</descriptor>
+                    </descriptors>
                 </configuration>
             </plugin>
         </plugins>
