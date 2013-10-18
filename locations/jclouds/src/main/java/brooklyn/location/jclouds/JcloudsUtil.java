@@ -221,7 +221,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
             }
         }
 
-        String endpoint = (String) conf.get(CLOUD_ENDPOINT);
+        String endpoint = conf.get(CLOUD_ENDPOINT);
         if (!truth(endpoint)) endpoint = getDeprecatedProperty(conf, Constants.PROPERTY_ENDPOINT);
         if (truth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
 
@@ -230,6 +230,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 .put("provider", provider)
                 .put("identify", identity)
                 .put("credential", credential)
+                .putIfNotNull("endpoint", endpoint)
                 .build()
                 .toImmutable();
         
