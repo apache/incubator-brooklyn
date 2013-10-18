@@ -1276,7 +1276,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     String getPublicHostname(NodeMetadata node, ConfigBag setup) {
-        if ("aws-ec2".equals(setup != null ? setup.get(CLOUD_PROVIDER) : null)) {
+        String provider = (setup != null) ? setup.get(CLOUD_PROVIDER) : null;
+        if (provider == null) provider= getProvider();
+        
+        if ("aws-ec2".equals(provider)) {
             String vmIp = null;
             try {
                 vmIp = JcloudsUtil.getFirstReachableAddress(this.getComputeService().getContext(), node);

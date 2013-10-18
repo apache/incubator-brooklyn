@@ -231,7 +231,9 @@ public abstract class MachineLifecycleEffectorTasks {
             // (to prevent the tiny possibility of races resulting in hostname being returned
             // simply because subnet is still being looked up)
             Optional<String> lh = Machines.getSubnetHostname(machine);
+            Optional<String> la = Machines.getSubnetIp(machine);
             if (lh.isPresent()) entity().setAttribute(Attributes.SUBNET_HOSTNAME, lh.get());
+            if (la.isPresent()) entity().setAttribute(Attributes.SUBNET_ADDRESS, la.get());
             entity().setAttribute(Attributes.HOSTNAME, machine.getAddress().getHostName());
             entity().setAttribute(Attributes.ADDRESS, machine.getAddress().getHostAddress());
             
@@ -387,6 +389,7 @@ public abstract class MachineLifecycleEffectorTasks {
             entity().setAttribute(Attributes.HOSTNAME, null);
             entity().setAttribute(Attributes.ADDRESS, null);
             entity().setAttribute(Attributes.SUBNET_HOSTNAME, null);
+            entity().setAttribute(Attributes.SUBNET_ADDRESS, null);
             if (provisioner != null) provisioner.release((MachineLocation)machine);
         } catch (Throwable t) {
             throw Exceptions.propagate(t);

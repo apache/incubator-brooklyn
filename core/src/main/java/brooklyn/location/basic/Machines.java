@@ -30,12 +30,23 @@ public class Machines {
             if (addr != null) hostname = addr.getHostAddress();
         }
         log.debug("computed hostname {} for {}", hostname, where);
-        if (hostname == null) {
-            return Optional.absent();
-            // TODO replace with Optional.absent(message) when available (also below)
-//            throw new IllegalStateException("Cannot find hostname for "+where);
+        // TODO if Optional.absent(message) appears, could/should use that
+        // TODO If no machine available, should we throw new IllegalStateException("Cannot find hostname for "+where);
+        return Optional.fromNullable(hostname);
+    }
+
+    public static Optional<String> getSubnetIp(Location where) {
+        // TODO Too much duplication between the ip and hostname methods
+        String result = null;
+        if (where instanceof HasSubnetHostname) {
+            result = ((HasSubnetHostname) where).getSubnetIp();
         }
-        return Optional.of(hostname);
+        if (result == null && where instanceof MachineLocation) {
+            InetAddress addr = ((MachineLocation) where).getAddress();
+            if (addr != null) result = addr.getHostAddress();
+        }
+        log.debug("computed hostname {} for {}", result, where);
+        return Optional.fromNullable(result);
     }
 
     public static Optional<MachineLocation> findUniqueMachineLocation(Iterable<? extends Location> locations) {
@@ -87,6 +98,34 @@ public class Machines {
         InetAddress addr = l.get().getAddress();
         if (addr==null) return Optional.absent();
         return Optional.fromNullable(addr.getHostName());
+    }
+
+    public static Optional<String> findSubnetOrPrivateIp(Entity entity) {
+        // see comments in findSubnetOrPrivateHostname
+        String hn = entity.getAttribute(Attributes.ADDRESS);
+        if (hn!=null) {
+            Optional<String> sn = findSubnetIp(entity);
+            if (sn.isPresent()) return sn;
+            return Optional.of(hn);
+        }
+        
+        Optional<MachineLocation> l = findUniqueMachineLocation(entity.getLocations());
+        if (!l.isPresent()) return Optional.absent();
+        InetAddress addr = l.get().getAddress();
+        if (addr==null) return Optional.absent();
+        return Optional.fromNullable(addr.getHostAddress());
+    }
+
+    public static Optional<String> findSubnetIp(Entity entity) {
+        String sh = entity.getAttribute(Attributes.SUBNET_HOSTNAME);
+        if (sh!=null) return Optional.of(sh);
+        return findSubnetIp(entity.getLocations());
+    }
+    
+    public static Optional<String> findSubnetIp(Iterable<? extends Location> ll) {
+        // TODO Or if can't find MachineLocation, should we throw new IllegalStateException("Cannot find hostname for among "+ll);
+        Optional<MachineLocation> l = findUniqueMachineLocation(ll);
+        return (l.isPresent()) ? Machines.getSubnetIp(l.get()) : Optional.<String>absent();
     }
 
     /** returns whether it is localhost (and has warned) */
