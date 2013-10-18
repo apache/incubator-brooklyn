@@ -44,6 +44,9 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = CassandraCluster.CLUSTER_NAME;
 
+    @SetFromFlag("snitchName")
+    ConfigKey<String> ENDPOINT_SNITCH_NAME = CassandraCluster.ENDPOINT_SNITCH_NAME;
+
     @SetFromFlag("gossipPort")
     PortAttributeSensorAndConfigKey GOSSIP_PORT = new PortAttributeSensorAndConfigKey("cassandra.gossip.port", "Cassandra Gossip communications port", PortRanges.fromString("7000+"));
 
@@ -61,6 +64,25 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans
     @SetFromFlag("cassandraConfigFileName")
     BasicAttributeSensorAndConfigKey<String> CASSANDRA_CONFIG_FILE_NAME = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "cassandra.config.fileName", "Name for the copied config file", "cassandra.yaml");
+
+    @SetFromFlag("cassandraRackdcConfigTemplateUrl")
+    BasicAttributeSensorAndConfigKey<String> CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "cassandra.config.rackdc.templateUrl", "Template file (in freemarker format) for the cassandra-rackdc.properties config file", 
+            "classpath://brooklyn/entity/nosql/cassandra/cassandra-rackdc.properties");
+
+    @SetFromFlag("cassandraRackdcConfigFileName")
+    BasicAttributeSensorAndConfigKey<String> CASSANDRA_RACKDC_CONFIG_FILE_NAME = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "cassandra.config.rackdc.fileName", "Name for the copied rackdc config file", "cassandra-rackdc.properties");
+    
+    @SetFromFlag("datacenterName")
+    BasicAttributeSensorAndConfigKey<String> DATACENTER_NAME = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "cassandra.replication.datacenterName", "Datacenter name (used for configuring replication)", 
+            null);
+
+    @SetFromFlag("rackName")
+    BasicAttributeSensorAndConfigKey<String> RACK_NAME = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "cassandra.replication.rackName", "Rack name (used for configuring replication)", 
+            null);
 
     AttributeSensor<Long> TOKEN = Sensors.newLongSensor("cassandra.token", "Cassandra Token");
 
@@ -97,7 +119,8 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans
     Integer getSslGossipPort();
     Integer getThriftPort();
     String getClusterName();
-    String getSubnetAddress();
+    String getListenAddress();
+    String getBroadcastAddress();
     String getSeeds();
     Long getToken();
 

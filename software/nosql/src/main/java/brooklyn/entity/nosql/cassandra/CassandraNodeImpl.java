@@ -4,7 +4,9 @@
 package brooklyn.entity.nosql.cassandra;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -17,19 +19,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.RollingTimeWindowMeanEnricher;
-import brooklyn.enricher.TimeFractionDeltaEnricher;
 import brooklyn.enricher.TimeWeightedDeltaEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JavaAppUtils;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
+import brooklyn.event.feed.jmx.JmxOperationPollConfig;
+import brooklyn.location.MachineLocation;
+import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.Machines;
+import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.net.Networking;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -56,22 +64,91 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @Override public Integer getSslGossipPort() { return getAttribute(CassandraNode.SSL_GOSSIP_PORT); }
     @Override public Integer getThriftPort() { return getAttribute(CassandraNode.THRIFT_PORT); }
     @Override public String getClusterName() { return getAttribute(CassandraNode.CLUSTER_NAME); }
-    @Override public String getSubnetAddress() { return Machines.findSubnetOrPublicHostname(this).get(); }
     @Override public Long getToken() { return getAttribute(CassandraNode.TOKEN); }
-    
+    @Override public String getListenAddress() {
+        String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
+        return Strings.isNonBlank(subnetAddress) ? subnetAddress : getAttribute(CassandraNode.ADDRESS); 
+    }
+    @Override public String getBroadcastAddress() {
+        String snitchName = getConfig(CassandraNode.ENDPOINT_SNITCH_NAME);
+        if (snitchName.equals("Ec2MultiRegionSnitch")) {
+            // http://www.datastax.com/documentation/cassandra/2.0/mobile/cassandra/architecture/architectureSnitchEC2MultiRegion_c.html
+            // describes that the listen_address is set to the private IP, and the broadcast_address is set to the public IP.
+            return getAttribute(CassandraNode.ADDRESS);
+        } else {
+            // In other situations, prefer the hostname so other regions can see it
+            return getAttribute(CassandraNode.HOSTNAME);
+        }
+    }
+
     @Override public String getSeeds() { 
         Set<Entity> seeds = getConfig(CassandraNode.INITIAL_SEEDS);
         if (seeds==null) {
             log.warn("No seeds available when requested for "+this, new Throwable("source of no Cassandra seeds when requested"));
             return null;
         }
+        String snitchName = getConfig(CassandraNode.ENDPOINT_SNITCH_NAME);
         MutableSet<String> seedsHostnames = MutableSet.of();
-        for (Entity e: seeds) {
+        for (Entity entity : seeds) {
             // tried removing ourselves if there are other nodes, but that is a BAD idea!
             // blows up with a "java.lang.RuntimeException: No other nodes seen!"
-            seedsHostnames.add(Machines.findSubnetOrPublicHostname(e).get());
+            
+            String seedHostname = Machines.findSubnetOrPublicHostname(entity).get();
+            if (snitchName.equals("Ec2MultiRegionSnitch")) {
+                // http://www.datastax.com/documentation/cassandra/2.0/mobile/cassandra/architecture/architectureSnitchEC2MultiRegion_c.html
+                // says the seeds should be public IPs.
+                try {
+                    String seeIp = Networking.isValidIp4(seedHostname) ? seedHostname : InetAddress.getByName(seedHostname).getHostAddress();
+                    seedsHostnames.add(seeIp);
+                } catch (UnknownHostException e) {
+                    throw Exceptions.propagate(e);
+                }
+            } else {
+                seedsHostnames.add(seedHostname);
+            }
         }
-        return Strings.join(seedsHostnames, ",");
+        
+        String result = Strings.join(seedsHostnames, ",");
+        log.info("Seeds for {}: {}", this, result);
+        return result;
+    }
+
+    public String getDatacenterName() {
+        String name = getAttribute(CassandraNode.DATACENTER_NAME);
+        if (name == null) {
+            MachineLocation machine = getMachineOrNull();
+            MachineProvisioningLocation<?> provisioningLocation = getProvisioningLocation();
+            if (machine != null) {
+                name = machine.getConfig(CloudLocationConfig.CLOUD_REGION_ID);
+            }
+            if (name == null && provisioningLocation != null) {
+                name = provisioningLocation.getConfig(CloudLocationConfig.CLOUD_REGION_ID);
+            }
+            if (name == null) {
+                name = "UNKNOWN_DATACENTER";
+            }
+            setAttribute((AttributeSensor<String>)DATACENTER_NAME, name);
+        }
+        return name;
+    }
+
+    public String getRackName() {
+        String name = getAttribute(CassandraNode.RACK_NAME);
+        if (name == null) {
+            MachineLocation machine = getMachineOrNull();
+            MachineProvisioningLocation<?> provisioningLocation = getProvisioningLocation();
+            if (machine != null) {
+                name = machine.getConfig(CloudLocationConfig.CLOUD_AVAILABILITY_ZONE_ID);
+            }
+            if (name == null && provisioningLocation != null) {
+                name = provisioningLocation.getConfig(CloudLocationConfig.CLOUD_AVAILABILITY_ZONE_ID);
+            }
+            if (name == null) {
+                name = "UNKNOWN_RACK";
+            }
+            setAttribute((AttributeSensor<String>)RACK_NAME, name);
+        }
+        return name;
     }
 
     @Override
@@ -90,7 +167,8 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     private ObjectName storageServiceMBean = JmxHelper.createObjectName("org.apache.cassandra.db:type=StorageService");
     private ObjectName readStageMBean = JmxHelper.createObjectName("org.apache.cassandra.request:type=ReadStage");
     private ObjectName mutationStageMBean = JmxHelper.createObjectName("org.apache.cassandra.request:type=MutationStage");
-
+    private ObjectName snitchMBean = JmxHelper.createObjectName("org.apache.cassandra.db:type=EndpointSnitchInfo");
+    
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected void connectSensors() {
@@ -120,6 +198,18 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                             }
                         })
                         .onException(Functions.constant(-1L)))
+                .pollOperation(new JmxOperationPollConfig<String>(DATACENTER_NAME)
+                        .period(60, TimeUnit.SECONDS)
+                        .objectName(snitchMBean)
+                        .operationName("getDatacenter")
+                        .operationParams(ImmutableList.of(getBroadcastAddress()))
+                        .onException(Functions.<String>constant(null)))
+                .pollOperation(new JmxOperationPollConfig<String>(RACK_NAME)
+                        .period(60, TimeUnit.SECONDS)
+                        .objectName(snitchMBean)
+                        .operationName("getRack")
+                        .operationParams(ImmutableList.of(getBroadcastAddress()))
+                        .onException(Functions.<String>constant(null)))
                 .pollAttribute(new JmxAttributePollConfig<Integer>(PEERS)
                         .objectName(storageServiceMBean)
                         .attributeName("TokenToEndpointMap")

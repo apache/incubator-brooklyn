@@ -5,21 +5,19 @@ package brooklyn.entity.nosql.cassandra;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.CustomAggregatingEnricher;
-import brooklyn.enricher.RollingTimeWindowMeanEnricher;
-import brooklyn.enricher.TimeFractionDeltaEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.entity.java.UsesJavaMXBeans;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
@@ -31,10 +29,13 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 /**
  * Implementation of {@link CassandraCluster}.
@@ -79,6 +80,44 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
                 }
                 // node was removed, or added when we are not yet quorate; in either case let's find the seeds
                 setAttribute(CURRENT_SEEDS, gatherSeeds());
+            }
+        });
+        
+        // Track the datacenters for this cluster
+        subscribeToMembers(this, CassandraNode.DATACENTER_NAME, new SensorEventListener<String>() {
+            @Override
+            public void onEvent(SensorEvent<String> event) {
+                Entity member = event.getSource();
+                String dcName = event.getValue();
+                if (dcName != null) {
+                    Multimap<String, Entity> datacenterUsage = getAttribute(DATACENTER_USAGE);
+                    Multimap<String, Entity> mutableDatacenterUsage = (datacenterUsage == null) ? LinkedHashMultimap.<String, Entity>create() : LinkedHashMultimap.create(datacenterUsage);
+                    Optional<String> oldDcName = getKeyOfVal(mutableDatacenterUsage, member);
+                    if (!(oldDcName.isPresent() && dcName.equals(oldDcName.get()))) {
+                        mutableDatacenterUsage.values().remove(member);
+                        mutableDatacenterUsage.put(dcName, member);
+                        setAttribute(DATACENTER_USAGE, mutableDatacenterUsage);
+                    }
+                }
+            }
+            private <K,V> Optional<K> getKeyOfVal(Multimap<K,V> map, V val) {
+                for (Map.Entry<K,V> entry : map.entries()) {
+                    if (Objects.equal(val, entry.getValue())) {
+                        return Optional.of(entry.getKey());
+                    }
+                }
+                return Optional.absent();
+            }
+        });
+        subscribe(this, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
+            @Override public void onEvent(SensorEvent<Entity> event) {
+                Entity entity = event.getSource();
+                Multimap<String, Entity> datacenterUsage = getAttribute(DATACENTER_USAGE);
+                if (datacenterUsage != null && datacenterUsage.containsValue(entity)) {
+                    Multimap<String, Entity> mutableDatacenterUsage = LinkedHashMultimap.create(datacenterUsage);
+                    mutableDatacenterUsage.values().remove(entity);
+                    setAttribute(DATACENTER_USAGE, mutableDatacenterUsage);
+                }
             }
         });
     }

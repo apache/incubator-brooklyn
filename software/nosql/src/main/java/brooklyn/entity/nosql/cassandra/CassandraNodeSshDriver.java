@@ -20,7 +20,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.event.basic.SetConfigKey.SetModifications;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
@@ -63,11 +62,19 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     @Override
     public String getClusterName() { return entity.getAttribute(CassandraNode.CLUSTER_NAME); }
 
+    public String getEndpointSnitchName() {
+        return entity.getConfig(CassandraNode.ENDPOINT_SNITCH_NAME);
+    }
+
     @Override
     public String getCassandraConfigTemplateUrl() { return entity.getAttribute(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL); }
 
     @Override
     public String getCassandraConfigFileName() { return entity.getAttribute(CassandraNode.CASSANDRA_CONFIG_FILE_NAME); }
+
+    public String getCassandraRackdcConfigTemplateUrl() { return entity.getAttribute(CassandraNode.CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL); }
+
+    public String getCassandraRackdcConfigFileName() { return entity.getAttribute(CassandraNode.CASSANDRA_RACKDC_CONFIG_FILE_NAME); }
 
     public String getMirrorUrl() { return entity.getConfig(CassandraNode.MIRROR_URL); }
     
@@ -139,10 +146,15 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .body.append(commands.build())
                 .execute();
 
-        // Copy the configuration file across
+        // Copy the cassandra.yaml configuration file across
         String configFileContents = processTemplate(getCassandraConfigTemplateUrl());
         String destinationConfigFile = String.format("%s/conf/%s", getRunDir(), getCassandraConfigFileName());
         getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
+        
+        // Copy the cassandra-rackdc.properties configuration file across
+        String rackdcFileContents = processTemplate(getCassandraRackdcConfigTemplateUrl());
+        String rackdcDestinationFile = String.format("%s/conf/%s", getRunDir(), getCassandraRackdcConfigFileName());
+        getMachine().copyTo(new ByteArrayInputStream(rackdcFileContents.getBytes()), rackdcDestinationFile);
     }
 
     protected boolean isClustered() {

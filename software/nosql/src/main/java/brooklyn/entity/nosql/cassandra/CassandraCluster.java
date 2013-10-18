@@ -3,11 +3,14 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.util.Map;
 import java.util.Set;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -16,6 +19,8 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
+
+import com.google.common.collect.Multimap;
 
 /**
  * A cluster of {@link CassandraNode}s based on {@link DynamicCluster} which can be resized by a policy if required.
@@ -32,6 +37,12 @@ public interface CassandraCluster extends DynamicCluster {
 
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "cassandra.cluster.name", "Name of the Cassandra cluster", "BrooklynCluster");
+
+    @SetFromFlag("snitchName")
+    ConfigKey<String> ENDPOINT_SNITCH_NAME = ConfigKeys.newStringConfigKey("cassandra.cluster.snitchName", "Type of the Cassandra snitch", "SimpleSnitch");
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    AttributeSensor<Multimap<String,Entity>> DATACENTER_USAGE = (AttributeSensor)Sensors.newSensor(Map.class, "cassandra.cluster.datacenters", "Current set of datacenters in use, with nodes in each");
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     AttributeSensor<Set<Entity>> CURRENT_SEEDS = (AttributeSensor)Sensors.newSensor(Set.class, "cassandra.cluster.seeds.current", "Current set of seeds to use to bootstrap the cluster");
