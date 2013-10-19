@@ -158,7 +158,9 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     }
 
     static Map<Map<?,?>,ComputeService> cachedComputeServices = new ConcurrentHashMap<Map<?,?>,ComputeService> ();
-    
+
+    private static final Object createComputeServicesMutex = new Object();
+
     /** @deprecated since 0.5.0 pass ConfigBag instead */
     public static ComputeService buildOrFindComputeService(Map<String,? extends Object> conf) {
         return buildComputeService(conf, MutableMap.of(), true);
@@ -248,11 +250,16 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 new SLF4JLoggingModule(),
                 new BouncyCastleCryptoModule());
 
-        ComputeServiceContext computeServiceContext = ContextBuilder.newBuilder(provider)
-                .modules(modules)
-                .credentials(identity, credential)
-                .overrides(properties)
-                .build(ComputeServiceContext.class);
+        // Synchronizing to avoid deadlock from sun.reflect.annotation.AnnotationType.
+        // See https://github.com/brooklyncentral/brooklyn/issues/974
+        ComputeServiceContext computeServiceContext;
+        synchronized (createComputeServicesMutex) {
+            computeServiceContext = ContextBuilder.newBuilder(provider)
+                    .modules(modules)
+                    .credentials(identity, credential)
+                    .overrides(properties)
+                    .build(ComputeServiceContext.class);
+        }
         final ComputeService computeService = computeServiceContext.getComputeService();
                 
         if (allowReuse) {
