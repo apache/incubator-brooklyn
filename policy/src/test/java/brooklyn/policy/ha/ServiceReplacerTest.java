@@ -3,6 +3,7 @@ package brooklyn.policy.ha;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Set;
@@ -16,6 +17,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
@@ -31,8 +33,10 @@ import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -173,6 +177,65 @@ public class ServiceReplacerTest {
         // And will have received notification event about it
         assertEventuallyHasEntityReplacementFailedEvent(cluster);
     }
+    
+    // if we keep on getting failure reports, never managing to replace the failed node, then don't keep trying
+    // (i.e. avoid infinite loop).
+    @Test
+    public void testAbandonsReplacementAfterNumFailures() throws Exception {
+        app.subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
+        
+        Predicate<FailingEntity> whetherToFail = new Predicate<FailingEntity>() {
+            private final AtomicInteger counter = new AtomicInteger(0);
+            @Override public boolean apply(FailingEntity input) {
+                return counter.incrementAndGet() >= 2;
+            }
+        };
+        
+        Function<Entity,Void> failureCallback = new Function<Entity,Void>() {
+            @Override public Void apply(Entity input) {
+                ((EntityInternal)input).emit(HASensors.ENTITY_FAILED, new FailureDescriptor(input, "simulate failure"));
+                return null;
+            }
+        };
+        
+        final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
+                        .configure(FailingEntity.FAIL_ON_START_CONDITION, whetherToFail)
+                        .configure(FailingEntity.EXEC_ON_FAILURE, failureCallback))
+                .configure(DynamicCluster.INITIAL_SIZE, 1)
+                .configure(DynamicCluster.QUARANTINE_FAILED_ENTITIES, true));
+        app.start(ImmutableList.<Location>of(loc));
+        
+        ServiceReplacer policy = new ServiceReplacer(new ConfigBag()
+                .configure(ServiceReplacer.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED)
+                .configure(ServiceReplacer.FAIL_ON_NUM_RECURRING_FAILURES, 2));
+        cluster.addPolicy(policy);
+        
+        Set<Entity> initialMembers = ImmutableSet.copyOf(cluster.getMembers());
+        TestEntity e1 = (TestEntity) Iterables.get(initialMembers, 0);
+
+        e1.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
+        
+        // There is a race in ServiceReplacer.onReplacementFailed and isRepeatedlyFailingTooMuch because they are called in different threads.
+        // We might still be recording the latest failure while checking the number of previous failures, so we might get an extra
+        // attempt to replace the node.
+        // But make sure it hasn't gone crazy.
+        Runnable assertion = new Runnable() {
+            @Override public void run() {
+                Iterable<Entity> members = Iterables.filter(managementContext.getEntityManager().getEntities(), Predicates.instanceOf(FailingEntity.class));
+                int numMembers = Iterables.size(members);
+                assertTrue(numMembers >= 3 && numMembers <= 10, "numMembers="+numMembers);
+            }};
+        Asserts.succeedsEventually(assertion);
+        Asserts.succeedsContinually(MutableMap.of("timeout", 50), assertion);
+
+        // e2 failed to start, so it won't have called stop on e1
+        Iterable<FailingEntity> members = Iterables.filter(managementContext.getEntityManager().getEntities(), FailingEntity.class);
+        for (FailingEntity en : members) {
+            assertEquals(en.getCallHistory(), ImmutableList.of("start"));
+        }
+    }
+
 
     private void assertEventuallyHasEntityReplacementFailedEvent(final Entity expectedCluster) {
         Asserts.succeedsEventually(new Runnable() {

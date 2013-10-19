@@ -3,7 +3,10 @@ package brooklyn.policy.ha;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +31,9 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.base.Ticker;
+import com.google.common.collect.Lists;
+
 /** attaches to a DynamicCluster and replaces a failed member in response to HASensors.ENTITY_FAILED or other sensor;
  * if this fails, it sets the Cluster state to on-fire */
 public class ServiceReplacer extends AbstractPolicy {
@@ -47,6 +53,28 @@ public class ServiceReplacer extends AbstractPolicy {
     @SuppressWarnings("rawtypes")
     public static final ConfigKey<Sensor> FAILURE_SENSOR_TO_MONITOR = new BasicConfigKey<Sensor>(Sensor.class, "failureSensorToMonitor", "", ServiceRestarter.ENTITY_RESTART_FAILED); 
 
+    /** skips replace if replacement has failed this many times failure re-occurs within this time interval */
+    @SetFromFlag("failOnRecurringFailuresInThisDuration")
+    public static final ConfigKey<Long> FAIL_ON_RECURRING_FAILURES_IN_THIS_DURATION = ConfigKeys.newLongConfigKey(
+            "failOnRecurringFailuresInThisDuration", 
+            "abandon replace if replacement has failed many times within this time interval",
+            30*60*1000L);
+
+    /** skips replace if replacement has failed this many times failure re-occurs within this time interval */
+    @SetFromFlag("failOnNumRecurringFailures")
+    public static final ConfigKey<Integer> FAIL_ON_NUM_RECURRING_FAILURES = ConfigKeys.newIntegerConfigKey(
+            "failOnNumRecurringFailures", 
+            "abandon replace if replacement has failed this many times (100% of attempts) within the time interval",
+            5);
+
+    @SetFromFlag("ticker")
+    public static final ConfigKey<Ticker> TICKER = ConfigKeys.newConfigKey(Ticker.class,
+            "ticker", 
+            "A time source (defaults to system-clock, which is almost certainly what's wanted, except in tests)",
+            null);
+
+    protected final List<Long> consecutiveReplacementFailureTimes = Lists.newCopyOnWriteArrayList();
+    
     public ServiceReplacer() {
         this(new ConfigBag());
     }
@@ -80,6 +108,11 @@ public class ServiceReplacer extends AbstractPolicy {
     
     // TODO semaphores would be better to allow at-most-one-blocking behaviour
     protected synchronized void onDetectedFailure(final SensorEvent<Object> event) {
+        if (isRepeatedlyFailingTooMuch()) {
+            LOG.error("ServiceReplacer not acting on failure detected at "+event.getSource()+" ("+event.getValue()+", child of "+entity+"), because too many recent replacement failures");
+            return;
+        }
+        
         LOG.warn("ServiceReplacer acting on failure detected at "+event.getSource()+" ("+event.getValue()+", child of "+entity+")");
         ((EntityInternal)entity).getManagementSupport().getExecutionContext().submit(MutableMap.of(), new Runnable() {
 
@@ -87,6 +120,7 @@ public class ServiceReplacer extends AbstractPolicy {
             public void run() {
                 try {
                     Entities.invokeEffectorWithArgs(entity, entity, DynamicCluster.REPLACE_MEMBER, event.getSource().getId()).get();
+                    consecutiveReplacementFailureTimes.clear();
                 } catch (Exception e) {
                     // FIXME replaceMember fails if stop fails on the old node; should resolve that more gracefully than this
                     if (e.toString().contains("stopping") && e.toString().contains(event.getSource().getId())) {
@@ -102,8 +136,33 @@ public class ServiceReplacer extends AbstractPolicy {
         });
     }
 
+    private boolean isRepeatedlyFailingTooMuch() {
+        Integer failOnNumRecurringFailures = getConfig(FAIL_ON_NUM_RECURRING_FAILURES);
+        long failOnRecurringFailuresInThisDuration = getConfig(FAIL_ON_RECURRING_FAILURES_IN_THIS_DURATION);
+        long oldestPermitted = currentTimeMillis() - failOnRecurringFailuresInThisDuration;
+        
+        // trim old ones
+        for (Iterator<Long> iter = consecutiveReplacementFailureTimes.iterator(); iter.hasNext();) {
+            Long timestamp = iter.next();
+            if (timestamp < oldestPermitted) {
+                iter.remove();
+            } else {
+                break;
+            }
+        }
+        
+        return (consecutiveReplacementFailureTimes.size() >= failOnNumRecurringFailures);
+    }
+
+    protected long currentTimeMillis() {
+        Ticker ticker = getConfig(TICKER);
+        return (ticker == null) ? System.currentTimeMillis() : TimeUnit.NANOSECONDS.toMillis(ticker.read());
+    }
+    
     protected void onReplacementFailed(String msg) {
         LOG.warn("ServiceReplacer failed for "+entity+": "+msg);
+        consecutiveReplacementFailureTimes.add(currentTimeMillis());
+        
         if (getConfig(SET_ON_FIRE_ON_FAILURE)) {
             entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
         }
