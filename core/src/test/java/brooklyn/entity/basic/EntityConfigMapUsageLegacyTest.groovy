@@ -234,15 +234,18 @@ public class EntityConfigMapUsageLegacyTest {
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME))
         Entities.startManagement(app);
         app.start([new SimulatedLocation()])
-        
-        Thread t = new Thread( { Thread.sleep(10); entity2.setAttribute(TestEntity.NAME, "aval") } )
+
+        // previously was just sleep 10, and (endtime-starttime > 10); failed with exactly 10ms        
+        long sleepTime = 20;
+        long earlyReturnGrace = 5;
+        Thread t = new Thread( { Thread.sleep(sleepTime); entity2.setAttribute(TestEntity.NAME, "aval") } )
         try {
             long starttime = System.currentTimeMillis()
             t.start()
             assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval")
             long endtime = System.currentTimeMillis()
             
-            assertTrue((endtime - starttime) > 10, "starttime=$starttime; endtime=$endtime")
+            assertTrue((endtime - starttime) >= (sleepTime - earlyReturnGrace), "starttime=$starttime; endtime=$endtime")
             
         } finally {
             t.interrupt()
