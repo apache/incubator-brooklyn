@@ -3,9 +3,11 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,17 +25,20 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closeables;
 
 /**
  * Start a {@link CassandraNode} in a {@link Location} accessible over ssh.
@@ -155,6 +160,20 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         String rackdcFileContents = processTemplate(getCassandraRackdcConfigTemplateUrl());
         String rackdcDestinationFile = String.format("%s/conf/%s", getRunDir(), getCassandraRackdcConfigFileName());
         getMachine().copyTo(new ByteArrayInputStream(rackdcFileContents.getBytes()), rackdcDestinationFile);
+
+        // Copy the custom snitch jar file across
+        String customSnitchJarUrl = entity.getConfig(CassandraNode.CUSTOM_SNITCH_JAR_URL);
+        if (Strings.isNonBlank(customSnitchJarUrl)) {
+            int lastSlashIndex = customSnitchJarUrl.lastIndexOf("/");
+            String customSnitchJarName = (lastSlashIndex > 0) ? customSnitchJarUrl.substring(lastSlashIndex+1) : "customBrooklynSnitch.jar";
+            String jarDestinationFile = String.format("%s/lib/%s", getRunDir(), customSnitchJarName);
+            InputStream customSnitchJarStream = checkNotNull(new ResourceUtils(entity).getResourceFromUrl(customSnitchJarUrl), "%s could not be loaded", customSnitchJarUrl);
+            try {
+                getMachine().copyTo(customSnitchJarStream, jarDestinationFile);
+            } finally {
+                Closeables.closeQuietly(customSnitchJarStream);
+            }
+        }
     }
 
     protected boolean isClustered() {

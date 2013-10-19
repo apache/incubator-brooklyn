@@ -4,9 +4,7 @@
 package brooklyn.entity.nosql.cassandra;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -36,8 +34,6 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Networking;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -71,14 +67,21 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     }
     @Override public String getBroadcastAddress() {
         String snitchName = getConfig(CassandraNode.ENDPOINT_SNITCH_NAME);
-        if (snitchName.equals("Ec2MultiRegionSnitch")) {
+        if (snitchName.equals("Ec2MultiRegionSnitch") || snitchName.contains("MultiCloudSnitch")) {
             // http://www.datastax.com/documentation/cassandra/2.0/mobile/cassandra/architecture/architectureSnitchEC2MultiRegion_c.html
             // describes that the listen_address is set to the private IP, and the broadcast_address is set to the public IP.
-            return getAttribute(CassandraNode.ADDRESS);
+            return getPublicIp();
         } else {
             // In other situations, prefer the hostname so other regions can see it
             return getAttribute(CassandraNode.HOSTNAME);
         }
+    }
+    public String getPrivateIp() {
+        String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
+        return Strings.isNonBlank(subnetAddress) ? subnetAddress : getAttribute(CassandraNode.ADDRESS);
+    }
+    public String getPublicIp() {
+        return getAttribute(CassandraNode.ADDRESS);
     }
 
     @Override public String getSeeds() { 
@@ -93,17 +96,12 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             // tried removing ourselves if there are other nodes, but that is a BAD idea!
             // blows up with a "java.lang.RuntimeException: No other nodes seen!"
             
-            String seedHostname = Machines.findSubnetOrPublicHostname(entity).get();
-            if (snitchName.equals("Ec2MultiRegionSnitch")) {
+            if (snitchName.equals("Ec2MultiRegionSnitch") || snitchName.contains("MultiCloudSnitch")) {
                 // http://www.datastax.com/documentation/cassandra/2.0/mobile/cassandra/architecture/architectureSnitchEC2MultiRegion_c.html
                 // says the seeds should be public IPs.
-                try {
-                    String seeIp = Networking.isValidIp4(seedHostname) ? seedHostname : InetAddress.getByName(seedHostname).getHostAddress();
-                    seedsHostnames.add(seeIp);
-                } catch (UnknownHostException e) {
-                    throw Exceptions.propagate(e);
-                }
+                seedsHostnames.add(entity.getAttribute(CassandraNode.ADDRESS));
             } else {
+                String seedHostname = Machines.findSubnetOrPublicHostname(entity).get();
                 seedsHostnames.add(seedHostname);
             }
         }
