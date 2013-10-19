@@ -130,8 +130,8 @@ public class ServiceReplacerTest {
 
         // e2 failed to start, so it won't have called stop on e1
         TestEntity e2 = (TestEntity) Iterables.getOnlyElement(Sets.difference(ImmutableSet.copyOf(members), initialMembers));
-        assertEquals(e1.getCallHistory(), ImmutableList.of("start"));
-        assertEquals(e2.getCallHistory(), ImmutableList.of("start"));
+        assertEquals(e1.getCallHistory(), ImmutableList.of("start"), "e1.history="+e1.getCallHistory());
+        assertEquals(e2.getCallHistory(), ImmutableList.of("start"), "e2.history="+e2.getCallHistory());
 
         // And will have received notification event about it
         assertEventuallyHasEntityReplacementFailedEvent(cluster);
