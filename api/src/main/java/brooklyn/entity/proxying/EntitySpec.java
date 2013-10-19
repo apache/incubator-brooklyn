@@ -20,6 +20,7 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.management.Task;
 import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
@@ -90,6 +91,7 @@ public class EntitySpec<T extends Entity> implements Serializable {
                 .addInitializers(spec.getInitializers())
                 .configure(spec.getConfig())
                 .configure(spec.getFlags())
+                .policySpecs(spec.getPolicySpecs())
                 .policies(spec.getPolicies());
         
         if (spec.getParent() != null) result.parent(spec.getParent());
@@ -109,6 +111,7 @@ public class EntitySpec<T extends Entity> implements Serializable {
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
     private final List<Policy> policies = Lists.newArrayList();
+    private final List<PolicySpec<?>> policySpecs = Lists.newArrayList();
     private final Set<Class<?>> additionalInterfaces = Sets.newLinkedHashSet();
     private final List<EntityInitializer> entityInitializers = Lists.newArrayList();
     private volatile boolean immutable;
@@ -177,6 +180,10 @@ public class EntitySpec<T extends Entity> implements Serializable {
         return Collections.unmodifiableMap(config);
     }
         
+    public List<PolicySpec<?>> getPolicySpecs() {
+        return policySpecs;
+    }
+    
     public List<Policy> getPolicies() {
         return policies;
     }
@@ -288,14 +295,29 @@ public class EntitySpec<T extends Entity> implements Serializable {
     /** adds a policy to the spec */
     public <V> EntitySpec<T> policy(Policy val) {
         checkMutable();
-        policies.add(val);
+        policies.add(checkNotNull(val, "policy"));
+        return this;
+    }
+
+    /** adds a policy to the spec */
+    public <V> EntitySpec<T> policy(PolicySpec<?> val) {
+        checkMutable();
+        policySpecs.add(checkNotNull(val, "policySpec"));
         return this;
     }
 
     /** adds the supplied policies to the spec */
+    public <V> EntitySpec<T> policySpecs(Iterable<? extends PolicySpec<?>> val) {
+        checkMutable();
+        policySpecs.addAll(Sets.newLinkedHashSet(checkNotNull(val, "policySpecs")));
+        return this;
+    }
+    
+
+    /** adds the supplied policies to the spec */
     public <V> EntitySpec<T> policies(Iterable<? extends Policy> val) {
         checkMutable();
-        policies.addAll(Sets.newLinkedHashSet(val));
+        policies.addAll(Sets.newLinkedHashSet(checkNotNull(val, "policies")));
         return this;
     }
     

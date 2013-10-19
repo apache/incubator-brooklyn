@@ -102,7 +102,7 @@ public class GroupPickUpEntitiesTest {
         }
 
         @SuppressWarnings("unchecked")
-        protected void init() {
+        public void init() {
             subscribe(null, Startable.SERVICE_UP, handler);
         }
 
@@ -127,7 +127,7 @@ public class GroupPickUpEntitiesTest {
     public static class FindUpServicesWithNameBob extends FindUpServices {
 
         @SuppressWarnings("unchecked")
-        protected void init() {
+        public void init() {
             super.init();
             subscribe(null, TestEntity.NAME, handler);
         }

@@ -11,15 +11,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.BasicPolicyRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.management.ExecutionContext;
+import brooklyn.management.ManagementContext;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicyType;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
@@ -30,12 +33,15 @@ import com.google.common.collect.Maps;
  * Base {@link Policy} implementation; all policies should extend this or its children
  */
 public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Policy, Configurable {
-    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(AbstractPolicy.class);
 
+    private volatile ManagementContext managementContext;
     protected String policyStatus;
     protected Map leftoverProperties = Maps.newLinkedHashMap();
     protected AtomicBoolean suspended = new AtomicBoolean(false);
+
+    private boolean _legacyConstruction;
+    private boolean inConstruction;
 
     protected transient ExecutionContext execution;
 
@@ -52,8 +58,25 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
     }
     
     public AbstractPolicy(Map flags) {
-        configure(flags);
-        FlagUtils.checkRequiredFields(this);
+        inConstruction = true;
+        _legacyConstruction = !InternalPolicyFactory.FactoryConstructionTracker.isConstructing();
+        if (!_legacyConstruction && flags!=null && !flags.isEmpty()) {
+            log.debug("Using direct policy construction for "+getClass().getName()+" because properties were specified ("+flags+")");
+            _legacyConstruction = true;
+        }
+        
+        if (_legacyConstruction) {
+            log.debug("Using direct policy construction for "+getClass().getName()+"; calling configure(Map) immediately");
+            
+            configure(flags);
+            
+            boolean deferConstructionChecks = (flags.containsKey("deferConstructionChecks") && TypeCoercions.coerce(flags.get("deferConstructionChecks"), Boolean.class));
+            if (!deferConstructionChecks) {
+                FlagUtils.checkRequiredFields(this);
+            }
+        }
+        
+        inConstruction = false;
     }
 
     /** will set fields from flags, and put the remaining ones into the 'leftovers' map.
@@ -68,7 +91,7 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
     }
     
     @SuppressWarnings("unchecked")
-    protected void configure(Map flags) {
+    public void configure(Map flags) {
         // TODO only set on first time through
         boolean isFirstTime = true;
         
@@ -99,10 +122,42 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
         leftoverProperties = flags;
         
         if (!truth(name) && flags.containsKey("displayName")) {
-            //'displayName' is a legacy way to refer to a location's name
+            //TODO inconsistent with entity and location, where name is legacy and displayName is encouraged!
+            //'displayName' is a legacy way to refer to a policy's name
             Preconditions.checkArgument(flags.get("displayName") instanceof CharSequence, "'displayName' property should be a string");
             setName(flags.remove("displayName").toString());
         }
+    }
+    
+    protected boolean isLegacyConstruction() {
+        return _legacyConstruction;
+    }
+    
+    public void setManagementContext(ManagementContext managementContext) {
+        this.managementContext = managementContext;
+    }
+    
+    protected ManagementContext getManagementContext() {
+        return managementContext;
+    }
+
+    /**
+     * Called by framework (in new-style policies where PolicySpec was used) after configuring, setting parent, etc,
+     * but before a reference to this policy is shared.
+     * 
+     * To preserve backwards compatibility for if the policy is constructed directly, one
+     * can call the code below, but that means it will be called after references to this 
+     * policy have been shared with other entities.
+     * <pre>
+     * {@code
+     * if (isLegacyConstruction()) {
+     *     init();
+     * }
+     * }
+     * </pre>
+     */
+    public void init() {
+        // no-op
     }
     
     public <T> T getConfig(ConfigKey<T> key) {
