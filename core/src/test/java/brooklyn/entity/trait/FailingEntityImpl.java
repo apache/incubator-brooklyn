@@ -16,6 +16,7 @@ public class FailingEntityImpl extends TestEntityImpl implements FailingEntity {
         getConfig(LISTENER).onEvent(this, "start", new Object[] {locs});
         if (getConfig(FAIL_ON_START) || (getConfig(FAIL_ON_START_CONDITION) != null && getConfig(FAIL_ON_START_CONDITION).apply(this))) {
             callHistory.add("start");
+            getConfig(EXEC_ON_FAILURE).apply(this);
             throw newException("Simulating entity start failure for test");
         }
         super.start(locs);
@@ -26,6 +27,7 @@ public class FailingEntityImpl extends TestEntityImpl implements FailingEntity {
         getConfig(LISTENER).onEvent(this, "stop", new Object[0]);
         if (getConfig(FAIL_ON_STOP) || (getConfig(FAIL_ON_STOP_CONDITION) != null && getConfig(FAIL_ON_STOP_CONDITION).apply(this))) {
             callHistory.add("stop");
+            getConfig(EXEC_ON_FAILURE).apply(this);
             throw newException("Simulating entity stop failure for test");
         }
         super.stop();
@@ -36,6 +38,7 @@ public class FailingEntityImpl extends TestEntityImpl implements FailingEntity {
         getConfig(LISTENER).onEvent(this, "restart", new Object[0]);
         if (getConfig(FAIL_ON_RESTART) || (getConfig(FAIL_ON_RESTART_CONDITION) != null && getConfig(FAIL_ON_RESTART_CONDITION).apply(this))) {
             callHistory.add("restart");
+            getConfig(EXEC_ON_FAILURE).apply(this);
             throw newException("Simulating entity restart failure for test");
         }
         super.restart();
