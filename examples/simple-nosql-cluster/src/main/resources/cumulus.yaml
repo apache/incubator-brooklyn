@@ -2,7 +2,7 @@
 storage-layout: "flat"
 cassandra-hosts: "${cassandraHostname}:${cassandraThriftPort?c}"
 cassandra-keyspace: "KeyspaceCumulus"
-proxy-mode: "true"
+proxy-mode: "false"
 triples-subject: -1
 triples-object: 5000
 query-limit: 50000

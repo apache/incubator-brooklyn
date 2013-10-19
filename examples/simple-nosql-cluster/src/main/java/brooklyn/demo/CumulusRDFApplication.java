@@ -33,6 +33,7 @@ import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.nosql.cassandra.CassandraCluster;
+import brooklyn.entity.nosql.cassandra.CassandraNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.entity.trait.Startable;
@@ -65,57 +66,71 @@ public class CumulusRDFApplication extends AbstractApplication {
 
     @CatalogConfig(label="Cassandra Cluster Size", priority=1)
     public static final ConfigKey<Integer> CASSANDRA_CLUSTER_SIZE = ConfigKeys.newConfigKey(
-        "cumulus.cassandra.cluster.size", "Initial size of the Cassandra cluster", 1);
+        "cumulus.cassandra.cluster.size", "Initial size of the Cassandra cluster", 2);
 
     public static final String DEFAULT_LOCATION = "aws-ec2:eu-west-1";
 
-    private Effector<Void> configure = Effectors.effector(Void.class, "configure").buildAbstract();
+    private Effector<Void> cumulusConfig = Effectors.effector(Void.class, "cumulusConfig")
+            .description("Configure the CumulusRDF web application")
+            .buildAbstract();
+
     private CassandraCluster cassandra;
     private TomcatServer tomcat;
 
     /** Create entities. */
     public void init() {
+        // The cassandra cluster entity
         cassandra = addChild(EntitySpec.create(CassandraCluster.class)
                 .configure("initialSize", getConfig(CASSANDRA_CLUSTER_SIZE))
                 .configure("clusterName", "CumulusRDF")
-                .configure("jmxPort", "11099")
-                .configure("rmiServerPort", "9001")
-                .configure("jmxAgentMode", UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
-                .configure("thriftPort", getConfig(CASSANDRA_THRIFT_PORT)));
+                .configure("memberSpec", EntitySpec.create(CassandraNode.class)
+                        .configure("jmxAgentMode", UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
+                        .configure("jmxPort", "11099+")
+                        .configure("rmiServerPort", "9001+")
+                        .configure("thriftPort", getConfig(CASSANDRA_THRIFT_PORT))));
 
+        // The tomcat server entity
         tomcat = addChild(EntitySpec.create(TomcatServer.class)
-                .configure("jmxAgentMode", UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
                 .configure("version", "7.0.42")
+                .configure("jmxAgentMode", UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
+                .configure("jmxPort", "11099+")
+                .configure("rmiServerPort", "9001+")
                 .configure("war", "classpath://cumulusrdf.war")
-                .configure("javaSysProps", MutableMap.of("cumulusrdf.config-file", Entities.getRequiredUrlConfig(this, CUMULUS_RDF_CONFIG_URL))));
+                .configure("javaSysProps", MutableMap.of("cumulusrdf.config-file", "/tmp/cumulus.yaml")));
 
-        configure = Effectors.effector(configure).impl(new EffectorBody<Void>() {
-            private HostAndPort cassandraCluster;
+        // Add an effector to tomcat to reconfigure with a new YAML config file
+        ((EntityInternal) tomcat).getMutableEntityType().addEffector(cumulusConfig, new EffectorBody<Void>() {
+            private HostAndPort clusterEndpoint;
 
             @Override
             public Void call(ConfigBag parameters) {
-                String cassandraHostname = cassandra.getAttribute(CassandraCluster.HOSTNAME);
-                Integer cassandraThriftPort = cassandra.getAttribute(CassandraCluster.THRIFT_PORT);
-                HostAndPort current = HostAndPort.fromParts(cassandraHostname, cassandraThriftPort);
+                String hostname = cassandra.getAttribute(CassandraCluster.HOSTNAME);
+                Integer thriftPort = cassandra.getAttribute(CassandraCluster.THRIFT_PORT);
+                HostAndPort currentEndpoint = HostAndPort.fromParts(hostname, thriftPort);
 
-                if (!current.equals(cassandraCluster)) {
-                    cassandraCluster = current;
+                // Check if the cluster access point has changed
+                if (!currentEndpoint.equals(clusterEndpoint)) {
+                    log.info("Setting cluster endpoint to {}", currentEndpoint.toString());
+                    clusterEndpoint = currentEndpoint;
 
-                    Map<String, Object> config = MutableMap.<String, Object>of("cassandraHostname", cassandraHostname, "cassandraThriftPort", cassandraThriftPort);
-                    String cumulusYaml = TemplateProcessor.processTemplateContents(new ResourceUtils(this).getResourceAsString("classpath://cumulus.yaml"), config);
+                    // Process the YAML template given in the application config
+                    String url = Entities.getRequiredUrlConfig(CumulusRDFApplication.this, CUMULUS_RDF_CONFIG_URL);
+                    Map<String, Object> config = MutableMap.<String, Object>of("cassandraHostname", clusterEndpoint.getHostText(), "cassandraThriftPort", clusterEndpoint.getPort());
+                    String contents = TemplateProcessor.processTemplateContents(new ResourceUtils(this).getResourceAsString(url), config);
 
-                    DynamicTasks.queue(SshEffectorTasks.put("cumulus.yaml").contents(cumulusYaml));
+                    // Copy the file contents to the remote machine
+                    DynamicTasks.queue(SshEffectorTasks.put("/tmp/cumulus.yaml").contents(contents));
                 }
 
                 return null;
             }
-        }).build();
-        ((EntityInternal) tomcat).getMutableEntityType().addEffector(configure);
+        });
 
         subscribe(cassandra, CassandraCluster.HOSTNAME, new SensorEventListener<String>() {
             @Override
             public void onEvent(SensorEvent<String> event) {
-                tomcat.invoke(configure, MutableMap.<String, Object>of());
+                // Reconfigure the CumulusRDF application and restart tomcat if necessary
+                tomcat.invoke(cumulusConfig, MutableMap.<String, Object>of());
                 if (tomcat.getAttribute(Startable.SERVICE_UP)) {
                     tomcat.restart();
                 }
