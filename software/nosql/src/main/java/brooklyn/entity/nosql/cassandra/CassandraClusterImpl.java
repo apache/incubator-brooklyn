@@ -22,7 +22,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
 import brooklyn.util.collections.MutableMap;
@@ -54,8 +53,6 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     private final Object mutex = new Object[0];
 
     private AbstractMembershipTrackingPolicy policy;
-
-    private SshFeed sshFeed;
 
     public CassandraClusterImpl() {
     }
@@ -258,10 +255,6 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     }
     
     protected void disconnectSensors() {
-        if (sshFeed!=null && sshFeed.isActive()) {
-            sshFeed.stop();
-            sshFeed = null;
-        }
     }
 
     @Override
