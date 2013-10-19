@@ -27,9 +27,6 @@ import com.google.common.collect.Multimap;
  * <p>
  * Note that due to how Cassandra assumes ports are the same across a cluster, 
  * it is NOT possible to deploy a cluster to localhost.
- * <p>
- *
- * TODO add sensors with aggregated Cassandra statistics from cluster
  */
 @Catalog(name="Apache Cassandra Database Cluster", description="Cassandra is a highly scalable, eventually consistent, distributed, structured key-value store which provides a ColumnFamily-based data model richer than typical key/value systems", iconUrl="classpath:///cassandra-logo.jpeg")
 @ImplementedBy(CassandraClusterImpl.class)
@@ -42,7 +39,10 @@ public interface CassandraCluster extends DynamicCluster {
     ConfigKey<String> ENDPOINT_SNITCH_NAME = ConfigKeys.newStringConfigKey("cassandra.cluster.snitchName", "Type of the Cassandra snitch", "SimpleSnitch");
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    AttributeSensor<Multimap<String,Entity>> DATACENTER_USAGE = (AttributeSensor)Sensors.newSensor(Map.class, "cassandra.cluster.datacenters", "Current set of datacenters in use, with nodes in each");
+    AttributeSensor<Multimap<String,Entity>> DATACENTER_USAGE = (AttributeSensor)Sensors.newSensor(Map.class, "cassandra.cluster.datacenterUsages", "Current set of datacenters in use, with nodes in each");
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    AttributeSensor<Set<String>> DATACENTERS = (AttributeSensor)Sensors.newSensor(Set.class, "cassandra.cluster.datacenters", "Current set of datacenters in use");
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     AttributeSensor<Set<Entity>> CURRENT_SEEDS = (AttributeSensor)Sensors.newSensor(Set.class, "cassandra.cluster.seeds.current", "Current set of seeds to use to bootstrap the cluster");
