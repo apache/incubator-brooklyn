@@ -30,6 +30,7 @@ import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
@@ -54,6 +55,13 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
 
     private AbstractMembershipTrackingPolicy policy;
 
+    private final Supplier<Set<Entity>> defaultSeedSupplier = new Supplier<Set<Entity>>() {
+        @Override
+        public Set<Entity> get() {
+            return gatherSeeds();
+        }
+    };
+    
     public CassandraClusterImpl() {
     }
 
@@ -68,15 +76,42 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         subscribeToMembers(this, Attributes.HOSTNAME, new SensorEventListener<String>() {
             @Override
             public void onEvent(SensorEvent<String> event) {
-                String newHostname = event.getValue();
-                if (newHostname!=null) {
-                    // node added
-                    if (getAttribute(CURRENT_SEEDS)!=null)
-                        // if we have enough seeds already then we don't need to do anything
-                        return;
+                Entity member = event.getSource();
+                Set<Entity> seeds = getAttribute(CURRENT_SEEDS);
+                if (seeds != null && seeds.size() > 0 && !seeds.contains(member)) {
+                    // if we have enough seeds already then we don't need to do anything
+                    // (and one of our seeds has not just changed)
+                    return;
                 }
-                // node was removed, or added when we are not yet quorate; in either case let's find the seeds
-                setAttribute(CURRENT_SEEDS, gatherSeeds());
+                
+                Supplier<Set<Entity>> seedSupplier = getSeedSupplier();
+                setAttribute(CURRENT_SEEDS, seedSupplier.get());
+            }
+        });
+        subscribe(this, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
+            @Override public void onEvent(SensorEvent<Entity> event) {
+                Entity member = event.getSource();
+                Set<Entity> seeds = getAttribute(CURRENT_SEEDS);
+                if (seeds != null && seeds.contains(member)) {
+                    Supplier<Set<Entity>> seedSupplier = getSeedSupplier();
+                    setAttribute(CURRENT_SEEDS, seedSupplier.get());
+                }
+            }
+        });
+        subscribeToMembers(this, Attributes.SERVICE_UP, new SensorEventListener<Boolean>() {
+            @Override
+            public void onEvent(SensorEvent<Boolean> event) {
+                Entity member = event.getSource();
+                boolean isup = Boolean.TRUE.equals(event.getValue());
+                Set<Entity> seeds = getAttribute(CURRENT_SEEDS);
+                if (seeds != null && seeds.size() > 0 && !(seeds.contains(member) && !isup)) {
+                    // if we have enough seeds already then we don't need to do anything
+                    // (and one of our seeds has not just changed)
+                    return;
+                }
+                
+                Supplier<Set<Entity>> seedSupplier = getSeedSupplier();
+                setAttribute(CURRENT_SEEDS, seedSupplier.get());
             }
         });
         
@@ -121,6 +156,11 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         });
     }
     
+    protected Supplier<Set<Entity>> getSeedSupplier() {
+        Supplier<Set<Entity>> seedSupplier = getConfig(SEED_SUPPLIER);
+        return (seedSupplier == null) ? defaultSeedSupplier : seedSupplier;
+    }
+    
     protected int getQuorumSize() {
         Integer quorumSize = getConfig(INITIAL_QUORUM_SIZE);
         if (quorumSize!=null && quorumSize>0)
@@ -130,6 +170,21 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     }
 
     protected Set<Entity> gatherSeeds() {
+        Collection<Entity> availableEntities = gatherPotentialSeeds();
+        
+        if (!availableEntities.isEmpty()) {
+            int quorumSize = getQuorumSize();
+            if (availableEntities.size() >= quorumSize) {
+                return MutableSet.copyOf(Iterables.limit(availableEntities, quorumSize));
+            }
+        }
+        
+        // not quorate
+        return MutableSet.of();
+    }
+
+    @Override
+    public Collection<Entity> gatherPotentialSeeds() {
         Iterable<Entity> members = getMembers();
         List<Entity> availableEntities = Lists.newArrayList();
         for (Entity node : members) {
@@ -139,15 +194,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             }
         }
         
-        if (!availableEntities.isEmpty()) {
-            int quorumSize = getQuorumSize();
-            if (availableEntities.size()>=quorumSize) {
-                return MutableSet.copyOf(Iterables.limit(availableEntities, quorumSize));
-            }
-        }
-        
-        // not quorate
-        return null;
+        return availableEntities;
     }
 
     /**
@@ -260,6 +307,12 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     @Override
     public void update() {
         synchronized (mutex) {
+            // Update our seeds (unless we already have enough)
+            Set<Entity> seeds = getAttribute(CURRENT_SEEDS);
+            if (seeds == null || seeds.isEmpty()) {
+                setAttribute(CURRENT_SEEDS, getSeedSupplier().get());
+            }
+            
             // Choose the first available cluster member to set host and port (and compute one-up)
             Optional<Entity> upNode = Iterables.tryFind(getMembers(), EntityPredicates.attributeEqualTo(SERVICE_UP, Boolean.TRUE));
             setAttribute(SERVICE_UP, upNode.isPresent());
@@ -271,6 +324,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
                 setAttribute(HOSTNAME, null);
                 setAttribute(THRIFT_PORT, null);
             }
+
         }
     }
 }

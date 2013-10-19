@@ -3,6 +3,7 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,6 +21,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.Multimap;
 
 /**
@@ -37,6 +39,9 @@ public interface CassandraCluster extends DynamicCluster {
 
     @SetFromFlag("snitchName")
     ConfigKey<String> ENDPOINT_SNITCH_NAME = ConfigKeys.newStringConfigKey("cassandra.cluster.snitchName", "Type of the Cassandra snitch", "SimpleSnitch");
+
+    @SetFromFlag("seedSupplier")
+    ConfigKey<Supplier<Set<Entity>>> SEED_SUPPLIER = (ConfigKey) ConfigKeys.newConfigKey(Supplier.class, "cassandra.cluster.seedSupplier", "For determining the seed nodes", null);
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     AttributeSensor<Multimap<String,Entity>> DATACENTER_USAGE = (AttributeSensor)Sensors.newSensor(Map.class, "cassandra.cluster.datacenterUsages", "Current set of datacenters in use, with nodes in each");
@@ -98,12 +103,13 @@ public interface CassandraCluster extends DynamicCluster {
     // on 1.2.9 it seems a few seconds is sufficient even with 2 seed nodes
     public static final Duration DELAY_BEFORE_ADVERTISING_CLUSTER = Duration.TEN_SECONDS;
     
+    @Effector(description="Updates the cluster members")
+    void update();
+    
     /**
      * The name of the cluster.
      */
     String getClusterName();
 
-    @Effector(description="Updates the cluster members")
-    void update();
-
+    Collection<Entity> gatherPotentialSeeds();
 }
