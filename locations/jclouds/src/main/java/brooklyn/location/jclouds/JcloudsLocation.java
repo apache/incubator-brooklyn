@@ -460,6 +460,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                    sshMachineLocation.execCommands("Inserting iptables rules", iptablesRules);
                    sshMachineLocation.execCommands("List iptables rules", ImmutableList.of(IptablesCommands.listIptablesRule()));
                 }
+                
+                if (setup.get(STOP_IPTABLES)) {
+                    List<String> cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());
+                    sshMachineLocation.execCommands("Stopping iptables", cmds);
+                }
             } else {
                 // Otherwise would break CloudStack, where port-forwarding means that jclouds opinion 
                 // of using port 22 is wrong.

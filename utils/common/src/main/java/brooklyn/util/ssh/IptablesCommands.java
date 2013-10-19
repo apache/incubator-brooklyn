@@ -29,6 +29,26 @@ public class IptablesCommands {
         }
     }
 
+    public static String iptablesServiceStop() {
+        return iptablesService("stop");
+    }
+
+    public static String iptablesServiceStart() {
+        return iptablesService("start");
+    }
+
+    public static String iptablesServiceRestart() {
+        return iptablesService("restart");
+    }
+
+    public static String iptablesServiceStatus() {
+        return iptablesService("status");
+    }
+
+    public static String iptablesService(String cmd) {
+        return sudo("/sbin/service iptables "+cmd);
+    }
+
     /**
      * Returns the command that cleans up iptables rules.
      * 
