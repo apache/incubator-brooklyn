@@ -6,16 +6,22 @@ package brooklyn.entity.nosql.cassandra;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.CustomAggregatingEnricher;
+import brooklyn.enricher.RollingTimeWindowMeanEnricher;
+import brooklyn.enricher.TimeFractionDeltaEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
+import brooklyn.entity.java.UsesJavaMXBeans;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ssh.SshFeed;
@@ -26,6 +32,7 @@ import brooklyn.util.collections.MutableSet;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -138,8 +145,9 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     }
 
     protected void connectSensors() {
-        // track members
+        connectEnrichers();
         
+        // track members
         policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Cassandra Cluster Tracker")) {
             @Override
             protected void onEntityChange(Entity member) {
@@ -161,6 +169,46 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         policy.setGroup(this);
     }
     
+    protected void connectEnrichers() {
+        List<? extends List<? extends AttributeSensor<? extends Number>>> summingEnricherSetup = ImmutableList.of(
+                ImmutableList.of(CassandraNode.READ_ACTIVE, READ_ACTIVE),
+                ImmutableList.of(CassandraNode.READ_PENDING, READ_PENDING),
+                ImmutableList.of(CassandraNode.WRITE_ACTIVE, WRITE_ACTIVE),
+                ImmutableList.of(CassandraNode.WRITE_PENDING, WRITE_PENDING)
+        );
+        
+        List<? extends List<? extends AttributeSensor<? extends Number>>> averagingEnricherSetup = ImmutableList.of(
+                ImmutableList.of(CassandraNode.READS_PER_SECOND_LAST, READS_PER_SECOND_LAST_PER_NODE),
+                ImmutableList.of(CassandraNode.WRITES_PER_SECOND_LAST, WRITES_PER_SECOND_LAST_PER_NODE),
+                ImmutableList.of(CassandraNode.WRITES_PER_SECOND_IN_WINDOW, WRITES_PER_SECOND_IN_WINDOW_PER_NODE),
+                ImmutableList.of(CassandraNode.READS_PER_SECOND_IN_WINDOW, READS_PER_SECOND_IN_WINDOW_PER_NODE),
+                ImmutableList.of(CassandraNode.THRIFT_PORT_LATENCY, THRIFT_PORT_LATENCY_PER_NODE),
+                ImmutableList.of(CassandraNode.THRIFT_PORT_LATENCY_IN_WINDOW, THRIFT_PORT_LATENCY_IN_WINDOW_PER_NODE),
+                ImmutableList.of(CassandraNode.PROCESS_CPU_TIME_FRACTION_LAST, PROCESS_CPU_TIME_FRACTION_LAST_PER_NODE),
+                ImmutableList.of(CassandraNode.PROCESS_CPU_TIME_FRACTION_IN_WINDOW, PROCESS_CPU_TIME_FRACTION_IN_WINDOW_PER_NODE)
+        );
+        
+        for (List<? extends AttributeSensor<? extends Number>> es : summingEnricherSetup) {
+            AttributeSensor<? extends Number> t = es.get(0);
+            AttributeSensor<? extends Number> total = es.get(1);
+            CustomAggregatingEnricher<?,?> totaller = CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), t, total);
+            addEnricher(totaller);
+        }
+        
+        for (List<? extends AttributeSensor<? extends Number>> es : averagingEnricherSetup) {
+            AttributeSensor<Number> t = (AttributeSensor<Number>) es.get(0);
+            AttributeSensor<Double> average = (AttributeSensor<Double>) es.get(1);
+            CustomAggregatingEnricher<?,?> averager = CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), t, average, null);
+            addEnricher(averager);
+        }
+
+        subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {
+            @Override public void onEvent(SensorEvent<Boolean> event) {
+                setAttribute(SERVICE_UP, calculateServiceUp());
+            }
+        });
+    }
+
     @Override
     public void stop() {
         disconnectSensors();
