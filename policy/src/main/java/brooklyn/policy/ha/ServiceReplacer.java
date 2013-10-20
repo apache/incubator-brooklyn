@@ -108,6 +108,11 @@ public class ServiceReplacer extends AbstractPolicy {
     
     // TODO semaphores would be better to allow at-most-one-blocking behaviour
     protected synchronized void onDetectedFailure(final SensorEvent<Object> event) {
+        if (isSuspended()) {
+            LOG.warn("ServiceReplacer suspended, so not acting on failure detected at "+event.getSource()+" ("+event.getValue()+", child of "+entity+")");
+            return;
+        }
+
         if (isRepeatedlyFailingTooMuch()) {
             LOG.error("ServiceReplacer not acting on failure detected at "+event.getSource()+" ("+event.getValue()+", child of "+entity+"), because too many recent replacement failures");
             return;

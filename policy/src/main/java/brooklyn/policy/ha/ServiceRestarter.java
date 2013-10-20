@@ -85,6 +85,11 @@ public class ServiceRestarter extends AbstractPolicy {
     // FIXME as this is called in message-dispatch (single threaded) we should do most of this in a new submitted task
     // (as has been done in ServiceReplacer)
     protected synchronized void onDetectedFailure(SensorEvent<Object> event) {
+        if (isSuspended()) {
+            LOG.warn("ServiceRestarter suspended, so not acting on failure detected at "+entity+" ("+event.getValue()+")");
+            return;
+        }
+
         LOG.warn("ServiceRestarter acting on failure detected at "+entity+" ("+event.getValue()+")");
         long current = System.currentTimeMillis();
         Long last = lastFailureTime.getAndSet(current);
