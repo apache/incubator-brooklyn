@@ -36,6 +36,8 @@ import com.google.common.collect.Lists;
 
 public class WideAreaCassandraCluster extends AbstractApplication {
 
+    public static final String DEFAULT_LOCATION_SPEC = "aws-ec2:us-east-1,rackspace-cloudservers-uk";
+
     @Override
     public void init() {
         addChild(EntitySpec.create(CassandraFabric.class)
@@ -55,10 +57,7 @@ public class WideAreaCassandraCluster extends AbstractApplication {
     public static void main(String[] argv) {
         List<String> args = Lists.newArrayList(argv);
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
-        String locations = CommandLineUtil.getCommandLineOption(args, "--location");
-        if (locations == null) {
-            throw new IllegalArgumentException("Locations must be supplied (with --location <comma-separate-location-specs>)");
-        }
+        String locations = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION_SPEC);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                  .application(EntitySpec.create(StartableApplication.class, WideAreaCassandraCluster.class)
