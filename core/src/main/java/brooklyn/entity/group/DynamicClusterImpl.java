@@ -294,9 +294,28 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 throw new NoSuchElementException("In "+this+", entity "+member+" is not a member so not replacing");
             }
             
-            Location memberLoc;
+            Location memberLoc = null;
             if (isAvailabilityZoneEnabled()) {
-                memberLoc = checkNotNull(Iterables.getOnlyElement(member.getLocations()), "member's location (%s)", member);
+                // this entity's member could be a machine provisioned by a sub-location, or the actual sub-location 
+                List<Location> subLocations = getAttribute(SUB_LOCATIONS);
+                Location actualMemberLoc = checkNotNull(Iterables.getOnlyElement(member.getLocations()), "member's location (%s)", member);
+                Location contenderMemberLoc = actualMemberLoc;
+                boolean foundMatch = false;
+                do {
+                    if (subLocations.contains(contenderMemberLoc)) {
+                        memberLoc = contenderMemberLoc;
+                        foundMatch = true;
+                        LOG.debug("In {} replacing member {} ({}), inferred its sub-location is {}", new Object[] {this, memberId, member, memberLoc});
+                    }
+                    contenderMemberLoc = contenderMemberLoc.getParent();
+                } while (!foundMatch && contenderMemberLoc != null);
+                if (!foundMatch) {
+                    memberLoc = actualMemberLoc;
+                    LOG.warn("In {} replacing member {} ({}), could not find matching sub-location; falling back to its actual location: {}", new Object[] {this, memberId, member, memberLoc});
+                } else if (memberLoc == null) {
+                    // impossible to get here, based on logic above!
+                    throw new IllegalStateException("Unexpected condition! cluster="+this+"; member="+member+"; actualMemberLoc="+actualMemberLoc);
+                }
             } else {
                 memberLoc = getLocation();
             }

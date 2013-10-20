@@ -11,6 +11,15 @@ import com.google.common.base.Predicate;
 
 public class EntityPredicates {
 
+    public static <T> Predicate<Entity> idEqualTo(final T val) {
+        return new Predicate<Entity>() {
+            @Override
+            public boolean apply(@Nullable Entity input) {
+                return Objects.equal(input.getId(), val);
+            }
+        };
+    }
+    
     public static <T> Predicate<Entity> attributeEqualTo(final AttributeSensor<T> attribute, final T val) {
         return new Predicate<Entity>() {
             @Override
