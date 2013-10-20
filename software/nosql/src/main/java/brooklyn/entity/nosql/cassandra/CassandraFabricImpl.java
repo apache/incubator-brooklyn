@@ -226,7 +226,7 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
         } else if (custom.getConfig().containsKey(CassandraCluster.SEED_SUPPLIER) || custom.getFlags().containsKey("seedSupplier")) {
             return custom;
         } else {
-            return EntitySpec.create(CassandraCluster.class)
+            return EntitySpec.create(custom)
                     .configure(CassandraCluster.SEED_SUPPLIER, getSeedSupplier());
         }
     }
