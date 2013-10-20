@@ -4,11 +4,14 @@
 package brooklyn.entity.nosql.cassandra;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.Socket;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 import javax.management.ObjectName;
@@ -53,17 +56,57 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
 
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeImpl.class);
 
+    private final AtomicReference<Boolean> requiresAlwaysPublicIp = new AtomicReference<Boolean>();
+    
     public CassandraNodeImpl() {
     }
-
+    
+    /**
+     * Some clouds (e.g. Rackspace) give us VMs that have two nics: one for private and one for public.
+     * If the private IP is used then it doesn't work, even for a cluster purely internal to Rackspace!
+     * 
+     * TODO Need to investigate that further, e.g.:
+     *  - is `openIptables` opening it up for both interfaces?
+     *  - for aws->rackspace comms between nodes (thus using the public IP), will it be listening on an accessible port?
+     *  
+     * FIXME Really ugly code; surely can do better?!
+     * 
+     * @return
+     */
+    protected boolean requiresAlwaysPublicIp() {
+        if (requiresAlwaysPublicIp.get() != null) {
+            return requiresAlwaysPublicIp.get();
+        }
+        MachineProvisioningLocation<?> loc = getProvisioningLocation();
+        if (loc != null) {
+            try {
+                Method method = loc.getClass().getMethod("getProvider");
+                method.setAccessible(true);
+                String provider = (String) method.invoke(loc);
+                boolean result = (provider != null) && (provider.contains("rackspace") || provider.contains("cloudservers"));
+                log.info("Inferred requiresAlwaysPublicIp={} for {}; using location {}, based on provider {}", new Object[] {result, this, loc, provider});
+                requiresAlwaysPublicIp.set(result);
+            } catch (Exception e) {
+                log.info("Inferred requiresAlwaysPublicIp={} for {}; using location {}, based on: {}", new Object[] {false, this, loc, e});
+                requiresAlwaysPublicIp.set(false);
+            }
+            return requiresAlwaysPublicIp.get();
+        }
+        return false;
+    }
+    
     @Override public Integer getGossipPort() { return getAttribute(CassandraNode.GOSSIP_PORT); }
     @Override public Integer getSslGossipPort() { return getAttribute(CassandraNode.SSL_GOSSIP_PORT); }
     @Override public Integer getThriftPort() { return getAttribute(CassandraNode.THRIFT_PORT); }
     @Override public String getClusterName() { return getAttribute(CassandraNode.CLUSTER_NAME); }
     @Override public Long getToken() { return getAttribute(CassandraNode.TOKEN); }
     @Override public String getListenAddress() {
-        String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
-        return Strings.isNonBlank(subnetAddress) ? subnetAddress : getAttribute(CassandraNode.ADDRESS); 
+        if (requiresAlwaysPublicIp()) {
+            return getAttribute(CassandraNode.ADDRESS);
+        } else {
+            String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
+            return Strings.isNonBlank(subnetAddress) ? subnetAddress : getAttribute(CassandraNode.ADDRESS);
+        }
     }
     @Override public String getBroadcastAddress() {
         String snitchName = getConfig(CassandraNode.ENDPOINT_SNITCH_NAME);
@@ -77,8 +120,12 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         }
     }
     public String getPrivateIp() {
-        String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
-        return Strings.isNonBlank(subnetAddress) ? subnetAddress : getAttribute(CassandraNode.ADDRESS);
+        if (requiresAlwaysPublicIp()) {
+            return getAttribute(CassandraNode.ADDRESS);
+        } else {
+            String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
+            return Strings.isNonBlank(subnetAddress) ? subnetAddress : getAttribute(CassandraNode.ADDRESS);
+        }
     }
     public String getPublicIp() {
         return getAttribute(CassandraNode.ADDRESS);
@@ -100,6 +147,8 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 // http://www.datastax.com/documentation/cassandra/2.0/mobile/cassandra/architecture/architectureSnitchEC2MultiRegion_c.html
                 // says the seeds should be public IPs.
                 seedsHostnames.add(entity.getAttribute(CassandraNode.ADDRESS));
+            } else if (requiresAlwaysPublicIp()) {
+                seedsHostnames.add(entity.getAttribute(CassandraNode.HOSTNAME));
             } else {
                 String seedHostname = Machines.findSubnetOrPublicHostname(entity).get();
                 seedsHostnames.add(seedHostname);
