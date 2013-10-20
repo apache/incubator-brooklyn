@@ -3,9 +3,9 @@ package brooklyn.location.cloud;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.AbstractLocation;
-import brooklyn.location.basic.LocationCreationUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -27,7 +27,12 @@ implements MachineProvisioningLocation<SshMachineLocation>, CloudLocationConfig
      * subclasses can extend and downcast the result */
     @Override
     public AbstractCloudMachineProvisioningLocation newSubLocation(Map<?,?> newFlags) {
-        return LocationCreationUtils.newSubLocation(newFlags, this);
+        // TODO should be able to use ConfigBag.newInstanceExtending; would require moving stuff around to api etc
+        // TODO was previously `return LocationCreationUtils.newSubLocation(newFlags, this)`; need to retest on CloudStack etc
+        return getManagementContext().getLocationManager().createLocation(LocationSpec.create(getClass())
+                .parent(this)
+                .configure(getRawLocalConfigBag().getAllConfig())
+                .configure(newFlags));
     }
 
     @Override

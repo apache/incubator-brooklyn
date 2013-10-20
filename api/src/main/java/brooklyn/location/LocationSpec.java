@@ -30,6 +30,8 @@ import com.google.common.collect.Maps;
  */
 public class LocationSpec<T extends Location> implements Serializable {
 
+    // TODO Would like to add `configure(ConfigBag)`, but `ConfigBag` is in core rather than api
+    
     private static final Logger log = LoggerFactory.getLogger(LocationSpec.class);
 
     private final static long serialVersionUID = 1L;
@@ -95,7 +97,7 @@ public class LocationSpec<T extends Location> implements Serializable {
         parent = checkNotNull(val, "parent");
         return this;
     }
-    
+
     public LocationSpec<T> configure(Map<?,?> val) {
         for (Map.Entry<?, ?> entry: val.entrySet()) {
             if (entry.getKey()==null) throw new NullPointerException("Null key not permitted");

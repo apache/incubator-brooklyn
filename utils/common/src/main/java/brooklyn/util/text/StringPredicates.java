@@ -1,6 +1,11 @@
 package brooklyn.util.text;
 
+import java.io.Serializable;
+import java.util.Set;
+
 import javax.annotation.Nullable;
+
+import brooklyn.util.collections.MutableSet;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -52,6 +57,27 @@ public class StringPredicates {
         };
     }
 
+    public static Predicate<CharSequence> equalToAny(Iterable<String> vals) {
+        return new EqualToAny<CharSequence>(vals);
+    }
+
+    public static class EqualToAny<T> implements Predicate<T>, Serializable {
+        private static final long serialVersionUID = 6209304291945204422L;
+        private final Set<T> vals;
+        
+        public EqualToAny(Iterable<? extends T> vals) {
+            this.vals = MutableSet.copyOf(vals); // so allows nulls
+        }
+        @Override
+        public boolean apply(T input) {
+            return vals.contains(input);
+        }
+        @Override
+        public String toString() {
+            return "equalToAny("+vals+")";
+        }
+    }
+    
     // TODO globs, matches regex, etc ... add as you need them!
     
 }

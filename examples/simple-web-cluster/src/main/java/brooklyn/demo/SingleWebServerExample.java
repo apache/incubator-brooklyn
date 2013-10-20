@@ -39,7 +39,7 @@ public class SingleWebServerExample extends AbstractApplication {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(SingleWebServerExample.class).displayName("Brooklyn WebApp Cluster with Database example"))
+                .application(EntitySpecs.appSpec(SingleWebServerExample.class).displayName("Brooklyn WebApp example"))
                 .webconsolePort(port)
                 .location(location)
                 .start();

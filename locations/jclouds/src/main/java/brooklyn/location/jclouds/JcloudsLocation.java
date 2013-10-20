@@ -61,10 +61,11 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocationConfigUtils;
-import brooklyn.location.basic.LocationCreationUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
+import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
+import brooklyn.location.jclouds.zone.AwsAvailabilityZoneExtension;
 import brooklyn.management.AccessController;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -164,8 +165,20 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
     
     @Override
+    public void init() {
+        super.init();
+        if ("aws-ec2".equals(getProvider())) {
+            addExtension(AvailabilityZoneExtension.class, new AwsAvailabilityZoneExtension(getManagementContext(), this));
+        }
+    }
+    
+    @Override
     public JcloudsLocation newSubLocation(Map<?,?> newFlags) {
-        return LocationCreationUtils.newSubLocation(newFlags, this);
+        // TODO should be able to use ConfigBag.newInstanceExtending; would require moving stuff around to api etc
+        return getManagementContext().getLocationManager().createLocation(LocationSpec.create(getClass())
+                .parent(this)
+                .configure(getRawLocalConfigBag().getAllConfig())
+                .configure(newFlags));
     }
 
     @Override

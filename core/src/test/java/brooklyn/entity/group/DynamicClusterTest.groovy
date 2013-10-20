@@ -95,7 +95,8 @@ class DynamicClusterTest {
             cluster.start(null)
             fail();
         } catch (Exception e) {
-            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+            if (!e.toString().contains("Null location supplied")) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, NullPointerException.class) == null) throw e;
         }
     }
 
@@ -107,7 +108,7 @@ class DynamicClusterTest {
             cluster.start([])
             fail();
         } catch (Exception e) {
-            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
         }
     }
 
@@ -119,7 +120,7 @@ class DynamicClusterTest {
             cluster.start([ loc, loc2 ])
             fail();
         } catch (Exception e) {
-            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
         }
     }
 

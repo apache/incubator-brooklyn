@@ -5,6 +5,10 @@ import java.util.Map;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 
+/**
+ * @since 0.6.0-M1
+ * @deprecated since 0.6.0; instead use managementContext.getLocationManager().createLocation(locationSpec)
+ */
 public class LocationCreationUtils {
 
     /** uses reflection to create a location with of the same type as the parent, 

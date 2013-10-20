@@ -3,8 +3,10 @@ package brooklyn.entity.group;
 import groovy.lang.Closure;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
@@ -17,16 +19,23 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.group.zoneaware.BalancingNodePlacementStrategy;
+import brooklyn.entity.group.zoneaware.ProportionalZoneFailureDetector;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.location.Location;
+import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
@@ -34,6 +43,21 @@ import com.google.common.collect.ImmutableMap;
 @ImplementedBy(DynamicClusterImpl.class)
 public interface DynamicCluster extends AbstractGroup, Cluster {
 
+    @Beta
+    public interface NodePlacementStrategy {
+        List<Location> locationsForAdditions(Multimap<Location, Entity> currentMembers, Collection<? extends Location> locs, int numToAdd);
+        List<Entity> entitiesToRemove(Multimap<Location, Entity> currentMembers, int numToRemove);
+    }
+    
+    @Beta
+    public interface ZoneFailureDetector {
+        // TODO Would like to add entity-down reporting
+        // TODO Should we push any of this into the AvailabilityZoneExtension, rather than on the dynamic cluster?
+        void onStartupSuccess(Location loc, Entity entity);
+        void onStartupFailure(Location loc, Entity entity, Throwable cause);
+        boolean hasFailed(Location loc);
+    }
+    
     public static final MethodEffector<String> REPLACE_MEMBER = new MethodEffector<String>(DynamicCluster.class, "replaceMember");
 
     @SetFromFlag("quarantineFailedEntities")
@@ -68,6 +92,30 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
     public static final ConfigKey<Map> CUSTOM_CHILD_FLAGS = new BasicConfigKey<Map>(
             Map.class, "dynamiccluster.customChildFlags", "Additional flags to be passed to children when they are being created", ImmutableMap.of());
 
+    @SetFromFlag("enableAvailabilityZones")
+    ConfigKey<Boolean> ENABLE_AVAILABILITY_ZONES = ConfigKeys.newBooleanConfigKey(
+            "dynamiccluster.zone.enable", "Whether to use availability zones, or just deploy everything into the generic location", false);
+    
+    @SetFromFlag("zoneFailureDetector")
+    ConfigKey<ZoneFailureDetector> ZONE_FAILURE_DETECTOR = ConfigKeys.newConfigKey(
+            ZoneFailureDetector.class, "dynamiccluster.zone.failureDetector", "Zone failure detector", new ProportionalZoneFailureDetector(2, Duration.ONE_HOUR, 0.9));
+    
+    @SetFromFlag("zonePlacementStrategy")
+    ConfigKey<NodePlacementStrategy> ZONE_PLACEMENT_STRATEGY = ConfigKeys.newConfigKey(
+            NodePlacementStrategy.class, "dynamiccluster.zone.placementStrategy", "Node placement strategy", new BalancingNodePlacementStrategy());
+    
+    @SetFromFlag("availabilityZoneNames")
+    ConfigKey<Collection<String>> AVAILABILITY_ZONE_NAMES = (ConfigKey) ConfigKeys.newConfigKey(
+            Collection.class, "dynamiccluster.availabilityZones", "availability zones to use (if non-null, overrides other configuration)", null);
+    
+    @SetFromFlag("numAvailabilityZones")
+    ConfigKey<Integer> NUM_AVAILABILITY_ZONES = ConfigKeys.newIntegerConfigKey(
+            "dynamiccluster.numAvailabilityZones", "number of availability zones to use (will attempt to auto-discover this number)", 3);
+
+    AttributeSensor<List<Location>> SUB_LOCATIONS = new BasicAttributeSensor(List.class, "dynamiccluster.subLocations", "Locations for each availability zone to use");
+    
+    AttributeSensor<Set<Location>> FAILED_SUB_LOCATIONS = new BasicAttributeSensor(Set.class, "dynamiccluster.failedSubLocations", "Sub locations that seem to have failed");
+    
     /**
      * 
      * @param memberId
@@ -78,9 +126,16 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
     public String replaceMember(@EffectorParam(name="memberId", description="The entity id of a member to be replaced") String memberId);
     
     public void setRemovalStrategy(Function<Collection<Entity>, Entity> val);
-    
+
+    /**
+     * @deprecated since 0.6.0; use {@link #setRemovalStrategy(Function)}, along with {@link GroovyJavaMethods#functionFromClosure(Closure)}
+     */
     public void setRemovalStrategy(Closure val);
     
+    void setZonePlacementStrategy(NodePlacementStrategy val);
+    
+    public void setZoneFailureDetector(ZoneFailureDetector val);
+
     public void setMemberSpec(EntitySpec<?> memberSpec);
     
     public void setFactory(EntityFactory<?> factory);

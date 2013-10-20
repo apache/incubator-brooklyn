@@ -1,12 +1,15 @@
 package brooklyn.entity.group;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.lang.Closure;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,19 +25,25 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
+import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
@@ -42,8 +51,11 @@ import com.google.common.collect.Maps;
 public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicCluster {
     private static final Logger LOG = LoggerFactory.getLogger(DynamicClusterImpl.class);
 
-    // Mutex for synchronizing during re-size operations
-    private final Object mutex = new Object[0];
+    /**
+     * Mutex for synchronizing during re-size operations.
+     * Sub-classes should use with great caution, to not introduce deadlocks!
+     */
+    protected final Object mutex = new Object[0];
     
     private static final Function<Collection<Entity>, Entity> defaultRemovalStrategy = new Function<Collection<Entity>, Entity>() {
         @Override public Entity apply(Collection<Entity> contenders) {
@@ -85,6 +97,24 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return (result != null) ? result : defaultRemovalStrategy;
     }
     
+    @Override
+    public void setZonePlacementStrategy(NodePlacementStrategy val) {
+        setConfig(ZONE_PLACEMENT_STRATEGY, checkNotNull(val, "zonePlacementStrategy"));
+    }
+
+    protected NodePlacementStrategy getZonePlacementStrategy() {
+        return checkNotNull(getConfig(ZONE_PLACEMENT_STRATEGY), "zonePlacementStrategy config");
+    }
+
+    @Override
+    public void setZoneFailureDetector(ZoneFailureDetector val) {
+        setConfig(ZONE_FAILURE_DETECTOR, checkNotNull(val, "zoneFailureDetector"));
+    }
+
+    protected ZoneFailureDetector getZoneFailureDetector() {
+        return checkNotNull(getConfig(ZONE_FAILURE_DETECTOR), "zoneFailureDetector config");
+    }
+
     protected EntitySpec<?> getMemberSpec() {
         return getConfig(MEMBER_SPEC);
     }
@@ -107,27 +137,19 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return Iterables.getOnlyElement(getLocations());
     }
     
-    private boolean isQuarantineEnabled() {
+    protected boolean isAvailabilityZoneEnabled() {
+        return getConfig(ENABLE_AVAILABILITY_ZONES);
+    }
+    
+    protected boolean isQuarantineEnabled() {
         return getConfig(QUARANTINE_FAILED_ENTITIES);
     }
     
-    private Group getQuarantineGroup() {
+    protected Group getQuarantineGroup() {
         return getAttribute(QUARANTINE_GROUP);
     }
     
-    @Override
-    public void start(Collection<? extends Location> locs) {
-        if (isQuarantineEnabled()) {
-            Group quarantineGroup = addChild(EntitySpec.create(BasicGroup.class).displayName("quarantine"));
-            Entities.manage(quarantineGroup);
-            setAttribute(QUARANTINE_GROUP, quarantineGroup);
-        }
-        
-        if (locs==null) throw new IllegalStateException("Null location supplied to start "+this);
-        if (locs.size()!=1) throw new IllegalStateException("Wrong number of locations supplied to start "+this+": "+locs);
-        addLocations(locs);
-        setAttribute(SERVICE_STATE, Lifecycle.STARTING);
-        
+    protected int getInitialQuorumSize() {
         int initialSize = getConfig(INITIAL_SIZE).intValue();
         int initialQuorumSize = getConfig(INITIAL_QUORUM_SIZE).intValue();
         if (initialQuorumSize < 0) initialQuorumSize = initialSize;
@@ -135,21 +157,82 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             LOG.warn("On start of cluster {}, misconfigured initial quorum size {} greater than initial size{}; using {}", new Object[] {initialQuorumSize, initialSize, initialSize});
             initialQuorumSize = initialSize;
         }
-        
+        return initialQuorumSize;
+    }
+    
+    @Override
+    public void start(Collection<? extends Location> locs) {
+        checkNotNull(locs, "Null location supplied to start %s", this);
+        checkArgument(locs.size() == 1, "Wrong number of locations supplied to start %s: %s", this, locs);
+        addLocations(locs);
+
+        if (isAvailabilityZoneEnabled()) {
+            setAttribute(SUB_LOCATIONS, findSubLocations(Iterables.getOnlyElement(locs)));
+        }
+
+        setAttribute(SERVICE_STATE, Lifecycle.STARTING);
+
+        if (isQuarantineEnabled()) {
+            Group quarantineGroup = addChild(EntitySpec.create(BasicGroup.class).displayName("quarantine"));
+            Entities.manage(quarantineGroup);
+            setAttribute(QUARANTINE_GROUP, quarantineGroup);
+        }
+
+        int initialSize = getConfig(INITIAL_SIZE).intValue();
+        int initialQuorumSize = getInitialQuorumSize();
+
         resize(initialSize);
-        
+
         int currentSize = getCurrentSize().intValue();
         if (currentSize < initialQuorumSize) {
-            throw new IllegalStateException("On start of cluster "+this+", failed to get to initial size of "+initialSize+"; size is "+getCurrentSize()+
-                    (initialQuorumSize != initialSize ? " (initial quorum size is "+initialQuorumSize+")" : ""));
+            throw new IllegalStateException("On start of cluster " + this + ", failed to get to initial size of " + initialSize
+                    + "; size is " + getCurrentSize()
+                    + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : ""));
         } else if (currentSize < initialSize) {
-            LOG.warn("On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing", 
-                    new Object[] {this, currentSize, initialQuorumSize, initialSize});
+            LOG.warn(
+                    "On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing",
+                    new Object[] { this, currentSize, initialQuorumSize, initialSize });
         }
-        
-        for (Policy it : getPolicies()) { it.resume(); }
+
+        for (Policy it : getPolicies()) {
+            it.resume();
+        }
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
         setAttribute(SERVICE_UP, calculateServiceUp());
+    }
+
+    protected List<Location> findSubLocations(Location loc) {
+        Collection<String> zoneNames = getConfig(AVAILABILITY_ZONE_NAMES);
+        Integer numZones = getConfig(NUM_AVAILABILITY_ZONES);
+
+        if (loc.hasExtension(AvailabilityZoneExtension.class)) {
+            AvailabilityZoneExtension zoneExtension = loc.getExtension(AvailabilityZoneExtension.class);
+            List<Location> subLocations;
+
+            if (zoneNames == null || zoneNames.isEmpty()) {
+                checkArgument(numZones > 0, "numZones must be greater than zero: %s", numZones);
+                subLocations = zoneExtension.getSubLocations(numZones);
+
+                if (numZones > subLocations.size()) {
+                    throw new IllegalStateException("Number of required zones (" + numZones + ") not satisfied in " + loc
+                            + "; only " + subLocations.size() + " available: " + subLocations);
+                }
+            } else {
+                // TODO check that these are valid region / availabilityZones?
+                subLocations = zoneExtension.getSubLocationsByName(StringPredicates.equalToAny(zoneNames), zoneNames.size());
+
+                if (zoneNames.size() > subLocations.size()) {
+                    throw new IllegalStateException("Number of required zones (" + zoneNames.size() + " - " + zoneNames
+                            + ") not satisfied in " + loc + "; only " + subLocations.size() + " available: " + subLocations);
+                }
+            }
+
+            return subLocations;
+
+        } else {
+            throw new IllegalStateException("Availability zones (extension " + AvailabilityZoneExtension.class
+                    + ") not supported for location " + loc);
+        }
     }
 
     @Override
@@ -167,6 +250,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         throw new UnsupportedOperationException();
     }
     
+
     @Override
     public Integer resize(Integer desiredSize) {
         synchronized (mutex) {
@@ -201,7 +285,14 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 throw new NoSuchElementException("In "+this+", entity "+member+" is not a member so not replacing");
             }
             
-            Collection<Entity> addedEntities = grow(1);
+            Location memberLoc;
+            if (isAvailabilityZoneEnabled()) {
+                memberLoc = checkNotNull(Iterables.getOnlyElement(member.getLocations()), "member's location (%s)", member);
+            } else {
+                memberLoc = getLocation();
+            }
+            
+            Collection<Entity> addedEntities = growByOne(memberLoc);
             if (addedEntities.size() < 1) {
                 String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
                 throw new IllegalStateException(msg);
@@ -213,21 +304,94 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
     }
 
+    protected Multimap<Location, Entity> getMembersByLocation() {
+        Multimap<Location, Entity> result = LinkedHashMultimap.create();
+        for (Entity member : getMembers()) {
+            Collection<Location> memberLocs = member.getLocations();
+            Location memberLoc = Iterables.getFirst(memberLocs, null);
+            if (memberLoc != null) {
+                result.put(memberLoc, member);
+            }
+        }
+        return result;
+    }
+
+    protected List<Location> getNonFailedSubLocations() {
+        List<Location> result = Lists.newArrayList();
+        Set<Location> failed = Sets.newLinkedHashSet();
+        List<Location> subLocations = getAttribute(SUB_LOCATIONS);
+        Set<Location> oldFailedSubLocations = getAttribute(FAILED_SUB_LOCATIONS);
+        if (oldFailedSubLocations == null)
+            oldFailedSubLocations = ImmutableSet.<Location> of();
+
+        for (Location subLocation : subLocations) {
+            if (getZoneFailureDetector().hasFailed(subLocation)) {
+                failed.add(subLocation);
+            } else {
+                result.add(subLocation);
+            }
+        }
+
+        Set<Location> newlyFailed = Sets.difference(failed, oldFailedSubLocations);
+        Set<Location> newlyRecovered = Sets.difference(oldFailedSubLocations, failed);
+        setAttribute(FAILED_SUB_LOCATIONS, failed);
+        if (newlyFailed.size() > 0) {
+            LOG.warn("Detected probably zone failures for {}: {}", this, newlyFailed);
+        }
+        if (newlyRecovered.size() > 0) {
+            LOG.warn("Detected probably zone recoveries for {}: {}", this, newlyRecovered);
+        }
+
+        return result;
+    }
+
     /**
      * Increases the cluster size by the given number. Returns successfully added nodes.
+     * Called when synchronized on mutex, so overriders beware!
      */
     protected Collection<Entity> grow(int delta) {
-        Collection<Entity> addedEntities = Lists.newArrayList();
-        for (int i = 0; i < delta; i++) {
-            addedEntities.add(addNode());
+        // choose locations to be deployed to
+        List<Location> chosenLocations;
+        if (isAvailabilityZoneEnabled()) {
+            List<Location> subLocations = getNonFailedSubLocations();
+            Multimap<Location, Entity> membersByLocation = getMembersByLocation();
+            chosenLocations = getZonePlacementStrategy().locationsForAdditions(membersByLocation, subLocations, delta);
+            if (chosenLocations.size() != delta) {
+                throw new IllegalStateException("Node placement strategy chose " + Iterables.size(chosenLocations)
+                        + ", when expected delta " + delta + " in " + this);
+            }
+        } else {
+            chosenLocations = Collections.nCopies(delta, getLocation());
         }
+
+        // create the entities and start them
+        List<Entity> addedEntities = Lists.newArrayList();
+        Map<Entity, Location> addedEntityLocations = Maps.newLinkedHashMap();
         Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
-        for (Entity entity: addedEntities) {
-            Map<String,?> args = ImmutableMap.of("locations", ImmutableList.of(getLocation()));
+        for (Location chosenLocation : chosenLocations) {
+            Entity entity = addNode(chosenLocation);
+            addedEntities.add(entity);
+            addedEntityLocations.put(entity, chosenLocation);
+            Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(chosenLocation));
             tasks.put(entity, entity.invoke(Startable.START, args));
         }
         Map<Entity, Throwable> errors = waitForTasksOnEntityStart(tasks);
-        
+
+        // if tracking, then report success/fail to the ZoneFailureDetector
+        if (isAvailabilityZoneEnabled()) {
+            for (Map.Entry<Entity, Location> entry : addedEntityLocations.entrySet()) {
+                Entity entity = entry.getKey();
+                Location loc = entry.getValue();
+                Throwable err = errors.get(entity);
+                if (err == null) {
+                    getZoneFailureDetector().onStartupSuccess(loc, entity);
+                } else {
+                    getZoneFailureDetector().onStartupFailure(loc, entity, err);
+                }
+            }
+        }
+
+        // quarantine/cleanup as necessary
         if (!errors.isEmpty()) {
             if (isQuarantineEnabled()) {
                 quarantineFailedNodes(errors.keySet());
@@ -235,14 +399,51 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 cleanupFailedNodes(errors.keySet());
             }
         }
-        
-        return MutableList.<Entity>builder().addAll(addedEntities).removeAll(errors.keySet()).build();
+
+        return MutableList.<Entity> builder().addAll(addedEntities).removeAll(errors.keySet()).build();
     }
-    
+
+    /**
+     * Increases the cluster size by the given number. Returns successfully added nodes. 
+     * Called when synchronized on mutex, so overriders beware!
+     */
+    protected Collection<Entity> growByOne(Location loc) {
+        // TODO remove duplication from #grow(int)
+        Collection<Entity> addedEntities = Lists.newArrayList();
+        Entity entity = addNode(loc);
+        addedEntities.add(entity);
+        Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(loc));
+        Task<?> task = entity.invoke(Startable.START, args);
+        Map<Entity, Throwable> errors = waitForTasksOnEntityStart(ImmutableMap.of(entity, task));
+
+        // if tracking, then report success/fail to the ZoneFailureDetector
+        if (isAvailabilityZoneEnabled()) {
+            Throwable err = errors.get(entity);
+            if (err == null) {
+                getZoneFailureDetector().onStartupSuccess(loc, entity);
+            } else {
+                getZoneFailureDetector().onStartupFailure(loc, entity, err);
+            }
+        }
+
+        // quarantine/cleanup as necessary
+        if (!errors.isEmpty()) {
+            if (isQuarantineEnabled()) {
+                quarantineFailedNodes(ImmutableList.of(entity));
+            } else {
+                cleanupFailedNodes(ImmutableList.of(entity));
+            }
+        }
+
+        return MutableList.<Entity> builder().addAll(addedEntities).removeAll(errors.keySet()).build();
+    }
+
+    /**
+     * Decreases the cluster size by the given number.
+     * Called when synchronized on mutex, so overriders beware!
+     */
     protected void shrink(int delta) {
-        Collection<Entity> removedEntities = Lists.newArrayList();
-        
-        for (int i = 0; i < (delta*-1); i++) { removedEntities.add(pickAndRemoveMember()); }
+        Collection<Entity> removedEntities = pickAndRemoveMembers(delta * -1);
 
         // FIXME symmetry in order of added as child, managed, started, and added to group
         // FIXME assume stoppable; use logic of grow?
@@ -280,11 +481,11 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getAttribute(SERVICE_STATE) == Lifecycle.RUNNING;
     }
     
-    protected Map<Entity, Throwable> waitForTasksOnEntityStart(Map<Entity,Task<?>> tasks) {
+    protected Map<Entity, Throwable> waitForTasksOnEntityStart(Map<? extends Entity,? extends Task<?>> tasks) {
         // TODO Could have CompoundException, rather than propagating first
         Map<Entity, Throwable> errors = Maps.newLinkedHashMap();
         
-        for (Map.Entry<Entity,Task<?>> entry : tasks.entrySet()) {
+        for (Map.Entry<? extends Entity,? extends Task<?>> entry : tasks.entrySet()) {
             Entity entity = entry.getKey();
             Task<?> task = entry.getValue();
             try {
@@ -315,8 +516,15 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getConfig(CUSTOM_CHILD_FLAGS);
     }
     
+    protected Entity addNode(Location loc) {
+        return addNode();
+    }
+    
+    /**
+     * @deprecated since 0.6; use {@link #addNode(Location)}, so can take that location into account when configuring node
+     */
     protected Entity addNode() {
-        Map creation = Maps.newLinkedHashMap(getCustomChildFlags());
+        Map<?,?> creation = Maps.newLinkedHashMap(getCustomChildFlags());
         if (LOG.isDebugEnabled()) LOG.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] {this, getId(), creation});
 
         Entity entity = createNode(creation);
@@ -325,6 +533,13 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return entity;
     }
 
+    protected Entity createNode(Location loc, Map flags) {
+        return createNode(flags);
+    }
+    
+    /**
+     * @deprecated since 0.6; use {@link #createNode(Location, Map)}, so can take that location into account when configuring node
+     */
     protected Entity createNode(Map flags) {
         EntitySpec<?> memberSpec = getMemberSpec();
         if (memberSpec != null) {
@@ -345,9 +560,42 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return entity;
     }
     
-    protected Entity pickAndRemoveMember() {
+    protected List<Entity> pickAndRemoveMembers(int delta) {
+        if (delta == 1 && !isAvailabilityZoneEnabled()) {
+            return ImmutableList.of(pickAndRemoveMember()); // for backwards compatibility in sub-classes
+        }
         
-        // TODO use pluggable strategy; default is to remove newest
+        // TODO inefficient impl
+        Preconditions.checkState(getMembers().size() > 0, "Attempt to remove a node when members is empty, from cluster " + this);
+        if (LOG.isDebugEnabled()) LOG.debug("Removing a node from {}", this);
+
+        if (isAvailabilityZoneEnabled()) {
+            Multimap<Location, Entity> membersByLocation = getMembersByLocation();
+            List<Entity> entities = getZonePlacementStrategy().entitiesToRemove(membersByLocation, delta);
+
+            Preconditions.checkState(entities.size() == delta, "Incorrect num entity chosen for removal from %s (%s when expected %s)",
+                    getId(), entities.size(), delta);
+
+            for (Entity entity : entities) {
+                removeMember(entity);
+            }
+            return entities;
+            
+        } else {
+            List<Entity> entities = Lists.newArrayList();
+            for (int i = 0; i < delta; i++) {
+                entities.add(pickAndRemoveMember());
+            }
+            return entities;
+        }
+    }
+
+    /**
+     * @deprecated since 0.6.0; subclasses should instead override {@link #pickAndRemoveMembers(int)} if they really need to!
+     */
+    protected Entity pickAndRemoveMember() {
+        assert !isAvailabilityZoneEnabled() : "should instead call pickAndRemoveMembers(int) if using availability zones";
+        
         // TODO inefficient impl
         Preconditions.checkState(getMembers().size() > 0, "Attempt to remove a node when members is empty, from cluster "+this);
         if (LOG.isDebugEnabled()) LOG.debug("Removing a node from {}", this);

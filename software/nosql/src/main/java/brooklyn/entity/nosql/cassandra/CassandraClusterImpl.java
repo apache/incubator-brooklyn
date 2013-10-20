@@ -39,7 +39,7 @@ import com.google.common.collect.Lists;
 /**
  * Implementation of {@link CassandraCluster}.
  * <p>
- * Serveral subtleties to note:
+ * Several subtleties to note:
  * - a node may take some time after it is running and serving JMX to actually be contactable on its thrift port
  *   (so we wait for thrift port to be contactable)
  * - sometimes new nodes take a while to peer, and/or take a while to get a consistent schema
