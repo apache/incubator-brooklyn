@@ -114,6 +114,9 @@ public class InternalPolicyFactory {
                 ((AbstractPolicy)pol).configure(MutableMap.copyOf(config)); // TODO AbstractPolicy.configure modifies the map
             }
             
+            // TODO Can we avoid this for "new-style policies"? Should we just trust the configure() method, 
+            // which the user may have overridden? 
+            // Also see InternalLocationFactory for same issue, which this code is based on.
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
                 ((AbstractPolicy)pol).setConfig((ConfigKey)entry.getKey(), entry.getValue());
             }
