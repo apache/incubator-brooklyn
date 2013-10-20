@@ -219,6 +219,17 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                             }
                         })
                         .onException(Functions.constant(-1)))
+                .pollAttribute(new JmxAttributePollConfig<Integer>(LIVE_NODE_COUNT)
+                        .objectName(storageServiceMBean)
+                        .attributeName("LiveNodes")
+                        .onSuccess((Function) new Function<List, Integer>() {
+                            @Override
+                            public Integer apply(@Nullable List input) {
+                                if (input == null || input.isEmpty()) return 0;
+                                return input.size();
+                            }
+                        })
+                        .onException(Functions.constant(-1)))
                 .pollAttribute(new JmxAttributePollConfig<Integer>(READ_ACTIVE)
                         .objectName(readStageMBean)
                         .attributeName("ActiveCount")

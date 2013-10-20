@@ -93,6 +93,8 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans
 
     AttributeSensor<Integer> PEERS = Sensors.newIntegerSensor( "cassandra.peers", "Number of peers in cluster");
 
+    AttributeSensor<Integer> LIVE_NODE_COUNT = Sensors.newIntegerSensor( "cassandra.liveNodeCount", "Number of live nodes in cluster");
+
     /* Metrics for read/write performance. */
 
     AttributeSensor<Long> READ_PENDING = Sensors.newLongSensor("cassandra.read.pending", "Current pending ReadStage tasks");
