@@ -171,34 +171,38 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
 
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
-
-        if (isQuarantineEnabled()) {
-            Group quarantineGroup = addChild(EntitySpec.create(BasicGroup.class).displayName("quarantine"));
-            Entities.manage(quarantineGroup);
-            setAttribute(QUARANTINE_GROUP, quarantineGroup);
+        try {
+            if (isQuarantineEnabled()) {
+                Group quarantineGroup = addChild(EntitySpec.create(BasicGroup.class).displayName("quarantine"));
+                Entities.manage(quarantineGroup);
+                setAttribute(QUARANTINE_GROUP, quarantineGroup);
+            }
+    
+            int initialSize = getConfig(INITIAL_SIZE).intValue();
+            int initialQuorumSize = getInitialQuorumSize();
+    
+            resize(initialSize);
+    
+            int currentSize = getCurrentSize().intValue();
+            if (currentSize < initialQuorumSize) {
+                throw new IllegalStateException("On start of cluster " + this + ", failed to get to initial size of " + initialSize
+                        + "; size is " + getCurrentSize()
+                        + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : ""));
+            } else if (currentSize < initialSize) {
+                LOG.warn(
+                        "On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing",
+                        new Object[] { this, currentSize, initialQuorumSize, initialSize });
+            }
+    
+            for (Policy it : getPolicies()) {
+                it.resume();
+            }
+            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+            setAttribute(SERVICE_UP, calculateServiceUp());
+        } catch (Exception e) {
+            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            throw Exceptions.propagate(e);
         }
-
-        int initialSize = getConfig(INITIAL_SIZE).intValue();
-        int initialQuorumSize = getInitialQuorumSize();
-
-        resize(initialSize);
-
-        int currentSize = getCurrentSize().intValue();
-        if (currentSize < initialQuorumSize) {
-            throw new IllegalStateException("On start of cluster " + this + ", failed to get to initial size of " + initialSize
-                    + "; size is " + getCurrentSize()
-                    + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : ""));
-        } else if (currentSize < initialSize) {
-            LOG.warn(
-                    "On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing",
-                    new Object[] { this, currentSize, initialQuorumSize, initialSize });
-        }
-
-        for (Policy it : getPolicies()) {
-            it.resume();
-        }
-        setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
-        setAttribute(SERVICE_UP, calculateServiceUp());
     }
 
     protected List<Location> findSubLocations(Location loc) {
@@ -238,11 +242,16 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public void stop() {
         setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
-        setAttribute(SERVICE_UP, calculateServiceUp());
-        for (Policy it : getPolicies()) { it.suspend(); }
-        resize(0);
-        setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
-        setAttribute(SERVICE_UP, calculateServiceUp());
+        try {
+            setAttribute(SERVICE_UP, calculateServiceUp());
+            for (Policy it : getPolicies()) { it.suspend(); }
+            resize(0);
+            setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
+            setAttribute(SERVICE_UP, calculateServiceUp());
+        } catch (Exception e) {
+            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            throw Exceptions.propagate(e);
+        }
     }
 
     @Override
