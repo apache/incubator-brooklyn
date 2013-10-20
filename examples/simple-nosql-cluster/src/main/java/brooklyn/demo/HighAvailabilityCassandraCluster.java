@@ -40,9 +40,11 @@ public class HighAvailabilityCassandraCluster extends AbstractApplication {
     public void init() {
         addChild(EntitySpec.create(CassandraCluster.class)
                 .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
-                .configure(CassandraCluster.INITIAL_SIZE, 2)
-//                .configure(CassandraCluster.ENABLE_AVAILABILITY_ZONES, true)
-//                .configure(CassandraCluster.NUM_AVAILABILITY_ZONES, 3)
+                .configure(CassandraCluster.INITIAL_SIZE, 6)
+                .configure(CassandraCluster.ENABLE_AVAILABILITY_ZONES, true)
+                .configure(CassandraCluster.NUM_AVAILABILITY_ZONES, 3)
+                //See https://github.com/brooklyncentral/brooklyn/issues/973
+                //.configure(CassandraCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("us-east-1b", "us-east-1c", "us-east-1e"))
                 .configure(CassandraCluster.ENDPOINT_SNITCH_NAME, "GossipingPropertyFileSnitch")
                 .configure(CassandraCluster.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
                         .policy(PolicySpec.create(ServiceFailureDetector.class))
@@ -55,10 +57,7 @@ public class HighAvailabilityCassandraCluster extends AbstractApplication {
     public static void main(String[] argv) {
         List<String> args = Lists.newArrayList(argv);
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
-        String location = CommandLineUtil.getCommandLineOption(args, "--location");
-        if (location == null) {
-            throw new IllegalArgumentException("Location must be supplied (with --location <location-spec>)");
-        }
+        String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION_SPEC);
         
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                  .application(EntitySpec.create(StartableApplication.class, HighAvailabilityCassandraCluster.class)
