@@ -58,7 +58,7 @@ public class ServiceReplacer extends AbstractPolicy {
     public static final ConfigKey<Long> FAIL_ON_RECURRING_FAILURES_IN_THIS_DURATION = ConfigKeys.newLongConfigKey(
             "failOnRecurringFailuresInThisDuration", 
             "abandon replace if replacement has failed many times within this time interval",
-            30*60*1000L);
+            5*60*1000L);
 
     /** skips replace if replacement has failed this many times failure re-occurs within this time interval */
     @SetFromFlag("failOnNumRecurringFailures")
