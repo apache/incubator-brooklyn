@@ -9,6 +9,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.MapConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
@@ -17,6 +18,8 @@ public interface SoftwareProcess extends Entity, Startable {
 
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
     public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
+    public static final AttributeSensor<String> SUBNET_HOSTNAME = Attributes.SUBNET_HOSTNAME;
+    public static final AttributeSensor<String> SUBNET_ADDRESS = Attributes.SUBNET_ADDRESS;
 
     @SetFromFlag("startTimeout")
     public static final ConfigKey<Integer> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;

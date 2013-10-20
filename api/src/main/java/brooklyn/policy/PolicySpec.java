@@ -1,4 +1,4 @@
-package brooklyn.location;
+package brooklyn.policy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -19,86 +19,61 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
 
 /**
- * Gives details of a location to be created. It describes the location's configuration, and is
- * reusable to create multiple locations with the same configuration.
+ * Gives details of a policy to be created. It describes the policy's configuration, and is
+ * reusable to create multiple policies with the same configuration.
  * 
- * To create a LocationSpec, it is strongly encouraged to use {@code create(...)} methods.
+ * To create a PolicySpec, it is strongly encouraged to use {@code create(...)} methods.
  * 
- * @param <T> The type of location to be created
+ * @param <T> The type of policy to be created
  * 
  * @author aled
  */
-public class LocationSpec<T extends Location> implements Serializable {
+public class PolicySpec<T extends Policy> implements Serializable {
 
-    // TODO Would like to add `configure(ConfigBag)`, but `ConfigBag` is in core rather than api
-    
-    private static final Logger log = LoggerFactory.getLogger(LocationSpec.class);
+    private static final Logger log = LoggerFactory.getLogger(PolicySpec.class);
 
     private final static long serialVersionUID = 1L;
 
 
     /**
-     * @deprecated since 0.6 (added 0.6.0-M1); use {@link #create(Class)}
-     */
-    @Deprecated
-    public static <T extends Location> LocationSpec<T> spec(Class<T> type) {
-        return create(type);
-    }
-
-    /**
-     * @deprecated since 0.6 (added 0.6.0-M1); use {@link #create(Map, Class)}
-     */
-    @Deprecated
-    public static <T extends Location> LocationSpec<T> spec(Map<?,?> config, Class<T> type) {
-        return create(config, type);
-    }
-
-    /**
-     * Creates a new {@link LocationSpec} instance for a location of the given type. The returned 
-     * {@link LocationSpec} can then be customized.
+     * Creates a new {@link PolicySpec} instance for a policy of the given type. The returned 
+     * {@link PolicySpec} can then be customized.
      * 
-     * @param type A {@link Location} class
+     * @param type A {@link Policy} class
      */
-    public static <T extends Location> LocationSpec<T> create(Class<T> type) {
-        return new LocationSpec<T>(type);
+    public static <T extends Policy> PolicySpec<T> create(Class<T> type) {
+        return new PolicySpec<T>(type);
     }
     
     /**
-     * Creates a new {@link LocationSpec} instance with the given config, for a location of the given type.
+     * Creates a new {@link PolicySpec} instance with the given config, for a policy of the given type.
      * 
-     * This is primarily for groovy code; equivalent to {@code LocationSpec.create(type).configure(config)}.
+     * This is primarily for groovy code; equivalent to {@code PolicySpec.create(type).configure(config)}.
      * 
-     * @param config The spec's configuration (see {@link LocationSpec#configure(Map)}).
-     * @param type   A {@link Location} class
+     * @param config The spec's configuration (see {@link PolicySpec#configure(Map)}).
+     * @param type   A {@link Policy} class
      */
-    public static <T extends Location> LocationSpec<T> create(Map<?,?> config, Class<T> type) {
-        return LocationSpec.create(type).configure(config);
+    public static <T extends Policy> PolicySpec<T> create(Map<?,?> config, Class<T> type) {
+        return PolicySpec.create(type).configure(config);
     }
     
     private final Class<T> type;
     private String displayName;
-    private Location parent;
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
-    private final Map<Class<?>, Object> extensions = Maps.newLinkedHashMap();
 
-    protected LocationSpec(Class<T> type) {
+    protected PolicySpec(Class<T> type) {
         checkIsImplementation(type);
         checkIsNewStyleImplementation(type);
         this.type = type;
     }
     
-    public LocationSpec<T> displayName(String val) {
+    public PolicySpec<T> displayName(String val) {
         displayName = val;
         return this;
     }
 
-    public LocationSpec<T> parent(Location val) {
-        parent = checkNotNull(val, "parent");
-        return this;
-    }
-
-    public LocationSpec<T> configure(Map<?,?> val) {
+    public PolicySpec<T> configure(Map<?,?> val) {
         for (Map.Entry<?, ?> entry: val.entrySet()) {
             if (entry.getKey()==null) throw new NullPointerException("Null key not permitted");
             if (entry.getKey() instanceof CharSequence)
@@ -114,64 +89,52 @@ public class LocationSpec<T extends Location> implements Serializable {
         return this;
     }
     
-    public LocationSpec<T> configure(CharSequence key, Object val) {
+    public PolicySpec<T> configure(CharSequence key, Object val) {
         flags.put(checkNotNull(key, "key").toString(), val);
         return this;
     }
     
-    public <V> LocationSpec<T> configure(ConfigKey<V> key, V val) {
+    public <V> PolicySpec<T> configure(ConfigKey<V> key, V val) {
         config.put(checkNotNull(key, "key"), val);
         return this;
     }
 
-    public <V> LocationSpec<T> configureIfNotNull(ConfigKey<V> key, V val) {
+    public <V> PolicySpec<T> configureIfNotNull(ConfigKey<V> key, V val) {
         return (val != null) ? configure(key, val) : this;
     }
 
-    public <V> LocationSpec<T> configure(ConfigKey<V> key, Task<? extends V> val) {
+    public <V> PolicySpec<T> configure(ConfigKey<V> key, Task<? extends V> val) {
         config.put(checkNotNull(key, "key"), val);
         return this;
     }
 
-    public <V> LocationSpec<T> configure(HasConfigKey<V> key, V val) {
+    public <V> PolicySpec<T> configure(HasConfigKey<V> key, V val) {
         config.put(checkNotNull(key, "key").getConfigKey(), val);
         return this;
     }
 
-    public <V> LocationSpec<T> configure(HasConfigKey<V> key, Task<? extends V> val) {
+    public <V> PolicySpec<T> configure(HasConfigKey<V> key, Task<? extends V> val) {
         config.put(checkNotNull(key, "key").getConfigKey(), val);
-        return this;
-    }
-
-    public <E> LocationSpec<T> extension(Class<E> extensionType, E extension) {
-        extensions.put(checkNotNull(extensionType, "extensionType"), checkNotNull(extension, "extension"));
         return this;
     }
 
     /**
-     * @return The type of the location
+     * @return The type of the policy
      */
     public Class<T> getType() {
         return type;
     }
     
     /**
-     * @return The display name of the location
+     * @return The display name of the policy
      */
     public String getDisplayName() {
         return displayName;
     }
     
     /**
-     * @return The location's parent
-     */
-    public Location getParent() {
-        return parent;
-    }
-    
-    /**
      * @return Read-only construction flags
-     * @see SetFromFlag declarations on the location type
+     * @see SetFromFlag declarations on the policy type
      */
     public Map<String, ?> getFlags() {
         return Collections.unmodifiableMap(flags);
@@ -184,14 +147,6 @@ public class LocationSpec<T extends Location> implements Serializable {
         return Collections.unmodifiableMap(config);
     }
         
-    /**
-     * @return Read-only extension values
-     */
-    public Map<Class<?>, Object> getExtensions() {
-        return Collections.unmodifiableMap(extensions);
-    }
-        
-    
     @Override
     public String toString() {
         return Objects.toStringHelper(this).add("type", type).toString();
@@ -199,7 +154,7 @@ public class LocationSpec<T extends Location> implements Serializable {
     
     // TODO Duplicates method in EntitySpec and BasicEntityTypeRegistry
     private void checkIsImplementation(Class<?> val) {
-        if (!Location.class.isAssignableFrom(val)) throw new IllegalStateException("Implementation "+val+" does not implement "+Location.class.getName());
+        if (!Policy.class.isAssignableFrom(val)) throw new IllegalStateException("Implementation "+val+" does not implement "+Policy.class.getName());
         if (val.isInterface()) throw new IllegalStateException("Implementation "+val+" is an interface, but must be a non-abstract class");
         if (Modifier.isAbstract(val.getModifiers())) throw new IllegalStateException("Implementation "+val+" is abstract, but must be a non-abstract class");
     }

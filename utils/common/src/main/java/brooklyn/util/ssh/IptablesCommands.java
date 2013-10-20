@@ -1,7 +1,8 @@
 package brooklyn.util.ssh;
 
-import static brooklyn.util.ssh.CommonCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.sudo;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 
 public class IptablesCommands {
@@ -27,6 +28,31 @@ public class IptablesCommands {
         public String toString() {
             return protocol;
         }
+    }
+
+    @Beta // implementation not portable across distros
+    public static String iptablesServiceStop() {
+        return iptablesService("stop");
+    }
+
+    @Beta // implementation not portable across distros
+    public static String iptablesServiceStart() {
+        return iptablesService("start");
+    }
+
+    @Beta // implementation not portable across distros
+    public static String iptablesServiceRestart() {
+        return iptablesService("restart");
+    }
+
+    @Beta // implementation not portable across distros
+    public static String iptablesServiceStatus() {
+        return iptablesService("status");
+    }
+
+    @Beta // implementation not portable across distros
+    public static String iptablesService(String cmd) {
+        return sudo("/sbin/service iptables "+cmd);
     }
 
     /**

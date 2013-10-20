@@ -381,7 +381,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         if (DynamicTasks.getTaskQueuingContext() != null) {
             doStart(locations);
         } else {
-            Task<?> task = Tasks.builder().name("stop").body(new Runnable() { public void run() { doStart(locations); } }).build();
+            Task<?> task = Tasks.builder().name("start").body(new Runnable() { public void run() { doStart(locations); } }).build();
             Entities.submit(this, task).getUnchecked();
         }
     }

@@ -17,6 +17,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
@@ -39,7 +40,8 @@ public class InternalEntityFactory {
     
     private final ManagementContextInternal managementContext;
     private final EntityTypeRegistry entityTypeRegistry;
-
+    private final InternalPolicyFactory policyFactory;
+    
     /**
      * For tracking if AbstractEntity constructor has been called by framework, or in legacy way (i.e. directly).
      * 
@@ -95,6 +97,7 @@ public class InternalEntityFactory {
     public InternalEntityFactory(ManagementContextInternal managementContext, EntityTypeRegistry entityTypeRegistry) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
         this.entityTypeRegistry = checkNotNull(entityTypeRegistry, "entityTypeRegistry");
+        this.policyFactory = new InternalPolicyFactory(managementContext);
     }
 
     @SuppressWarnings("unchecked")
@@ -153,6 +156,10 @@ public class InternalEntityFactory {
             
             for (Policy policy : spec.getPolicies()) {
                 entity.addPolicy((AbstractPolicy)policy);
+            }
+            
+            for (PolicySpec<?> policySpec : spec.getPolicySpecs()) {
+                entity.addPolicy(policyFactory.createPolicy(policySpec));
             }
             
             Entity parent = spec.getParent();

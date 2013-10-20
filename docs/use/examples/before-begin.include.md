@@ -36,7 +36,7 @@ Grab a copy of the Brooklyn distribution and set up `BROOKLYN_HOME`:
 
 ### Installing the Examples 
 
-Grab a copy of the brooklyn-examples source code and build with Maven:
+Grab a copy of the brooklyn-examples source code and build it with Maven:
 
 {% highlight bash %}
 % git clone https://github.com/brooklyncentral/brooklyn-examples.git

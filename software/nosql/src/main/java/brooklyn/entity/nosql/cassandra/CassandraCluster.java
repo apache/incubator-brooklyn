@@ -3,11 +3,14 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.util.Map;
 import java.util.Set;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -17,14 +20,14 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Supplier;
+import com.google.common.collect.Multimap;
+
 /**
  * A cluster of {@link CassandraNode}s based on {@link DynamicCluster} which can be resized by a policy if required.
  * <p>
  * Note that due to how Cassandra assumes ports are the same across a cluster, 
  * it is NOT possible to deploy a cluster to localhost.
- * <p>
- *
- * TODO add sensors with aggregated Cassandra statistics from cluster
  */
 @Catalog(name="Apache Cassandra Database Cluster", description="Cassandra is a highly scalable, eventually consistent, distributed, structured key-value store which provides a ColumnFamily-based data model richer than typical key/value systems", iconUrl="classpath:///cassandra-logo.jpeg")
 @ImplementedBy(CassandraClusterImpl.class)
@@ -33,6 +36,28 @@ public interface CassandraCluster extends DynamicCluster {
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "cassandra.cluster.name", "Name of the Cassandra cluster", "BrooklynCluster");
 
+    @SetFromFlag("snitchName")
+    ConfigKey<String> ENDPOINT_SNITCH_NAME = ConfigKeys.newStringConfigKey("cassandra.cluster.snitchName", "Type of the Cassandra snitch", "SimpleSnitch");
+
+    @SetFromFlag("seedSupplier")
+    ConfigKey<Supplier<Set<Entity>>> SEED_SUPPLIER = (ConfigKey) ConfigKeys.newConfigKey(Supplier.class, "cassandra.cluster.seedSupplier", "For determining the seed nodes", null);
+
+    /** Additional time after the nodes in the cluster are up when starting before announcing the cluster as up;
+     * Useful to ensure nodes have synchronized.  */
+    // on 1.2.2 this could be as much as 120s when using 2 seed nodes, 
+    // or just a few seconds with 1 seed node;
+    // on 1.2.9 it seems a few seconds is sufficient even with 2 seed nodes
+    @SetFromFlag("delayBeforeAdvertisingCluster")
+    ConfigKey<Duration> DELAY_BEFORE_ADVERTISING_CLUSTER = ConfigKeys.newConfigKey(Duration.class, "cassandra.cluster.delayBeforeAdvertisingCluster", "Type of the Cassandra snitch", Duration.TEN_SECONDS);
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    AttributeSensor<Multimap<String,Entity>> DATACENTER_USAGE = (AttributeSensor)Sensors.newSensor(Map.class, "cassandra.cluster.datacenterUsages", "Current set of datacenters in use, with nodes in each");
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    AttributeSensor<Set<String>> DATACENTERS = (AttributeSensor)Sensors.newSensor(Set.class, "cassandra.cluster.datacenters", "Current set of datacenters in use");
+
+    AttributeSensor<Boolean> HAS_PUBLISHED_SEEDS = Sensors.newBooleanSensor("cassandra.cluster.seeds.hasPublished", "Whether we have published any seeds");
+    
     @SuppressWarnings({ "unchecked", "rawtypes" })
     AttributeSensor<Set<Entity>> CURRENT_SEEDS = (AttributeSensor)Sensors.newSensor(Set.class, "cassandra.cluster.seeds.current", "Current set of seeds to use to bootstrap the cluster");
     
@@ -80,19 +105,15 @@ public interface CassandraCluster extends DynamicCluster {
     // what happens if non-seed nodes start before the seed nodes ?
     public static final boolean WAIT_FOR_FIRST = true;
     
-    /** Additional time after the nodes in the cluster are up when starting before announcing the cluster as up;
-     * Useful to ensure nodes have synchronized.  */
-    // on 1.2.2 this could be as much as 120s when using 2 seed nodes, 
-    // or just a few seconds with 1 seed node;
-    // on 1.2.9 it seems a few seconds is sufficient even with 2 seed nodes
-    public static final Duration DELAY_BEFORE_ADVERTISING_CLUSTER = Duration.TEN_SECONDS;
+    @Effector(description="Updates the cluster members")
+    void update();
     
     /**
      * The name of the cluster.
      */
     String getClusterName();
 
-    @Effector(description="Updates the cluster members")
-    void update();
-
+    Set<Entity> gatherPotentialSeeds();
+    
+    Set<Entity> gatherPotentialRunningSeeds();
 }

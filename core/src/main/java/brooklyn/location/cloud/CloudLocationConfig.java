@@ -9,6 +9,7 @@ public interface CloudLocationConfig {
 
     public static final ConfigKey<String> CLOUD_ENDPOINT = LocationConfigKeys.CLOUD_ENDPOINT;
     public static final ConfigKey<String> CLOUD_REGION_ID = LocationConfigKeys.CLOUD_REGION_ID;
+    public static final ConfigKey<String> CLOUD_AVAILABILITY_ZONE_ID = LocationConfigKeys.CLOUD_AVAILABILITY_ZONE_ID;
         
     @SetFromFlag("identity")
     public static final ConfigKey<String> ACCESS_IDENTITY = LocationConfigKeys.ACCESS_IDENTITY;

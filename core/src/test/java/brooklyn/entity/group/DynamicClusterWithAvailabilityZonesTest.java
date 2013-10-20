@@ -2,6 +2,8 @@ package brooklyn.entity.group;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 import java.util.List;
 import java.util.Set;
@@ -14,6 +16,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.group.zoneaware.ProportionalZoneFailureDetector;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.FailingEntity;
@@ -89,6 +92,23 @@ public class DynamicClusterWithAvailabilityZonesTest {
         cluster.resize(0);
         locsUsed = getLocationNames(getLocationsOf(cluster.getMembers()));
         Asserts.assertEqualsIgnoringOrder(locsUsed, ImmutableList.of());
+    }
+    
+    @Test
+    public void testReplacesEntityInSameZone() throws Exception {
+        ((EntityLocal)cluster).setConfig(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone1", "zone2"));
+        cluster.start(ImmutableList.of(loc));
+        
+        cluster.resize(4);
+        List<String> locsUsed = getLocationNames(getLocationsOf(cluster.getMembers()));
+        Asserts.assertEqualsIgnoringOrder(locsUsed, ImmutableList.of("zone1", "zone1", "zone2", "zone2"));
+
+        String idToRemove = Iterables.getFirst(cluster.getMembers(), null).getId();
+        String idAdded = cluster.replaceMember(idToRemove);
+        locsUsed = getLocationNames(getLocationsOf(cluster.getMembers()));
+        Asserts.assertEqualsIgnoringOrder(locsUsed, ImmutableList.of("zone1", "zone1", "zone2", "zone2"));
+        assertNull(Iterables.find(cluster.getMembers(), EntityPredicates.idEqualTo(idToRemove), null));
+        assertNotNull(Iterables.find(cluster.getMembers(), EntityPredicates.idEqualTo(idAdded), null));
     }
     
     @Test

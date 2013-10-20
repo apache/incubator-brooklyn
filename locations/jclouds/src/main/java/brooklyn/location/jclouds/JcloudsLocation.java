@@ -41,6 +41,7 @@ import org.jclouds.compute.domain.TemplateBuilderSpec;
 import org.jclouds.compute.functions.Sha512Crypt;
 import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.domain.Credentials;
+import org.jclouds.domain.LocationScope;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
@@ -71,7 +72,6 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.internal.ssh.SshTool;
@@ -459,6 +459,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                    iptablesRules.add(IptablesCommands.saveIptablesRules());
                    sshMachineLocation.execCommands("Inserting iptables rules", iptablesRules);
                    sshMachineLocation.execCommands("List iptables rules", ImmutableList.of(IptablesCommands.listIptablesRule()));
+                }
+                
+                if (setup.get(STOP_IPTABLES)) {
+                    List<String> cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());
+                    sshMachineLocation.execCommands("Stopping iptables", cmds);
                 }
             } else {
                 // Otherwise would break CloudStack, where port-forwarding means that jclouds opinion 
@@ -976,15 +981,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         try {
             if (setup.getDescription()==null) setCreationString(setup);
             
-            String id = (String) checkNotNull(setup.getStringKey("id"), "id");
+            String unqualifiedId = (String) checkNotNull(setup.getStringKey("id"), "id");
             String hostname = (String) setup.getStringKey("hostname");
             String user = checkNotNull(getUser(setup), "user");
+            String region = (String) setup.getStringKey("region");
+            String id = ((region != null) ? region+"/" : "") + unqualifiedId;
             
             LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {}", 
                     new Object[] {id, user, (hostname != null ? hostname : "<unspecified>"), getProvider()});
             
             // can we allow re-use ?  previously didn't
-            ComputeService computeService = JcloudsUtil.findComputeService(setup, false);
+            ComputeService computeService = JcloudsUtil.findComputeService(setup, true);
             NodeMetadata node = computeService.getNodeMetadata(id);
             if (node == null) {
                 throw new IllegalArgumentException("Node not found with id "+id);
@@ -1023,6 +1030,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     protected JcloudsSshMachineLocation createJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, ConfigBag setup) throws IOException {
         Map<?,?> sshConfig = extractSshConfig(setup, node);
+        String nodeAvailabilityZone = extractAvailabilityZone(setup, node);
+        String nodeRegion = extractRegion(setup, node);
+        if (nodeRegion == null) {
+            // e.g. rackspace doesn't have "region", so rackspace-uk is best we can say (but zone="LON")
+            nodeRegion = extractProvider(setup, node);
+        }
+        
         if (LOG.isDebugEnabled())
             LOG.debug("creating JcloudsSshMachineLocation representation for {}@{} for {} with {}", 
                     new Object[] {
@@ -1043,6 +1057,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             .configure("config", sshConfig)
                             .configure("jcloudsParent", this)
                             .configure("node", node)
+                            .configureIfNotNull(CLOUD_AVAILABILITY_ZONE_ID, nodeAvailabilityZone)
+                            .configureIfNotNull(CLOUD_REGION_ID, nodeRegion)
                             .configure(CALLER_CONTEXT, setup.get(CALLER_CONTEXT)));
         } else {
             LOG.warn("Using deprecated JcloudsSshMachineLocation constructor because "+this+" is not managed");
@@ -1055,6 +1071,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     // FIXME remove "config" -- inserted directly, above
                     .put("config", sshConfig)
                     .put("callerContext", setup.get(CALLER_CONTEXT))
+                    .putIfNotNull(CLOUD_AVAILABILITY_ZONE_ID.getName(), nodeAvailabilityZone)
+                    .putIfNotNull(CLOUD_REGION_ID.getName(), nodeRegion)
                     .build(),
                     this,
                     node);
@@ -1071,6 +1089,28 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         return extractSshConfig(setup, nodeConfig).getAllConfigRaw();
     }
+
+    protected String extractAvailabilityZone(ConfigBag setup, NodeMetadata node) {
+        return extractNodeLocationId(setup, node, LocationScope.ZONE);
+    }
+
+    protected String extractRegion(ConfigBag setup, NodeMetadata node) {
+        return extractNodeLocationId(setup, node, LocationScope.REGION);
+    }
+
+    protected String extractProvider(ConfigBag setup, NodeMetadata node) {
+        return extractNodeLocationId(setup, node, LocationScope.PROVIDER);
+    }
+
+    protected String extractNodeLocationId(ConfigBag setup, NodeMetadata node, LocationScope scope) {
+        org.jclouds.domain.Location nodeLoc = node.getLocation();
+        do {
+            if (nodeLoc.getScope() == scope) return nodeLoc.getId();
+            nodeLoc = nodeLoc.getParent();
+        } while (nodeLoc != null);
+        return null;
+    }
+
 
     @Override
     public void release(SshMachineLocation machine) {
@@ -1276,7 +1316,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     String getPublicHostname(NodeMetadata node, ConfigBag setup) {
-        if ("aws-ec2".equals(setup != null ? setup.get(CLOUD_PROVIDER) : null)) {
+        String provider = (setup != null) ? setup.get(CLOUD_PROVIDER) : null;
+        if (provider == null) provider= getProvider();
+        
+        if ("aws-ec2".equals(provider)) {
             String vmIp = null;
             try {
                 vmIp = JcloudsUtil.getFirstReachableAddress(this.getComputeService().getContext(), node);

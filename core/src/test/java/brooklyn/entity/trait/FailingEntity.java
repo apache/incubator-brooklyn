@@ -9,6 +9,8 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 
@@ -38,6 +40,9 @@ public interface FailingEntity extends TestEntity {
     
     @SetFromFlag("exceptionClazz")
     ConfigKey<Class<? extends RuntimeException>> EXCEPTION_CLAZZ = (ConfigKey) ConfigKeys.newConfigKey(Class.class, "exceptionClazz", "Type of exception to throw", IllegalStateException.class);
+    
+    @SetFromFlag("execOnFailure")
+    ConfigKey<Function<? super FailingEntity,?>> EXEC_ON_FAILURE = (ConfigKey) ConfigKeys.newConfigKey(Function.class, "execOnFailure", "Callback to execute before throwing an exception, on any failure", Functions.identity());
     
     public interface EventListener {
         public static final EventListener NOOP = new EventListener() {

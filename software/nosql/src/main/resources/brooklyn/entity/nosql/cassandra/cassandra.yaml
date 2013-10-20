@@ -296,11 +296,11 @@ ssl_storage_port: ${entity.sslGossipPort?c}
 # address associated with the hostname (it might not be).
 #
 # Setting this to 0.0.0.0 is always wrong.
-listen_address: ${entity.subnetAddress}
+listen_address: ${entity.listenAddress}
 
 # Address to broadcast to other Cassandra nodes
 # Leaving this blank will set it to the same value as listen_address
-# broadcast_address: ${entity.subnetAddress}
+broadcast_address: ${entity.broadcastAddress}
 
 # Whether to start the native transport server.
 # Currently, only the thrift server is started by default because the native
@@ -529,7 +529,7 @@ cross_node_timeout: false
 #
 # You can use a custom Snitch by setting this to the full class name
 # of the snitch, which will be assumed to be on your classpath.
-endpoint_snitch: SimpleSnitch
+endpoint_snitch: ${driver.endpointSnitchName}
 
 # controls how often to perform the more expensive part of host score
 # calculation
