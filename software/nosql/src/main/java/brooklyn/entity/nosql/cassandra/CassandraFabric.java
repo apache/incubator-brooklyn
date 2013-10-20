@@ -41,6 +41,8 @@ public interface CassandraFabric extends DynamicFabric {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     AttributeSensor<Set<Entity>> CURRENT_SEEDS = (AttributeSensor)Sensors.newSensor(Set.class, "cassandra.cluster.seeds.current", "Current set of seeds to use to bootstrap the cluster");
     
+    AttributeSensor<Boolean> HAS_PUBLISHED_SEEDS = Sensors.newBooleanSensor("cassandra.cluster.seeds.hasPublished", "Whether we have published any seeds");
+    
     AttributeSensor<String> HOSTNAME = Sensors.newStringSensor("cassandra.cluster.hostname", "Hostname to connect to cluster with");
 
     AttributeSensor<Integer> THRIFT_PORT = Sensors.newIntegerSensor("cassandra.cluster.thrift.port", "Cassandra Thrift RPC port to connect to cluster with");

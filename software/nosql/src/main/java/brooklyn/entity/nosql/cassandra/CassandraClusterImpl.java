@@ -15,7 +15,9 @@ import brooklyn.enricher.CustomAggregatingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.DynamicGroup;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
@@ -25,17 +27,17 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 /**
  * Implementation of {@link CassandraCluster}.
@@ -48,20 +50,81 @@ import com.google.common.collect.Multimap;
  */
 public class CassandraClusterImpl extends DynamicClusterImpl implements CassandraCluster {
 
+    /*
+     * TODO Seed management is hard!
+     *  - The ServiceRestarter is not doing customize(), so is not refreshing the seeds in cassandra.yaml.
+     *    If we have two nodes that were seeds for each other and they both restart at the same time, we'll have a split brain.
+     */
+    
     private static final Logger log = LoggerFactory.getLogger(CassandraClusterImpl.class);
 
     // Mutex for synchronizing during re-size operations
     private final Object mutex = new Object[0];
 
-    private AbstractMembershipTrackingPolicy policy;
-
     private final Supplier<Set<Entity>> defaultSeedSupplier = new Supplier<Set<Entity>>() {
+        // Mutex for (re)calculating our seeds
+        // TODO is this very dangerous?! Calling out to SeedTracker, which calls out to alien getAttribute()/getConfig(). But I think that's ok.
+        // TODO might not need mutex? previous race was being caused by something else, other than concurrent calls!
+        private final Object seedMutex = new Object();
+        
         @Override
         public Set<Entity> get() {
-            return gatherSeeds();
+            synchronized (seedMutex) {
+                boolean hasPublishedSeeds = Boolean.TRUE.equals(getAttribute(HAS_PUBLISHED_SEEDS));
+                int quorumSize = getQuorumSize();
+                Set<Entity> potentialSeeds = gatherPotentialSeeds();
+                Set<Entity> potentialRunningSeeds = gatherPotentialRunningSeeds();
+                boolean stillWaitingForQuorum = (!hasPublishedSeeds) && (potentialSeeds.size() < quorumSize);
+                
+                if (stillWaitingForQuorum) {
+                    if (log.isDebugEnabled()) log.debug("Not refresheed seeds of cluster {}, because still waiting for quorum (need {}; have {} potentials)", new Object[] {CassandraClusterImpl.class, getQuorumSize(), potentialSeeds.size()});
+                    return ImmutableSet.of();
+                } else if (hasPublishedSeeds) {
+                    Set<Entity> currentSeeds = getAttribute(CURRENT_SEEDS);
+                    if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) {
+                        if (Sets.intersection(currentSeeds, potentialSeeds).isEmpty()) {
+                            log.warn("Cluster {} lost all its seeds while starting! Subsequent failure likely, but changing seeds during startup would risk split-brain: seeds={}", new Object[] {this, currentSeeds});
+                        }
+                        return currentSeeds;
+                    } else if (potentialRunningSeeds.isEmpty()) {
+                        // TODO Could be race where nodes have only just returned from start() and are about to 
+                        // transition to serviceUp; so don't just abandon all our seeds!
+                        log.warn("Cluster {} has no running seeds (yet?); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {this});
+                        return currentSeeds;
+                    } else {
+                        Set<Entity> result = trim(quorumSize, potentialRunningSeeds);
+                        log.debug("Cluster {} updating seeds: chosen={}; potentialRunning={}", new Object[] {this, result, potentialRunningSeeds});
+                        return result;
+                    }
+                } else {
+                    Set<Entity> result = trim(quorumSize, potentialSeeds);
+                    if (log.isDebugEnabled()) log.debug("Cluster {} has reached seed quorum: seeds={}", new Object[] {this, result});
+                    return result;
+                }
+            }
+        }
+        private Set<Entity> trim(int num, Set<Entity> contenders) {
+            // Prefer existing seeds wherever possible; otherwise accept any other contenders
+            Set<Entity> currentSeeds = (getAttribute(CURRENT_SEEDS) != null) ? getAttribute(CURRENT_SEEDS) : ImmutableSet.<Entity>of();
+            Set<Entity> result = Sets.newLinkedHashSet();
+            result.addAll(Sets.intersection(currentSeeds, contenders));
+            result.addAll(contenders);
+            return ImmutableSet.copyOf(Iterables.limit(result, num));
+        }
+        private boolean containsDownEntity(Set<Entity> seeds) {
+            for (Entity seed : seeds) {
+                if (!seedTracker.isViableSeed(seed)) {
+                    return true;
+                }
+            }
+            return false;
         }
     };
     
+    protected SeedTracker seedTracker = new SeedTracker();
+    
+    private AbstractMembershipTrackingPolicy policy;
+
     public CassandraClusterImpl() {
     }
 
@@ -76,42 +139,18 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         subscribeToMembers(this, Attributes.HOSTNAME, new SensorEventListener<String>() {
             @Override
             public void onEvent(SensorEvent<String> event) {
-                Entity member = event.getSource();
-                Set<Entity> seeds = getAttribute(CURRENT_SEEDS);
-                if (seeds != null && seeds.size() > 0 && !seeds.contains(member)) {
-                    // if we have enough seeds already then we don't need to do anything
-                    // (and one of our seeds has not just changed)
-                    return;
-                }
-                
-                Supplier<Set<Entity>> seedSupplier = getSeedSupplier();
-                setAttribute(CURRENT_SEEDS, seedSupplier.get());
+                seedTracker.onHostnameChanged(event.getSource(), event.getValue());
             }
         });
         subscribe(this, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
-                Entity member = event.getSource();
-                Set<Entity> seeds = getAttribute(CURRENT_SEEDS);
-                if (seeds != null && seeds.contains(member)) {
-                    Supplier<Set<Entity>> seedSupplier = getSeedSupplier();
-                    setAttribute(CURRENT_SEEDS, seedSupplier.get());
-                }
+                seedTracker.onMemberRemoved(event.getValue());
             }
         });
         subscribeToMembers(this, Attributes.SERVICE_UP, new SensorEventListener<Boolean>() {
             @Override
             public void onEvent(SensorEvent<Boolean> event) {
-                Entity member = event.getSource();
-                boolean isup = Boolean.TRUE.equals(event.getValue());
-                Set<Entity> seeds = getAttribute(CURRENT_SEEDS);
-                if (seeds != null && seeds.size() > 0 && !(seeds.contains(member) && !isup)) {
-                    // if we have enough seeds already then we don't need to do anything
-                    // (and one of our seeds has not just changed)
-                    return;
-                }
-                
-                Supplier<Set<Entity>> seedSupplier = getSeedSupplier();
-                setAttribute(CURRENT_SEEDS, seedSupplier.get());
+                seedTracker.onServiceUpChanged(event.getSource(), event.getValue());
             }
         });
         
@@ -169,32 +208,14 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         return Math.min(getConfig(INITIAL_SIZE), DEFAULT_SEED_QUORUM);
     }
 
-    protected Set<Entity> gatherSeeds() {
-        Collection<Entity> availableEntities = gatherPotentialSeeds();
-        
-        if (!availableEntities.isEmpty()) {
-            int quorumSize = getQuorumSize();
-            if (availableEntities.size() >= quorumSize) {
-                return MutableSet.copyOf(Iterables.limit(availableEntities, quorumSize));
-            }
-        }
-        
-        // not quorate
-        return MutableSet.of();
+    @Override
+    public Set<Entity> gatherPotentialSeeds() {
+        return seedTracker.gatherPotentialSeeds();
     }
 
     @Override
-    public Collection<Entity> gatherPotentialSeeds() {
-        Iterable<Entity> members = getMembers();
-        List<Entity> availableEntities = Lists.newArrayList();
-        for (Entity node : members) {
-            Optional<String> hostname = Machines.findSubnetOrPublicHostname(node);
-            if (hostname.isPresent()) {
-                availableEntities.add(node);
-            }
-        }
-        
-        return availableEntities;
+    public Set<Entity> gatherPotentialRunningSeeds() {
+        return seedTracker.gatherPotentialRunningSeeds();
     }
 
     /**
@@ -254,6 +275,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         policy.setGroup(this);
     }
     
+    @SuppressWarnings("unchecked")
     protected void connectEnrichers() {
         List<? extends List<? extends AttributeSensor<? extends Number>>> summingEnricherSetup = ImmutableList.of(
                 ImmutableList.of(CassandraNode.READ_ACTIVE, READ_ACTIVE),
@@ -307,11 +329,8 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     @Override
     public void update() {
         synchronized (mutex) {
-            // Update our seeds (unless we already have enough)
-            Set<Entity> seeds = getAttribute(CURRENT_SEEDS);
-            if (seeds == null || seeds.isEmpty()) {
-                setAttribute(CURRENT_SEEDS, getSeedSupplier().get());
-            }
+            // Update our seeds, as necessary
+            seedTracker.refreshSeeds();
             
             // Choose the first available cluster member to set host and port (and compute one-up)
             Optional<Entity> upNode = Iterables.tryFind(getMembers(), EntityPredicates.attributeEqualTo(SERVICE_UP, Boolean.TRUE));
@@ -325,6 +344,129 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
                 setAttribute(THRIFT_PORT, null);
             }
 
+        }
+    }
+    
+    /**
+     * For tracking our seeds. This gets fiddly! High-level logic is:
+     * <ul>
+     *   <li>If we have never reached quorum (i.e. have never published seeds), then continue to wait for quorum;
+     *       because entity-startup may be blocking for this. This is handled by the seedSupplier.
+     *   <li>If we previously reached quorum (i.e. have previousy published seeds), then always update;
+     *       we never want stale/dead entities listed in our seeds.
+     *   <li>If an existing seed looks unhealthy, then replace it.
+     *   <li>If a new potential seed becomes available (and we're in need of more), then add it.
+     * <ul>
+     * 
+     * Also note that {@link CassandraFabric} can take over, because it know about multiple sub-clusters!
+     * It will provide a different {@link CassandraCluster#SEED_SUPPLIER}. Each time we think that our seeds
+     * need to change, we call that. The fabric will call into {@link CassandraClusterImpl#gatherPotentialSeeds()}
+     * to find out what's available.
+     * 
+     * @author aled
+     */
+    protected class SeedTracker {
+        public void onMemberRemoved(Entity member) {
+            Set<Entity> seeds = getSeeds();
+            boolean maybeRemove = seeds.contains(member);
+            
+            if (maybeRemove) {
+                refreshSeeds();
+            } else {
+                if (log.isTraceEnabled()) log.trace("Seeds considered stable for cluster {} (node {} removed)", new Object[] {CassandraClusterImpl.this, member});
+                return;
+            }
+        }
+        public void onHostnameChanged(Entity member, String hostname) {
+            Set<Entity> seeds = getSeeds();
+            int quorum = getQuorumSize();
+            boolean isViable = isViableSeed(member);
+            boolean maybeAdd = isViable && seeds.size() < quorum;
+            boolean maybeRemove = seeds.contains(member) && !isViable;
+            
+            if (maybeAdd || maybeRemove) {
+                refreshSeeds();
+            } else {
+                if (log.isTraceEnabled()) log.trace("Seeds considered stable for cluster {} (node {} changed hostname {})", new Object[] {CassandraClusterImpl.this, member, hostname});
+                return;
+            }
+            
+            Supplier<Set<Entity>> seedSupplier = getSeedSupplier();
+            setAttribute(CURRENT_SEEDS, seedSupplier.get());
+        }
+        public void onServiceUpChanged(Entity member, Boolean serviceUp) {
+            Set<Entity> seeds = getSeeds();
+            int quorum = getQuorumSize();
+            boolean isViable = isViableSeed(member);
+            boolean maybeAdd = isViable && seeds.size() < quorum;
+            boolean maybeRemove = seeds.contains(member) && !isViable;
+            
+            if (maybeAdd || maybeRemove) {
+                refreshSeeds();
+            } else {
+                if (log.isTraceEnabled()) log.trace("Seeds considered stable for cluster {} (node {} changed serviceUp {})", new Object[] {CassandraClusterImpl.this, member, serviceUp});
+                return;
+            }
+            
+            Supplier<Set<Entity>> seedSupplier = getSeedSupplier();
+            setAttribute(CURRENT_SEEDS, seedSupplier.get());
+        }
+        protected Set<Entity> getSeeds() {
+            Set<Entity> result = getAttribute(CURRENT_SEEDS);
+            return (result == null) ? ImmutableSet.<Entity>of() : result;
+        }
+        public void refreshSeeds() {
+            Set<Entity> oldseeds = getAttribute(CURRENT_SEEDS);
+            Set<Entity> newseeds = getSeedSupplier().get();
+            if (Objects.equal(oldseeds, newseeds)) {
+                if (log.isTraceEnabled()) log.debug("Seed refresh no-op for cluster {}: still={}", new Object[] {CassandraClusterImpl.this, oldseeds});
+            } else {
+                if (log.isDebugEnabled()) log.debug("Refreshings seeds of cluster {}: now={}; old={}", new Object[] {this, newseeds, oldseeds});
+                setAttribute(CURRENT_SEEDS, newseeds);
+                if (newseeds != null && newseeds.size() > 0) {
+                    setAttribute(HAS_PUBLISHED_SEEDS, true);
+                }
+            }
+        }
+        public Set<Entity> gatherPotentialSeeds() {
+            Set<Entity> result = Sets.newLinkedHashSet();
+            for (Entity member : getMembers()) {
+                if (isViableSeed(member)) {
+                    result.add(member);
+                }
+            }
+            if (log.isTraceEnabled()) log.trace("Viable seeds in Cluster {}: {}", new Object[] {result});
+            return result;
+        }
+        public Set<Entity> gatherPotentialRunningSeeds() {
+            Set<Entity> result = Sets.newLinkedHashSet();
+            for (Entity member : getMembers()) {
+                if (isRunningSeed(member)) {
+                    result.add(member);
+                }
+            }
+            if (log.isTraceEnabled()) log.trace("Viable running seeds in Cluster {}: {}", new Object[] {result});
+            return result;
+        }
+        public boolean isViableSeed(Entity member) {
+            // TODO would be good to reuse the better logic in ServiceFailureDetector
+            // (e.g. if that didn't just emit a notification but set a sensor as well?)
+            boolean managed = Entities.isManaged(member);
+            String hostname = member.getAttribute(Attributes.HOSTNAME);
+            boolean serviceUp = Boolean.TRUE.equals(member.getAttribute(Attributes.SERVICE_UP));
+            Lifecycle serviceState = member.getAttribute(Attributes.SERVICE_STATE);
+            boolean hasFailed = !managed || (serviceState == Lifecycle.ON_FIRE) || (serviceState == Lifecycle.RUNNING && !serviceUp) || (serviceState == Lifecycle.STOPPED);
+            boolean result = (hostname != null && !hasFailed);
+            if (log.isTraceEnabled()) log.trace("Node {} in Cluster {}: viableSeed={}; hostname={}; serviceUp={}; serviceState={}; hasFailed={}", new Object[] {member, this, result, hostname, serviceUp, serviceState, hasFailed});
+            return result;
+        }
+        public boolean isRunningSeed(Entity member) {
+            boolean viableSeed = isViableSeed(member);
+            boolean serviceUp = Boolean.TRUE.equals(member.getAttribute(Attributes.SERVICE_UP));
+            Lifecycle serviceState = member.getAttribute(Attributes.SERVICE_STATE);
+            boolean result = viableSeed && serviceUp && serviceState == Lifecycle.RUNNING;
+            if (log.isTraceEnabled()) log.trace("Node {} in Cluster {}: runningSeed={}; viableSeed={}; serviceUp={}; serviceState={}", new Object[] {member, this, result, viableSeed, serviceUp, serviceState});
+            return result;
         }
     }
 }

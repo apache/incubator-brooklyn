@@ -3,7 +3,6 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -57,6 +56,8 @@ public interface CassandraCluster extends DynamicCluster {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     AttributeSensor<Set<String>> DATACENTERS = (AttributeSensor)Sensors.newSensor(Set.class, "cassandra.cluster.datacenters", "Current set of datacenters in use");
 
+    AttributeSensor<Boolean> HAS_PUBLISHED_SEEDS = Sensors.newBooleanSensor("cassandra.cluster.seeds.hasPublished", "Whether we have published any seeds");
+    
     @SuppressWarnings({ "unchecked", "rawtypes" })
     AttributeSensor<Set<Entity>> CURRENT_SEEDS = (AttributeSensor)Sensors.newSensor(Set.class, "cassandra.cluster.seeds.current", "Current set of seeds to use to bootstrap the cluster");
     
@@ -112,5 +113,7 @@ public interface CassandraCluster extends DynamicCluster {
      */
     String getClusterName();
 
-    Collection<Entity> gatherPotentialSeeds();
+    Set<Entity> gatherPotentialSeeds();
+    
+    Set<Entity> gatherPotentialRunningSeeds();
 }
