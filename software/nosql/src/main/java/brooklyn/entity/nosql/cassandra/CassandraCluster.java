@@ -43,6 +43,14 @@ public interface CassandraCluster extends DynamicCluster {
     @SetFromFlag("seedSupplier")
     ConfigKey<Supplier<Set<Entity>>> SEED_SUPPLIER = (ConfigKey) ConfigKeys.newConfigKey(Supplier.class, "cassandra.cluster.seedSupplier", "For determining the seed nodes", null);
 
+    /** Additional time after the nodes in the cluster are up when starting before announcing the cluster as up;
+     * Useful to ensure nodes have synchronized.  */
+    // on 1.2.2 this could be as much as 120s when using 2 seed nodes, 
+    // or just a few seconds with 1 seed node;
+    // on 1.2.9 it seems a few seconds is sufficient even with 2 seed nodes
+    @SetFromFlag("delayBeforeAdvertisingCluster")
+    ConfigKey<Duration> DELAY_BEFORE_ADVERTISING_CLUSTER = ConfigKeys.newConfigKey(Duration.class, "cassandra.cluster.delayBeforeAdvertisingCluster", "Type of the Cassandra snitch", Duration.TEN_SECONDS);
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     AttributeSensor<Multimap<String,Entity>> DATACENTER_USAGE = (AttributeSensor)Sensors.newSensor(Map.class, "cassandra.cluster.datacenterUsages", "Current set of datacenters in use, with nodes in each");
 
@@ -95,13 +103,6 @@ public interface CassandraCluster extends DynamicCluster {
     // not sure whether this is needed or not; need to test in env where not all nodes are seed nodes,
     // what happens if non-seed nodes start before the seed nodes ?
     public static final boolean WAIT_FOR_FIRST = true;
-    
-    /** Additional time after the nodes in the cluster are up when starting before announcing the cluster as up;
-     * Useful to ensure nodes have synchronized.  */
-    // on 1.2.2 this could be as much as 120s when using 2 seed nodes, 
-    // or just a few seconds with 1 seed node;
-    // on 1.2.9 it seems a few seconds is sufficient even with 2 seed nodes
-    public static final Duration DELAY_BEFORE_ADVERTISING_CLUSTER = Duration.TEN_SECONDS;
     
     @Effector(description="Updates the cluster members")
     void update();

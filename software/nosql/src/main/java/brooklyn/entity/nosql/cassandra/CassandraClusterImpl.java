@@ -224,7 +224,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         // SshEffectorTasks.ssh("echo \"describe cluster;\" | /bin/cassandra-cli");
         // once we've done that we can revert to using 2 seed nodes.
         // see CassandraCluster.DEFAULT_SEED_QUORUM
-        Time.sleep(DELAY_BEFORE_ADVERTISING_CLUSTER);
+        Time.sleep(getConfig(DELAY_BEFORE_ADVERTISING_CLUSTER));
 
         update();
     }
