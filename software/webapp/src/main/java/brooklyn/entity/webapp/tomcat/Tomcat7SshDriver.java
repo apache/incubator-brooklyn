@@ -1,19 +1,18 @@
 package brooklyn.entity.webapp.tomcat;
 
-import static java.lang.String.format;
+import static java.lang.String.*;
 
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
-
 
 public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {
 
@@ -24,7 +23,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
     }
 
     protected String getLogFileLocation() {
-        return String.format("%s/logs/catalina.out",getRunDir());
+        return String.format("%s/logs/catalina.out", getRunDir());
     }
 
     protected String getDeploySubdir() {
@@ -42,38 +41,38 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
 
     @Override
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
+        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName("apache-tomcat-"+getVersion());
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
         commands.add(format("tar xvzf %s",saveAs));
 
-        newScript(INSTALLING).
-                failOnNonZeroResultCode().
-                body.append(commands).execute();
+        newScript(INSTALLING)
+                .failOnNonZeroResultCode()
+                .body.append(commands).execute();
     }
 
     @Override
     public void customize() {
-        newScript(CUSTOMIZING).
-                body.append(
-                "mkdir conf logs webapps temp",
-                format("cp %s/conf/{server,web}.xml conf/",getExpandedInstallDir()),
-                format("sed -i.bk s/8080/%s/g conf/server.xml",getHttpPort()),
-                format("sed -i.bk s/8005/%s/g conf/server.xml",getShutdownPort()),
-                "sed -i.bk /8009/D conf/server.xml"
-        ).execute();
+        newScript(CUSTOMIZING)
+                .body.append(
+                        "mkdir conf logs webapps temp",
+                        format("cp %s/conf/{server,web}.xml conf/", getExpandedInstallDir()),
+                        format("sed -i.bk s/8080/%s/g conf/server.xml", getHttpPort()),
+                        format("sed -i.bk s/8005/%s/g conf/server.xml", getShutdownPort()),
+                        "sed -i.bk /8009/D conf/server.xml")
+                .execute();
 
         ((TomcatServerImpl)entity).deployInitialWars();
     }
 
     @Override
     public void launch() {
-        Map ports = MutableMap.of("httpPort",getHttpPort(), "jmxPort",getJmxPort(), "shutdownPort",getShutdownPort());
+        Map ports = MutableMap.of("httpPort", getHttpPort(), "shutdownPort", getShutdownPort());
 
         Networking.checkPortsValid(ports);
         Map flags = MutableMap.of("usePidFile",false);
@@ -82,16 +81,16 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
         // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
         // we saw the ssh session return before the tomcat process was fully running 
         // so the process failed to start.
-        newScript(flags, LAUNCHING).
-        body.append(
-                format("%s/bin/startup.sh >>$RUN/console 2>&1 </dev/null",getExpandedInstallDir()),
-                "for i in {1..10}\n" +
-                "do\n" +
-                "    if [ -s "+getLogFileLocation()+" ]; then exit; fi\n" +
-                "    sleep 1\n" +
-                "done\n" +
-            "echo \"Couldn't determine if tomcat-server is running (logs/catalina.out is still empty); continuing but may subsequently fail\""
-        ).execute();
+        newScript(flags, LAUNCHING)
+                .body.append(
+                        format("%s/bin/startup.sh >>$RUN/console 2>&1 </dev/null",getExpandedInstallDir()),
+                        "for i in {1..10}\n" +
+                        "do\n" +
+                        "    if [ -s "+getLogFileLocation()+" ]; then exit; fi\n" +
+                        "    sleep 1\n" +
+                        "done\n" +
+                        "echo \"Couldn't determine if tomcat-server is running (logs/catalina.out is still empty); continuing but may subsequently fail\"")
+                .execute();
     }
 
     @Override
@@ -124,12 +123,12 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
 
     @Override
     public Map<String, String> getShellEnvironment() {
-        Map<String,String> results = new LinkedHashMap<String,String>();
-        results.putAll(super.getShellEnvironment());
-        results.put("CATALINA_BASE",getRunDir());
-        results.put("CATALINA_OPTS",results.get("JAVA_OPTS"));
-        results.put("CATALINA_PID","pid.txt");
-        results.put("RUN",getRunDir());
-        return results;
+        return MutableMap.<String, String>builder()
+                .putAll(super.getShellEnvironment())
+                .renameKey("JAVA_OPTS", "CATALINA_OPTS")
+                .put("CATALINA_PID", "pid.txt")
+                .put("CATALINA_BASE", getRunDir())
+                .put("RUN", getRunDir())
+                .build();
     }
 }
