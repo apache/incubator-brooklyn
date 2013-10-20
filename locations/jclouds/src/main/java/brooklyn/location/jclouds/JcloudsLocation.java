@@ -1032,6 +1032,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         Map<?,?> sshConfig = extractSshConfig(setup, node);
         String nodeAvailabilityZone = extractAvailabilityZone(setup, node);
         String nodeRegion = extractRegion(setup, node);
+        if (nodeRegion == null) {
+            // e.g. rackspace doesn't have "region", so rackspace-uk is best we can say (but zone="LON")
+            nodeRegion = extractProvider(setup, node);
+        }
         
         if (LOG.isDebugEnabled())
             LOG.debug("creating JcloudsSshMachineLocation representation for {}@{} for {} with {}", 
@@ -1092,6 +1096,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     protected String extractRegion(ConfigBag setup, NodeMetadata node) {
         return extractNodeLocationId(setup, node, LocationScope.REGION);
+    }
+
+    protected String extractProvider(ConfigBag setup, NodeMetadata node) {
+        return extractNodeLocationId(setup, node, LocationScope.PROVIDER);
     }
 
     protected String extractNodeLocationId(ConfigBag setup, NodeMetadata node, LocationScope scope) {
