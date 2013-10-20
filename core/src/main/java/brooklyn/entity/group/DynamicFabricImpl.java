@@ -19,6 +19,7 @@ import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
@@ -26,6 +27,7 @@ import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -89,20 +91,27 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
         Preconditions.checkArgument(locations.size() >= 1, "One or more location must be supplied");
         addLocations(locations);
         
-        Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
-        for (Location it : locations) {
-            Entity e = addCluster(it);
-            // FIXME: this is a quick workaround to ensure that the location is available to any membership change
-            //        listeners (notably AbstractDeoDnsService). A more robust mechanism is required; see ENGR-????
-            //        for ideas and discussion.
-            ((EntityInternal)e).addLocations(Arrays.asList(it));
-            if (e instanceof Startable) {
-                Task task = e.invoke(Startable.START, ImmutableMap.of("locations", ImmutableList.of(it)));
-                tasks.put(e, task);
+        setAttribute(SERVICE_STATE, Lifecycle.STARTING);
+        try {
+            Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
+            for (Location it : locations) {
+                Entity e = addCluster(it);
+                // FIXME: this is a quick workaround to ensure that the location is available to any membership change
+                //        listeners (notably AbstractDeoDnsService). A more robust mechanism is required; see ENGR-????
+                //        for ideas and discussion.
+                ((EntityInternal)e).addLocations(Arrays.asList(it));
+                if (e instanceof Startable) {
+                    Task task = e.invoke(Startable.START, ImmutableMap.of("locations", ImmutableList.of(it)));
+                    tasks.put(e, task);
+                }
             }
+            waitForTasksOnStart(tasks);
+            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+            setAttribute(SERVICE_UP, true);
+        } catch (Exception e) {
+            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            throw Exceptions.propagate(e);
         }
-        waitForTasksOnStart(tasks);
-        setAttribute(SERVICE_UP, true);
     }
 
     protected void waitForTasksOnStart(Map<Entity, Task<?>> tasks) {
@@ -122,18 +131,17 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     
     @Override
     public void stop() {
-        Iterable<Entity> stoppableChildren = Iterables.filter(getChildren(), Predicates.instanceOf(Startable.class));
-        Task invoke = Entities.invokeEffector(this, stoppableChildren, Startable.STOP);
+        setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
         try {
+            Iterable<Entity> stoppableChildren = Iterables.filter(getChildren(), Predicates.instanceOf(Startable.class));
+            Task<?> invoke = Entities.invokeEffector(this, stoppableChildren, Startable.STOP);
 	        if (invoke != null) invoke.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw Throwables.propagate(e);
-        } catch (ExecutionException ee) {
-            throw Throwables.propagate(ee.getCause());
+            setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
+            setAttribute(SERVICE_UP, false);
+        } catch (Exception e) {
+            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            throw Exceptions.propagate(e);
         }
-
-        setAttribute(SERVICE_UP, false);
     }
 
     @Override
