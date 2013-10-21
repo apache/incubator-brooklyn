@@ -268,12 +268,11 @@ the brooklyn web-console (select the entity, go the policies tab, select the pol
 
 ## Putting it all together: CumulusRDF
 
-Let's put all this together to run an example application: 
-[CumulusRDF](https://code.google.com/p/cumulusrdf)
-with a wide-area high-availability Cassandra cluster.
+If you want to try this with a real example application using the Cassandra cluster, take a look at
+[CumulusRDF](https://code.google.com/p/cumulusrdf). There is an example Brooklyn application at:
 
 {% highlight bash %}
-% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.CumulusRDFApplication \
+% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.CumulusRdfApplication \
   --location "aws-ec2:us-east-1,aws-ec2:us-east-1"
 {% endhighlight %}
 
