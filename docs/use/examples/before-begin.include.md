@@ -17,7 +17,7 @@ unpack it to your favourite location (e.g. `$(pwd)`),
 and export `BROOKLYN_HOME`:
 
 {% highlight bash %}
-% curl -L -o brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz {{ this_dist_tgz_url }}
+% curl -L -o brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz {{ this_dist_url_tgz }}
 % tar xvzf brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz
 % export BROOKLYN_HOME=$(pwd)/brooklyn-{{ site.brooklyn-version }}/
 {% endhighlight %}
