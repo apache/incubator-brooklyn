@@ -401,6 +401,8 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             boolean maybeAdd = isViable && seeds.size() < quorum;
             boolean maybeRemove = seeds.contains(member) && !isViable;
             
+            if (log.isDebugEnabled())
+                log.debug("Considering refresh of seeds for "+CassandraClusterImpl.this+" because "+member+" is now "+serviceUp+" ("+isViable+" / "+maybeAdd+" / "+maybeRemove+")");
             if (maybeAdd || maybeRemove) {
                 refreshSeeds();
             } else {
@@ -409,7 +411,10 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             }
             
             Supplier<Set<Entity>> seedSupplier = getSeedSupplier();
-            setAttribute(CURRENT_SEEDS, seedSupplier.get());
+            Set<Entity> newSeeds = seedSupplier.get();
+            setAttribute(CURRENT_SEEDS, newSeeds);
+            if (log.isDebugEnabled())
+                log.debug("Seeds for "+CassandraClusterImpl.this+" now "+newSeeds);
         }
         protected Set<Entity> getSeeds() {
             Set<Entity> result = getAttribute(CURRENT_SEEDS);

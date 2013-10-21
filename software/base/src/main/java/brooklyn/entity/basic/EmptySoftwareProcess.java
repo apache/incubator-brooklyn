@@ -5,4 +5,6 @@ import brooklyn.entity.proxying.ImplementedBy;
 @ImplementedBy(EmptySoftwareProcessImpl.class)
 public interface EmptySoftwareProcess extends SoftwareProcess {
 
+    public SoftwareProcessDriver getDriver();
+    
 }
