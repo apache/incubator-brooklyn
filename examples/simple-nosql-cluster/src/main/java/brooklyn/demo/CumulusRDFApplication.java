@@ -15,43 +15,64 @@
  */
 package brooklyn.demo;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
+import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.nosql.cassandra.CassandraCluster;
+import brooklyn.entity.nosql.cassandra.CassandraFabric;
 import brooklyn.entity.nosql.cassandra.CassandraNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.entity.trait.Startable;
+import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.launcher.BrooklynLauncher;
+import brooklyn.location.Location;
+import brooklyn.location.basic.PortRanges;
+import brooklyn.policy.PolicySpec;
+import brooklyn.policy.ha.ServiceFailureDetector;
+import brooklyn.policy.ha.ServiceReplacer;
+import brooklyn.policy.ha.ServiceRestarter;
 import brooklyn.util.CommandLineUtil;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 
 /** CumulusRDF application with Cassandra cluster. */
+@Catalog(name="Cumulus RDF Application", description="CumulusRDF Application on a Tomcat server using a multi-region Cassandra fabric")
 public class CumulusRDFApplication extends AbstractApplication {
 
     private static final Logger log = LoggerFactory.getLogger(CumulusRDFApplication.class);
@@ -68,83 +89,139 @@ public class CumulusRDFApplication extends AbstractApplication {
     public static final ConfigKey<Integer> CASSANDRA_CLUSTER_SIZE = ConfigKeys.newConfigKey(
         "cumulus.cassandra.cluster.size", "Initial size of the Cassandra cluster", 2);
 
-    public static final String DEFAULT_LOCATION = "aws-ec2:eu-west-1";
+    @CatalogConfig(label="Multi-region Fabric", priority=1)
+    public static final ConfigKey<Boolean> MULTI_REGION_FABRIC = ConfigKeys.newConfigKey(
+        "cumulus.cassandra.fabric", "Deploy a multi-region Cassandra fabric", false);
+
+    public static final String DEFAULT_LOCATIONS = "aws-ec2:us-east-1,rackspace-cloudservers-uk";
 
     private Effector<Void> cumulusConfig = Effectors.effector(Void.class, "cumulusConfig")
             .description("Configure the CumulusRDF web application")
             .buildAbstract();
 
-    private CassandraCluster cassandra;
-    private TomcatServer tomcat;
+    private Entity cassandra;
+    private TomcatServer webapp;
+    private HostAndPort endpoint;
 
-    /** Create entities. */
+    /**
+     * Create the application entities:
+     * <ul>
+     * <li>A {@link CassandraFabric} of {@link CassandraCluster}s containing {@link CassandraNode}s
+     * <li>A {@link TomcatServer}
+     * </ul>
+     */
+    @Override
     public void init() {
-        // The cassandra cluster entity
-        cassandra = addChild(EntitySpec.create(CassandraCluster.class)
-                .configure("initialSize", getConfig(CASSANDRA_CLUSTER_SIZE))
-                .configure("clusterName", "CumulusRDF")
-                .configure("memberSpec", EntitySpec.create(CassandraNode.class)
-                        .configure("jmxAgentMode", UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
-                        .configure("jmxPort", "11099+")
-                        .configure("rmiServerPort", "9001+")
-                        .configure("thriftPort", getConfig(CASSANDRA_THRIFT_PORT))));
+        // Cassandra cluster
+        EntitySpec<CassandraCluster> clusterSpec = EntitySpec.create(CassandraCluster.class)
+                .configure(CassandraCluster.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
+                        .configure(UsesJmx.JMX_AGENT_MODE, UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
+                        .configure(UsesJmx.JMX_PORT, PortRanges.fromString("11099+"))
+                        .configure(UsesJmx.RMI_REGISTRY_PORT, PortRanges.fromString("9001+"))
+                        .configure(CassandraNode.THRIFT_PORT, PortRanges.fromInteger(getConfig(CASSANDRA_THRIFT_PORT)))
+                        .policy(PolicySpec.create(ServiceFailureDetector.class))
+                        .policy(PolicySpec.create(ServiceRestarter.class)
+                                .configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, ServiceFailureDetector.ENTITY_FAILED)))
+                .policy(PolicySpec.create(ServiceReplacer.class)
+                        .configure(ServiceReplacer.FAILURE_SENSOR_TO_MONITOR, ServiceRestarter.ENTITY_RESTART_FAILED));
 
-        // The tomcat server entity
-        tomcat = addChild(EntitySpec.create(TomcatServer.class)
-                .configure("version", "7.0.42")
-                .configure("jmxAgentMode", UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
-                .configure("jmxPort", "11099+")
-                .configure("rmiServerPort", "9001+")
-                .configure("war", "classpath://cumulusrdf.war")
-                .configure("javaSysProps", MutableMap.of("cumulusrdf.config-file", "/tmp/cumulus.yaml")));
+        if (getConfig(MULTI_REGION_FABRIC)) {
+            cassandra = addChild(EntitySpec.create(CassandraFabric.class)
+                    .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
+                    .configure(CassandraCluster.INITIAL_SIZE, 2) // per location
+                    .configure(CassandraCluster.ENDPOINT_SNITCH_NAME, "brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch")
+                    .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar")
+                    .configure(CassandraFabric.MEMBER_SPEC, clusterSpec));
+        } else {
+            cassandra = addChild(EntitySpec.create(clusterSpec)
+                    .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
+                    .configure(CassandraCluster.INITIAL_SIZE, 2));
+        }
+
+        // Tomcat web-app server
+        webapp = addChild(EntitySpec.create(TomcatServer.class)
+                .configure(SoftwareProcess.SUGGESTED_VERSION, "7.0.42")
+                .configure(UsesJmx.JMX_AGENT_MODE, UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
+                .configure(UsesJmx.JMX_PORT, PortRanges.fromString("11099+"))
+                .configure(UsesJmx.RMI_REGISTRY_PORT, PortRanges.fromString("9001+"))
+                .configure(JavaWebAppService.ROOT_WAR, "classpath://cumulusrdf.war")
+                .configure(UsesJava.JAVA_SYSPROPS, MutableMap.of("cumulusrdf.config-file", "/tmp/cumulus.yaml")));
 
         // Add an effector to tomcat to reconfigure with a new YAML config file
-        ((EntityInternal) tomcat).getMutableEntityType().addEffector(cumulusConfig, new EffectorBody<Void>() {
-            private HostAndPort clusterEndpoint;
-
+        ((EntityInternal) webapp).getMutableEntityType().addEffector(cumulusConfig, new EffectorBody<Void>() {
             @Override
             public Void call(ConfigBag parameters) {
-                String hostname = cassandra.getAttribute(CassandraCluster.HOSTNAME);
-                Integer thriftPort = cassandra.getAttribute(CassandraCluster.THRIFT_PORT);
-                HostAndPort currentEndpoint = HostAndPort.fromParts(hostname, thriftPort);
+                // Process the YAML template given in the application config
+                String url = Entities.getRequiredUrlConfig(CumulusRDFApplication.this, CUMULUS_RDF_CONFIG_URL);
+                Map<String, Object> config = MutableMap.<String, Object>of("cassandraHostname", endpoint.getHostText(), "cassandraThriftPort", endpoint.getPort());
+                String contents = TemplateProcessor.processTemplateContents(new ResourceUtils(this).getResourceAsString(url), config);
 
-                // Check if the cluster access point has changed
-                if (!currentEndpoint.equals(clusterEndpoint)) {
-                    log.info("Setting cluster endpoint to {}", currentEndpoint.toString());
-                    clusterEndpoint = currentEndpoint;
-
-                    // Process the YAML template given in the application config
-                    String url = Entities.getRequiredUrlConfig(CumulusRDFApplication.this, CUMULUS_RDF_CONFIG_URL);
-                    Map<String, Object> config = MutableMap.<String, Object>of("cassandraHostname", clusterEndpoint.getHostText(), "cassandraThriftPort", clusterEndpoint.getPort());
-                    String contents = TemplateProcessor.processTemplateContents(new ResourceUtils(this).getResourceAsString(url), config);
-
-                    // Copy the file contents to the remote machine
-                    DynamicTasks.queue(SshEffectorTasks.put("/tmp/cumulus.yaml").contents(contents));
-                }
-
-                return null;
+                // Copy the file contents to the remote machine
+                return DynamicTasks.queue(SshEffectorTasks.put("/tmp/cumulus.yaml").contents(contents)).get();
             }
         });
 
+        // Listen for HOSTNAME changes from the Cassandra fabric to show at least one node is available
         subscribe(cassandra, CassandraCluster.HOSTNAME, new SensorEventListener<String>() {
             @Override
             public void onEvent(SensorEvent<String> event) {
-                // Reconfigure the CumulusRDF application and restart tomcat if necessary
-                tomcat.invoke(cumulusConfig, MutableMap.<String, Object>of());
-                if (tomcat.getAttribute(Startable.SERVICE_UP)) {
-                    tomcat.restart();
+                if (Strings.isNonBlank(event.getValue())) {
+                    synchronized (endpoint) {
+                        String hostname = Entities.submit(CumulusRDFApplication.this, DependentConfiguration.attributeWhenReady(cassandra, CassandraCluster.HOSTNAME)).getUnchecked();
+                        Integer thriftPort = Entities.submit(CumulusRDFApplication.this, DependentConfiguration.attributeWhenReady(cassandra, CassandraCluster.THRIFT_PORT)).getUnchecked();
+                        HostAndPort current = HostAndPort.fromParts(hostname, thriftPort);
+
+                        // Check if the cluster access point has changed
+                        if (!current.equals(endpoint)) {
+                            log.info("Setting cluster endpoint to {}", current.toString());
+                            endpoint = current;
+
+                            // Reconfigure the CumulusRDF application and restart tomcat if necessary
+                            webapp.invoke(cumulusConfig, MutableMap.<String, Object>of());
+                            if (webapp.getAttribute(Startable.SERVICE_UP)) {
+                                webapp.restart();
+                            }
+                        }
+                    }
                 }
             }
         });
     }
 
+    /**
+     * Controls the startup locations for the webapp and the cassandra fabric.
+     *
+     * @see AbstractApplication#start(Collection)
+     */
+    @Override
+    public void start(Collection<? extends Location> locations) {
+        addLocations(locations);
+
+        // The web application only needs to run in one location, use the first
+        Collection<? extends Location> first = MutableList.copyOf(Iterables.limit(locations, 1));
+
+        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+        try {
+            Entities.invokeEffector(this, cassandra, Startable.START, MutableMap.of("locations", locations)).getUnchecked();
+            Entities.invokeEffector(this, webapp, Startable.START, MutableMap.of("locations", first)).getUnchecked();
+        } catch (Exception e) {
+            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            throw Exceptions.propagate(e);
+        }
+        setAttribute(SERVICE_UP, true);
+        setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
+
+        log.info("Started CumulusRDF in " + locations);
+    }
+
+
     public static void main(String[] argv) {
         List<String> args = Lists.newArrayList(argv);
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
-        String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
+        String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATIONS);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpec.create(StartableApplication.class, CumulusRDFApplication.class).displayName("CumulusRDF application with Cassandra cluster"))
+                .application(EntitySpec.create(StartableApplication.class, CumulusRDFApplication.class).displayName("CumulusRDF application using Cassandra"))
                 .webconsolePort(port)
                 .location(location)
                 .start();
