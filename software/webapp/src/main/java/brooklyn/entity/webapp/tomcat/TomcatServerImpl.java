@@ -1,18 +1,14 @@
 package brooklyn.entity.webapp.tomcat;
 
-import static java.lang.String.format;
+import static java.lang.String.*;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
-import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.util.time.Duration;
@@ -31,24 +27,12 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
         super();
     }
 
-    public TomcatServerImpl(Map flags) {
-        this(flags,null);
-    }
-
-    public TomcatServerImpl(Entity parent) {
-        this(new LinkedHashMap(),parent);
-    }
-
-    public TomcatServerImpl(Map flags, Entity parent) {
-        super(flags, parent);
-    }
-    
     private volatile JmxFeed jmxFeed;
 
     @Override
     public void connectSensors() {
         super.connectSensors();
-        
+
         if (getDriver().isJmxEnabled()) {
             String requestProcessorMbeanName = "Catalina:type=GlobalRequestProcessor,name=\"http-*\"";
             String connectorMbeanName = format("Catalina:type=Connector,port=%s", getAttribute(HTTP_PORT));
@@ -74,20 +58,29 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
                             .onSuccess(Functions.forPredicate(Predicates.<Object>equalTo("STARTED")))
                             .setOnFailureOrException(false))
                     .build();
-            
+
             JavaAppUtils.connectMXBeanSensors(this);
-            JavaAppUtils.connectJavaAppServerPolicies(this);
         } else {
             // if not using JMX
             LOG.warn("Tomcat running without JMX monitoring; limited visibility of service available");
-            // TODO we could at least check the http/s is up
+            connectServiceUpIsRunning();
+        }
+    }
+
+    @Override
+    public void disconnectSensors() {
+        super.disconnectSensors();
+        if (getDriver().isJmxEnabled()) {
+           if (jmxFeed.isActivated()) jmxFeed.stop();
+        } else {
+            disconnectServiceUpIsRunning();
         }
     }
 
     @Override
     public void waitForServiceUp() {
         // Increases wait-time by overriding this
-        LOG.info("Waiting for {} up, via {}", this, jmxFeed == null ? "" : jmxFeed.getJmxUri());
+        LOG.info("Waiting for {} up, via {}", this, jmxFeed == null ? "isRunning()" : jmxFeed.getJmxUri());
         waitForServiceUp(Duration.of(getConfig(TomcatServer.START_TIMEOUT), TimeUnit.SECONDS));
     }
 
