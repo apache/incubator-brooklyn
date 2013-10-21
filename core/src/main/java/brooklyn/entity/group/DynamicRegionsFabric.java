@@ -15,10 +15,10 @@ public interface DynamicRegionsFabric extends DynamicFabric {
             "returning the id of the new entity")
     public String addRegion(
             @EffectorParam(name="location", description="Location spec string "
-                    + "(e.g. aws-ec2:us-west-1 - and note you may have to surround this with double quotes)") String location);
+                    + "(e.g. aws-ec2:us-west-1)") String location);
 
     @Effector(description="Stops and removes a region")
     public void removeRegion(
-            @EffectorParam(name="id", description="ID of the child entity to stop and remove "
-                    + "(note you may have to surround this with double quotes)") String id);
+            @EffectorParam(name="id", description="ID of the child entity to stop and remove") String id);
+    
 }
