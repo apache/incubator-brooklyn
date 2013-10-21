@@ -6,5 +6,8 @@
 { "title": "Whirr Hadoop Cluster",
   "file":  "{{ site.url }}/use/examples/whirrhadoop/index.html" },
 { "title": "Publish-Subscribe Messaging",
-  "file":  "{{ site.url }}/use/examples/messaging/index.html" }
+  "file":  "{{ site.url }}/use/examples/messaging/index.html" },
+{ "title": "Cassandra Cluster",
+  "file":  "{{ site.url }}/use/examples/nosql-cassandra/index.html" }
+
 ]
