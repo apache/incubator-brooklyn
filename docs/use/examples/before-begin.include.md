@@ -17,7 +17,7 @@ unpack it to your favourite location (e.g. `$(pwd)`),
 and export `BROOKLYN_HOME`:
 
 {% highlight bash %}
-% curl -L -o brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz {{ this_dist_url_tgz }}
+% curl -L -o brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz "{{ this_dist_url_tgz }}"
 % tar xvzf brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz
 % export BROOKLYN_HOME=$(pwd)/brooklyn-{{ site.brooklyn-version }}/
 {% endhighlight %}
@@ -27,7 +27,7 @@ and export `BROOKLYN_HOME`:
 Grab a copy of the Brooklyn distribution and set up `BROOKLYN_HOME`:
 
 {% highlight bash %}
-% curl -LO {{ this_dist_url_tgz }}
+% curl -LO "{{ this_dist_url_tgz }}"
 % tar xvzf brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz
 % export BROOKLYN_HOME=$(pwd)/brooklyn-{{ site.brooklyn-version }}/
 {% endhighlight %}
