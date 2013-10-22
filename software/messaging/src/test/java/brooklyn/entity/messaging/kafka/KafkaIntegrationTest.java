@@ -66,7 +66,7 @@ public class KafkaIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testZookeeper() {
-        final KafkaZookeeper zookeeper = app.createAndManageChild(EntitySpec.create(KafkaZookeeper.class));
+        final KafkaZooKeeper zookeeper = app.createAndManageChild(EntitySpec.create(KafkaZooKeeper.class));
 
         zookeeper.start(ImmutableList.of(testLocation));
         Asserts.succeedsEventually(MutableMap.of("timeout", 60000l), new Callable<Void>() {
@@ -86,7 +86,7 @@ public class KafkaIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testBrokerPlusZookeeper() {
-        final KafkaZookeeper zookeeper = app.createAndManageChild(EntitySpec.create(KafkaZookeeper.class));
+        final KafkaZooKeeper zookeeper = app.createAndManageChild(EntitySpec.create(KafkaZooKeeper.class));
         final KafkaBroker broker = app.createAndManageChild(EntitySpec.create(KafkaBroker.class).configure(KafkaBroker.ZOOKEEPER, zookeeper));
 
         zookeeper.start(ImmutableList.of(testLocation));
@@ -129,7 +129,7 @@ public class KafkaIntegrationTest {
             @Override
             public Void call() {
                 assertTrue(cluster.getAttribute(Startable.SERVICE_UP));
-                assertTrue(cluster.getZookeeper().getAttribute(Startable.SERVICE_UP));
+                assertTrue(cluster.getZooKeeper().getAttribute(Startable.SERVICE_UP));
                 assertEquals(cluster.getCurrentSize().intValue(), 2);
                 return null;
             }

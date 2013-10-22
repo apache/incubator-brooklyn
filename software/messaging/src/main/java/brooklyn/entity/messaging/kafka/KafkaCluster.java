@@ -27,7 +27,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
-import brooklyn.entity.zookeeper.Zookeeper;
+import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -63,12 +63,12 @@ public interface KafkaCluster extends Entity, Startable, Resizable, Group  {
 
     /** Zookeeper for the cluster. If null a default be will created. */
     @SetFromFlag("zookeeper")
-    BasicAttributeSensorAndConfigKey<Zookeeper> ZOOKEEPER = new BasicAttributeSensorAndConfigKey<Zookeeper>(
-            Zookeeper.class, "kafka.cluster.zookeeper", "The zookeeper for the cluster; if null a default be will created");
+    BasicAttributeSensorAndConfigKey<ZooKeeperNode> ZOOKEEPER = new BasicAttributeSensorAndConfigKey<ZooKeeperNode>(
+            ZooKeeperNode.class, "kafka.cluster.zookeeper", "The zookeeper for the cluster; if null a default be will created");
 
     /** Spec for creating the default Kafka zookeeper entity. */
     @SetFromFlag("zookeeperSpec")
-    BasicAttributeSensorAndConfigKey<EntitySpec<KafkaZookeeper>> ZOOKEEPER_SPEC = new BasicAttributeSensorAndConfigKey(
+    BasicAttributeSensorAndConfigKey<EntitySpec<KafkaZooKeeper>> ZOOKEEPER_SPEC = new BasicAttributeSensorAndConfigKey(
             EntitySpec.class, "kafka.cluster.zookeeperSpec", "Spec for creating the kafka zookeeper");
 
     /** Spec for Kafka broker entities to be created. */
@@ -80,7 +80,7 @@ public interface KafkaCluster extends Entity, Startable, Resizable, Group  {
     AttributeSensor<DynamicCluster> CLUSTER = new BasicAttributeSensor<DynamicCluster>(
             DynamicCluster.class, "kafka.cluster.brokerCluster", "Underlying Kafka broker cluster");
 
-    Zookeeper getZookeeper();
+    ZooKeeperNode getZooKeeper();
 
     DynamicCluster getCluster();
 

@@ -13,12 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package brooklyn.entity.messaging.kafka;
+package brooklyn.entity.zookeeper;
 
-import brooklyn.entity.java.JavaSoftwareProcessDriver;
+/**
+ * An {@link brooklyn.entity.Entity} that represents a single standalone zookeeper instance.
+ */
+public class ZooKeeperNodeImpl extends AbstractZooKeeperImpl implements ZooKeeperNode {
 
-public interface KafkaZooKeeperDriver extends JavaSoftwareProcessDriver {
+    public ZooKeeperNodeImpl() {}
 
-    Integer getZookeeperPort();
+    @Override
+    public Class<?> getDriverInterface() {
+        return ZooKeeperDriver.class;
+    }
 
 }

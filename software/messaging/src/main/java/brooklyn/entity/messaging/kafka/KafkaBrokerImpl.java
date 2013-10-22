@@ -27,7 +27,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.zookeeper.Zookeeper;
+import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
@@ -62,7 +62,7 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     public Integer getBrokerId() { return getAttribute(BROKER_ID); }
 
     @Override
-    public Zookeeper getZookeeper() { return getConfig(ZOOKEEPER); }
+    public ZooKeeperNode getZookeeper() { return getConfig(ZOOKEEPER); }
 
     public KafkaTopic createTopic(Map<?, ?> properties) {
         KafkaTopic result = addChild(EntitySpec.create(KafkaTopic.class).configure(properties));
@@ -153,7 +153,7 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     /** Use the {@link #getZookeeper() zookeeper} details if available, otherwise use our own host and port. */
     @Override
     public void setBrokerUrl() {
-        Zookeeper zookeeper = getZookeeper();
+        ZooKeeperNode zookeeper = getZookeeper();
         if (zookeeper != null) {
             setAttribute(BROKER_URL, String.format("zookeeper://%s:%d", zookeeper.getAttribute(HOSTNAME), zookeeper.getZookeeperPort()));
         } else {

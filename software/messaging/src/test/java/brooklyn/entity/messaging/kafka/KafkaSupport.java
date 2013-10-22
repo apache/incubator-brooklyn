@@ -31,7 +31,7 @@ import kafka.javaapi.producer.ProducerData;
 import kafka.message.Message;
 import kafka.producer.ProducerConfig;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.zookeeper.Zookeeper;
+import brooklyn.entity.zookeeper.ZooKeeperNode;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -51,7 +51,7 @@ public class KafkaSupport {
      * Send a message to the {@link KafkaCluster} on the given topic.
      */
     public void sendMessage(String topic, String message) {
-        Zookeeper zookeeper = cluster.getZookeeper();
+        ZooKeeperNode zookeeper = cluster.getZooKeeper();
         Properties props = new Properties();
         props.put("zk.connect", String.format("%s:%d", zookeeper.getAttribute(Attributes.HOSTNAME), zookeeper.getZookeeperPort()));
         props.put("serializer.class", "kafka.serializer.StringEncoder");
@@ -67,7 +67,7 @@ public class KafkaSupport {
      * Retrieve the next message on the given topic from the {@link KafkaCluster}.
      */
     public String getMessage(String topic) {
-        Zookeeper zookeeper = cluster.getZookeeper();
+        ZooKeeperNode zookeeper = cluster.getZooKeeper();
         Properties props = new Properties();
         props.put("zk.connect", String.format("%s:%d", zookeeper.getAttribute(Attributes.HOSTNAME), zookeeper.getZookeeperPort()));
         props.put("zk.connectiontimeout.ms", "120000"); // two minutes

@@ -46,7 +46,7 @@ public class KafkaLiveTest extends AbstractEc2LiveTest {
             @Override
             public Void call() {
                 assertTrue(cluster.getAttribute(Startable.SERVICE_UP));
-                assertTrue(cluster.getZookeeper().getAttribute(Startable.SERVICE_UP));
+                assertTrue(cluster.getZooKeeper().getAttribute(Startable.SERVICE_UP));
                 assertEquals(cluster.getCurrentSize().intValue(), 2);
                 return null;
             }

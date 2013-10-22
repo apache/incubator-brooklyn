@@ -39,7 +39,7 @@ import com.google.common.collect.ImmutableMap;
 public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriver {
 
     @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(KafkaZookeeperSshDriver.class);
+    private static final Logger log = LoggerFactory.getLogger(KafkaZooKeeperSshDriver.class);
 
     public AbstractfKafkaSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);

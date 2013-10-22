@@ -28,7 +28,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
-import brooklyn.entity.zookeeper.Zookeeper;
+import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableList;
@@ -59,12 +59,12 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
         ConfigToAttributes.apply(this, ZOOKEEPER_SPEC);
 
         log.debug("creating zookeeper child for {}", this);
-        Zookeeper zookeeper = getAttribute(ZOOKEEPER);
+        ZooKeeperNode zookeeper = getAttribute(ZOOKEEPER);
         if (zookeeper == null) {
-            EntitySpec<KafkaZookeeper> zookeeperSpec = getAttribute(ZOOKEEPER_SPEC);
+            EntitySpec<KafkaZooKeeper> zookeeperSpec = getAttribute(ZOOKEEPER_SPEC);
             if (zookeeperSpec == null) {
                 log.debug("creating zookeeper using default spec for {}", this);
-                zookeeperSpec = EntitySpec.create(KafkaZookeeper.class);
+                zookeeperSpec = EntitySpec.create(KafkaZooKeeper.class);
                 setAttribute(ZOOKEEPER_SPEC, zookeeperSpec);
             } else {
                 log.debug("creating zookeeper using custom spec for {}", this);
@@ -90,7 +90,7 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
     }
 
     @Override
-    public Zookeeper getZookeeper() {
+    public ZooKeeperNode getZooKeeper() {
         return getAttribute(ZOOKEEPER);
     }
 
@@ -111,10 +111,10 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
 
         List<Entity> childrenToStart = MutableList.<Entity>of(getCluster());
         // Set the KafkaZookeeper entity as child of cluster, if it does not already have a parent
-        if (getZookeeper().getParent() == null) {
-            addChild(getZookeeper());
+        if (getZooKeeper().getParent() == null) {
+            addChild(getZooKeeper());
         } // And only start zookeeper if we are parent
-        if (Objects.equal(this, getZookeeper().getParent())) childrenToStart.add(getZookeeper());
+        if (Objects.equal(this, getZooKeeper().getParent())) childrenToStart.add(getZooKeeper());
         Entities.invokeEffector(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations)).getUnchecked();
 
         connectSensors();
@@ -123,9 +123,9 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
     @Override
     public void stop() {
         List<Exception> errors = Lists.newArrayList();
-        if (getZookeeper() != null && Objects.equal(this, getZookeeper().getParent())) {
+        if (getZooKeeper() != null && Objects.equal(this, getZooKeeper().getParent())) {
             try {
-                getZookeeper().stop();
+                getZooKeeper().stop();
             } catch (Exception e) {
                 errors.add(e);
             }
@@ -158,7 +158,7 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
     void connectSensors() {
         SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(getCluster(), SERVICE_UP)
                 .addToEntityAndEmitAll(this);
-        SensorPropagatingEnricher.newInstanceListeningTo(getZookeeper(), SERVICE_UP)
+        SensorPropagatingEnricher.newInstanceListeningTo(getZooKeeper(), SERVICE_UP)
                 .addToEntityAndEmitAll(this);
     }
 

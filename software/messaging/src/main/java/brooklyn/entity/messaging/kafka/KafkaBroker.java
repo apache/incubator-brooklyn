@@ -21,7 +21,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.zookeeper.Zookeeper;
+import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -50,7 +50,7 @@ public interface KafkaBroker extends SoftwareProcess, MessageBroker, UsesJmx, Ka
             "classpath://brooklyn/entity/messaging/kafka/server.properties");
 
     @SetFromFlag("zookeeper")
-    ConfigKey<Zookeeper> ZOOKEEPER = new BasicConfigKey<Zookeeper>(Zookeeper.class, "kafka.broker.zookeeper", "Kafka zookeeper entity");
+    ConfigKey<ZooKeeperNode> ZOOKEEPER = new BasicConfigKey<ZooKeeperNode>(ZooKeeperNode.class, "kafka.broker.zookeeper", "Kafka zookeeper entity");
 
     AttributeSensor<Integer> BROKER_ID = Sensors.newIntegerSensor("kafka.broker.id", "Kafka unique broker ID");
 
@@ -69,6 +69,6 @@ public interface KafkaBroker extends SoftwareProcess, MessageBroker, UsesJmx, Ka
 
     Integer getBrokerId();
 
-    Zookeeper getZookeeper();
+    ZooKeeperNode getZookeeper();
 
 }

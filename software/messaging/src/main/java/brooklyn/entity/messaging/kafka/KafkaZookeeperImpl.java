@@ -18,21 +18,21 @@ package brooklyn.entity.messaging.kafka;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.zookeeper.AbstractZookeeperImpl;
+import brooklyn.entity.zookeeper.AbstractZooKeeperImpl;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Kafka zookeeper instance.
  */
-public class KafkaZookeeperImpl extends AbstractZookeeperImpl implements KafkaZookeeper {
+public class KafkaZooKeeperImpl extends AbstractZooKeeperImpl implements KafkaZooKeeper {
 
-    private static final Logger log = LoggerFactory.getLogger(KafkaZookeeperImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(KafkaZooKeeperImpl.class);
 
-    public KafkaZookeeperImpl() {
+    public KafkaZooKeeperImpl() {
     }
 
     @Override
     public Class<?> getDriverInterface() {
-        return KafkaZookeeperDriver.class;
+        return KafkaZooKeeperDriver.class;
     }
 
 }

@@ -21,9 +21,9 @@ import brooklyn.config.ConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 
-public class KafkaZookeeperSshDriver extends AbstractfKafkaSshDriver implements KafkaZookeeperDriver {
+public class KafkaZooKeeperSshDriver extends AbstractfKafkaSshDriver implements KafkaZooKeeperDriver {
 
-    public KafkaZookeeperSshDriver(KafkaZookeeperImpl entity, SshMachineLocation machine) {
+    public KafkaZooKeeperSshDriver(KafkaZooKeeperImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
@@ -34,7 +34,7 @@ public class KafkaZookeeperSshDriver extends AbstractfKafkaSshDriver implements 
 
     @Override
     protected ConfigKey<String> getConfigTemplateKey() {
-        return KafkaZookeeper.KAFKA_ZOOKEEPER_CONFIG_TEMPLATE;
+        return KafkaZooKeeper.KAFKA_ZOOKEEPER_CONFIG_TEMPLATE;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class KafkaZookeeperSshDriver extends AbstractfKafkaSshDriver implements 
 
     @Override
     public Integer getZookeeperPort() {
-        return getEntity().getAttribute(KafkaZookeeper.ZOOKEEPER_PORT);
+        return getEntity().getAttribute(KafkaZooKeeper.ZOOKEEPER_PORT);
     }
 
 }

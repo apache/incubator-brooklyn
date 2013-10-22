@@ -32,16 +32,16 @@ import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Apache Zookeeper instance.
+ * An {@link brooklyn.entity.Entity} that represents a single Apache ZooKeeper instance.
  */
-public abstract class AbstractZookeeperImpl extends SoftwareProcessImpl implements Zookeeper {
+public abstract class AbstractZooKeeperImpl extends SoftwareProcessImpl implements ZooKeeperNode {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractZookeeperImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractZooKeeperImpl.class);
     private static final ObjectName ZOOKEEPER_MBEAN = JmxHelper.createObjectName("org.apache.ZooKeeperService:name0=StandaloneServer_port-1");
 
     private volatile JmxFeed jmxFeed;
 
-    public AbstractZookeeperImpl() {
+    public AbstractZooKeeperImpl() {
     }
 
     @Override

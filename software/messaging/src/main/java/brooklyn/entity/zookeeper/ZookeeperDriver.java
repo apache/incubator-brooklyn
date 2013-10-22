@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package brooklyn.entity.messaging.kafka;
+package brooklyn.entity.zookeeper;
 
 import brooklyn.entity.java.JavaSoftwareProcessDriver;
 
-public interface KafkaZooKeeperDriver extends JavaSoftwareProcessDriver {
+public interface ZooKeeperDriver extends JavaSoftwareProcessDriver {
 
-    Integer getZookeeperPort();
+    Integer getZooKeeperPort();
 
 }

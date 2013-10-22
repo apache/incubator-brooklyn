@@ -18,15 +18,15 @@ package brooklyn.entity.messaging.kafka;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.zookeeper.Zookeeper;
+import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Kafka zookeeper instance.
  */
-@ImplementedBy(KafkaZookeeperImpl.class)
-public interface KafkaZookeeper extends Zookeeper, Kafka {
+@ImplementedBy(KafkaZooKeeperImpl.class)
+public interface KafkaZooKeeper extends ZooKeeperNode, Kafka {
 
     @SetFromFlag("startTimeout")
     public static final ConfigKey<Integer> START_TIMEOUT = SoftwareProcess.START_TIMEOUT;
