@@ -27,12 +27,20 @@ import com.google.common.io.Files;
 public class SaltBashCommands {
 
     // TODO inject the version number tag
-    public static final String INSTALL_USING_SALTSTACK_BOOSTRAP =
+    public static final String INSTALL_MASTER_USING_SALTSTACK_BOOSTRAP =
             BashCommands.chain(
                     INSTALL_CURL,
                     INSTALL_TAR,
                     INSTALL_UNZIP,
-                    "( "+downloadToStdout("http://bootstrap.saltstack.org/") + " | " + sudo("sudo sh -s -- -M -N git stable")+" )");
+                    "( "+downloadToStdout("http://bootstrap.saltstack.org/") + " | " + sudo("sudo sh -s -- -M -N stable")+" )");
+
+    // TODO inject the version number tag
+    public static final String INSTALL_MINION_USING_SALTSTACK_BOOSTRAP =
+            BashCommands.chain(
+                    INSTALL_CURL,
+                    INSTALL_TAR,
+                    INSTALL_UNZIP,
+                    "( "+downloadToStdout("http://bootstrap.saltstack.org/") + " | " + sudo("sudo sh")+" )");
 
     /**
      * SaltStack formulas are normally found at https://github.com/saltstack-formulas as repositories.

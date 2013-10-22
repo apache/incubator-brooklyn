@@ -20,31 +20,37 @@ import com.google.gson.GsonBuilder;
 @Beta
 public class SaltTasks {
 
-    public static TaskFactory<?> installChef(String chefDirectory, boolean force) {
-        // TODO check on entity whether it is chef _server_
-        String installCmd = cdAndRun(chefDirectory, ChefBashCommands.INSTALL_FROM_OPSCODE);
-        if (!force) installCmd = BashCommands.alternatives("which chef-solo", installCmd);
-        return SshEffectorTasks.ssh(installCmd).summary("install chef");
+    public static TaskFactory<?> installSaltMaster(String saltDirectory, boolean force) {
+        // TODO check on entity whether it is salt _server_
+        String installCmd = cdAndRun(saltDirectory, SaltBashCommands.INSTALL_MASTER_USING_SALTSTACK_BOOSTRAP);
+        if (!force) installCmd = BashCommands.alternatives("which salt-master", installCmd);
+        return SshEffectorTasks.ssh(installCmd).summary("install salt master");
     }
 
-    public static TaskFactory<?> installCookbooks(final String chefDirectory, final Map<String,String> cookbooksAndUrls, final boolean force) {
-        return Tasks.<Void>builder().name("install cookbooks").body(
+    public static TaskFactory<?> installSaltMinion(String saltDirectory, boolean force) {
+        String installCmd = cdAndRun(saltDirectory, SaltBashCommands.INSTALL_MINION_USING_SALTSTACK_BOOSTRAP);
+        if (!force) installCmd = BashCommands.alternatives("which salt-minion", installCmd);
+        return SshEffectorTasks.ssh(installCmd).summary("install salt minion");
+    }
+
+    public static TaskFactory<?> installFormulas(final String saltDirectory, final Map<String,String> formulasAndUrls, final boolean force) {
+        return Tasks.<Void>builder().name("install formulas").body(
                 new Runnable() {
                     public void run() {
                         Entity e = EffectorTasks.findEntity();
-                        if (cookbooksAndUrls==null)
-                            throw new IllegalStateException("No cookbooks defined to install at "+e);
-                        for (String cookbook: cookbooksAndUrls.keySet())
-                            DynamicTasks.queue(installCookbook(chefDirectory, cookbook, cookbooksAndUrls.get(cookbook), force));
+                        if (formulasAndUrls==null)
+                            throw new IllegalStateException("No formulas defined to install at "+e);
+                        for (String formula: formulasAndUrls.keySet())
+                            DynamicTasks.queue(installFormula(saltDirectory, formula, formulasAndUrls.get(formula), force));
                     }
                 }).buildFactory();
     }
 
-    public static TaskFactory<?> installCookbook(String chefDirectory, String cookbook, String url, boolean force) {
+    public static TaskFactory<?> installFormula(String saltDirectory, String formula, String url, boolean force) {
         // TODO if it's server, try knife first
         // TODO support downloads from classpath / local server
-        return SshEffectorTasks.ssh(cdAndRun(chefDirectory, ChefBashCommands.downloadAndExpandCookbook(url, cookbook, force))).
-                summary("install cookbook "+cookbook).requiringExitCodeZero();
+        return SshEffectorTasks.ssh(cdAndRun(saltDirectory, SaltBashCommands.downloadAndExpandFormula(url, formula, force))).
+                summary("install formula "+formula).requiringExitCodeZero();
     }
 
     protected static String cdAndRun(String targetDirectory, String command) {
@@ -53,7 +59,7 @@ public class SaltTasks {
                 command);
     }
 
-    public static TaskFactory<?> buildChefFile(String runDirectory, String chefDirectory, String phase, Iterable<? extends String> runList,
+    public static TaskFactory<?> buildSaltFile(String runDirectory, String saltDirectory, String phase, Iterable<? extends String> runList,
             Map<String, Object> optionalAttributes) {
         // TODO if it's server, try knife first
         // TODO configure add'l properties
@@ -61,8 +67,8 @@ public class SaltTasks {
                 "root = File.absolute_path(File.dirname(__FILE__))\n"+
                 "\n"+
                 "file_cache_path root\n"+
-//                "cookbook_path root + '/cookbooks'\n";
-                "cookbook_path '"+chefDirectory+"'\n";
+//                "formula_path root + '/formulas'\n";
+                "formula_path '"+saltDirectory+"'\n";
 
         Map<String,Object> phaseJsonMap = MutableMap.of();
         if (optionalAttributes!=null)
@@ -72,15 +78,15 @@ public class SaltTasks {
         Gson json = new GsonBuilder().create();
         String phaseJson = json.toJson(phaseJsonMap);
 
-        return Tasks.sequential("build chef files for "+phase,
+        return Tasks.sequential("build salt files for "+phase,
                     SshEffectorTasks.put(Urls.mergePaths(runDirectory)+"/"+phase+".rb").contents(phaseRb).createDirectory(),
                     SshEffectorTasks.put(Urls.mergePaths(runDirectory)+"/"+phase+".json").contents(phaseJson));
     }
 
-    public static TaskFactory<?> runChef(String runDir, String phase) {
-        // TODO chef server
-        return SshEffectorTasks.ssh(cdAndRun(runDir, "sudo chef-solo -c "+phase+".rb -j "+phase+".json -ldebug")).
-                summary("run chef for "+phase).requiringExitCodeZero();
+    public static TaskFactory<?> runSalt(String runDir, String phase) {
+        // TODO salt server
+        return SshEffectorTasks.ssh(cdAndRun(runDir, "sudo salt-solo -c "+phase+".rb -j "+phase+".json -ldebug")).
+                summary("run salt for "+phase).requiringExitCodeZero();
     }
     
 }
