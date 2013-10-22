@@ -20,4 +20,8 @@ public class PostgreSqlSpecs {
         return spec;
     }
 
+    public static EntitySpec<PostgreSqlNode> specSalt() {
+        EntitySpec<PostgreSqlNode> spec = EntitySpec.create(PostgreSqlNode.class, PostgreSqlNodeSaltImpl.class);
+        return spec;
+    }
 }
