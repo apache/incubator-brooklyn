@@ -1,5 +1,7 @@
 package brooklyn.entity.salt;
 
+import static brooklyn.util.ssh.BashCommands.*;
+
 import java.util.Map;
 
 import brooklyn.entity.Entity;
@@ -20,15 +22,28 @@ import com.google.gson.GsonBuilder;
 @Beta
 public class SaltTasks {
 
-    public static TaskFactory<?> installSaltMaster(String saltDirectory, boolean force) {
+    public static TaskFactory<?> installSaltMaster(Entity master, String saltDirectory, boolean force) {
         // TODO check on entity whether it is salt _server_
-        String installCmd = cdAndRun(saltDirectory, SaltBashCommands.INSTALL_MASTER_USING_SALTSTACK_BOOSTRAP);
+        String boostrapUrl = master.getConfig(SaltStackMaster.BOOTSTRAP_URL);
+        String version = master.getConfig(SaltStackMaster.SUGGESTED_VERSION);
+        String installCmd = cdAndRun(saltDirectory,
+                BashCommands.chain(
+                        INSTALL_CURL,
+                        INSTALL_TAR,
+                        INSTALL_UNZIP,
+                        "( "+downloadToStdout(boostrapUrl) + " | " + sudo("sudo sh -s -- -M -N "+version)+" )"));
         if (!force) installCmd = BashCommands.alternatives("which salt-master", installCmd);
         return SshEffectorTasks.ssh(installCmd).summary("install salt master");
     }
 
-    public static TaskFactory<?> installSaltMinion(String saltDirectory, boolean force) {
-        String installCmd = cdAndRun(saltDirectory, SaltBashCommands.INSTALL_MINION_USING_SALTSTACK_BOOSTRAP);
+    public static TaskFactory<?> installSaltMinion(Entity minion, String saltDirectory, boolean force) {
+        String boostrapUrl = minion.getConfig(SaltStackMaster.BOOTSTRAP_URL);
+        String installCmd = cdAndRun(saltDirectory, 
+                BashCommands.chain(
+                                INSTALL_CURL,
+                                INSTALL_TAR,
+                                INSTALL_UNZIP,
+                                "( "+downloadToStdout(boostrapUrl) + " | " + sudo("sudo sh")+" )"));
         if (!force) installCmd = BashCommands.alternatives("which salt-minion", installCmd);
         return SshEffectorTasks.ssh(installCmd).summary("install salt minion");
     }

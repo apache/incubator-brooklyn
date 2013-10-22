@@ -1,0 +1,41 @@
+[#ftl]
+##
+# SaltStack Master Configuration
+# /etc/salt/master
+##
+
+#interface: 0.0.0.0
+#ipv6: False
+#publish_port: ${entity.publishPort,c} # 4505
+
+#user: root
+#max_open_files: 100000
+#worker_threads: 5
+ret_port: ${entity.saltPort,c} # 4506
+
+root_dir: ${runDir}/
+pidfile: ${driver.pidFile}
+pki_dir: pki
+cachedir: cache
+sock_dir: sock
+log_file: ${driver.logFileLocation}
+key_logfile: key.log
+
+#verify_env: True
+#keep_jobs: 24
+
+#timeout: 5
+#loop_interval: 60
+
+output: nested
+color: False
+log_level: info
+log_level_logfile: debug # Debugging
+
+#job_cache: True
+#minion_data_cache: True
+
+#open_mode: False
+#auto_accept: False
+#autosign_file: autosign.conf
+#permissive_pki_access: False
