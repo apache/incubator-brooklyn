@@ -80,13 +80,18 @@ public class SaltLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         String runDir = Urls.mergePaths(AbstractSoftwareProcessSshDriver.BROOKLYN_HOME_DIR,
                 "apps/"+entity().getApplicationId()+"/salt-entities/"+entity().getId());
 
-        DynamicTasks.queue(
-                SaltTasks.installFormulas(installDir, SaltConfigs.getRequiredConfig(entity(), SALT_FORMULAS), false),
-                SaltTasks.buildSaltFile(runDir,
-                        SaltConfigs.getRequiredConfig(entity(), SALT_RUN_LIST),
-                        entity().getConfig(SALT_LAUNCH_ATTRIBUTES)),
-                SaltTasks.installSaltMinion(entity(), runDir, installDir, false),
-                SaltTasks.runSalt(runDir));
+        Boolean masterless = entity().getConfig(SaltConfig.MASTERLESS_MODE);
+        if (masterless) {
+            DynamicTasks.queue(
+                    SaltTasks.installFormulas(installDir, SaltConfigs.getRequiredConfig(entity(), SALT_FORMULAS), false),
+                    SaltTasks.buildSaltFile(runDir,
+                            SaltConfigs.getRequiredConfig(entity(), SALT_RUN_LIST),
+                            entity().getConfig(SALT_LAUNCH_ATTRIBUTES)),
+                    SaltTasks.installSaltMinion(entity(), runDir, installDir, false),
+                    SaltTasks.runSalt(runDir));
+        } else {
+            throw new UnsupportedOperationException("Salt master mode not yet supported for minions");
+        }
     }
 
     @Override

@@ -3,6 +3,7 @@ package brooklyn.entity.database.postgresql;
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefConfig.ChefModes;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.salt.SaltConfig;
 
 /** utiltiy for creating specs for PostgreSql instances */
 public class PostgreSqlSpecs {
@@ -22,6 +23,7 @@ public class PostgreSqlSpecs {
 
     public static EntitySpec<PostgreSqlNode> specSalt() {
         EntitySpec<PostgreSqlNode> spec = EntitySpec.create(PostgreSqlNode.class, PostgreSqlNodeSaltImpl.class);
+        spec.configure(SaltConfig.MASTERLESS_MODE, true);
         return spec;
     }
 }

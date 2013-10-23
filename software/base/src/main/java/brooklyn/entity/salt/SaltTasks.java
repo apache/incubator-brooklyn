@@ -50,7 +50,9 @@ public class SaltTasks {
                         if (!force) installCmd = BashCommands.alternatives("which salt-minion", installCmd);
 
                         // Process the minion configuration template
-                        String url = Entities.getRequiredUrlConfig(minion, SaltConfig.MINION_CONFIGURATION_URL);
+                        Boolean masterless = minion.getConfig(SaltConfig.MASTERLESS_MODE);
+                        String url = masterless ? Entities.getRequiredUrlConfig(minion, SaltConfig.MASTERLESS_CONFIGURATION_URL)
+                                                : Entities.getRequiredUrlConfig(minion, SaltConfig.MINION_CONFIGURATION_URL);
                         Map<String, Object> config = MutableMap.<String, Object>builder()
                                 .put("entity", minion)
                                 .put("runDir", runDir)
