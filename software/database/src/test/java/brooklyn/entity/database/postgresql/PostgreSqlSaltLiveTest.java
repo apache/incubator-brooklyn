@@ -8,7 +8,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.chef.ChefLiveTestSupport;
 import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.salt.SaltLiveTestSupport;
@@ -56,9 +55,9 @@ public class PostgreSqlSaltLiveTest extends SaltLiveTestSupport {
 
     @Test(groups="Live")
     public void testPostgresScriptAndAccess() throws Exception {
-        ChefLiveTestSupport.installBrooklynChefHostedConfig(app);
+        SaltLiveTestSupport.createLocation(mgmt);
         PortRange randomPort = PortRanges.fromString(""+(5420+new Random().nextInt(10))+"+");
-        psql = app.createAndManageChild(PostgreSqlSpecs.specChef()
+        psql = app.createAndManageChild(PostgreSqlSpecs.specSalt()
                 .configure(PostgreSqlNode.CREATION_SCRIPT_CONTENTS, PostgreSqlIntegrationTest.CREATION_SCRIPT)
                 .configure(PostgreSqlNode.POSTGRESQL_PORT, randomPort)
             );
