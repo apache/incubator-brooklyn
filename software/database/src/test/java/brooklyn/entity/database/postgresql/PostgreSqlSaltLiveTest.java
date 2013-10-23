@@ -21,32 +21,26 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 
-/** 
- * Tests Chef installation of PostgreSql. Requires chef-server (knife).
- * <p> 
- * To be able to run repeatedly on the same box, you will need the patched version of the postgresql library,
- * at https://github.com/opscode-cookbooks/postgresql/pull/73 .
- *  
- * @author alex
- *
+/**
+ * Tests Salt installation of PostgreSql.
  */
 public class PostgreSqlSaltLiveTest extends SaltLiveTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(PostgreSqlSaltLiveTest.class);
-    
+
     PostgreSqlNode psql;
-    
+
     @Test(groups="Live")
     public void testPostgresStartsAndStops() throws Exception {
         psql = app.createAndManageChild(PostgreSqlSpecs.specSalt());
 
         app.start(ImmutableList.of(targetLocation));
-        
+
         Entities.submit(psql, SshEffectorTasks.ssh("ps aux | grep [p]ostgres").requiringExitCodeZero());
         SshMachineLocation targetMachine = EffectorTasks.getSshMachine(psql);
-        
+
         psql.stop();
-        
+
         try {
             // if host is still contactable ensure postgres is not running
             ProcessTaskWrapper<Integer> t = Entities.submit(app, SshEffectorTasks.ssh("ps aux | grep [p]ostgres").machine(targetMachine).allowingNonZeroExitCode());
@@ -59,7 +53,7 @@ public class PostgreSqlSaltLiveTest extends SaltLiveTestSupport {
             log.info("Machine "+targetMachine+" destroyed on stop (expected - "+e+")");
         }
     }
-    
+
     @Test(groups="Live")
     public void testPostgresScriptAndAccess() throws Exception {
         ChefLiveTestSupport.installBrooklynChefHostedConfig(app);
@@ -75,7 +69,7 @@ public class PostgreSqlSaltLiveTest extends SaltLiveTestSupport {
         log.info("Trying to connect to "+psql+" at "+url);
         Assert.assertNotNull(url);
         Assert.assertTrue(url.contains("542"));
-        
+
         new VogellaExampleAccess("org.postgresql.Driver", url).readModifyAndRevertDataBase();
     }
 
