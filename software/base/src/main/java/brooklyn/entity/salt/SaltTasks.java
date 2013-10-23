@@ -134,7 +134,7 @@ public class SaltTasks {
     }
 
     public static TaskFactory<?> runSalt(String runDir) {
-        return SshEffectorTasks.ssh(cdAndRun(runDir, BashCommands.sudo("salt-call --local state.highstate")))
+        return SshEffectorTasks.ssh(cdAndRun(runDir, BashCommands.sudo("salt-call state.highstate")))
                 .summary("run salt install")
                 .requiringExitCodeZero();
     }

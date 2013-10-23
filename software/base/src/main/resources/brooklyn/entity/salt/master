@@ -28,13 +28,12 @@
 #worker_threads: 5
 ret_port: ${entity.saltPort,c} # 4506
 
-root_dir: ${runDir}/
+root_dir: /
 pidfile: ${driver.pidFile}
-pki_dir: pki
-cachedir: cache
-sock_dir: sock
+pki_dir: ${runDir}/pki
+cachedir: ${runDir}/cache
 log_file: ${driver.logFileLocation}
-key_logfile: key.log
+key_logfile: ${runDir}/key.log
 
 #verify_env: True
 #keep_jobs: 24

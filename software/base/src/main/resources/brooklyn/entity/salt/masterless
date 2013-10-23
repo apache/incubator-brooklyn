@@ -19,28 +19,25 @@
 # /etc/salt/minion
 ##
 
-#default_include: minion.d/*.conf
-
 # Minion configuration
 id: ${entity.id}
 user: root
 backup_mode: minion
 
 # Directory settings
-root_dir: ${runDir}/
-pidfile: salt-minion.pid
-pki_dir: pki
-cachedir: cache
-sock_dir: sock
-log_file: minion.log
-key_logfile: key.log
+root_dir: /
+pidfile: ${runDir}/salt-minion.pid
+pki_dir: ${runDir}/pki
+cachedir: ${runDir}/cache
+log_file: ${runDir}/minion.log
+key_logfile: ${runDir}/key.log
 
 file_client: local
 file_roots:
   base:
-    - ${installDir}/base
-[#list formulas.entrySet() as entry]
-    - ${installDir}/base/${entry.key}
+    - ${runDir}/base
+[#list formulas?keys as formulaName]
+    - ${installDir}/${formulaName}
 [/#list]
 
 #verify_env: True
