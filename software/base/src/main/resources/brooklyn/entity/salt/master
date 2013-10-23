@@ -39,3 +39,12 @@ log_level_logfile: debug # Debugging
 #auto_accept: False
 #autosign_file: autosign.conf
 #permissive_pki_access: False
+
+fileserver_backend:
+  - git
+
+gitfs_remotes:
+  - git://github.com/saltstack/salt-states.git
+  - git://github.com/saltstack-formulas/postgres-formula.git
+  - ${entity.remoteUrl}
+  # TODO iterate through formula URLs

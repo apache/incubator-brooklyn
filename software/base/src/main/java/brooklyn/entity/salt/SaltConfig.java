@@ -18,7 +18,9 @@ import com.google.common.base.Functions;
 public interface SaltConfig {
 
     MapConfigKey<String> SALT_FORMULAS = new MapConfigKey<String>(String.class,
-            "salt.formulaUrls", "Map of Salt formulaURLs (normally GutHub repositories from the salt-formulas user)");
+            "salt.formulaUrls", "Map of Salt formulaURLs (normally GutHub repository archives from the salt-formulas user)");
+    SetConfigKey<String> SALT_RUN_LIST = new SetConfigKey<String>(String.class, "salt.runList", "TODO");
+    MapConfigKey<Object> SALT_LAUNCH_ATTRIBUTES = new MapConfigKey<Object>(Object.class, "salt.launch.attributes", "TODO");
 
     @SetFromFlag("master")
     ConfigKey<SaltStackMaster> MASTER = ConfigKeys.newConfigKey(SaltStackMaster.class,
@@ -26,6 +28,17 @@ public interface SaltConfig {
 
     AttributeSensor<String> MINION_ID = new BasicAttributeSensor<String>(String.class,
             "salt.minion.id", "The ID for a Salt minion");
+
+    @SetFromFlag("masterConfigUrl")
+    ConfigKey<String> MASTER_CONFIGURATION_URL = ConfigKeys.newStringConfigKey(
+            "salt.master.config.template.url", "The Salt master configuration file template URL",
+            "classpath://brooklyn/entity/salt/master");
+
+    @SetFromFlag("minionConfigUrl")
+    ConfigKey<String> MINION_CONFIGURATION_URL = ConfigKeys.newStringConfigKey(
+            "salt.minion.config.template.url", "The Salt minion configuration file template URL",
+            "classpath://brooklyn/entity/salt/masterless");
+    // TODO allow choice between this and "classpath://brooklyn/entity/salt/minion" template
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @SetFromFlag("minionIdFunction")

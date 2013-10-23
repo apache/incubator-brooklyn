@@ -5,19 +5,19 @@ import static brooklyn.util.ssh.BashCommands.*;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.management.TaskFactory;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.annotations.Beta;
-import com.google.common.collect.ImmutableList;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 @Beta
 public class SaltTasks {
@@ -31,24 +31,48 @@ public class SaltTasks {
                         INSTALL_CURL,
                         INSTALL_TAR,
                         INSTALL_UNZIP,
-                        "( "+downloadToStdout(boostrapUrl) + " | " + sudo("sudo sh -s -- -M -N "+version)+" )"));
+                        "( "+downloadToStdout(boostrapUrl) + " | " + sudo("sh -s -- -M -N "+version)+" )"));
         if (!force) installCmd = BashCommands.alternatives("which salt-master", installCmd);
         return SshEffectorTasks.ssh(installCmd).summary("install salt master");
     }
 
-    public static TaskFactory<?> installSaltMinion(Entity minion, String saltDirectory, boolean force) {
-        String boostrapUrl = minion.getConfig(SaltStackMaster.BOOTSTRAP_URL);
-        String installCmd = cdAndRun(saltDirectory, 
-                BashCommands.chain(
+    public static TaskFactory<?> installSaltMinion(final Entity minion, final String runDir, final String installDir, final boolean force) {
+        return Tasks.<Void>builder().name("install minion").body(
+                new Runnable() {
+                    public void run() {
+                        // Setup bootstrap installation command for minion
+                        String boostrapUrl = minion.getConfig(SaltStackMaster.BOOTSTRAP_URL);
+                        String installCmd = cdAndRun(runDir, BashCommands.chain(
                                 INSTALL_CURL,
                                 INSTALL_TAR,
                                 INSTALL_UNZIP,
-                                "( "+downloadToStdout(boostrapUrl) + " | " + sudo("sudo sh")+" )"));
-        if (!force) installCmd = BashCommands.alternatives("which salt-minion", installCmd);
-        return SshEffectorTasks.ssh(installCmd).summary("install salt minion");
+                                "( "+downloadToStdout(boostrapUrl) + " | " + sudo("sh")+" )"));
+                        if (!force) installCmd = BashCommands.alternatives("which salt-minion", installCmd);
+
+                        // Process the minion configuration template
+                        String url = Entities.getRequiredUrlConfig(minion, SaltConfig.MINION_CONFIGURATION_URL);
+                        Map<String, Object> config = MutableMap.<String, Object>builder()
+                                .put("entity", minion)
+                                .put("runDir", runDir)
+                                .put("installDir", installDir)
+                                .put("formulas", minion.getConfig(SaltConfig.SALT_FORMULAS))
+                                .build();
+                        String contents = TemplateProcessor.processTemplateContents(new ResourceUtils(minion).getResourceAsString(url), config);
+
+                        // Copy the file contents to the remote machine and install/start salt-minion
+                        DynamicTasks.queue(
+                                SshEffectorTasks.ssh(installCmd),
+                                SshEffectorTasks.put("/tmp/minion")
+                                        .contents(contents)
+                                        .createDirectory(),
+                                SshEffectorTasks.ssh(sudo("mv /tmp/minion /etc/salt/minion")), // TODO clunky
+                                SshEffectorTasks.ssh(sudo("restart salt-minion"))
+                            );
+                    }
+                }).buildFactory();
     }
 
-    public static TaskFactory<?> installFormulas(final String saltDirectory, final Map<String,String> formulasAndUrls, final boolean force) {
+    public static TaskFactory<?> installFormulas(final String installDir, final Map<String,String> formulasAndUrls, final boolean force) {
         return Tasks.<Void>builder().name("install formulas").body(
                 new Runnable() {
                     public void run() {
@@ -56,52 +80,42 @@ public class SaltTasks {
                         if (formulasAndUrls==null)
                             throw new IllegalStateException("No formulas defined to install at "+e);
                         for (String formula: formulasAndUrls.keySet())
-                            DynamicTasks.queue(installFormula(saltDirectory, formula, formulasAndUrls.get(formula), force));
+                            DynamicTasks.queue(installFormula(installDir, formula, formulasAndUrls.get(formula), force));
                     }
                 }).buildFactory();
     }
 
-    public static TaskFactory<?> installFormula(String saltDirectory, String formula, String url, boolean force) {
-        // TODO if it's server, try knife first
-        // TODO support downloads from classpath / local server
-        return SshEffectorTasks.ssh(cdAndRun(saltDirectory, SaltBashCommands.downloadAndExpandFormula(url, formula, force))).
-                summary("install formula "+formula).requiringExitCodeZero();
+    public static TaskFactory<?> installFormula(String installDir, String formula, String url, boolean force) {
+        return SshEffectorTasks.ssh(cdAndRun(installDir, SaltBashCommands.downloadAndExpandFormula(url, formula, force)))
+                .summary("install formula "+formula)
+                .requiringExitCodeZero();
     }
 
     protected static String cdAndRun(String targetDirectory, String command) {
-        return BashCommands.chain("mkdir -p "+targetDirectory,
+        return BashCommands.chain(
+                "mkdir -p "+targetDirectory,
                 "cd "+targetDirectory,
                 command);
     }
 
-    public static TaskFactory<?> buildSaltFile(String runDirectory, String saltDirectory, String phase, Iterable<? extends String> runList,
-            Map<String, Object> optionalAttributes) {
-        // TODO if it's server, try knife first
-        // TODO configure add'l properties
-        String phaseRb = 
-                "root = File.absolute_path(File.dirname(__FILE__))\n"+
-                "\n"+
-                "file_cache_path root\n"+
-//                "formula_path root + '/formulas'\n";
-                "formula_path '"+saltDirectory+"'\n";
+    public static TaskFactory<?> buildSaltFile(String runDir, Iterable<? extends String> runList, Map<String, Object> attributes) {
+        StringBuilder top =  new StringBuilder()
+                .append("base:\n")
+                .append("    '*':\n");
+        for (String run : runList) {
+            top.append("      - " + run + "\n");
+        }
 
-        Map<String,Object> phaseJsonMap = MutableMap.of();
-        if (optionalAttributes!=null)
-            phaseJsonMap.putAll(optionalAttributes);
-        if (runList!=null)
-            phaseJsonMap.put("run_list", ImmutableList.copyOf(runList));
-        Gson json = new GsonBuilder().create();
-        String phaseJson = json.toJson(phaseJsonMap);
-
-        return Tasks.sequential("build salt files for "+phase,
-                    SshEffectorTasks.put(Urls.mergePaths(runDirectory)+"/"+phase+".rb").contents(phaseRb).createDirectory(),
-                    SshEffectorTasks.put(Urls.mergePaths(runDirectory)+"/"+phase+".json").contents(phaseJson));
+        return SshEffectorTasks.put(Urls.mergePaths(runDir, "base", "top.sls"))
+                .contents(top.toString())
+                .summary("build salt top file")
+                .createDirectory();
     }
 
-    public static TaskFactory<?> runSalt(String runDir, String phase) {
-        // TODO salt server
-        return SshEffectorTasks.ssh(cdAndRun(runDir, "sudo salt-solo -c "+phase+".rb -j "+phase+".json -ldebug")).
-                summary("run salt for "+phase).requiringExitCodeZero();
+    public static TaskFactory<?> runSalt(String runDir) {
+        return SshEffectorTasks.ssh(cdAndRun(runDir, BashCommands.sudo("salt-call --local state.highstate")))
+                .summary("run salt install")
+                .requiringExitCodeZero();
     }
     
 }

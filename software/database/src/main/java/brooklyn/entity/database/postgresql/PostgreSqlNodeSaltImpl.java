@@ -36,7 +36,7 @@ public class PostgreSqlNodeSaltImpl extends EffectorStartableImpl implements Pos
             .description("invokes a script")
             .parameter(ExecuteScriptEffectorBody.SCRIPT)
             .impl(new ExecuteScriptEffectorBody()).build();
-    
+
     private SshFeed feed;
 
     @Override
@@ -44,34 +44,35 @@ public class PostgreSqlNodeSaltImpl extends EffectorStartableImpl implements Pos
         super.init();
         new SaltPostgreSqlLifecycle().attachLifecycleEffectors(this);
     }
-    
+
     public static class SaltPostgreSqlLifecycle extends SaltLifecycleEffectorTasks {
         public SaltPostgreSqlLifecycle() {
             usePidFile("/var/run/postgresql/*.pid");
             useService("postgresql");
         }
-        
+
         @Override
         protected void startMinionAsync() {
             Entities.warnOnIgnoringConfig(entity(), SaltConfig.SALT_FORMULAS);
             Entities.warnOnIgnoringConfig(entity(), SaltConfig.SALT_RUN_LIST);
             Entities.warnOnIgnoringConfig(entity(), SaltConfig.SALT_LAUNCH_ATTRIBUTES);
-            
+
             // TODO Set these as defaults, rather than replacing user's value!?
-            SaltConfigs.addToFormulas(entity(), "postgresql", "https://github.com/saltstack-formulas/postgres-formula");
+            SaltConfigs.addToFormulas(entity(), "postgres", "https://github.com/saltstack-formulas/postgres-formula/archive/master.tar.gz");
+            SaltConfigs.addToRunList(entity(), "postgres");
             SaltConfigs.addLaunchAttributes(entity(), ImmutableMap.<String,Object>builder()
                     .put("port", DependentConfiguration.attributeWhenReady(entity(), PostgreSqlNode.POSTGRESQL_PORT))
                     .put("listen_addresses", "*")
                     .put("pg_hba.type", "host")
                     .put("pg_hba.db", "all")
-                    .put("pg_hba.user", "all") 
+                    .put("pg_hba.user", "all")
                     .put("pg_hba.addr", "0.0.0.0/0")
                     .put("pg_hba.method", "md5")
                     .build());
-            
+
             super.startMinionAsync();
         }
-        
+
         @Override
         protected void postStartCustom() {
             super.postStartCustom();
@@ -82,33 +83,33 @@ public class PostgreSqlNodeSaltImpl extends EffectorStartableImpl implements Pos
             if (creationScriptUrl != null)
                 creationScript = new ResourceUtils(entity()).getResourceAsString(creationScriptUrl);
             else creationScript = entity().getConfig(PostgreSqlNode.CREATION_SCRIPT_CONTENTS);
-            entity().invoke(PostgreSqlNodeSaltImpl.EXECUTE_SCRIPT, 
+            entity().invoke(PostgreSqlNodeSaltImpl.EXECUTE_SCRIPT,
                     ConfigBag.newInstance().configure(ExecuteScriptEffectorBody.SCRIPT, creationScript).getAllConfig()).getUnchecked();
 
             // and finally connect sensors
             ((PostgreSqlNodeSaltImpl)entity()).connectSensors();
         }
-        
+
         @Override
         protected void preStopCustom() {
             ((PostgreSqlNodeSaltImpl)entity()).disconnectSensors();
             super.preStopCustom();
         }
     }
-    
+
     public static class ExecuteScriptEffectorBody extends EffectorBody<String> {
         public static final ConfigKey<String> SCRIPT = ConfigKeys.newStringConfigKey("script", "contents of script to run");
-        
+
         @Override
         public String call(ConfigBag parameters) {
             return DynamicTasks.queue(SshEffectorTasks.ssh(
                     BashCommands.pipeTextTo(
-                        parameters.get(SCRIPT),
-                        BashCommands.sudoAsUser("postgres", "psql --file -")))
+                            parameters.get(SCRIPT),
+                            BashCommands.sudoAsUser("postgres", "psql --file -")))
                     .requiringExitCodeZero()).getStdout();
         }
     }
-    
+
     protected void connectSensors() {
         setAttribute(DB_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
 

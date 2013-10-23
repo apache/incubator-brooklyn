@@ -17,14 +17,16 @@ import com.google.common.base.Preconditions;
 @Beta
 public class SaltConfigs {
 
-    public static void addToRunList(EntitySpec<?> entity, String ...recipes) {
-        for (String recipe: recipes)
-            entity.configure(SaltConfig.SALT_RUN_LIST, SetModifications.addItem(recipe));
+    public static void addToRunList(EntitySpec<?> entity, String...states) {
+        for (String state : states) {
+            entity.configure(SaltConfig.SALT_RUN_LIST, SetModifications.addItem(state));
+        }
     }
 
-    public static void addToRunList(EntityInternal entity, String ...recipes) {
-        for (String recipe: recipes)
-            entity.setConfig(SaltConfig.SALT_RUN_LIST, SetModifications.addItem(recipe));
+    public static void addToRunList(EntityInternal entity, String...states) {
+        for (String state : states) {
+            entity.setConfig(SaltConfig.SALT_RUN_LIST, SetModifications.addItem(state));
+        }
     }
 
     public static void addToFormuals(EntitySpec<?> entity, String formulaName, String formulaUrl) {

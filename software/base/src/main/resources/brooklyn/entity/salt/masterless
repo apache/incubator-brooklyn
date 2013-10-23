@@ -1,18 +1,10 @@
 [#ftl]
 ##
-# SaltStack Minion Configuration
+# SaltStack Masterless Minion Configuration
 # /etc/salt/minion
 ##
 
 #default_include: minion.d/*.conf
-
-# The salt master server
-master: ${entity.master.hostname}
-ipv6: False
-retry_dns: 30
-master_port: ${entity.master.saltPort,c} # 4506
-acceptance_wait_time: 30
-acceptance_wait_time_max: 300
 
 # Minion configuration
 id: ${entity.id}
@@ -27,6 +19,14 @@ cachedir: cache
 sock_dir: sock
 log_file: minion.log
 key_logfile: key.log
+
+file_client: local
+file_roots:
+  base:
+    - ${installDir}/base
+[#list formulas.entrySet() as entry]
+    - ${installDir}/base/${entry.key}
+[/#list]
 
 #verify_env: True
 #cache_jobs: True # Debugging
