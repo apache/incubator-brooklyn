@@ -53,7 +53,9 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
         Set<Exception> exceptions = Sets.newHashSet();
         for (MachineLocation machineLocation: machinesToTearDown) {
             try {
-                location.release(machineLocation);
+                // Do not attempt to release machine if it has already been released
+                if (location.getChildren().contains(machineLocation))
+                    location.release(machineLocation);
             } catch (Exception e) {
                 exceptions.add(e);
             }
@@ -72,12 +74,11 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
         location.setManagementContext(managementContext);
         
         MachineLocation m1 = location.obtain();
+        machinesToTearDown.add(m1);
         
         assertNotNull(m1);
 
         log.info("GOT "+m1);
-        
-        location.release(m1);
     }
     
     @SuppressWarnings("unchecked")
@@ -149,6 +150,5 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
         
         SshMachineLocation m1 = (SshMachineLocation) location.obtain();
         machinesToTearDown.add(m1);
-        location.release(m1);
     }
 }
