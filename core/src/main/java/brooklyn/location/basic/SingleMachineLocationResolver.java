@@ -47,7 +47,7 @@ public class SingleMachineLocationResolver implements LocationResolver {
         String args = matcher.group(2);
         Map<String,?> locationArgs = KeyValueParser.parseMap(args);
 
-        Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties("byon", namedLocation, properties);
+        Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties(null, namedLocation, properties);
         MutableMap<String, Object> flags = MutableMap.<String, Object>builder()
                 .putAll(filteredProperties)
                 .putAll(locationFlags)
