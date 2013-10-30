@@ -284,7 +284,7 @@ Let's look at the management web console, on port 8081:
 
 [![Web Console Map](console-map-w700.png "Web Console Map")](console-map.png) 
 
-This shows the targets (e.g. Ireland (AWS eu-west-1),  Singapore (AWS ap-southeast-1),  and California (AWS us-west-1)
+This shows the targets (e.g. Ireland (AWS eu-west-1),  Singapore (AWS ap-southeast-1),  and California (AWS us-west-1)).
 This also shows the current status of the application.
 
 Navigating to the "applications" tab, we can view sensors, invoke effectors, control policies,
