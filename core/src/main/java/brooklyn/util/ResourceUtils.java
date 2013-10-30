@@ -13,7 +13,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,20 +90,23 @@ public class ResourceUtils {
         return new ResourceUtils(null);
     }
 
-    /** @see ResourceUtils#create(ClassLoader, Object, String) */
-    private ResourceUtils(ClassLoader loader, Object contextObject, String contextMessage) {
+    /** @deprecated since 0.6.0 use {@link ResourceUtils#create(ClassLoader, Object, String)} */
+    @Deprecated
+    public ResourceUtils(ClassLoader loader, Object contextObject, String contextMessage) {
         this.loader = loader;
         this.contextObject = contextObject;
         this.context = contextMessage;
     }
 
-    /** @see ResourceUtils#create(Object, String) */
-    private ResourceUtils(Object contextObject, String contextMessage) {
+    /** @deprecated since 0.6.0 use {@link ResourceUtils#create(Object, String)} */
+    @Deprecated
+    public ResourceUtils(Object contextObject, String contextMessage) {
         this(contextObject==null ? null : getClassLoaderForObject(contextObject), contextObject, contextMessage);
     }
 
-    /** @see ResourceUtils#create(Object) */
-    private ResourceUtils(Object contextObject) {
+    /** @deprecated since 0.6.0 use {@link ResourceUtils#create(Object)} */
+    @Deprecated
+    public ResourceUtils(Object contextObject) {
         this(contextObject, "for " + Strings.toString(contextObject));
     }
     
