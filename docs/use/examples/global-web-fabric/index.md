@@ -269,8 +269,7 @@ import com.google.common.collect.Lists;
 
 ## Running the Example
 
-Now let's run this example.  You will need to specify increased heap size and memory limits,
-as well as the appropriate classpath.
+Now let's run this example.
 
 {% highlight bash %}
 ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.GlobalWebFabricExample \
