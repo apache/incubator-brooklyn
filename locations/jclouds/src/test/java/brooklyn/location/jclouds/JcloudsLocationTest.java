@@ -1,6 +1,11 @@
 package brooklyn.location.jclouds;
 
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
@@ -13,18 +18,22 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
 
 /**
  * @author Shane Witbeck
@@ -35,6 +44,8 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             new RuntimeException("early termination for test");
     
     public static class BailOutJcloudsLocation extends JcloudsLocation {
+        public static final ConfigKey<Function<ConfigBag,Void>> BUILD_TEMPLATE_INTERCEPTOR = ConfigKeys.newConfigKey(new TypeToken<Function<ConfigBag,Void>>() {}, "buildtemplateinterceptor");
+        
         ConfigBag lastConfigBag;
 
         public BailOutJcloudsLocation() {
@@ -48,9 +59,10 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         @Override
         protected Template buildTemplate(ComputeService computeService, ConfigBag config) {
             lastConfigBag = config;
+            if (getConfig(BUILD_TEMPLATE_INTERCEPTOR) != null) getConfig(BUILD_TEMPLATE_INTERCEPTOR).apply(config);
             throw BAIL_OUT_FOR_TESTING;
         }
-        protected synchronized void tryObtainAndCheck(Map<?,?> flags, Predicate<ConfigBag> test) {
+        protected void tryObtainAndCheck(Map<?,?> flags, Predicate<? super ConfigBag> test) {
             try {
                 obtain(flags);
             } catch (NoMachinesAvailableException e) {
@@ -110,34 +122,49 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     }
     
     protected BailOutJcloudsLocation newSampleBailOutJcloudsLocationForTesting() {
+        return newSampleBailOutJcloudsLocationForTesting(ImmutableMap.<ConfigKey<?>,Object>of());
+    }
+    
+    protected BailOutJcloudsLocation newSampleBailOutJcloudsLocationForTesting(Map<?,?> config) {
+        Map<ConfigKey<?>,?> allConfig = MutableMap.<ConfigKey<?>,Object>builder()
+                .put(IMAGE_ID, "bogus")
+                .put(CLOUD_PROVIDER, "aws-ec2")
+                .put(ACCESS_IDENTITY, "bogus")
+                .put(CLOUD_REGION_ID, "bogus")
+                .put(ACCESS_CREDENTIAL, "bogus")
+                .put(USER, "fred")
+                .put(MIN_RAM, 16)
+                .putAll((Map)config)
+                .build();
         return managementContext.getLocationManager().createLocation(LocationSpec.create(BailOutJcloudsLocation.class)
-                .configure(MutableMap.of(
-                        IMAGE_ID, "bogus",
-                        CLOUD_PROVIDER, "aws-ec2",
-                        ACCESS_IDENTITY, "bogus",
-                        CLOUD_REGION_ID, "bogus",
-                        ACCESS_CREDENTIAL, "bogus",
-                        USER, "fred",
-                        MIN_RAM, 16)));
+                .configure(allConfig));
     }
     
     protected BailOutWithTemplateJcloudsLocation newSampleBailOutWithTemplateJcloudsLocation() {
+        return newSampleBailOutWithTemplateJcloudsLocation(ImmutableMap.<ConfigKey<?>,Object>of());
+    }
+
+    protected BailOutWithTemplateJcloudsLocation newSampleBailOutWithTemplateJcloudsLocation(Map<?,?> config) {
         String identity = (String) brooklynProperties.get("brooklyn.location.jclouds.aws-ec2.identity");
         if (identity == null) identity = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.identity");
         String credential = (String) brooklynProperties.get("brooklyn.location.jclouds.aws-ec2.credential");
         if (credential == null) identity = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.credential");
         
+        Map<ConfigKey<?>,?> allConfig = MutableMap.<ConfigKey<?>,Object>builder()
+                .put(CLOUD_PROVIDER, "aws-ec2")
+                .put(CLOUD_REGION_ID, "eu-west-1")
+                .put(IMAGE_ID, "us-east-1/ami-7d7bfc14") // so it runs faster, without loading all EC2 images
+                .put(ACCESS_IDENTITY, identity)
+                .put(ACCESS_CREDENTIAL, credential)
+                .put(USER, "fred")
+                .put(INBOUND_PORTS, "[22, 80, 9999]")
+                .putAll((Map)config)
+                .build();
+        
         return managementContext.getLocationManager().createLocation(LocationSpec.create(BailOutWithTemplateJcloudsLocation.class)
-                .configure(MutableMap.of(
-                        CLOUD_PROVIDER, "aws-ec2",
-                        CLOUD_REGION_ID, "eu-west-1",
-                        IMAGE_ID, "us-east-1/ami-7d7bfc14", // so it runs faster, without loading all EC2 images
-                        ACCESS_IDENTITY, identity,
-                        ACCESS_CREDENTIAL, credential,
-                        USER, "fred",
-                        INBOUND_PORTS, "[22, 80, 9999]")));
+                .configure(allConfig));
     }
-    
+
     public static Predicate<ConfigBag> checkerFor(final String user, final Integer minRam, final Integer minCores) {
         return new Predicate<ConfigBag>() {
             @Override
@@ -264,6 +291,134 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         jcloudsLocation.tryObtainAndCheck(MutableMap.of(INBOUND_PORTS, "[23, 81, 9998]"), templateCheckerFor("[23, 81, 9998]"));
         int[] ports = new int[] {23, 81, 9998};
         Assert.assertEquals(jcloudsLocation.template.getOptions().getInboundPorts(), ports);
+    }
+
+    @Test
+    public void testCreateWithMaxConcurrentCallsUnboundedByDefault() throws Exception {
+        final int numCalls = 20;
+        ConcurrencyTracker interceptor = new ConcurrencyTracker();
+        ExecutorService executor = Executors.newCachedThreadPool();
+
+        try {
+            final BailOutJcloudsLocation jcloudsLocation = newSampleBailOutJcloudsLocationForTesting(ImmutableMap.of(BailOutJcloudsLocation.BUILD_TEMPLATE_INTERCEPTOR, interceptor));
+            
+            for (int i = 0; i < numCalls; i++) {
+                executor.execute(new Runnable() {
+                    @Override public void run() {
+                        jcloudsLocation.tryObtainAndCheck(MutableMap.of(), Predicates.alwaysTrue());
+                    }});
+            }
+            
+            interceptor.assertCallCountEventually(numCalls);
+            
+            interceptor.unblock();
+            executor.shutdown();
+            executor.awaitTermination(10, TimeUnit.SECONDS);
+            
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test(groups="Integration") // because takes 1 sec
+    public void testCreateWithMaxConcurrentCallsRespectsConfig() throws Exception {
+        final int numCalls = 4;
+        final int maxConcurrentCreations = 2;
+        ConcurrencyTracker interceptor = new ConcurrencyTracker();
+        ExecutorService executor = Executors.newCachedThreadPool();
+        
+        try {
+            final BailOutJcloudsLocation jcloudsLocation = newSampleBailOutJcloudsLocationForTesting(ImmutableMap.of(
+                    BailOutJcloudsLocation.BUILD_TEMPLATE_INTERCEPTOR, interceptor,
+                    JcloudsLocation.MAX_CONCURRENT_MACHINE_CREATIONS, maxConcurrentCreations));
+            
+            for (int i = 0; i < numCalls; i++) {
+                executor.execute(new Runnable() {
+                    @Override public void run() {
+                        jcloudsLocation.tryObtainAndCheck(MutableMap.of(), Predicates.alwaysTrue());
+                    }});
+            }
+            
+            interceptor.assertCallCountEventually(maxConcurrentCreations);
+            interceptor.assertCallCountContinually(maxConcurrentCreations);
+            
+            interceptor.unblock();
+            interceptor.assertCallCountEventually(numCalls);
+            executor.shutdown();
+            executor.awaitTermination(10, TimeUnit.SECONDS);
+            
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test(groups="Integration") // because takes 1 sec
+    public void testCreateWithMaxConcurrentCallsAppliesToSubLocations() throws Exception {
+        final int numCalls = 4;
+        final int maxConcurrentCreations = 2;
+        ConcurrencyTracker interceptor = new ConcurrencyTracker();
+        ExecutorService executor = Executors.newCachedThreadPool();
+
+        try {
+            final BailOutJcloudsLocation jcloudsLocation = newSampleBailOutJcloudsLocationForTesting(ImmutableMap.of(
+                    BailOutJcloudsLocation.BUILD_TEMPLATE_INTERCEPTOR, interceptor,
+                    JcloudsLocation.MAX_CONCURRENT_MACHINE_CREATIONS, maxConcurrentCreations));
+            
+    
+            for (int i = 0; i < numCalls; i++) {
+                final BailOutJcloudsLocation subLocation = (BailOutJcloudsLocation) jcloudsLocation.newSubLocation(MutableMap.of());
+                executor.execute(new Runnable() {
+                    @Override public void run() {
+                        subLocation.tryObtainAndCheck(MutableMap.of(), Predicates.alwaysTrue());
+                    }});
+            }
+            
+            interceptor.assertCallCountEventually(maxConcurrentCreations);
+            interceptor.assertCallCountContinually(maxConcurrentCreations);
+            
+            interceptor.unblock();
+            interceptor.assertCallCountEventually(numCalls);
+            executor.shutdown();
+            executor.awaitTermination(10, TimeUnit.SECONDS);
+
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    public static class ConcurrencyTracker implements Function<ConfigBag,Void> {
+        final AtomicInteger concurrentCallsCounter = new AtomicInteger();
+        final CountDownLatch continuationLatch = new CountDownLatch(1);
+        
+        @Override public Void apply(ConfigBag input) {
+            concurrentCallsCounter.incrementAndGet();
+            try {
+                continuationLatch.await();
+            } catch (InterruptedException e) {
+                throw Exceptions.propagate(e);
+            }
+            return null;
+        }
+        
+        public void unblock() {
+            continuationLatch.countDown();
+        }
+
+        public void assertCallCountEventually(final int expected) {
+            Asserts.succeedsEventually(new Runnable() {
+                @Override public void run() {
+                    Assert.assertEquals(concurrentCallsCounter.get(), expected);
+                }
+            });
+        }
+        
+        public void assertCallCountContinually(final int expected) {
+            Asserts.succeedsContinually(new Runnable() {
+                @Override public void run() {
+                    Assert.assertEquals(concurrentCallsCounter.get(), expected);
+                }
+            });
+        }
     }
 
     // TODO more tests, where flags come in from resolver, named locations, etc
