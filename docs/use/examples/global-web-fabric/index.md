@@ -273,9 +273,8 @@ Now let's run this example.  You will need to specify increased heap size and me
 as well as the appropriate classpath.
 
 {% highlight bash %}
-export BROOKLYN_CLASSPATH=/path/to/your/project/target/classes
 ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.GlobalWebFabricExample \
-    --location jclouds:aws-ec2:eu-west-1,jclouds:aws-ec2:ap-southeast-1,jclouds:aws-ec2:us-west-1 
+--location jclouds:aws-ec2:eu-west-1,jclouds:aws-ec2:ap-southeast-1,jclouds:aws-ec2:us-west-1 
 {% endhighlight %}
 
 The management web console will start,
