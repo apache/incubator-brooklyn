@@ -2,6 +2,7 @@ package brooklyn.location.jclouds;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.concurrent.Semaphore;
 
 import org.jclouds.Constants;
 import org.jclouds.compute.domain.TemplateBuilder;
@@ -142,6 +143,12 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
 
     public static final ConfigKey<Integer> MACHINE_CREATE_ATTEMPTS = ConfigKeys.newIntegerConfigKey(
             "machineCreateAttempts", "Number of times to retry if jclouds fails to create a VM", 1);
+
+    public static final ConfigKey<Integer> MAX_CONCURRENT_MACHINE_CREATIONS = ConfigKeys.newIntegerConfigKey(
+            "maxConcurrentMachineCreations", "Maximum number of concurrent machine-creations", Integer.MAX_VALUE);
+
+    public static final ConfigKey<Semaphore> MACHINE_CREATION_SEMAPHORE = ConfigKeys.newConfigKey(
+            Semaphore.class, "machineCreationSemaphore", "Semaphore for controlling concurrent machine creation", null);
 
     // TODO
     
