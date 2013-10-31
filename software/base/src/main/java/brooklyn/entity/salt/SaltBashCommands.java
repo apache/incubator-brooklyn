@@ -31,8 +31,6 @@ import com.google.common.io.Files;
 
 /**
  * BASH commands useful for setting up SaltStack.
- *
- * @see ChefBashCommands
  */
 @Beta
 public class SaltBashCommands {
