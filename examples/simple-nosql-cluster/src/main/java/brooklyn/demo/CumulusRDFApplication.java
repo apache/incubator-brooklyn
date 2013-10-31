@@ -128,14 +128,14 @@ public class CumulusRDFApplication extends AbstractApplication {
         if (getConfig(MULTI_REGION_FABRIC)) {
             cassandra = addChild(EntitySpec.create(CassandraFabric.class)
                     .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
-                    .configure(CassandraCluster.INITIAL_SIZE, 2) // per location
+                    .configure(CassandraCluster.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE)) // per location
                     .configure(CassandraCluster.ENDPOINT_SNITCH_NAME, "brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch")
                     .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar")
                     .configure(CassandraFabric.MEMBER_SPEC, clusterSpec));
         } else {
             cassandra = addChild(EntitySpec.create(clusterSpec)
                     .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
-                    .configure(CassandraCluster.INITIAL_SIZE, 2));
+                    .configure(CassandraCluster.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE)));
         }
 
         // Tomcat web-app server
@@ -154,7 +154,7 @@ public class CumulusRDFApplication extends AbstractApplication {
                 // Process the YAML template given in the application config
                 String url = Entities.getRequiredUrlConfig(CumulusRDFApplication.this, CUMULUS_RDF_CONFIG_URL);
                 Map<String, Object> config = MutableMap.<String, Object>of("cassandraHostname", endpoint.getHostText(), "cassandraThriftPort", endpoint.getPort());
-                String contents = TemplateProcessor.processTemplateContents(new ResourceUtils(this).getResourceAsString(url), config);
+                String contents = TemplateProcessor.processTemplateContents(new ResourceUtils(CumulusRDFApplication.this).getResourceAsString(url), config);
 
                 // Copy the file contents to the remote machine
                 return DynamicTasks.queue(SshEffectorTasks.put("/tmp/cumulus.yaml").contents(contents)).get();
@@ -198,6 +198,7 @@ public class CumulusRDFApplication extends AbstractApplication {
         addLocations(locations);
 
         // The web application only needs to run in one location, use the first
+        // TODO use a multi-region web cluster
         Collection<? extends Location> first = MutableList.copyOf(Iterables.limit(locations, 1));
 
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
