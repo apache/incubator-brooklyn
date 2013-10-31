@@ -5,6 +5,7 @@ import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
@@ -27,7 +28,13 @@ public class PostgreSqlSaltLiveTest extends SaltLiveTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(PostgreSqlSaltLiveTest.class);
 
-    PostgreSqlNode psql;
+    private PostgreSqlNode psql;
+
+    @Override
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() {
+        // Ignore
+    }
 
     @Test(groups="Live")
     public void testPostgresStartsAndStops() throws Exception {
