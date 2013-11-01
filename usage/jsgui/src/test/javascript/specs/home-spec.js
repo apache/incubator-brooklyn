@@ -74,15 +74,15 @@ define([
                 model:model
             }).render()
 
-            it('must have 3 td tags', function () {
-                expect(view.$('td').length).toEqual(3)
+            it('must have 2 td tags', function () {
+                expect(view.$('td').length).toEqual(2)
             })
 
-            it('must have a td with button.delete', function () {
-                expect(view.$('button.delete').length).toEqual(1)
-                expect(view.$('button.delete').parent().is('td')).toEqual(true)
-                expect(view.$("button.delete").attr("id")).toBe(model.cid)
-            })
+//            it('must have a td with button.delete', function () {
+//                expect(view.$('button.delete').length).toEqual(1)
+//                expect(view.$('button.delete').parent().is('td')).toEqual(true)
+//                expect(view.$("button.delete").attr("id")).toBe(model.cid)
+//            })
         })
     })
 })
