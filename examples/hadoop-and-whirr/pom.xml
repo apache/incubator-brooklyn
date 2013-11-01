@@ -19,6 +19,11 @@
             <version>${project.version}</version>
             <classifier>with-dependencies</classifier>
         </dependency>
+        <dependency>
+            <groupId>org.apache.whirr</groupId>
+            <artifactId>whirr-elasticsearch</artifactId>
+            <version>${whirr.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

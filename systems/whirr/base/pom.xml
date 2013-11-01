@@ -147,6 +147,11 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.whirr</groupId>
+            <artifactId>whirr-elasticsearch</artifactId>
+            <version>${whirr.version}</version>
+            <scope>test</scope>
     </dependencies>
 
 </project>
