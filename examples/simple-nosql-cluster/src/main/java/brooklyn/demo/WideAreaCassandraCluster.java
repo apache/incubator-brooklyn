@@ -18,6 +18,10 @@ package brooklyn.demo;
 import java.util.Arrays;
 import java.util.List;
 
+import brooklyn.catalog.Catalog;
+import brooklyn.catalog.CatalogConfig;
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
@@ -34,15 +38,22 @@ import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
 
+@Catalog(name="Wide Area Cassandra Cluster Application", description="Deploy a Cassandra cluster across multiple geographies.")
 public class WideAreaCassandraCluster extends AbstractApplication {
 
     public static final String DEFAULT_LOCATION_SPEC = "aws-ec2:us-east-1,rackspace-cloudservers-uk";
-
+	
+	@CatalogConfig(label="Initial Cluster Size (per location)", priority=2)
+    public static final ConfigKey<Integer> CASSANDRA_CLUSTER_SIZE = ConfigKeys.newConfigKey(
+        "cassandra.cluster.initialSize", "Initial size of the Cassandra clusterss", 2);      
+    
+    
+	
     @Override
     public void init() {
         addChild(EntitySpec.create(CassandraFabric.class)
                 .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
-                .configure(CassandraCluster.INITIAL_SIZE, 2) // per location
+                .configure(CassandraCluster.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE)) // per location
                 .configure(CassandraCluster.ENDPOINT_SNITCH_NAME, "brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch")
                 .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar")
                 .configure(CassandraFabric.MEMBER_SPEC, EntitySpec.create(CassandraCluster.class)
