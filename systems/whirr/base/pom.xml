@@ -100,6 +100,11 @@
             <artifactId>jclouds-netty</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.jclouds.driver</groupId>
+            <artifactId>jclouds-enterprise</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.whirr</groupId>
