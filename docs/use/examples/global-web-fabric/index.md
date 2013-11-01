@@ -269,13 +269,11 @@ import com.google.common.collect.Lists;
 
 ## Running the Example
 
-Now let's run this example.  You will need to specify increased heap size and memory limits,
-as well as the appropriate classpath.
+Now let's run this example.
 
 {% highlight bash %}
-export BROOKLYN_CLASSPATH=/path/to/your/project/target/classes
 ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.GlobalWebFabricExample \
-    --location jclouds:aws-ec2:eu-west-1,jclouds:aws-ec2:ap-southeast-1,jclouds:aws-ec2:us-west-1 
+--location jclouds:aws-ec2:eu-west-1,jclouds:aws-ec2:ap-southeast-1,jclouds:aws-ec2:us-west-1 
 {% endhighlight %}
 
 The management web console will start,
@@ -285,9 +283,8 @@ Let's look at the management web console, on port 8081:
 
 [![Web Console Map](console-map-w700.png "Web Console Map")](console-map.png) 
 
-This shows the targets (e.g. Ireland (AWS eu-west-1),  Singapore (AWS ap-southeast-1))
-as well as a few other places (wrong locations picked up for some AWS IP's!).
-This also shows the progress of the most recent tasks.
+This shows the targets (e.g. Ireland (AWS eu-west-1),  Singapore (AWS ap-southeast-1),  and California (AWS us-west-1)).
+This also shows the current status of the application.
 
 Navigating to the "applications" tab, we can view sensors, invoke effectors, control policies,
 and track activity, 
@@ -297,7 +294,7 @@ Let's drill down on the Geoscaling DNS entity's sensors:
 
 [![Web Console Geoscaling Details](console-geoscaling-details-w700.png "Web Console Geoscaling Details")](console-geoscaling-details.png)
 
-Here we see it has chosen `brooklyn-csgFCzTM.geopaas.org` as the geo-load-balanced domain name.
+Here we see it has chosen `brooklyn-vOZ7b4BL.martincloudsoft.geopaas.org` as the geo-load-balanced domain name.
 (Yours will be under `yourname.geopaas.org`, unless you chose a different domain earlier.)
 We can also see the hosts it is forwarding to, one for each cluster, corresponding to the
 children of the Web Fabric (propagated from the nginx hostnames, in the case of the ControlledDynamicWebAppCluster instances).
