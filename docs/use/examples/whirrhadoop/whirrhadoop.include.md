@@ -79,6 +79,12 @@ public class WhirrExample extends AbstractApplication {
 }
 {% endhighlight %}
 
+As this example uses elasticsearch, the elasticsearch jar will need to be added to the classpath. If you are using elasticsearch in your own project, you will also need to add it as a dependency in your pom.xml. For an example see the brooklyn-examples/hadoop-and-whirr/pom.xml
+
+{% highlight bash %}
+% export BROOKLYN_CLASSPATH=~/.m2/repository/org/apache/whirr/whirr-elasticsearch/0.8.1/whirr-elasticsearch-0.8.1.jar:$BROOKLYN_CLASSPATH
+{% endhighlight %} 
+
 This can be launched by running:
 
 {% highlight bash %}
