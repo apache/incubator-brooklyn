@@ -175,7 +175,7 @@ this can also be deployed to your favourite cloud, let's pretend
 it's Amazon Ireland, as follows:
 
 {% highlight bash %}
-% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.StandaloneBrokerExample --location aws-ec2:eu-west-1
+% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.StandaloneQpidBrokerExample --location aws-ec2:eu-west-1
 {% endhighlight %}
 
 If you encounter any difficulties, please
