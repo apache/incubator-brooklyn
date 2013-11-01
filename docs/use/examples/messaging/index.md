@@ -41,7 +41,7 @@ default configuration, specifying only the AMQP port and creates
 no queues or topics:
 
 {% highlight java %}
-public class StandaloneBrokerExample extends AbstractApplication {
+public class StandaloneQpidBrokerExample extends AbstractApplication {
     @Override
     public void init() {
         // Configure the Qpid broker entity
@@ -103,7 +103,7 @@ out the Brooklyn [repository](https://www.github.com/brooklyncentral/brooklyn)
 as follows:
 
 {% highlight bash %}
-% ${BROOKLYN_HOME}/bin/brooklyn -v launch --app brooklyn.demo.StandaloneBrokerExample --location localhost
+% ${BROOKLYN_HOME}/bin/brooklyn -v launch --app brooklyn.demo.StandaloneQpidBrokerExample --location localhost
 {% endhighlight %}
 
 Now, visit the Brooklyn web console on port 8081 (for pre 0.6 releases,
