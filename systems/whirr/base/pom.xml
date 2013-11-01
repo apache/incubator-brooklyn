@@ -152,6 +152,7 @@
             <artifactId>whirr-elasticsearch</artifactId>
             <version>${whirr.version}</version>
             <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>
