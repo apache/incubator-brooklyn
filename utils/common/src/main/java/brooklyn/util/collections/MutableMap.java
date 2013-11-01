@@ -4,6 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.ImmutableMap;
 
 /** Map impl, exposing simple builder operations (add) in a fluent-style API,
@@ -78,9 +80,10 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         return result;
      }
 
-    public static <K,V> MutableMap<K,V> copyOf(Map<? extends K, ? extends V> orig) {
+    public static <K,V> MutableMap<K,V> copyOf(@Nullable Map<? extends K, ? extends V> orig) {
         MutableMap<K,V> result = new MutableMap<K,V>();
-        result.putAll(orig);
+        if (orig!=null)
+            result.putAll(orig);
         return result;
     }
     
