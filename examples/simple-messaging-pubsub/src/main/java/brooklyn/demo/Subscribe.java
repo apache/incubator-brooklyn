@@ -44,7 +44,7 @@ public class Subscribe {
                 TextMessage msg = (TextMessage) messageConsumer.receive(MESSAGE_TIMEOUT_MILLIS);
                 if (msg == null) break;
                 System.out.printf("Got message: '%s'\n", msg.getText());
-            } while (n --> 0);
+            } while (--n > 0);
         } catch (Exception e) {
             System.err.printf("Error while receiving - %s\n", e.getMessage());
             System.err.printf("Cause: %s\n", Throwables.getStackTraceAsString(e));
