@@ -39,7 +39,7 @@ public class Subscribe {
             MessageConsumer messageConsumer = session.createConsumer(destination);
 
             // Try and receive 100 messages
-            for (int n = 0; n < 100; n++) {
+            for (int n = 0; n < MESSAGE_COUNT; n++) {
                 TextMessage msg = (TextMessage) messageConsumer.receive(MESSAGE_TIMEOUT_MILLIS);
                 if (msg == null) {
                     System.out.printf("No message received in %s milliseconds, exiting", MESSAGE_TIMEOUT_MILLIS);
