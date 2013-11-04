@@ -8,7 +8,7 @@ import brooklyn.config.ConfigKey;
 import com.google.common.annotations.Beta;
 
 /**
- * Gives type information for an {@link Policy}. It is immutable.
+ * Gives type information for a {@link Policy}. It is immutable.
  * 
  * For policies that can support config keys etc being added on-the-fly,
  * then this PolicyType will be a snapshot and subsequent snapshots will
