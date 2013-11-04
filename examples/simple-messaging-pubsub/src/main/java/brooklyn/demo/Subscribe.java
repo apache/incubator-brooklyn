@@ -39,12 +39,14 @@ public class Subscribe {
             MessageConsumer messageConsumer = session.createConsumer(destination);
 
             // Try and receive 100 messages
-            int n = MESSAGE_COUNT;
-            do {
+            for (int n = 0; n < 100; n++) {
                 TextMessage msg = (TextMessage) messageConsumer.receive(MESSAGE_TIMEOUT_MILLIS);
-                if (msg == null) break;
-                System.out.printf("Got message: '%s'\n", msg.getText());
-            } while (--n > 0);
+                if (msg == null) {
+                    System.out.printf("No message received in %s milliseconds, exiting", MESSAGE_TIMEOUT_MILLIS);
+                    break;
+                }
+                System.out.printf("Got message %d: '%s'\n", n+1, msg.getText());
+            }
         } catch (Exception e) {
             System.err.printf("Error while receiving - %s\n", e.getMessage());
             System.err.printf("Cause: %s\n", Throwables.getStackTraceAsString(e));
