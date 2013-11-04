@@ -93,7 +93,7 @@ public class QpidBrokerImpl extends JMSBrokerImpl<QpidQueue, QpidTopic> implemen
 
     @Override
     protected void connectSensors() {
-    	super.connectSensors();
+        super.connectSensors();
         String serverInfoMBeanName = "org.apache.qpid:type=ServerInformation,name=ServerInformation";
 
         jmxFeed = JmxFeed.builder()
