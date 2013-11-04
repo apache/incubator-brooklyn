@@ -6,8 +6,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
@@ -73,7 +76,20 @@ public class InternalPolicyFactory {
     
     public static boolean isNewStylePolicy(Class<?> clazz) {
         if (!Policy.class.isAssignableFrom(clazz)) {
-            throw new IllegalArgumentException("Class "+clazz+" is not an policy");
+            throw new IllegalArgumentException("Class "+clazz+" is not a policy");
+        }
+        
+        try {
+            clazz.getConstructor(new Class[0]);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
+    
+    public static boolean isNewStyleEnricher(Class<?> clazz) {
+        if (!Enricher.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("Class "+clazz+" is not an enricher");
         }
         
         try {
@@ -129,6 +145,47 @@ public class InternalPolicyFactory {
         }
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public <T extends Enricher> T createEnricher(EnricherSpec<T> spec) {
+        if (spec.getFlags().containsKey("parent")) {
+            throw new IllegalArgumentException("Spec's flags must not contain parent; use spec.parent() instead for "+spec);
+        }
+        
+        try {
+            Class<? extends T> clazz = spec.getType();
+            
+            FactoryConstructionTracker.setConstructing();
+            T enricher;
+            try {
+                enricher = construct(clazz, spec);
+            } finally {
+                FactoryConstructionTracker.reset();
+            }
+            
+            if (spec.getDisplayName()!=null)
+                ((AbstractEnricher)enricher).setName(spec.getDisplayName());
+            
+            if (isNewStyleEnricher(clazz)) {
+                ((AbstractEnricher)enricher).setManagementContext(managementContext);
+                Map<String, Object> config = ConfigBag.newInstance().putAll(spec.getFlags()).putAll(spec.getConfig()).getAllConfig();
+                ((AbstractEnricher)enricher).configure(MutableMap.copyOf(config)); // TODO AbstractEnricher.configure modifies the map
+            }
+            
+            // TODO Can we avoid this for "new-style policies"? Should we just trust the configure() method, 
+            // which the user may have overridden? 
+            // Also see InternalLocationFactory for same issue, which this code is based on.
+            for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
+                ((AbstractEnricher)enricher).setConfig((ConfigKey)entry.getKey(), entry.getValue());
+            }
+            ((AbstractEnricher)enricher).init();
+            
+            return enricher;
+            
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+    
     private <T extends Policy> T construct(Class<? extends T> clazz, PolicySpec<T> spec) throws InstantiationException, IllegalAccessException, InvocationTargetException {
         if (isNewStylePolicy(clazz)) {
             return clazz.newInstance();
@@ -137,8 +194,16 @@ public class InternalPolicyFactory {
         }
     }
     
-    private <T extends Policy> T constructOldStyle(Class<? extends T> clazz, Map<String,?> flags) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        Optional<? extends T> v = Reflections.invokeConstructorWithArgs(clazz, new Object[] {MutableMap.copyOf(flags)}, true);
+    private <T extends Enricher> T construct(Class<? extends T> clazz, EnricherSpec<T> spec) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        if (isNewStyleEnricher(clazz)) {
+            return clazz.newInstance();
+        } else {
+            return constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
+        }
+    }
+    
+    private <T> T constructOldStyle(Class<T> clazz, Map<String,?> flags) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        Optional<T> v = Reflections.invokeConstructorWithArgs(clazz, new Object[] {MutableMap.copyOf(flags)}, true);
         if (v.isPresent()) {
             return v.get();
         } else {
