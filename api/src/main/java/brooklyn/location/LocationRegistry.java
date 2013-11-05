@@ -12,6 +12,8 @@ import java.util.NoSuchElementException;
 @SuppressWarnings("rawtypes")
 public interface LocationRegistry {
 
+    /** map of ID (possibly randomly generated) to the definition (spec, name, id, and props; 
+     * where spec is the spec as defined, for instance possibly another named:xxx location) */
     public Map<String,LocationDefinition> getDefinedLocations();
     
     /**
