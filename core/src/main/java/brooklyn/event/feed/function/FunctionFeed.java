@@ -15,6 +15,7 @@ import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
@@ -75,6 +76,9 @@ public class FunctionFeed extends AbstractFeed {
         public Builder entity(EntityLocal val) {
             this.entity = val;
             return this;
+        }
+        public Builder period(Duration d) {
+            return period(d.toMilliseconds(), TimeUnit.MILLISECONDS);
         }
         public Builder period(long millis) {
             return period(millis, TimeUnit.MILLISECONDS);
