@@ -16,11 +16,6 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
 
     private final EnricherType enricherType;
     
-    /**
-     * The config values of this entity. Updating this map should be done
-     * via getConfig/setConfig.
-     */
-    
     public AbstractEnricher() {
         this(Maps.newLinkedHashMap());
     }

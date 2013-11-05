@@ -8,7 +8,7 @@ import brooklyn.policy.EnricherType;
 import com.google.common.base.Objects;
 
 /**
- * This is the actual type of a policy instance at runtime.
+ * This is the actual type of an enricher instance.
  */
 public class EnricherTypeImpl implements EnricherType {
     private static final long serialVersionUID = 668629178669109738L;
