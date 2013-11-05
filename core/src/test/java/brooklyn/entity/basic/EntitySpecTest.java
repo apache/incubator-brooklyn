@@ -3,13 +3,20 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.util.Map;
+
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
+import brooklyn.policy.EnricherType;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
@@ -69,9 +76,40 @@ public class EntitySpecTest {
         assertEquals(Iterables.getOnlyElement(entity.getPolicies()), policy);
     }
     
+    @Test
+    public void testAddsEnricherSpec() throws Exception {
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .enricher(EnricherSpec.create(MyEnricher.class)
+                        .displayName("myenrichername")
+                        .configure(MyEnricher.CONF1, "myconf1val")
+                        .configure("myfield", "myfieldval")));
+        
+        Enricher enricher = Iterables.getOnlyElement(entity.getEnrichers());
+        assertTrue(enricher instanceof MyEnricher, "enricher="+enricher);
+        assertEquals(enricher.getName(), "myenrichername");
+        assertEquals(enricher.getConfig(MyEnricher.CONF1), "myconf1val");
+    }
+    
+    @Test
+    public void testAddsEnricher() throws Exception {
+        MyEnricher enricher = new MyEnricher();
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .enricher(enricher));
+        
+        assertEquals(Iterables.getOnlyElement(entity.getEnrichers()), enricher);
+    }
+    
     public static class MyPolicy extends AbstractPolicy {
-        public static final BasicConfigKey<String> CONF1 = new BasicConfigKey<String>(String.class, "test.conf1", "my descr, conf1", "defaultval1");
-        public static final BasicConfigKey<Integer> CONF2 = new BasicConfigKey<Integer>(Integer.class, "test.conf2", "my descr, conf2", 2);
+        public static final BasicConfigKey<String> CONF1 = new BasicConfigKey<String>(String.class, "testpolicy.conf1", "my descr, conf1", "defaultval1");
+        public static final BasicConfigKey<Integer> CONF2 = new BasicConfigKey<Integer>(Integer.class, "testpolicy.conf2", "my descr, conf2", 2);
+        
+        @SetFromFlag
+        public String myfield;
+    }
+    
+    public static class MyEnricher extends AbstractEnricher {
+        public static final BasicConfigKey<String> CONF1 = new BasicConfigKey<String>(String.class, "testenricher.conf1", "my descr, conf1", "defaultval1");
+        public static final BasicConfigKey<Integer> CONF2 = new BasicConfigKey<Integer>(Integer.class, "testenricher.conf2", "my descr, conf2", 2);
         
         @SetFromFlag
         public String myfield;

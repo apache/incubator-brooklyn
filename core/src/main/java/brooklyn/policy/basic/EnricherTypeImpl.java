@@ -3,19 +3,19 @@ package brooklyn.policy.basic;
 import java.util.Set;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.policy.PolicyType;
+import brooklyn.policy.EnricherType;
 
 import com.google.common.base.Objects;
 
 /**
- * This is the actual type of a policy instance at runtime.
+ * This is the actual type of an enricher instance.
  */
-public class PolicyTypeImpl implements PolicyType {
-    private static final long serialVersionUID = -7370390838599315481L;
+public class EnricherTypeImpl implements EnricherType {
+    private static final long serialVersionUID = 668629178669109738L;
     
     private final AdjunctType delegate;
 
-    public PolicyTypeImpl(AdjunctType delegate) {
+    public EnricherTypeImpl(AdjunctType delegate) {
         this.delegate = delegate;
     }
 
@@ -42,8 +42,8 @@ public class PolicyTypeImpl implements PolicyType {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof PolicyType)) return false;
-        PolicyType o = (PolicyType) obj;
+        if (!(obj instanceof EnricherType)) return false;
+        EnricherType o = (EnricherType) obj;
         
         return Objects.equal(getName(), o.getName()) && Objects.equal(getConfigKeys(), o.getConfigKeys());
     }

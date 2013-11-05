@@ -19,6 +19,8 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.management.Task;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.exceptions.Exceptions;
@@ -112,6 +114,8 @@ public class EntitySpec<T extends Entity> implements Serializable {
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
     private final List<Policy> policies = Lists.newArrayList();
     private final List<PolicySpec<?>> policySpecs = Lists.newArrayList();
+    private final List<Enricher> enrichers = Lists.newArrayList();
+    private final List<EnricherSpec<?>> enricherSpecs = Lists.newArrayList();
     private final Set<Class<?>> additionalInterfaces = Sets.newLinkedHashSet();
     private final List<EntityInitializer> entityInitializers = Lists.newArrayList();
     private volatile boolean immutable;
@@ -186,6 +190,14 @@ public class EntitySpec<T extends Entity> implements Serializable {
     
     public List<Policy> getPolicies() {
         return policies;
+    }
+    
+    public List<EnricherSpec<?>> getEnricherSpecs() {
+        return enricherSpecs;
+    }
+    
+    public List<Enricher> getEnrichers() {
+        return enrichers;
     }
     
     public EntitySpec<T> displayName(String val) {
@@ -313,11 +325,38 @@ public class EntitySpec<T extends Entity> implements Serializable {
         return this;
     }
     
-
     /** adds the supplied policies to the spec */
     public <V> EntitySpec<T> policies(Iterable<? extends Policy> val) {
         checkMutable();
         policies.addAll(Sets.newLinkedHashSet(checkNotNull(val, "policies")));
+        return this;
+    }
+    
+    /** adds a policy to the spec */
+    public <V> EntitySpec<T> enricher(Enricher val) {
+        checkMutable();
+        enrichers.add(checkNotNull(val, "enricher"));
+        return this;
+    }
+
+    /** adds a policy to the spec */
+    public <V> EntitySpec<T> enricher(EnricherSpec<?> val) {
+        checkMutable();
+        enricherSpecs.add(checkNotNull(val, "enricherSpec"));
+        return this;
+    }
+
+    /** adds the supplied policies to the spec */
+    public <V> EntitySpec<T> enricherSpecs(Iterable<? extends EnricherSpec<?>> val) {
+        checkMutable();
+        enricherSpecs.addAll(Sets.newLinkedHashSet(checkNotNull(val, "enricherSpecs")));
+        return this;
+    }
+    
+    /** adds the supplied policies to the spec */
+    public <V> EntitySpec<T> enrichers(Iterable<? extends Enricher> val) {
+        checkMutable();
+        enrichers.addAll(Sets.newLinkedHashSet(checkNotNull(val, "enrichers")));
         return this;
     }
     

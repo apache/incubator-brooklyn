@@ -16,6 +16,8 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
@@ -153,6 +155,14 @@ public class InternalEntityFactory {
             ((AbstractEntity)entity).init();
             for (EntityInitializer initializer: spec.getInitializers())
                 initializer.apply((EntityInternal)entity);
+            
+            for (Enricher enricher : spec.getEnrichers()) {
+                entity.addEnricher(enricher);
+            }
+            
+            for (EnricherSpec<?> enricherSpec : spec.getEnricherSpecs()) {
+                entity.addEnricher(policyFactory.createEnricher(enricherSpec));
+            }
             
             for (Policy policy : spec.getPolicies()) {
                 entity.addPolicy((AbstractPolicy)policy);

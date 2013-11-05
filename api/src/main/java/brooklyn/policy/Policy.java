@@ -17,6 +17,7 @@ public interface Policy extends EntityAdjunct, Rebindable {
     /**
      * A unique id for this policy.
      */
+    @Override
     String getId();
 
     /**
@@ -24,6 +25,7 @@ public interface Policy extends EntityAdjunct, Rebindable {
      *
      * @return the name assigned to the policy.
      */
+    @Override
     String getName();
 
     /**
