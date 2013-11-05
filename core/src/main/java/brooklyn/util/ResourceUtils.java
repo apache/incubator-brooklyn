@@ -13,7 +13,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,32 +27,88 @@ import brooklyn.util.text.Strings;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 
 public class ResourceUtils {
     
     private static final Logger log = LoggerFactory.getLogger(ResourceUtils.class);
+    private static final List<Function<Object,ClassLoader>> classLoaderProviders = Lists.newCopyOnWriteArrayList();
 
-    ClassLoader loader = null;
-    String context = null;
-    Object contextObject = null;
+    private ClassLoader loader = null;
+    private String context = null;
+    private Object contextObject = null;
     
-    /** context string used for errors */
+    /**
+     * Creates a {@link ResourceUtils} object with a specific class loader and context.
+     * <p>
+     * Use the provided {@link ClassLoader} object for class loading with the
+     * {@code contextObject} for context and the {@code contextMessage} string for
+     * error messages.
+     *
+     * @see ResourceUtils#create(Object, String)
+     * @see ResourceUtils#create(Object)
+     */
+    public static final ResourceUtils create(ClassLoader loader, Object contextObject, String contextMessage) {
+        return new ResourceUtils(loader, contextObject, contextMessage);
+    }
+
+    /**
+     * Creates a {@link ResourceUtils} object with the given context.
+     * <p>
+     * Uses the {@link ClassLoader} of the given {@code contextObject} for class
+     * loading and the {@code contextMessage} string for error messages.
+     *
+     * @see ResourceUtils#create(ClassLoader, Object, String)
+     * @see ResourceUtils#create(Object)
+     */
+    public static final ResourceUtils create(Object contextObject, String contextMessage) {
+        return new ResourceUtils(contextObject, contextMessage);
+    }
+
+    /**
+     * Creates a {@link ResourceUtils} object with the given context.
+     * <p>
+     * Uses the {@link ClassLoader} of the given {@code contextObject} for class
+     * loading and its {@link Object#toString()} (preceded by the word 'for') as
+     * the string used in error messages.
+     *
+     * @see ResourceUtils#create(ClassLoader, Object, String)
+     * @see ResourceUtils#create(Object)
+     */
+    public static final ResourceUtils create(Object contextObject) {
+        return new ResourceUtils(contextObject);
+    }
+
+    /**
+     * Creates a {@link ResourceUtils} object with itself as the context.
+     *
+     * @see ResourceUtils#create(Object)
+     */
+    public static final ResourceUtils create() {
+        return new ResourceUtils(null);
+    }
+
+    /** @deprecated since 0.6.0 use {@link ResourceUtils#create(ClassLoader, Object, String)} */
+    @Deprecated
     public ResourceUtils(ClassLoader loader, Object contextObject, String contextMessage) {
         this.loader = loader;
         this.contextObject = contextObject;
         this.context = contextMessage;
     }
-    /** contextObject used for classloading, contextMessage used for errors */
+
+    /** @deprecated since 0.6.0 use {@link ResourceUtils#create(Object, String)} */
+    @Deprecated
     public ResourceUtils(Object contextObject, String contextMessage) {
-        this(contextObject==null ? null : 
-            getClassLoaderForObject(contextObject), 
-            contextObject, contextMessage);
+        this(contextObject==null ? null : getClassLoaderForObject(contextObject), contextObject, contextMessage);
     }
-    
-    private static List<Function<Object,ClassLoader>> classLoaderProviders =
-        new CopyOnWriteArrayList<Function<Object,ClassLoader>>(); 
+
+    /** @deprecated since 0.6.0 use {@link ResourceUtils#create(Object)} */
+    @Deprecated
+    public ResourceUtils(Object contextObject) {
+        this(contextObject, "for " + Strings.toString(contextObject));
+    }
     
     /** used to register custom mechanisms for getting classloaders given an object */
     public static void addClassLoaderProvider(Function<Object,ClassLoader> provider) {
@@ -68,11 +123,6 @@ public class ResourceUtils {
         return contextObject instanceof Class ? ((Class<?>)contextObject).getClassLoader() : 
             contextObject instanceof ClassLoader ? ((ClassLoader)contextObject) : 
                 contextObject.getClass().getClassLoader();
-    }
-    
-    /** uses the classloader of the given object, and the phrase object's toString (preceded by the word 'for') as the context string used in errors */
-    public ResourceUtils(Object context) {
-        this(context, Strings.toString(context));
     }
     
     public ClassLoader getLoader() {

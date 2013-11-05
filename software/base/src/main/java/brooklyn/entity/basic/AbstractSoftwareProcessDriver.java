@@ -26,11 +26,13 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 	private static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessDriver.class);
 	
     protected final EntityLocal entity;
-    private final Location location;
+    protected final ResourceUtils resource;
+    protected final Location location;
     
     public AbstractSoftwareProcessDriver(EntityLocal entity, Location location) {
         this.entity = checkNotNull(entity, "entity");
         this.location = checkNotNull(location, "location");
+        this.resource = ResourceUtils.create(entity);
     }
 	
     /*
@@ -140,11 +142,11 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     public Location getLocation() { return location; } 
     
     public InputStream getResource(String url) {
-        return new ResourceUtils(entity).getResourceFromUrl(url);
+        return resource.getResourceFromUrl(url);
     }
     
     public String getResourceAsString(String url) {
-        return new ResourceUtils(entity).getResourceAsString(url);
+        return resource.getResourceAsString(url);
     }
 
     public String processTemplate(File templateConfigFile, Map<String,Object> extraSubstitutions) {

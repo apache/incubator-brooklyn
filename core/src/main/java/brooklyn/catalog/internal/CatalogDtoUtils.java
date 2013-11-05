@@ -40,7 +40,7 @@ public class CatalogDtoUtils {
     public static CatalogDto newDtoFromUrl(String url) {
         if (log.isDebugEnabled()) log.debug("Retrieving catalog from: {}", url);
         try {
-            InputStream source = new ResourceUtils(null).getResourceFromUrl(url);
+            InputStream source = ResourceUtils.create().getResourceFromUrl(url);
             CatalogDto result = (CatalogDto) new CatalogXmlSerializer().deserialize(new InputStreamReader(source));
             if (log.isDebugEnabled()) log.debug("Retrieved catalog from: {}", url);
             return result;

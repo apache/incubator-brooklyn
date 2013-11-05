@@ -1,8 +1,6 @@
 package brooklyn.location.basic;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
-
-import com.google.common.net.HostAndPort;
+import static brooklyn.util.GroovyJavaMethods.*;
 import groovy.lang.Closure;
 
 import java.io.Closeable;
@@ -42,7 +40,6 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
-import brooklyn.location.basic.PortRanges.BasicPortRange;
 import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.ResourceUtils;
@@ -80,6 +77,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -626,7 +624,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     /**
      * @see #obtainPort(PortRange)
-     * @see BasicPortRange#ANY_HIGH_PORT
+     * @see PortRanges#ANY_HIGH_PORT
      */
     public boolean obtainSpecificPort(int portNumber) {
         synchronized (usedPorts) {
@@ -731,7 +729,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     /** returns the un-passphrased key-pair info if a key is being used, or else null */ 
     public KeyPair findKeyPair() {
         String fn = getConfig(SshTool.PROP_PRIVATE_KEY_FILE);
-        if (fn!=null) return SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl(fn), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
+        ResourceUtils r = ResourceUtils.create(this);
+        if (fn!=null) return SecureKeys.readPem(r.getResourceFromUrl(fn), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
         String data = getConfig(SshTool.PROP_PRIVATE_KEY_DATA);
         if (data!=null) return SecureKeys.readPem(new ReaderInputStream(new StringReader(data)), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
         if (findPassword()!=null)
@@ -739,9 +738,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             return null;
         // fall back to id_rsa and id_dsa
         if (new File( Urls.mergePaths(System.getProperty("user.home"), ".ssh/id_rsa") ).exists() )
-            return SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("~/.ssh/id_rsa"), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
+            return SecureKeys.readPem(r.getResourceFromUrl("~/.ssh/id_rsa"), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
         if (new File( Urls.mergePaths(System.getProperty("user.home"), ".ssh/id_dsa") ).exists() )
-            return SecureKeys.readPem(new ResourceUtils(this).getResourceFromUrl("~/.ssh/id_dsa"), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
+            return SecureKeys.readPem(r.getResourceFromUrl("~/.ssh/id_dsa"), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
         LOG.warn("Unable to extract any key or passphrase data in request to findKeyPair for "+this);
         return null;
     }

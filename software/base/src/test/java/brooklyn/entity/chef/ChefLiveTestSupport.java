@@ -58,7 +58,7 @@ public class ChefLiveTestSupport extends BrooklynMgmtContextTestSupport {
     public synchronized static String installBrooklynChefHostedConfig() {
         if (defaultConfigFile!=null) return defaultConfigFile;
         File tempDir = Files.createTempDir();
-        ResourceUtils r = new ResourceUtils(ChefServerTasksIntegrationTest.class);
+        ResourceUtils r = ResourceUtils.create(ChefServerTasksIntegrationTest.class);
         try {
             for (String f: new String[] { "knife.rb", "brooklyn-tests.pem", "brooklyn-validator.pem" }) {
                 Files.copy(InputStreamSupplier.fromString(r.getResourceAsString(

@@ -1,7 +1,7 @@
 package brooklyn.entity.brooklynnode;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.String.format;
+import static com.google.common.base.Preconditions.*;
+import static java.lang.String.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -16,7 +16,6 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JarBuilder;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
@@ -81,11 +80,11 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                     .body.append("cd "+getInstallDir(), "test -f BROOKLYN")
                     .execute() == 0;
             if (!exists) {
-                InputStream distroStream = new ResourceUtils(entity).getResourceFromUrl(uploadUrl);
+                InputStream distroStream = resource.getResourceFromUrl(uploadUrl);
                 getMachine().copyTo(distroStream, getInstallDir()+"/"+saveAs);
             }
         } else {
-            commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+            commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         }
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
@@ -145,7 +144,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                 String val = substitution.getValue();
                 resolvedRemotePath = resolvedRemotePath.replace("${"+key+"}", val).replace("$"+key, val);
             }
-            machine.copyTo(MutableMap.of("permissions", "0600"), new ResourceUtils(entity).getResourceFromUrl(localResource), resolvedRemotePath);
+            machine.copyTo(MutableMap.of("permissions", "0600"), resource.getResourceFromUrl(localResource), resolvedRemotePath);
         }
         
         // TODO Copied from VanillaJavaApp; share code there? Or delete this functionality from here?
@@ -165,7 +164,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                 toinstall = f;
             }
             
-            int result = machine.installTo(new ResourceUtils(entity), toinstall, getRunDir() + "/" + "lib" + "/");
+            int result = machine.installTo(resource, toinstall, getRunDir() + "/" + "lib" + "/");
             if (result != 0)
                 throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s",f,entity,machine));
             
@@ -278,7 +277,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         if (contents != null) {
             machine.copyTo(new ByteArrayInputStream(contents.getBytes()), tempRemotePath);
         } else if (alternativeUri != null) {
-            InputStream propertiesStream = new ResourceUtils(entity).getResourceFromUrl(alternativeUri);
+            InputStream propertiesStream = resource.getResourceFromUrl(alternativeUri);
             machine.copyTo(propertiesStream, tempRemotePath);
         } else {
             throw new IllegalStateException("No contents supplied for file "+remotePath);

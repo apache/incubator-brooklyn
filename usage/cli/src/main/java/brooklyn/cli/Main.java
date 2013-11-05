@@ -232,7 +232,7 @@ public class Main {
                 }
             }
 
-            ResourceUtils utils = new ResourceUtils(this);
+            ResourceUtils utils = ResourceUtils.create(this);
             ClassLoader parent = utils.getLoader();
             GroovyClassLoader loader = new GroovyClassLoader(parent);
 

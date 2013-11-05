@@ -97,7 +97,7 @@ public class HttpService {
                     server.removeConnector(c);
                 }
     
-                InputStream keyStoreStream = new ResourceUtils(this).getResourceFromUrl(SERVER_KEYSTORE);
+                InputStream keyStoreStream = ResourceUtils.create(this).getResourceFromUrl(SERVER_KEYSTORE);
                 KeyStore keyStore;
                 try {
                     keyStore = SecureKeys.newKeyStore(keyStoreStream, "password");
@@ -118,7 +118,7 @@ public class HttpService {
             addShutdownHook();
     
             File tmpWarFile = ResourceUtils.writeToTempFile(
-                    new ResourceUtils(this).getResourceFromUrl(ROOT_WAR_URL), 
+                    ResourceUtils.create(this).getResourceFromUrl(ROOT_WAR_URL), 
                     "TestHttpService", 
                     ".war");
             

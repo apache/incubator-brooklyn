@@ -55,6 +55,7 @@ import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -722,9 +723,8 @@ public class Entities {
     /** fails-fast if value of the given key is null or unresolveable */
     public static String getRequiredUrlConfig(Entity entity, ConfigKey<String> urlKey) {
         String url = entity.getConfig(urlKey);
-        if (url==null)
-            throw new NullPointerException("Key "+urlKey+" on "+entity+" should not be null");
-        return new ResourceUtils(entity).checkUrlExists(url);
+        Preconditions.checkNotNull(url, "Key %s on %s should not be null", urlKey, entity);
+        return ResourceUtils.create(entity).checkUrlExists(url);
     }
     /** as {@link #getRequiredUrlConfig(Entity, ConfigKey)} */
     public static String getRequiredUrlConfig(Entity entity, HasConfigKey<String> urlKey) {

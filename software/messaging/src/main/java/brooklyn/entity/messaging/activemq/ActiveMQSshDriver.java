@@ -1,6 +1,6 @@
 package brooklyn.entity.messaging.activemq;
 
-import static java.lang.String.format;
+import static java.lang.String.*;
 
 import java.io.ByteArrayInputStream;
 import java.util.LinkedList;
@@ -9,9 +9,7 @@ import java.util.Map;
 
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import brooklyn.entity.java.JmxSupport;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;

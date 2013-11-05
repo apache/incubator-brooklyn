@@ -110,7 +110,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         
         private static void addPropertiesFromUrl(BrooklynProperties p, String url, boolean warnIfNotFound) {
             try {
-                p.addFrom(new ResourceUtils(BrooklynProperties.class).getResourceFromUrl(url));
+                p.addFrom(ResourceUtils.create(BrooklynProperties.class).getResourceFromUrl(url));
             } catch (Exception e) {
                 if (warnIfNotFound)
                     LOG.warn("Could not load {}; continuing", url);
@@ -189,7 +189,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     public BrooklynProperties addFromUrl(String url) {
         try {
             if (url==null) return this;
-            return addFrom(new ResourceUtils(this).getResourceFromUrl(url));
+            return addFrom(ResourceUtils.create(this).getResourceFromUrl(url));
         } catch (Exception e) {
             throw new RuntimeException("Error reading properties from "+url+": "+e, e);
         }

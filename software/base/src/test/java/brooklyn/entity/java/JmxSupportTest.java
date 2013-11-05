@@ -44,7 +44,7 @@ public class JmxSupportTest {
         Assert.assertEquals(support.getJmxAgentJarMavenArtifact().getArtifactId(),
                 "brooklyn-jmxmp-agent");
         
-        Assert.assertTrue(new ResourceUtils(this).doesUrlExist(support.getJmxAgentJarUrl()), support.getJmxAgentJarUrl());
+        Assert.assertTrue(ResourceUtils.create(this).doesUrlExist(support.getJmxAgentJarUrl()), support.getJmxAgentJarUrl());
         Assert.assertTrue(support.getJmxAgentJarUrl().contains("-shaded-"), support.getJmxAgentJarUrl());
     }
     
@@ -56,7 +56,7 @@ public class JmxSupportTest {
         Assert.assertEquals(support.getJmxAgentJarMavenArtifact().getArtifactId(),
                 "brooklyn-jmxrmi-agent");
         
-        Assert.assertTrue(new ResourceUtils(this).doesUrlExist(support.getJmxAgentJarUrl()), support.getJmxAgentJarUrl());
+        Assert.assertTrue(ResourceUtils.create(this).doesUrlExist(support.getJmxAgentJarUrl()), support.getJmxAgentJarUrl());
     }
 
     @Test(groups="Integration")
@@ -83,7 +83,7 @@ public class JmxSupportTest {
     private void checkValidArchive(String url, long minSize) {
         byte[] bytes;
         try {
-            bytes = ResourceUtils.readFullyBytes(new ResourceUtils(this).getResourceFromUrl(url));
+            bytes = ResourceUtils.readFullyBytes(ResourceUtils.create(this).getResourceFromUrl(url));
             log.info("read "+bytes.length+" bytes from "+url+" for "+JavaClassNames.callerNiceClassAndMethod(1));
         } catch (Exception e) {
             log.warn("Unable to read URL "+url+" for " +JavaClassNames.callerNiceClassAndMethod(1)+

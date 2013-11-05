@@ -400,7 +400,7 @@ public class BrooklynWebServer {
         }
 
         try {
-            File tmpWarFile = ResourceUtils.writeToTempFile(new CustomResourceLocator(managementContext.getConfig(), new ResourceUtils(this)).getResourceFromUrl(warUrl), 
+            File tmpWarFile = ResourceUtils.writeToTempFile(new CustomResourceLocator(managementContext.getConfig(), ResourceUtils.create(this)).getResourceFromUrl(warUrl), 
                     isRoot ? "ROOT" : ("embedded-" + cleanPathSpec), ".war");
             context.setWar(tmpWarFile.getAbsolutePath());
         } catch (Exception e) {
