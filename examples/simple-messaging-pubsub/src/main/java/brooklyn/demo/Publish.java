@@ -37,7 +37,7 @@ public class Publish {
 
 	        // Send 100 messages
 	        for (int n = 0; n < 100; n++) {
-	            String body = String.format("test message %03d", n);
+	            String body = String.format("test message %03d", n+1);
 	            TextMessage message = session.createTextMessage(body);
 	            messageProducer.send(message);
 	            System.out.printf("Sent message %s\n", body);

@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -540,7 +542,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return changed;
     }
     
-    protected Map getCustomChildFlags() {
+    protected Map<?,?> getCustomChildFlags() {
         return getConfig(CUSTOM_CHILD_FLAGS);
     }
     
@@ -555,13 +557,13 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         Map<?,?> creation = Maps.newLinkedHashMap(getCustomChildFlags());
         if (LOG.isDebugEnabled()) LOG.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] {this, getId(), creation});
 
-        Entity entity = createNode(creation);
+        Entity entity = createNode(null, creation);
         Entities.manage(entity);
         addMember(entity);
         return entity;
     }
 
-    protected Entity createNode(Location loc, Map flags) {
+    protected Entity createNode(@Nullable Location loc, Map<?,?> flags) {
         return createNode(flags);
     }
     

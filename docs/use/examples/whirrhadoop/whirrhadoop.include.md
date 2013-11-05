@@ -54,7 +54,7 @@ so you will need to set your AWS credentials as described [here]({{site.url}}/us
 [![Web Console Showing Whirr-launched Hadoop Cluster](whirrhadoop-w750.png "Web Console Showing Whirr-launched Hadoop Cluster")](whirrhadoop.png) 
 
 Once it is running, navigate to the Brooklyn web console to see the ``NAME_NODE_URL`` sensor.
-(And not that using [``attributeWhenReady``]({{ site.url }}/use/guide/defining-applications/advanced-concepts.html#dependent), 
+(And note that using [``attributeWhenReady``]({{ site.url }}/use/guide/defining-applications/advanced-concepts.html#dependent), 
 you can easily configure a larger application to use its own dedicated Hadoop cluster.)
 
 
@@ -78,6 +78,12 @@ public class WhirrExample extends AbstractApplication {
     }
 }
 {% endhighlight %}
+
+As this example uses elasticsearch, the elasticsearch jar will need to be added to the classpath. If you are using elasticsearch in your own project, you will also need to add it as a dependency in your pom.xml. For an example see the brooklyn-examples/hadoop-and-whirr/pom.xml
+
+{% highlight bash %}
+% export BROOKLYN_CLASSPATH=~/.m2/repository/org/apache/whirr/whirr-elasticsearch/0.8.1/whirr-elasticsearch-0.8.1.jar:$BROOKLYN_CLASSPATH
+{% endhighlight %} 
 
 This can be launched by running:
 

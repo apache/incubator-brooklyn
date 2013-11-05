@@ -153,7 +153,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 
     /**
-     * Called after the rest of start has completed.
+     * Called after the rest of start has completed (after {@link #connectSensors()} and {@link #waitForServiceUp()})
      */
     protected void postStart() {
     }

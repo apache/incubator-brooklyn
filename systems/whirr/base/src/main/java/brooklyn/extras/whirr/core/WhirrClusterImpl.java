@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
@@ -195,12 +196,13 @@ public class WhirrClusterImpl extends AbstractEntity implements WhirrCluster {
                 addChild(EntitySpec.create(WhirrInstance.class).
                     displayName("Instance:" + instance.getId()).
                     configure("instance", instance));
+            Entities.manage(rolesGroup);
 
             for (String role: instance.getRoles()) {
                 log.info("Creating entity for '" + role + "' on instance " + instance.getId());
-                rolesGroup.addChild(EntitySpec.create(WhirrRole.class).
+                Entities.manage(rolesGroup.addChild(EntitySpec.create(WhirrRole.class).
                         displayName("Role:" + role).
-                        configure("role", role));
+                        configure("role", role)));
             }
             addGroup(rolesGroup);
         }

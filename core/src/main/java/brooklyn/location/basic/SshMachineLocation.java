@@ -627,24 +627,30 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      * @see PortRanges#ANY_HIGH_PORT
      */
     public boolean obtainSpecificPort(int portNumber) {
-	    // TODO Does not yet check if the port really is free on this machine
-        if (usedPorts.contains(portNumber)) {
-            return false;
-        } else {
-            usedPorts.add(portNumber);
-            return true;
+        synchronized (usedPorts) {
+            // TODO Does not yet check if the port really is free on this machine
+            if (usedPorts.contains(portNumber)) {
+                return false;
+            } else {
+                usedPorts.add(portNumber);
+                return true;
+            }
         }
     }
 
     public int obtainPort(PortRange range) {
-        for (int p: range)
-            if (obtainSpecificPort(p)) return p;
-         if (LOG.isDebugEnabled()) LOG.debug("unable to find port in {} on {}; returning -1", range, this);
-         return -1;
+        synchronized (usedPorts) {
+            for (int p: range)
+                if (obtainSpecificPort(p)) return p;
+            if (LOG.isDebugEnabled()) LOG.debug("unable to find port in {} on {}; returning -1", range, this);
+            return -1;
+        }
     }
 
     public void releasePort(int portNumber) {
-        usedPorts.remove((Object) portNumber);
+        synchronized (usedPorts) {
+            usedPorts.remove((Object) portNumber);
+        }
     }
 
     public boolean isSshable() {

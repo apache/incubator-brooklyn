@@ -160,7 +160,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         
         // if it's still up after 5s assume we are good (default behaviour)
         Time.sleep(Duration.FIVE_SECONDS);
-        if (!((Integer)0).equals(DynamicTasks.queue(SshEffectorTasks.ssh("sc query \""+serviceName+"\" | find \"RUNNING\"").runAsCommand()).get())) {
+        if (!((Integer)0).equals(DynamicTasks.queue(SshEffectorTasks.ssh("sc query \""+windowsServiceName+"\" | find \"RUNNING\"").runAsCommand()).get())) {
             throw new IllegalStateException("The process for "+entity()+" appears not to be running (windowsService "+windowsServiceName+")");
         }
 
@@ -171,6 +171,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
     protected String stopProcessesAtMachine() {
         boolean result = false;
         result |= tryStopService();
+        result |= tryStopWindowsService();
         result |= tryStopPid();
         if (!result) {
             throw new IllegalStateException("The process for "+entity()+" appears could not be stopped (no impl!)");
@@ -185,6 +186,16 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         if (entity().getAttribute(Attributes.SERVICE_STATE)!=Lifecycle.RUNNING)
             return true;
         
+        throw new IllegalStateException("The process for "+entity()+" appears could not be stopped (exit code "+result+" to service stop)");
+    }
+
+    protected boolean tryStopWindowsService() {
+        if (windowsServiceName==null) return false;
+                int result = DynamicTasks.queue(SshEffectorTasks.ssh("sc query \""+windowsServiceName+"\"").runAsCommand()).get();
+        if (0==result) return true;
+        if (entity().getAttribute(Attributes.SERVICE_STATE)!=Lifecycle.RUNNING)
+            return true;
+
         throw new IllegalStateException("The process for "+entity()+" appears could not be stopped (exit code "+result+" to service stop)");
     }
 

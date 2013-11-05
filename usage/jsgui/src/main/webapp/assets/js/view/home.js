@@ -17,8 +17,7 @@ define([
         tagName:"div",
         events:{
             'click #add-new-application':'createApplication',
-            'click .addApplication':'createApplication',
-            'click .delete':'deleteApplication'
+            'click .addApplication':'createApplication'
         },
         
         summariesView:{},
@@ -132,12 +131,6 @@ define([
                         that.collection.fetch({reset:true});
                     }).modal('show')
             }
-        },
-
-        deleteApplication:function (event) {
-            // call Backbone destroy() which does HTTP DELETE on the model
-            this.collection.get(event.currentTarget['id']).destroy({wait:true})
-            this.refresh(this)
         }
     })
 
