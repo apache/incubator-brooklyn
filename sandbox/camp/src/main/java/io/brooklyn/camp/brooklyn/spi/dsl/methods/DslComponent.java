@@ -26,11 +26,12 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 		this.componentId = componentId;
 	}
 
+    @Override
     public Task<Entity> newTask() {
         return TaskBuilder.<Entity>builder().name("component("+componentId+")").body(new Callable<Entity>() {
             @Override
             public Entity call() throws Exception {
-                Iterable<Entity> entitiesInApp = entity().getApplication().getManagementContext().getEntityManager().getEntitiesInApplication( entity().getApplication() );
+                Iterable<Entity> entitiesInApp = entity().getManagementContext().getEntityManager().getEntitiesInApplication( entity().getApplication() );
                 Optional<Entity> result = Iterables.tryFind(entitiesInApp, new Predicate<Entity>() {
                     @Override
                     public boolean apply(Entity input) {
