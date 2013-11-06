@@ -73,40 +73,41 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     }
     
     public static class BailOutWithTemplateJcloudsLocation extends JcloudsLocation {
-         ConfigBag lastConfigBag;
-         Template template;
+        ConfigBag lastConfigBag;
+        Template template;
 
-         public BailOutWithTemplateJcloudsLocation() {
+        public BailOutWithTemplateJcloudsLocation() {
             super();
-         }
-        
-         public BailOutWithTemplateJcloudsLocation(Map<?, ?> conf) {
-             super(conf);
-         }
+        }
+
+        public BailOutWithTemplateJcloudsLocation(Map<?, ?> conf) {
+            super(conf);
+        }
+
+        @Override
+        protected Template buildTemplate(ComputeService computeService, ConfigBag config) {
+            template = super.buildTemplate(computeService, config);
+
+            lastConfigBag = config;
+            throw BAIL_OUT_FOR_TESTING;
+        }
+
+        protected synchronized void tryObtainAndCheck(Map<?,?> flags, Predicate<ConfigBag> test) {
+            try {
+                obtain(flags);
+            } catch (Throwable e) {
+                if (e == BAIL_OUT_FOR_TESTING) {
+                    test.apply(lastConfigBag);
+                } else {
+                    throw Exceptions.propagate(e);
+                }
+            }
+        }
          
-         @Override
-         protected Template buildTemplate(ComputeService computeService, ConfigBag config) {
-             template = super.buildTemplate(computeService, config);
-             
-             lastConfigBag = config;
-             throw BAIL_OUT_FOR_TESTING;
-         }
-         protected synchronized void tryObtainAndCheck(Map<?,?> flags, Predicate<ConfigBag> test) {
-             try {
-                 obtain(flags);
-             } catch (Throwable e) {
-                 if (e==BAIL_OUT_FOR_TESTING) {
-                     test.apply(lastConfigBag);
-                 } else {
-                     throw Exceptions.propagate(e);
-                 }
-             }
-         }
-         
-         public Template getTemplate() {
-             return template;
-         }
-     }
+        public Template getTemplate() {
+            return template;
+        }
+    }
     
     protected BailOutJcloudsLocation newSampleBailOutJcloudsLocationForTesting() {
         return managementContext.getLocationManager().createLocation(LocationSpec.create(BailOutJcloudsLocation.class)
