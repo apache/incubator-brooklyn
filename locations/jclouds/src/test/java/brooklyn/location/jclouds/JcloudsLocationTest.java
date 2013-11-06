@@ -26,6 +26,7 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
@@ -65,8 +66,9 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         protected void tryObtainAndCheck(Map<?,?> flags, Predicate<? super ConfigBag> test) {
             try {
                 obtain(flags);
-            } catch (NoMachinesAvailableException e) {
-                if (e.getCause()==BAIL_OUT_FOR_TESTING) {
+            } catch (Exception e) {
+                if (e==BAIL_OUT_FOR_TESTING || e.getCause()==BAIL_OUT_FOR_TESTING 
+                        || (e instanceof CompoundRuntimeException && ((CompoundRuntimeException)e).getAllCauses().contains(BAIL_OUT_FOR_TESTING))) {
                     test.apply(lastConfigBag);
                 } else {
                     throw Exceptions.propagate(e);
@@ -134,6 +136,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
                 .put(ACCESS_CREDENTIAL, "bogus")
                 .put(USER, "fred")
                 .put(MIN_RAM, 16)
+                .put(JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 1)
                 .putAll((Map)config)
                 .build();
         return managementContext.getLocationManager().createLocation(LocationSpec.create(BailOutJcloudsLocation.class)
@@ -275,7 +278,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         Assert.assertEquals(jcl.buildTemplateCount, 3);
     }
 
-    @Test(groups="Live")
+    @Test(groups={"Live", "Live-sanity"})
     public void testCreateWithInboundPorts() {
         BailOutWithTemplateJcloudsLocation jcloudsLocation = newSampleBailOutWithTemplateJcloudsLocation();
         jcloudsLocation = (BailOutWithTemplateJcloudsLocation) jcloudsLocation.newSubLocation(MutableMap.of());
@@ -284,7 +287,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         Assert.assertEquals(jcloudsLocation.template.getOptions().getInboundPorts(), ports);
     }
     
-    @Test(groups="Live")
+    @Test(groups={"Live", "Live-sanity"})
     public void testCreateWithInboundPortsOverride() {
         BailOutWithTemplateJcloudsLocation jcloudsLocation = newSampleBailOutWithTemplateJcloudsLocation();
         jcloudsLocation = (BailOutWithTemplateJcloudsLocation) jcloudsLocation.newSubLocation(MutableMap.of());
