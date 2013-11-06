@@ -47,7 +47,7 @@ public class Asserts {
      * Fails a test with the given message.
      * @param message the assertion error message
      */
-    public static void fail(String message) {
+    public static AssertionError fail(String message) {
         throw new AssertionError(message);
     }
 
@@ -125,8 +125,8 @@ public class Asserts {
         succeedsEventually(flags, toCallable(r));
     }
     
-    public static void succeedsEventually(Callable<?> c) {
-        succeedsEventually(ImmutableMap.<String,Object>of(), c);
+    public static <T> T succeedsEventually(Callable<T> c) {
+        return succeedsEventually(ImmutableMap.<String,Object>of(), c);
     }
     
     // FIXME duplication with TestUtils.BooleanWithMessage
@@ -168,7 +168,7 @@ public class Asserts {
      * @param r
      * @param finallyBlock
      */
-    public static void succeedsEventually(Map<String,?> flags, Callable<?> c) {
+    public static <T> T succeedsEventually(Map<String,?> flags, Callable<T> c) {
         boolean abortOnException = get(flags, "abortOnException", false);
         boolean abortOnError = get(flags, "abortOnError", false);
         boolean useGroovyTruth = get(flags, "useGroovyTruth", false);
@@ -184,7 +184,7 @@ public class Asserts {
         long startTime = System.currentTimeMillis();
         try {
             Throwable lastException = null;
-            Object result = null;
+            T result = null;
             long lastAttemptTime = 0;
             long expireTime = startTime+duration.toMilliseconds();
             long sleepTimeBetweenAttempts = minPeriod.toMilliseconds();
@@ -196,14 +196,14 @@ public class Asserts {
                     result = c.call();
                     if (log.isTraceEnabled()) log.trace("Attempt {} after {} ms: {}", new Object[] {attempt, System.currentTimeMillis() - startTime, result});
                     if (useGroovyTruth) {
-                        if (groovyTruth(result)) return;
+                        if (groovyTruth(result)) return result;
                     } else if (Boolean.FALSE.equals(result)) {
                         if (result instanceof BooleanWithMessage) 
                             log.warn("Test returned an instance of BooleanWithMessage but useGroovyTruth is not set! " +
                                      "The result of this probably isn't what you intended.");
-                        return;
+                        return result;
                     } else {
-                        return;
+                        return result;
                     }
                     lastException = null;
                 } catch(Throwable e) {
@@ -220,7 +220,7 @@ public class Asserts {
             log.debug("TestUtils.executeUntilSucceedsWithFinallyBlockInternal exceeded max attempts or timeout - {} attempts lasting {} ms", attempt, System.currentTimeMillis()-startTime);
             if (lastException != null)
                 throw lastException;
-            fail("invalid result: "+result);
+            throw fail("invalid result: "+result);
         } catch (Throwable t) {
             if (logException) log.info("failed succeeds-eventually, "+attempt+" attempts, "+
                     (System.currentTimeMillis()-startTime)+"ms elapsed "+
@@ -237,11 +237,11 @@ public class Asserts {
         succeedsContinually(flags, toCallable(r));
     }
 
-    public static void succeedsContinually(Callable<?> c) {
-        succeedsContinually(ImmutableMap.<String,Object>of(), c);
+    public static <T> T succeedsContinually(Callable<T> c) {
+        return succeedsContinually(ImmutableMap.<String,Object>of(), c);
     }
     
-    public static void succeedsContinually(Map<String,?> flags, Callable<?> job) {
+    public static <T> T succeedsContinually(Map<String,?> flags, Callable<T> job) {
         Duration duration = toDuration(flags.get("timeout"), Duration.ONE_SECOND);
         Duration period = toDuration(flags.get("period"), Duration.millis(10));
         long periodMs = period.toMilliseconds();
@@ -249,15 +249,17 @@ public class Asserts {
         long expireTime = startTime+duration.toMilliseconds();
         
         boolean first = true;
+        T result = null;
         while (first || System.currentTimeMillis() <= expireTime) {
             try {
-                job.call();
+                result = job.call();
             } catch (Exception e) {
                 throw propagate(e);
             }
             if (periodMs > 0) sleep(periodMs);
             first = false;
         }
+        return result;
     }
     
     private static Duration toDuration(Object duration) {

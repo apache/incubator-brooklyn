@@ -12,6 +12,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class ReflectionsTest {
@@ -70,6 +71,19 @@ public class ReflectionsTest {
     }
     
     public static class CI1 {
+        public final List<Object> constructorArgs;
+        
+        public CI1() {
+            constructorArgs = ImmutableList.of();
+        }
+        public CI1(String x, int y) {
+            constructorArgs = ImmutableList.<Object>of(x, y);
+        }
+        public CI1(String x, int y0, int y1, int ...yy) {
+            constructorArgs = Lists.newArrayList();
+            constructorArgs.addAll(ImmutableList.of(x, y0, y1));
+            for (int yi: yy) constructorArgs.add((Integer)yi);
+        }
         public static String m1(String x, int y) {
             return x+y;
         }
@@ -93,5 +107,12 @@ public class ReflectionsTest {
         
         Assert.assertEquals(Reflections.invokeMethodWithArgs(CI1.class, "m1", Arrays.<Object>asList("hello", 3)).get(), "hello3");
         Assert.assertEquals(Reflections.invokeMethodWithArgs(CI1.class, "m1", Arrays.<Object>asList("hello", 3, 4, 5)).get(), "hello12");
+    }
+    
+    @Test
+    public void testConstruction() throws Exception {
+        Assert.assertEquals(Reflections.invokeConstructorWithArgs(CI1.class, new Object[] {"hello", 3}).get().constructorArgs, ImmutableList.of("hello", 3));
+        Assert.assertEquals(Reflections.invokeConstructorWithArgs(CI1.class, new Object[] {"hello", 3, 4, 5}).get().constructorArgs, ImmutableList.of("hello", 3, 4, 5));
+        Assert.assertFalse(Reflections.invokeConstructorWithArgs(CI1.class, new Object[] {"wrong", "args"}).isPresent());
     }
 }

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.management.Task;
 import brooklyn.management.TaskFactory;
@@ -20,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** provide an object suitable to resolve chained invocations in a parsed YAML / Deployment Plan DSL,
- * which also implements {@link DeferredSupplier} so that the can be resolved when needed
+ * which also implements {@link DeferredSupplier} so that they can be resolved when needed
  * (e.g. when entity-lookup and execution contexts are available).
  * <p>
  * implementations of this abstract class are expected to be immutable,
@@ -49,16 +50,17 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
         dsl = sourceNode!=null ? sourceNode.getOriginalValue() : null;
     }
     
-	/** returns the current entity; for use in implementations of {@link #get()} */
-	protected final Entity entity() {
-		// rely on implicit ThreadLocal for now
-		return EffectorTasks.findEntity();
-	}
+    /** returns the current entity; for use in implementations of {@link #get()} */
+    protected final EntityInternal entity() {
+        // rely on implicit ThreadLocal for now
+        return (EntityInternal) EffectorTasks.findEntity();
+    }
 
-	public final synchronized T get() {
-	    try {
-	        if (log.isDebugEnabled())
-	            log.debug("Queuing task to resolve "+dsl);
+    @Override
+    public final synchronized T get() {
+        try {
+            if (log.isDebugEnabled())
+                log.debug("Queuing task to resolve "+dsl);
             T result = Entities.submit(entity(), newTask()).get();
             if (log.isDebugEnabled())
                 log.debug("Resolved "+result+" from "+dsl);
@@ -66,9 +68,9 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
-	}
-	
-	@Override
-	public abstract Task<T> newTask();
+    }
+    
+    @Override
+    public abstract Task<T> newTask();
 
 }

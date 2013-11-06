@@ -17,7 +17,12 @@ public class FunctionWithArgs {
         return function;
     }
     
-    /** arguments (typically {@link QuotedString} or more {@link FunctionWithArgs}) */
+    /**
+     * arguments (typically {@link QuotedString} or more {@link FunctionWithArgs}).
+     * 
+     * null means it is a function in a map key which expects map value to be the arguments -- specified without parentheses;
+     * empty means parentheses already applied, with 0 args.
+     */
     public List<Object> getArgs() {
         return args;
     }

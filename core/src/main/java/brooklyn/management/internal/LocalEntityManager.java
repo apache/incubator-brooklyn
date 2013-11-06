@@ -15,6 +15,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.proxying.BasicEntityTypeRegistry;
 import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.entity.proxying.EntitySpec;
@@ -95,14 +96,9 @@ public class LocalEntityManager implements EntityManager {
     }
     
     @Override
-    public Iterable<Entity> getEntitiesInApplication(Application application) {
-        final String appId = application.getId();
-        return Iterables.filter(ImmutableList.copyOf(entityProxiesById.values()), new Predicate<Entity>() {
-            @Override
-            public boolean apply(Entity input) {
-                return appId.equals(input.getApplicationId());
-            }
-        });
+    public synchronized Iterable<Entity> getEntitiesInApplication(Application application) {
+        Predicate<Entity> predicate = EntityPredicates.applicationIdEqualTo(application.getId());
+        return ImmutableList.copyOf(Iterables.filter(entityProxiesById.values(), predicate));
     }
     
     @Override
