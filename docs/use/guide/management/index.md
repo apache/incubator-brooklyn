@@ -95,6 +95,12 @@ export BROOKLYN_CLASSPATH=${BROOKLYN_HOME}/examples/simple-web-cluster/target/cl
 brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
 {% endhighlight %}
 
+You can add things to the brooklyn classpath in a number of ways:
+
+* Add ``.jar`` files to brooklyn's ``./lib/dropins/`` directory. These are added at the end of the classpath.
+* Add ``.jar`` files to brooklyn's ``./lib/patch/`` directory. These are added at the front of the classpath.
+* Add resources to brooklyn's ``./conf/`` directory. This directory is at the very front of the classpath.
+* Use the ``BROOKLYN_CLASSPATH`` environment variable. If set, this is prepended to the brooklyn classpath.
 
 
 <a name="console"></a>
