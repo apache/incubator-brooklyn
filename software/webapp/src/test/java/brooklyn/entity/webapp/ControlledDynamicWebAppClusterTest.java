@@ -15,10 +15,10 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
@@ -136,4 +136,32 @@ public class ControlledDynamicWebAppClusterTest {
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, ControlledDynamicWebAppCluster.SERVICE_UP, expectedServiceUp);
     }
     
+    @Test(groups="Integration")
+    public void testUsesCustomWebClusterSpec() {
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+                .configure("initialSize", 0)
+                .configure(ControlledDynamicWebAppCluster.WEB_CLUSTER_SPEC, EntitySpec.create(DynamicWebAppCluster.class)
+                        .displayName("mydisplayname")));
+        app.start(locs);
+
+        assertEquals(cluster.getCluster().getDisplayName(), "mydisplayname");
+    }
+    
+    @Test(groups="Integration")
+    public void testCustomWebClusterSpecGetsMemberSpec() {
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+                .configure("initialSize", 1)
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class)
+                        .configure(JBoss7Server.ROOT_WAR, warUrl.toString()))
+                .configure(ControlledDynamicWebAppCluster.WEB_CLUSTER_SPEC, EntitySpec.create(DynamicWebAppCluster.class)
+                        .displayName("mydisplayname")));
+        app.start(locs);
+
+        String url = cluster.getController().getAttribute(NginxController.ROOT_URL);
+        HttpTestUtils.assertContentEventuallyContainsText(url, "Hello");
+
+        // and make sure it really was using our custom spec
+        assertEquals(cluster.getCluster().getDisplayName(), "mydisplayname");
+
+    }
 }
