@@ -73,6 +73,7 @@ import brooklyn.management.AccessController;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
@@ -370,19 +371,27 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public JcloudsSshMachineLocation obtain(Map<?,?> flags) throws NoMachinesAvailableException {
         ConfigBag setup = ConfigBag.newInstanceExtending(getConfigBag(), flags);
         Integer attempts = setup.get(MACHINE_CREATE_ATTEMPTS);
-        Exception lastThrownException = null;
+        List<Exception> exceptions = Lists.newArrayList();
         if (attempts == null || attempts < 1) attempts = 1;
         for (int i = 1; i <= attempts; i++) {
             try {
                 return obtainOnce(flags, setup);
             } catch (RuntimeException e) {
                 LOG.warn("Attempt #{}/{} to obtain machine threw error: {}", new Object[]{i, attempts, e});
-                lastThrownException = e;
+                exceptions.add(e);
             }
         }
-        throw new NoMachinesAvailableException(
-                String.format("Failed to get VM after %d attempt%s.", attempts, attempts == 1 ? "" : "s"),
-                lastThrownException);
+        String msg = String.format("Failed to get VM after %d attempt%s.", attempts, attempts == 1 ? "" : "s");
+
+        Exception cause = (exceptions.size() == 1) 
+                ? exceptions.get(0)
+                : new CompoundRuntimeException(msg + " Causes include: "+exceptions.get(exceptions.size()-1), exceptions);
+
+        if (exceptions.get(exceptions.size()-1) instanceof NoMachinesAvailableException) {
+            throw new NoMachinesAvailableException(msg, cause);
+        } else {
+            throw Exceptions.propagate(cause);
+        }
     }
 
     protected JcloudsSshMachineLocation obtainOnce(Map<?, ?> flags, ConfigBag setup) throws NoMachinesAvailableException {
