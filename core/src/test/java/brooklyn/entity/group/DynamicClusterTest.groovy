@@ -141,7 +141,7 @@ class DynamicClusterTest {
         cluster.start([loc])
 
         cluster.resize(1)
-        Entity entity = Iterables.getOnlyElement(cluster.getChildren());
+        Entity entity = Iterables.getOnlyElement(cluster.getMembers());
         assertEquals entity.count, 1
         assertEquals entity.parent, cluster
         assertEquals entity.application, app
@@ -312,9 +312,9 @@ class DynamicClusterTest {
         cluster.start([loc])
         cluster.resize(3)
         assertEquals(cluster.currentSize, 2)
-        assertEquals(cluster.children.size(), 2)
-        cluster.children.each {
-            assertFalse(((FailingEntity)it).failOnStart)
+        assertEquals(cluster.getMembers().size(), 2)
+        for (Entity member : cluster.getMembers()) {
+            assertFalse(((FailingEntity)member).failOnStart)
         }
     }
 
@@ -331,10 +331,12 @@ class DynamicClusterTest {
                 }));
 
         cluster.start([loc])
+        
+        // note that children include quarantine group; and quarantined nodes
         assertEquals(cluster.getCurrentSize(), 1)
-        assertEquals(cluster.getChildren().size(), 1)
-        for (Entity child : cluster.getChildren()) {
-            assertFalse(((FailingEntity)child).failOnStart)
+        assertEquals(cluster.getMembers().size(), 1)
+        for (Entity member : cluster.getMembers()) {
+            assertFalse(((FailingEntity)member).failOnStart)
         }
     }
 
@@ -359,10 +361,12 @@ class DynamicClusterTest {
                 throw e; // fail
             }
         }
+        
+        // note that children include quarantine group; and quarantined nodes
         assertEquals(cluster.getCurrentSize(), 1)
-        assertEquals(cluster.getChildren().size(), 1)
-        for (Entity child : cluster.getChildren()) {
-            assertFalse(((FailingEntity)child).failOnStart)
+        assertEquals(cluster.getMembers().size(), 1)
+        for (Entity member : cluster.getMembers()) {
+            assertFalse(((FailingEntity)member).failOnStart)
         }
     }
 
@@ -382,7 +386,7 @@ class DynamicClusterTest {
         cluster.resize(3)
         assertEquals(cluster.currentSize, 2)
         assertEquals(cluster.getMembers().size(), 2)
-        assertEquals(Iterables.size(Iterables.filter(cluster.children, Predicates.instanceOf(FailingEntity.class))), 3)
+        assertEquals(Iterables.size(Iterables.filter(cluster.getChildren(), Predicates.instanceOf(FailingEntity.class))), 3)
         cluster.members.each {
             assertFalse(((FailingEntity)it).failOnStart)
         }
@@ -410,12 +414,12 @@ class DynamicClusterTest {
         cluster.resize(1)
         cluster.resize(2)
         assertEquals(cluster.currentSize, 2)
-        assertEquals(ImmutableSet.copyOf(cluster.getChildren()), ImmutableSet.copyOf(creationOrder), "actual="+cluster.getChildren())
+        assertEquals(ImmutableSet.copyOf(cluster.getMembers()), ImmutableSet.copyOf(creationOrder), "actual="+cluster.getMembers())
 
         // Now stop one
         cluster.resize(1)
         assertEquals(cluster.currentSize, 1)
-        assertEquals(ImmutableList.copyOf(cluster.getChildren()), creationOrder.subList(0, 1))
+        assertEquals(ImmutableList.copyOf(cluster.getMembers()), creationOrder.subList(0, 1))
     }
 
     @Test
@@ -441,12 +445,12 @@ class DynamicClusterTest {
 
         cluster.start([loc])
 
-        TestEntity child = cluster.children.get(0)
+        TestEntity child = Iterables.get(cluster.getMembers(), 0);
         child.stop()
         Entities.unmanage(child)
 
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(cluster.children.size(), 0)
+            assertFalse(cluster.getChildren().contains(child), "children="+cluster.getChildren())
             assertEquals(cluster.currentSize, 0)
             assertEquals(cluster.members.size(), 0)
         }
