@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,6 +73,7 @@ import brooklyn.management.AccessController;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
@@ -162,6 +165,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         
         setCreationString(getConfigBag());
+        
+        if (getConfig(MACHINE_CREATION_SEMAPHORE) == null) {
+            Integer maxConcurrent = getConfig(MAX_CONCURRENT_MACHINE_CREATIONS);
+            if (maxConcurrent == null || maxConcurrent < 1) {
+                throw new IllegalStateException(MAX_CONCURRENT_MACHINE_CREATIONS.getName() + " must be >= 1, but was "+maxConcurrent);
+            }
+            setConfig(MACHINE_CREATION_SEMAPHORE, new Semaphore(maxConcurrent, true));
+        }
     }
     
     @Override
@@ -178,7 +189,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return getManagementContext().getLocationManager().createLocation(LocationSpec.create(getClass())
                 .parent(this)
                 .configure(getRawLocalConfigBag().getAllConfig())
-                .configure(newFlags));
+                .configure(newFlags)
+                .configure(MACHINE_CREATION_SEMAPHORE, getMachineCreationSemaphore()));
     }
 
     @Override
@@ -230,6 +242,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public String getUser(ConfigBag config) {
         return LocationConfigUtils.getConfigCheckingDeprecatedAlternatives(config, 
                 USER, JCLOUDS_KEY_USERNAME);
+    }
+    
+    protected Semaphore getMachineCreationSemaphore() {
+        return checkNotNull(getConfig(MACHINE_CREATION_SEMAPHORE), MACHINE_CREATION_SEMAPHORE.getName());
     }
     
     protected Collection<JcloudsLocationCustomizer> getCustomizers(ConfigBag setup) {
@@ -355,19 +371,27 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public JcloudsSshMachineLocation obtain(Map<?,?> flags) throws NoMachinesAvailableException {
         ConfigBag setup = ConfigBag.newInstanceExtending(getConfigBag(), flags);
         Integer attempts = setup.get(MACHINE_CREATE_ATTEMPTS);
-        Exception lastThrownException = null;
+        List<Exception> exceptions = Lists.newArrayList();
         if (attempts == null || attempts < 1) attempts = 1;
         for (int i = 1; i <= attempts; i++) {
             try {
                 return obtainOnce(flags, setup);
             } catch (RuntimeException e) {
                 LOG.warn("Attempt #{}/{} to obtain machine threw error: {}", new Object[]{i, attempts, e});
-                lastThrownException = e;
+                exceptions.add(e);
             }
         }
-        throw new NoMachinesAvailableException(
-                String.format("Failed to get VM after %d attempt%s.", attempts, attempts == 1 ? "" : "s"),
-                lastThrownException);
+        String msg = String.format("Failed to get VM after %d attempt%s.", attempts, attempts == 1 ? "" : "s");
+
+        Exception cause = (exceptions.size() == 1) 
+                ? exceptions.get(0)
+                : new CompoundRuntimeException(msg + " Causes include: "+exceptions.get(exceptions.size()-1), exceptions);
+
+        if (exceptions.get(exceptions.size()-1) instanceof NoMachinesAvailableException) {
+            throw new NoMachinesAvailableException(msg, cause);
+        } else {
+            throw Exceptions.propagate(cause);
+        }
     }
 
     protected JcloudsSshMachineLocation obtainOnce(Map<?, ?> flags, ConfigBag setup) throws NoMachinesAvailableException {
@@ -386,19 +410,36 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         try {
             LOG.info("Creating VM in "+setup.getDescription()+" for "+this);
 
-            Template template = buildTemplate(computeService, setup);
-            LoginCredentials initialCredentials = initUserTemplateOptions(template, setup);
-            for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
-                customizer.customize(this, computeService, template.getOptions());
+            LoginCredentials initialCredentials;
+            Set<? extends NodeMetadata> nodes;
+            Semaphore machineCreationSemaphore = getMachineCreationSemaphore();
+            boolean acquired = machineCreationSemaphore.tryAcquire(0, TimeUnit.SECONDS);
+            if (!acquired) {
+                LOG.info("Waiting in {} for machine-creation permit ({} other queuing requests already)", new Object[] {this, machineCreationSemaphore.getQueueLength()});
+                Stopwatch stopwatch = new Stopwatch().start();
+                machineCreationSemaphore.acquire();
+                LOG.info("Acquired in {} machine-creation permit, after waiting {}", this, Time.makeTimeStringRounded(stopwatch));
+            } else {
+                LOG.info("Acquired in {} machine-creation permit immediately", this);
             }
-            LOG.debug("jclouds using template {} / options {} to provision machine in {}", new Object[] {
-                    template, template.getOptions(), setup.getDescription()});
-
-            if (!setup.getUnusedConfig().isEmpty())
-                LOG.debug("NOTE: unused flags passed to obtain VM in "+setup.getDescription()+": "+
-                        setup.getUnusedConfig());
+            try {
+                Template template = buildTemplate(computeService, setup);
+                initialCredentials = initUserTemplateOptions(template, setup);
+                for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
+                    customizer.customize(this, computeService, template.getOptions());
+                }
+                LOG.debug("jclouds using template {} / options {} to provision machine in {}", new Object[] {
+                        template, template.getOptions(), setup.getDescription()});
+    
+                if (!setup.getUnusedConfig().isEmpty())
+                    LOG.debug("NOTE: unused flags passed to obtain VM in "+setup.getDescription()+": "+
+                            setup.getUnusedConfig());
+                
+                nodes = computeService.createNodesInGroup(groupId, 1, template);
+            } finally {
+                machineCreationSemaphore.release();
+            }
             
-            Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupId, 1, template);
             node = Iterables.getOnlyElement(nodes, null);
             LOG.debug("jclouds created {} for {}", node, setup.getDescription());
             if (node == null)
