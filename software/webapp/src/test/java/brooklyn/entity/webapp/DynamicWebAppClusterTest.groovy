@@ -91,38 +91,32 @@ public class DynamicWebAppClusterTest {
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, false);
         
         // When child is !service_up, should continue to report false
-        Iterables.get(cluster.getChildren(), 0).setAttribute(Startable.SERVICE_UP, false);
+        Iterables.get(cluster.getMembers(), 0).setAttribute(Startable.SERVICE_UP, false);
         EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", SHORT_WAIT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, false);
         
         cluster.resize(2);
         
         // When one of the two children is service_up, should report true
-        Iterables.get(cluster.getChildren(), 0).setAttribute(Startable.SERVICE_UP, true);
+        Iterables.get(cluster.getMembers(), 0).setAttribute(Startable.SERVICE_UP, true);
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, true);
 
         // And if that serviceUp child goes away, should again report false
-        Entities.unmanage(Iterables.get(cluster.getChildren(), 0));
+        Entities.unmanage(Iterables.get(cluster.getMembers(), 0));
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, false);
     }
     
-    // FIXME Fails because of the config-closure stuff; it now coerces closure every time 
-    // on entity.getConfig(key), rather than only once. So the call to cluster.factory.configure
-    // updated a different instance from that retrieved subsequently!
-    @Test(groups="WIP")
+    @Test
     public void testPropertiesToChildren() {
-        DynamicWebAppCluster cluster = new DynamicWebAppClusterImpl(
-            factory: { properties -> new TestJavaWebAppEntity(properties + ["a": 1]) },
-            parent:app) {
-                protected Map getCustomChildFlags() { ["c":3] }
-        }
-        cluster.factory.configure(b: 2);
+        DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
+            .configure(DynamicWebAppCluster.FACTORY, { properties -> new TestJavaWebAppEntity(properties + ["a": 1]) })
+            .configure(DynamicWebAppCluster.CUSTOM_CHILD_FLAGS, ["b":2]));
+
         Entities.manage(cluster);
         
         app.start([new SimulatedLocation()])
         assertEquals 1, cluster.members.size()
-        def we = cluster.members[0]
+        TestJavaWebAppEntity we = Iterables.get(cluster.getMembers(), 0);
         assertEquals we.a, 1
         assertEquals we.b, 2
-        assertEquals we.c, 3
     }
 }

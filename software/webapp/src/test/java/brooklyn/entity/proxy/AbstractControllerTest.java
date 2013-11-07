@@ -161,7 +161,7 @@ public class AbstractControllerTest {
     public void testUpdateCalledWithAddressesOfNewChildren() {
         // First child
         cluster.resize(1);
-        EntityLocal child = (EntityLocal) cluster.getChildren().iterator().next();
+        EntityLocal child = (EntityLocal) Iterables.getOnlyElement(cluster.getMembers());
         
         List<Collection<String>> u = Lists.newArrayList(controller.getUpdates());
         assertTrue(u.isEmpty(), "expected empty list but got "+u);
@@ -175,9 +175,9 @@ public class AbstractControllerTest {
         Asserts.succeedsEventually(new Runnable() {
             @Override
             public void run() {
-                assertEquals(cluster.getChildren().size(), 2);
+                assertEquals(cluster.getMembers().size(), 2);
             }});
-        EntityLocal child2 = (EntityLocal) Iterables.getOnlyElement(MutableSet.builder().addAll(cluster.getChildren()).remove(child).build());
+        EntityLocal child2 = (EntityLocal) Iterables.getOnlyElement(MutableSet.builder().addAll(cluster.getMembers()).remove(child).build());
         
         child2.setAttribute(ClusteredEntity.HTTP_PORT, 1234);
         child2.setAttribute(Startable.SERVICE_UP, true);
@@ -197,7 +197,7 @@ public class AbstractControllerTest {
     public void testUpdateCalledWithAddressesRemovedForStoppedChildren() {
         // Get some children, so we can remove one...
         cluster.resize(2);
-        for (Entity it: cluster.getChildren()) { 
+        for (Entity it: cluster.getMembers()) { 
             ((EntityLocal)it).setAttribute(ClusteredEntity.HTTP_PORT, 1234);
             ((EntityLocal)it).setAttribute(Startable.SERVICE_UP, true);
         }
@@ -205,7 +205,7 @@ public class AbstractControllerTest {
 
         // Now remove one child
         cluster.resize(1);
-        assertEquals(cluster.getChildren().size(), 1);
+        assertEquals(cluster.getMembers().size(), 1);
         assertEventuallyAddressesMatchCluster();
     }
 
@@ -213,7 +213,7 @@ public class AbstractControllerTest {
     public void testUpdateCalledWithAddressesRemovedForServiceDownChildrenThatHaveClearedHostnamePort() {
         // Get some children, so we can remove one...
         cluster.resize(2);
-        for (Entity it: cluster.getChildren()) { 
+        for (Entity it: cluster.getMembers()) { 
             ((EntityLocal)it).setAttribute(ClusteredEntity.HTTP_PORT, 1234);
             ((EntityLocal)it).setAttribute(Startable.SERVICE_UP, true);
         }
@@ -221,7 +221,7 @@ public class AbstractControllerTest {
 
         // Now unset host/port, and remove children
         // Note the unsetting of hostname is done in SoftwareProcessImpl.stop(), so this is realistic
-        for (Entity it : cluster.getChildren()) {
+        for (Entity it : cluster.getMembers()) {
             ((EntityLocal)it).setAttribute(ClusteredEntity.HTTP_PORT, null);
             ((EntityLocal)it).setAttribute(ClusteredEntity.HOSTNAME, null);
             ((EntityLocal)it).setAttribute(Startable.SERVICE_UP, false);
@@ -230,7 +230,7 @@ public class AbstractControllerTest {
     }
 
     private void assertEventuallyAddressesMatchCluster() {
-        assertEventuallyAddressesMatch(cluster.getChildren());
+        assertEventuallyAddressesMatch(cluster.getMembers());
     }
 
     private void assertEventuallyAddressesMatch(final Collection<Entity> expectedMembers) {
