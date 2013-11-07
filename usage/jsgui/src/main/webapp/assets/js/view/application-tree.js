@@ -135,22 +135,38 @@ define([
                             return false;
                         }
                     }
-                    parentsChildren = parent.parent().children('.node-children')
+                    parentsChildren = $(parent.parent().children('.node-children'));
                     depth = parent.parent().data("depth")+1
                 }
 
                 // add it, with surrounding html, in parent's node-children child
+                var sortKey = id.toLowerCase();
                 var newNodeWrapper = $(
-                        '<div class="toggler-group tree-box '+
+                        '<div data-sort-key="'+sortKey+'" class="toggler-group tree-box '+
                             (depth==0 ? "outer" : "inner "+(depth%2==1 ? "depth-odd" : "depth-even")+
                                 (depth==1 ? " depth-first" : "")) + '" data-depth="'+depth+'">'+
                         '<div id="'+id+'" class="entity_tree_node_wrapper"></div>'+
                         '<div class="toggler-target hide node-children"></div>'+
                         '</div>')
-                        
                 $('#'+id, newNodeWrapper).html(newNode);
-                $(parentsChildren).append(newNodeWrapper);
-                this.addEventsToNode($(parentsChildren))
+
+                // Maintain entities sorted by id. Would like to sort by name but it's
+                // not always available in the model.
+                var placed = false;
+                var contender = $(".toggler-group", parentsChildren).first();
+                while (contender.length && !placed) {
+                    var contenderKey = contender.data("sort-key");
+                    if (sortKey < contenderKey) {
+                        contender.before(newNodeWrapper);
+                        placed = true;
+                    } else {
+                        contender = contender.next(".toggler-group", parentsChildren);
+                    }
+                }
+                if (!placed) {
+                    parentsChildren.append(newNodeWrapper);
+                }
+                this.addEventsToNode(parentsChildren)
             } else {
                 // updating
                 var $node = $(node), $newNode = $(newNode);
