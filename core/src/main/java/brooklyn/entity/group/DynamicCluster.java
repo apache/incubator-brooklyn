@@ -62,7 +62,7 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
 
     @SetFromFlag("quarantineFailedEntities")
     public static final ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = new BasicConfigKey<Boolean>(
-            Boolean.class, "dynamiccluster.quarantineFailedEntities", "Whether to guarantine entities that fail to start, or to try to clean them up", false);
+            Boolean.class, "dynamiccluster.quarantineFailedEntities", "Whether to quarantine entities that fail to start, or to try to clean them up", true);
 
     public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
 
