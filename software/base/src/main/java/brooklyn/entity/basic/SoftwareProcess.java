@@ -113,5 +113,6 @@ public interface SoftwareProcess extends Entity, Startable {
             MachineProvisioningLocation.class, "softwareservice.provisioningLocation", "Location used to provision a machine where this is running");
         
     public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
-    
+ 
+    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor( "softwareprocess.pid.file", "PID file");
 }

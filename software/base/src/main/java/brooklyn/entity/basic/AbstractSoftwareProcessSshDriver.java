@@ -354,6 +354,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             String pidFile = (flags.get(USE_PID_FILE) instanceof CharSequence ? flags.get(USE_PID_FILE) : getRunDir()+"/"+PID_FILENAME).toString();
             String processOwner = (String) flags.get(PROCESS_OWNER);
             if (LAUNCHING.equals(phase)) {
+                entity.setAttribute(SoftwareProcess.PID_FILE, pidFile);
                 s.footer.prepend("echo $! > "+pidFile);
             } else if (CHECK_RUNNING.equals(phase)) {
                 s.body.append(
