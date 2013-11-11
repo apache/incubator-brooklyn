@@ -45,16 +45,22 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     public String getOsTag() {
         OsDetails os = getLocation().getOsDetails();
+        // NOTE: cannot rely on OsDetails.isLinux() to return true for all linux flavours, so
+        // explicitly test for unsupported OSes, otherwise assume generic linux.
         if (os == null) return "linux-i686";
-        if (os.isLinux()) return "linux-" + (os.is64bit() ? "x86_64" : "i686");
-        throw new UnsupportedOperationException("only support linux versions just now");
+        if (os.isWindows() || os.isMac())
+            throw new UnsupportedOperationException("only support linux versions just now; OS details: " + os);
+        return "linux-" + (os.is64bit() ? "x86_64" : "i686");
     }
 
     public String getDownloadParentDir() {
+        // NOTE: cannot rely on OsDetails.isLinux() to return true for all linux flavours, so
+        // explicitly test for unsupported OSes, otherwise assume generic linux.
         OsDetails os = getLocation().getOsDetails();
         if (os == null) return "kvm-bintar-hardy-x86";
-        if (os.isLinux()) return "kvm-bintar-hardy-" + (os.is64bit() ? "amd64" : "x86");
-        throw new UnsupportedOperationException("only support linux versions just now");
+        if (os.isWindows() || os.isMac())
+            throw new UnsupportedOperationException("only support linux versions just now; OS details: " + os);
+        return "kvm-bintar-hardy-" + (os.is64bit() ? "amd64" : "x86");
     }
 
     public String getMirrorUrl() {
