@@ -30,9 +30,16 @@ You can install these using Help -> Install New Software, or from the Eclipse Ma
 As of this writing, Eclipse 4.2 and Eclipse 4.3 are commonly used, 
 and the codebase can be imported (Import -> Existing Maven Projects) 
 and successfully built and run inside an IDE.
-However there are quicks, and mileage may vary.
+However there are quirks, and mileage may vary.
 
 If you encounter issues, the following hints may be helpful:
+
+* If you attempt to import projects before the plugins are installed, you may encounter errors such as 
+  '``No marketplace entries found to handle maven-compiler-plugin:2.3.2:compile in Eclipse``',
+  and the projects will not be recognized as java projects. If you do, simply cancel the import 
+  (or delete the imported projects if they have been imported) and install the plugins as described above.
+  If you have installed plugins from alternative locations, remove them and re-install them from the locations
+  specified above.
 
 * A quick command-line build (`mvn clean install -DskipTests`) followed by a workspace refresh
   can be useful to re-populate files which need to be copied to `target/`

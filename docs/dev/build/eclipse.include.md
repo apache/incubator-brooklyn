@@ -1,5 +1,5 @@
 
-- Maven Plugin: m2e from [download.eclipse.org/technology/m2e/releases](http://download.eclipse.org/technology/m2e/releases)
+- Maven Plugin: m2e from [download.eclipse.org/technology/m2e/releases](http://download.eclipse.org/technology/m2e/releases), or for kepler [http://download.eclipse.org/releases/kepler](http://download.eclipse.org/releases/kepler)
   (typically bundled with Eclipse or available in the default update site set)
 
 - Git Plugin: egit from [download.eclipse.org/egit/updates](http://download.eclipse.org/egit/updates)
