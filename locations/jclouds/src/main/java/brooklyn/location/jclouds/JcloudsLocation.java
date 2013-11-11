@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +35,7 @@ import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.NodeMetadata.Status;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
 import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.domain.OsFamily;
@@ -62,7 +64,10 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineManagementMixins.MachineMetadata;
+import brooklyn.location.MachineManagementMixins.RichMachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.basic.BasicMachineMetadata;
 import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
@@ -92,6 +97,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
@@ -99,6 +105,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -111,7 +118,7 @@ import com.google.common.primitives.Ints;
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
  * Configuration flags are defined in {@link JcloudsLocationConfig}.
  */
-public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements JcloudsLocationConfig {
+public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements JcloudsLocationConfig, RichMachineProvisioningLocation<SshMachineLocation> {
 
     // TODO After converting from Groovy to Java, this is now very bad code! It relies entirely on putting 
     // things into and taking them out of maps; it's not type-safe, and it's thus very error-prone.
@@ -330,11 +337,31 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             ConfigBag.newInstanceExtending(getConfigBag(), flags));
     }
     
+    /** @deprecated since 0.7.0 use {@link #listComputeInstances()} */ @Deprecated
     public Set<? extends ComputeMetadata> listNodes() {
         return listNodes(MutableMap.of());
     }
+    /** @deprecated since 0.7.0 use {@link #listComputeInstances()} */ @Deprecated
     public Set<? extends ComputeMetadata> listNodes(Map<?,?> flags) {
         return getComputeService(flags).listNodes();
+    }
+    
+    @Override
+    public Map<String, MachineMetadata> listMachines() {
+        Set<? extends ComputeMetadata> nodes = getComputeService().listNodes();
+        Map<String,MachineMetadata> result = new LinkedHashMap<String, MachineMetadata>();
+        for (ComputeMetadata node: nodes) {
+            result.put(node.getId(), new BasicMachineMetadata(node.getId(), node.getName(), 
+                ((node instanceof NodeMetadata) ? Iterators.tryFind( ((NodeMetadata)node).getPublicAddresses().iterator(), Predicates.alwaysTrue() ).orNull() : null),
+                ((node instanceof NodeMetadata) ? ((NodeMetadata)node).getStatus()==Status.RUNNING : null),
+                node));
+        }
+        return result;
+    }
+    
+    @Override
+    public void killMachine(String id) {
+        getComputeService().destroyNode(id);
     }
 
     /** attaches a string describing where something is being created 
