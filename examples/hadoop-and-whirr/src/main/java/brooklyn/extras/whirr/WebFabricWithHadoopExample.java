@@ -9,6 +9,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.whirr.service.hadoop.HadoopCluster;
 import org.slf4j.Logger;
@@ -166,10 +167,14 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
         }
         
         public void start() {
-            subscribeToMembers((Group)entity, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
+        	subscribeToMembers((Group)entity, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
+                // track if previously up, so only execute when transitions from false->true
+                private final AtomicBoolean up = new AtomicBoolean();
+                
                 @Override public void onEvent(SensorEvent<Boolean> event) {
                     log.debug("hadoop set up policy recieved {}", event);
-                    if (event.getValue() != null) {
+                    if (Boolean.TRUE.equals(event.getValue()) && !up.get()) {
+                        up.set(true);
                         setupMachine(event.getSource());
                     }
                 }});
@@ -197,6 +202,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
                 String user = hadoopCluster.getClusterSpec().getClusterUser();
                 InetAddress namenode = HadoopCluster.getNamenodePublicAddress(hadoopCluster.getCluster());
                 String server = namenode.getHostName();
+                // TODO: the `ssh -D` command keeps failing because of incorrect ssh key. Tested in "aws-ec2:us-west-2", AMI ubuntu-saucy-13.10-i386-server-20131015 (ami-aae67f9a)
                 String proxyCommand = Joiner.on(" ").join(ImmutableList.of(
                         "ssh",
                         "-i", "/tmp/hadoop-proxy-private-key",
@@ -211,6 +217,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
                 if (log.isDebugEnabled()) log.debug("http config update for {}, proxy command: {}", e, proxyCommand);
 
                 String hadoopProxyForeverContent = 
+            		 "#!/bin/bash"+"\n"+ 
                         "while [ true ] ; do"+"\n"+ 
                         "    date"+"\n"+
                         "    echo starting proxy for hadoop to "+String.format("%s@%s", user, server)+"\n"+
@@ -220,7 +227,8 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
                 
                 ssh.copyTo(new StringReader(hadoopProxyForeverContent), "/tmp/hadoop-proxy-forever.sh");
                   
-                ssh.execCommands("chmod", ImmutableList.of("chmod 600 /tmp/hadoop-proxy-private-key ; chmod +x /tmp/hadoop-proxy-forever.sh ; nohup /tmp/hadoop-proxy-forever.sh &"));
+                //  TODO: the `nohup hadoop-proxy-forever.sh &`  script is not returning. Tested in "aws-ec2:us-west-2", AMI ubuntu-saucy-13.10-i386-server-20131015 (ami-aae67f9a)
+                ssh.execCommands("chmod", ImmutableList.of("chmod 600 /tmp/hadoop-proxy-private-key", "chmod +x /tmp/hadoop-proxy-forever.sh", "nohup /tmp/hadoop-proxy-forever.sh < /dev/null &"));
 
                 URI updateConfigUri = new URI(e.getAttribute(JBoss7Server.ROOT_URL)+
                         "configure.jsp?key=brooklyn.example.hadoop.site.xml.url&value=file:///tmp/hadoop-site.xml");
