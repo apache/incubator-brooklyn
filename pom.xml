@@ -792,16 +792,35 @@
                         <groupId>org.apache.felix</groupId>
                         <artifactId>maven-bundle-plugin</artifactId>
                         <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <id>create-bundle-manifest</id>
-                                <phase>process-classes</phase>
-                                <goals>
-                                    <goal>manifest</goal>
-                                </goals>
-                            </execution>
-                        </executions>
+                        <!-- configure plugin to generate MANIFEST.MF 
+                             adapted from http://blog.knowhowlab.org/2010/06/osgi-tutorial-from-project-structure-to.html -->
+                        <executions>  
+                            <execution>  
+                                <id>bundle-manifest</id>  
+                                <phase>process-classes</phase>  
+                                <goals>  
+                                    <goal>manifest</goal>  
+                                </goals>  
+                            </execution>  
+                        </executions>  
+                        <configuration>  
+                            <supportedProjectTypes>  
+                                <supportedProjectType>jar</supportedProjectType>  
+                            </supportedProjectTypes>  
+                            <instructions>  
+                                <!-- OSGi specific instruction -->  
+                            </instructions>  
+                        </configuration>  
                     </plugin>
+                    <plugin>  
+                        <groupId>org.apache.maven.plugins</groupId>  
+                        <artifactId>maven-jar-plugin</artifactId>  
+                        <configuration>
+                            <archive> 
+                                <manifestFile> ${project.build.outputDirectory}/META-INF/MANIFEST.MF </manifestFile>
+                            </archive>
+                        </configuration>
+                    </plugin>  
                 </plugins>
             </build>
         </profile>
@@ -847,6 +866,7 @@
                                 </goals>
                                 <configuration>
                                     <forceCreation>true</forceCreation>
+                                    <archive combine.self="override"></archive>
                                 </configuration>
                             </execution>
                         </executions>
@@ -932,21 +952,6 @@
             </properties>
             <build>
                 <plugins>
-                <!-- 
-                    <plugin>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <inherited>true</inherited>
-                        <executions>
-                            <execution>
-                                <id>run-tests</id>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                                <phase>integration-test</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                 -->
                     <plugin>
                         <artifactId>maven-jar-plugin</artifactId>
                         <executions>

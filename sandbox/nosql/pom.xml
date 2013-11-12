@@ -4,7 +4,7 @@
 
     <groupId>io.brooklyn.sandbox</groupId>
     <artifactId>brooklyn-sandbox-software-nosql</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>Brooklyn NoSQL Software Entities</name>
     <description>
         Brooklyn entitites for NoSQL software processes

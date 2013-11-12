@@ -2,7 +2,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>brooklyn-software-webapp</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>Brooklyn Web App Software Entities</name>
     <description>
 		Brooklyn entities for Web App software processes
