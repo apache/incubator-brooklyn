@@ -283,8 +283,9 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <!-- NB: if this version is changed, update the MavenArtifactTest -->
-                    <version>2.4</version>
+                    <!-- NB: if this version is changed, update the MavenArtifactTest. 
+                         v2.4+ seems to break eclipse integration as per https://github.com/tesla/m2eclipse-extras/issues/10 -->
+                    <version>2.3.2</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-source-plugin</artifactId>
