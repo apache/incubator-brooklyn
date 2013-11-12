@@ -4,24 +4,41 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.Entity;
 import brooklyn.entity.rebind.dto.BasicEntityMemento;
 import brooklyn.entity.rebind.dto.BasicLocationMemento;
 import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
+import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.location.Location;
+import brooklyn.policy.EntityAdjunct;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.xstream.XmlSerializer;
+
+import com.thoughtworks.xstream.converters.Converter;
+import com.thoughtworks.xstream.converters.MarshallingContext;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /* uses xml, cleaned up a bit
  * 
  * there is an early attempt at doing this with JSON in pull request #344 but 
  * it is not nicely deserializable, see comments at http://xstream.codehaus.org/json-tutorial.html */  
 public class XmlMementoSerializer<T> extends XmlSerializer<T> implements MementoSerializer<T> {
-    
+
+    private static final Logger LOG = LoggerFactory.getLogger(XmlMementoSerializer.class);
+
     @SuppressWarnings("unused")
     private final ClassLoader classLoader;
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public XmlMementoSerializer(ClassLoader classLoader) {
         this.classLoader = checkNotNull(classLoader, "classLoader");
         xstream.alias("brooklyn", MutableBrooklynMemento.class);
@@ -29,6 +46,9 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         xstream.alias("location", BasicLocationMemento.class);
         xstream.alias("configKey", BasicConfigKey.class);
         xstream.alias("attributeSensor", BasicAttributeSensor.class);
+        xstream.registerConverter(new ConverterImpl(Location.class));
+        xstream.registerConverter(new ConverterImpl(Entity.class));
+        xstream.registerConverter(new ConverterImpl(EntityAdjunct.class));
     }
     
     @Override
@@ -41,4 +61,43 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
     }
 
+    public static class ConverterImpl<T extends Identifiable> implements Converter {
+        private final AtomicBoolean hasWarned = new AtomicBoolean(false);
+        private final Class<?> converatable;
+        
+        ConverterImpl(Class<T> converatable) {
+            this.converatable = checkNotNull(converatable, "converatable");
+        }
+        
+        @SuppressWarnings({ "rawtypes" })
+        @Override
+        public boolean canConvert(Class type) {
+            return converatable.isAssignableFrom(type);
+        }
+        
+        @SuppressWarnings("unchecked")
+        @Override
+        public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
+            if (source != null) {
+                if (hasWarned.compareAndSet(false, true)) {
+                    LOG.warn("Cannot marshall to xml (for persistence) {} {}; should have been intercepted; unmarshalling will give null!", converatable.getSimpleName(), source);
+                } else {
+                    LOG.debug("Cannot marshall to xml (for persistence) {} {}; should have been intercepted; unmarshalling will give null!", converatable.getSimpleName(), source);
+                }
+            }
+            // no-op; can't marshall this; deserializing will give null!
+            writer.startNode("unserializableLocation");
+            writer.setValue(((T)source).getId());
+            writer.endNode();
+        }
+
+        @Override
+        public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
+            reader.moveDown();
+            String id = reader.getValue();
+            reader.moveUp();
+            LOG.warn("Cannot unmarshall from persisted xml {} {}; should have been intercepted; returning null!", converatable.getSimpleName(), id);
+            return null;
+        }
+    }
 }
