@@ -1,13 +1,16 @@
 package brooklyn.policy;
 
+import brooklyn.entity.trait.Identifiable;
+
 /**
  * EntityAdjuncts are supplementary logic that can be attached to Entities, providing sensor enrichment
  * or enabling policy
  */
-public interface EntityAdjunct {
+public interface EntityAdjunct extends Identifiable {
     /**
      * A unique id for this adjunct
      */
+    @Override
     String getId();
 
     /**

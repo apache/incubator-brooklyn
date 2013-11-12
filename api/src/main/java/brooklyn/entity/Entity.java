@@ -10,6 +10,7 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
+import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
@@ -30,10 +31,11 @@ import brooklyn.policy.Policy;
  * 
  * @see brooklyn.entity.basic.AbstractEntity
  */
-public interface Entity extends Rebindable {
+public interface Entity extends Identifiable, Rebindable {
     /**
      * The unique identifier for this entity.
      */
+    @Override
     String getId();
     
     /**
