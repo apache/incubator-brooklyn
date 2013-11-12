@@ -72,20 +72,20 @@
     
     
     <classpath> 
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-web-cluster/0.6.0-SNAPSHOT/brooklyn-example-simple-web-cluster-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->   
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-global-web-fabric/0.6.0-SNAPSHOT/brooklyn-example-global-web-fabric-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->        
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-global-web-fabric/0.6.0-SNAPSHOT/brooklyn-example-global-web-fabric-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-hadoop-webapp/0.6.0-SNAPSHOT/brooklyn-example-hello-world-hadoop-webapp-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-portable-cloudfoundry/0.6.0-SNAPSHOT/brooklyn-example-portable-cloudfoundry-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-web-cluster/0.6.0-SNAPSHOT/brooklyn-example-simple-web-cluster-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hadoop-and-whirr/0.6.0-SNAPSHOT/brooklyn-example-hadoop-and-whirr-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0-SNAPSHOT/brooklyn-example-hello-world-sql-webapp-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-messaging-pubsub/0.6.0-SNAPSHOT/brooklyn-example-simple-messaging-pubsub-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-examples-parent/0.6.0-SNAPSHOT/brooklyn-examples-parent-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-hadoop-jar/0.6.0-SNAPSHOT/brooklyn-example-hello-world-hadoop-jar-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-webapp/0.6.0-SNAPSHOT/brooklyn-example-hello-world-webapp-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-nosql-cluster/0.6.0-SNAPSHOT/brooklyn-example-simple-nosql-cluster-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-examples-webapps-parent/0.6.0-SNAPSHOT/brooklyn-examples-webapps-parent-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-web-cluster/0.6.0-rc.3/brooklyn-example-simple-web-cluster-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->   
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-global-web-fabric/0.6.0-rc.3/brooklyn-example-global-web-fabric-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->        
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-global-web-fabric/0.6.0-rc.3/brooklyn-example-global-web-fabric-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-hadoop-webapp/0.6.0-rc.3/brooklyn-example-hello-world-hadoop-webapp-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-portable-cloudfoundry/0.6.0-rc.3/brooklyn-example-portable-cloudfoundry-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-web-cluster/0.6.0-rc.3/brooklyn-example-simple-web-cluster-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hadoop-and-whirr/0.6.0-rc.3/brooklyn-example-hadoop-and-whirr-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0-rc.3/brooklyn-example-hello-world-sql-webapp-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-messaging-pubsub/0.6.0-rc.3/brooklyn-example-simple-messaging-pubsub-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-examples-parent/0.6.0-rc.3/brooklyn-examples-parent-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-hadoop-jar/0.6.0-rc.3/brooklyn-example-hello-world-hadoop-jar-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-webapp/0.6.0-rc.3/brooklyn-example-hello-world-webapp-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-nosql-cluster/0.6.0-rc.3/brooklyn-example-simple-nosql-cluster-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-examples-webapps-parent/0.6.0-rc.3/brooklyn-examples-webapps-parent-0.6.0-rc.3.jar</entry> <!--  BROOKLYN_VERSION  -->
     </classpath>
 
 

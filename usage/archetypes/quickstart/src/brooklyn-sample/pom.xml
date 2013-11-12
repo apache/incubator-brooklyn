@@ -42,7 +42,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <brooklyn.version>0.6.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+    <brooklyn.version>0.6.0-rc.3</brooklyn.version>  <!-- BROOKLYN_VERSION -->
     <logback.version>1.0.7</logback.version>
     <testng.version>6.3.1</testng.version>
     <surefire.version>2.13</surefire.version>
