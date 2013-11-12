@@ -13,6 +13,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.rebind.dto.BasicEntityMemento;
 import brooklyn.entity.rebind.dto.BasicLocationMemento;
 import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
+import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
@@ -20,7 +21,6 @@ import brooklyn.policy.EntityAdjunct;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.xstream.XmlSerializer;
 
-import com.google.common.base.Function;
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
@@ -46,18 +46,9 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         xstream.alias("location", BasicLocationMemento.class);
         xstream.alias("configKey", BasicConfigKey.class);
         xstream.alias("attributeSensor", BasicAttributeSensor.class);
-        xstream.registerConverter(new ConverterImpl(Location.class, new Function<Location,String>() {
-            @Override public String apply(Location input) {
-                return (input != null) ? input.getId() : null;
-            }}));
-        xstream.registerConverter(new ConverterImpl(Entity.class, new Function<Entity,String>() {
-            @Override public String apply(Entity input) {
-                return (input != null) ? input.getId() : null;
-            }}));
-        xstream.registerConverter(new ConverterImpl(EntityAdjunct.class, new Function<EntityAdjunct,String>() {
-            @Override public String apply(EntityAdjunct input) {
-                return (input != null) ? input.getId() : null;
-            }}));
+        xstream.registerConverter(new ConverterImpl(Location.class));
+        xstream.registerConverter(new ConverterImpl(Entity.class));
+        xstream.registerConverter(new ConverterImpl(EntityAdjunct.class));
     }
     
     @Override
@@ -70,14 +61,12 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
     }
 
-    public static class ConverterImpl<T> implements Converter {
+    public static class ConverterImpl<T extends Identifiable> implements Converter {
         private final AtomicBoolean hasWarned = new AtomicBoolean(false);
         private final Class<?> converatable;
-        private final Function<T,String> idExtractor;
         
-        ConverterImpl(Class<T> converatable, Function<T,String> idExtractor) {
+        ConverterImpl(Class<T> converatable) {
             this.converatable = checkNotNull(converatable, "converatable");
-            this.idExtractor = checkNotNull(idExtractor, "idExtractor");
         }
         
         @SuppressWarnings({ "rawtypes" })
@@ -98,7 +87,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             }
             // no-op; can't marshall this; deserializing will give null!
             writer.startNode("unserializableLocation");
-            writer.setValue(idExtractor.apply((T)source));
+            writer.setValue(((T)source).getId());
             writer.endNode();
         }
 
