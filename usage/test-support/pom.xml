@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>brooklyn-test-support</artifactId>
 	<name>Brooklyn Test Support</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 	<description>Test support dependencies and classes</description>
 
 	<parent>
