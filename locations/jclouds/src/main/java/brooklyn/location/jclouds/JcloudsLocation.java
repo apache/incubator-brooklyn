@@ -375,7 +375,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (attempts == null || attempts < 1) attempts = 1;
         for (int i = 1; i <= attempts; i++) {
             try {
-                return obtainOnce(flags, setup);
+                return obtainOnce(setup);
             } catch (RuntimeException e) {
                 LOG.warn("Attempt #{}/{} to obtain machine threw error: {}", new Object[]{i, attempts, e});
                 exceptions.add(e);
@@ -394,7 +394,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
-    protected JcloudsSshMachineLocation obtainOnce(Map<?, ?> flags, ConfigBag setup) throws NoMachinesAvailableException {
+    protected JcloudsSshMachineLocation obtainOnce(ConfigBag setup) throws NoMachinesAvailableException {
         AccessController.Response access = getManagementContext().getAccessController().canProvisionLocation(this);
         if (!access.isAllowed()) {
             throw new IllegalStateException("Access controller forbids provisioning in "+this+": "+access.getMsg());
@@ -1056,8 +1056,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             throw Exceptions.propagate(e);
         }
     }
+
     public JcloudsSshMachineLocation rebindMachine(Map flags) throws NoMachinesAvailableException {
-        return rebindMachine(new ConfigBag().putAll(flags));
+        ConfigBag setup = ConfigBag.newInstanceExtending(getConfigBag(), flags);
+        return rebindMachine(setup);
     }
 
     // -------------- create the SshMachineLocation instance, and connect to it etc ------------------------
