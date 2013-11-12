@@ -1,4 +1,3 @@
-
 <included>
 
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
