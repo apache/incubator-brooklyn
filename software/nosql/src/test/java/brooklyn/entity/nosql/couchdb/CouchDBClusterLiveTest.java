@@ -17,8 +17,6 @@ package brooklyn.entity.nosql.couchdb;
 
 import static org.testng.Assert.assertEquals;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -40,9 +38,7 @@ import com.google.common.collect.Iterables;
  * Tests that a two node cluster can be started on Amazon EC2 and data written on one {@link CouchDBNode}
  * can be read from another, using the Astyanax API.
  */
-class CouchDBClusterLiveTest {
-
-    private static final Logger log = LoggerFactory.getLogger(CouchDBClusterLiveTest.class);
+public class CouchDBClusterLiveTest {
 
     // private String provider = "rackspace-cloudservers-uk";
     private String provider = "aws-ec2:eu-west-1";
