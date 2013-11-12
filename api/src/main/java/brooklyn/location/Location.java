@@ -7,6 +7,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
+import brooklyn.entity.trait.Identifiable;
 import brooklyn.mementos.LocationMemento;
 
 /**
@@ -17,11 +18,12 @@ import brooklyn.mementos.LocationMemento;
  * 
  * Locations may not be {@link Serializable} in subsequent releases!
  */
-public interface Location extends Serializable, Rebindable{
+public interface Location extends Serializable, Identifiable, Rebindable {
 
     /**
      * A unique id for this location.
      */
+    @Override
     String getId();
 
     /**

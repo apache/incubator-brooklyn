@@ -9,7 +9,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;
 import com.thoughtworks.xstream.XStream;
@@ -27,10 +29,17 @@ public class XmlSerializer<T> {
         
         xstream.registerConverter(new StringKeyMapConverter(xstream.getMapper()), /* priority */ 10);
         xstream.alias("MutableMap", MutableMap.class);
+        xstream.alias("MutableSet", MutableSet.class);
+        xstream.alias("MutableList", MutableList.class);
+        
+        // Needs an explicit MutableSet converter!
+        // Without it, the alias for "set" seems to interfere with the MutableSet.map field, so it gets
+        // a null field on deserialization.
+        xstream.registerConverter(new MutableSetConverter(xstream.getMapper()));
         
         xstream.aliasType("ImmutableList", ImmutableList.class);
         xstream.registerConverter(new ImmutableListConverter(xstream.getMapper()));
-        
+
         xstream.registerConverter(new EnumCaseForgivingConverter());
         xstream.registerConverter(new Inet4AddressConverter());
     }
