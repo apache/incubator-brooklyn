@@ -69,8 +69,8 @@ public abstract class AbstractEc2LiveTest extends BrooklynMgmtContextTestSupport
 
     @Test(groups = {"Live"})
     public void test_Ubuntu_12_0() throws Exception {
-        // Image: {id=us-east-1/ami-950680fc, providerId=ami-950680fc, name=RightImage_Ubuntu_12.04_x64_v5.8.8, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=12.04, description=rightscale-us-east/RightImage_Ubuntu_12.04_x64_v5.8.8.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_12.04_x64_v5.8.8.manifest.xml, version=5.8.8, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
-        runTest(ImmutableMap.of("imageId", "us-east-1/ami-950680fc", "hardwareId", SMALL_HARDWARE_ID));
+        // Image: {id=us-east-1/ami-0769ee6e, providerId=ami-0769ee6e, name=RightImage_Ubuntu_12.04_x64_v5.8.8.5, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=12.04, description=rightscale-us-east/RightImage_Ubuntu_12.04_x64_v5.8.8.5.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_12.04_x64_v5.8.8.5.manifest.xml, version=5.8.8.5, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-0769ee6e", "hardwareId", SMALL_HARDWARE_ID));
     }
 
     @Test(groups = {"Live"})
@@ -87,8 +87,8 @@ public abstract class AbstractEc2LiveTest extends BrooklynMgmtContextTestSupport
 
     @Test(groups = {"Live"})
     public void test_Red_Hat_Enterprise_Linux_6() throws Exception {
-        // Image: {id=us-east-1/ami-d258fbbb, providerId=ami-d258fbbb, name=RHEL-6.3-Starter-i386-1-Hourly2, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=rhel, arch=paravirtual, version=6.4, description=, is64Bit=true}, description=, version=6.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=309956199498, rootDeviceType=ebs, virtualizationType=paravirtual, hypervisor=xen}}
-        runTest(ImmutableMap.of("imageId", "us-east-1/ami-d258fbbb", "hardwareId", SMALL_HARDWARE_ID));
+        // Image: {id=us-east-1/ami-a35a33ca, providerId=ami-a35a33ca, name=RHEL-6.3_GA-x86_64-5-Hourly2, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=rhel, arch=paravirtual, version=6.0, description=309956199498/RHEL-6.3_GA-x86_64-5-Hourly2, is64Bit=true}, description=309956199498/RHEL-6.3_GA-x86_64-5-Hourly2, version=Hourly2, status=AVAILABLE[available], loginUser=root, userMetadata={owner=309956199498, rootDeviceType=ebs, virtualizationType=paravirtual, hypervisor=xen}}
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-a35a33ca", "hardwareId", SMALL_HARDWARE_ID));
     }
     
     protected void runTest(Map<String,?> flags) throws Exception {
