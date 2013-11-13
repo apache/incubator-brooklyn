@@ -1,5 +1,7 @@
 package brooklyn.entity;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
@@ -9,6 +11,8 @@ import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 
 public class BrooklynMgmtContextTestSupport {
+
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynMgmtContextTestSupport.class);
 
     protected TestApplication app;
     protected ManagementContext mgmt;
@@ -25,8 +29,13 @@ public class BrooklynMgmtContextTestSupport {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (mgmt != null) Entities.destroyAll(mgmt);
-        mgmt = null;
+        try {
+            if (mgmt != null) Entities.destroyAll(mgmt);
+        } catch (Throwable t) {
+            LOG.error("Caught exception in tearDown method", t);
+        } finally {
+            mgmt = null;
+        }
     }
     
 }
