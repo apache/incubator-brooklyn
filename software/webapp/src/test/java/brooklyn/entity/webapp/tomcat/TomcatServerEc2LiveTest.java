@@ -39,9 +39,6 @@ public class TomcatServerEc2LiveTest extends AbstractEc2LiveTest {
                 assertNotNull(server.getAttribute(TomcatServer.REQUEST_COUNT));
                 assertNotNull(server.getAttribute(TomcatServer.ERROR_COUNT));
                 assertNotNull(server.getAttribute(TomcatServer.TOTAL_PROCESSING_TIME));
-                assertNotNull(server.getAttribute(TomcatServer.MAX_PROCESSING_TIME));
-                assertNotNull(server.getAttribute(TomcatServer.BYTES_RECEIVED));
-                assertNotNull(server.getAttribute(TomcatServer.BYTES_SENT));
             }});
     }
     
