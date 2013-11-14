@@ -90,22 +90,16 @@ public class ResourceUtils {
         return new ResourceUtils(null);
     }
 
-    /** @deprecated since 0.6.0 use {@link ResourceUtils#create(ClassLoader, Object, String)} */
-    @Deprecated
     public ResourceUtils(ClassLoader loader, Object contextObject, String contextMessage) {
         this.loader = loader;
         this.contextObject = contextObject;
         this.context = contextMessage;
     }
 
-    /** @deprecated since 0.6.0 use {@link ResourceUtils#create(Object, String)} */
-    @Deprecated
     public ResourceUtils(Object contextObject, String contextMessage) {
         this(contextObject==null ? null : getClassLoaderForObject(contextObject), contextObject, contextMessage);
     }
 
-    /** @deprecated since 0.6.0 use {@link ResourceUtils#create(Object)} */
-    @Deprecated
     public ResourceUtils(Object contextObject) {
         this(contextObject, "for " + Strings.toString(contextObject));
     }
