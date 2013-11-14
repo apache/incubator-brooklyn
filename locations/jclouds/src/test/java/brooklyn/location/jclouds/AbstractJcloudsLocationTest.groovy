@@ -105,7 +105,7 @@ public abstract class AbstractJcloudsLocationTest {
     @Test(groups = [ "Live" ], dataProvider="fromImageNamePattern")
     public void testProvisionVmUsingImageNamePattern(String regionName, String imageNamePattern, String imageOwner) {
         loc = ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
-        SshMachineLocation machine = obtainMachine([imageNamePattern:imageNamePattern, imageOwner:imageOwner])
+        SshMachineLocation machine = obtainMachine([imageNameRegex:imageNamePattern, imageOwner:imageOwner])
         
         LOG.info("Provisioned AWS vm $machine; checking if ssh'able")
         assertTrue machine.isSshable()
@@ -114,7 +114,7 @@ public abstract class AbstractJcloudsLocationTest {
     @Test(groups = "Live", dataProvider="fromImageDescriptionPattern")
     public void testProvisionVmUsingImageDescriptionPattern(String regionName, String imageDescriptionPattern, String imageOwner) {
         loc = ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
-        SshMachineLocation machine = obtainMachine([imageDescriptionPattern:imageDescriptionPattern, imageOwner:imageOwner])
+        SshMachineLocation machine = obtainMachine([imageDescriptionRegex:imageDescriptionPattern, imageOwner:imageOwner])
         
         LOG.info("Provisioned AWS vm $machine; checking if ssh'able")
         assertTrue machine.isSshable()
