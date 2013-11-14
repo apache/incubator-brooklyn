@@ -11,6 +11,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.java.JavaOptsTest.TestingJavaOptsVanillaJavaAppImpl;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
@@ -70,7 +72,9 @@ public class VanillaJavaAppRebindTest {
     
     @Test(groups="Integration")
     public void testRebindToJavaApp() throws Exception {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.of("main", MAIN_CLASS.getCanonicalName(), "classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH)), app);
+        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class, TestingJavaOptsVanillaJavaAppImpl.class)
+            .configure("main", MAIN_CLASS.getCanonicalName()).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH)));
+
         Entities.manage(javaProcess);
         app.start(ImmutableList.of(loc));
 
@@ -82,10 +86,11 @@ public class VanillaJavaAppRebindTest {
 
     @Test(groups="Integration")
     public void testRebindToKilledJavaApp() throws Exception {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.of("main", MAIN_CLASS.getCanonicalName(), "classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH)), app);
+        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class, TestingJavaOptsVanillaJavaAppImpl.class)
+            .configure("main", MAIN_CLASS.getCanonicalName()).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH)));
         Entities.manage(javaProcess);
         app.start(ImmutableList.of(loc));
-        javaProcess.getDriver().kill();
+        javaProcess.kill();
         
         long starttime = System.currentTimeMillis();
         rebind();

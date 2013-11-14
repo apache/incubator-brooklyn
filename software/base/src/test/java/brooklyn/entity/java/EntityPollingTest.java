@@ -56,7 +56,7 @@ public class EntityPollingTest {
     private static final String attributeName = "myattrib";
     private static final String opName = "myop";
 
-    public static class SubVanillaJavaApp extends VanillaJavaApp {
+    public static class SubVanillaJavaApp extends VanillaJavaAppImpl {
         private JmxFeed feed;
         
         @Override protected void connectSensors() {

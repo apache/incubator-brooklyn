@@ -22,6 +22,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation;
@@ -90,11 +91,8 @@ public class JavaOptsTest {
     
     @Test
     public void testSimpleLaunchesJavaProcess() {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("main", "my.Main")
-                .put("useJmx", false)
-                .build(), 
-                app);
+        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", "my.Main").configure("useJmx", false));
         app.startManagement();
         app.start(ImmutableList.of(loc));
         
@@ -107,12 +105,8 @@ public class JavaOptsTest {
     
     @Test
     public void testPassesJavaArgs() {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("main", "my.Main")
-                .put("args", ImmutableList.of("a1", "a2"))
-                .put("useJmx", false)
-                .build(), 
-                app);
+        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", "my.Main").configure("useJmx", false).configure("args", ImmutableList.of("a1", "a2")));
         app.startManagement();
         app.start(ImmutableList.of(loc));
         
@@ -125,12 +119,8 @@ public class JavaOptsTest {
     
     @Test
     public void testPassesJavaOpts() {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("main", "my.Main")
-                .put("javaOpts", ImmutableList.of("-abc"))
-                .put("useJmx", false)
-                .build(), 
-                app);
+        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", "my.Main").configure("useJmx", false).configure("javaOpts", ImmutableList.of("-abc")));
         app.startManagement();
         app.start(ImmutableList.of(loc));
         
@@ -145,12 +135,9 @@ public class JavaOptsTest {
 
     @Test
     public void testPassesJavaSysProps() {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("main", "my.Main")
-                .put("javaSysProps", ImmutableMap.of("mykey", "myval"))
-                .put("useJmx", false)
-                .build(), 
-                app);
+        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", "my.Main").configure("useJmx", false).configure("javaSysProps", ImmutableMap.of("mykey", "myval")));
+
         app.startManagement();
         app.start(ImmutableList.of(loc));
         
@@ -165,12 +152,8 @@ public class JavaOptsTest {
     
     @Test
     public void testPassesJavaOptsOverridingDefaults() {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("main", "my.Main")
-                .put("javaOpts", ImmutableList.of("-Xmx567m", "-XX:MaxPermSize=567m"))
-                .put("useJmx", false)
-                .build(), 
-                app);
+        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", "my.Main").configure("useJmx", false).configure("javaOpts", ImmutableList.of("-Xmx567m", "-XX:MaxPermSize=567m")));
         app.startManagement();
         app.start(ImmutableList.of(loc));
         
@@ -182,25 +165,24 @@ public class JavaOptsTest {
         assertHasExpectedCmds(expectedCmds, expectedEnvs);
     }
     
+    public static class TestingJavaOptsVanillaJavaAppImpl extends VanillaJavaAppImpl {
+        @Override public VanillaJavaAppSshDriver newDriver(MachineLocation loc) {
+            return new VanillaJavaAppSshDriver(this, (SshMachineLocation)loc) {
+                @Override protected List<String> getCustomJavaConfigOptions() {
+                    return MutableList.<String>builder()
+                        .addAll(super.getCustomJavaConfigOptions())
+                        .add("-server")
+                        .build();
+                };
+            };
+        }
+    }
+    
     @Test
     public void testPassesJavaOptsObeyingMutualExclusions() {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("main", "my.Main")
-                .put("javaOpts", ImmutableList.of("-client"))
-                .put("useJmx", false)
-                .build(), 
-                app) {
-            @Override public VanillaJavaAppSshDriver newDriver(MachineLocation loc) {
-                return new VanillaJavaAppSshDriver(this, (SshMachineLocation)loc) {
-                    @Override protected List<String> getCustomJavaConfigOptions() {
-                        return MutableList.<String>builder()
-                                .addAll(super.getCustomJavaConfigOptions())
-                                .add("-server")
-                                .build();
-                    };
-                };
-            }
-        };
+        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class, TestingJavaOptsVanillaJavaAppImpl.class)
+            .configure("main", "my.Main").configure("useJmx", false).configure("javaOpts", ImmutableList.of("-client")));
+        
         app.startManagement();
         app.start(ImmutableList.of(loc));
         
@@ -240,17 +222,19 @@ public class JavaOptsTest {
         fail("Cmd not present: expected="+expectedCmds+"/"+expectedEnvs+"; actual="+execScriptCmds);
     }
 
+    public static class TestingNoSensorsVanillaJavaAppImpl extends VanillaJavaAppImpl {
+        protected void connectSensors() {
+            /* nothing here */
+            setAttribute(SERVICE_UP, true);
+        }
+    }
+    
     private void assertJmxWithPropsHasPhrases(Map props,
             List<String> expectedPhrases,
             List<String> forbiddenPhrases) {
         if (!props.containsKey("main")) props.put("main", "my.Main");
         @SuppressWarnings({ "unused" })
-        VanillaJavaApp javaProcess = new VanillaJavaApp(props, app) {
-            protected void connectSensors() {
-                /* nothing here */
-                setAttribute(SERVICE_UP, true);
-            }
-        };
+        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class, TestingNoSensorsVanillaJavaAppImpl.class));
         app.startManagement();
         app.start(ImmutableList.of(loc));
         
