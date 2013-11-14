@@ -9,6 +9,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.management.ManagementContext
@@ -59,7 +60,8 @@ public abstract class AbstractJcloudsLocationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        ctx = Entities.newManagementContext(ImmutableMap.of("provider", provider));
+        BrooklynProperties props = BrooklynProperties.Factory.newDefault().addFromMap(ImmutableMap.of("provider", provider))
+        ctx = Entities.newManagementContext(props);
     }
 
     @AfterMethod(alwaysRun=true)
