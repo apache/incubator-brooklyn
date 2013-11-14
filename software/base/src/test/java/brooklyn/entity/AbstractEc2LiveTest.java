@@ -7,6 +7,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.location.Location;
+import brooklyn.location.jclouds.JcloudsLocationConfig;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 
@@ -88,7 +89,7 @@ public abstract class AbstractEc2LiveTest extends BrooklynMgmtContextTestSupport
     @Test(groups = {"Live"})
     public void test_Red_Hat_Enterprise_Linux_6() throws Exception {
         // Image: {id=us-east-1/ami-a35a33ca, providerId=ami-a35a33ca, name=RHEL-6.3_GA-x86_64-5-Hourly2, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=rhel, arch=paravirtual, version=6.0, description=309956199498/RHEL-6.3_GA-x86_64-5-Hourly2, is64Bit=true}, description=309956199498/RHEL-6.3_GA-x86_64-5-Hourly2, version=Hourly2, status=AVAILABLE[available], loginUser=root, userMetadata={owner=309956199498, rootDeviceType=ebs, virtualizationType=paravirtual, hypervisor=xen}}
-        runTest(ImmutableMap.of("imageId", "us-east-1/ami-a35a33ca", "hardwareId", SMALL_HARDWARE_ID));
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-a35a33ca", "hardwareId", SMALL_HARDWARE_ID, JcloudsLocationConfig.OPEN_IPTABLES.getName(), "true"));
     }
     
     protected void runTest(Map<String,?> flags) throws Exception {
