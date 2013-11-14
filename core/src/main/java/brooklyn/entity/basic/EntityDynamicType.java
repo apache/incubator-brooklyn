@@ -277,6 +277,10 @@ public class EntityDynamicType {
                         if (optionalEntity==null) continue;
                     }
                     Effector<?> eff = (Effector<?>) f.get(optionalEntity);
+                    if (eff==null) {
+                        LOG.warn("Effector "+f+" undefined for "+clazz+" ("+optionalEntity+")");
+                        continue;
+                    }
                     Effector<?> overwritten = result.put(eff.getName(), eff);
                     Field overwrittenFieldSource = fieldSources.put(eff.getName(), f);
                     if (overwritten!=null && !Effectors.sameInstance(overwritten, eff)) {
