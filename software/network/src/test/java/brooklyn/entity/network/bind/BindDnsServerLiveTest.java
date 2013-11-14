@@ -56,8 +56,8 @@ public class BindDnsServerLiveTest {
 
     @DataProvider(name = "virtualMachineData")
     public Object[][] provideVirtualMachineData() {
-        return new Object[][] { // ImageId, Provider, Region
-            new Object[] { "eu-west-1/ami-029f9476", "aws-ec2:eu-west-1" },
+        return new Object[][] { // CentOS 6.3
+            new Object[] { "us-east-1/ami-7d7bfc14", "aws-ec2:us-east-1" },
         };
     }
 
@@ -66,7 +66,6 @@ public class BindDnsServerLiveTest {
         LOG.info("Testing BIND on {} using {}", provider, imageId);
 
         Map<String, String> properties = MutableMap.of("image-id", imageId);
-        if (provider.contains("ec2")) properties.put("user", "ec2-user");
         testLocation = app.getManagementContext().getLocationRegistry().resolve(provider, properties);
 
         BindDnsServer dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class));
