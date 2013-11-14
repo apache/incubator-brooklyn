@@ -176,7 +176,8 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         }
     }
 
-    protected boolean isClustered() {
+    @Override
+    public boolean isClustered() {
         return entity.getParent() instanceof CassandraCluster;
     }
 

@@ -114,11 +114,14 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             // http://www.datastax.com/documentation/cassandra/2.0/mobile/cassandra/architecture/architectureSnitchEC2MultiRegion_c.html
             // describes that the listen_address is set to the private IP, and the broadcast_address is set to the public IP.
             return getPublicIp();
+        } else if (!getDriver().isClustered()) {
+            return getListenAddress();
         } else {
             // In other situations, prefer the hostname so other regions can see it
             return getAttribute(CassandraNode.HOSTNAME);
         }
     }
+    
     public String getPrivateIp() {
         if (requiresAlwaysPublicIp()) {
             return getAttribute(CassandraNode.ADDRESS);
@@ -201,6 +204,10 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @Override
     public Class<CassandraNodeDriver> getDriverInterface() {
         return CassandraNodeDriver.class;
+    }
+    
+    public CassandraNodeDriver getDriver() {
+        return (CassandraNodeDriver) super.getDriver();
     }
 
     @Override
