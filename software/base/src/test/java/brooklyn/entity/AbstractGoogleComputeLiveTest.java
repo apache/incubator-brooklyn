@@ -63,7 +63,7 @@ public abstract class AbstractGoogleComputeLiveTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        if (app != null) Entities.destroyAllCatching(app.getManagementContext());
     }
 
     @Test(groups = {"Live"})

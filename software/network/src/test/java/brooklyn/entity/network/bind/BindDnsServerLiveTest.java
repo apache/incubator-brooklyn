@@ -51,14 +51,12 @@ public class BindDnsServerLiveTest {
 
     @AfterMethod(alwaysRun = true)
     public void shutdown() throws Exception {
-        Entities.destroyAll(app.getManagementContext());
-        // Thread.sleep(TimeUnit.MINUTES.toMillis(30));
+        if (app != null) Entities.destroyAllCatching(app.getManagementContext());
     }
 
     @DataProvider(name = "virtualMachineData")
     public Object[][] provideVirtualMachineData() {
         return new Object[][] { // ImageId, Provider, Region
-            new Object[] { "", "named:cloudera" },
             new Object[] { "eu-west-1/ami-029f9476", "aws-ec2:eu-west-1" },
         };
     }

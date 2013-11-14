@@ -83,7 +83,7 @@ public class WindowsPerformanceCounterFeedLiveTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (mgmt != null) Entities.destroyAll(mgmt);
+        if (mgmt != null) Entities.destroyAllCatching(mgmt);
         mgmt = null;
     }
 

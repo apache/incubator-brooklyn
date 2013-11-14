@@ -98,7 +98,7 @@ public class JcloudsLoginLiveTest {
             if (machine != null) jcloudsLocation.release(machine);
             machine = null;
         } finally {
-            if (managementContext != null) Entities.destroyAll(managementContext);
+            if (managementContext != null) Entities.destroyAllCatching(managementContext);
         }
     }
 
