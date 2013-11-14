@@ -6,6 +6,7 @@ package brooklyn.entity.nosql.cassandra;
 import java.util.Set;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
@@ -60,6 +61,10 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans
     ConfigKey<String> CUSTOM_SNITCH_JAR_URL = ConfigKeys.newStringConfigKey("cassandra.config.customSnitchUrl", 
             "URL for a jar file to be uploaded (e.g. \"classpath://brooklyn/entity/nosql/cassandra/multiCloudSnitch.jar\"); defaults to null which means nothing to upload", 
             null);
+
+    @SetFromFlag("creationScriptUrl")
+    public static final ConfigKey<String> CREATION_SCRIPT_URL = ConfigKeys.newStringConfigKey("cassandra.creation.script.url", 
+        "URL where Cassandra creation script can be found", "");
 
     @SetFromFlag("cassandraConfigTemplateUrl")
     BasicAttributeSensorAndConfigKey<String> CASSANDRA_CONFIG_TEMPLATE_URL = new BasicAttributeSensorAndConfigKey<String>(
@@ -119,7 +124,9 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans
             "List of cluster nodes to seed this node");
 
     ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.START_TIMEOUT, 3*60);
-    
+
+    public static Effector<String> EXECUTE_SCRIPT = CassandraCluster.EXECUTE_SCRIPT;
+
     /* Accessors used from template */
     
     Integer getGossipPort();
@@ -134,4 +141,9 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans
     /* For configuration */
     
     void setToken(String token);
+    
+    /* Using Cassandra */
+    
+    String executeScript(String commands);
+    
 }

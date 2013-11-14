@@ -11,6 +11,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
@@ -95,6 +96,11 @@ public interface CassandraCluster extends DynamicCluster {
     AttributeSensor<Double> PROCESS_CPU_TIME_FRACTION_IN_WINDOW_PER_NODE = Sensors.newDoubleSensor("cassandra.cluster.metrics.processCpuTime.fraction.windowed", "Fraction of CPU time used (percentage, over time window), averaged over all nodes");
 
     MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraCluster.class, "update");
+    
+    brooklyn.entity.Effector<String> EXECUTE_SCRIPT = Effectors.effector(String.class, "executeScript")
+        .description("executes the given script contents using cassandra-cli")
+        .parameter(String.class, "commands")
+        .buildAbstract();
 
     /**
      * Sets the number of nodes used to seed the cluster.
@@ -132,5 +138,7 @@ public interface CassandraCluster extends DynamicCluster {
     Set<Entity> gatherPotentialSeeds();
 
     Set<Entity> gatherPotentialRunningSeeds();
+
+    String executeScript(String commands);
 
 }
