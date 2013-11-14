@@ -140,7 +140,6 @@ public class CumulusRDFApplication extends AbstractApplication {
 
         // Tomcat web-app server
         webapp = addChild(EntitySpec.create(TomcatServer.class)
-                .configure(SoftwareProcess.SUGGESTED_VERSION, "7.0.42")
                 .configure(UsesJmx.JMX_AGENT_MODE, UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
                 .configure(UsesJmx.JMX_PORT, PortRanges.fromString("11099+"))
                 .configure(UsesJmx.RMI_REGISTRY_PORT, PortRanges.fromString("9001+"))
