@@ -2,6 +2,7 @@ package brooklyn.entity.database.postgresql;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicConfigKey;
@@ -33,8 +34,8 @@ public interface PostgreSqlNode extends DatabaseNode {
     public static final PortAttributeSensorAndConfigKey POSTGRESQL_PORT =
             new PortAttributeSensorAndConfigKey("postgresql.port", "PostgreSQL port", PortRanges.fromString("5432+"));
     
-    @SetFromFlag("disconnetOnStop")
+    @SetFromFlag("disconnectOnStop")
     public static final ConfigKey<Boolean> DISCONNECT_ON_STOP =
-    new BasicConfigKey<Boolean>(Boolean.class, "postgresql.disconnecto.on.stop", "If true, PostgreSQL will immediately disconnet (pg_ctl -m immediate stop) all current connections when the node is stopped", true);
+            ConfigKeys.newBooleanConfigKey("postgresql.disconnect.on.stop", "If true, PostgreSQL will immediately disconnet (pg_ctl -m immediate stop) all current connections when the node is stopped", true);
 
 }
