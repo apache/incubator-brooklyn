@@ -31,6 +31,7 @@ define(
                             lm.circle.setRadius(local.radius(local.computeLocationArea(it.leafEntityCount)));
                             lm.circle.setCenter(latlng);
                             lm.marker.setPosition(latlng);
+                            lm.marker.setTitle(it.name);
 //                            lm.infoWindow.setPairs(l);
 
                             newLocs[id] = lm;
@@ -40,7 +41,8 @@ define(
 
                             var marker = new google.maps.Marker({
                                 map: map,
-                                position: new google.maps.LatLng(it.latitude, it.longitude)
+                                position: new google.maps.LatLng(it.latitude, it.longitude),
+                                title: it.name
                             });
 
                             // TODO from old grails app
