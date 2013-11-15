@@ -24,6 +24,10 @@ import brooklyn.util.task.BasicExecutionContext;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
+/**
+ * @deprecated since 0.6.0; never used in production setting, and thus of dubious value; best avoided as unlikely to be supported in future versions
+ */
+@Deprecated
 public class BrooklynMachinePool extends MachinePool {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynMachinePool.class);

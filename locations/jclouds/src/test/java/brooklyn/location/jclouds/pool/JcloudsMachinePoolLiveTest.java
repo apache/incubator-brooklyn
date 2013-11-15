@@ -10,13 +10,16 @@ import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.location.jclouds.pool.JcloudsMachinePoolLiveTest;
-import brooklyn.location.jclouds.pool.MachinePool;
-import brooklyn.location.jclouds.pool.MachinePoolPredicates;
-import brooklyn.location.jclouds.pool.MachineSet;
-import brooklyn.location.jclouds.pool.ReusableMachineTemplate;
+import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.basic.Entities;
+import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.management.internal.LocalManagementContext;
+
+import com.google.common.collect.ImmutableSet;
 
 public class JcloudsMachinePoolLiveTest {
 
@@ -56,12 +59,42 @@ public class JcloudsMachinePoolLiveTest {
         return result;
     }
 
-    @Test(groups="Live")
-    public void buildClaimAndDestroy() {
-        ComputeServiceContext context = ContextBuilder.newBuilder("aws-ec2")
+    private LocalManagementContext managementContext;
+    private JcloudsLocation jcloudsLocation;
+    private ComputeServiceContext context;
+    
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        // Don't let any defaults from brooklyn.properties (except credentials) interfere with test
+        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        for (String key : ImmutableSet.copyOf(brooklynProperties.asMapWithStringKeys().keySet())) {
+            if (key.startsWith("brooklyn.jclouds") && !(key.endsWith("identity") || key.endsWith("credential"))) {
+                brooklynProperties.remove(key);
+            }
+            
+            // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
+            if (key.startsWith("brooklyn.ssh")) {
+                brooklynProperties.remove(key);
+            }
+        }
+        
+        managementContext = new LocalManagementContext(brooklynProperties);
+        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve("aws-ec2:eu-west-1");
+        
+        context = ContextBuilder.newBuilder("aws-ec2")
                 .modules(Arrays.asList(new SshjSshClientModule(), new SLF4JLoggingModule()))
-                .credentials(getRequiredSystemProperty("identity"), getRequiredSystemProperty("credential"))
+                .credentials(jcloudsLocation.getIdentity(), jcloudsLocation.getCredential())
                 .build(ComputeServiceContext.class);
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (managementContext != null) Entities.destroyAll(managementContext);
+        if (context != null) context.close();
+    }
+    
+    @Test(groups={"Live","WIP"})
+    public void buildClaimAndDestroy() {
         ComputeService svc = context.getComputeService();
         SamplePool p = new SamplePool(svc);
         log.info("buildClaimAndDestroy: created pool");
