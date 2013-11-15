@@ -1,5 +1,7 @@
 package brooklyn.location.jclouds;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -85,10 +87,10 @@ public class JcloudsLocationRebindTest {
         JcloudsSshMachineLocation machine = obtainMachine(ImmutableMap.of("imageId", EUWEST_IMAGE_ID, "imageOwner", IMAGE_OWNER));
         assertTrue(machine.isSshable());
 
-        String id = machine.getJcloudsId();
-        InetAddress address = machine.getAddress();
-        String hostname = address.getHostName();
-        String user = machine.getUser();
+        String id = checkNotNull(machine.getJcloudsId(), "id");
+        InetAddress address = checkNotNull(machine.getAddress(), "address");
+        String hostname = checkNotNull(address.getHostName(), "hostname");
+        String user = checkNotNull(machine.getUser(), "user");
         
         // Create a new jclouds location, and re-bind the existing VM to that
         JcloudsLocation loc2 = (JcloudsLocation) managementContext.getLocationRegistry().resolve(PROVIDER+":"+EUWEST_REGION_NAME);
