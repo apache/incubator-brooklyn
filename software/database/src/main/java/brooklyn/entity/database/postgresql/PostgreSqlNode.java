@@ -32,5 +32,9 @@ public interface PostgreSqlNode extends DatabaseNode {
     @SetFromFlag("port")
     public static final PortAttributeSensorAndConfigKey POSTGRESQL_PORT =
             new PortAttributeSensorAndConfigKey("postgresql.port", "PostgreSQL port", PortRanges.fromString("5432+"));
+    
+    @SetFromFlag("disconnetOnStop")
+    public static final ConfigKey<Boolean> DISCONNECT_ON_STOP =
+    new BasicConfigKey<Boolean>(Boolean.class, "postgresql.disconnecto.on.stop", "If true, PostgreSQL will immediately disconnet (pg_ctl -m immediate stop) all current connections when the node is stopped", true);
 
 }
