@@ -4,6 +4,8 @@ import static brooklyn.test.HttpTestUtils.connectToUrl;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -25,7 +27,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class TomcatAutoScalerPolicyTest {
-    
+
+    @SuppressWarnings("unused")
+    private static final Logger LOG = LoggerFactory.getLogger(TomcatAutoScalerPolicyTest.class);
+
     // TODO Test is time-sensitive: we send two web-requests in rapid succession, and expect the average workrate to
     // be 2 msgs/sec; we then expect resizing to kick-in.
     // P speculate that... if for some reason things are running slow (e.g. GC during that one second), then brooklyn 
@@ -33,7 +38,7 @@ public class TomcatAutoScalerPolicyTest {
 
     private LocalhostMachineProvisioningLocation loc;
     private TestApplication app;
-
+    
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation(MutableMap.of("name", "london"));
@@ -78,23 +83,29 @@ public class TomcatAutoScalerPolicyTest {
         
         app.start(ImmutableList.of(loc));
         
-        assertEquals((Integer)1, cluster.getCurrentSize());
+        assertEquals(cluster.getCurrentSize(), (Integer)1);
         
+        // Scaling based on *total requests* processed, rather than the requests per second.
+        // So just hit it with 2 requests.
+        // Alternatively could hit each tomcat server's URL twice per second; but that's less deterministic.
         TomcatServer tc = (TomcatServer) Iterables.getOnlyElement(cluster.getMembers());
         for (int i = 0; i < 2; i++) {
             connectToUrl(tc.getAttribute(TomcatServerImpl.ROOT_URL));
         }
         
-        Asserts.succeedsEventually(MutableMap.of("timeout", 3000), new Runnable() {
-            public void run() {
-                assertEquals(2.0d/cluster.getCurrentSize(), cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT));
-            }});
-
+        // We'll scale to two members as soon as the policy detects it.
+        // But the second member won't count in the requests-per-node until it has started up.
+        // Expect to see (if we polled at convenient times):
+        //  - zero requests per node (because haven't yet retrieved over JMX the metric)
+        //  - two requests per node, with one member
+        //  - two requests per node, with two members (one of whom is still starting up, so doesn't count)
+        //  - one request per node (i.e. two divided across the two active members)
         Asserts.succeedsEventually(MutableMap.of("timeout", 5*60*1000), new Runnable() {
-            public void run() {
-                assertTrue(policy.isRunning());
-                assertEquals((Integer)2, cluster.getCurrentSize());
-                assertEquals(1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT));
+            @Override public void run() {
+                String err = "policy="+policy.isRunning()+"; size="+cluster.getCurrentSize()+"; reqCountPerNode="+cluster.getAttribute(DynamicWebAppCluster.REQUEST_COUNT_PER_NODE);
+                assertTrue(policy.isRunning(), "err="+err);
+                assertEquals(cluster.getCurrentSize(), (Integer)2, "err="+err);
+                assertEquals(cluster.getAttribute(DynamicWebAppCluster.REQUEST_COUNT_PER_NODE), 1.0d, "err="+err);
             }});
     }
 }
