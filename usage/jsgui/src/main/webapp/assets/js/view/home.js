@@ -61,6 +61,9 @@ define([
             			        0, 0, 1
             			        )
             			var locatedLocations = new Location.UsageLocated()
+                        // googlemaps.js isn't re-loaded during tab-to-tab navigation so we need to reset it each time
+                        // the maps is re-drawn to reset the cached set of location markers
+                        GoogleMaps.resetCircles()
             			that.updateCircles(that, locatedLocations, GoogleMaps, map)
             			that.callPeriodically("circles", function() {
             			    that.updateCircles(that, locatedLocations, GoogleMaps, map)
