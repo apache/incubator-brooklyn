@@ -15,6 +15,11 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(JBoss6ServerImpl.class)
 public interface JBoss6Server extends JavaWebAppSoftwareProcess, JavaWebAppService, UsesJmx {
 
+    // TODO Instead of using portIncrement, would prefer to use http_port as "8080+" etc.
+    // On localhost, if an existing jboss6 is running and consuming the required port(s), 
+    // then we don't spot that and don't claim a different port.
+    // Things then fail silently!
+    
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
             ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "6.0.0.Final");

@@ -11,8 +11,11 @@ import java.util.Map;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.entity.java.UsesJmx;
+import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 
@@ -115,8 +118,8 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         String clusterArg = isEmpty(getClusterName()) ? "":"-g "+getClusterName();
         // run.sh must be backgrounded otherwise the script will never return.
 
-        Map<String,Object> flags = new HashMap<String, Object>();
-        flags.put("usePidFile",false);
+        // Don't automatically create pid; instead set JBOSS_PIDFILE to create the pid file we need
+        Map<String,?> flags = MutableMap.of("usePidFile", false);
 
         // We wait for evidence of tomcat running because, using 
         // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
@@ -125,6 +128,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         newScript(flags, LAUNCHING).
             body.append(
                 format("export JBOSS_CLASSPATH=%s/lib/jboss-logmanager.jar",getExpandedInstallDir()),
+                format("export JBOSS_PIDFILE=%s/%s", getRunDir(), PID_FILENAME),
                 format("%s/bin/run.sh -Djboss.service.binding.set=%s -Djboss.server.base.dir=$RUN_DIR/server ",getExpandedInstallDir(),PORT_GROUP_NAME) +
                         format("-Djboss.server.base.url=file://$RUN_DIR/server -Djboss.messaging.ServerPeerID=%s ",entity.getId())+
                         format("-Djboss.boot.server.log.dir=%s/server/%s/log ",getRunDir(),SERVER_TYPE) +
@@ -141,39 +145,51 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
 
     @Override
     public boolean isRunning() {
-        String host = entity.getAttribute(Attributes.HOSTNAME);
-        Integer port = entity.getAttribute(Attributes.JMX_PORT);
-
-        List<String> checkRunningScript = new LinkedList<String>();
-        checkRunningScript.add(
-                format("%s/bin/twiddle.sh --host %s --port %s get \"jboss.system:type=Server\" Started | grep true || exit 1",
-                        getExpandedInstallDir(), host, port));
-
-        //have to override the CLI/JMX options
-
-        Map<String, Object> flags = new LinkedHashMap<String, Object>();
-        flags.put("env", new LinkedHashMap<String, String>());
-
-        int result = execute(flags, checkRunningScript, "checkRunning " + entity + " on " + getMachine());
-        if (result == 0) return true;
-        if (result == 1) return false;
-        throw new IllegalStateException(format("%s running check gave result code %s",getEntity(),result));
+        JmxAgentModes jmxMode = entity.getConfig(UsesJmx.JMX_AGENT_MODE);
+        if (jmxMode == JmxAgentModes.JMX_RMI_CUSTOM_AGENT) {
+            String host = entity.getAttribute(Attributes.HOSTNAME);
+            Integer port = entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT);
+    
+            List<String> checkRunningScript = new LinkedList<String>();
+            checkRunningScript.add(
+                    format("%s/bin/twiddle.sh --host %s --port %s get \"jboss.system:type=Server\" Started | grep true || exit 1",
+                            getExpandedInstallDir(), host, port));
+    
+            //have to override the CLI/JMX options
+    
+            Map<String, Object> flags = new LinkedHashMap<String, Object>();
+            flags.put("env", new LinkedHashMap<String, String>());
+    
+            int result = execute(flags, checkRunningScript, "checkRunning " + entity + " on " + getMachine());
+            if (result == 0) return true;
+            if (result == 1) return false;
+            throw new IllegalStateException(format("%s running check gave result code %s",getEntity(),result));
+        } else {
+            Map<String,?> flags = MutableMap.of("usePidFile", true);
+            return newScript(flags, CHECK_RUNNING).execute() == 0;
+        }
     }
 
     @Override
     public void stop() {
-        String host = entity.getAttribute(Attributes.HOSTNAME);
-        Integer port = entity.getAttribute(Attributes.JMX_PORT);
-        List<String> shutdownScript = new LinkedList<String>();
-        shutdownScript.add(format("%s/bin/shutdown.sh --host %s --port %s -S", getExpandedInstallDir(), host, port));
-
-        //again, messy copy of parent; but new driver scheme could allow script-helper to customise parameters
-        log.debug("invoking shutdown script for {}: {}", entity, shutdownScript);
-        Map<String, Object> flags = new LinkedHashMap<String, Object>();
-        flags.put("env", new LinkedHashMap<String, String>());
-        int result = execute(flags, shutdownScript, "shutdown " + entity + " on " + getMachine());
-        if (result != 0) log.warn("non-zero result code terminating {}: {}", entity, result);
-        log.debug("done invoking shutdown script for {}", entity);
+        JmxAgentModes jmxMode = entity.getConfig(UsesJmx.JMX_AGENT_MODE);
+        if (jmxMode == JmxAgentModes.JMX_RMI_CUSTOM_AGENT) {
+            String host = entity.getAttribute(Attributes.HOSTNAME);
+            Integer port = entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT);
+            List<String> shutdownScript = new LinkedList<String>();
+            shutdownScript.add(format("%s/bin/shutdown.sh --host %s --port %s -S", getExpandedInstallDir(), host, port));
+    
+            //again, messy copy of parent; but new driver scheme could allow script-helper to customise parameters
+            log.debug("invoking shutdown script for {}: {}", entity, shutdownScript);
+            Map<String, Object> flags = new LinkedHashMap<String, Object>();
+            flags.put("env", new LinkedHashMap<String, String>());
+            int result = execute(flags, shutdownScript, "shutdown " + entity + " on " + getMachine());
+            if (result != 0) log.warn("non-zero result code terminating {}: {}", entity, result);
+            log.debug("done invoking shutdown script for {}", entity);
+        } else {
+            Map<String,?> flags = MutableMap.of("usePidFile", true);
+            newScript(flags, STOPPING).execute();
+        }
     }
 
     @Override
