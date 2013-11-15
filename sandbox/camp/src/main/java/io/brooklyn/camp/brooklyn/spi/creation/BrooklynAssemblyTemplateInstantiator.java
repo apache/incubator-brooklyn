@@ -48,6 +48,7 @@ import com.google.common.collect.Maps;
 
 public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateInstantiator {
 
+    public static String TARGET_LOCATION = "localhost";
     private static final Logger log = LoggerFactory.getLogger(BrooklynAssemblyTemplateInstantiator.class);
     
     @Override
@@ -167,7 +168,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
 
         // TODO support other places besides localhost
         List<Location> locations = 
-                getBrooklynManagementContext(platform).getLocationRegistry().resolve(Arrays.asList("localhost"));
+                getBrooklynManagementContext(platform).getLocationRegistry().resolve(Arrays.asList(TARGET_LOCATION));
         
         return Entities.invokeEffector((EntityLocal)app, app, Startable.START,
                 MutableMap.of("locations", locations));
