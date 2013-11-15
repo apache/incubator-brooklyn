@@ -58,7 +58,7 @@ public class YamlLauncher {
             log.info("Waiting on "+tasks.size()+" task(s)");
             for (Task<?> t: tasks) t.blockUntilEnded();
 
-            log.info("App started:");
+            log.info("Application started from YAML file "+filename+": "+app);
             Entities.dumpInfo(app);
         } catch (Exception e) {
             throw Exceptions.propagate(e);
