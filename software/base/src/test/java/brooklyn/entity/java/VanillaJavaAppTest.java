@@ -27,7 +27,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
@@ -38,6 +38,7 @@ import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.crypto.FluentKeySigner;
@@ -61,7 +62,7 @@ public class VanillaJavaAppTest {
     private static Class MAIN_CLASS = ExampleVanillaMain.class;
     private static Class MAIN_CPU_HUNGRY_CLASS = ExampleVanillaMainCpuHungry.class;
     
-    private AbstractApplication app;
+    private TestApplication app;
     private LocalhostMachineProvisioningLocation loc;
 
     @BeforeMethod(alwaysRun = true)
@@ -69,7 +70,7 @@ public class VanillaJavaAppTest {
         if (BROOKLYN_THIS_CLASSPATH==null) {
             BROOKLYN_THIS_CLASSPATH = ResourceUtils.create(MAIN_CLASS).getClassLoaderDir();
         }
-        app = new AbstractApplication() {};
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         loc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
     }
 
@@ -80,7 +81,7 @@ public class VanillaJavaAppTest {
 
     @Test
     public void testReadsConfigFromFlags() throws Exception {
-        final VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", "my.Main").configure("classpath", ImmutableList.of("c1", "c2"))
             .configure("args", ImmutableList.of("a1", "a2")));
 
@@ -91,7 +92,7 @@ public class VanillaJavaAppTest {
 
     @Test(groups={"WIP", "Integration"})
     public void testJavaSystemProperties() throws Exception {
-        final VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", "my.Main").configure("classpath", ImmutableList.of("c1", "c2"))
             .configure("args", ImmutableList.of("a1", "a2")));
         ((EntityLocal)javaProcess).setConfig(UsesJava.JAVA_SYSPROPS, ImmutableMap.of("fooKey", "fooValue", "barKey", "barValue"));
@@ -101,7 +102,7 @@ public class VanillaJavaAppTest {
     @Test(groups={"Integration"})
     public void testStartsAndStops() throws Exception {
         String main = MAIN_CLASS.getCanonicalName();
-        final VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
         Entities.startManagement(app);
@@ -115,7 +116,7 @@ public class VanillaJavaAppTest {
     @Test(groups={"Integration"})
     public void testHasJvmMXBeanSensorVals() throws Exception {
         String main = MAIN_CLASS.getCanonicalName();
-        final VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
         Entities.startManagement(app);
@@ -178,7 +179,7 @@ public class VanillaJavaAppTest {
     @Test(groups={"Integration"})
     public void testJvmMXBeanProcessCpuTimeGivesNonZeroPercentage() throws Exception {
         String main = MAIN_CPU_HUNGRY_CLASS.getCanonicalName();
-        final VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
         Entities.startManagement(app);
@@ -223,7 +224,7 @@ public class VanillaJavaAppTest {
     public void testStartsWithJmxPortSpecifiedInConfig() throws Exception {
         int port = 53405;
         String main = MAIN_CLASS.getCanonicalName();
-        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
         ((EntityLocal)javaProcess).setConfig(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));
@@ -238,7 +239,7 @@ public class VanillaJavaAppTest {
     public void testStartsWithSecureJmxPortSpecifiedInConfig() throws Exception {
         int port = 53406;
         String main = MAIN_CLASS.getCanonicalName();
-        final VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
         ((EntityLocal)javaProcess).setConfig(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));

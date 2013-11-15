@@ -101,7 +101,9 @@ public class ResourceUtils {
     }
 
     public ResourceUtils(Object contextObject) {
-        this(contextObject, "for " + Strings.toString(contextObject));
+        this(contextObject, 
+            /* NOV 2013: for a short while we said 'for' here but that is redundant in most logging calls */ Strings.toString(contextObject)
+        );
     }
     
     /** used to register custom mechanisms for getting classloaders given an object */
@@ -197,7 +199,7 @@ public class ResourceUtils {
             throw new IOException("'"+orig+"' not found on classpath or filesystem");
         } catch (Exception e) {
             if (context!=null)
-                throw new RuntimeException("Error getting resource for "+context+": "+e, e);
+                throw new RuntimeException("Error getting resource '"+url+"' for "+context+": "+e, e);
             else throw new RuntimeException(e);
         }
     }

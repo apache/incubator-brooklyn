@@ -21,19 +21,22 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MapDifference.ValueDifference;
 import com.google.common.collect.Maps;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -70,7 +73,7 @@ public class JavaOptsTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         execScriptCmds = new CopyOnWriteArrayList<ExecCmd>();
-        app = new TestApplicationImpl();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         loc = Mockito.mock(SshMachineLocation.class);
         Mockito.when(loc.getAddress()).thenReturn(InetAddress.getByName("localhost"));
         Mockito.when(loc.obtainPort(Mockito.<PortRange>anyObject())).thenReturn(1);
@@ -91,9 +94,8 @@ public class JavaOptsTest {
     
     @Test
     public void testSimpleLaunchesJavaProcess() {
-        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", "my.Main").configure("useJmx", false));
-        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
@@ -105,9 +107,8 @@ public class JavaOptsTest {
     
     @Test
     public void testPassesJavaArgs() {
-        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", "my.Main").configure("useJmx", false).configure("args", ImmutableList.of("a1", "a2")));
-        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
@@ -119,9 +120,8 @@ public class JavaOptsTest {
     
     @Test
     public void testPassesJavaOpts() {
-        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", "my.Main").configure("useJmx", false).configure("javaOpts", ImmutableList.of("-abc")));
-        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
@@ -135,10 +135,9 @@ public class JavaOptsTest {
 
     @Test
     public void testPassesJavaSysProps() {
-        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", "my.Main").configure("useJmx", false).configure("javaSysProps", ImmutableMap.of("mykey", "myval")));
 
-        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
@@ -152,14 +151,14 @@ public class JavaOptsTest {
     
     @Test
     public void testPassesJavaOptsOverridingDefaults() {
-        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class)
+        VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", "my.Main").configure("useJmx", false).configure("javaOpts", ImmutableList.of("-Xmx567m", "-XX:MaxPermSize=567m")));
-        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
-        String expectedJavaOpts = "-Xms128m -Xmx567m -XX:MaxPermSize=567m";
-        Map<String,String> expectedEnvs = ImmutableMap.<String,String>of("JAVA_OPTS", expectedJavaOpts);
+//        String expectedJavaOpts = "-Xms128m -Xmx567m -XX:MaxPermSize=567m";
+        Object expectedJavaOpts = MutableSet.of("-Xms128m", "-Xmx567m", "-XX:MaxPermSize=567m");
+        Map<String,Object> expectedEnvs = ImmutableMap.<String,Object>of("JAVA_OPTS", expectedJavaOpts);
         List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS -cp \"lib/*\" my.Main  >> %s/console 2>&1 </dev/null &", runDir));
         
         assertHasExpectedCmds(expectedCmds, expectedEnvs);
@@ -180,10 +179,8 @@ public class JavaOptsTest {
     
     @Test
     public void testPassesJavaOptsObeyingMutualExclusions() {
-        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class, TestingJavaOptsVanillaJavaAppImpl.class)
+        VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class, TestingJavaOptsVanillaJavaAppImpl.class)
             .configure("main", "my.Main").configure("useJmx", false).configure("javaOpts", ImmutableList.of("-client")));
-        
-        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
@@ -200,9 +197,48 @@ public class JavaOptsTest {
      * There could be other commands in between though.
      */
     private void assertHasExpectedCmds(List<String> expectedCmds, Map<String,?> expectedEnvs) {
+        if (execScriptCmds.isEmpty())
+            fail("No commands recorded");
+        
         for (ExecCmd cmd : execScriptCmds) {
             // TODO Check expectedCmds in-order
-            if (cmd.commands.containsAll(expectedCmds) && Maps.<Object,Object>difference(cmd.env, expectedEnvs).entriesDiffering().isEmpty()) {
+            
+            // check if expectedEnv is a set, then the string value contains all elements in the set
+            Map<Object, ValueDifference<Object>> difference = Maps.<Object,Object>difference(cmd.env, expectedEnvs).entriesDiffering();
+            boolean same = difference.isEmpty();
+            if (!same) {
+                Set<Object> differingKeys = new LinkedHashSet<Object>(difference.keySet());
+                Iterator<Object> ki = differingKeys.iterator();
+                while (ki.hasNext()) {
+                    Object key = ki.next();
+                    Object expectationHere = expectedEnvs.get(key);
+                    Object valueHere = cmd.env.get(key);
+                    if (valueHere==null) break;
+                    
+                    if (expectationHere instanceof Set) {
+                        Set mutableExpectationHere = new LinkedHashSet(((Set)expectationHere));
+                        Iterator si = ((Set)mutableExpectationHere).iterator();
+                        while (si.hasNext()) {
+                            Object oneExpectationHere = si.next();
+                            if (valueHere.toString().contains(Strings.toString(oneExpectationHere)))
+                                si.remove();
+                            else break;
+                        }
+                        if (mutableExpectationHere.isEmpty())
+                            differingKeys.remove(key);
+                        else
+                            // not the same
+                            break;
+                    } else {
+                        // not the same
+                        break;
+                    }
+                }
+                if (differingKeys.isEmpty())
+                    same = true;
+            }
+            
+            if (cmd.commands.containsAll(expectedCmds) && same) {
                 return;
             }
         }
@@ -218,7 +254,7 @@ public class JavaOptsTest {
                 log.info("\t\t"+c);
             }
         }
-        expectedCmds.get(0).equals( execScriptCmds.get(2).commands.get(4) );
+        
         fail("Cmd not present: expected="+expectedCmds+"/"+expectedEnvs+"; actual="+execScriptCmds);
     }
 
@@ -234,8 +270,8 @@ public class JavaOptsTest {
             List<String> forbiddenPhrases) {
         if (!props.containsKey("main")) props.put("main", "my.Main");
         @SuppressWarnings({ "unused" })
-        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class, TestingNoSensorsVanillaJavaAppImpl.class));
-        app.startManagement();
+        VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class, TestingNoSensorsVanillaJavaAppImpl.class)
+            .configure(props));
         app.start(ImmutableList.of(loc));
         
         List<String> phrases = new ArrayList<String>(expectedPhrases);

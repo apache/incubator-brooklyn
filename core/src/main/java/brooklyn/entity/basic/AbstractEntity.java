@@ -548,6 +548,11 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     /**
      * Adds the given entity as a child of this parent <em>and</em> sets this entity as the parent of the child;
      * returns argument passed in, for convenience.
+     * <p>
+     * The child is NOT managed, even if the parent is already managed at this point
+     * (e.g. the child is added *after* the parent's {@link AbstractEntity#init()} is invoked)
+     * and so will need an explicit <code>getEntityManager().manage(childReturnedFromThis)</code> call.
+     * <i>These semantics are currently under review.</i>
      */
     @Override
     public <T extends Entity> T addChild(T child) {

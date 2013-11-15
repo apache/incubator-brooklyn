@@ -8,10 +8,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJavaApp {
 
@@ -22,6 +25,13 @@ public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJa
     
     protected JmxFeed jmxFeed;
 
+    public VanillaJavaAppImpl() {}
+    
+    @VisibleForTesting
+    public VanillaJavaAppImpl(Map<?,?> properties, Entity parent) {
+        super(properties, parent);
+    }
+    
     public String getMainClass() { return getConfig(MAIN_CLASS); }
     public List<String> getClasspath() { return getConfig(CLASSPATH); }
     public Map getJvmDefines() { return getConfig(JVM_DEFINES); }
