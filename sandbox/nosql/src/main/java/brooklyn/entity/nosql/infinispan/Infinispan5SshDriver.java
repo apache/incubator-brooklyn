@@ -6,13 +6,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
 
@@ -54,8 +54,8 @@ public class Infinispan5SshDriver extends JavaSoftwareProcessSshDriver implement
         expandedInstallDir = getInstallDir(); // unpacks to current directory, rather than sub-directory
 
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
-                .add(CommonCommands.INSTALL_ZIP)
+                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .add(BashCommands.INSTALL_ZIP)
                 .add("unzip " + saveAs)
                 .build();
 
