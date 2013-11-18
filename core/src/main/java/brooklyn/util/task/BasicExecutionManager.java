@@ -276,18 +276,6 @@ public class BasicExecutionManager implements ExecutionManager {
         }
     }
 
-    public <T> Task<T> submit(Map<?,?> flags, Object c) {
-        if (c instanceof Task) {
-            return submit(flags, (Task)c);
-        } else if (c instanceof Callable) {
-            return submit(flags, (Callable)c);
-        } else if (c instanceof Runnable) {
-            return (Task<T>) submit(flags, (Runnable)c);
-        } else {
-            throw new IllegalArgumentException("Unhandled task type: c="+c+"; type="+(c!=null ? c.getClass() : "null"));
-        }
-    }
-
     public <T> Task<T> scheduleWith(Task<T> task) { return scheduleWith(Collections.emptyMap(), task); }
 	public <T> Task<T> scheduleWith(Map flags, Task<T> task) {
 		synchronized (task) {

@@ -161,7 +161,15 @@ public class BasicExecutionContext extends AbstractExecutionContext {
                 return null;
             }});
         
-        return executionManager.submit(properties, task);
+        if (task instanceof Task) {
+            return executionManager.submit(properties, (Task)task);
+        } else if (task instanceof Callable) {
+            return executionManager.submit(properties, (Callable)task);
+        } else if (task instanceof Runnable) {
+            return (Task<T>) executionManager.submit(properties, (Runnable)task);
+        } else {
+            throw new IllegalArgumentException("Unhandled task type: task="+task+"; type="+(task!=null ? task.getClass() : "null"));
+        }
     }
     
     private void registerPerThreadExecutionContext() { perThreadExecutionContext.set(this); }
