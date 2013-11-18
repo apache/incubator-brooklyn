@@ -13,7 +13,7 @@ toc: /toc.json
 > **Server (debug) mode detected.**
 
 > *Links to other versions on this page and others will likely not work when running in server/debug mode.
-Files must be copied to the brooklyncentral.github.io repo for these links to resolve correctly.*
+Files must be copied to the brooklyncentral.github.com repo for these links to resolve correctly.*
 
 > *Debug page generated {{ site.time }}*
 {% endif %}
@@ -73,9 +73,7 @@ This is the archived documentation for Brooklyn {{ site.brooklyn-version }}
 
 ### Version History
 
-* **[0.7.0-SNAPSHOT (master)](/v/0.7.0-SNAPSHOT)**
-
-* **[0.6.0](/v/0.6.0/)**: locations are constructed using LocationSpec rather than calling constructor directly, improved Chef (& Windows) support, more entities, more clouds, Hazelcast datagrid, GUI improvements (Nov 2013)
+* **[0.6.0-SNAPSHOT (master)](/v/0.6.0-SNAPSHOT)**: no major changes yet since 0.5.0
 
 * **[0.5.0](/v/0.5.0/)**: includes new JS GUI and REST API, rebind/persistence support, cleaner model and naming conventions, more entities (May 2013)
 
