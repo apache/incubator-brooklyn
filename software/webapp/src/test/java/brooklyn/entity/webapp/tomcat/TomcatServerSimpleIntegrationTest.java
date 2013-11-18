@@ -1,10 +1,10 @@
 package brooklyn.entity.webapp.tomcat;
 
-import static brooklyn.test.TestUtils.isPortInUse;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.fail;
 
 import java.net.ServerSocket;
+import java.util.Iterator;
 
 import org.jclouds.util.Throwables2;
 import org.slf4j.Logger;
@@ -16,8 +16,11 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;
 
@@ -30,20 +33,23 @@ public class TomcatServerSimpleIntegrationTest {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(TomcatServerSimpleIntegrationTest.class);
     
-    /** don't use 8080 since that is commonly used by testing software */
-    static int DEFAULT_HTTP_PORT = 7880;
-
-    static boolean httpPortLeftOpen = false;
+    /** don't use 8080 since that is commonly used by testing software; use different from other tests. */
+    static PortRange DEFAULT_HTTP_PORT_RANGE = PortRanges.fromString("7880-7980");
     
     private TestApplication app;
     private TomcatServer tc;
+    private int httpPort;
     
     @BeforeMethod(alwaysRun=true)
-    public void failIfHttpPortInUse() {
-        if (isPortInUse(DEFAULT_HTTP_PORT, 5000L)) {
-            httpPortLeftOpen = true;
-            fail("someone is already listening on port "+DEFAULT_HTTP_PORT+"; tests assume that port "+DEFAULT_HTTP_PORT+" is free on localhost");
+    public void pickFreePort() {
+        for (Iterator<Integer> iter = DEFAULT_HTTP_PORT_RANGE.iterator(); iter.hasNext();) {
+            Integer port = iter.next();
+            if (Networking.isPortAvailable(port)) {
+                httpPort = port;
+                return;
+            }
         }
+        fail("someone is already listening on ports "+DEFAULT_HTTP_PORT_RANGE+"; tests assume that port is free on localhost");
     }
  
     @AfterMethod(alwaysRun=true)
@@ -53,10 +59,10 @@ public class TomcatServerSimpleIntegrationTest {
     
     @Test(groups="Integration")
     public void detectFailureIfTomcatCantBindToPort() throws Exception {
-        ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
+        ServerSocket listener = new ServerSocket(httpPort);
         try {
             app = ApplicationBuilder.newManagedApp(TestApplication.class);
-            tc = app.createAndManageChild(EntitySpec.create(TomcatServer.class).configure("httpPort",DEFAULT_HTTP_PORT));
+            tc = app.createAndManageChild(EntitySpec.create(TomcatServer.class).configure("httpPort", httpPort));
             
             try {
                 tc.start(ImmutableList.of(app.getManagementContext().getLocationManager().manage(new LocalhostMachineProvisioningLocation())));

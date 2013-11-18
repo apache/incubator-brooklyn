@@ -19,4 +19,6 @@ public interface CassandraNodeDriver extends JavaSoftwareProcessDriver {
 
     String getCassandraConfigFileName();
 
+    boolean isClustered();
+
 }

@@ -6,7 +6,7 @@ Contact us on the discussion groups:
 
 Additionally look for us on:
 
-* **IRC**: #brooklyncentral
+* **IRC**: #brooklyncentral ([IRC??](/meta/irc.html))
 * **Twitter**: @brooklyncentral #brooklyncentral
 
 We'd love to hear from you!

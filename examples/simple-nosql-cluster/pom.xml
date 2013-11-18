@@ -27,6 +27,13 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
+        
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-logback-xml</artifactId>
+            <version>${project.version}</version>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>

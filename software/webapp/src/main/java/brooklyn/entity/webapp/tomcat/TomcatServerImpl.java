@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp.tomcat;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 
 import java.util.concurrent.TimeUnit;
 
@@ -71,7 +71,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
     public void disconnectSensors() {
         super.disconnectSensors();
         if (getDriver().isJmxEnabled()) {
-           if (jmxFeed.isActivated()) jmxFeed.stop();
+           if (jmxFeed != null) jmxFeed.stop();
         } else {
             disconnectServiceUpIsRunning();
         }

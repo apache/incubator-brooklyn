@@ -19,9 +19,9 @@ define(
                 // TODO info window; massive code tidy
                 drawCircles: function(map, data) {
                     var newLocs = {};
-                    var id;
                     var lm;
                     _.each(data, function(it) {
+                        var id = it.id;
                         if (it.latitude == null || it.longitude == null || (it.latitude == 0 && it.longitude == 0)) {
                             // Suppress circle if not set or at (0,0); slightly clumsy, but workable
                         } else if (lm = locationMarkers[id]) {
@@ -31,6 +31,7 @@ define(
                             lm.circle.setRadius(local.radius(local.computeLocationArea(it.leafEntityCount)));
                             lm.circle.setCenter(latlng);
                             lm.marker.setPosition(latlng);
+                            lm.marker.setTitle(it.name);
 //                            lm.infoWindow.setPairs(l);
 
                             newLocs[id] = lm;
@@ -40,7 +41,8 @@ define(
 
                             var marker = new google.maps.Marker({
                                 map: map,
-                                position: new google.maps.LatLng(it.latitude, it.longitude)
+                                position: new google.maps.LatLng(it.latitude, it.longitude),
+                                title: it.name
                             });
 
                             // TODO from old grails app
@@ -56,10 +58,10 @@ define(
                     })
 
                     // TODO yuck, we assume location markers (static field) are tied to map (supplied)
-                    for (id in locationMarkers) {
-                        if (! newLocs[id]) {
+                    for (var marker in locationMarkers) {
+                        if (! newLocs[marker]) {
                             // location has been removed
-                            lm = locationMarkers[id];
+                            lm = locationMarkers[marker];
                             lm.circle.setMap(null);
                             lm.marker.setMap(null);
                             lm.infoWindow.getInfoWindow().setMap(null);
@@ -67,7 +69,10 @@ define(
                     }
                     locationMarkers = newLocs;
                 },
-                
+                resetCircles: function() {
+                    locationMarkers = {};
+                },
+
                 drawCircle: function(map, lat, lng, radius) {
                     var circle_latlong = new google.maps.LatLng(lat, lng);
                     var circle_options = {

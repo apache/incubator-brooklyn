@@ -272,8 +272,8 @@ If you want to try this with a real example application using the Cassandra clus
 [CumulusRDF](https://code.google.com/p/cumulusrdf). There is an example Brooklyn application at:
 
 {% highlight bash %}
-% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.CumulusRdfApplication \
-  --location "aws-ec2:us-east-1,aws-ec2:us-east-1"
+% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.CumulusRDFApplication \
+  --location "aws-ec2:us-east-1"
 {% endhighlight %}
 
 
