@@ -402,8 +402,8 @@ class DynamicClusterTest {
         final int failNum = 2
         final AtomicInteger counter = new AtomicInteger(0)
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
-                // default is quarantineFailedEntities==false in 0.6.x
-                //.configure("quarantineFailedEntities", false)
+                // default is quarantineFailedEntities==true
+                .configure("quarantineFailedEntities", false)
                 .configure("initialSize", 0)
                 .configure("factory", { properties ->
                     int num = counter.incrementAndGet();
