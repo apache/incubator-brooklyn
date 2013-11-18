@@ -39,11 +39,6 @@ public interface ManagementContext {
     ExecutionManager getExecutionManager();
 
     /**
-     * @deprecated since 0.5; use {@link #getEntityDriverManager()}
-     */
-    EntityDriverManager getEntityDriverFactory();
-
-    /**
      * Returns the {@link EntityDriverManager} entities can use to create drivers. This
      * manager can also be used to programmatically customize which driver type to use 
      * for entities in different locations.
