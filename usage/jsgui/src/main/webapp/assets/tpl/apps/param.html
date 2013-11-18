@@ -1,5 +1,12 @@
 <!--effector param template -->
 <tr class="effector-param" rel="tooltip" title="<%= description %></b><br><br><%= type %>" data-placement="left">
     <td class="param-name"><%= name %></td>
+    <!-- TODO: for now this just looks at the name of the parameter which is poor (and @Beta !). 
+    Better will be to use a strongly-typed LocationCollection or (significantly better) supply a generic 
+    server-side mechanism for populating options in some situations. -->
+    <% if (name == 'locations' || name == 'location') { %>
+    <td><div id="selector-container" class="input-medium param-value"></div></td>
+    <% } else { %>
     <td><input type="text" class="input-medium param-value"></td>
+    <% } %>    
 </tr>
