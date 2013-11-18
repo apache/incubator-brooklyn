@@ -39,6 +39,17 @@ import com.google.common.collect.Multimap;
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
+ * 
+ * When quarantine is enabled:
+ * <ul
+ *   <li> The DynamicCluster will have a child entity named "quarantine", which is a group for nodes that failed to start correctly.
+ *   <li> The DynamicCluster's other children will be all nodes in the cluster (that have not been unmanaged/deleted).
+ *   <li> The DynamicCluster's members will be all live nodes in the cluster.
+ *   <li> The Quarantine group's members will be all problem nodes (all nodes that failed to start correctly)
+ * </ul> 
+ * 
+ * When quarantine is disabled, the DynamicCluster will not have a "quarantine" child. Nodes that fail to start will be 
+ * removed from the cluster (i.e. stopped and deleted).
  */
 @ImplementedBy(DynamicClusterImpl.class)
 public interface DynamicCluster extends AbstractGroup, Cluster {
@@ -62,7 +73,7 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
 
     @SetFromFlag("quarantineFailedEntities")
     public static final ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = new BasicConfigKey<Boolean>(
-            Boolean.class, "dynamiccluster.quarantineFailedEntities", "Whether to guarantine entities that fail to start, or to try to clean them up", false);
+            Boolean.class, "dynamiccluster.quarantineFailedEntities", "If true, will quarantine entities that fail to start; if false, will get rid of them (i.e. delete them)", true);
 
     public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
 

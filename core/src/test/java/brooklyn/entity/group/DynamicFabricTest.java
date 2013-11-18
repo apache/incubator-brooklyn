@@ -20,6 +20,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicEntity;
@@ -377,20 +378,21 @@ public class DynamicFabricTest {
 		app.start(ImmutableList.of(loc1));
 
 		assertEquals(fabric.getChildren().size(), 1);
-		assertEquals(getChild(fabric, 0).getChildren().size(), 1);
-		assertEquals(getGrandchild(fabric, 0, 0).getConfig(Attributes.HTTP_PORT.getConfigKey()), PortRanges.fromInteger(1234));
-		assertEquals(((TestEntity)getGrandchild(fabric, 0, 0)).getConfigureProperties().get("a"), null);
-		assertEquals(((TestEntity)getGrandchild(fabric, 0, 0)).getConfigureProperties().get("b"), "avail");
-		assertEquals(((TestEntity)getGrandchild(fabric, 0, 0)).getConfigureProperties().get("fromCluster"), "passed to base entity");
-		assertEquals(((TestEntity)getGrandchild(fabric, 0, 0)).getConfigureProperties().get("fromFabric"), null);
+		DynamicCluster child = (DynamicCluster) getChild(fabric, 0);
+		assertEquals(child.getMembers().size(), 1);
+		assertEquals(getMember(child, 0).getConfig(Attributes.HTTP_PORT.getConfigKey()), PortRanges.fromInteger(1234));
+		assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("a"), null);
+		assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("b"), "avail");
+		assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("fromCluster"), "passed to base entity");
+		assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("fromFabric"), null);
 
-        ((DynamicCluster)getChild(fabric, 0)).resize(2);
-        assertEquals(getChild(fabric, 0).getChildren().size(), 2);
+        child.resize(2);
+        assertEquals(child.getMembers().size(), 2);
         assertEquals(getGrandchild(fabric, 0, 1).getConfig(Attributes.HTTP_PORT.getConfigKey()), PortRanges.fromInteger(1234));
-        assertEquals(((TestEntity)getGrandchild(fabric, 0, 1)).getConfigureProperties().get("a"), null);
-        assertEquals(((TestEntity)getGrandchild(fabric, 0, 1)).getConfigureProperties().get("b"), "avail");
-        assertEquals(((TestEntity)getGrandchild(fabric, 0, 1)).getConfigureProperties().get("fromCluster"), "passed to base entity");
-        assertEquals(((TestEntity)getGrandchild(fabric, 0, 1)).getConfigureProperties().get("fromFabric"), null);
+        assertEquals(((TestEntity)getMember(child, 1)).getConfigureProperties().get("a"), null);
+        assertEquals(((TestEntity)getMember(child, 1)).getConfigureProperties().get("b"), "avail");
+        assertEquals(((TestEntity)getMember(child, 1)).getConfigureProperties().get("fromCluster"), "passed to base entity");
+        assertEquals(((TestEntity)getMember(child, 1)).getConfigureProperties().get("fromFabric"), null);
 	}
 
 	private Entity getGrandchild(Entity entity, int childIndex, int grandchildIndex) {
@@ -400,5 +402,9 @@ public class DynamicFabricTest {
 
     private Entity getChild(Entity entity, int childIndex) {
         return Iterables.get(entity.getChildren(), childIndex);
+    }
+    
+    private Entity getMember(Group entity, int memberIndex) {
+        return Iterables.get(entity.getMembers(), memberIndex);
     }
 }
