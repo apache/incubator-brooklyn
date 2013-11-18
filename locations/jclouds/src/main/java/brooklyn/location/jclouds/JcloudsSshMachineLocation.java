@@ -5,6 +5,7 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +16,9 @@ import javax.annotation.Nullable;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.callables.RunScriptOnNode;
 import org.jclouds.compute.domain.ExecResponse;
+import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.Processor;
 import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.InterpretableStatement;
@@ -209,16 +212,19 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
     
     @Override
     public Map<String, String> toMetadataRecord() {
+        Hardware hardware = node.getHardware();
+        List<? extends Processor> processors = (hardware != null) ? hardware.getProcessors() : null;
+        
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         builder.putAll(super.toMetadataRecord());
         putIfNotNull(builder, "provider", getParent().getProvider());
         putIfNotNull(builder, "account", getParent().getIdentity());
         putIfNotNull(builder, "serverId", node.getProviderId());
         putIfNotNull(builder, "imageId", node.getImageId());
-        putIfNotNull(builder, "instanceTypeName", node.getHardware().getName());
-        putIfNotNull(builder, "instanceTypeId", node.getHardware().getProviderId());
-        putIfNotNull(builder, "ram", "" + node.getHardware().getRam());
-        putIfNotNull(builder, "cpus", "" + node.getHardware().getProcessors().size());
+        putIfNotNull(builder, "instanceTypeName", (hardware != null ? hardware.getName() : null));
+        putIfNotNull(builder, "instanceTypeId", (hardware != null ? hardware.getProviderId() : null));
+        putIfNotNull(builder, "ram", "" + (hardware != null ? hardware.getRam() : null));
+        putIfNotNull(builder, "cpus", "" + (processors != null ? processors.size() : null));
         putIfNotNull(builder, "osName", getOsDetails().getName());
         putIfNotNull(builder, "osArch", getOsDetails().getArch());
         putIfNotNull(builder, "64bit", getOsDetails().is64bit() ? "true" : "false");
