@@ -23,6 +23,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.geo.HostGeoInfo;
@@ -180,7 +181,7 @@ public class AbstractGeoDnsServiceTest {
             }
             Location l = Iterables.getOnlyElement(e.getLocations());
             HostGeoInfo geoInfo = new HostGeoInfo("127.0.0.1", l.getDisplayName(), 
-                (Double) l.findLocationProperty("latitude"), (Double) l.findLocationProperty("longitude"));
+                l.getConfig(LocationConfigKeys.LATITUDE), l.getConfig(LocationConfigKeys.LONGITUDE));
             targetHosts.put(e, geoInfo);
             return true;
         }

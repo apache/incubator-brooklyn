@@ -48,19 +48,19 @@ public class LocationRegistryTest {
         
         Location l = mgmt.getLocationRegistry().resolve("named:foo");
         Assert.assertNotNull(l);
-        Assert.assertEquals(l.getLocationProperty("privateKeyFile"), "~/.ssh/foo.id_rsa");
+        Assert.assertEquals(l.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE), "~/.ssh/foo.id_rsa");
         
         l = mgmt.getLocationRegistry().resolve("foo");
         Assert.assertNotNull(l);
-        Assert.assertEquals(l.getLocationProperty("privateKeyFile"), "~/.ssh/foo.id_rsa");
+        Assert.assertEquals(l.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE), "~/.ssh/foo.id_rsa");
         
         l = mgmt.getLocationRegistry().resolve("id:"+locdef.getId());
         Assert.assertNotNull(l);
-        Assert.assertEquals(l.getLocationProperty("privateKeyFile"), "~/.ssh/foo.id_rsa");
+        Assert.assertEquals(l.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE), "~/.ssh/foo.id_rsa");
         
         l = mgmt.getLocationRegistry().resolve(locdef.getId());
         Assert.assertNotNull(l);
-        Assert.assertEquals(l.getLocationProperty("privateKeyFile"), "~/.ssh/foo.id_rsa");
+        Assert.assertEquals(l.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE), "~/.ssh/foo.id_rsa");
     }
 
     @Test

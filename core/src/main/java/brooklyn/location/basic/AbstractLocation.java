@@ -10,11 +10,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
@@ -37,6 +37,7 @@ import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -322,6 +323,12 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         if (getParent()!=null) return getParent().getConfig(key);
         return key.getDefaultValue();
     }
+    
+    @Override
+    public <T> T getConfig(HasConfigKey<T> key) {
+        return getConfig(key.getConfigKey());
+    }
+    
     @Override
     @Deprecated
     public boolean hasConfig(ConfigKey<?> key) {
@@ -466,22 +473,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         return removed;
     }
 
-    @Override
-    @Deprecated
-    public boolean hasLocationProperty(String key) { return configBag.containsKey(key); }
-    
-    @Override
-    @Deprecated
-    public Object getLocationProperty(String key) { return configBag.getStringKey(key); }
-    
-    @Override
-    @Deprecated
-    public Object findLocationProperty(String key) {
-        if (hasLocationProperty(key)) return getLocationProperty(key);
-        if (parentLocation != null) return parentLocation.findLocationProperty(key);
-        return null;
-    }
-    
 //    @Override
 //    public Map<String,?> getLocationProperties() {
 //    	return Collections.<String,Object>unmodifiableMap(leftoverProperties);

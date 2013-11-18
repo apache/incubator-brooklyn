@@ -11,6 +11,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.location.AddressableLocation;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.OsDetails;
@@ -130,8 +131,8 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
                     .build();
             // TODO is this necessary? since they are inherited anyway? 
             // (probably, since inheritance is only respected for a small subset) 
-            for (String k: SshMachineLocation.ALL_SSH_CONFIG_KEY_NAMES) {
-                Object v = findLocationProperty(k);
+            for (HasConfigKey<?> k: SshMachineLocation.ALL_SSH_CONFIG_KEYS) {
+                Object v = getConfig(k);
                 if (v!=null) flags2.put(k, v);
             }
             
