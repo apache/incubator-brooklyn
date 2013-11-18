@@ -107,11 +107,11 @@ public class DependentConfiguration {
         return DependentConfiguration.<T,T>attributePostProcessedWhenReady(source, sensor, GroovyJavaMethods.truthPredicate(), Functions.constant(value));
     }
 
-    public static <T> Task<T> valueWhenAttributeReady(Entity source, AttributeSensor<T> sensor, Function<? super T,T> valueProvider) {
+    public static <T,V> Task<V> valueWhenAttributeReady(Entity source, AttributeSensor<T> sensor, Function<? super T,V> valueProvider) {
         return attributePostProcessedWhenReady(source, sensor, GroovyJavaMethods.truthPredicate(), valueProvider);
     }
     
-    public static <T> Task<T> valueWhenAttributeReady(Entity source, AttributeSensor<T> sensor, Closure<T> valueProvider) {
+    public static <T,V> Task<V> valueWhenAttributeReady(Entity source, AttributeSensor<T> sensor, Closure<V> valueProvider) {
         return attributePostProcessedWhenReady(source, sensor, GroovyJavaMethods.truthPredicate(), valueProvider);
     }
     

@@ -398,6 +398,37 @@ class DynamicClusterTest {
     }
 
     @Test
+    public void testDoNotQuarantineFailedEntities() {
+        final int failNum = 2
+        final AtomicInteger counter = new AtomicInteger(0)
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                // default is quarantineFailedEntities==true
+                .configure("quarantineFailedEntities", false)
+                .configure("initialSize", 0)
+                .configure("factory", { properties ->
+                    int num = counter.incrementAndGet();
+                    return new FailingEntity(properties, (num==failNum))
+                }));
+
+        cluster.start([loc])
+        
+        // no quarantine group, as a child
+        assertEquals(cluster.getChildren().size(), 0, "children="+cluster.getChildren())
+        
+        // Failed node will not be a member or child
+        cluster.resize(3)
+        assertEquals(cluster.currentSize, 2)
+        assertEquals(cluster.getMembers().size(), 2)
+        assertEquals(cluster.getChildren().size(), 2, "children="+cluster.getChildren())
+        
+        // Failed node will not be managed either
+        assertEquals(Iterables.size(Iterables.filter(cluster.getChildren(), Predicates.instanceOf(FailingEntity.class))), 2)
+        for (Entity member : cluster.getMembers()) {
+            assertFalse(((FailingEntity)member).failOnStart)
+        }
+    }
+
+    @Test
     public void defaultRemovalStrategyShutsDownNewestFirstWhenResizing() {
         TestEntity entity
         final int failNum = 2

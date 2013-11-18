@@ -1023,11 +1023,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         try {
             if (setup.getDescription()==null) setCreationString(setup);
             
-            String unqualifiedId = (String) checkNotNull(setup.getStringKey("id"), "id");
+            String rawId = (String) checkNotNull(setup.getStringKey("id"), "id");
             String hostname = (String) setup.getStringKey("hostname");
             String user = checkNotNull(getUser(setup), "user");
             String region = (String) setup.getStringKey("region");
-            String id = ((region != null) ? region+"/" : "") + unqualifiedId;
+            String id = rawId.contains("/") ? rawId : (((region != null) ? region+"/" : "") + rawId);
             
             LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {}", 
                     new Object[] {id, user, (hostname != null ? hostname : "<unspecified>"), getProvider()});

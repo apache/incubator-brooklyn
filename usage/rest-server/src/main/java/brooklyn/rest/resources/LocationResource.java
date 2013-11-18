@@ -61,6 +61,7 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
       for (Map.Entry<Location,Integer> count: counts.entrySet()) {
           Location l = count.getKey();
           Map<String,Object> m = MutableMap.<String,Object>of(
+                  "id", l.getId(),
                   "name", l.getDisplayName(),
                   "leafEntityCount", count.getValue(),
                   "latitude", l.getConfig(LocationConfigKeys.LATITUDE),

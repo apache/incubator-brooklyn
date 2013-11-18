@@ -47,7 +47,10 @@ import com.google.common.collect.Iterables;
  * If underlying provisioning/destroying operations fail, the pool
  * currently may be in an unknown state, currently.
  * If more robustness is needed this can be added.
+ * 
+ * @deprecated since 0.6.0; never used in production setting, and thus of dubious value; best avoided as unlikely to be supported in future versions
  */
+@Deprecated
 public class MachinePool {
     
     private static final Logger log = LoggerFactory.getLogger(MachinePool.class);

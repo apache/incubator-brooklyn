@@ -94,7 +94,7 @@ $ mvn clean assembly:assembly
 $ cd target/brooklyn-sample-0.1.0-SNAPSHOT-dist/brooklyn-sample-0.1.0-SNAPSHOT/
 
 $ ./start.sh application \
-    --class com.acme.sample.brooklyn.ClusterWebServerDatabaseSample \
+    --class com.acme.sample.brooklyn.sample.app.ClusterWebServerDatabaseSample \
     --location jclouds:aws-ec2:eu-west-1
 {% endhighlight %}
 

@@ -37,5 +37,5 @@ public class BrooklynMgmtContextTestSupport {
             mgmt = null;
         }
     }
-    
+
 }

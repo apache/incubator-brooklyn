@@ -268,7 +268,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     public void update() {
         Task<?> task = updateAsync();
-        task.getUnchecked();
+        if (task != null) task.getUnchecked();
     }
     
     public synchronized Task<?> updateAsync() {
