@@ -3,26 +3,34 @@
  */
 define([
     "underscore", "jquery", "backbone",
-
+    "model/location",
     "text!tpl/apps/effector-modal.html",
+    "text!tpl/app-add-wizard/deploy-location-row.html", 
+    "text!tpl/app-add-wizard/deploy-location-option.html",
     "text!tpl/apps/param.html",
     "text!tpl/apps/param-list.html"
-], function (_, $, Backbone, EffectorModalHtml, ParamHtml, ParamListHtml) {
+], function (_, $, Backbone, Location, EffectorModalHtml, 
+		DeployLocationRowHtml, DeployLocationOptionHtml, ParamHtml, ParamListHtml) {
 
     var EffectorInvokeView = Backbone.View.extend({
         template:_.template(EffectorModalHtml),
+        locationRowTemplate:_.template(DeployLocationRowHtml),
+        locationOptionTemplate:_.template(DeployLocationOptionHtml),
         effectorParam:_.template(ParamHtml),
         effectorParamList:_.template(ParamListHtml),
         events:{
             "click .invoke-effector":"invokeEffector",
             "shown":"unfade"
         },
+        initialize:function () {
+        	this.locations = new Location.Collection();
+        },
         render:function () {
             var that = this, params = this.model.get("parameters")
             this.$el.html(this.template({
                 name:this.model.get("name"),
                 entityName:this.options.entity.get("name"),
-                description:this.model.get("description")?this.model.get("description"):""
+                description:this.model.get("description")?this.model.get("description"):"",
             }))
             // do we have parameters to render?
             if (params.length !== 0) {
@@ -33,10 +41,30 @@ define([
                     $tbody.append(that.effectorParam({
                         name:param.name,
                         type:param.type,
-                        description:param.description?param.description:""
+                        description:param.description?param.description:"",
                     }))
                 })
-            }
+                this.locations.fetch({async:false})
+	        	var container = this.$("#selector-container")
+	        	container.empty()
+				var chosenLocation = this.locations[0];
+				container.append(that.locationRowTemplate({
+									initialValue : chosenLocation,
+									rowId : 0
+								}))
+	    		var $selectLocations = container.find('#select-location')
+	    		this.locations.each(function(aLocation) {
+	        			var $option = that.locationOptionTemplate({
+	                        url:aLocation.getLinkByName("self"),
+	                        name:aLocation.getPrettyName()
+	                    })
+	                    $selectLocations.append($option)
+	        		})
+	    		$selectLocations.each(function(i) {
+	    			var url = $($selectLocations[i]).parent().attr('initialValue');
+	    			$($selectLocations[i]).val(url)
+	    		})
+        	}
             this.$(".modal-body").find('*[rel="tooltip"]').tooltip()
             return this
         },
@@ -46,11 +74,13 @@ define([
 
         extractParamsFromTable:function () {
             var parameters = {}
-
+            
             // iterate over the rows
             this.$(".effector-param").each(function (index) {
                 var key = $(this).find(".param-name").text(),
-                    value = $(this).find(".param-value").val()
+                value = $(this).find(".param-value").attr('id') == 'selector-container' ? 
+                		$(this).find(".param-value :selected").text().trim() : 
+                	    $(this).find(".param-value").val()
                 parameters[key] = value;
             })
             return parameters
