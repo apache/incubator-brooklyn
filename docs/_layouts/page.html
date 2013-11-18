@@ -46,7 +46,10 @@ $(document).ready(function() {
     var target = $(this).next();
     var txt = target.text().trim();
     if (target.find('code.bash')) {
-      txt = txt.replace(/^[^%$]*[%$] /, "").replace(new RegExp('\n[^%$]*[%$] ','g'), "\n");
+      // Strip out bash prompts from the start of each line (i.e. '$' or '%' characters
+      // at the very start, or immediately following any newline). Correctly handles continuation
+      // lines, where a leading '$' or '%' is *not* a prompt character.
+      txt = txt.replace(/(^|[^\\]\n)[$%] /g, "$1");
     }
     clipboard.setText(txt);
   });
