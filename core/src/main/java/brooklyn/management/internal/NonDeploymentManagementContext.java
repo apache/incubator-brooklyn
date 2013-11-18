@@ -161,11 +161,6 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
 
     @Override
-    public EntityDriverManager getEntityDriverFactory() {
-        return getEntityDriverManager();
-    }
-
-    @Override
     public DownloadResolverManager getEntityDownloadsManager() {
         checkInitialManagementContextReal();
         return initialManagementContext.getEntityDownloadsManager();

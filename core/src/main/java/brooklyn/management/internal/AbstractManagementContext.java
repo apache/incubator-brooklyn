@@ -172,11 +172,6 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     }
 
     @Override
-    public EntityDriverManager getEntityDriverFactory() {
-        return getEntityDriverManager();
-    }
-
-    @Override
     public EntityDriverManager getEntityDriverManager() {
         return entityDriverManager;
     }
