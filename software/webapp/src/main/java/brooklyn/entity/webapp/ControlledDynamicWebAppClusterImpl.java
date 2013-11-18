@@ -57,6 +57,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         ConfigToAttributes.apply(this, MEMBER_SPEC);
         ConfigToAttributes.apply(this, CONTROLLER);
         ConfigToAttributes.apply(this, CONTROLLER_SPEC);
+        ConfigToAttributes.apply(this, WEB_CLUSTER_SPEC);
         
         ConfigurableEntityFactory<? extends WebAppService> webServerFactory = getAttribute(FACTORY);
         EntitySpec<? extends WebAppService> webServerSpec = getAttribute(MEMBER_SPEC);
@@ -68,14 +69,27 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         
         log.debug("creating cluster child for {}", this);
         // Note relies on initial_size being inherited by DynamicWebAppCluster, because key id is identical
-        Map<String,Object> flags;
+        EntitySpec<? extends DynamicWebAppCluster> webClusterSpec = getAttribute(WEB_CLUSTER_SPEC);
+        Map<String,Object> webClusterFlags;
         if (webServerSpec != null) {
-            flags = MutableMap.<String,Object>of("memberSpec", webServerSpec);
+            webClusterFlags = MutableMap.<String,Object>of("memberSpec", webServerSpec);
         } else {
-            flags = MutableMap.<String,Object>of("factory", webServerFactory);
+            webClusterFlags = MutableMap.<String,Object>of("factory", webServerFactory);
         }
-        DynamicWebAppCluster cluster = addChild(EntitySpec.create(DynamicWebAppCluster.class)
-                .configure(flags));
+        if (webClusterSpec == null) {
+            log.debug("creating default web cluster spec for {}", this);
+            webClusterSpec = EntitySpec.create(DynamicWebAppCluster.class);
+        }
+        boolean hasMemberSpec = webClusterSpec.getConfig().containsKey(DynamicWebAppCluster.MEMBER_SPEC) || webClusterSpec.getFlags().containsKey("memberSpec");
+        boolean hasMemberFactory = webClusterSpec.getConfig().containsKey(DynamicWebAppCluster.FACTORY) || webClusterSpec.getFlags().containsKey("factory");
+        if (!(hasMemberSpec || hasMemberFactory)) {
+            webClusterSpec.configure(webClusterFlags);
+        } else {
+            log.warn("In {}, not setting cluster's {} because already set on webClusterSpec", new Object[] {this, webClusterFlags.keySet()});
+        }
+        setAttribute(WEB_CLUSTER_SPEC, webClusterSpec);
+        
+        DynamicWebAppCluster cluster = addChild(webClusterSpec);
         if (Entities.isManaged(this)) Entities.manage(cluster);
         setAttribute(CLUSTER, cluster);
         
