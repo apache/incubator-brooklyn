@@ -20,6 +20,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.location.Location;
+import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.BrooklynMavenArtifacts;
@@ -34,6 +35,7 @@ import brooklyn.util.net.Urls;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.net.HostAndPort;
 
 public class JmxSupport implements UsesJmx {
 
@@ -170,7 +172,9 @@ public class JmxSupport implements UsesJmx {
         }
         
         if (getJmxAgentMode()==JmxAgentModes.JMXMP) {
-            return JmxHelper.toJmxmpUrl(host, entity.getAttribute(JMX_PORT));
+            // only JMXMP is valid for going through firewalls (it is the default)
+            HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(JMX_PORT));
+            return JmxHelper.toJmxmpUrl(hp.getHostText(), hp.getPort());
         } else {
             if (getJmxAgentMode()==JmxAgentModes.NONE) {
                 fixPortsForModeNone();
