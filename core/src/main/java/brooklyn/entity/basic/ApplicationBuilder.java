@@ -81,13 +81,6 @@ public abstract class ApplicationBuilder {
         }.manage(managementContext);
     }
 
-    /**
-     * @deprecated since 0.5.0-rc.1 (added in 0.5.0-M2)
-     */
-    public static <T extends StartableApplication> EntitySpec<StartableApplication> newAppSpec(Class<? extends T> type) {
-        return EntitySpecs.appSpec(type);
-    }
-
     protected volatile boolean managed = false;
     protected final AtomicBoolean inManage = new AtomicBoolean(false);
     private EntitySpec<? extends StartableApplication> appSpec;
@@ -137,21 +130,6 @@ public abstract class ApplicationBuilder {
         checkPreManage();
         appSpec.configure(config);
         return this;
-    }
-    
-    /**
-     * @deprecated since 0.5.0-rc.1 (added in 0.5.0-M2); use {@link #addChild(EntitySpec)}, 
-     *             for consistency with {@link AbstractEntity#addChild(EntitySpec)}.
-     */
-    protected final <T extends Entity> T createChild(EntitySpec<T> spec) {
-        return addChild(spec);
-    }
-    
-    /**
-     * @deprecated since 0.5.0-rc.1 (added in 0.5.0-M2); use {@link #addChild(Map, Class)}
-     */
-    protected final <T extends Entity> T createChild(Map<?,?> config, Class<T> type) {
-        return addChild(config, type);
     }
     
     /**
