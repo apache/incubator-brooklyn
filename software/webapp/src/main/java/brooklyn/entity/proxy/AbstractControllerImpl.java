@@ -347,9 +347,14 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
                 serverPoolAddresses.remove(oldAddress);
             }
             
+        } else if (newAddress.equals(oldAddress)) {
+            if (LOG.isTraceEnabled())
+                LOG.trace("Ignoring unchanged address "+oldAddress);
+            return;
+            
         } else {
             if (oldAddress != null) {
-                LOG.info("Replacing in  {}, member {} with old address {}, new address {}", new Object[] {this, member, oldAddress, newAddress});
+                LOG.info("Replacing in {}, member {} with old address {}, new address {}", new Object[] {this, member, oldAddress, newAddress});
                 serverPoolAddresses.remove(oldAddress);
             } else {
                 LOG.info("Adding to {}, new member {} with address {}", new Object[] {this, member, newAddress});
