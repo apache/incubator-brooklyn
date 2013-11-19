@@ -11,7 +11,6 @@ import java.util.WeakHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.collections.Lists;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -32,6 +31,7 @@ import brooklyn.util.exceptions.Exceptions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -161,7 +161,7 @@ public class LocalEntityManager implements EntityManager {
             if (it.getManagementSupport().isDeployed()) {
                 return false;
             } else {
-            	allEntities.add(it);
+                allEntities.add(it);
                 preManageNonRecursive(it);
                 it.getManagementSupport().onManagementStarting(info); 
                 return manageNonRecursive(it);
@@ -173,7 +173,7 @@ public class LocalEntityManager implements EntityManager {
                 it.getManagementSupport().onManagementStarted(info);
                 managementContext.getRebindManager().getChangeListener().onManaged(it);
             }
-        };
+        }
     }
     
     @Override
@@ -195,7 +195,7 @@ public class LocalEntityManager implements EntityManager {
             it.getManagementSupport().onManagementStopped(info);
             managementContext.getRebindManager().getChangeListener().onUnmanaged(it);
             if (managementContext.gc != null) managementContext.gc.onUnmanaged(it);
-        };
+        }
     }
     
     /**

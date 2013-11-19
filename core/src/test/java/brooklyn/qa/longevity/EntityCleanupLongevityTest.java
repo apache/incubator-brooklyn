@@ -44,7 +44,7 @@ public class EntityCleanupLongevityTest {
     }
 
     // FIXME Grinds to a crawl after approx 10000 iterations (with -Xmx512m)
-    @Test(groups={"Longevity","Acceptance","WIP"})
+    @Test(groups={"Longevity","Acceptance"})
     public void testAppCreatedStartedAndStopped() throws Exception {
         int iterations = numIterations();
         Stopwatch timer = new Stopwatch().start();
@@ -63,7 +63,7 @@ public class EntityCleanupLongevityTest {
 
     // FIXME Grinds to a crawl after approx 12000 iterations (with -Xmx512m)
     // Note does not call stop() on the entities
-    @Test(groups={"Longevity","Acceptance","WIP"})
+    @Test(groups={"Longevity","Acceptance"})
     public void testAppCreatedStartedAndUnmanaged() throws Exception {
         int iterations = numIterations();
         Stopwatch timer = new Stopwatch().start();
