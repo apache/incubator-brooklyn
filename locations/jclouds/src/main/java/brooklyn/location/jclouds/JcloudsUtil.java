@@ -56,7 +56,6 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.inject.Module;
 
@@ -161,27 +160,6 @@ public class JcloudsUtil implements JcloudsLocationConfig {
 
     private static final Object createComputeServicesMutex = new Object();
 
-    /** @deprecated since 0.5.0 pass ConfigBag instead */
-    public static ComputeService buildOrFindComputeService(Map<String,? extends Object> conf) {
-        return buildComputeService(conf, MutableMap.of(), true);
-    }
-    /** @deprecated since 0.5.0 pass ConfigBag instead */
-    public static ComputeService buildOrFindComputeService(Map<String,? extends Object> conf, Map unusedConf) {
-        return buildComputeService(conf, unusedConf, true);
-    }
-    /** @deprecated since 0.5.0 pass ConfigBag instead */
-    public static ComputeService buildComputeService(Map<String,? extends Object> conf) {
-        return buildComputeService(conf, MutableMap.of());
-    }
-    /** @deprecated since 0.5.0 pass ConfigBag instead */
-    public static ComputeService buildComputeService(Map<String,? extends Object> conf, Map unusedConf) {
-        return buildComputeService(conf, unusedConf, false);
-    }
-    /** @deprecated since 0.5.0 pass ConfigBag instead */
-    public static ComputeService buildComputeService(Map<String,? extends Object> conf, Map unusedConf, boolean allowReuse) {
-        ConfigBag confBag = new ConfigBag().putAll(conf).markAll(Sets.difference(conf.keySet(), unusedConf.keySet()));
-        return findComputeService(confBag, allowReuse);
-    }
     public static ComputeService findComputeService(ConfigBag conf) {
         return findComputeService(conf, true);
     }
