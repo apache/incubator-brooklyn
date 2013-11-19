@@ -56,7 +56,7 @@ public class WebClusterExample extends AbstractApplication {
                         .configure("war", WAR_PATH)));
         
         web.getCluster().addPolicy(AutoScalerPolicy.builder()
-                .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+                .metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_LAST_PER_NODE)
                 .sizeRange(1, 5)
                 .metricRange(10, 100)
                 .build());
