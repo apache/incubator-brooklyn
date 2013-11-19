@@ -4,12 +4,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.util.ObservableList;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.collections.Lists;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -154,46 +156,46 @@ public class LocalEntityManager implements EntityManager {
         }
 
         final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
+        final List<EntityInternal> allEntities =  Lists.newArrayList();
         recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
             if (it.getManagementSupport().isDeployed()) {
                 return false;
             } else {
+            	allEntities.add(it);
                 preManageNonRecursive(it);
                 it.getManagementSupport().onManagementStarting(info); 
                 return manageNonRecursive(it);
             }
         } });
         
-        recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
-            if (it.getManagementSupport().isFullyManaged()) {
-                return false;
-            } else {
+        for (EntityInternal it : allEntities) {
+            if (!it.getManagementSupport().isFullyManaged()) {
                 it.getManagementSupport().onManagementStarted(info);
                 managementContext.getRebindManager().getChangeListener().onManaged(it);
-                return true;
             }
-        } });
+        };
     }
     
     @Override
     public void unmanage(Entity e) {
         if (shouldSkipUnmanagement(e)) return;
-        
+        // Need to store all child entities as onManagementStopping removes a child from the parent entity
+        final List<EntityInternal> allEntities =  Lists.newArrayList();        
         final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
         recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
             if (shouldSkipUnmanagement(it)) return false;
+            allEntities.add(it);
             it.getManagementSupport().onManagementStopping(info); 
             return true;
         } });
         
-        recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
-            if (shouldSkipUnmanagement(it)) return false;
-            boolean result = unmanageNonRecursive(it);            
+        for (EntityInternal it : allEntities) {
+            if (shouldSkipUnmanagement(it)) continue;
+            unmanageNonRecursive(it);            
             it.getManagementSupport().onManagementStopped(info);
             managementContext.getRebindManager().getChangeListener().onUnmanaged(it);
             if (managementContext.gc != null) managementContext.gc.onUnmanaged(it);
-            return result; 
-        } });
+        };
     }
     
     /**
