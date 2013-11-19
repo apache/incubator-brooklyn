@@ -229,11 +229,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return getConfig(CLOUD_REGION_ID);
     }
 
-    /** @deprecated since 0.5.0 use getRegion */
-    public String getJcloudsProviderLocationId() {
-        return getConfig(CLOUD_REGION_ID);
-    }
-
     public String getEndpoint() {
         return LocationConfigUtils.getConfigCheckingDeprecatedAlternatives(getConfigBag(), 
                 CLOUD_ENDPOINT, JCLOUDS_KEY_ENDPOINT);
