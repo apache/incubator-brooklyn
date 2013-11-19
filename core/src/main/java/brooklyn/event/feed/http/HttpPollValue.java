@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Objects;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.slf4j.Logger;
@@ -16,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -33,12 +33,6 @@ public class HttpPollValue {
     private int responseCode;
     private Map<String,List<String>> headerLists;
     private byte[] content;
-
-    /** @deprecated since 0.5.0 caller should supply start time for accurate measurement */
-    @Deprecated
-    public HttpPollValue(HttpResponse response) {
-        this(response, System.currentTimeMillis());
-    }
 
     public HttpPollValue(HttpResponse response, long startTime) {
         this.response = response;
@@ -61,11 +55,6 @@ public class HttpPollValue {
         }        
     }
 
-    /** @deprecated since 0.5.0 caller should supply start time for accurate measurement */
-    public HttpPollValue(int responseCode, Map<String,List<String>> headers, byte[] content) {
-        this(responseCode, headers, content,
-                System.currentTimeMillis(), -1, -1);
-    }
     public HttpPollValue(int responseCode, Map<String,List<String>> headers, byte[] content,
             long startTime, long durationMillisOfFirstResponse, long durationMillisOfFullContent) {
         this.response = null;
