@@ -6,6 +6,7 @@ import groovy.time.TimeDuration;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
@@ -466,6 +467,13 @@ public class TypeCoercions {
             @Override
             public Number apply(String input) {
                 return Double.valueOf(input);
+            }
+        });
+        /** This actually produce a {@link Double} for any input, cast to a {@link Number}. */
+        registerAdapter(BigDecimal.class, Double.class, new Function<BigDecimal,Double>() {
+            @Override
+            public Double apply(BigDecimal input) {
+                return input.doubleValue();
             }
         });
     }

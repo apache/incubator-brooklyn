@@ -13,6 +13,7 @@ import brooklyn.entity.Entity;
 import brooklyn.location.AddressableLocation;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.util.internal.BrooklynSystemProperties;
 
 /**
@@ -55,8 +56,8 @@ public class HostGeoInfo implements Serializable {
             if (result!=null) return result;
         }
         InetAddress address = findIpAddress(l);
-        Object latitude = l.findLocationProperty("latitude");
-        Object longitude = l.findLocationProperty("longitude");
+        Object latitude = l.getConfig(LocationConfigKeys.LATITUDE);
+        Object longitude = l.getConfig(LocationConfigKeys.LONGITUDE);
 
         if (address == null) return null;
         if (latitude == null || longitude == null) {

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.entity.trait.Identifiable;
@@ -108,6 +109,8 @@ public interface Location extends Serializable, Identifiable, Rebindable {
     /** Returns configuration set at this location or inherited or default */
     <T> T getConfig(ConfigKey<T> key);
     
+    <T> T getConfig(HasConfigKey<T> key);
+
     /** True iff the indication config key is set _at_ this location (not parents) 
      * @deprecated since 0.6.0 use {@link #hasConfig(ConfigKey, boolean)} */
     @Deprecated
@@ -124,35 +127,6 @@ public interface Location extends Serializable, Identifiable, Rebindable {
     /** Returns all config set, either inherited (argument true) or locally-only (argument false) */
     public Map<String,Object> getAllConfig(boolean includeInherited);
     
-    /**
-     * Returns {@code true} iff this location contains a property with the specified {@code key}. The
-     * property's value can be obtained by calling {@link #getLocationProperty}. This method only interrogates the
-     * immediate properties; the parent hierarchy is NOT searched in the event that the property is not found locally.
-     * @deprecated since 0.5.0, use hasConfig
-     */
-    @Deprecated
-    boolean hasLocationProperty(String key);
-    
-    /**
-     * Returns the value of the property identified by the specified {@code key}. This method only interrogates the
-     * immediate properties; the parent hierarchy is NOT searched in the event that the property is not found locally.
-     * 
-     * NOTE: must not name this method 'getProperty' as this will clash with the 'magic' Groovy's method of the same
-     *       name, at which point everything stops working!
-     * @deprecated since 0.5.0, use `if (hasConfig) { getConfig }` if you really need to preserve 
-     * "don't look at parents" behaviour
-     */
-    @Deprecated
-    Object getLocationProperty(String key);
-    
-    /**
-     * Like {@link #getLocationProperty}, but if the property is not defined on this location, searches recursively up
-     * the parent hierarchy until it is found, or the root is reached (when this method will return {@code null}).
-     * @deprecated since 0.5.0, use getConfig
-     */
-    @Deprecated
-    Object findLocationProperty(String key);
-
     @Override
     RebindSupport<LocationMemento> getRebindSupport();
 

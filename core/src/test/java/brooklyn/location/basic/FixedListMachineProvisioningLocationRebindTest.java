@@ -64,10 +64,10 @@ public class FixedListMachineProvisioningLocationRebindTest {
     	assertEquals(newLoc.getId(), origLoc.getId());
     	assertEquals(newLoc.getDisplayName(), origLoc.getDisplayName());
     	assertEquals(newLoc.getHostGeoInfo(), origLoc.getHostGeoInfo());
-    	assertEquals(newLoc.getLocationProperty("user"), origLoc.getLocationProperty("user"));
-    	assertEquals(newLoc.getLocationProperty("privateKeyPassphrase"), origLoc.getLocationProperty("privateKeyPassphrase"));
-    	assertEquals(newLoc.getLocationProperty("privateKeyFile"), origLoc.getLocationProperty("privateKeyFile"));
-    	assertEquals(newLoc.getLocationProperty("privateKeyData"), origLoc.getLocationProperty("privateKeyData"));
+    	assertEquals(newLoc.getConfig(LocationConfigKeys.USER), origLoc.getConfig(LocationConfigKeys.USER));
+    	assertEquals(newLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_PASSPHRASE), origLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_PASSPHRASE));
+    	assertEquals(newLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE), origLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE));
+    	assertEquals(newLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_DATA), origLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_DATA));
     }
 
     @Test
