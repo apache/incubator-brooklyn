@@ -19,6 +19,7 @@ import brooklyn.config.ConfigUtils;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -105,8 +106,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * 
      * <pre>
      * {@code
-     * DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
-       List<String> urls = resolver.getTargets();
+     * DownloadResolver resolver = Entities.newDownloader(this);
+     * List<String> urls = resolver.getTargets();
      * }
      * </pre>
      */

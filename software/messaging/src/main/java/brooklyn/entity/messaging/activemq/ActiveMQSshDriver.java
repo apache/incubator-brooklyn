@@ -1,12 +1,13 @@
 package brooklyn.entity.messaging.activemq;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
@@ -45,7 +46,7 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
     
     @Override
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
+        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-activemq-%s", getVersion()));
