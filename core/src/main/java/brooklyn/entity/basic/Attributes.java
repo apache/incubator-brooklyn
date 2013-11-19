@@ -24,15 +24,6 @@ public interface Attributes {
     BasicNotificationSensor<Void> LOCATION_CHANGED = new BasicNotificationSensor<Void>(
             Void.class, "entity.locationChanged", "Indicates that an entity's location has been changed");
 
-
-    /**
-     * Application information sensors.
-     * 
-     * @deprecated since 0.5; see {@link BrooklynConfigKeys#SUGGESTED_VERSION}
-     */
-    @Deprecated
-    AttributeSensor<String> VERSION = Sensors.newStringSensor( "version", "Version information");
-
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "download.url", "URL pattern for downloading the installer (will substitute things like ${version} automatically)");
 

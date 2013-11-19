@@ -146,7 +146,7 @@ public class DerbyDatabase extends SoftwareProcessImpl implements Database, Uses
         try {
             ObjectName serverInfoObjectName = ObjectName.getInstance("org.apache.derby:type=ServerInformation,name=ServerInformation");
             String productVersion = (String) jmxHelper.getAttribute(serverInfoObjectName, "ProductVersion");
-            return (productVersion != null && productVersion.equals(getAttribute(Attributes.VERSION)));
+            return (productVersion != null);
         } catch (Exception e) {
             return false;
         }
