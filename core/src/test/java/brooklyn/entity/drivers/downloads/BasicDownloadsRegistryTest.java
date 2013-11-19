@@ -50,7 +50,7 @@ public class BasicDownloadsRegistryTest {
 
     @Test
     public void testUsesDownloadUrlAttribute() throws Exception {
-        entity.setAttribute(Attributes.VERSION, "myversion");
+        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         entity.setAttribute(Attributes.DOWNLOAD_URL, "acme.com/version=${version},type=${type},simpletype=${simpletype}");
         String expectedFilename = String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntity.class.getName(), "TestEntity");
         
@@ -62,7 +62,7 @@ public class BasicDownloadsRegistryTest {
     
     @Test
     public void testUsesDownloadAddonUrlsAttribute() throws Exception {
-        entity.setAttribute(Attributes.VERSION, "myentityversion");
+        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myentityversion");
         entity.setAttribute(Attributes.DOWNLOAD_ADDON_URLS, ImmutableMap.of("myaddon", "acme.com/addon=${addon},version=${addonversion},type=${type},simpletype=${simpletype}"));
         String expectedFilename = String.format("addon=%s,version=%s,type=%s,simpletype=%s", "myaddon", "myaddonversion", TestEntity.class.getName(), "TestEntity");
         
@@ -105,7 +105,7 @@ public class BasicDownloadsRegistryTest {
 
     @Test
     public void testInfersFilenameFromDownloadUrl() throws Exception {
-        entity.setAttribute(Attributes.VERSION, "myversion");
+        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         entity.setAttribute(Attributes.DOWNLOAD_URL, "http://myhost.com/myfile-${version}.tar.gz");
 
         DownloadResolver actual = managementContext.getEntityDownloadsManager().newDownloader(driver);
@@ -114,7 +114,7 @@ public class BasicDownloadsRegistryTest {
     
     @Test
     public void testInfersAddonFilenameFromDownloadUrl() throws Exception {
-        entity.setAttribute(Attributes.VERSION, "myversion");
+        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         entity.setAttribute(Attributes.DOWNLOAD_ADDON_URLS, ImmutableMap.of("myaddon", "http://myhost.com/myfile-${addonversion}.tar.gz"));
 
         DownloadResolver actual = managementContext.getEntityDownloadsManager().newDownloader(driver, "myaddon", ImmutableMap.of("addonversion", "myaddonversion"));
@@ -123,7 +123,7 @@ public class BasicDownloadsRegistryTest {
     
     @Test
     public void testCanOverrideFilenameFromDownloadUrl() throws Exception {
-        entity.setAttribute(Attributes.VERSION, "myversion");
+        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         entity.setAttribute(Attributes.DOWNLOAD_URL, "http://myhost.com/download/");
 
         DownloadResolver actual = managementContext.getEntityDownloadsManager().newDownloader(driver, ImmutableMap.of("filename", "overridden.filename.tar.gz"));

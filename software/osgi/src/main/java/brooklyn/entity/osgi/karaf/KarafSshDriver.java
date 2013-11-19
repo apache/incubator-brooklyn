@@ -7,11 +7,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 
@@ -46,7 +45,7 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
     
     @Override
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
+        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-karaf-%s", getVersion()));

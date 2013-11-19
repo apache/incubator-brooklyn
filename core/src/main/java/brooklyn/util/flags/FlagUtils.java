@@ -123,10 +123,6 @@ public class FlagUtils {
         return getFieldsWithFlagsInternal(o, filteredFields);
     }
     
-    /** @deprecated since 0.5.0 use setAllConfigKeys */
-    public static Map<String, ? extends Object> setConfigKeysFromFlags(Map<String, ? extends Object> flags, Configurable instance) {
-        return setAllConfigKeys(flags, instance);
-    }
     /** sets _all_ accessible _{@link ConfigKey}_ and {@link HasConfigKey} fields on the given object, 
      * using the indicated flags/config-bag */
     public static Map<String, ? extends Object> setAllConfigKeys(Map<String, ? extends Object> flagsOrConfig, Configurable instance) {

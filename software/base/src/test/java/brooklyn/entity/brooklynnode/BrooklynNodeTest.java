@@ -61,7 +61,7 @@ public class BrooklynNodeTest {
         ConfigToAttributes.apply(entity);
         BrooklynNodeSshDriver driver = new BrooklynNodeSshDriver(entity, loc);
         
-        DownloadResolver resolver = ((EntityLocal)entity).getManagementContext().getEntityDownloadsManager().newDownloader(driver);
+        DownloadResolver resolver = Entities.newDownloader(driver);
         List<String> urls = resolver.getTargets();
         
         System.out.println("urls="+urls);

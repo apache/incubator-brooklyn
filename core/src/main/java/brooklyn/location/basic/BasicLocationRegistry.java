@@ -75,12 +75,6 @@ public class BasicLocationRegistry implements LocationRegistry {
         }
     }
     
-    @Deprecated
-    @Override
-    public LocationDefinition getDefinedLocation(String id) {
-        return getDefinedLocationById(id);
-    }
-
     @Override
     public LocationDefinition getDefinedLocationById(String id) {
         return definedLocations.get(id);
@@ -160,10 +154,6 @@ public class BasicLocationRegistry implements LocationRegistry {
     /** to catch circular references */
     protected ThreadLocal<Set<String>> specsSeen = new ThreadLocal<Set<String>>();
     
-    @Override @Deprecated
-    public boolean canResolve(String spec) {
-        return canMaybeResolve(spec);
-    }
     @Override
     public boolean canMaybeResolve(String spec) {
         return getSpecResolver(spec) != null;
@@ -242,11 +232,6 @@ public class BasicLocationRegistry implements LocationRegistry {
         return false;
     }
 
-    /** @deprecated since 0.5; use resolve */
-    public List<Location> getLocationsById(Iterable<?> specs) {
-        return resolve(specs);
-    }
-    
     /**
      * Expects a collection of strings being the spec for locations, returns a list of locations.
      * Also allows single elements which are comma-separated lists of locations.

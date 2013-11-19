@@ -16,12 +16,6 @@ public interface LocationRegistry {
      * where spec is the spec as defined, for instance possibly another named:xxx location) */
     public Map<String,LocationDefinition> getDefinedLocations();
     
-    /**
-     * @deprecated since 0.6.0; use {@link #getDefinedLocationById(String)}
-     * (ID should be explicit because this is usually *not* the method people want) */
-    @Deprecated
-    public LocationDefinition getDefinedLocation(String id);
-    
     /** returns a LocationDefinition given its ID (usually a random string), or null if none */
     public LocationDefinition getDefinedLocationById(String id);
     
@@ -45,11 +39,6 @@ public interface LocationRegistry {
      * that is it has a chance of being resolved (depending on the spec) but NOT guaranteed;
      * see {@link #resolveIfPossible(String)} which has stronger guarantees */
     public boolean canMaybeResolve(String spec);
-    
-    /** @deprecated since 0.6.0, @see {@link #resolveIfPossible(String)} and 
-     * #canMaybeResolve(String) as a "true" here does not mean it can actually resolve it */
-    @Deprecated
-    public boolean canResolve(String spec);
     
     /** Returns a location created from the given spec, which might correspond to a definition, or created on-the-fly.
      * Optional flags can be passed through to underlying the location. 

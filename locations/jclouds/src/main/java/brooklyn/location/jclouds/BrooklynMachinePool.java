@@ -38,7 +38,7 @@ public class BrooklynMachinePool extends MachinePool {
     
     public BrooklynMachinePool(JcloudsLocation l) {
         super(l.getComputeService());
-        providerLocationId = l.getJcloudsProviderLocationId();
+        providerLocationId = l.getRegion();
         this.location = l;
     }
     
