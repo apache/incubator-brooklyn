@@ -152,7 +152,7 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
         // TODO might not be enough, as policy may still be executing and have a record of historic vals; should remove policies
         // (also not sure we want this; implies more generally a responsibility for sensors to announce things when disconnected,
         // vs them just showing the last known value...)
-        setAttribute(REQUESTS_PER_SECOND, 0D);
-        setAttribute(AVG_REQUESTS_PER_SECOND, 0D);
+        setAttribute(REQUESTS_PER_SECOND_LAST, 0D);
+        setAttribute(REQUESTS_PER_SECOND_IN_WINDOW, 0D);
     }
 }

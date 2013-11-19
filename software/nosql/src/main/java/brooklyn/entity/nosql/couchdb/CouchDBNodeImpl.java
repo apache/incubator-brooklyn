@@ -97,7 +97,7 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
     protected void doStop() {
         super.doStop();
         // zero our workrate derived workrates.
-        setAttribute(REQUESTS_PER_SECOND, 0D);
-        setAttribute(AVG_REQUESTS_PER_SECOND, 0D);
+        setAttribute(REQUESTS_PER_SECOND_LAST, 0D);
+        setAttribute(REQUESTS_PER_SECOND_IN_WINDOW, 0D);
     }
 }
