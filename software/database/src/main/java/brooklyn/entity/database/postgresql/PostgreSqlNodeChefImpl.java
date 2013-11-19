@@ -8,7 +8,6 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EffectorStartableImpl;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefLifecycleEffectorTasks;
 import brooklyn.entity.chef.ChefServerTasks;
@@ -27,7 +26,7 @@ import brooklyn.util.task.DynamicTasks;
 
 import com.google.common.collect.Iterables;
 
-public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements PostgreSqlNode, SoftwareProcess {
+public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements PostgreSqlNode {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgreSqlNodeChefImpl.class);
 
@@ -100,7 +99,7 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
     }
     
     protected void connectSensors() {
-        setAttribute(DB_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
+        setAttribute(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
 
         Location machine = Iterables.get(getLocations(), 0, null);
 
@@ -122,4 +121,11 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
         if (feed != null) feed.stop();
     }
 
+    @Override
+    public String executeScript(String commands) {
+        return Entities.invokeEffector(this, this, EXECUTE_SCRIPT, ConfigBag.newInstance().
+            configure(ExecuteScriptEffectorBody.SCRIPT, commands).getAllConfig())
+            .getUnchecked();
+    }
+    
 }

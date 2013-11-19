@@ -4,10 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.config.ConfigBag;
 
 import com.google.common.collect.Iterables;
 
@@ -26,9 +28,20 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
     }
     
     @Override
+    public void init() {
+        super.init();
+        getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
+            @Override
+            public String call(ConfigBag parameters) {
+                return executeScript((String)parameters.getStringKey("commands"));
+            }
+        });
+    }
+    
+    @Override
     protected void connectSensors() {
         super.connectSensors();
-        setAttribute(DB_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
+        setAttribute(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
 
         Location machine = Iterables.get(getLocations(), 0, null);
 
@@ -53,4 +66,10 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
     protected void disconnectSensors() {
         if (feed != null) feed.stop();
     }
+    
+    @Override
+    public String executeScript(String commands) {
+        return getDriver().executeScriptAsync(commands).block().getStdout();
+    }
+
 }

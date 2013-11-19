@@ -19,6 +19,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -26,12 +27,12 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Identifiers;
@@ -215,9 +216,9 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                         String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
                 .execute();
         if (!isClustered()) {
-            String scriptUrl = getEntity().getConfig(CassandraNode.CREATION_SCRIPT_URL);
-            if (Strings.isNonEmpty(scriptUrl)) {
-                executeScriptHere(new ResourceUtils(this).getResourceAsString(scriptUrl));
+            InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
+            if (creationScript!=null) { 
+                executeScriptHere(Streams.readFullyString(creationScript));
             }
         }
         if (isClustered() && isFirst) {
@@ -260,7 +261,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         return DynamicTasks.queue(SshEffectorTasks.ssh(
             "cd "+getRunDir(), 
             String.format("./bin/cassandra-cli --port %s --file %s", ""+getEntity().getAttribute(CassandraNode.THRIFT_PORT), filename))
-            .summary("executing cassandra-cli script "+filename)).getStdout();
+            .summary("executing cassandra-cli script "+filename)).block().getStdout();
     }
     
 }

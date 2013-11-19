@@ -29,6 +29,12 @@
             <artifactId>brooklyn-software-webapp</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <!-- just to access DatastoreMixins -->
+            <artifactId>brooklyn-software-database</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- for mongodb sensors -->
         <dependency>

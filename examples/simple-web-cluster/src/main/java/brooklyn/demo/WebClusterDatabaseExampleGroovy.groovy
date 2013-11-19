@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.mysql.MySqlNode
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.launcher.BrooklynLauncher
@@ -48,11 +48,11 @@ public class WebClusterDatabaseExampleGroovy extends AbstractApplication {
                 httpPort: "8080+",
                 (javaSysProp("brooklyn.example.db.url")): 
                     formatString("jdbc:%s%s?user=%s\\&password=%s", 
-                            attributeWhenReady(mysql, MySqlNode.MYSQL_URL), 
+                            attributeWhenReady(mysql, MySqlNode.DATASTORE_URL), 
                             DB_TABLE, DB_USERNAME, DB_PASSWORD));
     
         web.getCluster().addPolicy(AutoScalerPolicy.builder().
-                metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
+                metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_LAST_PER_NODE).
                 sizeRange(1, 5).
                 metricRange(10, 100).
                 build());
@@ -64,7 +64,7 @@ public class WebClusterDatabaseExampleGroovy extends AbstractApplication {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(WebClusterDatabaseExampleGroovy.class).displayName("Brooklyn WebApp Cluster with Database example"))
+                .application(EntitySpec.create(WebClusterDatabaseExampleGroovy.class).displayName("Brooklyn WebApp Cluster with Database example"))
                 .webconsolePort(port)
                 .location(location)
                 .start();

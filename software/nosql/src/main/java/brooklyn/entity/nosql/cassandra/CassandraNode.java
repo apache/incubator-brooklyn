@@ -11,6 +11,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.database.DatabaseNode;
+import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.java.UsesJavaMXBeans;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -26,7 +28,7 @@ import brooklyn.util.flags.SetFromFlag;
  * An {@link brooklyn.entity.Entity} that represents a Cassandra node in a {@link CassandraCluster}.
  */
 @ImplementedBy(CassandraNodeImpl.class)
-public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans {
+public interface CassandraNode extends DatastoreMixins.DatastoreCommon, SoftwareProcess, UsesJmx, UsesJavaMXBeans, DatastoreMixins.HasDatastoreUrl, DatastoreMixins.CanExecuteScript {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.11");
@@ -61,10 +63,6 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans
     ConfigKey<String> CUSTOM_SNITCH_JAR_URL = ConfigKeys.newStringConfigKey("cassandra.config.customSnitchUrl", 
             "URL for a jar file to be uploaded (e.g. \"classpath://brooklyn/entity/nosql/cassandra/multiCloudSnitch.jar\"); defaults to null which means nothing to upload", 
             null);
-
-    @SetFromFlag("creationScriptUrl")
-    public static final ConfigKey<String> CREATION_SCRIPT_URL = ConfigKeys.newStringConfigKey("cassandra.creation.script.url", 
-        "URL where Cassandra creation script can be found", "");
 
     @SetFromFlag("cassandraConfigTemplateUrl")
     BasicAttributeSensorAndConfigKey<String> CASSANDRA_CONFIG_TEMPLATE_URL = new BasicAttributeSensorAndConfigKey<String>(

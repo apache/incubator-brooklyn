@@ -11,6 +11,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -34,7 +35,7 @@ import com.google.common.reflect.TypeToken;
         "consistent, distributed, structured key-value store which provides a ColumnFamily-based data model " +
         "richer than typical key/value systems", iconUrl="classpath:///cassandra-logo.jpeg")
 @ImplementedBy(CassandraClusterImpl.class)
-public interface CassandraCluster extends DynamicCluster {
+public interface CassandraCluster extends DynamicCluster, DatastoreMixins.HasDatastoreUrl, DatastoreMixins.CanExecuteScript {
 
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "cassandra.cluster.name", "Name of the Cassandra cluster", "BrooklynCluster");
@@ -97,9 +98,8 @@ public interface CassandraCluster extends DynamicCluster {
 
     MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraCluster.class, "update");
     
-    brooklyn.entity.Effector<String> EXECUTE_SCRIPT = Effectors.effector(String.class, "executeScript")
+    brooklyn.entity.Effector<String> EXECUTE_SCRIPT = Effectors.effector(DatastoreMixins.EXECUTE_SCRIPT)
         .description("executes the given script contents using cassandra-cli")
-        .parameter(String.class, "commands")
         .buildAbstract();
 
     /**

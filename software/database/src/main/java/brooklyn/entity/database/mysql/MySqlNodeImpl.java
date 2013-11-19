@@ -7,12 +7,14 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -33,16 +35,16 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
         this(MutableMap.of(), parent);
     }
 
-    public MySqlNodeImpl(Map flags) {
+    public MySqlNodeImpl(Map<?,?> flags) {
         super(flags, null);
     }
 
-    public MySqlNodeImpl(Map flags, Entity parent) {
+    public MySqlNodeImpl(Map<?,?> flags, Entity parent) {
         super(flags, parent);
     }
 
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return MySqlDriver.class;
     }
 
@@ -52,9 +54,20 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     }
     
     @Override
+    public void init() {
+        super.init();
+        getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
+            @Override
+            public String call(ConfigBag parameters) {
+                return executeScript((String)parameters.getStringKey("commands"));
+            }
+        });
+    }
+    
+    @Override
     protected void connectSensors() {
         super.connectSensors();
-        setAttribute(DB_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MYSQL_PORT)));
+        setAttribute(DATASTORE_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MYSQL_PORT)));
         
         /*        
          * TODO status gives us things like:
@@ -120,4 +133,10 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     public String getShortName() {
         return "MySQL";
     }
+    
+    @Override
+    public String executeScript(String commands) {
+        return getDriver().executeScriptAsync(commands).block().getStdout();
+    }
+
 }

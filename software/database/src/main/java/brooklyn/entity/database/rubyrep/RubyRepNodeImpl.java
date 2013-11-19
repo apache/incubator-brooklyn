@@ -38,10 +38,10 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
         DatabaseNode rightNode = getConfig(RIGHT_DATABASE);
 
         if (leftNode != null) {
-            setConfig(LEFT_DATABASE_URL, DependentConfiguration.attributeWhenReady(leftNode, DatabaseNode.DB_URL));
+            setConfig(LEFT_DATABASE_URL, DependentConfiguration.attributeWhenReady(leftNode, DatabaseNode.DATASTORE_URL));
         }
         if (rightNode != null) {
-            setConfig(RIGHT_DATABASE_URL, DependentConfiguration.attributeWhenReady(rightNode, DatabaseNode.DB_URL));
+            setConfig(RIGHT_DATABASE_URL, DependentConfiguration.attributeWhenReady(rightNode, DatabaseNode.DATASTORE_URL));
         }
     }
 

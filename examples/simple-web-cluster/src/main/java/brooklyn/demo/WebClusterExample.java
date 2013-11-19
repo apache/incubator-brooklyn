@@ -10,7 +10,6 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -47,16 +46,16 @@ public class WebClusterExample extends AbstractApplication {
                 //.configure("domain", "webclusterexample.brooklyn.local")
                 .configure("port", "8000+"));
           
-        web = addChild(ControlledDynamicWebAppCluster.Spec.newInstance()
+        web = addChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .displayName("WebApp cluster")
-                .controller(nginxController)
-                .initialSize(1)
-                .memberSpec(EntitySpec.create(JBoss7Server.class)
+                .configure(ControlledDynamicWebAppCluster.CONTROLLER, nginxController)
+                .configure(ControlledDynamicWebAppCluster.INITIAL_SIZE, 1)
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class)
                         .configure("httpPort", "8080+")
                         .configure("war", WAR_PATH)));
         
         web.getCluster().addPolicy(AutoScalerPolicy.builder()
-                .metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_LAST_PER_NODE)
+                .metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE)
                 .sizeRange(1, 5)
                 .metricRange(10, 100)
                 .build());
@@ -69,7 +68,7 @@ public class WebClusterExample extends AbstractApplication {
 
         // TODO Want to parse, to handle multiple locations
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(WebClusterExample.class).displayName("Brooklyn WebApp Cluster example"))
+                .application(EntitySpec.create(WebClusterExample.class).displayName("Brooklyn WebApp Cluster example"))
                 .webconsolePort(port)
                 .location(location)
                 .start();
