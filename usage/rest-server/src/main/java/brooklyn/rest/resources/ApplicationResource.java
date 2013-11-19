@@ -199,7 +199,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
   private void checkLocationsAreValid(ApplicationSpec applicationSpec) {
     for (String locationId : applicationSpec.getLocations()) {
         locationId = BrooklynRestResourceUtils.fixLocation(locationId);
-      if (!brooklyn().getLocationRegistry().canResolve(locationId)) {
+      if (!brooklyn().getLocationRegistry().canMaybeResolve(locationId)) {
         throw WebResourceUtils.notFound("Undefined location '%s'", locationId);
       }
     }

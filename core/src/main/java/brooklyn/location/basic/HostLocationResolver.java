@@ -51,7 +51,7 @@ public class HostLocationResolver implements LocationResolver {
 
         String args = matcher.group(2);
         String target = "byon:(hosts=" + args + ")";
-        if (!managementContext.getLocationRegistry().canResolve(target)) {
+        if (!managementContext.getLocationRegistry().canMaybeResolve(target)) {
             throw new IllegalArgumentException("Invalid target location '" + target + "'; must be resolvable location");
         }
         

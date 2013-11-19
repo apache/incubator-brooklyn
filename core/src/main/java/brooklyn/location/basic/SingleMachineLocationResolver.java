@@ -59,7 +59,7 @@ public class SingleMachineLocationResolver implements LocationResolver {
         }
         String target = locationArgs.get("target").toString();
         locationArgs.remove("target");
-        if (!managementContext.getLocationRegistry().canResolve(target)) {
+        if (!managementContext.getLocationRegistry().canMaybeResolve(target)) {
             throw new IllegalArgumentException("Invalid target location '" + target + "'; must be resolvable location");
         }
         
