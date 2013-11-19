@@ -91,7 +91,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     @Override
     public void install() {
         log.debug("Installing {}", entity);
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
+        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-cassandra-%s", getVersion()));

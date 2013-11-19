@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.java.UsesJmx.JmxAgentModes;
@@ -72,7 +73,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
 
     @Override
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
+        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/" + resolver.getUnpackedDirectoryName("jboss-"+getVersion());

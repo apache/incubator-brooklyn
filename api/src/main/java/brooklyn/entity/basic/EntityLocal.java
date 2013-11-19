@@ -11,8 +11,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.SubscriptionManager;
@@ -143,16 +141,4 @@ public interface EntityLocal extends Entity, Configurable {
      * @return True if any enrichers existed at this entity; false otherwise
      */
     boolean removeAllEnrichers();
-    
-    /** 
-     * @return The management context for the entity, or null if it is not yet managed.
-     * @deprecated since 0.5.0; access via {@link EntityInternal#getManagementContext()}.
-     */
-    ManagementContext getManagementContext();
-
-    /** 
-     * @return The task execution context for the entity, or null if it is not yet managed.
-     * @deprecated since 0.5.0; access via {@link EntityInternal#getExecutionContext()}.
-     */    
-    ExecutionContext getExecutionContext();
 }
