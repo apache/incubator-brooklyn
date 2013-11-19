@@ -88,23 +88,6 @@ public abstract class ShellAbstractTool implements ShellTool {
         }
     }
 
-    /** @deprecated since 0.5.0 use ConfigKey variant */
-    @Deprecated
-    protected static <T> T getMandatoryVal(Map<String,?> map, String key, Class<T> clazz) {
-        checkArgument(map.containsKey(key), "must contain key '"+key+"'");
-        return TypeCoercions.coerce(map.get(key), clazz);
-    }
-    
-    /** @deprecated since 0.5.0 use ConfigKey variant */
-    @Deprecated
-    protected static <T> T getOptionalVal(Map<String,?> map, String key, Class<T> clazz, T defaultVal) {
-        if (map.containsKey(key)) {
-            return TypeCoercions.coerce(map.get(key), clazz);
-        } else {
-            return defaultVal;
-        }
-    }
-    
     protected void closeWhispering(Closeable closeable, Object context) {
         closeWhispering(closeable, this, context);
     }
