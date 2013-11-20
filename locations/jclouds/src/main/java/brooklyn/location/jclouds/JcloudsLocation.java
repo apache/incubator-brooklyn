@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
@@ -64,6 +65,7 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineManagementMixins.MachineMetadata;
 import brooklyn.location.MachineManagementMixins.RichMachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
@@ -351,17 +353,37 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         Set<? extends ComputeMetadata> nodes = getComputeService().listNodes();
         Map<String,MachineMetadata> result = new LinkedHashMap<String, MachineMetadata>();
         for (ComputeMetadata node: nodes) {
-            result.put(node.getId(), new BasicMachineMetadata(node.getId(), node.getName(), 
-                ((node instanceof NodeMetadata) ? Iterators.tryFind( ((NodeMetadata)node).getPublicAddresses().iterator(), Predicates.alwaysTrue() ).orNull() : null),
-                ((node instanceof NodeMetadata) ? ((NodeMetadata)node).getStatus()==Status.RUNNING : null),
-                node));
+            result.put(node.getId(), getMachineMetadata(node));
         }
         return result;
     }
+
+    protected MachineMetadata getMachineMetadata(ComputeMetadata node) {
+        if (node==null)
+            return null;
+        return new BasicMachineMetadata(node.getId(), node.getName(), 
+            ((node instanceof NodeMetadata) ? Iterators.tryFind( ((NodeMetadata)node).getPublicAddresses().iterator(), Predicates.alwaysTrue() ).orNull() : null),
+            ((node instanceof NodeMetadata) ? ((NodeMetadata)node).getStatus()==Status.RUNNING : null),
+            node);
+    }
+    
+    public MachineMetadata getMachineMetadata(MachineLocation l) {
+        if (l instanceof JcloudsSshMachineLocation) {
+            return getMachineMetadata( ((JcloudsSshMachineLocation)l).node );
+        }
+        return null;
+    }
     
     @Override
-    public void killMachine(String id) {
-        getComputeService().destroyNode(id);
+    public void killMachine(String cloudServiceId) {
+        getComputeService().destroyNode(cloudServiceId);
+    }
+    
+    @Override
+    public void killMachine(MachineLocation l) {
+        MachineMetadata m = getMachineMetadata(l);
+        if (m==null) throw new NoSuchElementException("Machine "+l+" is not known at "+this);
+        killMachine(m.getId());
     }
 
     /** attaches a string describing where something is being created 
