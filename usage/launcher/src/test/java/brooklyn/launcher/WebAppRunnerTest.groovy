@@ -63,11 +63,6 @@ public class WebAppRunnerTest {
         return new BrooklynWebServer(bigProps, newManagementContext(brooklynProperties));
     }
     
-    /** @deprecated since 0.4.0. user createWebServer, or better, use BrooklynLauncher.newLauncher() */
-    BrooklynWebServer createLauncher(Map properties) {
-        return createWebServer(properties);        
-    }
-    
     @Test
     public void testStartWar1() {
         if (!Networking.isPortAvailable(8090))

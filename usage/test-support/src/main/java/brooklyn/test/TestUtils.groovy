@@ -400,28 +400,6 @@ public class TestUtils {
             return t
         }
     }
-    
-    /** @deprecated since 0.4.0 use HttpTestUtils.assertUrlEventuallyHasText or HttpTestUtils.assertUrlHasText 
-     * (NB: this method has "eventually" logic, with default timeout of 30s, despite the absence of that in the name) */
-    @Deprecated
-    public static void assertUrlHasText(Map flags=[:], String url, String ...phrases) {
-        String contents;
-        Duration timeout = Duration.of(flags.timeout) ?: Duration.THIRTY_SECONDS
-        executeUntilSucceeds(timeout:timeout, maxAttempts:50) {
-            //URLConnection connection = connectToURL(url);
-            //connection.getContent();
-            //int status = ((HttpURLConnection) connection).getResponseCode()
-            def connection = connectToURL(url);
-            contents = new URL(url).openStream().getText();
-            assertTrue(contents!=null && contents.length()>0)
-        }
-        for (String text: phrases) {
-            if (!contents.contains(text)) {
-                log.warn("CONTENTS OF URL MISSING TEXT: $text\n"+contents)
-                fail("URL $url does not contain text: $text")
-            }
-        }
-    }
 
     /**
      * @deprecated since 0.5; use {@link EntityTestUtils#assertAttributeEqualsEventually(Entity, AttributeSensor, Object)}

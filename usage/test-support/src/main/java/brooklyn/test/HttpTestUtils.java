@@ -227,18 +227,6 @@ public class HttpTestUtils {
         }
     }
     
-    /** @deprecated since 0.4.0 use assertContentEventuallyContainsText */
-    // it's not necessarily http (and http is implied by the class name anyway)
-    // more importantly, we want to use new routines above which don't wrap execute-until-succeeds twice!
-    @Deprecated
-    public static void assertHttpContentEventuallyContainsText(final String url, final String containedText) {
-        TestUtils.executeUntilSucceeds(new Runnable() {
-            public void run() {
-                TestUtils.assertUrlHasText(url, containedText);
-            }
-         });
-    }
-    
     /**
      * Schedules (with the given executor) a poller that repeatedly accesses the given url, to confirm it always gives
      * back the expected status code.

@@ -2,7 +2,6 @@ package brooklyn.util.task;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -67,26 +66,6 @@ public class BasicExecutionManager implements ExecutionManager {
         return PerThreadCurrentTaskHolder.perThreadCurrentTask;
     }
 
-    /** @deprecated in 0.4.0, use Tasks.current() */
-    public static Task getCurrentTask() { return Tasks.current(); }
-
-    /** convenience for setting "blocking details" on any task where the current thread is running;
-     * typically invoked prior to a wait, for transparency to a user;
-     * then invoked with 'null' just after the wait 
-     * 
-     * @deprecated in 0.4.0, use Tasks.setBlockingDetails */
-    public static void setBlockingDetails(String description) {
-        Tasks.setBlockingDetails(description);
-    }
-    /** convenience for setting "blocking details" on any task where the current thread is running,
-     * while the passed code is executed; often used from groovy as
-     * <pre>{@code withBlockingDetails("sleeping 5s") { Thread.sleep(5000); } }</pre> 
-     * 
-     * @deprecated in 0.4.0, use Tasks.withBlockingDetails */
-    public static Object withBlockingDetails(String description, Callable code) throws Exception {
-        return Tasks.withBlockingDetails(description, code);
-    }
-
     private final ThreadFactory threadFactory;
     
     private final ThreadFactory daemonThreadFactory;
@@ -105,9 +84,6 @@ public class BasicExecutionManager implements ExecutionManager {
     private ConcurrentMap<Object,Set<Task>> tasksByTag = new ConcurrentHashMap<Object,Set<Task>>();
     
     private ConcurrentMap<String,Task> tasksById = new ConcurrentHashMap<String,Task>();
-
-    @Deprecated
-    private ConcurrentMap<Object, TaskPreprocessor> preprocessorByTag = new ConcurrentHashMap<Object, TaskPreprocessor>();
 
     private ConcurrentMap<Object, TaskScheduler> schedulerByTag = new ConcurrentHashMap<Object, TaskScheduler>();
     
@@ -371,7 +347,6 @@ public class BasicExecutionManager implements ExecutionManager {
               ((TaskInternal<?>)task).runListeners();
           }
         }};
-        ((TaskInternal<T>)task).initExecutionManager(this);
         
         // If there's a scheduler then use that; otherwise execute it directly
         Set<TaskScheduler> schedulers = null;
@@ -410,7 +385,7 @@ public class BasicExecutionManager implements ExecutionManager {
     protected void beforeSubmit(Map flags, Task<?> task) {
         incompleteTaskCount.incrementAndGet();
         
-		Task currentTask = getCurrentTask();
+        Task<?> currentTask = Tasks.current();
         if (currentTask!=null) ((TaskInternal<?>)task).setSubmittedByTask(currentTask);
         ((TaskInternal<?>)task).setSubmitTimeUtc(System.currentTimeMillis());
         
@@ -419,17 +394,6 @@ public class BasicExecutionManager implements ExecutionManager {
 
         for (Object tag: ((TaskInternal<?>)task).getTags()) {
             getMutableTasksWithTag(tag).add(task);
-        }
-        
-        List tagLinkedPreprocessors = new ArrayList();
-        for (Object tag: ((TaskInternal<?>)task).getTags()) {
-            TaskPreprocessor p = getTaskPreprocessorForTag(tag);
-            if (p!=null) tagLinkedPreprocessors.add(p);
-        }
-        flags.put("tagLinkedPreprocessors", tagLinkedPreprocessors);
-        for (Object ppo: tagLinkedPreprocessors) { 
-            TaskPreprocessor t = (TaskPreprocessor)ppo;
-            t.onSubmit(flags, task); 
         }
     }
 
@@ -448,10 +412,6 @@ public class BasicExecutionManager implements ExecutionManager {
             PerThreadCurrentTaskHolder.perThreadCurrentTask.set(task);
             ((TaskInternal<?>)task).setStartTimeUtc(System.currentTimeMillis());
         }
-        for (Object to : (Collection)flags.get("tagLinkedPreprocessors")) { 
-            TaskPreprocessor t = (TaskPreprocessor)to;
-            t.onStart(flags, task); 
-        }
         ExecutionUtils.invoke(flags.get("newTaskStartCallback"), task);
     }
 
@@ -464,10 +424,6 @@ public class BasicExecutionManager implements ExecutionManager {
         ExecutionUtils.invoke(flags.get("newTaskEndCallback"), task);
         List l = (List)flags.get("tagLinkedPreprocessors");
         Collections.reverse(l);
-        for (Object li: l) {
-            TaskPreprocessor t = (TaskPreprocessor)li;
-            t.onEnd(flags, task); 
-        }
 
         PerThreadCurrentTaskHolder.perThreadCurrentTask.remove();
         ((TaskInternal)task).setEndTimeUtc(System.currentTimeMillis());
@@ -488,70 +444,8 @@ public class BasicExecutionManager implements ExecutionManager {
         }
     }
 
-    /** Returns {@link TaskPreprocessor} defined for tasks with the given tag, or null if none. */
-    @Deprecated
-    public TaskPreprocessor getTaskPreprocessorForTag(Object tag) { return preprocessorByTag.get(tag); }
-
-    /** @see #setTaskPreprocessorForTag(Object, TaskPreprocessor) */
-    @SuppressWarnings("deprecation")
-    public void setTaskPreprocessorForTag(Object tag, Class<? extends TaskPreprocessor> preprocessor) {
-        synchronized (preprocessorByTag) {
-            TaskPreprocessor old = getTaskPreprocessorForTag(tag);
-            if (old!=null) {
-                if (preprocessor.isAssignableFrom(old.getClass())) {
-                    /* already have such an instance */
-                    return;
-                }
-                //might support multiple in future...
-                throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag "+tag+", has "+old+", setting new "+preprocessor+")");
-            }
-            try {
-                setTaskPreprocessorForTag(tag, preprocessor.newInstance());
-            } catch (InstantiationException e) {
-                throw Exceptions.propagate(e);
-            } catch (IllegalAccessException e) {
-                throw Exceptions.propagate(e);
-            }
-        }
-    }
-
-    /**
-     * Defines a {@link TaskPreprocessor} to run on all subsequently submitted jobs with the given tag.
-     *
-     * Maximum of one allowed currently. Resubmissions of the same preprocessor (or preprocessor class)
-     * allowed. If changing, you must call {@link #clearTaskPreprocessorForTag(Object)} between the two.
-     *
-     * @see #setTaskPreprocessorForTag(Object, Class)
-     */
-    @SuppressWarnings("deprecation")
-    public void setTaskPreprocessorForTag(Object tag, TaskPreprocessor preprocessor) {
-        synchronized (preprocessorByTag) {
-            preprocessor.injectManager(this);
-            preprocessor.injectTag(tag);
-
-            Object old = preprocessorByTag.put(tag, preprocessor);
-            if (old!=null && old!=preprocessor) {
-                //might support multiple in future...
-                throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag "+tag+")");
-            }
-        }
-    }
-
     public TaskScheduler getTaskSchedulerForTag(Object tag) {
         return schedulerByTag.get(tag);
-    }
-    
-    /**
-     * Forgets that any preprocessor was associated with a tag.
-     *
-     * @see #setTaskPreprocessorForTag(Object, TaskPreprocessor)
-     * @see #setTaskPreprocessorForTag(Object, Class)
-     */
-    public boolean clearTaskPreprocessorForTag(Object tag) {
-        synchronized (preprocessorByTag) {
-            Object old = preprocessorByTag.remove(tag);
-            return (old!=null);
-        }
     }
     
     public void setTaskSchedulerForTag(Object tag, Class<? extends TaskScheduler> scheduler) {

@@ -82,16 +82,10 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
      * @throws InterruptedException */    
     protected abstract List<T> runJobs() throws InterruptedException, ExecutionException;
     
-    @SuppressWarnings("deprecation")
     protected void submitIfNecessary(TaskAdaptable<?> task) {
         if (!task.asTask().isSubmitted()) {
             if (BasicExecutionContext.getCurrentExecutionContext() == null) {
-                if (em!=null) {
-                    log.warn("Discouraged submission of compound task ({}) from {} without execution context; using execution manager", task, this);
-                    em.submit(task);
-                } else {
-                    throw new IllegalStateException("Compound task ("+task+") launched from "+this+" missing required execution context");
-                }
+                throw new IllegalStateException("Compound task ("+task+") launched from "+this+" missing required execution context");
             } else {
                 BasicExecutionContext.getCurrentExecutionContext().submit(task);
             }

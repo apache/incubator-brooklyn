@@ -73,7 +73,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
 
     public String getVersion() {
-        return getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION);
+        return elvis(getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION), NO_VERSION_INFO);
     }
 
     /**

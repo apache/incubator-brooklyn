@@ -211,16 +211,6 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         return !isJmxEnabled() ? Integer.valueOf(-1) : entity.getAttribute(UsesJmx.JMX_PORT);
     }
 
-    /** @deprecated since 0.4.0, see {@link #getRmiRegistryPort()} */ @Deprecated
-    public Integer getRmiPort() {
-        return getRmiRegistryPort();
-    }
-
-    /** @deprecated since 0.4.0, see {@link #getRmiRegistryPort()} */ @Deprecated
-    public Integer getRmiServerPort() {
-        return !isJmxEnabled() ? -1 : entity.getAttribute(UsesJmx.RMI_SERVER_PORT);
-    }
-
     /** @deprecated since 0.6.0, the config key is always used instead of this */ @Deprecated
     public Integer getRmiRegistryPort() {
         return !isJmxEnabled() ? -1 : entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT);

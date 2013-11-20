@@ -26,8 +26,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 @Beta
 public interface TaskInternal<T> extends Task<T> {
     
-    void initExecutionManager(ExecutionManager em);
-    
     void initResult(ListenableFuture<T> result);
 
     /** if the job is queued for submission (e.g. by another task) it can indicate that fact (and time) here;
@@ -88,8 +86,6 @@ public interface TaskInternal<T> extends Task<T> {
     Set<Object> getMutableTags();
 
     void setStartTimeUtc(long currentTimeMillis);
-    
-    ExecutionManager getExecutionManager();
 
     void applyTagModifier(Function<Set<Object>,Void> modifier);
 }

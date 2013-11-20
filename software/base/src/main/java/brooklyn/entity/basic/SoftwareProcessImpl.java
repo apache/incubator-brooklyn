@@ -289,14 +289,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         result.put(LocationConfigKeys.CALLER_CONTEXT.getName(), this);
         return result;
     }
-    
-    /** @deprecated in 0.4.0. use obtainProvisioningFlags. 
-     * introduced in a branch which duplicates changes in master where it is called "obtainPF".
-     * will remove as soon as those uses are updated. */
-    protected final Map<String,Object> getProvisioningFlags(MachineProvisioningLocation location) {
-        return obtainProvisioningFlags(location);
-    }
-    
 
     /** returns the ports that this entity wants to use;
      * default implementation returns 22 plus first value for each PortAttributeSensorAndConfigKey config key PortRange.

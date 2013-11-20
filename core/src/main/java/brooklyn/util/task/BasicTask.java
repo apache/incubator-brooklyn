@@ -171,16 +171,6 @@ public class BasicTask<T> implements TaskInternal<T> {
     protected volatile Thread thread = null;
     private volatile boolean cancelled = false;
     protected volatile Future<T> result = null;
-
-    /** discouraged, but used in tests. not always set (e.g. if it is a scheduled task)
-     * @deprecated in 0.4.0; use current execution context, as per CompoundTask.submitXxx */
-    @Deprecated
-    protected ExecutionManager em;
-    
-    @Override
-    public void initExecutionManager(ExecutionManager em) {
-        this.em = em;
-    }
     
     @Override
     public synchronized void initResult(ListenableFuture<T> result) {
@@ -798,11 +788,6 @@ public class BasicTask<T> implements TaskInternal<T> {
     @Override
     public void setStartTimeUtc(long val) {
         startTimeUtc = val;
-    }
-    
-    @Override
-    public ExecutionManager getExecutionManager() {
-        return em;
     }
 
     @Override

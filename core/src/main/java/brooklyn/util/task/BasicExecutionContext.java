@@ -38,9 +38,6 @@ public class BasicExecutionContext extends AbstractExecutionContext {
     static final ThreadLocal<BasicExecutionContext> perThreadExecutionContext = new ThreadLocal<BasicExecutionContext>();
     
     public static BasicExecutionContext getCurrentExecutionContext() { return perThreadExecutionContext.get(); }
- 
-    /** @deprecated in 0.4.0, use Tasks.current() */
-    public Task<?> getCurrentTask() { return BasicExecutionManager.getCurrentTask(); }
 
     final ExecutionManager executionManager;
     final Set<Object> tags = new LinkedHashSet<Object>();
