@@ -422,8 +422,6 @@ public class BasicExecutionManager implements ExecutionManager {
 
         if (log.isTraceEnabled()) log.trace(this+" afterEnd, task: "+task);
         ExecutionUtils.invoke(flags.get("newTaskEndCallback"), task);
-        List l = (List)flags.get("tagLinkedPreprocessors");
-        Collections.reverse(l);
 
         PerThreadCurrentTaskHolder.perThreadCurrentTask.remove();
         ((TaskInternal)task).setEndTimeUtc(System.currentTimeMillis());

@@ -161,11 +161,6 @@ public abstract class ForwardingTask<T> extends ForwardingObject implements Task
     }
 
     @Override
-    public void initExecutionManager(ExecutionManager em) {
-        delegate().initExecutionManager(em);
-    }
-
-    @Override
     public void initResult(ListenableFuture<T> result) {
         delegate().initResult(result);
     }
@@ -293,11 +288,6 @@ public abstract class ForwardingTask<T> extends ForwardingObject implements Task
     @Override
     public void setStartTimeUtc(long currentTimeMillis) {
         delegate().setStartTimeUtc(currentTimeMillis);
-    }
-
-    @Override
-    public ExecutionManager getExecutionManager() {
-        return delegate().getExecutionManager();
     }
 
     @Override

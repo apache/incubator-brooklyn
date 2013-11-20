@@ -283,11 +283,6 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         public Set<Task<?>> getTasks() {
             return Collections.emptySet();
         }
-        
-        @Override
-        public Task<?> getCurrentTask() {
-            return null;
-        }
 
         @Override
         protected <T> Task<T> submitInternal(Map<?, ?> properties, Object task) {

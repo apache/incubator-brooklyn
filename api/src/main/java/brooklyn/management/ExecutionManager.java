@@ -96,9 +96,4 @@ public interface ExecutionManager {
      */
     public <T> Task<T> submit(Map<?, ?> flags, TaskAdaptable<T> task);
 
-    //following also used, may be moved up to interface
-//    void setTaskPreprocessorForTag(Object tag, Class<? extends TaskPreprocessor> preprocessor);
-//    TaskPreprocessor getTaskPreprocessorForTag(Object tag);
-//    void setTaskPreprocessorForTag(Object tag, TaskPreprocessor preprocessor);
-
 }

@@ -26,7 +26,7 @@ public class ScheduledExecutionTest {
 		BasicExecutionManager m = new BasicExecutionManager();
 		int i=0;
 		def t = new ScheduledTask(delay: 2*PERIOD*TimeUnit.MILLISECONDS, period: PERIOD*TimeUnit.MILLISECONDS, maxIterations: 5, { new BasicTask({
-			log.debug "task running: "+BasicExecutionManager.currentTask+" "+BasicExecutionManager.currentTask.getStatusDetail(false)
+			log.debug "task running: "+Tasks.current()+" "+Tasks.current().getStatusDetail(false)
 			++i; 
 		}) } );
 	
@@ -50,8 +50,8 @@ public class ScheduledExecutionTest {
 		BasicExecutionManager m = new BasicExecutionManager();
 		int i=0;
 		def t = new ScheduledTask(delay: 2*PERIOD*TimeUnit.MILLISECONDS, period: PERIOD*TimeUnit.MILLISECONDS, { new BasicTask({
-			if (i>=4) BasicExecutionManager.currentTask.submittedByTask.period = null
-			log.info "task running (${i}): "+BasicExecutionManager.currentTask+" "+BasicExecutionManager.currentTask.getStatusDetail(false)
+			if (i>=4) Tasks.current().submittedByTask.period = null
+			log.info "task running (${i}): "+Tasks.current()+" "+Tasks.current().getStatusDetail(false)
 			++i;
 		}) } );
 	
@@ -74,9 +74,9 @@ public class ScheduledExecutionTest {
 		BasicExecutionManager m = new BasicExecutionManager();
 		int i=0;
 		def t = new ScheduledTask(delay: 2*PERIOD*TimeUnit.MILLISECONDS, period: PERIOD*TimeUnit.MILLISECONDS, { new BasicTask({
-			log.info "task running (${i}): "+BasicExecutionManager.currentTask+" "+BasicExecutionManager.currentTask.getStatusDetail(false)
+			log.info "task running (${i}): "+Tasks.current()+" "+Tasks.current().getStatusDetail(false)
 			++i;
-			if (i>=5) BasicExecutionManager.currentTask.submittedByTask.cancel()
+			if (i>=5) Tasks.current().submittedByTask.cancel()
 			i
 		}) } );
 	

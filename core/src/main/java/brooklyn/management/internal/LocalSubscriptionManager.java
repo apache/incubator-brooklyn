@@ -131,15 +131,8 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
             boolean b3 = removeFromMapOfCollections(subscriptionsBySubscriber, s.subscriber, s);
             assert b3 == b2;
         }
-        
-        // TODO Requires code review: why did we previously do exactly same check twice in a row (with no synchronization in between)? 
-        if ((subscriptionsBySubscriber.size() == 0 || !groovyTruth(subscriptionsBySubscriber.get(s.subscriber))) && !s.subscriberExecutionManagerTagSupplied && s.subscriberExecutionManagerTag!=null) {
-            //if subscriber has gone away forget about his task; but check in synch block to ensure setTaskPreprocessor call above will win in any race
-            if ((subscriptionsBySubscriber.size() == 0 || !groovyTruth(subscriptionsBySubscriber.get(s.subscriber))))
-                ((BasicExecutionManager)em).clearTaskPreprocessorForTag(s.subscriberExecutionManagerTag);
-        }
 
-		//FIXME ALEX - this seems wrong
+        // FIXME ALEX - this seems wrong
         ((BasicExecutionManager) em).setTaskSchedulerForTag(s.subscriberExecutionManagerTag, SingleThreadedScheduler.class);
         return result;
     }

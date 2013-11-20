@@ -17,8 +17,7 @@ public interface TaskScheduler {
     public void injectExecutor(ExecutorService executor);
 
     /**
-     * Called by {@link BasicExecutionManager} when preprocessor is associated with an
-     * execution manager.
+     * Called by {@link BasicExecutionManager} to schedule tasks.
      */
     public <T> Future<T> submit(Callable<T> c);
 }

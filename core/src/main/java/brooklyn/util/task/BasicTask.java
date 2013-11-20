@@ -142,17 +142,15 @@ public class BasicTask<T> implements TaskInternal<T> {
      * Order is guaranteed to be as shown below, in order of #. Within each # line it is currently in the order specified by commas but this is not guaranteed.
      * (The spaces between the # section indicate longer delays / logical separation ... it should be clear!)
      *
-     * # submitter, submit time set, tags and other submit-time fields set, task tag-linked preprocessors onSubmit invoked
+     * # submitter, submit time set, tags and other submit-time fields set
      *
      * # thread set, ThreadLocal getCurrentTask set
      * # start time set, isBegun is true
-     * # task tag-linked preprocessors onStart invoked
      * # task end callback run, if supplied
      *
      * # task runs
      *
      * # task end callback run, if supplied
-     * # task tag-linked preprocessors onEnd invoked (in reverse order of tags)
      * # end time set
      * # thread cleared, ThreadLocal getCurrentTask set
      * # Task.notifyAll()

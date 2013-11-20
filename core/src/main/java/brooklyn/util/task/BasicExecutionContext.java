@@ -75,7 +75,7 @@ public class BasicExecutionContext extends AbstractExecutionContext {
     /** returns tasks started by this context (or tasks which have all the tags on this object) */
     public Set<Task<?>> getTasks() { return executionManager.getTasksWithAllTags((Set<?>)tags); }
      
-    @SuppressWarnings({ "deprecation", "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected <T> Task<T> submitInternal(Map<?,?> propertiesQ, final Object task) {
         if (task instanceof TaskAdaptable<?> && !(task instanceof Task<?>)) 
