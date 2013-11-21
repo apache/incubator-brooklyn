@@ -19,6 +19,8 @@ public class JcloudsMachineNamer extends CloudMachineNamer {
             return 39;
         if ("google-compute-engine".equals( setup.peek(JcloudsLocationConfig.CLOUD_PROVIDER) ))
             return 39;
+        if ("softlayer".equals( setup.peek(JcloudsLocationConfig.CLOUD_PROVIDER) ))
+            return 30;
         // TODO other cloud max length rules
         
         return null;  
