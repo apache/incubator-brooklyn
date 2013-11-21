@@ -87,4 +87,16 @@ public interface EntityApi {
           @PathParam("entity") final String entity
   );
   
+  @POST
+  @ApiOperation(
+      value = "Expunge an entity",
+      responseClass = "brooklyn.rest.domain.TaskSummary"
+  )
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Undefined entity or location"),
+      @ApiError(code = 412, reason = "Application already registered")
+  })
+  @Path("/{entity}/expunge")
+  public Response expunge(@PathParam("application") final String application, @PathParam("entity") final String entity);
+  
 }

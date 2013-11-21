@@ -367,6 +367,18 @@ public class BrooklynRestResourceUtils {
             }
         });
     }
+    
+    public Task<?> expunge(final Entity entity) {
+        return mgmt.getExecutionManager().submit(
+                MutableMap.of("displayName", "expunging " + entity, "description", "REST call to expunge entity "
+                        + entity.getDisplayName() + " (" + entity + ")"), new Runnable() {
+                    @Override
+                    public void run() {
+                        ((EntityInternal) entity).destroy();
+                        mgmt.getEntityManager().unmanage(entity);
+                    }
+                });
+    }
 
     @SuppressWarnings({ "rawtypes" })
     public Response createCatalogEntryFromGroovyCode(String groovyCode) {

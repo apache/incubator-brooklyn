@@ -1,6 +1,8 @@
 package brooklyn.rest.resources;
 
 import static com.google.common.collect.Iterables.transform;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.ACCEPTED;
 
 import java.net.URI;
 import java.util.List;
@@ -91,5 +93,13 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       // for anything else we do a redirect (e.g. http / https; perhaps ftp)
       return Response.temporaryRedirect(URI.create(url)).build();
   }
+
+    @Override
+    public Response expunge(String application, String entity) {
+        EntityLocal entityLocal = brooklyn().getEntity(application, entity);
+        Task<?> task = brooklyn().expunge(entityLocal);
+        TaskSummary summary = TaskTransformer.FROM_TASK.apply(task);
+        return status(ACCEPTED).entity(summary).build();
+    }
 
 }

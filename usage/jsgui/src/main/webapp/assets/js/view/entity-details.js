@@ -37,7 +37,8 @@ define([
                 sensors:this.sensorsView.model
             })
             this.lifecycleView = new LifecycleView({
-            	model: this.model
+            	model: this.model,
+            	application:this.options.application
             })
             this.$("#summary").html(this.summaryView.render().el)
             this.$("#lifecycle").html(this.lifecycleView.render().el)
