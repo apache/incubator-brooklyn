@@ -270,7 +270,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                 log.debug("java not detected at " + entity + " @ " + getLocation() + ", installing using BashCommands.installJava6");
                 
                 result = newScript("INSTALL_OPENJDK").body.append(
-                        BashCommands.installJava6OrFail()
+                        BashCommands.installJava7Or6OrFail()
                         // could use Jclouds routines -- but the following complains about yum-install not defined
                         // even though it is set as an alias (at the start of the first file)
                         //   resource.getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
@@ -290,7 +290,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                 Time.sleep(Duration.TEN_SECONDS);
                 
                 result = newScript("INSTALL_OPENJDK").body.append(
-                        BashCommands.installJava6OrFail()
+                        BashCommands.installJava7Or6OrFail()
                         ).execute();
                 if (result==0) {
                     log.info("Succeeded installing Java at " + getLocation() + " for " + entity + " after retry.");
@@ -347,6 +347,8 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         DynamicTasks.queue("install java", new Runnable() { public void run() {
             installJava(); }});
             
+        // TODO check java version
+        
         if (isJmxEnabled()) {
             DynamicTasks.queue("install jmx", new Runnable() { public void run() {
                 installJmxSupport(); }}); 
