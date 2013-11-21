@@ -57,8 +57,6 @@ public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJa
     protected void connectSensors() {
         super.connectSensors();
         
-        ConfigToAttributes.apply(this);
-        
         if ( ((VanillaJavaAppDriver)getDriver()).isJmxEnabled() ) {
             jmxPollPeriod = (jmxPollPeriod > 0) ? jmxPollPeriod : 500;
             jmxFeed = JavaAppUtils.connectMXBeanSensors(this, jmxPollPeriod);
@@ -76,7 +74,6 @@ public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJa
     
     @Override
     protected void preStop() {
-        // FIXME Confirm don't need to call jmxAdapter.deactivateAdapter();
         super.preStop();
     }
 

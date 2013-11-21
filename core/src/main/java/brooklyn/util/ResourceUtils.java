@@ -1,6 +1,5 @@
 package brooklyn.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -101,9 +100,7 @@ public class ResourceUtils {
     }
 
     public ResourceUtils(Object contextObject) {
-        this(contextObject, 
-            /* NOV 2013: for a short while we said 'for' here but that is redundant in most logging calls */ Strings.toString(contextObject)
-        );
+        this(contextObject, Strings.toString(contextObject));
     }
     
     /** used to register custom mechanisms for getting classloaders given an object */
@@ -403,25 +400,17 @@ public class ResourceUtils {
     
     /** @deprecated since 0.7.0 use {@link Streams#readFullyString(InputStream) */ @Deprecated
     public static String readFullyString(InputStream is) throws IOException {
-        return new String(readFullyBytes(is));
+        return Streams.readFullyString(is);
     }
 
     /** @deprecated since 0.7.0 use {@link Streams#readFully(InputStream) */ @Deprecated
     public static byte[] readFullyBytes(InputStream is) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        copy(is, out);
-        return out.toByteArray();
+        return Streams.readFully(is);
     }
-
+    
     /** @deprecated since 0.7.0 use {@link Streams#copy(InputStream, OutputStream)} */ @Deprecated
     public static void copy(InputStream input, OutputStream output) throws IOException {
-        byte[] buf = new byte[1024];
-        int bytesRead = input.read(buf);
-        while (bytesRead != -1) {
-            output.write(buf, 0, bytesRead);
-            bytesRead = input.read(buf);
-        }
-        output.flush();
+        Streams.copy(input, output);
     }
 
     public static File mkdirs(File dir) {

@@ -51,6 +51,7 @@ public class SshTasks {
         final String id = Identifiers.makeRandomId(6);
         return newSshExecTaskFactory(machine, 
                 BashCommands.dontRequireTtyForSudo(),
+                // strange quotes are to ensure we don't match against echoed stdin
                 BashCommands.sudo("echo \"sudo\"-is-working-"+id))
             .summary("setting up sudo")
             .configure(SshTool.PROP_ALLOCATE_PTY, true)

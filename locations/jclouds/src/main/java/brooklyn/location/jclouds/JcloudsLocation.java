@@ -339,11 +339,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             ConfigBag.newInstanceExtending(getConfigBag(), flags));
     }
     
-    /** @deprecated since 0.7.0 use {@link #listComputeInstances()} */ @Deprecated
+    /** @deprecated since 0.7.0 use {@link #listMachines()} */ @Deprecated
     public Set<? extends ComputeMetadata> listNodes() {
         return listNodes(MutableMap.of());
     }
-    /** @deprecated since 0.7.0 use {@link #listComputeInstances()} */ @Deprecated
+    /** @deprecated since 0.7.0 use {@link #listMachines()}.
+     * (no support for custom compute service flags; if that is needed, we'll have to introduce a new method,
+     * but it seems there are no usages) */ @Deprecated
     public Set<? extends ComputeMetadata> listNodes(Map<?,?> flags) {
         return getComputeService(flags).listNodes();
     }

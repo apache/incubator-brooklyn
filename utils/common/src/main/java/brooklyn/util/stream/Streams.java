@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -33,6 +34,7 @@ public class Streams {
     /** drop-in non-deprecated replacement for {@link Closeable}'s deprecated closeQuiety;
      * we may wish to review usages, particularly as we drop support for java 1.6,
      * but until then use this instead of the deprecated method */
+    @Beta
     public static void closeQuietly(Closeable x) {
         try {
             x.close();

@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -109,7 +108,7 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
 
     public String getArgs(){
         List<Object> args = entity.getConfig(VanillaJavaApp.ARGS);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for(Iterator<Object> it = args.iterator();it.hasNext();){
             Object argO = it.next();
             String arg;
