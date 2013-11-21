@@ -115,6 +115,7 @@ import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
+import com.google.inject.Module;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -1194,6 +1195,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     protected String extractNodeLocationId(ConfigBag setup, NodeMetadata node, LocationScope scope) {
         org.jclouds.domain.Location nodeLoc = node.getLocation();
+        if(nodeLoc == null) return null; 
         do {
             if (nodeLoc.getScope() == scope) return nodeLoc.getId();
             nodeLoc = nodeLoc.getParent();

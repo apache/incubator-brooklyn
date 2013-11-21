@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -47,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.location.jclouds.config.BrooklynStandardJcloudsGuiceModule;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 
@@ -222,11 +224,12 @@ public class JcloudsUtil implements JcloudsLocationConfig {
             }
             LOG.debug("jclouds ComputeService cache miss for compute service, creating, for "+Entities.sanitize(properties));
         }
-        
+
         Iterable<Module> modules = ImmutableSet.<Module> of(
                 new SshjSshClientModule(), 
                 new SLF4JLoggingModule(),
-                new BouncyCastleCryptoModule());
+                new BouncyCastleCryptoModule(),
+                new BrooklynStandardJcloudsGuiceModule());
 
         // Synchronizing to avoid deadlock from sun.reflect.annotation.AnnotationType.
         // See https://github.com/brooklyncentral/brooklyn/issues/974
@@ -239,7 +242,6 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                     .build(ComputeServiceContext.class);
         }
         final ComputeService computeService = computeServiceContext.getComputeService();
-                
         if (allowReuse) {
             synchronized (cachedComputeServices) {
                 ComputeService result = cachedComputeServices.get(cacheKey);
@@ -253,7 +255,6 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 cachedComputeServices.put(cacheKey, computeService);
             }
         }
-        
         return computeService;
      }
      
