@@ -14,7 +14,13 @@ applications contained in this archive.
 ### Cloud Credentials
 
 To run, you'll need to specify credentials for your preferred cloud.  This 
-can be done in `~/.brooklyn/brooklyn.properties`:
+can be done in `~/.brooklyn/brooklyn.properties`.
+
+A recommended starting point is the file at:
+
+    http://brooklyncentral.github.io/use/guide/quickstart/brooklyn.properties
+
+As a quick-start, you can specify:
 
     brooklyn.location.jclouds.aws-ec2.identity=AKXXXXXXXXXXXXXXXXXX
     brooklyn.location.jclouds.aws-ec2.credential=secret01xxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -22,8 +28,7 @@ can be done in `~/.brooklyn/brooklyn.properties`:
     brooklyn.location.named.My_Amazon_US_west=jclouds:aws-ec2:us-west-1
     brooklyn.location.named.My_Amazon_EU=jclouds:aws-ec2:eu-west-1
 
-Alternatively these can be set as shell environment parameters or JVM system 
-properties.
+Alternatively these can be set as shell environment parameters or JVM system properties.
 
 Many other clouds are supported also, as well as pre-existing machines 
 ("bring your own nodes"), custom endpoints for private clouds, and specifying 
