@@ -89,7 +89,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
         webCluster = addChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("war", WAR_PATH)
                 .policy(AutoScalerPolicy.builder()
-                        .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+                        .metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_LAST_PER_NODE)
                         .sizeRange(1, 5)
                         .metricRange(10, 100)
                         .build()));

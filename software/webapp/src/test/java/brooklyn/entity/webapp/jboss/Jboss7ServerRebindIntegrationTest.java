@@ -107,7 +107,7 @@ public class Jboss7ServerRebindIntegrationTest {
         JBoss7Server newServer = (JBoss7Server) Iterables.find(newApp.getChildren(), Predicates.instanceOf(JBoss7Server.class));
 
         assertEquals(newServer.getAttribute(JBoss7Server.ROOT_URL), origServer.getAttribute(JBoss7Server.ROOT_URL));
-        assertEquals(newServer.getAttribute(JBoss7Server.MANAGEMENT_HTTP_PORT), origServer.getAttribute(JBoss7Server.MANAGEMENT_PORT));
+        assertEquals(newServer.getAttribute(JBoss7Server.MANAGEMENT_HTTP_PORT), origServer.getAttribute(JBoss7Server.MANAGEMENT_HTTP_PORT));
         assertEquals(newServer.getAttribute(JBoss7Server.DEPLOYED_WARS), origServer.getAttribute(JBoss7Server.DEPLOYED_WARS));
         
         assertAttributeEventually(newServer, SoftwareProcess.SERVICE_UP, true);

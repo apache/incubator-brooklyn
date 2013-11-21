@@ -58,17 +58,11 @@ public interface WebAppServiceConstants {
     /** req/second computed from the delta of the last request count and an associated timestamp */
     public static final AttributeSensor<Double> REQUESTS_PER_SECOND_LAST =
             Sensors.newDoubleSensor("webapp.reqs.perSec.last", "Reqs/sec (last datapoint)");
-    /** @deprecated since 0.5.0, use REQUESTS_PER_SECOND_LAST */
-    public static final AttributeSensor<Double> REQUESTS_PER_SECOND = REQUESTS_PER_SECOND_LAST;
 
     /** rolled-up req/second for a window, 
      * easily configured with {@link WebAppServiceMethods#connectWebAppServerPolicies(brooklyn.entity.basic.EntityLocal, brooklyn.util.time.Duration)} */
     public static final AttributeSensor<Double> REQUESTS_PER_SECOND_IN_WINDOW =
             Sensors.newDoubleSensor("webapp.reqs.perSec.windowed", "Reqs/sec (over time window)");
-    /** @deprecated since 0.5.0, use REQUESTS_PER_SECOND_WINDOW_PERIOD */
-    public static final Integer AVG_REQUESTS_PER_SECOND_PERIOD = REQUESTS_PER_SECOND_WINDOW_PERIOD;
-    /** @deprecated since 0.5.0, use REQUESTS_PER_SECOND_IN_WINDOW */
-    public static final AttributeSensor<Double> AVG_REQUESTS_PER_SECOND = REQUESTS_PER_SECOND_IN_WINDOW;
 
     public static final AttributeSensor<String> ROOT_URL = RootUrl.ROOT_URL;
 

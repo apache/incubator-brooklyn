@@ -12,11 +12,6 @@ import javax.net.ssl.X509TrustManager;
 
 public class SslTrustUtils {
 
-    /** @deprecated since 0.5.0 use trustAll */
-    @Deprecated
-    public static <T extends URLConnection> T configure(T connection) {
-        return trustAll(connection);
-    }
     /** configures a connection to accept all certificates, if it is for https */
     public static <T extends URLConnection> T trustAll(T connection) {
         if (connection instanceof HttpsURLConnection) {
