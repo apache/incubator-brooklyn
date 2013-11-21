@@ -16,9 +16,13 @@ define(["underscore", "jquery", "backbone", "brooklyn-utils",
             this.$el.html(this.template());
         },
         showExpungeModal: function() {
+            var self = this;
             var modal = new ExpungeInvokeView({
                 el:"#expunge-modal",
                 model:this.model.attributes
+            });
+            modal.on("entity.expunged", function() {
+                self.trigger("entity.expunged");
             });
             modal.render().$el.modal("show");
         }

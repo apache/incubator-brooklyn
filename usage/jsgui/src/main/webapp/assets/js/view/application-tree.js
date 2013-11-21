@@ -448,6 +448,10 @@ define([
                 model:entitySummary,
                 application:app
             })
+            var self = this;
+            this.detailsView.on("entity.expunged", function() {
+            	self.displayEntityId(self.collection.first().id);
+            });
             $("div#details").html(this.detailsView.render().el)
             // preserve the tab selected before
             $("div#details").find('a[href="#'+whichTab+'"]').tab('show');

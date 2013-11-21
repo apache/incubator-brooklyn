@@ -14,6 +14,7 @@ define([
             'click .entity-tabs a':'tabSelected'
         },
         initialize:function () {
+        	var self = this;
             this.$el.html(this.template({}))
             this.configView = new ConfigView({
                 model:this.model
@@ -40,6 +41,9 @@ define([
             	model: this.model,
             	application:this.options.application
             })
+            this.lifecycleView.on("entity.expunged", function() {
+            	self.trigger("entity.expunged");
+            });
             this.$("#summary").html(this.summaryView.render().el)
             this.$("#lifecycle").html(this.lifecycleView.render().el)
             this.$("#config").html(this.configView.render().el)

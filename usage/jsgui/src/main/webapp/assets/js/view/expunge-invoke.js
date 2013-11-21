@@ -26,8 +26,7 @@ define([
                 data: JSON.stringify(parameters),
                 contentType: "application/json",
                 success: function() {
-                    // TODO: deselect the current entity as it no longer exists
-                    console.log("Success");
+                    self.trigger("entity.expunged")
                 },
                 error: function(data) {
                     self.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
