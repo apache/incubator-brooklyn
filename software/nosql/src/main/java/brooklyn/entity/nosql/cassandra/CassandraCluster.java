@@ -58,7 +58,7 @@ public interface CassandraCluster extends DynamicCluster, DatastoreMixins.HasDat
      * seconds is sufficient even with 2 seed nodes
      */
     @SetFromFlag("delayBeforeAdvertisingCluster")
-    ConfigKey<Duration> DELAY_BEFORE_ADVERTISING_CLUSTER = ConfigKeys.newConfigKey(Duration.class, "cassandra.cluster.delayBeforeAdvertisingCluster", "Type of the Cassandra snitch", Duration.TEN_SECONDS);
+    ConfigKey<Duration> DELAY_BEFORE_ADVERTISING_CLUSTER = ConfigKeys.newConfigKey(Duration.class, "cassandra.cluster.delayBeforeAdvertisingCluster", "Delay after cluster is started before checking and advertising its availability", Duration.TEN_SECONDS);
 
     @SuppressWarnings("serial")
     AttributeSensor<Multimap<String,Entity>> DATACENTER_USAGE = Sensors.newSensor(new TypeToken<Multimap<String,Entity>>() { }, "cassandra.cluster.datacenterUsages", "Current set of datacenters in use, with nodes in each");

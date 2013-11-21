@@ -28,7 +28,8 @@ public interface VanillaJavaApp extends SoftwareProcess, UsesJava, UsesJmx, Uses
     public static final ConfigKey<String> MAIN_CLASS = new BasicConfigKey<String>(String.class, "vanillaJavaApp.mainClass", "class to launch");
 
     @SetFromFlag("classpath")
-    public static final ConfigKey<List> CLASSPATH = new BasicConfigKey<List>(List.class, "vanillaJavaApp.classpath", "classpath to use, as list of URL entries", Lists.newArrayList());
+    public static final ConfigKey<List> CLASSPATH = new BasicConfigKey<List>(List.class, "vanillaJavaApp.classpath", "classpath to use, as list of URL entries; "
+        + "these URLs are copied to lib/ (expanded in the case of tar/tgz/zip), with 'lib/*' used at runtime", Lists.newArrayList());
 
     @SetFromFlag("jvmXArgs")
     public static final ConfigKey<List> JVM_XARGS = new BasicConfigKey<List>(List.class, "vanillaJavaApp.jvmXArgs", "JVM -X args for the java app (e.g. memory)", 
