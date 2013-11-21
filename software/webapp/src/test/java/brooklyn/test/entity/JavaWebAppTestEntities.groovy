@@ -7,8 +7,8 @@ import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.basic.SoftwareProcessImpl
-import brooklyn.entity.effector.EffectorAndBody;
-import brooklyn.entity.java.VanillaJavaApp
+import brooklyn.entity.effector.EffectorAndBody
+import brooklyn.entity.java.VanillaJavaAppImpl
 import brooklyn.entity.webapp.WebAppServiceConstants
 import brooklyn.location.Location
 import brooklyn.util.flags.SetFromFlag
@@ -16,7 +16,7 @@ import brooklyn.util.flags.SetFromFlag
 /**
  * Mock web application server entity for testing.
  */
-public class TestJavaWebAppEntity extends VanillaJavaApp {
+public class TestJavaWebAppEntity extends VanillaJavaAppImpl {
 	private static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntity.class);
     public static final Effector<Void> START = new EffectorAndBody<Void>(SoftwareProcessImpl.START, new MethodEffector(TestJavaWebAppEntity.class, "customStart").getBody());
 

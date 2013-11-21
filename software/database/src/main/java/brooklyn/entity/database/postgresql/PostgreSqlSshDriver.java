@@ -1,10 +1,17 @@
 package brooklyn.entity.database.postgresql;
 
-import static brooklyn.util.ssh.BashCommands.*;
+import static brooklyn.util.ssh.BashCommands.alternativesGroup;
+import static brooklyn.util.ssh.BashCommands.chainGroup;
+import static brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
+import static brooklyn.util.ssh.BashCommands.executeCommandThenAsUserTeeOutputToFile;
+import static brooklyn.util.ssh.BashCommands.fail;
+import static brooklyn.util.ssh.BashCommands.ifExecutableElse1;
+import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.sudoAsUser;
+import static brooklyn.util.ssh.BashCommands.warn;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.InputStream;
 
 import javax.annotation.Nullable;
 
@@ -12,13 +19,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.database.DatastoreMixins;
+import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
+import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ssh.SshTasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringFunctions;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -99,7 +113,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
     @Override
     public void customize() {
         // Some OSes start postgres during package installation
-        newScript(CUSTOMIZING).body.append(sudoAsUser("postgres", "/etc/init.d/postgresql stop")).queue();
+        newScript(CUSTOMIZING).body.append(sudoAsUser("postgres", BashCommands.ok("/etc/init.d/postgresql stop"))).queue();
         newScript(CUSTOMIZING).body.append(
                 sudo("mkdir -p " + getDataDir()),
                 sudo("chown postgres:postgres " + getDataDir()),
@@ -113,8 +127,6 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
                 sudoAsUserAppendCommandOutputToFile("postgres", "echo \"host    all         all         0.0.0.0/0             md5\"", getDataDir() + "/pg_hba.conf")
         ).failOnNonZeroResultCode().execute();
 
-        // execute above (to wait for commands to complete before customizing)
-        
         customizeUserCreationScript();
 
         /*
@@ -124,19 +136,20 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
     }
 
     protected void customizeUserCreationScript() {
-        log.info("Copying creation script " + getEntity().toString());
-        String creationScriptUrl = entity.getConfig(PostgreSqlNode.CREATION_SCRIPT_URL);
-        Reader creationScript;
-        if (creationScriptUrl != null)
-            creationScript = new InputStreamReader(resource.getResourceFromUrl(creationScriptUrl));
-        else creationScript = new StringReader(entity.getConfig(PostgreSqlNode.CREATION_SCRIPT_CONTENTS));
-
-        getMachine().copyTo(creationScript, getRunDir() + "/creation-script.sql");
-
-        newScript(CUSTOMIZING).body.append(callPgctl("start", true),
+        if (copyDatabaseCreationScript()) {
+            newScript("running postgres creation script").body.append(callPgctl("start", true),
                 sudoAsUser("postgres", getInstallDir() + "/bin/psql -p " + entity.getAttribute(PostgreSqlNode.POSTGRESQL_PORT) + " --file " + getRunDir() + "/creation-script.sql"),
                 callPgctl("stop", true)).
                 failOnNonZeroResultCode().execute();
+        }
+    }
+
+    private boolean copyDatabaseCreationScript() {
+        InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
+        if (creationScript==null) 
+            return false;
+        getMachine().copyTo(creationScript, getRunDir() + "/creation-script.sql");
+        return true;
     }
 
     protected String getDataDir() {
@@ -188,4 +201,18 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
     public String getStatusCmd() {
         return callPgctl("status", false);
     }
+    
+    public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
+        String filename = "postgresql-commands-"+Identifiers.makeRandomId(8);
+        DynamicTasks.queue(SshEffectorTasks.put(Urls.mergePaths(getRunDir(), filename)).contents(commands).summary("copying datastore script to execute "+filename));
+        return executeScriptFromInstalledFileAsync(filename);
+    }
+
+    public ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String filenameAlreadyInstalledAtServer) {
+        return DynamicTasks.queue(SshEffectorTasks.ssh(
+            "cd "+getRunDir(), 
+            sudoAsUser("postgres", getInstallDir() + "/bin/psql -p " + entity.getAttribute(PostgreSqlNode.POSTGRESQL_PORT) + " --file " + filenameAlreadyInstalledAtServer))
+            .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
+    }
+
 }

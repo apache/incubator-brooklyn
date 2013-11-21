@@ -19,7 +19,7 @@ import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="MySql Node", description="MySql is an open source relational database management system (RDBMS)", iconUrl="classpath:///mysql-logo-110x57.png")
 @ImplementedBy(MySqlNodeImpl.class)
-public interface MySqlNode extends DatabaseNode, HasShortName {
+public interface MySqlNode extends SoftwareProcess, HasShortName, DatabaseNode {
 
     // NOTE MySQL changes the minor version number of their GA release frequently, check for latest version if install fails
     @SetFromFlag("version")
@@ -42,12 +42,6 @@ public interface MySqlNode extends DatabaseNode, HasShortName {
     @SetFromFlag("port")
     public static final PortAttributeSensorAndConfigKey MYSQL_PORT = new PortAttributeSensorAndConfigKey("mysql.port", "MySQL port", PortRanges.fromString("3306, 13306+"));
 
-    @SetFromFlag("creationScriptContents")
-    public static final ConfigKey<String> CREATION_SCRIPT_CONTENTS = ConfigKeys.newStringConfigKey("mysql.creation.script.contents", "MySQL creation script (SQL contents)", "");
-
-    @SetFromFlag("creationScriptUrl")
-    public static final ConfigKey<String> CREATION_SCRIPT_URL = ConfigKeys.newStringConfigKey("mysql.creation.script.url", "URL where MySQL creation script can be found", "");
-
     @SetFromFlag("dataDir")
     public static final ConfigKey<String> DATA_DIR = ConfigKeys.newStringConfigKey(
             "mysql.datadir", "Directory for writing data files", null);
@@ -66,7 +60,8 @@ public interface MySqlNode extends DatabaseNode, HasShortName {
     public static final StringAttributeSensorAndConfigKey SOCKET_UID = new StringAttributeSensorAndConfigKey(
             "mysql.socketUid", "Socket uid, for use in file /tmp/mysql.sock.<uid>.3306 (or randomly generated if not set)", null);
     
-    public static final AttributeSensor<String> MYSQL_URL = DB_URL;
+    /** @deprecated since 0.7.0 use DATASTORE_URL */ @Deprecated
+    public static final AttributeSensor<String> MYSQL_URL = DATASTORE_URL;
 
     @SetFromFlag("configurationTemplateUrl")
     static final BasicAttributeSensorAndConfigKey<String> TEMPLATE_CONFIGURATION_URL = new StringAttributeSensorAndConfigKey(
@@ -74,5 +69,7 @@ public interface MySqlNode extends DatabaseNode, HasShortName {
             "classpath://brooklyn/entity/database/mysql/mysql.conf");
 
     public static final AttributeSensor<Double> QUERIES_PER_SECOND_FROM_MYSQL = Sensors.newDoubleSensor("mysql.queries.perSec.fromMysql");
+
+    public String executeScript(String commands);
     
 }

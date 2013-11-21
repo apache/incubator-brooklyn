@@ -492,6 +492,15 @@ public class BashCommands {
         return installPackageOrFail(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null);
     }
 
+    public static String installJava7OrFail() {
+        return BashCommands.installPackageOrFail(MutableMap.of("apt", "openjdk-7-jdk","yum", "java-1.7.0-openjdk-devel"), null);
+    }
+
+    public static String installJava7Or6OrFail() {
+        return BashCommands.installPackageOr(MutableMap.of("apt", "openjdk-7-jdk","yum", "java-1.7.0-openjdk-devel"), null, 
+            BashCommands.installJava6OrFail());
+    }
+
     /** cats the given text to the given command, using bash << multi-line input syntax */
     public static String pipeTextTo(String text, String command) {
         String id = Identifiers.makeRandomId(8);

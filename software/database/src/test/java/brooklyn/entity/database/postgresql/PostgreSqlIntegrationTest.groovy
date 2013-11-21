@@ -74,8 +74,9 @@ INSERT INTO COMMENTS values (1, 'lars', 'myemail@gmail.com','http://www.vogella.
                 .configure("port", "9111"));
 
         tapp.start([new LocalhostMachineProvisioningLocation()]);
-        log.info("PostgreSql started");
-        new VogellaExampleAccess("org.postgresql.Driver", pgsql.getAttribute(PostgreSqlNode.DB_URL)).readModifyAndRevertDataBase();
+        def url = pgsql.getAttribute(PostgreSqlNode.DB_URL);
+        log.info("PostgreSql started on "+url);
+        new VogellaExampleAccess("org.postgresql.Driver", url).readModifyAndRevertDataBase();
         log.info("Ran vogella PostgreSql example -- SUCCESS");
     }
 }

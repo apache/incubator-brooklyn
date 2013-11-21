@@ -1,13 +1,12 @@
 package brooklyn.entity.database.mysql;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
 import static brooklyn.util.ssh.BashCommands.installPackage;
 import static brooklyn.util.ssh.BashCommands.ok;
 import static java.lang.String.format;
 
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.LinkedList;
@@ -17,16 +16,27 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails.OsVersions;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.stream.KnownSizeInputStream;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.ComparableVersion;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.CountdownTimer;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -115,7 +125,6 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     @Override
     public void customize() {
-        copyDatabaseCreationScript();
         copyDatabaseConfigScript();
 
         newScript(CUSTOMIZING).
@@ -124,32 +133,28 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 "chmod 600 mymysql.cnf",
                 getBasedir()+"/scripts/mysql_install_db "+
                     "--basedir="+getBasedir()+" --datadir="+getDatadir()+" "+
-                    "--defaults-file=mymysql.cnf",
-                getBasedir()+"/bin/mysqld --defaults-file=mymysql.cnf --user=`whoami` &", //--user=root needed if we are root
-                "export MYSQL_PID=$!",
-                "sleep 20",
-                "echo launching mysqladmin",
-                getBasedir()+"/bin/mysqladmin --defaults-file=mymysql.cnf --password= password "+getPassword(),
-                "sleep 20",
-                "echo launching mysql creation script",
-                getBasedir()+"/bin/mysql --defaults-file=mymysql.cnf < creation-script.cnf",
-                "echo terminating mysql on customization complete",
-                "kill $MYSQL_PID"
+                    "--defaults-file=mymysql.cnf"
             ).execute();
-    }
 
-	private void copyDatabaseCreationScript() {
-        newScript(CUSTOMIZING).
-                body.append("echo copying creation script").
-                execute();  //create the directory
+        // launch, then we will configure it
+        launch();
+        
+        CountdownTimer timer = Duration.seconds(20).countdownTimer();
+        boolean hasCreationScript = copyDatabaseCreationScript();
+        timer.waitForExpiryUnchecked();
 
-        Reader creationScript;
-        String url = entity.getConfig(MySqlNode.CREATION_SCRIPT_URL);
-        if (!Strings.isBlank(url))
-            creationScript = new InputStreamReader(resource.getResourceFromUrl(url));
-        else creationScript =
-                new StringReader((String) elvis(entity.getConfig(MySqlNode.CREATION_SCRIPT_CONTENTS), ""));
-        getMachine().copyTo(creationScript, getRunDir() + "/creation-script.cnf");
+        DynamicTasks.queue(
+            SshEffectorTasks.ssh(
+                "cd "+getRunDir(),
+                getBasedir()+"/bin/mysqladmin --defaults-file=mymysql.cnf --password= password "+getPassword()
+            ).summary("setting password"));
+
+        if (hasCreationScript)
+            executeScriptFromInstalledFileAsync("creation-script.sql");
+
+        // not sure necessary to stop then subsequently launch, but seems safest
+        // (if skipping, use a flag in launch to indicate we've just launched it)
+        stop();
     }
 
     private void copyDatabaseConfigScript() {
@@ -161,6 +166,14 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         Reader configContents = new StringReader(configScriptContents);
 
         getMachine().copyTo(configContents, getRunDir() + "/mymysql.cnf");
+    }
+
+    private boolean copyDatabaseCreationScript() {
+        InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
+        if (creationScript==null) 
+            return false;
+        getMachine().copyTo(creationScript, getRunDir() + "/creation-script.sql");
+        return true;
     }
 
     public String getMySqlServerOptionsString() {
@@ -210,4 +223,18 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         return format("%s/bin/mysqladmin --user=%s --password=%s --socket=/tmp/mysql.sock.%s.%s status", 
                 getExpandedInstallDir(), "root", getPassword(), getSocketUid(), getPort());
     }
+    
+    public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
+        String filename = "mysql-commands-"+Identifiers.makeRandomId(8);
+        DynamicTasks.queue(SshEffectorTasks.put(Urls.mergePaths(getRunDir(), filename)).contents(commands).summary("copying datastore script to execute "+filename));
+        return executeScriptFromInstalledFileAsync(filename);
+    }
+
+    public ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String filenameAlreadyInstalledAtServer) {
+        return DynamicTasks.queue(SshEffectorTasks.ssh(
+            "cd "+getRunDir(), 
+            getBasedir()+"/bin/mysql --defaults-file=mymysql.cnf < "+filenameAlreadyInstalledAtServer)
+            .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
+    }
+
 }

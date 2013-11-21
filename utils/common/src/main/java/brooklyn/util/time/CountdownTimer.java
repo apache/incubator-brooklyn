@@ -2,6 +2,8 @@ package brooklyn.util.time;
 
 import java.util.concurrent.TimeUnit;
 
+import brooklyn.util.exceptions.Exceptions;
+
 import com.google.common.base.Stopwatch;
 
 public class CountdownTimer {
@@ -60,4 +62,24 @@ public class CountdownTimer {
         return new CountdownTimer(duration).pause();
     }
 
+    /** block (on this object) until completed 
+     * @throws InterruptedException */
+    public synchronized void waitForExpiry() throws InterruptedException {
+        while (true) {
+            Duration remainder = getDurationRemaining();
+            if (remainder.toMilliseconds() <= 0) 
+                return;
+            wait(remainder.toMilliseconds());
+        }
+    }
+
+    /** as {@link #waitForExpiry()} but catches and wraps InterruptedException as unchecked RuntimeInterruptedExcedption */
+    public synchronized void waitForExpiryUnchecked() {
+        try {
+            waitForExpiry();
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+    
 }

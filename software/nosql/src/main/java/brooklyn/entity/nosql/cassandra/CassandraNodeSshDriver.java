@@ -19,18 +19,23 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Networking;
+import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.stream.Streams;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -210,6 +215,15 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                         "echo date on cassandra server `hostname` when launching is `date`",
                         String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
                 .execute();
+        if (!isClustered()) {
+            InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
+            if (creationScript!=null) { 
+                Tasks.setBlockingDetails("Pausing to ensure Cassandra (singleton) has started before running creation script");
+                Time.sleep(Duration.seconds(20));
+                Tasks.resetBlockingDetails();
+                executeScriptHere(Streams.readFullyString(creationScript));
+            }
+        }
         if (isClustered() && isFirst) {
             ((EntityLocal)getEntity().getParent()).setAttribute(CassandraCluster.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
         }
@@ -243,4 +257,14 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .renameKey("JAVA_OPTS", "JVM_OPTS")
                 .build();
     }
+
+    public String executeScriptHere(String commands) {
+        String filename = "cassandra-commands-"+Identifiers.makeRandomId(8);
+        DynamicTasks.queue(SshEffectorTasks.put(Urls.mergePaths(getRunDir(), filename)).contents(commands).summary("copying cassandra-cli script to execute "+filename));
+        return DynamicTasks.queue(SshEffectorTasks.ssh(
+            "cd "+getRunDir(), 
+            String.format("./bin/cassandra-cli --port %s --file %s", ""+getEntity().getAttribute(CassandraNode.THRIFT_PORT), filename))
+            .summary("executing cassandra-cli script "+filename)).block().getStdout();
+    }
+    
 }

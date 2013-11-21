@@ -26,7 +26,9 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
@@ -245,7 +247,13 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         // SshEffectorTasks.ssh("echo \"describe cluster;\" | /bin/cassandra-cli");
         // once we've done that we can revert to using 2 seed nodes.
         // see CassandraCluster.DEFAULT_SEED_QUORUM
+        // (also ensure the cluster is ready if we are about to run a creation script)
         Time.sleep(getConfig(DELAY_BEFORE_ADVERTISING_CLUSTER));
+
+        String scriptUrl = getConfig(CassandraNode.CREATION_SCRIPT_URL);
+        if (Strings.isNonEmpty(scriptUrl)) {
+            executeScript(new ResourceUtils(this).getResourceAsString(scriptUrl));
+        }
 
         update();
     }
@@ -474,4 +482,15 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             return result;
         }
     }
+    
+    @Override
+    public String executeScript(String commands) {
+        Entity someChild = Iterables.getFirst(getMembers(), null);
+        if (someChild==null)
+            throw new IllegalStateException("No Cassandra nodes available");
+        // FIXME cross-etntity method-style calls such as below do not set up a queueing context (DynamicSequentialTask) 
+//        return ((CassandraNode)someChild).executeScript(commands);
+        return Entities.invokeEffector(this, someChild, CassandraNode.EXECUTE_SCRIPT, MutableMap.of("commands", commands)).getUnchecked();
+    }
+    
 }

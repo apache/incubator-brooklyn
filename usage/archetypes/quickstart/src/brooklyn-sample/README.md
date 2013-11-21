@@ -7,13 +7,21 @@ which Brooklyn will deploy and manage.
 To build an assembly, simply run:
 
     mvn clean assembly:assembly
-    
-You can then run the built application with:
 
-    cd target/brooklyn-sample-0.1.0-SNAPSHOT-dist/brooklyn-sample-0.1.0-SNAPSHOT
-    ./start.sh server
+This creates a tarball with a full standalone application which can be installed in any *nix machine at:
+    target/brooklyn-datastax-healthcare-0.1.0-SNAPSHOT-dist.tar.gz
 
+It also installs an unpacked version which you can run locally:
+ 
+     cd target/brooklyn-datastax-healthcare-0.1.0-SNAPSHOT-dist/brooklyn-datastax-healthcare-0.1.0-SNAPSHOT
+     ./start.sh server
+ 
 For more information see the README (or `./start.sh help`) in that directory.
+On OS X and Linux, this application will deploy to localhost *if* you have key-based 
+password-less (and passphrase-less) ssh enabled.
+
+To configure cloud and fixed-IP locations, see the README file in the built application directly.
+For more information you can run `./start.sh help`) in that directory.
 
 
 ### Opening in an IDE

@@ -6,10 +6,13 @@ package brooklyn.entity.nosql.cassandra;
 import java.util.Set;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.database.DatabaseNode;
+import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.java.UsesJavaMXBeans;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -25,7 +28,7 @@ import brooklyn.util.flags.SetFromFlag;
  * An {@link brooklyn.entity.Entity} that represents a Cassandra node in a {@link CassandraCluster}.
  */
 @ImplementedBy(CassandraNodeImpl.class)
-public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans {
+public interface CassandraNode extends DatastoreMixins.DatastoreCommon, SoftwareProcess, UsesJmx, UsesJavaMXBeans, DatastoreMixins.HasDatastoreUrl, DatastoreMixins.CanExecuteScript {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.11");
@@ -119,7 +122,9 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans
             "List of cluster nodes to seed this node");
 
     ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.START_TIMEOUT, 3*60);
-    
+
+    public static Effector<String> EXECUTE_SCRIPT = CassandraCluster.EXECUTE_SCRIPT;
+
     /* Accessors used from template */
     
     Integer getGossipPort();
@@ -134,4 +139,9 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans
     /* For configuration */
     
     void setToken(String token);
+    
+    /* Using Cassandra */
+    
+    String executeScript(String commands);
+    
 }

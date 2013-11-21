@@ -11,6 +11,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.database.DatastoreMixins;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
@@ -33,7 +35,7 @@ import com.google.common.reflect.TypeToken;
         "consistent, distributed, structured key-value store which provides a ColumnFamily-based data model " +
         "richer than typical key/value systems", iconUrl="classpath:///cassandra-logo.jpeg")
 @ImplementedBy(CassandraClusterImpl.class)
-public interface CassandraCluster extends DynamicCluster {
+public interface CassandraCluster extends DynamicCluster, DatastoreMixins.HasDatastoreUrl, DatastoreMixins.CanExecuteScript {
 
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "cassandra.cluster.name", "Name of the Cassandra cluster", "BrooklynCluster");
@@ -56,7 +58,7 @@ public interface CassandraCluster extends DynamicCluster {
      * seconds is sufficient even with 2 seed nodes
      */
     @SetFromFlag("delayBeforeAdvertisingCluster")
-    ConfigKey<Duration> DELAY_BEFORE_ADVERTISING_CLUSTER = ConfigKeys.newConfigKey(Duration.class, "cassandra.cluster.delayBeforeAdvertisingCluster", "Type of the Cassandra snitch", Duration.TEN_SECONDS);
+    ConfigKey<Duration> DELAY_BEFORE_ADVERTISING_CLUSTER = ConfigKeys.newConfigKey(Duration.class, "cassandra.cluster.delayBeforeAdvertisingCluster", "Delay after cluster is started before checking and advertising its availability", Duration.TEN_SECONDS);
 
     @SuppressWarnings("serial")
     AttributeSensor<Multimap<String,Entity>> DATACENTER_USAGE = Sensors.newSensor(new TypeToken<Multimap<String,Entity>>() { }, "cassandra.cluster.datacenterUsages", "Current set of datacenters in use, with nodes in each");
@@ -95,6 +97,10 @@ public interface CassandraCluster extends DynamicCluster {
     AttributeSensor<Double> PROCESS_CPU_TIME_FRACTION_IN_WINDOW_PER_NODE = Sensors.newDoubleSensor("cassandra.cluster.metrics.processCpuTime.fraction.windowed", "Fraction of CPU time used (percentage, over time window), averaged over all nodes");
 
     MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraCluster.class, "update");
+    
+    brooklyn.entity.Effector<String> EXECUTE_SCRIPT = Effectors.effector(DatastoreMixins.EXECUTE_SCRIPT)
+        .description("executes the given script contents using cassandra-cli")
+        .buildAbstract();
 
     /**
      * Sets the number of nodes used to seed the cluster.
@@ -132,5 +138,7 @@ public interface CassandraCluster extends DynamicCluster {
     Set<Entity> gatherPotentialSeeds();
 
     Set<Entity> gatherPotentialRunningSeeds();
+
+    String executeScript(String commands);
 
 }

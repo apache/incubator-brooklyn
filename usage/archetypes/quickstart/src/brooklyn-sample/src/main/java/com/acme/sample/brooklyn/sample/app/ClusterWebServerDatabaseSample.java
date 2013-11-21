@@ -17,7 +17,7 @@ import brooklyn.enricher.basic.SensorTransformingEnricher;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.database.DatabaseNode;
+import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
@@ -90,7 +90,7 @@ public class ClusterWebServerDatabaseSample extends AbstractApplication {
      *  with some sensors and a policy. */
     @Override
     public void init() {
-        DatabaseNode db = addChild(
+        DatastoreCommon db = addChild(
                 EntitySpec.create(MySqlNode.class)
                         .configure(MySqlNode.CREATION_SCRIPT_URL, Entities.getRequiredUrlConfig(this, DB_SETUP_SQL_URL)));
 
@@ -106,7 +106,7 @@ public class ClusterWebServerDatabaseSample extends AbstractApplication {
                         // inject a JVM system property to point to the DB
                         .configure(JavaEntityMethods.javaSysProp("brooklyn.example.db.url"), 
                                 formatString("jdbc:%s%s?user=%s\\&password=%s", 
-                                        attributeWhenReady(db, DatabaseNode.DB_URL), DB_TABLE, DB_USERNAME, DB_PASSWORD))
+                                        attributeWhenReady(db, DatastoreCommon.DATASTORE_URL), DB_TABLE, DB_USERNAME, DB_PASSWORD))
                     
                         // start with 2 appserver nodes, initially
                         .configure(DynamicCluster.INITIAL_SIZE, 2) 

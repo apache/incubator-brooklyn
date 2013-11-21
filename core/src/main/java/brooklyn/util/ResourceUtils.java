@@ -1,6 +1,5 @@
 package brooklyn.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -21,6 +20,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Urls;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.text.DataUriSchemeParser;
 import brooklyn.util.text.Strings;
 
@@ -29,7 +29,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 
 public class ResourceUtils {
     
@@ -101,7 +100,7 @@ public class ResourceUtils {
     }
 
     public ResourceUtils(Object contextObject) {
-        this(contextObject, "for " + Strings.toString(contextObject));
+        this(contextObject, Strings.toString(contextObject));
     }
     
     /** used to register custom mechanisms for getting classloaders given an object */
@@ -197,7 +196,7 @@ public class ResourceUtils {
             throw new IOException("'"+orig+"' not found on classpath or filesystem");
         } catch (Exception e) {
             if (context!=null)
-                throw new RuntimeException("Error getting resource for "+context+": "+e, e);
+                throw new RuntimeException("Error getting resource '"+url+"' for "+context+": "+e, e);
             else throw new RuntimeException(e);
         }
     }
@@ -318,7 +317,7 @@ public class ResourceUtils {
             machine.copyFrom(path, tempFile.getAbsolutePath());
             return new FileInputStream(tempFile);
         } finally {
-            Closeables.closeQuietly(machine);
+            Streams.closeQuietly(machine);
         }
     }
     
@@ -342,7 +341,7 @@ public class ResourceUtils {
             Exceptions.propagateIfFatal(e);
             throw new IllegalArgumentException("Unable to access URL "+url, e);
         }
-        Closeables.closeQuietly(s); 
+        Streams.closeQuietly(s); 
         return url;
     }
 
@@ -355,7 +354,7 @@ public class ResourceUtils {
         } catch (Exception e) {
             return false;
         } finally {
-            Closeables.closeQuietly(s);
+            Streams.closeQuietly(s);
         }
     }
     
@@ -399,24 +398,19 @@ public class ResourceUtils {
         return urls;
     }
     
+    /** @deprecated since 0.7.0 use {@link Streams#readFullyString(InputStream) */ @Deprecated
     public static String readFullyString(InputStream is) throws IOException {
-        return new String(readFullyBytes(is));
+        return Streams.readFullyString(is);
     }
 
+    /** @deprecated since 0.7.0 use {@link Streams#readFully(InputStream) */ @Deprecated
     public static byte[] readFullyBytes(InputStream is) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        copy(is, out);
-        return out.toByteArray();
+        return Streams.readFully(is);
     }
-
+    
+    /** @deprecated since 0.7.0 use {@link Streams#copy(InputStream, OutputStream)} */ @Deprecated
     public static void copy(InputStream input, OutputStream output) throws IOException {
-        byte[] buf = new byte[1024];
-        int bytesRead = input.read(buf);
-        while (bytesRead != -1) {
-            output.write(buf, 0, bytesRead);
-            bytesRead = input.read(buf);
-        }
-        output.flush();
+        Streams.copy(input, output);
     }
 
     public static File mkdirs(File dir) {
@@ -449,8 +443,8 @@ public class ResourceUtils {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         } finally {
-            Closeables.closeQuietly(is);
-            Closeables.closeQuietly(out);
+            Streams.closeQuietly(is);
+            Streams.closeQuietly(out);
         }
         return tempFile;
     }
@@ -476,7 +470,7 @@ public class ResourceUtils {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         } finally {
-            Closeables.closeQuietly(out);
+            Streams.closeQuietly(out);
         }
         return tempFile;
     }
@@ -505,7 +499,8 @@ public class ResourceUtils {
     }
 
     /** returns the items with exactly one "/" between items (whether or not the individual items start or end with /),
-     * except where character before the / is a : (url syntax) in which case it will permit multiple (will not remove any) */
+     * except where character before the / is a : (url syntax) in which case it will permit multiple (will not remove any) 
+     * @deprecated since 0.7.0 use {@link Urls#mergePaths(String...) */ @Deprecated
     public static String mergePaths(String ...items) {
         return Urls.mergePaths(items);
     }

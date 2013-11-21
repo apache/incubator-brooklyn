@@ -61,7 +61,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
                 .configure(JavaWebAppService.ROOT_WAR, WAR_PATH)
                 .configure(javaSysProp("brooklyn.example.db.url"), 
                         formatString("jdbc:%s%s?user=%s\\&password=%s", 
-                                attributeWhenReady(mysql, MySqlNode.DB_URL), 
+                                attributeWhenReady(mysql, MySqlNode.DATASTORE_URL), 
                                 DB_TABLE, DB_USERNAME, DB_PASSWORD)) );
 
         web.addEnricher(HttpLatencyDetector.builder().

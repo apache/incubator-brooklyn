@@ -1,6 +1,6 @@
 package brooklyn.entity.java;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +12,8 @@ import java.util.Map;
 
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 import com.google.common.collect.ImmutableList;
@@ -21,12 +23,12 @@ import com.google.common.collect.ImmutableList;
  */
 public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implements VanillaJavaAppDriver {
 
-    public VanillaJavaAppSshDriver(VanillaJavaApp entity, SshMachineLocation machine) {
+    public VanillaJavaAppSshDriver(VanillaJavaAppImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
-    public VanillaJavaApp getEntity() {
-        return (VanillaJavaApp) super.getEntity();
+    public VanillaJavaAppImpl getEntity() {
+        return (VanillaJavaAppImpl) super.getEntity();
     }
 
     protected String getLogFileLocation() {
@@ -105,10 +107,16 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
     }
 
     public String getArgs(){
-        List<String> args = entity.getConfig(VanillaJavaApp.ARGS);
-        StringBuffer sb = new StringBuffer();
-        for(Iterator<String> it = args.iterator();it.hasNext();){
-            String arg = it.next();
+        List<Object> args = entity.getConfig(VanillaJavaApp.ARGS);
+        StringBuilder sb = new StringBuilder();
+        for(Iterator<Object> it = args.iterator();it.hasNext();){
+            Object argO = it.next();
+            String arg;
+            try {
+                arg = Tasks.resolveValue(argO, String.class, getEntity().getExecutionContext());
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
             BashStringEscapes.assertValidForDoubleQuotingInBash(arg);
             sb.append(format("\"%s\"",arg));
             if(it.hasNext()){

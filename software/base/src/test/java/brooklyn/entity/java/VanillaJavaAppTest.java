@@ -27,15 +27,18 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.crypto.FluentKeySigner;
@@ -59,7 +62,7 @@ public class VanillaJavaAppTest {
     private static Class MAIN_CLASS = ExampleVanillaMain.class;
     private static Class MAIN_CPU_HUNGRY_CLASS = ExampleVanillaMainCpuHungry.class;
     
-    private AbstractApplication app;
+    private TestApplication app;
     private LocalhostMachineProvisioningLocation loc;
 
     @BeforeMethod(alwaysRun = true)
@@ -67,7 +70,7 @@ public class VanillaJavaAppTest {
         if (BROOKLYN_THIS_CLASSPATH==null) {
             BROOKLYN_THIS_CLASSPATH = ResourceUtils.create(MAIN_CLASS).getClassLoaderDir();
         }
-        app = new AbstractApplication() {};
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         loc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
     }
 
@@ -78,12 +81,10 @@ public class VanillaJavaAppTest {
 
     @Test
     public void testReadsConfigFromFlags() throws Exception {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("parent", app)
-                .put("main", "my.Main")
-                .put("classpath", ImmutableList.of("c1", "c2"))
-                .put("args", ImmutableList.of("a1", "a2"))
-                .build());
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", "my.Main").configure("classpath", ImmutableList.of("c1", "c2"))
+            .configure("args", ImmutableList.of("a1", "a2")));
+
         assertEquals(javaProcess.getMainClass(), "my.Main");
         assertEquals(javaProcess.getClasspath(), ImmutableList.of("c1","c2"));
         assertEquals(javaProcess.getConfig(VanillaJavaApp.ARGS), ImmutableList.of("a1", "a2"));
@@ -91,25 +92,19 @@ public class VanillaJavaAppTest {
 
     @Test(groups={"WIP", "Integration"})
     public void testJavaSystemProperties() throws Exception {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("parent", app)
-                .put("main", "my.Main")
-                .put("classpath", ImmutableList.of("c1", "c2"))
-                .put("args", ImmutableList.of("a1", "a2"))
-                .build());
-        javaProcess.setConfig(UsesJava.JAVA_SYSPROPS, ImmutableMap.of("fooKey", "fooValue", "barKey", "barValue"));
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", "my.Main").configure("classpath", ImmutableList.of("c1", "c2"))
+            .configure("args", ImmutableList.of("a1", "a2")));
+        ((EntityLocal)javaProcess).setConfig(UsesJava.JAVA_SYSPROPS, ImmutableMap.of("fooKey", "fooValue", "barKey", "barValue"));
         // TODO: how to test: launch standalone app that outputs system properties to stdout? Probe via JMX?
     }
 
     @Test(groups={"Integration"})
     public void testStartsAndStops() throws Exception {
         String main = MAIN_CLASS.getCanonicalName();
-        VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("parent", app)
-                .put("main", main)
-                .put("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
-                .put("args", ImmutableList.of())
-                .build());
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
+            .configure("args", ImmutableList.of()));
         Entities.startManagement(app);
         app.start(ImmutableList.of(loc));
         assertEquals(javaProcess.getAttribute(VanillaJavaApp.SERVICE_STATE), Lifecycle.RUNNING);
@@ -121,12 +116,9 @@ public class VanillaJavaAppTest {
     @Test(groups={"Integration"})
     public void testHasJvmMXBeanSensorVals() throws Exception {
         String main = MAIN_CLASS.getCanonicalName();
-        final VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("parent", app)
-                .put("main", main)
-                .put("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
-                .put("args", ImmutableList.of())
-                .build());
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
+            .configure("args", ImmutableList.of()));
         Entities.startManagement(app);
         app.start(ImmutableList.of(loc));
         
@@ -187,16 +179,13 @@ public class VanillaJavaAppTest {
     @Test(groups={"Integration"})
     public void testJvmMXBeanProcessCpuTimeGivesNonZeroPercentage() throws Exception {
         String main = MAIN_CPU_HUNGRY_CLASS.getCanonicalName();
-        final VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("parent", app)
-                .put("main", main)
-                .put("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
-                .put("args", ImmutableList.of())
-                .build());
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
+            .configure("args", ImmutableList.of()));
         Entities.startManagement(app);
         app.start(ImmutableList.of(loc));
 
-        JavaAppUtils.connectJavaAppServerPolicies(javaProcess);
+        JavaAppUtils.connectJavaAppServerPolicies((EntityLocal)javaProcess);
         
         final List<Double> fractions = new CopyOnWriteArrayList<Double>();
         app.getManagementContext().getSubscriptionManager().subscribe(javaProcess, VanillaJavaApp.PROCESS_CPU_TIME_FRACTION, new SensorEventListener<Double>() {
@@ -235,13 +224,10 @@ public class VanillaJavaAppTest {
     public void testStartsWithJmxPortSpecifiedInConfig() throws Exception {
         int port = 53405;
         String main = MAIN_CLASS.getCanonicalName();
-        final VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("parent", app)
-                .put("main", main)
-                .put("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
-                .put("args", ImmutableList.of())
-                .build());
-        javaProcess.setConfig(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));
+        VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
+            .configure("args", ImmutableList.of()));
+        ((EntityLocal)javaProcess).setConfig(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));
         Entities.startManagement(app);
         app.start(ImmutableList.of(loc));
 
@@ -253,14 +239,11 @@ public class VanillaJavaAppTest {
     public void testStartsWithSecureJmxPortSpecifiedInConfig() throws Exception {
         int port = 53406;
         String main = MAIN_CLASS.getCanonicalName();
-        final VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
-                .put("parent", app)
-                .put("main", main)
-                .put("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
-                .put("args", ImmutableList.of())
-                .build());
-        javaProcess.setConfig(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));
-        javaProcess.setConfig(UsesJmx.JMX_SSL_ENABLED, true);
+        final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
+            .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
+            .configure("args", ImmutableList.of()));
+        ((EntityLocal)javaProcess).setConfig(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));
+        ((EntityLocal)javaProcess).setConfig(UsesJmx.JMX_SSL_ENABLED, true);
         
         Entities.startManagement(app);
         app.start(ImmutableList.of(loc));
@@ -310,7 +293,7 @@ public class VanillaJavaAppTest {
         public AsserterForJmxConnection(VanillaJavaApp e) throws MalformedURLException {
             this.entity = e;
             
-            JmxHelper jmxHelper = new JmxHelper(entity);
+            JmxHelper jmxHelper = new JmxHelper((EntityLocal)entity);
             this.url = new JMXServiceURL(jmxHelper.getUrl());
             this.env = Maps.newLinkedHashMap(jmxHelper.getConnectionEnvVars());
         }

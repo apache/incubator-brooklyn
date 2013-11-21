@@ -24,6 +24,7 @@ import brooklyn.enricher.TimeWeightedDeltaEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.function.FunctionFeed;
@@ -37,6 +38,7 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -213,6 +215,12 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @Override
     public void init() {
         super.init();
+        getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
+            @Override
+            public String call(ConfigBag parameters) {
+                return executeScript((String)parameters.getStringKey("commands"));
+            }
+        });
     }
     
     private volatile JmxFeed jmxFeed;
@@ -226,6 +234,9 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected void connectSensors() {
+        // "cassandra" isn't really a protocol, but okay for now
+        setAttribute(DATASTORE_URL, "cassandra://"+getAttribute(HOSTNAME)+":"+getAttribute(THRIFT_PORT));
+        
         super.connectSensors();
 
         jmxHelper = new JmxHelper(this);
@@ -386,4 +397,10 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             Throwables.propagate(ioe);
         }
     }
+    
+    @Override
+    public String executeScript(String commands) {
+        return ((CassandraNodeSshDriver)getDriver()).executeScriptHere(commands);
+    }
+    
 }

@@ -15,6 +15,7 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.GroovyJavaMethods;
@@ -26,6 +27,7 @@ import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -268,7 +270,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                 log.debug("java not detected at " + entity + " @ " + getLocation() + ", installing using BashCommands.installJava6");
                 
                 result = newScript("INSTALL_OPENJDK").body.append(
-                        BashCommands.installJava6OrFail()
+                        BashCommands.installJava7Or6OrFail()
                         // could use Jclouds routines -- but the following complains about yum-install not defined
                         // even though it is set as an alias (at the start of the first file)
                         //   resource.getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
@@ -288,7 +290,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                 Time.sleep(Duration.TEN_SECONDS);
                 
                 result = newScript("INSTALL_OPENJDK").body.append(
-                        BashCommands.installJava6OrFail()
+                        BashCommands.installJava7Or6OrFail()
                         ).execute();
                 if (result==0) {
                     log.info("Succeeded installing Java at " + getLocation() + " for " + entity + " after retry.");
@@ -321,7 +323,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     public void checkJavaHostnameBug() {
         try {
             ProcessTaskWrapper<Integer> hostnameLen = DynamicTasks.queue(SshEffectorTasks.ssh("hostname -f | wc | awk '{print $3}'")).block();
-            if (hostnameLen.getExitCode()==0) {
+            if (hostnameLen.getExitCode()==0 && Strings.isNonBlank(hostnameLen.getStdout())) {
                 Integer len = Integer.parseInt(hostnameLen.getStdout().trim());
                 if (len > 63) {
                     // likely to cause a java crash due to java bug 7089443 -- set a new short hostname
@@ -332,6 +334,8 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                             "hostname "+newHostname,
                             "echo 127.0.0.1 "+newHostname+" > /etc/hosts").runAsRoot()).block();
                 }
+            } else {
+                log.debug("Hostname length could not be determined for location "+EffectorTasks.findSshMachine()+"; not doing Java hostname bug check");
             }
         } catch (Exception e) {
             log.warn("Error checking/fixing Java hostname bug: "+e, e);
@@ -343,6 +347,8 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         DynamicTasks.queue("install java", new Runnable() { public void run() {
             installJava(); }});
             
+        // TODO check java version
+        
         if (isJmxEnabled()) {
             DynamicTasks.queue("install jmx", new Runnable() { public void run() {
                 installJmxSupport(); }}); 

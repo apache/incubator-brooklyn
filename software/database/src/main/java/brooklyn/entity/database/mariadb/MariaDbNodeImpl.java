@@ -1,18 +1,16 @@
 package brooklyn.entity.database.mariadb;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -26,21 +24,6 @@ public class MariaDbNodeImpl extends SoftwareProcessImpl implements MariaDbNode 
 
     private SshFeed feed;
 
-    public MariaDbNodeImpl() {
-    }
-
-    public MariaDbNodeImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-
-    public MariaDbNodeImpl(Map<?,?> flags) {
-        super(flags, null);
-    }
-
-    public MariaDbNodeImpl(Map<?,?> flags, Entity parent) {
-        super(flags, parent);
-    }
-
     @Override
     public Class<?> getDriverInterface() {
         return MariaDbDriver.class;
@@ -52,9 +35,20 @@ public class MariaDbNodeImpl extends SoftwareProcessImpl implements MariaDbNode 
     }
 
     @Override
+    public void init() {
+        super.init();
+        getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
+            @Override
+            public String call(ConfigBag parameters) {
+                return executeScript((String)parameters.getStringKey("commands"));
+            }
+        });
+    }
+    
+    @Override
     protected void connectSensors() {
         super.connectSensors();
-        setAttribute(DB_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MARIADB_PORT)));
+        setAttribute(DATASTORE_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MARIADB_PORT)));
 
         /*        
          * TODO status gives us things like:
@@ -114,6 +108,11 @@ public class MariaDbNodeImpl extends SoftwareProcessImpl implements MariaDbNode 
     @Override
     public String getShortName() {
         return "MariaDB";
+    }
+
+    @Override
+    public String executeScript(String commands) {
+        return getDriver().executeScriptAsync(commands).block().getStdout();
     }
 
 }

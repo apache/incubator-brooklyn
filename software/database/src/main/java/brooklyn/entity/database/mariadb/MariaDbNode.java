@@ -19,7 +19,7 @@ import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="MariaDB Node", description="MariaDB is an open source relational database management system (RDBMS)", iconUrl="classpath:///mariadb-logo-180x119.png")
 @ImplementedBy(MariaDbNodeImpl.class)
-public interface MariaDbNode extends DatabaseNode, HasShortName {
+public interface MariaDbNode extends SoftwareProcess, DatabaseNode, HasShortName {
 
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION =
@@ -44,14 +44,6 @@ public interface MariaDbNode extends DatabaseNode, HasShortName {
     public static final PortAttributeSensorAndConfigKey MARIADB_PORT =
         new PortAttributeSensorAndConfigKey("mariadb.port", "MariaDB port", PortRanges.fromString("3306, 13306+"));
 
-    @SetFromFlag("creationScriptContents")
-    public static final ConfigKey<String> CREATION_SCRIPT_CONTENTS =
-        ConfigKeys.newStringConfigKey("mariadb.creation.script.contents", "MariaDB creation script (SQL contents)", "");
-
-    @SetFromFlag("creationScriptUrl")
-    public static final ConfigKey<String> CREATION_SCRIPT_URL =
-        ConfigKeys.newStringConfigKey("mariadb.creation.script.url", "URL where MariaDB creation script can be found", "");
-
     @SetFromFlag("dataDir")
     public static final ConfigKey<String> DATA_DIR = ConfigKeys.newStringConfigKey(
         "mariadb.datadir", "Directory for writing data files", null);
@@ -71,6 +63,7 @@ public interface MariaDbNode extends DatabaseNode, HasShortName {
     public static final StringAttributeSensorAndConfigKey SOCKET_UID = new StringAttributeSensorAndConfigKey(
         "mariadb.socketUid", "Socket uid, for use in file /tmp/mysql.sock.<uid>.3306 (or randomly generated if not set)", null);
 
+    /** @deprecated since 0.7.0 use DATASTORE_URL */ @Deprecated
     public static final AttributeSensor<String> MARIADB_URL = DB_URL;
 
     @SetFromFlag("configurationTemplateUrl")
@@ -81,4 +74,5 @@ public interface MariaDbNode extends DatabaseNode, HasShortName {
     public static final AttributeSensor<Double> QUERIES_PER_SECOND_FROM_MARIADB =
         Sensors.newDoubleSensor("mariadb.queries.perSec.fromMariadb");
 
+    public String executeScript(String commands);
 }

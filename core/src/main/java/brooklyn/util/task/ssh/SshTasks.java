@@ -16,6 +16,7 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.internal.PlainSshExecTaskFactory;
 import brooklyn.util.task.system.ProcessTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
@@ -47,13 +48,16 @@ public class SshTasks {
     /** creates a task which returns modifies sudoers to ensure non-tty access is permitted;
      * also gives nice warnings if sudo is not permitted */
     public static ProcessTaskFactory<Boolean> dontRequireTtyForSudo(SshMachineLocation machine, final boolean requireSuccess) {
+        final String id = Identifiers.makeRandomId(6);
         return newSshExecTaskFactory(machine, 
-                BashCommands.dontRequireTtyForSudo())
+                BashCommands.dontRequireTtyForSudo(),
+                // strange quotes are to ensure we don't match against echoed stdin
+                BashCommands.sudo("echo \"sudo\"-is-working-"+id))
             .summary("setting up sudo")
             .configure(SshTool.PROP_ALLOCATE_PTY, true)
             .allowingNonZeroExitCode()
             .returning(new Function<ProcessTaskWrapper<?>,Boolean>() { public Boolean apply(ProcessTaskWrapper<?> task) {
-                if (task.getExitCode()==0) return true;
+                if (task.getExitCode()==0 && task.getStdout().contains("sudo-is-working-"+id)) return true;
                 Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
                 log.warn("Error setting up sudo for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+" "+
                         " (exit code "+task.getExitCode()+(entity!=null ? ", entity "+entity : "")+")");
