@@ -218,6 +218,9 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         if (!isClustered()) {
             InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
             if (creationScript!=null) { 
+                Tasks.setBlockingDetails("Pausing to ensure Cassandra (singleton) has started before running creation script");
+                Time.sleep(Duration.seconds(20));
+                Tasks.resetBlockingDetails();
                 executeScriptHere(Streams.readFullyString(creationScript));
             }
         }

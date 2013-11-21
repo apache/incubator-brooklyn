@@ -247,6 +247,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         // SshEffectorTasks.ssh("echo \"describe cluster;\" | /bin/cassandra-cli");
         // once we've done that we can revert to using 2 seed nodes.
         // see CassandraCluster.DEFAULT_SEED_QUORUM
+        // (also ensure the cluster is ready if we are about to run a creation script)
         Time.sleep(getConfig(DELAY_BEFORE_ADVERTISING_CLUSTER));
 
         String scriptUrl = getConfig(CassandraNode.CREATION_SCRIPT_URL);
