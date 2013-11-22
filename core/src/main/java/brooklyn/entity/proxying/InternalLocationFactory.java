@@ -96,14 +96,13 @@ public class InternalLocationFactory {
         try {
             Class<? extends T> clazz = spec.getType();
             
-            FactoryConstructionTracker.setConstructing();
             T loc;
-            try {
-                loc = construct(clazz, spec);
-            } finally {
-                FactoryConstructionTracker.reset();
+            if (isNewStyleLocation(clazz)) {
+                loc = constructLocation(clazz);
+            } else {
+                loc = constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
             }
-            
+
             if (spec.getDisplayName()!=null)
                 ((AbstractLocation)loc).setName(spec.getDisplayName());
             
@@ -131,11 +130,23 @@ public class InternalLocationFactory {
         }
     }
     
-    private <T extends Location> T construct(Class<? extends T> clazz, LocationSpec<T> spec) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        if (isNewStyleLocation(clazz)) {
-            return clazz.newInstance();
-        } else {
-            return constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
+    /**
+     * Constructs a new-style location (fails if no no-arg constructor).
+     */
+    private <T extends Location> T constructLocation(Class<T> clazz) {
+        try {
+            FactoryConstructionTracker.setConstructing();
+            try {
+                if (isNewStyleLocation(clazz)) {
+                    return clazz.newInstance();
+                } else {
+                    throw new IllegalStateException("Location class "+clazz+" must have a no-arg constructor");
+                }
+            } finally {
+                FactoryConstructionTracker.reset();
+            }
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
     }
     
