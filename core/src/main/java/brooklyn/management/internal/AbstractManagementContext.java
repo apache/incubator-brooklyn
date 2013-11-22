@@ -31,8 +31,10 @@ import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.internal.storage.BrooklynStorageFactory;
-import brooklyn.internal.storage.impl.inmemory.InMemoryBrooklynStorageFactory;
+import brooklyn.internal.storage.DataGrid;
+import brooklyn.internal.storage.DataGridFactory;
+import brooklyn.internal.storage.impl.BrooklynStorageImpl;
+import brooklyn.internal.storage.impl.inmemory.InMemoryDataGridFactory;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
@@ -51,10 +53,10 @@ import com.google.common.base.Throwables;
 public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
 
-    private static BrooklynStorageFactory loadBrooklynStorageFactory(BrooklynProperties properties){
-        String clazzName = properties.getFirst(BrooklynStorageFactory.class.getName());
+    private static DataGridFactory loadDataGridFactory(BrooklynProperties properties){
+        String clazzName = properties.getFirst(DataGridFactory.class.getName());
         if(clazzName == null){
-            clazzName = InMemoryBrooklynStorageFactory.class.getName();
+            clazzName = InMemoryDataGridFactory.class.getName();
         }
 
         Class<?> clazz;
@@ -74,11 +76,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             throw new IllegalStateException(format("Could not instantiate class [%s]",clazzName),e);
         }
 
-        if(!(instance instanceof BrooklynStorageFactory)){
-            throw new IllegalStateException(format("Class [%s] not an instantiate of class [%s]",clazzName, BrooklynStorageFactory .class.getName()));
+        if(!(instance instanceof DataGridFactory)){
+            throw new IllegalStateException(format("Class [%s] not an instantiate of class [%s]",clazzName, DataGridFactory.class.getName()));
         }
 
-        return (BrooklynStorageFactory)instance;
+        return (DataGridFactory)instance;
     }
 
     static {
@@ -106,8 +108,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected ClassLoader baseClassLoader;
     protected Iterable<URL> baseClassPathForScanning;
 
-    // TODO leaking "this" reference; yuck
-    private final RebindManager rebindManager = new RebindManagerImpl(this);
+    private final RebindManager rebindManager;
     
     protected volatile BrooklynGarbageCollector gc;
 
@@ -119,20 +120,24 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     private volatile boolean running = true;
 
-    public   AbstractManagementContext(BrooklynProperties brooklynProperties){
+    public AbstractManagementContext(BrooklynProperties brooklynProperties){
         this(brooklynProperties, null);
     }
 
-    public AbstractManagementContext(BrooklynProperties brooklynProperties, BrooklynStorageFactory storageFactory) {
+    public AbstractManagementContext(BrooklynProperties brooklynProperties, DataGridFactory datagridFactory) {
         this.configMap = brooklynProperties;
         this.entityDriverManager = new BasicEntityDriverManager();
         this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
-        if (storageFactory == null) {
-            storageFactory = loadBrooklynStorageFactory(brooklynProperties);
+        if (datagridFactory == null) {
+            datagridFactory = loadDataGridFactory(brooklynProperties);
         }
-        this.storage = storageFactory.newStorage(this);
+        DataGrid datagrid = datagridFactory.newDataGrid(this);
+         
+        this.storage = new BrooklynStorageImpl(datagrid);
+        this.rebindManager = new RebindManagerImpl(this); // TODO leaking "this" reference; yuck
     }
 
+    @Override
     public void terminate() {
         running = false;
         rebindManager.stop();
@@ -142,6 +147,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         // group itself has been told that it is unmanaged).
     }
     
+    @Override
     public boolean isRunning() {
         return running;
     }
@@ -156,15 +162,18 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return rebindManager;
     }
 
+    @Override
     public long getTotalEffectorInvocations() {
         return totalEffectorInvocationCount.get();
     }
     
+    @Override
     public ExecutionContext getExecutionContext(Entity e) {
         // BEC is a thin wrapper around EM so fine to create a new one here
         return new BasicExecutionContext(MutableMap.of("tag", BrooklynTasks.tagForContextEntity(e)), getExecutionManager());
     }
     
+    @Override
     public SubscriptionContext getSubscriptionContext(Entity e) {
         // BSC is a thin wrapper around SM so fine to create a new one here
         return new BasicSubscriptionContext(getSubscriptionManager(), e);
@@ -182,6 +191,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     protected abstract void manageIfNecessary(Entity entity, Object context);
 
+    @Override
     public <T> Task<T> invokeEffector(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {
         return runAtEntity(entity, eff, parameters);
     }
@@ -198,6 +208,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
      * when a method is called on that entity.
      * @throws ExecutionException 
      */
+    @Override
     public <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException {
         try {
             Task<?> current = Tasks.current();
@@ -310,6 +321,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
      * (Surefire does some weird stuff, but the default classloader is fine for loading;
      * however it requires a custom base classpath to be set for scanning.)
      */
+    @Override
     public ClassLoader getBaseClassLoader() {
         return baseClassLoader;
     }
@@ -329,6 +341,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
      * Only settable once, before catalog is loaded.
      * <p>
      * ClasspathHelper.forJavaClassPath() is often a good argument to pass. */
+    @Override
     public void setBaseClassPathForScanning(Iterable<URL> urls) {
         if (baseClassPathForScanning == urls) return;
         if (baseClassPathForScanning != null) throw new IllegalStateException("Cannot change base class path for scanning (in "+this+")");
@@ -338,6 +351,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     /** 
      * @see #setBaseClassPathForScanning(Iterable)
      */
+    @Override
     public Iterable<URL> getBaseClassPathForScanning() {
         return baseClassPathForScanning;
     }

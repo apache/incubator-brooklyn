@@ -1,24 +1,26 @@
 package brooklyn.storage.impl.hazelcast;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.internal.storage.BrooklynStorageFactory;
-import brooklyn.internal.storage.Reference;
-import brooklyn.internal.storage.impl.BrooklynStorageImpl;
-import brooklyn.internal.storage.impl.hazelcast.HazelcastBrooklynStorageFactory;
-import brooklyn.internal.storage.impl.hazelcast.HazelcastDataGrid;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.util.collections.MutableList;
-import com.hazelcast.core.Hazelcast;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import brooklyn.config.BrooklynProperties;
+import brooklyn.internal.storage.BrooklynStorage;
+import brooklyn.internal.storage.DataGridFactory;
+import brooklyn.internal.storage.Reference;
+import brooklyn.internal.storage.impl.BrooklynStorageImpl;
+import brooklyn.internal.storage.impl.hazelcast.HazelcastDataGrid;
+import brooklyn.internal.storage.impl.hazelcast.HazelcastDataGridFactory;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.collections.MutableList;
+
+import com.hazelcast.core.Hazelcast;
 
 public class HazelcastStorageTest {
 
@@ -28,7 +30,7 @@ public class HazelcastStorageTest {
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
         BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
-        properties.put(BrooklynStorageFactory.class.getName(), HazelcastBrooklynStorageFactory .class.getName());
+        properties.put(DataGridFactory.class.getName(), HazelcastDataGridFactory.class.getName());
         managementContext = new LocalManagementContext(properties);
         storage = managementContext.getStorage();
     }
