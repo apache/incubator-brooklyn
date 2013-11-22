@@ -95,9 +95,9 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   }
 
     @Override
-    public Response expunge(String application, String entity) {
+    public Response expunge(String application, String entity, boolean release) {
         EntityLocal entityLocal = brooklyn().getEntity(application, entity);
-        Task<?> task = brooklyn().expunge(entityLocal);
+        Task<?> task = brooklyn().expunge(entityLocal, release);
         TaskSummary summary = TaskTransformer.FROM_TASK.apply(task);
         return status(ACCEPTED).entity(summary).build();
     }

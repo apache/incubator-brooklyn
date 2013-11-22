@@ -97,6 +97,6 @@ public interface EntityApi {
       @ApiError(code = 412, reason = "Application already registered")
   })
   @Path("/{entity}/expunge")
-  public Response expunge(@PathParam("application") final String application, @PathParam("entity") final String entity);
+  public Response expunge(@PathParam("application") final String application, @PathParam("entity") final String entity, @QueryParam("release") final boolean release);
   
 }

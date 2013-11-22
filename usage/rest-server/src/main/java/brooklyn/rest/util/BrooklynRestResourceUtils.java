@@ -368,13 +368,14 @@ public class BrooklynRestResourceUtils {
         });
     }
     
-    public Task<?> expunge(final Entity entity) {
+    public Task<?> expunge(final Entity entity, final boolean release) {
         return mgmt.getExecutionManager().submit(
                 MutableMap.of("displayName", "expunging " + entity, "description", "REST call to expunge entity "
                         + entity.getDisplayName() + " (" + entity + ")"), new Runnable() {
                     @Override
                     public void run() {
-                        ((EntityInternal) entity).destroy();
+                        if (release)
+                            Entities.destroyCatching(entity);
                         mgmt.getEntityManager().unmanage(entity);
                     }
                 });

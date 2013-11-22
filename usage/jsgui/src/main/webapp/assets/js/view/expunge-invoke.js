@@ -18,12 +18,11 @@ define([
         invokeExpunge: function() {
             console.log("Expunge invoked on " + this.model.name);
             var self = this;
-            var url = this.model.links.expunge;
-            var parameters = {application: this.options.application, entity: this.model.id};
+            var release = this.$("#release").is(":checked");
+            var url = this.model.links.expunge + "?release=" + release + "&timeout=0:";
             $.ajax({
                 type: "POST",
-                url: url+"?timeout=0:",
-                data: JSON.stringify(parameters),
+                url: url,
                 contentType: "application/json",
                 success: function() {
                     self.trigger("entity.expunged")
