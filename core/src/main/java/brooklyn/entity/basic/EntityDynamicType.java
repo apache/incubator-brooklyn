@@ -36,6 +36,7 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -472,6 +473,10 @@ public class EntityDynamicType {
         public FieldAndValue(Field field, V value) {
             this.field = field;
             this.value = value;
+        }
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("field", field).add("value", value).toString();
         }
     }
     
