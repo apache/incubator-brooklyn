@@ -111,10 +111,12 @@ public class LocalManagementContext extends AbstractManagementContext {
         INSTANCES.add(this);
     }
 
+    @Override
     public void prePreManage(Entity entity) {
         getEntityManager().prePreManage(entity);
     }
 
+    @Override
     public void prePreManage(Location location) {
         getLocationManager().prePreManage(location);
     }

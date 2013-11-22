@@ -10,6 +10,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.internal.storage.BrooklynStorage;
+import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 
@@ -48,4 +49,8 @@ public interface ManagementContextInternal extends ManagementContext {
     AccessManager getAccessManager();
 
     UsageManager getUsageManager();
+    
+    void prePreManage(Entity entity);
+
+    void prePreManage(Location location);
 }

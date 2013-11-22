@@ -75,6 +75,7 @@ public class JavaOptsTest {
         execScriptCmds = new CopyOnWriteArrayList<ExecCmd>();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         loc = Mockito.mock(SshMachineLocation.class);
+        Mockito.when(loc.getId()).thenReturn("mymockid");
         Mockito.when(loc.getAddress()).thenReturn(InetAddress.getByName("localhost"));
         Mockito.when(loc.obtainPort(Mockito.<PortRange>anyObject())).thenReturn(1);
         Mockito.when(loc.execScript(Mockito.<Map>anyObject(), Mockito.anyString(), Mockito.<List<String>>anyObject(), Mockito.<Map>anyObject())).thenAnswer(

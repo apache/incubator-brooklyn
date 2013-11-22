@@ -174,10 +174,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 getConfigBag().put(CLOUD_REGION_ID, (String)getConfigBag().getStringKey("providerLocationId"));
         }
         
-        if (!truth(name)) {
-            name = elvis(getProvider(), "unknown") +
+        if (!truth(getDisplayName())) {
+            setDisplayName(elvis(getProvider(), "unknown") +
                    (truth(getRegion()) ? ":"+getRegion() : "") +
-                   (truth(getEndpoint()) ? ":"+getEndpoint() : "");
+                   (truth(getEndpoint()) ? ":"+getEndpoint() : ""));
         }
         
         setCreationString(getConfigBag());
@@ -220,7 +220,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String configDescription = getConfigBag().getDescription();
         if (configDescription!=null && configDescription.startsWith(getClass().getSimpleName()))
             return configDescription;
-        return getClass().getSimpleName()+"["+name+":"+(identity != null ? identity : null)+
+        return getClass().getSimpleName()+"["+getDisplayName()+":"+(identity != null ? identity : null)+
                 (configDescription!=null ? "/"+configDescription : "") + "]";
     }
 
