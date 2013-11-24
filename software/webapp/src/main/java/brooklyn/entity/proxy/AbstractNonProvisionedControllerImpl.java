@@ -59,16 +59,12 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
     
     /**
      * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
-     * Can pass in the 'cluster'.
+     * Can pass in the 'serverPool'.
      */
     @Override
     public void bind(Map flags) {
         if (flags.containsKey("serverPool")) {
             setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("serverPool"));
-        } else if (flags.containsKey("cluster")) {
-            // @deprecated since 0.5.0
-            LOG.warn("Deprecated use of AbstractNonProvisionedController.cluster: entity {}; value {}", this, flags.get("cluster"));
-            setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("cluster"));
         }
     }
 

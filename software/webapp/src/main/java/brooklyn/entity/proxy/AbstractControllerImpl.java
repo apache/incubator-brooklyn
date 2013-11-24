@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
@@ -79,22 +78,6 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
 
     @Override
-    public AbstractEntity configure(Map flags) {
-        AbstractEntity result = super.configure(flags);
-        
-        // Support old "cluster" flag (deprecated)
-        if (flags.containsKey("cluster")) {
-            Group cluster = (Group) flags.get("cluster");
-            LOG.warn("Deprecated use of AbstractController.cluster: entity {}; value {}", this, cluster);
-            if (getConfig(SERVER_POOL) == null) {
-                setConfig(SERVER_POOL, cluster);
-            }
-        }
-        
-        return result;
-    }
-
-    @Override
     public void init() {
         super.init();
         
@@ -110,16 +93,12 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     /**
      * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
-     * Can pass in the 'cluster'.
+     * Can pass in the 'serverPool'.
      */
     @Override
     public void bind(Map flags) {
         if (flags.containsKey("serverPool")) {
             setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("serverPool"));
-        } else if (flags.containsKey("cluster")) {
-            // @deprecated since 0.5.0
-            LOG.warn("Deprecated use of AbstractController.cluster: entity {}; value {}", this, flags.get("cluster"));
-            setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("cluster"));
         }
     }
 
