@@ -19,7 +19,6 @@ import brooklyn.config.ConfigUtils;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -50,7 +49,6 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public static final String BROOKLYN_HOME_DIR = "/tmp/brooklyn-"+System.getProperty("user.name");
     public static final String DEFAULT_INSTALL_BASEDIR = BROOKLYN_HOME_DIR+File.separator+"installs";
     public static final String DEFAULT_RUN_BASEDIR = BROOKLYN_HOME_DIR+File.separator+"apps";
-    public static final String NO_VERSION_INFO = "no-version-info";
 
     /** include this flag in newScript creation to prevent entity-level flags from being included;
      * any SSH-specific flags passed to newScript override flags from the entity,
@@ -69,20 +67,13 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             machine.configure(getSshFlags());
     }
 
-    /**
-     * @deprecated since 0.4. Set default on ConfigKey in entity, rather than overriding it here 
-     * and not telling the entity what value was chosen!
-     */
-    @Deprecated
-    protected String getDefaultVersion() { return NO_VERSION_INFO; }
-
     /** returns location (tighten type, since we know it is an ssh machine location here) */	
     public SshMachineLocation getLocation() {
         return (SshMachineLocation) super.getLocation();
     }
 
     public String getVersion() {
-        return elvis(getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION), getDefaultVersion());
+        return getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION);
     }
 
     /**
@@ -120,7 +111,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      */
     protected String getEntityVersionLabel(String separator) {
         return elvis(entity.getEntityType().getSimpleName(),  
-                entity.getClass().getName())+(!NO_VERSION_INFO.equals(getVersion()) ? separator+getVersion() : "");
+                entity.getClass().getName())+(getVersion() != null ? separator+getVersion() : "");
     }
     
     public String getInstallDir() {
@@ -205,28 +196,6 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      */
     public Map<String, String> getShellEnvironment() {
         return Strings.toStringMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT));
-    }
-
-    /** @deprecated since 0.5.0, should use {@link copyResource(File, String)}. */
-    @Deprecated
-    public void copyFile(File src, String destination) {
-        copyFile(MutableMap.of(), src, destination);
-    }
-    /** @deprecated since 0.5.0, destination should be a string not a File */
-    @Deprecated
-    public void copyFile(File src, File destination) {
-        getMachine().copyTo(src, destination);
-    }
-    /** @deprecated since 0.5.0, should use {@link copyResource(Map, String, String)}. */
-    @Deprecated
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void copyFile(Map flags2, File src, String destination) {
-        Map flags = new LinkedHashMap();
-        if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
-            flags.putAll(getSshFlags());
-        flags.putAll(flags2);
-        
-        getMachine().copyTo(flags, src, destination);
     }
 
     public int copyTemplate(File template, String target) {
