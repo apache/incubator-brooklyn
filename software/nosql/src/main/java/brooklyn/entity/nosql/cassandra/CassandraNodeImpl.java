@@ -5,6 +5,7 @@ package brooklyn.entity.nosql.cassandra;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.util.List;
 import java.util.Map;
@@ -101,7 +102,15 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @Override public Integer getSslGossipPort() { return getAttribute(CassandraNode.SSL_GOSSIP_PORT); }
     @Override public Integer getThriftPort() { return getAttribute(CassandraNode.THRIFT_PORT); }
     @Override public String getClusterName() { return getAttribute(CassandraNode.CLUSTER_NAME); }
-    @Override public Long getToken() { return getAttribute(CassandraNode.TOKEN); }
+    
+    @Override public BigInteger getToken() {
+        BigInteger token = getAttribute(CassandraNode.TOKEN);
+        if (token == null) {
+            token = getConfig(CassandraNode.TOKEN);
+        }
+        return token;
+    }
+    
     @Override public String getListenAddress() {
         if (requiresAlwaysPublicIp()) {
             return getAttribute(CassandraNode.ADDRESS);
@@ -249,20 +258,20 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                         .attributeName("Initialized")
                         .onSuccess(Functions.forPredicate(Predicates.notNull()))
                         .onException(Functions.constant(false)))
-                .pollAttribute(new JmxAttributePollConfig<Long>(TOKEN)
+                .pollAttribute(new JmxAttributePollConfig<BigInteger>(TOKEN)
                         .objectName(storageServiceMBean)
                         .attributeName("TokenToEndpointMap")
-                        .onSuccess((Function) new Function<Map, Long>() {
+                        .onSuccess((Function) new Function<Map, BigInteger>() {
                             @Override
-                            public Long apply(@Nullable Map input) {
-                                if (input == null || input.isEmpty()) return 0L;
+                            public BigInteger apply(@Nullable Map input) {
+                                if (input == null || input.isEmpty()) return BigInteger.valueOf(0);
                                 // FIXME does not work on aws-ec2, uses RFC1918 address
                                 Predicate<String> self = Predicates.in(ImmutableList.of(getAttribute(HOSTNAME), getAttribute(ADDRESS)));
-                                Set tokens = Maps.filterValues(input, self).keySet();
-                                return Long.parseLong(Iterables.getFirst(tokens, "-1"));
+                                Set<String> tokens = Maps.filterValues(input, self).keySet();
+                                return new BigInteger(Iterables.getFirst(tokens, null));
                             }
                         })
-                        .onException(Functions.constant(-1L)))
+                        .onException(Functions.<BigInteger>constant(null)))
                 .pollOperation(new JmxOperationPollConfig<String>(DATACENTER_NAME)
                         .period(60, TimeUnit.SECONDS)
                         .objectName(snitchMBean)

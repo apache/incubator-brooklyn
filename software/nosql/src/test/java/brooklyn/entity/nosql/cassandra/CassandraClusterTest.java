@@ -1,5 +1,10 @@
 package brooklyn.entity.nosql.cassandra;
 
+import static org.testng.Assert.assertEquals;
+
+import java.math.BigInteger;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -106,6 +111,22 @@ public class CassandraClusterTest {
             EntityTestUtils.assertAttributeEqualsEventually(e1, CassandraNode.SERVICE_UP, true);
             EntityTestUtils.assertAttributeEqualsContinually(cluster, CassandraCluster.CURRENT_SEEDS, ImmutableSet.<Entity>of(e2, e3));
         }
+    }
+
+    @Test
+    public void testPopulatesInitialTokens() throws Exception {
+        cluster = app.createAndManageChild(EntitySpec.create(CassandraCluster.class)
+                .configure(CassandraCluster.INITIAL_SIZE, 2)
+                .configure(CassandraCluster.DELAY_BEFORE_ADVERTISING_CLUSTER, Duration.ZERO)
+                .configure(CassandraCluster.MEMBER_SPEC, EntitySpec.create(EmptySoftwareProcess.class)));
+
+        app.start(ImmutableList.of(loc));
+
+        Set<BigInteger> tokens = Sets.newLinkedHashSet();
+        for (Entity member : cluster.getMembers()) {
+            tokens.add(member.getConfig(CassandraNode.TOKEN));
+        }
+        assertEquals(tokens, ImmutableSet.of(BigInteger.ZERO, new BigInteger("85070591730234615865843651857942052863")));
     }
     
     @Test(groups="Integration")

@@ -3,10 +3,13 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +27,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
 import brooklyn.util.ResourceUtils;
@@ -35,6 +39,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
@@ -63,6 +68,9 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     // Mutex for synchronizing during re-size operations
     private final Object mutex = new Object[0];
 
+    // TODO Serialize the token generator state?
+    private final TokenGenerator defaultTokenGenerator = new BasicTokenGenerator();
+    
     private final Supplier<Set<Entity>> defaultSeedSupplier = new Supplier<Set<Entity>>() {
         // Mutex for (re)calculating our seeds
         // TODO is this very dangerous?! Calling out to SeedTracker, which calls out to alien getAttribute()/getConfig(). But I think that's ok.
@@ -202,6 +210,11 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         return (seedSupplier == null) ? defaultSeedSupplier : seedSupplier;
     }
     
+    protected TokenGenerator getTokenGenerator() {
+        TokenGenerator tokenGenerator = getConfig(TOKEN_GENERATOR);
+        return (tokenGenerator == null) ? defaultTokenGenerator : tokenGenerator;
+    }
+    
     protected int getQuorumSize() {
         Integer quorumSize = getConfig(INITIAL_QUORUM_SIZE);
         if (quorumSize!=null && quorumSize>0)
@@ -224,6 +237,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
      * Sets the default {@link #MEMBER_SPEC} to describe the Cassandra nodes.
      */
     @Override
+
     protected EntitySpec<?> getMemberSpec() {
         return getConfig(MEMBER_SPEC, EntitySpec.create(CassandraNode.class));
     }
@@ -231,6 +245,45 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     @Override
     public String getClusterName() {
         return getAttribute(CLUSTER_NAME);
+    }
+
+    @Override
+    protected Collection<Entity> grow(int delta) {
+        if (getCurrentSize() == 0) {
+            getTokenGenerator().growingCluster(delta);
+        }
+        return super.grow(delta);
+    }
+    
+    @Override
+    protected Entity createNode(@Nullable Location loc, Map<?,?> flags) {
+        Map<?,?> allflags; 
+        if (flags.containsKey(CassandraNode.TOKEN) || flags.containsKey("token")) {
+            allflags = flags;
+        } else {
+            BigInteger token = getTokenGenerator().newToken();
+            allflags = (token == null) ? flags : MutableMap.builder().putAll(flags).put(CassandraNode.TOKEN, token).build();
+        }
+        
+        return super.createNode(loc, allflags);
+    }
+
+    // TODO Duplicates super-class method more than I'd like!
+    @Override
+    protected Entity replaceMember(Entity member, Location memberLoc) {
+        BigInteger oldToken = ((CassandraNode)member).getToken();
+        BigInteger newToken = (oldToken != null) ? getTokenGenerator().getTokenForReplacementNode(oldToken) : null;
+        ImmutableMap<BasicAttributeSensorAndConfigKey<BigInteger>, BigInteger> extraFlags = ImmutableMap.of(CassandraNode.TOKEN, newToken);
+        
+        Collection<Entity> addedEntities = growByOne(memberLoc, extraFlags);
+        if (addedEntities.size() < 1) {
+            String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
+            throw new IllegalStateException(msg);
+        }
+        
+        stopAndRemoveNode(member);
+        
+        return Iterables.get(addedEntities, 0);
     }
 
     @Override

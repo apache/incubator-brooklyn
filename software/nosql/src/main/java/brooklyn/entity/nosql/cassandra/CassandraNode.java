@@ -3,6 +3,7 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.math.BigInteger;
 import java.util.Set;
 
 import brooklyn.config.ConfigKey;
@@ -11,7 +12,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.java.UsesJavaMXBeans;
 import brooklyn.entity.java.UsesJmx;
@@ -92,7 +92,9 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
             String.class, "cassandra.replication.rackName", "Rack name (used for configuring replication)", 
             null);
 
-    AttributeSensor<Long> TOKEN = Sensors.newLongSensor("cassandra.token", "Cassandra Token");
+    @SetFromFlag("token")
+    BasicAttributeSensorAndConfigKey<BigInteger> TOKEN = new BasicAttributeSensorAndConfigKey<BigInteger>(
+            BigInteger.class, "cassandra.token", "Cassandra Token");
 
     AttributeSensor<Integer> PEERS = Sensors.newIntegerSensor( "cassandra.peers", "Number of peers in cluster");
 
@@ -134,7 +136,9 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     String getListenAddress();
     String getBroadcastAddress();
     String getSeeds();
-    Long getToken();
+    
+    /** in range 0 to (2^127)-1; or null if not yet set or known */
+    BigInteger getToken();
 
     /* For configuration */
     
