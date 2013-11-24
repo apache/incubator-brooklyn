@@ -18,29 +18,7 @@ public interface TestApplication extends StartableApplication, EntityInternal {
 
     public static final AttributeSensor<String> MY_ATTRIBUTE = Sensors.newStringSensor("test.myattribute", "Test attribute sensor");
 
-    /**
-     * @deprecated since 0.6.0 - Use {@link #addChild(EntitySpec)} if you *don't* want it managed, or else {@link #createAndManageChild(EntitySpec)} 
-     */
-    @Deprecated
-    public <T extends Entity> T createChild(EntitySpec<T> spec);
-
     public <T extends Entity> T createAndManageChild(EntitySpec<T> spec);
-
-    /**
-     * convenience for wiring in management during testing
-     * 
-     * @deprecated since 0.6.0 (or 0.5.0) - Use Entities.startManagement(app)
-     */
-    @Deprecated
-    public void startManagement();
-    
-    /**
-     * convenience for wiring in management during testing
-     * 
-     * @deprecated since 0.6.0 (or 0.5.0) - Use Entities.manage(entity)
-     */
-    @Deprecated
-    public <T extends Entity> T manage(T entity);
 
     public LocalhostMachineProvisioningLocation newLocalhostProvisioningLocation();
     

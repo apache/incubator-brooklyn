@@ -13,6 +13,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
 import brooklyn.entity.basic.BrooklynConfigKeys
+import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestApplicationImpl
@@ -44,7 +45,7 @@ class StartStopSshDriverTest {
     public void setUp() {
         app = new TestApplicationImpl()
         entity = new TestEntityImpl(app)
-        app.startManagement();
+        Entities.startManagement(app);
         sshMachineLocation = new SshMachineLocationWithSshTool(address:"localhost");
         driver = new BasicStartStopSshDriver(entity, sshMachineLocation)
     }

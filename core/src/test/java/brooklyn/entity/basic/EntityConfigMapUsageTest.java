@@ -110,7 +110,7 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigCanBeSetOnEntity() throws Exception {
-        TestEntity entity = app.createChild(EntitySpec.create(TestEntity.class));
+        TestEntity entity = app.addChild(EntitySpec.create(TestEntity.class));
         ((EntityLocal)entity).setConfig(strKey, "aval");
         ((EntityLocal)entity).setConfig(intKey, 2);
         Entities.manage(entity);
@@ -121,7 +121,7 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigInheritedFromParent() throws Exception {
-        TestEntity parent = app.createChild(EntitySpec.create(TestEntity.class)
+        TestEntity parent = app.addChild(EntitySpec.create(TestEntity.class)
                 .configure(strKey, "aval"));
         ((EntityLocal)parent).setConfig(intKey, 2);
         Entities.manage(parent);
@@ -163,7 +163,7 @@ public class EntityConfigMapUsageTest {
 
     @Test
     public void testConfigSetOnParentInheritedByExistingChildrenBeforeStarted() throws Exception {
-        TestEntity parent = app.createChild(EntitySpec.create(TestEntity.class));
+        TestEntity parent = app.addChild(EntitySpec.create(TestEntity.class));
         TestEntity entity = parent.createChild(EntitySpec.create(TestEntity.class));
         ((EntityLocal)parent).setConfig(strKey,"aval");
         Entities.manage(entity);
