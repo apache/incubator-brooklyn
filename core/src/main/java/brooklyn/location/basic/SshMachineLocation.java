@@ -1,6 +1,6 @@
 package brooklyn.location.basic;
 
-import static brooklyn.util.GroovyJavaMethods.*;
+import static brooklyn.util.GroovyJavaMethods.truth;
 import groovy.lang.Closure;
 
 import java.io.Closeable;
@@ -230,12 +230,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
-    /** @deprecated temporary Beta method introduced in 0.5.0; 
-     * {@link #configure(Map)} does roughly the same, and more, supporting ConfigKey inputs etc */
-    public void addConfig(Map<String, Object> vals) {
-        getConfigBag().putAll(vals);
-    }
-    
     @Override
     public void close() throws IOException {
         vanillaSshToolPool.close();
