@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import java.io.FileNotFoundException;
 import java.net.URL;
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -181,36 +180,6 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return downloadsManager;
     }
     
-    @Deprecated
-    @Override
-    public boolean isManaged(Entity e) {
-        return getEntityManager().isManaged(e);
-    }
-    
-    @Deprecated
-    @Override
-    public void manage(Entity e) {
-        getEntityManager().manage(e);
-    }
-    
-    @Deprecated
-    @Override
-    public void unmanage(Entity e) {
-        getEntityManager().unmanage(e);
-    }
-
-    @Deprecated
-    @Override
-    public synchronized Collection<Entity> getEntities() {
-        return getEntityManager().getEntities();
-    }
-    
-    @Deprecated
-    @Override
-    public Entity getEntity(String id) {
-        return getEntityManager().getEntity(id);
-    }
-
     protected abstract void manageIfNecessary(Entity entity, Object context);
 
     public <T> Task<T> invokeEffector(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {

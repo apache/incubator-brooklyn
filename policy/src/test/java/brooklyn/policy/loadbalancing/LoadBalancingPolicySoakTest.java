@@ -149,7 +149,7 @@ public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest
                 MockContainerEntity containerToStop = containers.get(containerIndex);
                 containerToStop.offloadAndStop(containers.get((containerIndex+1)%numContainers));
                 LOG.debug("Unmanaging container {}", containerToStop);
-                app.getManagementContext().unmanage(containerToStop);
+                Entities.unmanage(containerToStop);
                 
                 MockContainerEntity containerToAdd = newContainer(app, "container-"+(containerIndex+1)+"."+i+"."+j, lowThreshold, highThreshold);
                 containers.set(containerIndex, containerToAdd);

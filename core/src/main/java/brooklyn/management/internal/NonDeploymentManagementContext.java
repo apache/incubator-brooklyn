@@ -211,31 +211,6 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
     
     @Override
-    public Collection<Entity> getEntities() {
-        return getEntityManager().getEntities();
-    }
-
-    @Override
-    public Entity getEntity(String id) {
-        return getEntityManager().getEntity(id);
-    }
-
-    @Override
-    public boolean isManaged(Entity entity) {
-        return getEntityManager().isManaged(entity);
-    }
-
-    @Override
-    public void manage(Entity e) {
-        getEntityManager().manage(e);
-    }
-
-    @Override
-    public void unmanage(Entity e) {
-        getEntityManager().unmanage(e);
-    }
-    
-    @Override
     public <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException {
         throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot invoke effector "+eff+" on entity "+entity);
     }

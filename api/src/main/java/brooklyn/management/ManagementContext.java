@@ -106,46 +106,6 @@ public interface ManagementContext {
     /** Record of configured Brooklyn entities (and templates and policies) which can be loaded */
     BrooklynCatalog getCatalog();
 
-    /**
-     * All entities under control of this management plane
-     * 
-     * @deprecated Use getEntityManager().getEntities() instead; deprecated in 0.5
-     */
-    @Deprecated
-    Collection<Entity> getEntities();
-
-    /**
-     * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote)
-     * 
-     * @deprecated Use getEntityManager().getEntity(String) instead; deprecated in 0.5
-     */
-    @Deprecated
-    Entity getEntity(String id);
-    
-    /**
-     * Whether the entity is under management by this management context
-     * 
-     * @deprecated Use getEntityManager().isManaged(Entity) instead; deprecated in 0.5
-     */
-    @Deprecated
-    boolean isManaged(Entity entity);
-
-    /**
-     * Manage an entity.
-     * 
-     * @deprecated Use getEntityManager().manage(Entity) instead; deprecated in 0.5
-     */
-    @Deprecated
-    void manage(Entity e);
-    
-    /**
-     * Unmanage an entity.
-     * 
-     * @deprecated Use getEntityManager().unmanage(Entity) instead; deprecated in 0.5
-     */
-    @Deprecated
-    void unmanage(Entity e);
-
     LocationManager getLocationManager();
 
     /**

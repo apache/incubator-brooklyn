@@ -40,7 +40,7 @@ public class MementosGenerators {
         for (Application app : managementContext.getApplications()) {
             builder.applicationIds.add(app.getId());
         }
-        for (Entity entity : managementContext.getEntities()) {
+        for (Entity entity : managementContext.getEntityManager().getEntities()) {
             builder.entities.put(entity.getId(), entity.getRebindSupport().getMemento());
             
             for (Location location : entity.getLocations()) {
