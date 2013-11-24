@@ -19,7 +19,6 @@ import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
@@ -64,7 +63,7 @@ public class ControlledDynamicWebAppClusterTest {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER, controller)
-                .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
         app.start(locs);
 
         EntityTestUtils.assertAttributeEqualsEventually(controller, NginxController.SERVICE_UP, true);
@@ -81,7 +80,7 @@ public class ControlledDynamicWebAppClusterTest {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, controllerSpec)
-                .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
         app.start(locs);
         LoadBalancer controller = cluster.getController();
         
@@ -97,7 +96,7 @@ public class ControlledDynamicWebAppClusterTest {
     public void testConfiguresController() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
-                .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
         app.start(locs);
 
         String url = cluster.getController().getAttribute(NginxController.ROOT_URL);
@@ -121,7 +120,7 @@ public class ControlledDynamicWebAppClusterTest {
     public void testSetsToplevelHostnameFromController() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
-                .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
         app.start(locs);
 
         String expectedHostname = cluster.getController().getAttribute(LoadBalancer.HOSTNAME);
