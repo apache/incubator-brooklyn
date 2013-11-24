@@ -1,16 +1,22 @@
 package brooklyn.qa.longevity.webcluster;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.jetty.util.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 
 import com.google.common.base.Throwables;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Periodically publishes values in the range of 0 to #amplitude. 
@@ -18,21 +24,31 @@ import com.google.common.base.Throwables;
  */
 public class SinusoidalLoadGenerator extends AbstractEnricher {
 
-    private final long publishPeriodMs;
-    private final long sinPeriodMs;
-    private final double amplitude;
+    private static final Logger LOG = LoggerFactory.getLogger(SinusoidalLoadGenerator.class);
 
-    private final AttributeSensor<Double> target;
+    public static final ConfigKey<AttributeSensor<Double>> TARGET = ConfigKeys.newConfigKey(new TypeToken<AttributeSensor<Double>>() {}, "target");
+    
+    public static final ConfigKey<Long> PUBLISH_PERIOD_MS = ConfigKeys.newLongConfigKey("publishPeriodMs");
+
+    public static final ConfigKey<Long> SIN_PERIOD_MS = ConfigKeys.newLongConfigKey("sinPeriodMs");
+
+    public static final ConfigKey<Double> SIN_AMPLITUDE = ConfigKeys.newDoubleConfigKey("sinAmplitude");
+
     private final ScheduledExecutorService executor;
     
-    public SinusoidalLoadGenerator(AttributeSensor<Double> target, long publishPeriodMs, long sinPeriodMs, double sinAmplitude) {
-        this.target = target;
-        this.publishPeriodMs = publishPeriodMs;
-        this.sinPeriodMs = sinPeriodMs;
-        this.amplitude = sinAmplitude;
+    public SinusoidalLoadGenerator() {
         this.executor = Executors.newSingleThreadScheduledExecutor();
     }
     
+    public SinusoidalLoadGenerator(AttributeSensor<Double> target, long publishPeriodMs, long sinPeriodMs, double sinAmplitude) {
+        setConfig(TARGET, target);
+        setConfig(PUBLISH_PERIOD_MS, publishPeriodMs);
+        setConfig(SIN_PERIOD_MS, sinPeriodMs);
+        setConfig(SIN_AMPLITUDE, sinAmplitude);
+        this.executor = Executors.newSingleThreadScheduledExecutor();
+    }
+    
+    @Override
     public void setEntity(final EntityLocal entity) {
         super.setEntity(entity);
         
@@ -40,18 +56,23 @@ public class SinusoidalLoadGenerator extends AbstractEnricher {
             @Override public void run() {
                 try {
                     long time = System.currentTimeMillis();
-                    double val = amplitude * (1 + Math.sin( (1.0*time) / sinPeriodMs * Math.PI * 2  - Math.PI/2 )) / 2;
-                    entity.setAttribute(target, val);
+                    double val = getRequiredConfig(SIN_AMPLITUDE) * (1 + Math.sin( (1.0*time) / getRequiredConfig(SIN_PERIOD_MS) * Math.PI * 2  - Math.PI/2 )) / 2;
+                    entity.setAttribute(getRequiredConfig(TARGET), val);
                 } catch (Throwable t) {
-                    Log.warn("Error generating sinusoidal-load metric", t);
+                    LOG.warn("Error generating sinusoidal-load metric", t);
                     throw Throwables.propagate(t);
                 }
             }
-        }, 0, publishPeriodMs, TimeUnit.MILLISECONDS);
+
+        }, 0, getRequiredConfig(PUBLISH_PERIOD_MS), TimeUnit.MILLISECONDS);
     }
     
     @Override
     public void destroy() {
         executor.shutdownNow();
+    }
+    
+    private <T> T getRequiredConfig(ConfigKey<T> key) {
+        return checkNotNull(getConfig(key), key);
     }
 }

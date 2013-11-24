@@ -1,28 +1,27 @@
 package brooklyn.qa.longevity.webcluster;
 
 import java.util.List;
-import java.util.Map;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.enricher.CustomAggregatingEnricher;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.launcher.BrooklynLauncher;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.Lists;
 
-public class WebClusterApp extends ApplicationBuilder {
+public class WebClusterApp extends AbstractApplication {
 
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault();
 
@@ -31,7 +30,7 @@ public class WebClusterApp extends ApplicationBuilder {
     private static final long loadCyclePeriodMs = 2 * 60 * 1000L;
 
     @Override
-    protected void doBuild() {
+    public void init() {
         final AttributeSensor<Double> sinusoidalLoad =
                 Sensors.newDoubleSensor("brooklyn.qa.sinusoidalLoad", "Sinusoidal server load");
         AttributeSensor<Double> averageLoad =
@@ -41,19 +40,20 @@ public class WebClusterApp extends ApplicationBuilder {
                 // .configure("domain", "webclusterexample.brooklyn.local")
                 .configure("port", "8000+"));
 
-        JBoss7ServerFactory jbossFactory = new JBoss7ServerFactory(MutableMap.of("httpPort", "8080+", "war", WAR_PATH)) {
-            public JBoss7Server newEntity2(Map flags, Entity parent) {
-                JBoss7Server result = super.newEntity2(flags, parent);
-                result.addEnricher(new SinusoidalLoadGenerator(sinusoidalLoad, 500L, loadCyclePeriodMs, 1d));
-                return result;
-            }
-        };
+        EntitySpec<JBoss7Server> jbossSpec = EntitySpec.create(JBoss7Server.class)
+                .configure("httpPort", "8080+")
+                .configure("war", WAR_PATH)
+                .enricher(EnricherSpec.create(SinusoidalLoadGenerator.class)
+                        .configure(SinusoidalLoadGenerator.TARGET, sinusoidalLoad)
+                        .configure(SinusoidalLoadGenerator.PUBLISH_PERIOD_MS, 500L)
+                        .configure(SinusoidalLoadGenerator.SIN_PERIOD_MS, loadCyclePeriodMs)
+                        .configure(SinusoidalLoadGenerator.SIN_AMPLITUDE, 1d));
 
         ControlledDynamicWebAppCluster web = addChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .displayName("WebApp cluster")
                 .configure("controller", nginxController)
                 .configure("initialSize", 1)
-                .configure("factory", jbossFactory));
+                .configure("memberSpec", jbossSpec));
 
 
         web.getCluster().addEnricher(CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), sinusoidalLoad, averageLoad));
@@ -70,7 +70,7 @@ public class WebClusterApp extends ApplicationBuilder {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(new WebClusterApp().appDisplayName("Brooklyn WebApp Cluster example"))
+                .application(EntitySpecs.appSpec(WebClusterApp.class).displayName("Brooklyn WebApp Cluster example"))
                 .webconsolePort(port)
                 .location(location)
                 .start();
