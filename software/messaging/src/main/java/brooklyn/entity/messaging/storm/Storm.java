@@ -6,17 +6,20 @@ package brooklyn.entity.messaging.storm;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a Storm node (Nimbus or Worker).
+ * An {@link brooklyn.entity.Entity} that represents a Storm node (UI, Nimbus or Supervisor).
  */
 @ImplementedBy(StormImpl.class)
-public interface Storm extends SoftwareProcess/*, UsesJmx*/ {
+public interface Storm extends SoftwareProcess, UsesJmx {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "0.8.2");
@@ -51,6 +54,8 @@ public interface Storm extends SoftwareProcess/*, UsesJmx*/ {
 
     @SetFromFlag("zeromqVersion")
     ConfigKey<String> ZEROMQ_VERSION = ConfigKeys.newStringConfigKey("storm.zeromq.version", "zeromq version", "2.1.7");
+
+    AttributeSensor<Boolean> SERVICE_UP_JMX = Sensors.newBooleanSensor("storm.service.jmx.up", "Whether JMX is up for this service");
 
     String getStormConfigTemplateUrl();
     String getHostname();
