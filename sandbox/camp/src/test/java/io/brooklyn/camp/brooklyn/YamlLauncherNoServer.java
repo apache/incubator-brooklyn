@@ -1,22 +1,22 @@
 package io.brooklyn.camp.brooklyn;
 
-import com.google.common.annotations.Beta;
-
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
+
+import com.google.common.annotations.Beta;
 
 /** convenience for launching YAML files directly */
 @Beta
-public class YamlLauncher extends YamlLauncherAbstract {
+public class YamlLauncherNoServer extends YamlLauncherAbstract {
 
     @Override
     protected BrooklynCampPlatformLauncherAbstract newPlatformLauncher() {
-        return new BrooklynCampPlatformLauncher();
+        return new BrooklynCampPlatformLauncherNoServer();
     }
 
     public static void main(String[] args) {
         BrooklynAssemblyTemplateInstantiator.TARGET_LOCATION = "localhost";
         
-        YamlLauncher l = new YamlLauncher();
+        YamlLauncherNoServer l = new YamlLauncherNoServer();
         
 //        l.launchAppYaml("java-web-app-and-db-with-function.yaml");
 //        l.launchAppYaml("java-web-app-and-memsql.yaml");

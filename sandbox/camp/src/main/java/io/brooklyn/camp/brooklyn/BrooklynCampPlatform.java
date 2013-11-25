@@ -2,15 +2,11 @@ package io.brooklyn.camp.brooklyn;
 
 import io.brooklyn.camp.AggregatingCampPlatform;
 import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.CampServer;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
 import io.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslInterpreter;
-import io.brooklyn.camp.brooklyn.spi.lookup.BrooklynUrlLookup;
 import io.brooklyn.camp.brooklyn.spi.platform.BrooklynImmutableCampPlatform;
 import io.brooklyn.camp.brooklyn.spi.platform.HasBrooklynManagementContext;
 import io.brooklyn.camp.spi.PlatformRootSummary;
-import brooklyn.config.BrooklynProperties;
-import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.management.ManagementContext;
 
 /** {@link CampPlatform} implementation which includes Brooklyn entities 
@@ -43,21 +39,6 @@ public class BrooklynCampPlatform extends AggregatingCampPlatform implements Has
     
     protected void addInterpreters() {
         pdp().addInterpreter(new BrooklynDslInterpreter());
-    }
-
-    // --- runtime
-    
-    public static void main(String[] args) {
-        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .start();
-        
-        ((BrooklynProperties)launcher.getServerDetails().getManagementContext().getConfig()).
-            put(BrooklynUrlLookup.BROOKLYN_ROOT_URL, launcher.getServerDetails().getWebServerUrl());
-        
-        BrooklynCampPlatform p = new BrooklynCampPlatform(
-                PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(),
-                launcher.getServerDetails().getManagementContext());
-        new CampServer(p, "").start();
     }
 
 }

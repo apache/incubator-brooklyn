@@ -1,7 +1,5 @@
 package io.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.CampServer;
-import io.brooklyn.camp.rest.util.CampJsons;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import io.brooklyn.camp.spi.PlatformRootSummary;
@@ -44,6 +42,8 @@ public class JavaWebAppsMatchingTest {
               brooklynMgmt);
     }
     
+    // FIXME all commented-out lines require camp server
+    
     @AfterMethod
     public void teardown() {
         if (brooklynMgmt!=null) Entities.destroyAll(brooklynMgmt);
@@ -61,7 +61,7 @@ public class JavaWebAppsMatchingTest {
         Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl("java-web-app-simple.yaml"));
         AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
         
-        log.info("AT is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(at)));
+//        log.info("AT is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(at)));
         
         Assert.assertEquals(at.getName(), "sample-single-jboss");
     }
@@ -83,11 +83,11 @@ public class JavaWebAppsMatchingTest {
 
         AssemblyTemplate at = platform.pdp().registerDeploymentPlan(plan);
         
-        log.info("AT is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(at)));
+//        log.info("AT is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(at)));
         Assert.assertEquals(at.getName(), "example-with-function");
         
         PlatformComponentTemplate pct = at.getPlatformComponentTemplates().links().iterator().next().resolve();
-        log.info("PCT is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(pct)));
+//        log.info("PCT is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(pct)));
         Object cfg2 = pct.getCustomAttributes().get("brooklyn.config");
         Assert.assertEquals(cfg2, cfg1);
     }
@@ -108,22 +108,22 @@ public class JavaWebAppsMatchingTest {
         
         AssemblyTemplate at = platform.pdp().registerDeploymentPlan(plan);
         
-        log.info("AT is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(at)));
+//        log.info("AT is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(at)));
         Assert.assertEquals(at.getName(), "java-cluster-db-example");
 
         Iterator<ResolvableLink<PlatformComponentTemplate>> pcti = at.getPlatformComponentTemplates().links().iterator();
         PlatformComponentTemplate pct1 = pcti.next().resolve(); 
-        log.info("PCT1 is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(pct1)));
+//        log.info("PCT1 is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(pct1)));
 
         PlatformComponentTemplate pct2 = pcti.next().resolve(); 
-        log.info("PCT2 is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(pct2)));
+//        log.info("PCT2 is:\n"+CampJsons.prettyJson(new CampServer(platform, "").getDtoFactory().adapt(pct2)));
 
         Map<?,?> config = (Map<?, ?>) pct1.getCustomAttributes().get("brooklyn.config");
         Map<?,?> javaSysProps = (Map<?, ?>) config.get("java.sysprops");
         Object dbUrl = javaSysProps.get("brooklyn.example.db.url");
-        String j = CampJsons.prettyJson(dbUrl);
+//        String j = CampJsons.prettyJson(dbUrl);
         Assert.assertTrue(dbUrl instanceof DeferredSupplier<?>, "url is: "+dbUrl);
-        Assert.assertTrue(j.indexOf("formatString") >= 0, "url json is: "+j);
+//        Assert.assertTrue(j.indexOf("formatString") >= 0, "url json is: "+j);
         
         Assert.assertEquals(pct2.getCustomAttributes().get("planId"), "db");
     }

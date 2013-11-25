@@ -1,7 +1,6 @@
 package io.brooklyn.camp.brooklyn;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.brooklyn.camp.CampServer;
 import io.brooklyn.camp.brooklyn.spi.lookup.BrooklynUrlLookup;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
@@ -35,9 +34,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
-import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 @Test(groups="Integration")
 public class JavaWebAppsIntegrationTest {
@@ -58,8 +55,6 @@ public class JavaWebAppsIntegrationTest {
         platform = new BrooklynCampPlatform(
               PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(),
               brooklynMgmt);
-        
-        new CampServer(platform, "").start();
     }
     
     @AfterMethod
