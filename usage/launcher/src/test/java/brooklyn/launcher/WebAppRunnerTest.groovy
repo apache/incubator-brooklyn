@@ -128,9 +128,11 @@ public class WebAppRunnerTest {
 
     @Test
     public void testStartWithLauncher() {
-        BrooklynServerDetails details = BrooklynLauncher.newLauncher().
-            setAttribute("brooklyn.webconsole.security.provider",'brooklyn.rest.security.provider.AnyoneSecurityProvider').
-            webapp("/hello", "hello-world.war").launch();
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
+                .brooklynProperties("brooklyn.webconsole.security.provider",'brooklyn.rest.security.provider.AnyoneSecurityProvider')
+                .webapp("/hello", "hello-world.war")
+                .start();
+        BrooklynServerDetails details = launcher.getServerDetails();
         
         try {
             details.getWebServer().deploy("/hello2", "hello-world.war");

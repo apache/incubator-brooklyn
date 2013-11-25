@@ -95,7 +95,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
     @Test(groups = "Integration")
     public void testRebindsToRunningCluster() throws Exception {
         DynamicWebAppCluster origCluster = origApp.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
-                .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString()))
 				.configure("initialSize", 1));
     	
         origApp.start(ImmutableList.of(localhostProvisioningLocation));

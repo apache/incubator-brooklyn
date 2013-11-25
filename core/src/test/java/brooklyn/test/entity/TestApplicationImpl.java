@@ -4,12 +4,10 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
@@ -41,14 +39,6 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
         // no-op
     }
     
-    /**
-     * @deprecated since 0.6.0 Use the standard {@link #addChild(EntitySpec)}
-     */
-    @Override
-    public <T extends Entity> T createChild(EntitySpec<T> spec) {
-        return addChild(spec);
-    }
-
     @Override
     public <T extends Entity> T createAndManageChild(EntitySpec<T> spec) {
         if (!getManagementSupport().isDeployed()) throw new IllegalStateException("Entity "+this+" not managed");
@@ -66,19 +56,6 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
     public String toString() {
         String id = getId();
         return "Application["+id.substring(Math.max(0, id.length()-8))+"]";
-    }
-
-    @Override
-    public void startManagement() {
-        Entities.startManagement(this);
-    }
-    
-    @Override
-    public <T extends Entity> T manage(T entity) {
-        if (!Entities.manage(entity)) {
-            Assert.assertEquals(entity.getApplication(), this);
-        }
-        return entity;
     }
 
     public LocalhostMachineProvisioningLocation newLocalhostProvisioningLocation() {

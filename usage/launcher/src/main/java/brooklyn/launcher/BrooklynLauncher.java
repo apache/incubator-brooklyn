@@ -16,7 +16,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynProperties.Factory.Builder;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.Application;
-import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
@@ -205,16 +204,6 @@ public class BrooklynLauncher {
         return this;
     }
 
-    /** Specifies an attribute passed to deployed webapps 
-     * (in addition to {@link BrooklynServiceAttributes#BROOKLYN_MANAGEMENT_CONTEXT}
-     * 
-     * @deprecated in 0.5; use {@link #brooklynProperties(String, Object)}
-     */
-    @Deprecated
-    public BrooklynLauncher setAttribute(String field, Object value) {
-        return brooklynProperties(field, value);
-    }
-
     /** 
      * Specifies whether the launcher will start the Brooklyn web console 
      * (and any additional webapps specified); default true.
@@ -287,38 +276,6 @@ public class BrooklynLauncher {
      * @return An object containing details of the web server and the management context.
      */
     public BrooklynLauncher start() {
-        doLaunch();
-        
-        // Start the apps
-        List<Throwable> appExceptions = Lists.newArrayList();
-        for (Application app : apps) {
-            if (app instanceof Startable) {
-                if (shutdownOnExit) Entities.invokeStopOnShutdown(app);
-                try {
-                    LOG.info("Starting brooklyn application {} in location{} {}", new Object[] { app, locations.size()!=1?"s":"", locations });
-                    ((Startable)app).start(locations);
-                } catch (Exception e) {
-                    LOG.error("Error starting "+app+": "+Exceptions.collapseText(e), Exceptions.getFirstInteresting(e));
-                    appExceptions.add(Exceptions.collapse(e));
-                    
-                    if (Thread.currentThread().isInterrupted()) {
-                        LOG.error("Interrupted while starting applications; aborting");
-                        break;
-                    }
-                }
-            }
-        }
-        if (appExceptions.size() > 0) {
-            throw new CompoundRuntimeException("Error starting applications", appExceptions);
-        }
-        
-        return this;
-    }
-    
-    /**
-     * For backwards compatibility, to implement launch(); will be deleted when that deprecated code is deleted.
-     */
-    protected BrooklynLauncher doLaunch() {
         if (started) throw new IllegalStateException("Cannot start() or launch() multiple times");
         started = true;
         
@@ -344,36 +301,46 @@ public class BrooklynLauncher {
         
         // Start the web-console
         if (startWebApps) {
-            if (BrooklynWebConfig.hasNoSecurityOptions(brooklynProperties)) {
-                if (bindAddress==null) {
-                    LOG.info("Starting brooklyn web-console on loopback interface because no security config is set");
-                    bindAddress = Networking.LOOPBACK;
-                }
-                if (skipSecurityFilter==null) {
-                    LOG.debug("Starting brooklyn web-console without security because we are loopback and no security is set");
-                    skipSecurityFilter = true;
-                }
-            }
-            try {
-                webServer = new BrooklynWebServer(webconsoleFlags, managementContext);
-                webServer.setBindAddress(bindAddress);
-                webServer.setPort(port);
-                webServer.putAttributes(brooklynProperties);
-                if (skipSecurityFilter != Boolean.TRUE) {
-                    webServer.setSecurityFilter(BrooklynPropertiesSecurityFilter.class);
-                }
-                
-                for (Map.Entry<String, String> webapp : webApps.entrySet())
-                    webServer.deploy(webapp.getKey(), webapp.getValue());
-                
-                webServer.start();
-                
-            } catch (Exception e) {
-                LOG.warn("Failed to start Brooklyn web-console: "+e, e);
-            }
+            startWebApps();
         }
         
-        // Create the apps
+        createApps();
+        startApps();
+        
+        return this;
+    }
+
+    protected void startWebApps() {
+        if (BrooklynWebConfig.hasNoSecurityOptions(brooklynProperties)) {
+            if (bindAddress==null) {
+                LOG.info("Starting brooklyn web-console on loopback interface because no security config is set");
+                bindAddress = Networking.LOOPBACK;
+            }
+            if (skipSecurityFilter==null) {
+                LOG.debug("Starting brooklyn web-console without security because we are loopback and no security is set");
+                skipSecurityFilter = true;
+            }
+        }
+        try {
+            webServer = new BrooklynWebServer(webconsoleFlags, managementContext);
+            webServer.setBindAddress(bindAddress);
+            webServer.setPort(port);
+            webServer.putAttributes(brooklynProperties);
+            if (skipSecurityFilter != Boolean.TRUE) {
+                webServer.setSecurityFilter(BrooklynPropertiesSecurityFilter.class);
+            }
+            
+            for (Map.Entry<String, String> webapp : webApps.entrySet())
+                webServer.deploy(webapp.getKey(), webapp.getValue());
+            
+            webServer.start();
+            
+        } catch (Exception e) {
+            LOG.warn("Failed to start Brooklyn web-console: "+e, e);
+        }
+    }
+
+    protected void createApps() {
         for (ApplicationBuilder appBuilder : appBuildersToManage) {
             StartableApplication app = appBuilder.manage(managementContext);
             apps.add(app);
@@ -382,8 +349,30 @@ public class BrooklynLauncher {
             Entities.startManagement(app, managementContext);
             apps.add(app);
         }
-        
-        return this;
+    }
+    
+    protected void startApps() {
+        List<Throwable> appExceptions = Lists.newArrayList();
+        for (Application app : apps) {
+            if (app instanceof Startable) {
+                if (shutdownOnExit) Entities.invokeStopOnShutdown(app);
+                try {
+                    LOG.info("Starting brooklyn application {} in location{} {}", new Object[] { app, locations.size()!=1?"s":"", locations });
+                    ((Startable)app).start(locations);
+                } catch (Exception e) {
+                    LOG.error("Error starting "+app+": "+Exceptions.collapseText(e), Exceptions.getFirstInteresting(e));
+                    appExceptions.add(Exceptions.collapse(e));
+                    
+                    if (Thread.currentThread().isInterrupted()) {
+                        LOG.error("Interrupted while starting applications; aborting");
+                        break;
+                    }
+                }
+            }
+        }
+        if (appExceptions.size() > 0) {
+            throw new CompoundRuntimeException("Error starting applications", appExceptions);
+        }
     }
     
     /**
@@ -411,112 +400,5 @@ public class BrooklynLauncher {
                 Closeables.closeQuietly((Closeable)loc);
             }
         }
-    }
-    
-    /* ---------------------------------------
-     * ! EVERYTHING BELOW HERE IS DEPRECATED !
-     * ---------------------------------------
-     */
-    
-    /** Launches the web console on port 8081, and a Brooklyn application, with a single command,
-     * in such a way that the web console is launched and the application is shutdown on server termination.
-     * For readability and flexibility, clients may prefer the {@link #newLauncher()} fluent syntax.
-     * 
-     * @deprecated in 0.5; use newInstance().application(app).start()
-     */
-    @Deprecated
-    public static ManagementContext manage(AbstractApplication app) {
-        return manage(app, 8081, true, true);
-    }
-
-    /** Launches the web console on the given port, and a Brooklyn application, with a single command,
-     * in such a way that the web console is launched and the application is shutdown on server termination.
-     * For readability and flexibility, clients may prefer the {@link #newLauncher()} fluent syntax.
-     * 
-     * @deprecated in 0.5; use newInstance().webconsolePort(port).shutdownOnExit(true).application(app).start()
-     */
-    @Deprecated
-    public static ManagementContext manage(final AbstractApplication app, int port){
-        return manage(app, port,true,true);
-    }
-
-    /** Launches the web console on the given port, and a Brooklyn application, with a single command.
-     * For readability and flexibility, clients may prefer the {@link #newLauncher()} builder-style syntax.
-     * 
-     * @deprecated in 0.5; use newInstance().webconsolePort(port).shutdownOnExit(shutdownApp).webconsole(startWebConsole).application(app).start()
-     */
-    @Deprecated
-    public static ManagementContext manage(final AbstractApplication app, int port, boolean shutdownApp, boolean startWebConsole) {
-        // Locate the management context
-        Entities.startManagement(app);
-        LocalManagementContext context = (LocalManagementContext) app.getManagementContext();
-
-        if (startWebConsole) {
-            try {
-                new BrooklynWebServer(context, port).start();
-            } catch (Exception e) {
-                LOG.warn("Failed to start Brooklyn web-console", e);
-            }
-        }
-
-        if (shutdownApp) Entities.invokeStopOnShutdown(app);
-        
-        return context;
-    }
-
-    /** Creates a configurable (fluent API) launcher for use starting the web console and Brooklyn applications.
-     * 
-     * @deprecated in 0.5; use newInstance();
-     */
-    @Deprecated
-    public static BrooklynLauncher newLauncher() {
-        return newInstance();
-    }
-    
-    /** Specifies the management context this launcher should use. 
-     * If not specified a new {@link LocalManagementContext} is used.
-     * 
-     * @deprecated in 0.5; use managementContext(context);
-     */
-    @Deprecated
-    public BrooklynLauncher management(ManagementContext context) {
-        return managementContext(context);
-    }
-
-    /** Specifies that the launcher should manage the given Brooklyn application.
-     * The application will not be started as part of this call (callers should start it when appropriate, often after the launcher is launched).
-     * The application must not yet be managed.
-     * 
-     * @deprecated in 0.5; use application(app);
-     */
-    @Deprecated
-    public BrooklynLauncher managing(Application app) {
-        return application(app);
-    }
-
-    /** Specifies that the launcher should build and manage the given Brooklyn application.
-     * The application will not be started as part of this call (callers should start it when appropriate, often after the launcher is launched).
-     * The application must not yet be managed.
-     * 
-     * @deprecated in 0.5; use application(app);
-     */
-    @Deprecated
-    public BrooklynLauncher managing(ApplicationBuilder app) {
-        return application(app);
-    }
-
-    /** Starts the web server (with web console) and Brooklyn applications, as per the specifications configured. 
-     * @return An object containing details of the web server and the management context.
-     * 
-     * @deprecated in 0.5; use {@link #start()}; if you really don't want to start the apps then don't pass them in!
-     */
-    @Deprecated
-    public BrooklynServerDetails launch() {
-        // for backwards compatibility:
-        shutdownOnExit(false);
-        
-        doLaunch();
-        
-        return getServerDetails();
     }
 }

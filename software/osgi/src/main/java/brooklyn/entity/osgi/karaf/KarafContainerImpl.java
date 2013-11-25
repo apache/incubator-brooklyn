@@ -230,9 +230,9 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
         if (FILE_SCHEME.equals(uri.getScheme())) {
             LOG.info("Deploying bundle {} via file copy", bundle);
             File source = new File(uri);
-            File target = new File(getDriver().getRunDir(), source.getName());
-            getDriver().copyFile(source, target);
-            return (Long) jmxHelper.operation(OSGI_FRAMEWORK, "installBundle", (wrap ? WRAP_SCHEME + ":" : "") + FILE_SCHEME + "://" + target.getPath());
+            String target = getDriver().getRunDir() + "/" + source.getName();
+            getDriver().copyResource(source, target);
+            return (Long) jmxHelper.operation(OSGI_FRAMEWORK, "installBundle", (wrap ? WRAP_SCHEME + ":" : "") + FILE_SCHEME + "://" + target);
         } else {
             LOG.info("Deploying bundle {} via JMX", bundle);
             return (Long) jmxHelper.operation(OSGI_FRAMEWORK, "installBundle", (wrap ? WRAP_SCHEME + ":" : "") + bundle);
@@ -265,8 +265,8 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
             File local = ResourceUtils.writeToTempFile(props, "karaf-"+getId(), ".cfg");
             local.setReadable(true);
             try {
-                File remote = new File(getDriver().getRunDir(), file);
-                getDriver().copyFile(local, remote);
+                String remote = getDriver().getRunDir() + "/" + file;
+                getDriver().copyResource(local, remote);
             } finally {
                 local.delete();
             }

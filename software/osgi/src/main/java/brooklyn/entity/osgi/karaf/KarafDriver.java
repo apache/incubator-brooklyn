@@ -8,5 +8,5 @@ public interface KarafDriver extends JavaSoftwareProcessDriver {
 
     public String getRunDir();
 
-    public void copyFile(File src, File destination);
+    public int copyResource(File src, String destination);
 }

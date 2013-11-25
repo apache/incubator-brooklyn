@@ -183,7 +183,7 @@ public class NginxClusterIntegrationTest {
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private List<NginxController> findNginxs() {
-        ImmutableList result = ImmutableList.copyOf(Iterables.filter(app.getManagementContext().getEntities(), Predicates.instanceOf(NginxController.class)));
+        ImmutableList result = ImmutableList.copyOf(Iterables.filter(app.getManagementContext().getEntityManager().getEntities(), Predicates.instanceOf(NginxController.class)));
         return (List<NginxController>) result;
     }
 

@@ -131,7 +131,7 @@ public class AbstractFollowTheSunPolicyTest {
     }
 
     protected String verboseDumpToString() {
-        Iterable<MockContainerEntity> containers = Iterables.filter(app.getManagementContext().getEntities(), MockContainerEntity.class);
+        Iterable<MockContainerEntity> containers = Iterables.filter(app.getManagementContext().getEntityManager().getEntities(), MockContainerEntity.class);
         //Collection<MockContainerEntity> containers = app.getManagementContext().getEntities().findAll { it instanceof MockContainerEntity }
         Iterable<Set<Movable>> itemDistribution = Iterables.transform(containers, new Function<MockContainerEntity, Set<Movable>>() {
             public Set<Movable> apply(MockContainerEntity input) {

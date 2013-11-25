@@ -323,7 +323,7 @@ public class DynamicGroupTest {
         final CountDownLatch rescanLatch = new CountDownLatch(1);
         final CountDownLatch entityAddedLatch = new CountDownLatch(1);
         
-        final TestEntity e3 = app.createChild(EntitySpec.create(TestEntity.class));
+        final TestEntity e3 = app.addChild(EntitySpec.create(TestEntity.class));
         Predicate filter = Predicates.equalTo(e3);
         
         DynamicGroup group2 = new DynamicGroupImpl() {
