@@ -29,7 +29,7 @@
         
         <dependency>
             <groupId>io.brooklyn.camp</groupId>
-            <artifactId>camp-server</artifactId>
+            <artifactId>camp-base</artifactId>
             <version>${camp-impl.version}</version>
         </dependency>
 
@@ -39,6 +39,13 @@
             <!-- optional so that this project has logging; dependencies may redeclare or supply their own -->
             <optional>true</optional>
         </dependency>
+        
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${fasterxml.jackson.version}</version>
+        </dependency>
+
         
         <!-- demo... -->
         <dependency>
