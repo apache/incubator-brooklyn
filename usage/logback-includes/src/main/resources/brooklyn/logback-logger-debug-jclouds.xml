@@ -1,0 +1,14 @@
+<included>
+
+    <!-- include jclouds log file appender -->
+    <include resource="brooklyn/logback-appender-jclouds.xml"/>
+
+    <!-- send jclouds logging categories to the file -->
+    <logger name="org.jclouds" additivity="false">
+        <appender-ref ref="JCLOUDS-FILE" />
+    </logger>
+    <logger name="jclouds" additivity="false">
+        <appender-ref ref="JCLOUDS-FILE" />
+    </logger>
+      
+</included>
