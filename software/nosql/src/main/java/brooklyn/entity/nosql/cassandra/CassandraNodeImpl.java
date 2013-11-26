@@ -45,6 +45,7 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
@@ -164,8 +165,13 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             } else if (requiresAlwaysPublicIp()) {
                 seedsHostnames.add(entity.getAttribute(CassandraNode.HOSTNAME));
             } else {
-                String seedHostname = Machines.findSubnetOrPublicHostname(entity).get();
-                seedsHostnames.add(seedHostname);
+                Optional<String> optionalSeedHostname = Machines.findSubnetOrPublicHostname(entity);
+                if (optionalSeedHostname.isPresent()) {
+                    String seedHostname = optionalSeedHostname.get();
+                    seedsHostnames.add(seedHostname);
+                } else {
+                    log.warn("In node {}, seed hostname missing for {}; not including in seeds list", this, entity);
+                }
             }
         }
         
@@ -217,6 +223,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         return CassandraNodeDriver.class;
     }
     
+    @Override
     public CassandraNodeDriver getDriver() {
         return (CassandraNodeDriver) super.getDriver();
     }
@@ -268,7 +275,8 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                                 // FIXME does not work on aws-ec2, uses RFC1918 address
                                 Predicate<String> self = Predicates.in(ImmutableList.of(getAttribute(HOSTNAME), getAttribute(ADDRESS)));
                                 Set<String> tokens = Maps.filterValues(input, self).keySet();
-                                return new BigInteger(Iterables.getFirst(tokens, null));
+                                String token = Iterables.getFirst(tokens, null);
+                                return (token != null) ? new BigInteger(token) : null;
                             }
                         })
                         .onException(Functions.<BigInteger>constant(null)))
