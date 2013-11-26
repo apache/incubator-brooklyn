@@ -260,7 +260,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         
     public boolean installJava() {
         try {
-            getLocation().acquireMutex("install:" + getLocation().getDisplayName(), "installing Java at " + getLocation());
+            getLocation().acquireMutex("installing", "installing Java at " + getLocation());
             log.debug("checking for java at " + entity + " @ " + getLocation());
             int result = getLocation().execCommands("check java", Arrays.asList("which java"));
             if (result == 0) {
@@ -268,18 +268,15 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                 return true;
             } else {
                 log.debug("java not detected at " + entity + " @ " + getLocation() + ", installing using BashCommands.installJava6");
-                
-                result = newScript("INSTALL_OPENJDK").body.append(
-                        BashCommands.installJava7Or6OrFail()
-                        // could use Jclouds routines -- but the following complains about yum-install not defined
-                        // even though it is set as an alias (at the start of the first file)
-                        //   resource.getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
-                        //   resource.getResourceAsString("classpath:///functions/installOpenJDK.sh"),
-                        //   "installOpenJDK"
-                        ).execute();
-                if (result==0)
-                    return true;
-                
+
+                result = DynamicTasks.queue(SshEffectorTasks.ssh(BashCommands.installJava7Or6OrFail())).get();
+                // could use Jclouds routines -- but the following complains about yum-install not defined
+                // even though it is set as an alias (at the start of the first file)
+                //   resource.getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
+                //   resource.getResourceAsString("classpath:///functions/installOpenJDK.sh"),
+                //   "installOpenJDK"
+                if (result==0) return true;
+
                 // some failures might want a delay and a retry; 
                 // NOT confirmed this is needed, so:
                 // if we don't see the warning then remove, 
@@ -288,10 +285,8 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                         " (and Java not detected); invalid result "+result+". " + 
                         "Will retry.");
                 Time.sleep(Duration.TEN_SECONDS);
-                
-                result = newScript("INSTALL_OPENJDK").body.append(
-                        BashCommands.installJava7Or6OrFail()
-                        ).execute();
+
+                result = DynamicTasks.queue(SshEffectorTasks.ssh(BashCommands.installJava7Or6OrFail())).get();
                 if (result==0) {
                     log.info("Succeeded installing Java at " + getLocation() + " for " + entity + " after retry.");
                     return true;
@@ -304,7 +299,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         } catch (Exception e) {
             throw Throwables.propagate(e);
         } finally {
-            getLocation().releaseMutex("install:" + getLocation().getDisplayName());
+            getLocation().releaseMutex("installing");
         }
 
         // //this works on ubuntu (surprising that jdk not in default repos!)
