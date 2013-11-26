@@ -77,21 +77,6 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
     }
 
     protected class ProcessTaskInternalJob implements Callable<Object> {
-        /** for overriding */
-        protected ConfigBag getConfigForRunning() {
-            ConfigBag config = ConfigBag.newInstanceCopying(ProcessTaskWrapper.this.config);
-            if (stdout!=null) config.put(ShellTool.PROP_OUT_STREAM, stdout);
-            if (stderr!=null) config.put(ShellTool.PROP_ERR_STREAM, stderr);
-            
-            if (!config.containsKey(ShellTool.PROP_NO_EXTRA_OUTPUT))
-                // by default no extra output (so things like cat, etc work as expected)
-                config.put(ShellTool.PROP_NO_EXTRA_OUTPUT, true);
-
-            if (runAsRoot)
-                config.put(ShellTool.PROP_RUN_AS_ROOT, true);
-            return config;
-        }
-        
         @Override
         public Object call() throws Exception {
             run( getConfigForRunning() );
@@ -160,6 +145,21 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
     /** true iff the process has completed (with or without failure) */
     public boolean isDone() {
         return getTask().isDone();
+    }
+
+    /** for overriding */
+    protected ConfigBag getConfigForRunning() {
+        ConfigBag config = ConfigBag.newInstanceCopying(ProcessTaskWrapper.this.config);
+        if (stdout!=null) config.put(ShellTool.PROP_OUT_STREAM, stdout);
+        if (stderr!=null) config.put(ShellTool.PROP_ERR_STREAM, stderr);
+        
+        if (!config.containsKey(ShellTool.PROP_NO_EXTRA_OUTPUT))
+            // by default no extra output (so things like cat, etc work as expected)
+            config.put(ShellTool.PROP_NO_EXTRA_OUTPUT, true);
+
+        if (runAsRoot)
+            config.put(ShellTool.PROP_RUN_AS_ROOT, true);
+        return config;
     }
 
     protected abstract void run(ConfigBag config);

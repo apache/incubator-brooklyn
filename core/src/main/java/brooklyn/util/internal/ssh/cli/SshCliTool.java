@@ -293,6 +293,6 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     private int execProcess(Map<String,?> props, List<String> cmdWords) {
         OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
         OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
-        return ProcessTool.execSingleProcess(cmdWords, null, out, err, this);
+        return ProcessTool.execSingleProcess(cmdWords, null, (File)null, out, err, this);
     }
 }

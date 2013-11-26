@@ -37,6 +37,8 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
     
     public static final ConfigKey<Boolean> PROP_LOGIN_SHELL = newConfigKey("loginShell", "Causes the commands to be invoked with bash arguments to forcea  login shell", Boolean.FALSE);
 
+    public static final ConfigKey<File> PROP_DIRECTORY = newConfigKey(File.class, "directory", "the working directory, for executing commands", null);
+    
     public ProcessTool() {
         this(null);
     }
@@ -57,6 +59,8 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
         return new ToolAbstractExecScript(props) {
             public int run() {
                 try {
+                    File directory = getOptionalVal(props, PROP_DIRECTORY);
+                    
                     String scriptContents = toScript(props, commands, env);
 
                     if (LOG.isTraceEnabled()) LOG.trace("Running shell process (process) as script:\n{}", scriptContents);
@@ -66,7 +70,7 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
 
                     List<String> cmds = buildRunScriptCommand();
                     cmds.add(0, "chmod +x "+scriptPath);
-                    return asInt(execProcesses(cmds, null, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
+                    return asInt(execProcesses(cmds, null, directory, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
                 } catch (IOException e) {
                     throw Throwables.propagate(e);
                 }
@@ -82,7 +86,8 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
         OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
         OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
         String separator = getOptionalVal(props, PROP_SEPARATOR);
-
+        File directory = getOptionalVal(props, PROP_DIRECTORY);
+        
         List<String> allcmds = toCommandSequence(commands, null);
 
         String singlecmd = Joiner.on(separator).join(allcmds);
@@ -91,13 +96,24 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
         }
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command (process): {}", singlecmd);
         
-        return asInt(execProcesses(allcmds, env, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
+        return asInt(execProcesses(allcmds, env, directory, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
     }
 
-    /** as {@link #execProcesses(List, Map, OutputStream, OutputStream, String, boolean, Object)} but not using a login shell
+    /**
+     * as {@link #execProcesses(List, Map, OutputStream, OutputStream, String, boolean, Object)} but not using a login shell
+     * @deprecated since 0.7; use {@link #execProcesses(List, Map, File, OutputStream, OutputStream, String, boolean, Object)}
      */
+    @Deprecated
     public static int execProcesses(List<String> cmds, Map<String,?> env, OutputStream out, OutputStream err, String separator, Object contextForLogging) {
-        return execProcesses(cmds, env, out, err, separator, false, contextForLogging);
+        return execProcesses(cmds, env, (File)null, out, err, separator, false, contextForLogging);
+    }
+
+    /**
+     * @deprecated since 0.7; use {@link #execProcesses(List, Map, File, OutputStream, OutputStream, String, boolean, Object)}
+     */
+    @Deprecated
+    public static int execProcesses(List<String> cmds, Map<String,?> env, OutputStream out, OutputStream err, String separator, boolean asLoginShell, Object contextForLogging) {
+        return execProcesses(cmds, env, (File)null, out, err, separator, asLoginShell, contextForLogging);
     }
     
     /** executes a set of commands by sending them as a single process to `bash -c` 
@@ -106,16 +122,24 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
      * consequence of this is that you should not normally need to escape things oddly in your commands, 
      * type them just as you would into a bash shell (if you find exceptions please note them here!)
      */
-    public static int execProcesses(List<String> cmds, Map<String,?> env, OutputStream out, OutputStream err, String separator, boolean asLoginShell, Object contextForLogging) {
+    public static int execProcesses(List<String> cmds, Map<String,?> env, File directory, OutputStream out, OutputStream err, String separator, boolean asLoginShell, Object contextForLogging) {
         MutableList<String> commands = new MutableList<String>().append("bash");
         if (asLoginShell) commands.append("-l");
         commands.append("-c", Strings.join(cmds, Preconditions.checkNotNull(separator, "separator")));
-        return execSingleProcess(commands, env, out, err, contextForLogging);
+        return execSingleProcess(commands, env, directory, out, err, contextForLogging);
+    }
+    
+    /**
+     * @deprecated since 0.7; use {@link #execSingleProcess(List, Map, File, OutputStream, OutputStream, Object)}
+     */
+    @Deprecated
+    public static int execSingleProcess(List<String> cmdWords, Map<String,?> env, OutputStream out, OutputStream err, Object contextForLogging) {
+        return execSingleProcess(cmdWords, env, (File)null, out, err, contextForLogging);
     }
     
     /** executes a single process made up of the given command words (*not* bash escaped);
      * should be portable across OS's */
-    public static int execSingleProcess(List<String> cmdWords, Map<String,?> env, OutputStream out, OutputStream err, Object contextForLogging) {
+    public static int execSingleProcess(List<String> cmdWords, Map<String,?> env, File directory, OutputStream out, OutputStream err, Object contextForLogging) {
         StreamGobbler errgobbler = null;
         StreamGobbler outgobbler = null;
         
@@ -123,7 +147,10 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
         if (env!=null) {
             for (Map.Entry<String,?> kv: env.entrySet()) pb.environment().put(kv.getKey(), String.valueOf(kv.getValue())); 
         }
-
+        if (directory != null) {
+            pb.directory(directory);
+        }
+        
         try {
             Process p = pb.start();
             

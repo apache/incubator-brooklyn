@@ -67,7 +67,9 @@ public class ShellFeedIntegrationTest {
         EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_INT, 123);
     }
     
-    @Test(groups="Integration")
+    // TODO timeout no longer supported; would be nice to have a generic task-timeout feature,
+    // now that the underlying impl uses SystemProcessTaskFactory
+    @Test(enabled=false, groups={"Integration", "WIP"})
     public void testShellTimesOut() throws Exception {
         feed = ShellFeed.builder()
                 .entity(entity)
@@ -141,17 +143,22 @@ public class ShellFeedIntegrationTest {
                 .entity(entity)
                 .poll(new ShellPollConfig<String>(SENSOR_STRING)
                         .command("exit 123")
+                        .onSuccess(new Function<SshPollValue, String>() {
+                            @Override
+                            public String apply(SshPollValue input) {
+                                return "Exit status (on success) " + input.getExitStatus();
+                            }})
                         .onFailure(new Function<SshPollValue, String>() {
                             @Override
                             public String apply(SshPollValue input) {
-                                return "Exit status " + input.getExitStatus();
+                                return "Exit status (on failure) " + input.getExitStatus();
                             }}))
                 .build();
         
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String val = entity.getAttribute(SENSOR_STRING);
-                assertTrue(val != null && val.contains("Exit status 123"), "val="+val);
+                assertTrue(val != null && val.contains("Exit status (on failure) 123"), "val="+val);
             }});
     }
     

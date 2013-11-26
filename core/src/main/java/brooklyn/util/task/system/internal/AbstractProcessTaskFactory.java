@@ -37,29 +37,34 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         dirty = true;
     }
     
+    @Override
     public T add(String ...commandsToAdd) {
         markDirty();
         for (String commandToAdd: commandsToAdd) this.commands.add(commandToAdd);
         return self();
     }
 
+    @Override
     public T add(Iterable<String> commandsToAdd) {
         Iterables.addAll(this.commands, commandsToAdd);
         return self();
     }
     
+    @Override
     public T machine(SshMachineLocation machine) {
         markDirty();
         this.machine = machine;
         return self();
     }
 
+    @Override
     public T requiringExitCodeZero() {
         markDirty();
         requireExitCodeZero = true;
         return self();
     }
     
+    @Override
     public T requiringExitCodeZero(String extraErrorMessage) {
         markDirty();
         requireExitCodeZero = true;
@@ -67,12 +72,14 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         return self();
     }
     
+    @Override
     public T allowingNonZeroExitCode() {
         markDirty();
         requireExitCodeZero = false;
         return self();
     }
 
+    @Override
     public ProcessTaskFactory<Boolean> returningIsExitCodeZero() {
         if (requireExitCodeZero==null) allowingNonZeroExitCode();
         return returning(new Function<ProcessTaskWrapper<?>,Boolean>() {
@@ -82,11 +89,13 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         });
     }
 
+    @Override
     public ProcessTaskFactory<String> requiringZeroAndReturningStdout() {
         requiringExitCodeZero();
         return this.<String>returning(ScriptReturnType.STDOUT_STRING);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <RET2> ProcessTaskFactory<RET2> returning(ScriptReturnType type) {
         markDirty();
@@ -94,6 +103,7 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         return (ProcessTaskFactory<RET2>) self();
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <RET2> ProcessTaskFactory<RET2> returning(Function<ProcessTaskWrapper<?>, RET2> resultTransformation) {
         markDirty();
@@ -102,30 +112,35 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         return (ProcessTaskFactory<RET2>) self();
     }
     
+    @Override
     public T runAsCommand() {
         markDirty();
         runAsScript = false;
         return self();
     }
 
+    @Override
     public T runAsScript() {
         markDirty();
         runAsScript = true;
         return self();
     }
 
+    @Override
     public T runAsRoot() {
         markDirty();
         runAsRoot = true;
         return self();
     }
     
+    @Override
     public T environmentVariable(String key, String val) {
         markDirty();
         shellEnvironment.put(key, val);
         return self();
     }
 
+    @Override
     public T environmentVariables(Map<String,String> vars) {
         markDirty();
         shellEnvironment.putAll(vars);
@@ -142,17 +157,20 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         return tb;
     }
     
+    @Override
     public T summary(String summary) {
         markDirty();
         this.summary = summary;
         return self();
     }
 
+    @Override
     public <V> T configure(ConfigKey<V> key, V value) {
         config.configure(key, value);
         return self();
     }
-
+ 
+    @Override
     public T addCompletionListener(Function<ProcessTaskWrapper<?>, Void> listener) {
         completionListeners.add(listener);
         return self();
