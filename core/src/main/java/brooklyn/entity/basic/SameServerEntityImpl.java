@@ -89,11 +89,13 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
 
     protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {
         Map<String,Object> result = obtainProvisioningFlags(this, location);
+        Collection<Integer> ports = getRequiredOpenPorts();
 
-        if (result.get("inboundPorts") == null) {
-            Collection<Integer> ports = getRequiredOpenPorts();
-            if (ports != null && ports.size() > 0) result.put("inboundPorts", ports);
+        if (result.containsKey("inboundPorts")) {
+            ports.addAll((Collection<Integer>) result.get("inboundPorts"));
         }
+        if (ports.size() > 0) result.put("inboundPorts", ports);
+
         result.put(LocationConfigKeys.CALLER_CONTEXT.getName(), this);
         return result;
     }
