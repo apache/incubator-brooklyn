@@ -154,9 +154,6 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
                 if (p != null && !p.isEmpty()) ports.add(p.iterator().next());
             }
         }
-        for (Entity child : entity.getChildren()) {
-            ports.addAll(getRequiredOpenPorts(child));
-        }
         log.debug("getRequiredOpenPorts detected default {} for {}", ports, entity);
 
         for (Entity child : entity.getChildren()) {
