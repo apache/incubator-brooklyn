@@ -10,5 +10,10 @@
     <logger name="jclouds" additivity="false">
         <appender-ref ref="JCLOUDS-FILE" />
     </logger>
-      
+
+    <!-- always send this to the jcluds file -->
+    <logger name="jclouds.ssh" level="INFO" additivity="false">
+        <appender-ref ref="JCLOUDS-FILE" />
+    </logger>
+
 </included>
