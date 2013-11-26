@@ -20,6 +20,10 @@ import brooklyn.util.text.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closer;
 
+/**
+ * @deprecated since 0.7; does not return exit status, stderr, etc, so utility is of very limited use; and is not used in core brooklyn at all!
+ */
+@Deprecated
 public class ShellUtils {
 
     public static long TIMEOUT = 60*1000;
