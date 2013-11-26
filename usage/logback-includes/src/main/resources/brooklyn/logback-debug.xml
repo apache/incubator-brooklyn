@@ -1,11 +1,9 @@
 <included>
 
     <!-- override this file to customise what debug categories are included.
-         leave empty for no debug logging. jclouds moves the jclouds messages
-         to a separate log file; favs is smaller and less noisy than all -->
+         leave empty for no debug logging; favs is smaller and less noisy than all -->
 
     <include resource="brooklyn/logback-logger-debug-all.xml"/>
-    <include resource="brooklyn/logback-logger-debug-jclouds.xml"/>
     <include resource="brooklyn/logback-logger-debug-favs.xml"/>
 
 </included>
