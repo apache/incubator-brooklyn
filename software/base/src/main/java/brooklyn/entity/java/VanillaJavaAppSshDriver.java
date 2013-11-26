@@ -82,7 +82,7 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
             } else if (destName.toLowerCase().endsWith(".tgz") || destName.toLowerCase().endsWith(".tar.gz")) {
                 result = machine.execCommands("untarring gz", ImmutableList.of(format("cd %s/lib && tar xvfz %s",getRunDir(),destName)));
             } else if (destName.toLowerCase().endsWith(".tar")) {
-                result = machine.execCommands("untarring", ImmutableList.of(format("cd %s/lib && tar xvfz %s",getRunDir(),destName)));
+                result = machine.execCommands("untarring", ImmutableList.of(format("cd %s/lib && tar xvf %s",getRunDir(),destName)));
             }
             if (result != 0)
                 throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s (failed to expand archive)",f,entity,machine));
