@@ -88,15 +88,8 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
     }
 
     protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {
-        Map<String,Object> result = Maps.newLinkedHashMap();
-        result.putAll(Maps.newLinkedHashMap(location.getProvisioningFlags(ImmutableList.of(getEntityType().getName()))));
-        result.putAll(getConfig(PROVISIONING_PROPERTIES));
-        
-        for (Entity child : getChildren()) {
-            result.putAll(Maps.newLinkedHashMap(location.getProvisioningFlags(ImmutableList.of(child.getEntityType().getName()))));
-            result.putAll(child.getConfig(PROVISIONING_PROPERTIES));
-        }
-        
+        Map<String,Object> result = obtainProvisioningFlags(this, location);
+
         if (result.get("inboundPorts") == null) {
             Collection<Integer> ports = getRequiredOpenPorts();
             if (ports != null && ports.size() > 0) result.put("inboundPorts", ports);
@@ -104,7 +97,18 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
         result.put(LocationConfigKeys.CALLER_CONTEXT.getName(), this);
         return result;
     }
-    
+
+    protected Map<String,Object> obtainProvisioningFlags(Entity entity, MachineProvisioningLocation location) {
+        Map<String,Object> result = Maps.newLinkedHashMap();
+        result.putAll(Maps.newLinkedHashMap(location.getProvisioningFlags(ImmutableList.of(entity.getEntityType().getName()))));
+        result.putAll(entity.getConfig(PROVISIONING_PROPERTIES));
+
+        for (Entity child : entity.getChildren()) {
+            result.putAll(obtainProvisioningFlags(child, location));
+        }
+        return result;
+    }
+
     protected void startInLocation(final MachineProvisioningLocation<?> location) {
         final Map<String,Object> flags = obtainProvisioningFlags(location);
         if (!(location instanceof LocalhostMachineProvisioningLocation))
@@ -154,6 +158,10 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
             ports.addAll(getRequiredOpenPorts(child));
         }
         log.debug("getRequiredOpenPorts detected default {} for {}", ports, entity);
+
+        for (Entity child : entity.getChildren()) {
+            ports.addAll(getRequiredOpenPorts(child));
+        }
         return ports;
     }
 
