@@ -109,7 +109,7 @@ public interface UsageApi {
     @Path("/machines/{machine}")
     @ApiOperation(
             value = "Retrieve usage information about a specific machine location",
-            responseClass = "brooklyn.rest.domain.usagestatistics"
+            responseClass = "brooklyn.rest.domain.UsageStatistics"
     )
     @ApiErrors(value = {
             @ApiError(code = 404, reason = "Machine not found")

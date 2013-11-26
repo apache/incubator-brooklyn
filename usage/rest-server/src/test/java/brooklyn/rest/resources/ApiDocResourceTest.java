@@ -1,13 +1,21 @@
 package brooklyn.rest.resources;
 
+import static org.testng.Assert.assertEquals;
+
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
+
 import com.google.common.collect.Iterables;
 import com.wordnik.swagger.core.Documentation;
 import com.wordnik.swagger.core.DocumentationEndPoint;
-import org.testng.annotations.Test;
-
-import static org.testng.Assert.assertEquals;
 
 /**
  * @author Adam Lowe
@@ -15,6 +23,7 @@ import static org.testng.Assert.assertEquals;
 @Test(singleThreaded = true)
 public class ApiDocResourceTest extends BrooklynRestResourceTest {
 
+    private static final Logger log = LoggerFactory.getLogger(ApiDocResourceTest.class);
 
     @Override
     protected void setUpResources() throws Exception {
@@ -52,6 +61,25 @@ public class ApiDocResourceTest extends BrooklynRestResourceTest {
     public void testCatalogDetails() throws Exception {
         Documentation response = client().resource("/v1/apidoc/brooklyn.rest.resources.CatalogResource").get(Documentation.class);
         assertEquals(countOperations(response), 8);
+    }
+
+    @Test
+    public void testAllAreLoadable() throws Exception {
+        // sometimes -- e.g. if an annotation refers to a class name with the wrong case -- the call returns a 500 and breaks apidoc; ensure we don't trigger that.  
+        Map response = client().resource("/v1/apidoc/").get(Map.class);
+        // "Documenation" object does not include the links :( so traverse via map
+        log.debug("root doc response is: "+response);
+        List apis = (List)response.get("apis");
+        for (Object api: apis) {
+            String link = (String) ((Map)api).get("link");
+            try {
+                Map r2 = client().resource(link).get(Map.class);
+                log.debug("doc for "+link+" is: "+r2);
+            } catch (Exception e) {
+                log.error("Error in swagger/apidoc annotations, unparseable, at "+link+": "+e, e);
+                Assert.fail("Error in swagger/apidoc annotations, unparseable, at "+link+": "+e, e);
+            }
+        }
     }
 
     /* Note in some cases we might have more than one Resource method per 'endpoint'
