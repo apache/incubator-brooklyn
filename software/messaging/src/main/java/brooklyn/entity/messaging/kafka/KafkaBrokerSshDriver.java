@@ -18,6 +18,7 @@ package brooklyn.entity.messaging.kafka;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 
@@ -63,8 +64,9 @@ public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements Kaf
         return MutableMap.<String, String> builder()
                 .putAll(super.getShellEnvironment())
                 // seems odd to pass RMI port here, as it gets assigned to com.sun.mgmt.jmx.port in kafka-run-class.sh
-                // but RMI server port works, whereas JMX port does not
-                .put("JMX_PORT", String.valueOf(getRmiServerPort()))
+                // but RMI server/registry port works, whereas JMX port does not
+                // TODO tie in with the brooklyn UsesJmx configuration ? 
+                .put("JMX_PORT", String.valueOf(entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT)))
                 .build();
     }
 

@@ -54,24 +54,6 @@ public class CompoundTaskExecutionTest {
     }
 
     @Test
-    // for legacy compatibility; generally we will require execution contexts, stronger than managers
-    // (this test will cause a warning)
-    public void runSequenceTaskWithoutContext() {
-        data.clear()
-        
-        data.put(1, "a")
-        BasicTask t1 = [ { data.put(1, "b") } ]
-        BasicTask t2 = [ { data.put(1, "c") } ]
-        BasicTask t3 = [ { data.put(1, "d") } ]
-        BasicTask t4 = [ { data.put(1, "e") } ]
-        
-        BasicExecutionManager legacyDirectExecMgrUse = []
-        Task tSequence = legacyDirectExecMgrUse.submit tag:"A", new SequentialTask(t1, t2, t3, t4)
-        
-        assertEquals(["a", "b", "c", "d", "e"], tSequence.get() + data.get(1))
-    }
-
-    @Test
     public void runParallelTask() {
         data.clear()
         
