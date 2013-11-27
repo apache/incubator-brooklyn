@@ -132,13 +132,11 @@ public abstract class ShellAbstractTool implements ShellTool {
 
     protected String toScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
         List<String> allcmds = toCommandSequence(commands, env);
-        
         StringBuilder result = new StringBuilder();
-        // -e causes it to fail on any command in the script which has an error (non-zero return code)
-        result.append(getOptionalVal(props, PROP_SCRIPT_HEADER)+"\n");
+        result.append(getOptionalVal(props, PROP_SCRIPT_HEADER)).append('\n');
         
         for (String cmd : allcmds) {
-            result.append(cmd+"\n");
+            result.append(cmd).append('\n');
         }
         
         return result.toString();
@@ -146,15 +144,17 @@ public abstract class ShellAbstractTool implements ShellTool {
 
     /** builds the command to run the given script;
      * note that some modes require \$RESULT passed in order to access a variable, whereas most just need $ */
-    protected List<String> buildRunScriptCommand(String scriptPath, Boolean noExtraOutput, Boolean runAsRoot) {
+    protected List<String> buildRunScriptCommand(String scriptPath, Boolean noExtraOutput, Boolean runAsRoot, Boolean noDelete) {
         MutableList.Builder<String> cmds = MutableList.<String>builder()
                 .add((runAsRoot ? BashCommands.sudo(scriptPath) : scriptPath) + " < /dev/null")
                 .add("RESULT=$?");
         if (noExtraOutput==null || !noExtraOutput)
             cmds.add("echo Executed "+scriptPath+", result $RESULT"); 
-        // use "-f" because some systems have "rm" aliased to "rm -i"
-        // use "< /dev/null" to guarantee doesn't hang
-        cmds.add("rm -f "+scriptPath+" < /dev/null"); 
+        if (noDelete!=Boolean.TRUE) {
+            // use "-f" because some systems have "rm" aliased to "rm -i"
+            // use "< /dev/null" to guarantee doesn't hang
+            cmds.add("rm -f "+scriptPath+" < /dev/null");
+        }
         cmds.add("exit $RESULT");
         return cmds.build();
     }

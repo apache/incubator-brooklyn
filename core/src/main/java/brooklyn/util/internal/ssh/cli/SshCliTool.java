@@ -21,6 +21,7 @@ import brooklyn.util.internal.ssh.process.ProcessTool;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
+import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -128,11 +129,20 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         }
         String permissions = getOptionalVal(props, PROP_PERMISSIONS);
         
+        int uid = getOptionalVal(props, PROP_OWNER_UID);
+        
         int result = scpToServer(props, f, pathAndFileOnRemoteServer);
         if (result == 0) {
             result = chmodOnServer(props, permissions, pathAndFileOnRemoteServer);
-            if (result != 0) {
-                LOG.warn("Error setting file permissions to {}, after copying file {} to {}:{}; exit code {}", new Object[] {permissions, pathAndFileOnRemoteServer, this, f, result});
+            if (result == 0) {
+                if (uid != -1) {
+                    result = chownOnServer(props, uid, pathAndFileOnRemoteServer);
+                    if (result != 0) {
+                        LOG.warn("Error setting file owner to {}, after copying file {} to {}:{}; exit code {}", new Object[] { uid, pathAndFileOnRemoteServer, this, f, result });
+                    }
+                }
+            } else {
+                LOG.warn("Error setting file permissions to {}, after copying file {} to {}:{}; exit code {}", new Object[] { permissions, pathAndFileOnRemoteServer, this, f, result });
             }
         } else {
             LOG.warn("Error copying file {} to {}:{}; exit code {}", new Object[] {pathAndFileOnRemoteServer, this, f, result});
@@ -140,6 +150,10 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         return result;
     }
 
+    private int chownOnServer(Map<String,?> props, int uid, String remote) {
+        return sshExec(props, "chown "+uid+" "+remote);
+    }
+    
     private int copyTempFileToServer(Map<String,?> props, File f, String pathAndFileOnRemoteServer) {
         try {
             return copyToServer(props, f, pathAndFileOnRemoteServer);
@@ -156,18 +170,22 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     @Override
     public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
         String separator = getOptionalVal(props, PROP_SEPARATOR);
+
+        // TODO duplication in SshCliTool, SshjTool, ProcessTool; a common inner class would be useful
         String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
         Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
         Boolean noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
-        String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
+        Boolean noDeleteAfterExec = getOptionalVal(props, PROP_NO_DELETE_SCRIPT);
+        String scriptPath = scriptDir+"/brooklyn-"+
+            Time.makeDateStampString()+Identifiers.makeRandomId(4)+
+            // TODO if we have a summary include that here!!!
+            ".sh";
 
         String scriptContents = toScript(props, commands, env);
-        
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
-        
         copyTempFileToServer(ImmutableMap.of("permissions", "0700"), writeTempFile(scriptContents), scriptPath);
         
-        String cmd = Strings.join(buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot), separator);
+        String cmd = Strings.join(buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot, noDeleteAfterExec), separator);
         return asInt(sshExec(props, cmd), -1);
     }
 

@@ -38,6 +38,7 @@ public interface ShellTool {
     @SuppressWarnings("deprecation")
     public static final ConfigKey<String> PROP_DIRECT_HEADER = ShellToolConfigKeysForRemote.PROP_DIRECT_HEADER;
 
+    ConfigKey<Boolean> PROP_NO_DELETE_SCRIPT = newConfigKey("noDeleteAfterExec", "Retains the generated script file after executing the commands instead of deleting it", false);
     
     /**
      * Executes the set of commands in a shell script. Blocks until completion.

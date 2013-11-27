@@ -22,6 +22,7 @@ import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -56,15 +57,20 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
     @Override
     public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
         try {
+            String separator = getOptionalVal(props, PROP_SEPARATOR);
             OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
             OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
-            String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
-            Boolean noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
-            Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
-            String separator = getOptionalVal(props, PROP_SEPARATOR);
             
-            String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
-
+            // TODO duplication in SshCliTool, SshjTool, ProcessTool; a common inner class would be useful
+            String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
+            Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
+            Boolean noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
+            Boolean noDeleteAfterExec = getOptionalVal(props, PROP_NO_DELETE_SCRIPT);
+            String scriptPath = scriptDir+"/brooklyn-"+
+                Time.makeDateStampString()+Identifiers.makeRandomId(4)+
+                // TODO if we have a summary include that here!!!
+                ".sh";
+            
             String scriptContents = toScript(props, commands, env);
 
             if (LOG.isTraceEnabled()) LOG.trace("Running shell process (process) as script:\n{}", scriptContents);
@@ -72,7 +78,7 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
             Files.createParentDirs(to);
             Files.copy(ByteStreams.newInputStreamSupplier(scriptContents.getBytes()), to);
 
-            List<String> cmds = buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot);
+            List<String> cmds = buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot, noDeleteAfterExec);
             cmds.add(0, "chmod +x "+scriptPath);
             return asInt(execProcesses(cmds, null, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
         } catch (IOException e) {

@@ -49,7 +49,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
@@ -58,21 +57,18 @@ import com.google.common.primitives.Ints;
 
 /**
  * For ssh and scp-style commands, using the sshj library.
- * <p>
- * The implementation is based on a combination of the existing brooklyn SshJschTool,
- * and the jclouds SshjSshClient.
- * <p>
- * Not thread-safe. Use a different SshjTool for each concurrent thread. 
- * If passing from one thread to another, ensure code goes through a synchronized block.
  */
 public class SshjTool extends SshAbstractTool implements SshTool {
 
     private static final Logger LOG = LoggerFactory.getLogger(SshjTool.class);
 
-    protected final int sshTriesTimeout;
     protected final int sshTries;
+    protected final int sshTriesTimeout;
     protected final BackoffLimitedRetryHandler backoffLimitedRetryHandler;
 
+    /** Terminal type name for {@code allocatePTY} option. */
+    final static String TERM = "vt100"; // "dumb"
+    
     private class CloseFtpChannelOnCloseInputStream extends ProxyInputStream {
         private final SFTPClient sftp;
 
@@ -101,7 +97,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         protected int connectTimeout;
         protected int sessionTimeout;
         protected int sshTries = 4;  //allow 4 tries by default, much safer
-        protected int sshTriesTimeout = 2*60*1000;  //allow 2 minutesby default (so if too slow trying sshTries times, abort anyway)
+        protected int sshTriesTimeout = 2*60*1000;  //allow 2 minutes by default (so if too slow trying sshTries times, abort anyway)
         protected long sshRetryDelay = 50L;
         
         @Override
@@ -174,6 +170,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     }
 
     @Override
+    @Deprecated // see super
     public void connect(int maxAttempts) {
         connect(); // FIXME Should callers instead configure sshTries? But that would apply to all ssh attempts
     }
@@ -184,7 +181,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         try {
             sshClientConnection.clear();
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
     }
 
@@ -239,7 +236,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
             Files.copy(new InputStreamSupplier(contents), localFile);
             return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
     }
 
@@ -273,17 +270,22 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
         OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
         OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
-        String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
-        Boolean noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
-        Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
         
-        String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
+        // TODO duplication in SshCliTool, SshjTool, ProcessTool; a common inner class would be useful
+        String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
+        Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
+        Boolean noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
+        Boolean noDeleteAfterExec = getOptionalVal(props, PROP_NO_DELETE_SCRIPT);
+        String scriptPath = scriptDir+"/brooklyn-"+
+            Time.makeDateStampString()+Identifiers.makeRandomId(4)+
+            // TODO if we have a summary include that here!!!
+            ".sh";
         
         String scriptContents = toScript(props, commands, env);
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
         copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
         
-        return asInt(acquire(new ShellAction(buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot), out, err)), -1);
+        return asInt(acquire(new ShellAction(buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot, noDeleteAfterExec), out, err)), -1);
     }
 
     public int execShellDirect(Map<String,?> props, List<String> commands, Map<String,?> env) {
@@ -340,21 +342,21 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         backoffLimitedRetryHandler.imposeBackoffExponentialDelay(retryAttempt, message);
     }
 
-    protected <T, C extends SshAction<T>> T acquire(C connection) {
+    protected <T, C extends SshAction<T>> T acquire(C action) {
         Stopwatch stopwatch = new Stopwatch().start();
         
         for (int i = 0; i < sshTries; i++) {
             try {
-                connection.clear();
-                if (LOG.isTraceEnabled()) LOG.trace(">> ({}) acquiring {}", toString(), connection);
-                T returnVal = connection.create();
+                action.clear();
+                if (LOG.isTraceEnabled()) LOG.trace(">> ({}) acquiring {}", toString(), action);
+                T returnVal = action.create();
                 if (LOG.isTraceEnabled()) LOG.trace("<< ({}) acquired {}", toString(), returnVal);
                 return returnVal;
             } catch (Exception e) {
                 // uninformative net.schmizz.sshj.connection.ConnectionException: 
                 //    Request failed (reason=UNKNOWN) may mean remote Subsytem is disabled (e.g. for FTP)
                 // if key is missing, get a UserAuth error
-                String errorMessage = String.format("(%s) error acquiring %s", toString(), connection);
+                String errorMessage = String.format("(%s) error acquiring %s", toString(), action);
                 String fullMessage = String.format("%s (attempt %s/%s, in time %s/%s)", 
                         errorMessage, (i+1), sshTries, Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)), 
                         (sshTriesTimeout > 0 ? Time.makeTimeStringRounded(sshTriesTimeout) : "unlimited"));
@@ -372,7 +374,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 } else {
                     if (LOG.isDebugEnabled()) LOG.debug("<< {}: {}", fullMessage, e.getMessage());
                     backoffForAttempt(i + 1, errorMessage + ": " + e.getMessage());
-                    if (connection != sshClientConnection)
+                    if (action != sshClientConnection)
                         connect();
                     continue;
                 }
@@ -433,21 +435,21 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     };
 
     private class PutFileAction implements SshAction<Void> {
-        // TODO See SshJschTool.createFile: it does whacky stuff when copying; do we need that here as well?
         // TODO support backup as a property?
         
-        private final String path;
         private SFTPClient sftp;
+        private final String path;
         private final int permissionsMask;
         private final long lastModificationDate;
         private final long lastAccessDate;
+        private final int uid;
         private final Supplier<InputStream> contentsSupplier;
         private final Integer length;
         
         PutFileAction(Map<String,?> props, String path, Supplier<InputStream> contentsSupplier, long length) {
-            String permissions = getOptionalVal(props, PROP_PERMISSIONS, "0644");
-            long lastModificationDateVal = getOptionalVal(props, PROP_LAST_MODIFICATION_DATE, 0L);
-            long lastAccessDateVal = getOptionalVal(props, PROP_LAST_ACCESS_DATE, 0L);
+            String permissions = getOptionalVal(props, PROP_PERMISSIONS);
+            long lastModificationDateVal = getOptionalVal(props, PROP_LAST_MODIFICATION_DATE);
+            long lastAccessDateVal = getOptionalVal(props, PROP_LAST_ACCESS_DATE);
             if (lastAccessDateVal <= 0 ^ lastModificationDateVal <= 0) {
                 lastAccessDateVal = Math.max(lastAccessDateVal, lastModificationDateVal);
                 lastModificationDateVal = Math.max(lastAccessDateVal, lastModificationDateVal);
@@ -455,6 +457,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
             this.permissionsMask = Integer.parseInt(permissions, 8);
             this.lastAccessDate = lastAccessDateVal;
             this.lastModificationDate = lastModificationDateVal;
+            this.uid = getOptionalVal(props, PROP_OWNER_UID);
             this.path = checkNotNull(path, "path");
             this.contentsSupplier = checkNotNull(contentsSupplier, "contents");
             this.length = Ints.checkedCast(checkNotNull((long)length, "size"));
@@ -485,6 +488,9 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                     }
                 }, path);
                 sftp.chmod(path, permissionsMask);
+                if (uid != -1) {
+                    sftp.chown(path, uid);
+                }
                 if (lastAccessDate > 0) {
                     sftp.setattr(path, new FileAttributes.Builder()
                             .withAtimeMtime(lastAccessDate, lastModificationDate)
@@ -502,35 +508,23 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         }
     };
 
+    // TODO simpler not to use predicates
     @VisibleForTesting
     Predicate<String> causalChainHasMessageContaining(final Exception from) {
         return new Predicate<String>() {
-
             @Override
             public boolean apply(final String input) {
                 return any(getCausalChain(from), new Predicate<Throwable>() {
-
                     @Override
-                    public boolean apply(Throwable arg0) {
-                        return (arg0.toString().indexOf(input) != -1)
-                                || (arg0.getMessage() != null && arg0.getMessage().indexOf(input) != -1);
+                    public boolean apply(Throwable throwable) {
+                        return (throwable.toString().indexOf(input) != -1)
+                                || (throwable.getMessage() != null && throwable.getMessage().indexOf(input) != -1);
                     }
-
                 });
             }
-
         };
     }
     
-    protected void allocatePTY(Session s) throws ConnectionException, TransportException {
-        // this was set as the default, but it makes output harder to read
-        // and causes stderr to be sent to stdout;
-        // but some systems requiretty for sudoing
-        if (allocatePTY)
-            s.allocatePTY("vt100", 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
-//            s.allocatePTY("dumb", 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
-    }
-
     protected SshAction<Session> newSessionAction() {
 
         return new SshAction<Session>() {
@@ -547,7 +541,9 @@ public class SshjTool extends SshAbstractTool implements SshTool {
             public Session create() throws Exception {
                 checkConnected();
                 session = sshClientConnection.ssh.startSession();
-                allocatePTY(session);
+                if (allocatePTY) {
+                    session.allocatePTY(TERM, 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
+                }
                 return session;
             }
 
@@ -764,17 +760,4 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         };
     }
 
-//    protected Payload toPayload(byte[] input) {
-//        return new ByteArrayPayload(input);
-//    }
-//    
-//    protected Payload toPayload(File input) {
-//        return new FilePayload(input);
-//    }
-//    
-//    protected Payload toPayload(InputStream input, long length) {
-//        InputStreamPayload payload = new InputStreamPayload(new LimitInputStream(input, length));
-//        payload.getContentMetadata().setContentLength(length);
-//        return payload;
-//    }
 }
