@@ -1,6 +1,6 @@
 define([
-    "underscore", "view/effector-invoke", "model/effector-summary", "model/entity"
-], function (_, EffectorInvokeView, EffectorSummary, Entity) {
+    "underscore", "view/effector-invoke", "model/effector-summary", "model/entity", "model/location"
+], function (_, EffectorInvokeView, EffectorSummary, Entity, Location) {
 
     var collection = new EffectorSummary.Collection()
     collection.url = "fixtures/effector-summary-list.json"
@@ -9,12 +9,17 @@ define([
     var entityFixture = new Entity.Collection
     entityFixture.url = 'fixtures/entity.json'
     entityFixture.fetch({async:true})
+    
+    var locationsFixture = new Location.Collection
+    locationsFixture.url = 'fixtures/location-list.json'
+    locationsFixture.fetch({async:true})
 
     var modalView = new EffectorInvokeView({
         tagName:"div",
         className:"modal",
         model:collection.at(0),
-        entity:entityFixture.at(0)
+        entity:entityFixture.at(0),
+        locations: locationsFixture
     })
 
     describe("view/effector-invoke", function () {
@@ -44,8 +49,8 @@ define([
 
         it("must properly extract parameters from table", function () {
             var params = modalView.extractParamsFromTable()
-            expect(params["locations"]).toBe("")
-            expect(params).toEqual({"locations": ""})
+            expect(params["locations"]).toBe("localhost")
+            expect(params).toEqual({"locations": "localhost"})
         })
     })
 })

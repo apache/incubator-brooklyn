@@ -23,7 +23,8 @@ define([
             "shown":"unfade"
         },
         initialize:function () {
-        	this.locations = new Location.Collection();
+        	this.locations = this.options.locations /* for testing */
+        	  || new Location.Collection();
         },
         render:function () {
             var that = this, params = this.model.get("parameters")
@@ -77,10 +78,10 @@ define([
             
             // iterate over the rows
             this.$(".effector-param").each(function (index) {
-                var key = $(this).find(".param-name").text(),
-                value = $(this).find(".param-value").attr('id') == 'selector-container' ? 
+                var key = $(this).find(".param-name").text();
+                var value = $(this).find(".param-value").attr('id') == 'selector-container' ? 
                 		$(this).find(".param-value :selected").text().trim() : 
-                	    $(this).find(".param-value").val()
+                	    $(this).find(".param-value").val();
                 parameters[key] = value;
             })
             return parameters
