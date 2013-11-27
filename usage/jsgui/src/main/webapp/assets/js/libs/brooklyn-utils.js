@@ -37,6 +37,11 @@ define([
         return Number(v.toFixed(mantissa))
     };
 
+    if (!String.prototype.trim) {
+    	// some older javascripts do not support 'trim' (including jasmine spec runner) so let's define it
+    	String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
+    }
+
     return Util;
 
 });
