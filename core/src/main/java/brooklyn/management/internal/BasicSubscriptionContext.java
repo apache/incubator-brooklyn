@@ -3,6 +3,7 @@ package brooklyn.management.internal;
 import static brooklyn.util.JavaGroovyEquivalents.mapOf;
 import groovy.lang.Closure;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -135,7 +136,15 @@ public class BasicSubscriptionContext implements SubscriptionContext {
     @Override
     public int unsubscribeAll() {
         int count = 0;
-        for (SubscriptionHandle s : ImmutableList.copyOf(getSubscriptions())) {
+        
+        // To avoid ConcurrentModificationException when copying subscriptions, need to synchronize on it
+        Set<SubscriptionHandle> subscriptions = getSubscriptions();
+        Collection<SubscriptionHandle> subscriptionsCopy;
+        synchronized (subscriptions) {
+            subscriptionsCopy = ImmutableList.copyOf(subscriptions);
+        }
+        
+        for (SubscriptionHandle s : subscriptionsCopy) {
             count++; 
             boolean result = unsubscribe(s); 
             if (!result) LOG.warn("When unsubscribing from all of {}, unsubscribe of {} return false", subscriber, s);
