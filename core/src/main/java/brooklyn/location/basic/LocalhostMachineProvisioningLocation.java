@@ -129,11 +129,15 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
                     .put("address", elvis(address, Networking.getLocalHost()))
                     .put("mutexSupport", LocalhostMachine.mutexSupport)
                     .build();
-            // TODO is this necessary? since they are inherited anyway? 
-            // (probably, since inheritance is only respected for a small subset) 
+            
+            // copy inherited keys for ssh; 
+            // shouldn't be necessary but not sure that all contexts traverse the hierarchy
+            // NOTE: changed Nov 2013 to copy only those ssh config keys actually set, rather than all of them
+            // TODO should take the plunge and try removing this altogether!
+            // (or alternatively switch to copying all ancestor keys)
             for (HasConfigKey<?> k: SshMachineLocation.ALL_SSH_CONFIG_KEYS) {
-                Object v = getConfig(k);
-                if (v!=null) flags2.put(k, v);
+                if (hasConfig(k.getConfigKey(), true))
+                    flags2.put(k, getConfig(k));
             }
             
             if (isManaged()) {

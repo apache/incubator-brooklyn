@@ -26,7 +26,8 @@ import brooklyn.util.stream.KnownSizeInputStream;
 public interface SshTool extends ShellTool {
     
     /** Public-facing global config keys for Brooklyn are defined in ConfigKeys, 
-     * and have this prefix pre-prended to the config keys in this class. */
+     * and have this prefix pre-prended to the config keys in this class. 
+     * These keys are detected from entity/global config and automatically applied to ssh executions. */
     public static final String BROOKLYN_CONFIG_KEY_PREFIX = "brooklyn.ssh.config.";
     
     public static final ConfigKey<String> PROP_TOOL_CLASS = newStringConfigKey("tool.class", "SshTool implementation to use", null);

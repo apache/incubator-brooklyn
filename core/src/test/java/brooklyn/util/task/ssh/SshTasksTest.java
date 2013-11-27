@@ -11,6 +11,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -168,6 +169,20 @@ public class SshTasksTest {
         Assert.assertTrue(t.isDone());
         Assert.assertEquals(t.get(), "hello fetched world");
         Assert.assertEquals(t.getBytes(), "hello fetched world".getBytes());
+    }
+
+    @Test(groups="Integration")
+    public void testSshWithHeaderProperty() {
+        host.setConfig(BrooklynConfigKeys.SSH_CONFIG_SCRIPT_HEADER, "#!/bin/bash -e\necho foo\n");
+        ProcessTaskWrapper<Integer> t = submit(SshTasks.newSshExecTaskFactory(host, "echo bar"));
+        Assert.assertTrue(t.block().getStdout().trim().matches("foo\\s+bar"), "mismatched output was: "+t.getStdout());
+    }
+
+    @Test(groups="Integration")
+    public void testSshIgnoringHeaderProperty() {
+        host.setConfig(BrooklynConfigKeys.SSH_CONFIG_SCRIPT_HEADER, "#!/bin/bash -e\necho foo\n");
+        ProcessTaskWrapper<Integer> t = submit(SshTasks.newSshExecTaskFactory(host, false, "echo bar"));
+        Assert.assertTrue(t.block().getStdout().trim().matches("bar"), "mismatched output was: "+t.getStdout());
     }
 
 }

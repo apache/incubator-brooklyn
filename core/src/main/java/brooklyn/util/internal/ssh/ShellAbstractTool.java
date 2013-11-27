@@ -7,6 +7,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +22,10 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
+import brooklyn.util.text.Strings;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
 
@@ -142,23 +146,6 @@ public abstract class ShellAbstractTool implements ShellTool {
         return result.toString();
     }
 
-    /** builds the command to run the given script;
-     * note that some modes require \$RESULT passed in order to access a variable, whereas most just need $ */
-    protected List<String> buildRunScriptCommand(String scriptPath, Boolean noExtraOutput, Boolean runAsRoot, Boolean noDelete) {
-        MutableList.Builder<String> cmds = MutableList.<String>builder()
-                .add((runAsRoot ? BashCommands.sudo(scriptPath) : scriptPath) + " < /dev/null")
-                .add("RESULT=$?");
-        if (noExtraOutput==null || !noExtraOutput)
-            cmds.add("echo Executed "+scriptPath+", result $RESULT"); 
-        if (noDelete!=Boolean.TRUE) {
-            // use "-f" because some systems have "rm" aliased to "rm -i"
-            // use "< /dev/null" to guarantee doesn't hang
-            cmds.add("rm -f "+scriptPath+" < /dev/null");
-        }
-        cmds.add("exit $RESULT");
-        return cmds.build();
-    }
-
     /**
      * Merges the commands and env, into a single set of commands. Also escapes the commands as required.
      * 
@@ -196,6 +183,60 @@ public abstract class ShellAbstractTool implements ShellTool {
 
     protected static int asInt(Integer input, int valueIfInputNull) {
         return input != null ? input : valueIfInputNull;
+    }
+
+    protected abstract class ToolAbstractExecScript {
+        protected final Map<String, ?> props;
+        protected final String separator;
+        protected final OutputStream out;
+        protected final OutputStream err;
+        protected final String scriptDir;
+        protected final Boolean runAsRoot;
+        protected final Boolean noExtraOutput;
+        protected final Boolean noDeleteAfterExec;
+        protected final String scriptPath;
+
+        public ToolAbstractExecScript(Map<String,?> props) {
+            this.props = props;
+            this.separator = getOptionalVal(props, PROP_SEPARATOR);
+            this.out = getOptionalVal(props, PROP_OUT_STREAM);
+            this.err = getOptionalVal(props, PROP_ERR_STREAM);
+            
+            this.scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
+            this.runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
+            this.noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
+            this.noDeleteAfterExec = getOptionalVal(props, PROP_NO_DELETE_SCRIPT);
+            
+            String summary = getOptionalVal(props, PROP_SUMMARY);
+            if (summary!=null) {
+                summary = Strings.makeValidFilename(summary);
+                if (summary.length()>30) 
+                    summary = summary.substring(0,30);
+            }
+            this.scriptPath = scriptDir+"/brooklyn-"+
+                Time.makeDateStampString()+"-"+Identifiers.makeRandomId(4)+
+                (summary==null ? "" : "-"+summary) +
+                ".sh";
+        }
+
+        /** builds the command to run the given script;
+         * note that some modes require \$RESULT passed in order to access a variable, whereas most just need $ */
+        protected List<String> buildRunScriptCommand() {
+            MutableList.Builder<String> cmds = MutableList.<String>builder()
+                    .add((runAsRoot ? BashCommands.sudo(scriptPath) : scriptPath) + " < /dev/null")
+                    .add("RESULT=$?");
+            if (noExtraOutput==null || !noExtraOutput)
+                cmds.add("echo Executed "+scriptPath+", result $RESULT"); 
+            if (noDeleteAfterExec!=Boolean.TRUE) {
+                // use "-f" because some systems have "rm" aliased to "rm -i"
+                // use "< /dev/null" to guarantee doesn't hang
+                cmds.add("rm -f "+scriptPath+" < /dev/null");
+            }
+            cmds.add("exit $RESULT");
+            return cmds.build();
+        }
+
+        public abstract int run();
     }
     
 }

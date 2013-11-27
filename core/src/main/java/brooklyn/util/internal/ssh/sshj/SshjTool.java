@@ -40,7 +40,6 @@ import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.stream.InputStreamSupplier;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.StreamGobbler;
-import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -267,25 +266,16 @@ public class SshjTool extends SshAbstractTool implements SshTool {
      * of separate message(s) for copying the file!
      */
     @Override
-    public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
-        OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
-        
-        // TODO duplication in SshCliTool, SshjTool, ProcessTool; a common inner class would be useful
-        String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
-        Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
-        Boolean noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
-        Boolean noDeleteAfterExec = getOptionalVal(props, PROP_NO_DELETE_SCRIPT);
-        String scriptPath = scriptDir+"/brooklyn-"+
-            Time.makeDateStampString()+Identifiers.makeRandomId(4)+
-            // TODO if we have a summary include that here!!!
-            ".sh";
-        
-        String scriptContents = toScript(props, commands, env);
-        if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
-        copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
-        
-        return asInt(acquire(new ShellAction(buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot, noDeleteAfterExec), out, err)), -1);
+    public int execScript(final Map<String,?> props, final List<String> commands, final Map<String,?> env) {
+        return new ToolAbstractExecScript(props) {
+            public int run() {
+                String scriptContents = toScript(props, commands, env);
+                if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
+                copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
+                
+                return asInt(acquire(new ShellAction(buildRunScriptCommand(), out, err)), -1);                
+            }
+        }.run();
     }
 
     public int execShellDirect(Map<String,?> props, List<String> commands, Map<String,?> env) {

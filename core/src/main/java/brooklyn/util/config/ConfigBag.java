@@ -115,6 +115,25 @@ public class ConfigBag {
         }
         return this;
     }
+    
+    public ConfigBag putIfAbsent(Map<?, ?> propertiesToSet) {
+        for (Map.Entry<?, ?> entry: propertiesToSet.entrySet()) {
+            Object key = entry.getKey();
+            if (key instanceof HasConfigKey<?>)
+                key = ((HasConfigKey<?>)key).getConfigKey();
+            if (key instanceof ConfigKey<?>) {
+                if (!containsKey((ConfigKey<?>)key))
+                    putAsStringKey(key, entry.getValue());
+            } else if (key instanceof String) {
+                if (!containsKey((String)key))
+                    putAsStringKey(key, entry.getValue());
+            } else {
+                logInvalidKey(key);
+            }
+        }
+        return this;
+    }
+
 
     @SuppressWarnings("unchecked")
     public <T> T put(ConfigKey<T> key, T value) {
@@ -137,11 +156,15 @@ public class ConfigBag {
         if (key instanceof String) {
             putStringKey((String)key, value);
         } else {
-            String message = (key == null ? "Invalid key 'null'" : "Invalid key type "+key.getClass().getCanonicalName()+" ("+key+")") +
-                    "being used for configuration, ignoring";
-            log.debug(message, new Throwable("Source of "+message));
-            log.warn(message);
+            logInvalidKey(key);
         }
+    }
+
+    protected void logInvalidKey(Object key) {
+        String message = (key == null ? "Invalid key 'null'" : "Invalid key type "+key.getClass().getCanonicalName()+" ("+key+")") +
+                "being used for configuration, ignoring";
+        log.debug(message, new Throwable("Source of "+message));
+        log.warn(message);
     }
     
     /** recommended to use {@link #put(ConfigKey, Object)} but there are times

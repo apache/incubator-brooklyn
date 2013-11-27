@@ -143,7 +143,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         this.managementContext = managementContext;
     }
     
-    protected ManagementContext getManagementContext() {
+    public ManagementContext getManagementContext() {
         return managementContext;
     }
     

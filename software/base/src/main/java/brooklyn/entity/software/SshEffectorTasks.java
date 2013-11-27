@@ -1,19 +1,28 @@
 package brooklyn.entity.software;
 
+import java.util.Map;
+
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigUtils;
+import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
+import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.SshFetchTaskFactory;
@@ -28,6 +37,7 @@ import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 
 /** convenience classes and methods for working with {@link SshTasks}, where the
  * {@link SshMachineLocation} is inferred either from the effector generation or
@@ -38,6 +48,10 @@ import com.google.common.base.Function;
 public class SshEffectorTasks {
 
     private static final Logger log = LoggerFactory.getLogger(SshEffectorTasks.class);
+    
+    public static final ConfigKey<Boolean> IGNORE_ENTITY_SSH_FLAGS = ConfigKeys.newBooleanConfigKey("ignoreEntitySshFlags",
+        "Whether to ignore any ssh flags (behaviour constraints) set on the entity or location "
+        + "where this is running, using only flags explicitly specified", false);
     
     /** like {@link EffectorBody} but providing conveniences when in a {@link SoftwareProcess}
      * (or other entity with a single machine location) */
@@ -50,7 +64,7 @@ public class SshEffectorTasks {
 
         /** convenience for generating an {@link PlainSshExecTaskFactory} which can be further customised if desired, and then (it must be explicitly) queued */
         public ProcessTaskFactory<Integer> ssh(String ...commands) {
-            return SshTasks.newSshExecTaskFactory(machine(), commands);
+            return new SshEffectorTaskFactory<Integer>(commands).machine(machine());
         }
     }
 
@@ -73,13 +87,14 @@ public class SshEffectorTasks {
         
         @Override
         public synchronized ProcessTaskWrapper<RET> newTask() {
+            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
             if (machine==null) {
                 if (log.isDebugEnabled())
                     log.debug("Using an SshEffectorTask not in an effector without any machine; will attempt to infer the machine: "+this);
-                Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
                 if (entity!=null)
                     machine(EffectorTasks.getSshMachine(entity));
             }
+            applySshFlags(getConfig(), entity, getMachine());
             return super.newTask();
         }
         
@@ -109,6 +124,7 @@ public class SshEffectorTasks {
         @Override
         public SshPutTaskWrapper newTask(Entity entity, Effector<Void> effector, ConfigBag parameters) {
             machine(EffectorTasks.getSshMachine(entity));
+            applySshFlags(getConfig(), entity, getMachine());
             return super.newTask();
         }
         @Override
@@ -134,6 +150,7 @@ public class SshEffectorTasks {
             Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
             if (entity!=null)
                 machine(EffectorTasks.getSshMachine(entity));
+            applySshFlags(getConfig(), entity, getMachine());
             return super.newTask();
         }
     }
@@ -208,6 +225,61 @@ public class SshEffectorTasks {
                 returning(new Function<ProcessTaskWrapper<?>, Boolean>() {
                     public Boolean apply(@Nullable ProcessTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
                 });
+    }
+
+    /** extracts the values for the main brooklyn.ssh.config.* config keys (i.e. those declared in ConfigKeys) 
+     * as declared on the entity, and inserts them in a map using the unprefixed state, for ssh. */
+    /* currently this is computed for each call, which may be wasteful, but it is reliable in the face of config changes. 
+     * we could cache the Map.  note that we do _not_ cache (or even own) the SshTool; 
+     * the SshTool is created or re-used by the SshMachineLocation making use of these properties */
+    @Beta
+    public static Map<String, Object> getSshFlags(Entity entity, Location optionalLocation) {
+        ConfigBag allConfig = ConfigBag.newInstance();
+        
+        StringConfigMap globalConfig = ((EntityInternal)entity).getManagementContext().getConfig();
+        allConfig.putAll(globalConfig.getAllConfig());
+        
+        if (optionalLocation!=null)
+            allConfig.putAll(optionalLocation.getAllConfig(true));
+        
+        allConfig.putAll(((EntityInternal)entity).getAllConfig());
+        
+        Map<String, Object> result = Maps.newLinkedHashMap();
+        for (String keyS : allConfig.getAllConfigRaw().keySet()) {
+            if (keyS.startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
+                ConfigKey<?> key = ConfigKeys.newConfigKey(Object.class, keyS);
+                
+                Object val = allConfig.getStringKey(keyS);
+                
+                /*
+                 * NOV 2013 changing this to rely on config above being inserted in the right order,
+                 * so entity config will be preferred over location, and location over global.
+                 * If that is consistent then remove the lines below.
+                 * (We can also accept null entity and so combine with SshTasks.getSshFlags.)
+                 */
+                
+//                // have to use raw config to test whether the config is set
+//                Object val = ((EntityInternal)entity).getConfigMap().getRawConfig(key);
+//                if (val!=null) {
+//                    val = entity.getConfig(key);
+//                } else {
+//                    val = globalConfig.getRawConfig(key);
+//                    if (val!=null) val = globalConfig.getConfig(key);
+//                }
+//                if (val!=null) {
+                    result.put(ConfigUtils.unprefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, key).getName(), val);
+//                }
+            }
+        }
+        return result;
+    }
+
+    private static void applySshFlags(ConfigBag config, Entity entity, Location machine) {
+        if (entity!=null) {
+            if (!config.get(IGNORE_ENTITY_SSH_FLAGS)) {
+                config.putIfAbsent(getSshFlags(entity, machine));
+            }
+        }
     }
 
 }

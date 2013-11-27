@@ -18,10 +18,8 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.process.ProcessTool;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
-import brooklyn.util.time.Time;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -168,25 +166,17 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     }
 
     @Override
-    public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        String separator = getOptionalVal(props, PROP_SEPARATOR);
+    public int execScript(final Map<String,?> props, final List<String> commands, final Map<String,?> env) {
+        return new ToolAbstractExecScript(props) {
+            public int run() {
+                String scriptContents = toScript(props, commands, env);
+                if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
+                copyTempFileToServer(ImmutableMap.of("permissions", "0700"), writeTempFile(scriptContents), scriptPath);
 
-        // TODO duplication in SshCliTool, SshjTool, ProcessTool; a common inner class would be useful
-        String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
-        Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
-        Boolean noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
-        Boolean noDeleteAfterExec = getOptionalVal(props, PROP_NO_DELETE_SCRIPT);
-        String scriptPath = scriptDir+"/brooklyn-"+
-            Time.makeDateStampString()+Identifiers.makeRandomId(4)+
-            // TODO if we have a summary include that here!!!
-            ".sh";
-
-        String scriptContents = toScript(props, commands, env);
-        if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
-        copyTempFileToServer(ImmutableMap.of("permissions", "0700"), writeTempFile(scriptContents), scriptPath);
-        
-        String cmd = Strings.join(buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot, noDeleteAfterExec), separator);
-        return asInt(sshExec(props, cmd), -1);
+                String cmd = Strings.join(buildRunScriptCommand(), separator);
+                return asInt(sshExec(props, cmd), -1);
+            }
+        }.run();
     }
 
     @Override

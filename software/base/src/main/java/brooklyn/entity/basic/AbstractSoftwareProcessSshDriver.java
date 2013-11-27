@@ -14,15 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigUtils;
-import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
+import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Strings;
 
@@ -54,7 +51,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * any SSH-specific flags passed to newScript override flags from the entity,
      * and flags from the entity override flags on the location
      * (where there aren't conflicts, flags from all three are used however) */
-    public static final String IGNORE_ENTITY_SSH_FLAGS = "ignoreEntitySshFlags"; 
+    public static final String IGNORE_ENTITY_SSH_FLAGS = SshEffectorTasks.IGNORE_ENTITY_SSH_FLAGS.getName(); 
 
     private volatile String runDir;
     private volatile String installDir;
@@ -145,36 +142,10 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public String getHostname() { return entity.getAttribute(Attributes.HOSTNAME); }
     public String getAddress() { return entity.getAttribute(Attributes.ADDRESS); }
 
-    /** extracts the values for the main brooklyn.ssh.config.* config keys (i.e. those declared in ConfigKeys) 
-     * as declared on the entity, and inserts them in a map using the unprefixed state, for ssh. */
-    /* currently this is computed for each call, which may be wasteful, but it is reliable in the face of config changes. 
-     * we could cache the Map.  note that we do _not_ cache (or even own) the SshTool; 
-     * the SshTool is created or re-used by the SshMachineLocation making use of these properties */
     protected Map<String, Object> getSshFlags() {
-        Map<String, Object> result = Maps.newLinkedHashMap();
-        StringConfigMap globalConfig = ((EntityInternal)getEntity()).getManagementContext().getConfig();
-        Map<ConfigKey<?>, Object> mgmtConfig = globalConfig.getAllConfig();
-        Map<ConfigKey<?>, Object> entityConfig = ((EntityInternal)getEntity()).getAllConfig();
-        Map<ConfigKey<?>, Object> allConfig = MutableMap.<ConfigKey<?>, Object>builder().putAll(mgmtConfig).putAll(entityConfig).build();
-        
-        for (ConfigKey<?> key : allConfig.keySet()) {
-            if (key.getName().startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
-                // have to use raw config to test whether the config is set
-                Object val = ((EntityInternal)getEntity()).getConfigMap().getRawConfig(key);
-                if (val!=null) {
-                    val = getEntity().getConfig(key);
-                } else {
-                    val = globalConfig.getRawConfig(key);
-                    if (val!=null) val = globalConfig.getConfig(key);
-                }
-                if (val!=null) {
-                    result.put(ConfigUtils.unprefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, key).getName(), val);
-                }
-            }
-        }
-        return result;
+        return SshEffectorTasks.getSshFlags(getEntity(), getMachine());
     }
-
+    
     public int execute(List<String> script, String summaryForLogging) {
         return execute(Maps.newLinkedHashMap(), script, summaryForLogging);
     }

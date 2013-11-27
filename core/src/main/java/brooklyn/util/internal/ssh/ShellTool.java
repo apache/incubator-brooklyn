@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 
 /** Methods for executing things in an environment (localhost process, or ssh) */
 public interface ShellTool {
@@ -28,17 +29,13 @@ public interface ShellTool {
     
     public static final ConfigKey<String> PROP_SEPARATOR = newConfigKey("separator", "string to insert between caller-supplied commands being executed as commands", " ; ");
     
-//    public static final ConfigKey<String> PROP_SCRIPT_DIR = newConfigKey("scriptDir", "directory where scripts should be copied", "/tmp");
-//    public static final ConfigKey<String> PROP_SCRIPT_HEADER = newConfigKey("scriptHeader", "lines to insert at the start of scripts generated for caller-supplied commands for script execution", "#!/bin/bash -e\n");
-//    public static final ConfigKey<String> PROP_DIRECT_HEADER = newConfigKey("directHeader", "commands to run at the target before any caller-supplied commands for direct execution", "exec bash -e");
-    @SuppressWarnings("deprecation")
-    public static final ConfigKey<String> PROP_SCRIPT_DIR = ShellToolConfigKeysForRemote.PROP_SCRIPT_DIR;
-    @SuppressWarnings("deprecation")
-    public static final ConfigKey<String> PROP_SCRIPT_HEADER = ShellToolConfigKeysForRemote.PROP_SCRIPT_HEADER;
-    @SuppressWarnings("deprecation")
-    public static final ConfigKey<String> PROP_DIRECT_HEADER = ShellToolConfigKeysForRemote.PROP_DIRECT_HEADER;
+    public static final ConfigKey<String> PROP_SCRIPT_DIR = newConfigKey("scriptDir", "directory where scripts should be copied", "/tmp");
+    public static final ConfigKey<String> PROP_SCRIPT_HEADER = newConfigKey("scriptHeader", "lines to insert at the start of scripts generated for caller-supplied commands for script execution", "#!/bin/bash -e\n");
+    public static final ConfigKey<String> PROP_DIRECT_HEADER = newConfigKey("directHeader", "commands to run at the target before any caller-supplied commands for direct execution", "exec bash -e");
 
     ConfigKey<Boolean> PROP_NO_DELETE_SCRIPT = newConfigKey("noDeleteAfterExec", "Retains the generated script file after executing the commands instead of deleting it", false);
+    
+    ConfigKey<String> PROP_SUMMARY = ConfigKeys.newStringConfigKey("summary", "Provides a human-readable summary, used in file generation etc");
     
     /**
      * Executes the set of commands in a shell script. Blocks until completion.

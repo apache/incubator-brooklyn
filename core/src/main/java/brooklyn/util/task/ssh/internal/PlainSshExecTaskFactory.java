@@ -1,6 +1,7 @@
 package brooklyn.util.task.ssh.internal;
 
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.base.Function;
@@ -37,5 +38,5 @@ public class PlainSshExecTaskFactory<RET> extends AbstractSshExecTaskFactory<Pla
     public PlainSshExecTaskFactory<String> requiringZeroAndReturningStdout() {
         return (PlainSshExecTaskFactory<String>) super.requiringZeroAndReturningStdout();
     }
-
+    
 }

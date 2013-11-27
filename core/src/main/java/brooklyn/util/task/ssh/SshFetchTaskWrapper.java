@@ -10,6 +10,7 @@ import org.apache.commons.io.FilenameUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.management.TaskWrapper;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
@@ -31,6 +32,8 @@ public class SshFetchTaskWrapper implements TaskWrapper<String> {
     private final String remoteFile;
     private final SshMachineLocation machine;
     private File backingFile;
+    private final ConfigBag config;
+    
     
     // package private as only AbstractSshTaskFactory should invoke
     SshFetchTaskWrapper(SshFetchTaskFactory factory) {
@@ -38,6 +41,7 @@ public class SshFetchTaskWrapper implements TaskWrapper<String> {
         this.machine = Preconditions.checkNotNull(factory.machine, "machine");
         TaskBuilder<String> tb = TaskBuilder.<String>builder().dynamic(false).name("ssh fetch "+factory.remoteFile);
         task = tb.body(new SshFetchJob()).build();
+        config = factory.getConfig();
     }
     
     @Override
@@ -67,7 +71,7 @@ public class SshFetchTaskWrapper implements TaskWrapper<String> {
                 backingFile = File.createTempFile("brooklyn-ssh-fetch-", FilenameUtils.getName(remoteFile));
                 backingFile.deleteOnExit();
                 
-                result = getMachine().copyFrom(remoteFile, backingFile.getPath());
+                result = getMachine().copyFrom(config.getAllConfig(), remoteFile, backingFile.getPath());
             } catch (Exception e) {
                 throw new IllegalStateException("SSH fetch "+getRemoteFile()+" from "+getMachine()+" returned threw exception, in "+Tasks.current()+": "+e, e);
             }
