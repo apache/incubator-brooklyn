@@ -15,12 +15,12 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.stream.StreamGobbler;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
-import com.google.common.io.Closeables;
 
 public abstract class ExecWithLoggingHelpers {
 
@@ -80,6 +80,8 @@ public abstract class ExecWithLoggingHelpers {
         // some props get overridden in execFlags, so remove them from the tool flags
         final ConfigBag toolFlags = new ConfigBag().putAll(props).removeAll(LOG_PREFIX, STDOUT, STDERR, ShellTool.PROP_NO_EXTRA_OUTPUT);
 
+        execFlags.configure(ShellTool.PROP_SUMMARY, summaryForLogging);
+        
         PipedOutputStream outO = null;
         PipedOutputStream outE = null;
         StreamGobbler gO=null, gE=null;
@@ -133,8 +135,8 @@ public abstract class ExecWithLoggingHelpers {
             // Must close the pipedOutStreams, otherwise input will never read -1 so StreamGobbler thread would never die
             if (outO!=null) try { outO.flush(); } catch (IOException e) {}
             if (outE!=null) try { outE.flush(); } catch (IOException e) {}
-            Closeables.closeQuietly(outO);
-            Closeables.closeQuietly(outE);
+            Streams.closeQuietly(outO);
+            Streams.closeQuietly(outE);
 
             try {
                 if (gE!=null) { gE.join(); }

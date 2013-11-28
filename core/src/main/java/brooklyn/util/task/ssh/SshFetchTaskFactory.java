@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.TaskFactory;
+import brooklyn.util.config.ConfigBag;
 
 // cannot be (cleanly) instantiated due to nested generic self-referential type; however trivial subclasses do allow it 
 public class SshFetchTaskFactory implements TaskFactory<SshFetchTaskWrapper> {
@@ -15,6 +16,7 @@ public class SshFetchTaskFactory implements TaskFactory<SshFetchTaskWrapper> {
     
     SshMachineLocation machine;
     String remoteFile;
+    final ConfigBag config = ConfigBag.newInstance();
 
     /** constructor where machine will be added later */
     public SshFetchTaskFactory(String remoteFile) {
@@ -39,11 +41,19 @@ public class SshFetchTaskFactory implements TaskFactory<SshFetchTaskWrapper> {
         return self();
     }
         
+    public SshMachineLocation getMachine() {
+        return machine;
+    }
+    
     public SshFetchTaskFactory remoteFile(String remoteFile) {
         this.remoteFile = remoteFile;
         return self();
     }
 
+    public ConfigBag getConfig() {
+        return config;
+    }
+    
     @Override
     public SshFetchTaskWrapper newTask() {
         dirty = false;
@@ -57,4 +67,5 @@ public class SshFetchTaskFactory implements TaskFactory<SshFetchTaskWrapper> {
             log.warn("Task "+this+" was modified but modification was never used");
         super.finalize();
     }
+
 }

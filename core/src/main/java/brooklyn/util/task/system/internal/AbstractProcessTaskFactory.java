@@ -152,7 +152,7 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         config.configure(key, value);
         return self();
     }
- 
+
     public T addCompletionListener(Function<ProcessTaskWrapper<?>, Void> listener) {
         completionListeners.add(listener);
         return self();

@@ -5,12 +5,11 @@ import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
 import static brooklyn.entity.basic.ConfigKeys.newConfigKeyWithPrefix;
 import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
 import brooklyn.config.ConfigKey;
-import brooklyn.util.internal.ssh.ShellToolConfigKeysForRemote;
+import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshTool;
 
 import com.google.common.base.Preconditions;
 
-@SuppressWarnings("deprecation")
 public class BrooklynConfigKeys {
 
     public static final ConfigKey<String> BROOKLYN_DATA_DIR = newStringConfigKey(
@@ -42,8 +41,7 @@ public class BrooklynConfigKeys {
     
     // some checks (this line, and a few Preconditions below) that the remote values aren't null, 
     // because they have some funny circular references
-    // TODO reinstate this once circular references are resolved!
-//    static { assert BROOKLYN_SSH_CONFIG_KEY_PREFIX.equals(SshTool.BROOKLYN_CONFIG_KEY_PREFIX) : "static final initializer classload ordering problem"; }
+    static { assert BROOKLYN_SSH_CONFIG_KEY_PREFIX.equals(SshTool.BROOKLYN_CONFIG_KEY_PREFIX) : "static final initializer classload ordering problem"; }
     
     public static final ConfigKey<String> SSH_TOOL_CLASS = newConfigKeyWithPrefix(BROOKLYN_SSH_CONFIG_KEY_PREFIX, 
             Preconditions.checkNotNull(SshTool.PROP_TOOL_CLASS, "static final initializer classload ordering problem"));
@@ -54,8 +52,9 @@ public class BrooklynConfigKeys {
     public static final ConfigKey<String> SSH_CONFIG_PASSWORD = newConfigKeyWithPrefix(BROOKLYN_SSH_CONFIG_KEY_PREFIX, SshTool.PROP_PASSWORD);
     
     public static final ConfigKey<String> SSH_CONFIG_SCRIPT_DIR = newConfigKeyWithPrefix(BROOKLYN_SSH_CONFIG_KEY_PREFIX, 
-            Preconditions.checkNotNull(ShellToolConfigKeysForRemote.PROP_SCRIPT_DIR, "static final initializer classload ordering problem"));
-    public static final ConfigKey<String> SSH_CONFIG_SCRIPT_HEADER = newConfigKeyWithPrefix(BROOKLYN_SSH_CONFIG_KEY_PREFIX, ShellToolConfigKeysForRemote.PROP_SCRIPT_HEADER);
-    public static final ConfigKey<String> SSH_CONFIG_DIRECT_HEADER = newConfigKeyWithPrefix(BROOKLYN_SSH_CONFIG_KEY_PREFIX, ShellToolConfigKeysForRemote.PROP_DIRECT_HEADER);
+            Preconditions.checkNotNull(ShellTool.PROP_SCRIPT_DIR, "static final initializer classload ordering problem"));
+    public static final ConfigKey<String> SSH_CONFIG_SCRIPT_HEADER = newConfigKeyWithPrefix(BROOKLYN_SSH_CONFIG_KEY_PREFIX, ShellTool.PROP_SCRIPT_HEADER);
+    public static final ConfigKey<String> SSH_CONFIG_DIRECT_HEADER = newConfigKeyWithPrefix(BROOKLYN_SSH_CONFIG_KEY_PREFIX, ShellTool.PROP_DIRECT_HEADER);
+    public static final ConfigKey<Boolean> SSH_CONFIG_NO_DELETE_SCRIPT = newConfigKeyWithPrefix(BROOKLYN_SSH_CONFIG_KEY_PREFIX, ShellTool.PROP_NO_DELETE_SCRIPT);
 
 }

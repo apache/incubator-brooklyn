@@ -16,7 +16,7 @@ import brooklyn.util.stream.KnownSizeInputStream;
  * Defines the methods available on the various different implementations of SSH,
  * and configuration options which are also generally available.
  * <p>
- * The config keys in this class can be supplied (or their string equivalents, where the flags/props take Map<String,?>)
+ * The config keys in this class can be supplied (or their string equivalents, where the flags/props take {@code Map<String,?>})
  * to influence configuration, either for the tool/session itself or for individual commands.
  * <p>
  * To specify some of these properties on a global basis, use the variants of the keys here
@@ -26,7 +26,8 @@ import brooklyn.util.stream.KnownSizeInputStream;
 public interface SshTool extends ShellTool {
     
     /** Public-facing global config keys for Brooklyn are defined in ConfigKeys, 
-     * and have this prefix pre-prended to the config keys in this class. */
+     * and have this prefix pre-prended to the config keys in this class. 
+     * These keys are detected from entity/global config and automatically applied to ssh executions. */
     public static final String BROOKLYN_CONFIG_KEY_PREFIX = "brooklyn.ssh.config.";
     
     public static final ConfigKey<String> PROP_TOOL_CLASS = newStringConfigKey("tool.class", "SshTool implementation to use", null);
@@ -52,9 +53,12 @@ public interface SshTool extends ShellTool {
     // TODO would be nice to track which arguments are used, so we can indicate whether extras are supplied
 
     public static final ConfigKey<String> PROP_PERMISSIONS = newConfigKey("permissions", "Default permissions for files copied/created on remote machine; must be four-digit octal string, default '0644'", "0644");
-    public static final ConfigKey<Long> PROP_LAST_MODIFICATION_DATE = newConfigKey("lastModificationDate", "Last-modification-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; defaults to current)", 0L);
-    public static final ConfigKey<Long> PROP_LAST_ACCESS_DATE = newConfigKey("lastAccessDate", "Last-access-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; defaults to lastModificationDate)", 0L);
-
+    public static final ConfigKey<Long> PROP_LAST_MODIFICATION_DATE = newConfigKey("lastModificationDate", "Last-modification-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; default 0 usually means current)", 0L);
+    public static final ConfigKey<Long> PROP_LAST_ACCESS_DATE = newConfigKey("lastAccessDate", "Last-access-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; default 0 usually means lastModificationDate)", 0L);
+    public static final ConfigKey<Integer> PROP_OWNER_UID = newConfigKey("ownerUid", "Default owner UID (not username) for files created on remote machine; default is unset", -1);
+    
+    // TODO remove unnecessary "public static final" modifiers
+    
     // TODO Could define the following in SshMachineLocation, or some such?
     //public static ConfigKey<String> PROP_LOG_PREFIX = newStringKey("logPrefix", "???", ???);
     //public static ConfigKey<Boolean> PROP_NO_STDOUT_LOGGING = newStringKey("noStdoutLogging", "???", ???);
@@ -66,6 +70,8 @@ public interface SshTool extends ShellTool {
     public void connect();
 
     /**
+     * @deprecated since 0.7.0; (since much earlier) this ignores the argument in favour of {@link #PROP_SSH_TRIES}
+     * 
      * @param maxAttempts
      * @throws SshException
      */

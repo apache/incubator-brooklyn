@@ -94,7 +94,7 @@ public class SshPutTaskWrapper extends SshPutTaskStub implements TaskWrapper<Voi
                     }
                 }
                 
-                ConfigBag config = ConfigBag.newInstance();
+                ConfigBag config = ConfigBag.newInstanceCopying(getConfig());
                 if (permissions!=null) config.put(SshTool.PROP_PERMISSIONS, permissions);
                 
                 exitCodeOfCopy = getMachine().copyTo(config.getAllConfig(), contents.get(), remoteFile);

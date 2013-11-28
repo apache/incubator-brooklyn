@@ -20,7 +20,6 @@ import brooklyn.util.internal.ssh.ShellAbstractTool;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.stream.StreamGobbler;
-import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
@@ -54,30 +53,25 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
     }
 
     @Override
-    public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        try {
-            OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
-            OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
-            String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
-            Boolean noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
-            Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
-            String separator = getOptionalVal(props, PROP_SEPARATOR);
-            
-            String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
+    public int execScript(final Map<String,?> props, final List<String> commands, final Map<String,?> env) {
+        return new ToolAbstractExecScript(props) {
+            public int run() {
+                try {
+                    String scriptContents = toScript(props, commands, env);
 
-            String scriptContents = toScript(props, commands, env);
+                    if (LOG.isTraceEnabled()) LOG.trace("Running shell process (process) as script:\n{}", scriptContents);
+                    File to = new File(scriptPath);
+                    Files.createParentDirs(to);
+                    Files.copy(ByteStreams.newInputStreamSupplier(scriptContents.getBytes()), to);
 
-            if (LOG.isTraceEnabled()) LOG.trace("Running shell process (process) as script:\n{}", scriptContents);
-            File to = new File(scriptPath);
-            Files.createParentDirs(to);
-            Files.copy(ByteStreams.newInputStreamSupplier(scriptContents.getBytes()), to);
-
-            List<String> cmds = buildRunScriptCommand(scriptPath, noExtraOutput, runAsRoot);
-            cmds.add(0, "chmod +x "+scriptPath);
-            return asInt(execProcesses(cmds, null, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
+                    List<String> cmds = buildRunScriptCommand();
+                    cmds.add(0, "chmod +x "+scriptPath);
+                    return asInt(execProcesses(cmds, null, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
+                } catch (IOException e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+        }.run();
     }
 
     @Override

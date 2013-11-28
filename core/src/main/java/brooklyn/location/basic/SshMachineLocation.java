@@ -108,13 +108,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     @SetFromFlag
     private Set<Integer> usedPorts;
-
-    /** any property that should be passed as ssh config (connection-time) 
-     *  can be prefixed with this and . and will be passed through (with the prefix removed),
-     *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" 
-     *  @deprecated use {@link SshTool#BROOKLYN_CONFIG_KEY_PREFIX} */
-    @Deprecated
-    public static final String SSHCONFIG_PREFIX = "sshconfig";
     
     public static final ConfigKey<String> SSH_HOST = BrooklynConfigKeys.SSH_CONFIG_HOST;
     public static final ConfigKey<Integer> SSH_PORT = BrooklynConfigKeys.SSH_CONFIG_PORT;
@@ -339,8 +332,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 String key = entry.getKey();
                 if (key.startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                     key = Strings.removeFromStart(key, SshTool.BROOKLYN_CONFIG_KEY_PREFIX);
-                } else if (key.startsWith(SSHCONFIG_PREFIX)) {
-                    key = Strings.removeFromStart(key, SSHCONFIG_PREFIX);
                 } else if (ALL_SSH_CONFIG_KEY_NAMES.contains(entry.getKey())) {
                     // key should be included, and does not need to be changed
                     
@@ -485,7 +476,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 String hostname = getAddress().getHostName();
                 Integer port = execFlags.peek(SshTool.PROP_PORT); 
                 if (port == null) port = getConfig(ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PORT));
-                if (port == null) port = getConfig(ConfigUtils.prefixedKey(SSHCONFIG_PREFIX, SshTool.PROP_PORT));
                 return (user != null ? user+"@" : "") + hostname + (port != null ? ":"+port : "");
             }
             @Override

@@ -3,6 +3,7 @@ package brooklyn.util.task.ssh;
 import java.io.InputStream;
 
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Supplier;
 
@@ -15,6 +16,7 @@ public class SshPutTaskStub {
     protected String permissions;
     protected boolean allowFailure = false;
     protected boolean createDirectory = false;
+    protected final ConfigBag config = ConfigBag.newInstance();
 
     protected SshPutTaskStub() {
     }
@@ -27,6 +29,7 @@ public class SshPutTaskStub {
         this.allowFailure = constructor.allowFailure;
         this.createDirectory = constructor.createDirectory;
         this.permissions = constructor.permissions;
+        this.config.copy(constructor.config);
     }
 
     public String getRemoteFile() {
@@ -40,5 +43,9 @@ public class SshPutTaskStub {
 
     public SshMachineLocation getMachine() {
         return machine;
+    }
+    
+    protected ConfigBag getConfig() {
+        return config;
     }
 }

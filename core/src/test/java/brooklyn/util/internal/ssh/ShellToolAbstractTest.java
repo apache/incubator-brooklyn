@@ -167,8 +167,7 @@ public abstract class ShellToolAbstractTest {
     @Test(groups = {"Integration"})
     public void testExecScriptWithSleepThenBigCommand() throws Exception {
         String bigstring = Strings.repeat("abcdefghij", 1000); // 10KB
-        String out = execScript("export MYPROP="+bigstring, "echo val is $MYPROP");
-        //String out = execScript([ "sleep 5", "export MYPROP="+bigstring, "echo val is \$MYPROP" ])
+        String out = execScript("sleep 2", "export MYPROP="+bigstring, "echo val is $MYPROP");
         assertTrue(out.contains("val is "+bigstring), "out="+out);
     }
     

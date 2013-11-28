@@ -2,6 +2,7 @@ package brooklyn.launcher.config;
 
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.launcher.config.BrooklynDevelopmentModes.BrooklynDevelopmentMode;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.internal.BrooklynGarbageCollector;
@@ -12,6 +13,10 @@ import brooklyn.util.internal.StringSystemProperty;
 /**
  * Convenience collection of popular global configuration values.
  * (Also a handy way to recall where config keys are set.)
+ * <p>
+ * These can typically be set in brooklyn.properties for global applicability.
+ * In some cases (eg SSH_CONFIG_* keys) they can also be set on entities/locations 
+ * for behaviour specific to that entity.
  * <p>
  * Also see:
  * <li> {@link BrooklynSystemProperties}
@@ -31,5 +36,13 @@ public class BrooklynGlobalConfig {
 
     public static final StringSystemProperty LOCALHOST_IP_ADDRESS = BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS;
     
+    // brooklyn.ssh.config.noDeleteAfterExec = true   will cause scripts to be left in situ for debugging
+    public static final ConfigKey<Boolean> SSH_CONFIG_NO_DELETE_SCRIPT = BrooklynConfigKeys.SSH_CONFIG_NO_DELETE_SCRIPT;
+    
+    public static final ConfigKey<String> SSH_CONFIG_SCRIPT_DIR = BrooklynConfigKeys.SSH_CONFIG_SCRIPT_DIR;
+    public static final ConfigKey<String> SSH_CONFIG_SCRIPT_HEADER = BrooklynConfigKeys.SSH_CONFIG_SCRIPT_HEADER;
+    public static final ConfigKey<String> SSH_CONFIG_DIRECT_HEADER = BrooklynConfigKeys.SSH_CONFIG_DIRECT_HEADER;
+
     // TODO other constants from elsewhere
+    
 }

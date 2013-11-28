@@ -1,14 +1,23 @@
 package brooklyn.util.task.ssh;
 
+import java.util.Map;
+
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.location.Location;
+import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
@@ -21,10 +30,13 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 
 /**
  * Conveniences for generating {@link Task} instances to perform SSH activities on an {@link SshMachineLocation}.
- * See also {@link SshEffectorTasks} for inferring the {@link SshMachineLocation} from context.
+ * See also {@link SshEffectorTasks} for inferring the {@link SshMachineLocation} from context
+ * and taking properties from entities and global management context.
+ * (In general Brooklyn should prefer SshEffectorTasks over this for that reason!)
  *  
  * @since 0.6.0
  */
@@ -34,15 +46,63 @@ public class SshTasks {
     private static final Logger log = LoggerFactory.getLogger(SshTasks.class);
         
     public static ProcessTaskFactory<Integer> newSshExecTaskFactory(SshMachineLocation machine, String ...commands) {
-        return new PlainSshExecTaskFactory<Integer>(machine, commands);
+        return newSshExecTaskFactory(machine, true, commands);
+    }
+    
+    public static ProcessTaskFactory<Integer> newSshExecTaskFactory(SshMachineLocation machine, final boolean useMachineConfig, String ...commands) {
+        return new PlainSshExecTaskFactory<Integer>(machine, commands) {
+            {
+                if (useMachineConfig)
+                    config.putIfAbsent(getSshFlags(machine));
+            }
+        };
     }
 
     public static SshPutTaskFactory newSshPutTaskFactory(SshMachineLocation machine, String remoteFile) {
-        return new SshPutTaskFactory(machine, remoteFile);
+        return newSshPutTaskFactory(machine, true, remoteFile);
+    }
+    
+    public static SshPutTaskFactory newSshPutTaskFactory(SshMachineLocation machine, final boolean useMachineConfig, String remoteFile) {
+        return new SshPutTaskFactory(machine, remoteFile) {
+            {
+                if (useMachineConfig)
+                    config.putIfAbsent(getSshFlags(machine));
+            }
+        };
     }
 
     public static SshFetchTaskFactory newSshFetchTaskFactory(SshMachineLocation machine, String remoteFile) {
-        return new SshFetchTaskFactory(machine, remoteFile);
+        return newSshFetchTaskFactory(machine, true, remoteFile);
+    }
+    
+    public static SshFetchTaskFactory newSshFetchTaskFactory(SshMachineLocation machine, final boolean useMachineConfig, String remoteFile) {
+        return new SshFetchTaskFactory(machine, remoteFile) {
+            {
+                if (useMachineConfig)
+                    config.putIfAbsent(getSshFlags(machine));
+            }
+        };
+    }
+
+    private static Map<String, Object> getSshFlags(Location location) {
+        ConfigBag allConfig = ConfigBag.newInstance();
+        
+        if (location instanceof AbstractLocation) {
+            ManagementContext mgmt = ((AbstractLocation)location).getManagementContext();
+            if (mgmt!=null)
+                allConfig.putAll(mgmt.getConfig().getAllConfig());
+        }
+        
+        allConfig.putAll(location.getAllConfig(true));
+        
+        Map<String, Object> result = Maps.newLinkedHashMap();
+        for (String keyS : allConfig.getAllConfigRaw().keySet()) {
+            ConfigKey<?> key = ConfigKeys.newConfigKey(Object.class, keyS);
+            if (key.getName().startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
+                result.put(ConfigUtils.unprefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, key).getName(), allConfig.get(key));
+            }
+        }
+        return result;
     }
 
     /** creates a task which returns modifies sudoers to ensure non-tty access is permitted;
