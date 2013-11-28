@@ -24,29 +24,29 @@ public class MariaDbLiveRackspaceTest extends MariaDbIntegrationTest {
         test("Ubuntu 10.0");
     }
 
-    @Test(groups = {"Live"})
-    public void test_Ubuntu_11_0() throws Exception {
-        test("Ubuntu 11.0");
-    }
-
     @Test(groups = {"Live", "Live-sanity"})
     public void test_Ubuntu_12_0() throws Exception {
         test("Ubuntu 12.0");
     }
 
     @Test(groups = {"Live"})
-    public void test_CentOS_6_0() throws Exception {
-        test("CentOS 6.0");
+    public void test_Ubuntu_13() throws Exception {
+        test("Ubuntu 13");
     }
 
     @Test(groups = {"Live"})
-    public void test_CentOS_5_6() throws Exception {
-        test("CentOS 5.6");
+    public void test_CentOS_6() throws Exception {
+        test("CentOS 6");
     }
 
     @Test(groups = {"Live"})
-    public void test_Fedora_17() throws Exception {
-        test("Fedora 17");
+    public void test_CentOS_5() throws Exception {
+        test("CentOS 5");
+    }
+
+    @Test(groups = {"Live"})
+    public void test_Fedora() throws Exception {
+        test("Fedora ");
     }
 
     @Test(groups = {"Live"})
@@ -63,8 +63,8 @@ public class MariaDbLiveRackspaceTest extends MariaDbIntegrationTest {
         MariaDbNode mariadb = tapp.createAndManageChild(EntitySpec.create(MariaDbNode.class)
                 .configure("creationScriptContents", CREATION_SCRIPT));
 
-        brooklynProperties.put("brooklyn.jclouds.rackspace-cloudservers-uk.image-name-regex", osRegex);
-        brooklynProperties.remove("brooklyn.jclouds.rackspace-cloudservers-uk.image-id");
+        brooklynProperties.put("brooklyn.location.jclouds.rackspace-cloudservers-uk.imageNameRegex", osRegex);
+        brooklynProperties.remove("brooklyn.location.jclouds.rackspace-cloudservers-uk.image-id");
         brooklynProperties.put("inboundPorts", "22, 3306");
         JcloudsLocation jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve("jclouds:rackspace-cloudservers-uk");
 

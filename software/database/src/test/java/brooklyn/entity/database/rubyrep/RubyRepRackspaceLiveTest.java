@@ -30,28 +30,28 @@ public class RubyRepRackspaceLiveTest extends RubyRepIntegrationTest {
     }
 
     @Test(groups = "Live")
-    public void test_Ubuntu_11_0() throws Exception {
-        test("Ubuntu 11.0");
-    }
-
-    @Test(groups = "Live")
     public void test_Ubuntu_12_0() throws Exception {
         test("Ubuntu 12.0");
     }
 
     @Test(groups = "Live")
-    public void test_CentOS_6_0() throws Exception {
-        test("CentOS 6.0");
+    public void test_Ubuntu_13() throws Exception {
+        test("Ubuntu 13");
     }
 
     @Test(groups = "Live")
-    public void test_CentOS_5_6() throws Exception {
-        test("CentOS 5.6");
+    public void test_CentOS_6() throws Exception {
+        test("CentOS 6");
     }
 
     @Test(groups = "Live")
-    public void test_Fedora_17() throws Exception {
-        test("Fedora 17");
+    public void test_CentOS_5() throws Exception {
+        test("CentOS 5");
+    }
+
+    @Test(groups = "Live")
+    public void test_Fedora() throws Exception {
+        test("Fedora ");
     }
 
     @Test(groups = "Live")
