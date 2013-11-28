@@ -12,6 +12,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.entity.Entity;
@@ -36,6 +39,8 @@ import com.sun.jersey.core.header.FormDataContentDisposition;
 
 public class CatalogResource extends AbstractBrooklynRestResource implements CatalogApi {
 
+    private static final Logger log = LoggerFactory.getLogger(CatalogResource.class);
+    
     @SuppressWarnings("rawtypes")
     private final Function<CatalogItem, CatalogItemSummary> TO_CATALOG_ITEM_SUMMARY = new Function<CatalogItem, CatalogItemSummary>() {
         @Override
@@ -117,17 +122,23 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     public Response getIcon(String itemId) {
         CatalogItem<?> result = brooklyn().getCatalog().getCatalogItem(itemId);
         String url = result.getIconUrl();
-        if (url==null)
+        if (url==null) {
+            log.debug("No icon available for "+result+"; returning "+Status.NO_CONTENT);
             return Response.status(Status.NO_CONTENT).build();
+        }
         
         if (brooklyn().isUrlServerSideAndSafe(url)) {
             // classpath URL's we will serve IF they end with a recognised image format;
             // paths (ie non-protocol) and 
             // NB, for security, file URL's are NOT served
+            log.debug("Loading and returning "+url+" as icon for "+result);
+            
             MediaType mime = WebResourceUtils.getImageMediaTypeFromExtension(Files.getFileExtension(url));
             Object content = ResourceUtils.create(brooklyn().getCatalog().getRootClassLoader()).getResourceFromUrl(url);
             return Response.ok(content, mime).build();
         }
+        
+        log.debug("Returning redirect to "+url+" as icon for "+result);
         
         // for anything else we do a redirect (e.g. http / https; perhaps ftp)
         return Response.temporaryRedirect(URI.create(url)).build();
