@@ -399,7 +399,7 @@ public class GeoscalingWebClient {
                 (request instanceof HttpPost ? " "+((HttpPost)request).getEntity() : ""));
         HttpResponse response = httpClient.execute(request);
         if (log.isDebugEnabled()) log.debug("Geoscaling response: "+response);
-        if (consumeResponse && response.getEntity() != null)
+        if (consumeResponse)
             EntityUtils.consume(response.getEntity());
         return response;
     }
