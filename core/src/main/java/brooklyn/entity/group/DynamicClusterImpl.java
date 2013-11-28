@@ -26,6 +26,7 @@ import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.Task;
@@ -90,6 +91,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         setConfig(REMOVAL_STRATEGY, checkNotNull(val, "removalStrategy"));
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void setRemovalStrategy(Closure val) {
         setRemovalStrategy(GroovyJavaMethods.functionFromClosure(val));
@@ -249,6 +251,11 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             setAttribute(SERVICE_UP, calculateServiceUp());
             for (Policy it : getPolicies()) { it.suspend(); }
             resize(0);
+            
+            // also stop any remaining stoppable children -- eg those on fire
+            // (this ignores the quarantine node which is not stoppable)
+            StartableMethods.stop(this);
+            
             setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
             setAttribute(SERVICE_UP, calculateServiceUp());
         } catch (Exception e) {
@@ -570,7 +577,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     /**
      * @deprecated since 0.6; use {@link #createNode(Location, Map)}, so can take that location into account when configuring node
      */
-    protected Entity createNode(Map flags) {
+    protected Entity createNode(Map<?,?> flags) {
         EntitySpec<?> memberSpec = getMemberSpec();
         if (memberSpec != null) {
             return addChild(EntitySpec.create(memberSpec).configure(flags));
@@ -580,7 +587,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         if (factory == null) { 
             throw new IllegalStateException("No member spec nor entity factory supplied for dynamic cluster "+this);
         }
-        EntityFactory<?> factoryToUse = (factory instanceof EntityFactoryForLocation) ? ((EntityFactoryForLocation)factory).newFactoryForLocation(getLocation()) : factory;
+        EntityFactory<?> factoryToUse = (factory instanceof EntityFactoryForLocation) ? ((EntityFactoryForLocation<?>)factory).newFactoryForLocation(getLocation()) : factory;
         Entity entity = factoryToUse.newEntity(flags, this);
         if (entity==null) {
             throw new IllegalStateException("EntityFactory factory routine returned null entity, in "+this);
