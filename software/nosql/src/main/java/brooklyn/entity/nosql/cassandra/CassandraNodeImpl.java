@@ -114,6 +114,12 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         }
         return token;
     }
+    
+    @Override public String getTokenAsString() {
+        BigInteger token = getToken();
+        if (token==null) return "";
+        return ""+token;
+    }
 
     @Override public String getListenAddress() {
         String sensorName = getConfig(LISTEN_ADDRESS_SENSOR);

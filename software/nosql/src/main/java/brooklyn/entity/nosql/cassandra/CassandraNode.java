@@ -144,6 +144,8 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     
     /** in range 0 to (2^127)-1; or null if not yet set or known */
     BigInteger getToken();
+    /** string value of token (with no commas, which freemarker introduces!) or blank if none */
+    String getTokenAsString();
 
     /* For configuration */
     
