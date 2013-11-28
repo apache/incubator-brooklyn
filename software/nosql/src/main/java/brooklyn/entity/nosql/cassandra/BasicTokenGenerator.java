@@ -34,7 +34,7 @@ public class BasicTokenGenerator implements TokenGenerator {
 
     @Override
     public synchronized void growingCluster(int numNewNodes) {
-        if (currentTokens.isEmpty()) {
+        if (currentTokens.isEmpty() && nextTokens.isEmpty()) {
             nextTokens.addAll(generateEquidistantTokens(numNewNodes));
         } else {
             // TODO add the new tokens amongst the existing nodes?
