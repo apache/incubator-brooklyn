@@ -50,13 +50,13 @@ define([
                           },
                           {
                               step_id:'name-and-locations',
-                              title:'Deploy Application',
+                              title:'<%= appName %>',
                               instructions:'Specify the locations to deploy to and any additional configuration',
                               view:new ModalWizard.StepDeploy({ model:this.model })
                           },
                           {
                               step_id:'preview',
-                              title:'Application Preview',
+                              title:'<%= appName %>',
                               instructions:'Confirm the code which will be sent to the server, optionally tweaking it or saving it for future reference',
                               view:new ModalWizard.StepPreview({ model:this.model })
                           }
@@ -75,11 +75,12 @@ define([
         },
 
         renderCurrentStep:function () {
+            var name = this.model.name || "";
             this.title = this.$("h3#step_title")
             this.instructions = this.$("p#step_instructions")
 
             var currentStep = this.steps[this.currentStep]
-            this.title.html(currentStep.title)
+            this.title.html(_.template(currentStep.title)({appName: name}));
             this.instructions.html(currentStep.instructions)
             this.currentView = currentStep.view
             
@@ -178,8 +179,6 @@ define([
                 self.addTemplateLozenges()
             })
         },
-        beforeClose:function () {
-        },
         renderConfiguredEntities:function () {
             var $configuredEntities = this.$('#entitiesAccordionish').empty()
             var that = this
@@ -236,9 +235,12 @@ define([
             $(".template-lozenge").removeClass("selected")
             if (!wasSelected) {
                 $tl.addClass("selected")
-                this.selectedTemplateId = $tl.attr('id');
+                this.selectedTemplate = {
+                    type: $tl.attr('id'),
+                    name: $tl.data("name")
+                };
             } else {
-                this.selectedTemplateId = null;
+                this.selectedTemplate = null;
             }
         },
         expandEntity:function (event) {
@@ -275,13 +277,14 @@ define([
             return map;
         },
         saveTemplate:function () {
-            var type = this.selectedTemplateId
-            if (type === undefined) return false
+            if (!this.selectedTemplate) return false
+            var type = this.selectedTemplate.type;
             if (!_.contains(this.catalogApplicationIds, type)) {
                 $('.entity-info-message').show('slow').delay(2000).hide('slow')
                 return false
             }
             this.model.spec.set("type", type);
+            this.model.name = this.selectedTemplate.name;
             this.model.catalogEntityData = "LOAD"
             return true;
         },
@@ -373,7 +376,7 @@ define([
 
         initialize:function () {
             this.model.spec.on("change", this.render, this)
-            this.$el.html(this.template({}))
+            this.$el.html(this.template())
             this.locations = new Location.Collection()
         },
         beforeClose:function () {
