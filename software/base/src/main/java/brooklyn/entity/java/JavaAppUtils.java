@@ -6,9 +6,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.management.openmbean.CompositeData;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import brooklyn.enricher.RollingTimeWindowMeanEnricher;
 import brooklyn.enricher.TimeFractionDeltaEnricher;
 import brooklyn.entity.basic.EntityLocal;
@@ -21,9 +18,6 @@ import com.google.common.base.Function;
 
 public class JavaAppUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(JavaAppUtils.class);
-    
-    @SuppressWarnings("unchecked")
     public static JmxFeed connectMXBeanSensors(EntityLocal entity) {
         return connectMXBeanSensors(entity, Duration.FIVE_SECONDS);
     }
@@ -32,6 +26,7 @@ public class JavaAppUtils {
         return connectMXBeanSensors(entity, Duration.millis(jmxPollPeriodMs));
     }
     
+    @SuppressWarnings({"unchecked","rawtypes"})
     public static JmxFeed connectMXBeanSensors(EntityLocal entity, Duration jmxPollPeriod) {
         if (Boolean.TRUE.equals(entity.getConfig(UsesJavaMXBeans.MXBEAN_STATS_ENABLED))) {
             // TODO Could we reuse the result of compositeDataToMemoryUsage?

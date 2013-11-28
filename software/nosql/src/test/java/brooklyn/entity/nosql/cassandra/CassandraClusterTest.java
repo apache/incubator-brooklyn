@@ -1,7 +1,14 @@
 package brooklyn.entity.nosql.cassandra;
 
+import static org.testng.Assert.assertEquals;
+
+import java.math.BigInteger;
+import java.util.Map;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -19,10 +26,13 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -106,6 +116,50 @@ public class CassandraClusterTest {
             EntityTestUtils.assertAttributeEqualsEventually(e1, CassandraNode.SERVICE_UP, true);
             EntityTestUtils.assertAttributeEqualsContinually(cluster, CassandraCluster.CURRENT_SEEDS, ImmutableSet.<Entity>of(e2, e3));
         }
+    }
+    
+    @Test
+    public void testPopulatesInitialTokens() throws Exception {
+        cluster = app.createAndManageChild(EntitySpec.create(CassandraCluster.class)
+                .configure(CassandraCluster.INITIAL_SIZE, 2)
+                .configure(CassandraCluster.DELAY_BEFORE_ADVERTISING_CLUSTER, Duration.ZERO)
+                .configure(CassandraCluster.MEMBER_SPEC, EntitySpec.create(EmptySoftwareProcess.class)));
+
+        app.start(ImmutableList.of(loc));
+
+        Set<BigInteger> tokens = Sets.newLinkedHashSet();
+        for (Entity member : cluster.getMembers()) {
+            tokens.add(member.getConfig(CassandraNode.TOKEN));
+        }
+        assertEquals(tokens, ImmutableSet.of(new BigInteger("-9223372036854775808"), BigInteger.ZERO));
+    }
+    
+    public static class MockInputForTemplate {
+        public BigInteger getToken() { return new BigInteger("-9223372036854775808"); }
+        public String getTokenAsString() { return "" + getToken(); }
+        public String getSeeds() { return ""; }
+        public int getGossipPort() { return 1234; }
+        public int getSslGossipPort() { return 1234; }
+        public int getThriftPort() { return 1234; }
+        public String getClusterName() { return "Mock"; }
+        public String getEndpointSnitchName() { return ""; }
+        public String getListenAddress() { return "0"; }
+        public String getBroadcastAddress() { return "0"; }
+        public String getRpcAddress() { return "0"; }
+        public String getRunDir() { return "/tmp/mock"; }
+    }
+    
+    @Test
+    public void testBigIntegerFormattedCorrectly() {
+        Map<String, Object> substitutions = ImmutableMap.<String, Object>builder()
+                .put("entity", new MockInputForTemplate())
+                .put("driver", new MockInputForTemplate())
+                .build();
+
+        String templateContents = new ResourceUtils(this).getResourceAsString(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL.getConfigKey().getDefaultValue());
+        String processedTemplate = TemplateProcessor.processTemplateContents(templateContents, substitutions);
+        Assert.assertEquals(processedTemplate.indexOf("775,808"), -1);
+        Assert.assertTrue(processedTemplate.indexOf("775808") > 0);
     }
     
     @Test(groups="Integration")

@@ -26,12 +26,14 @@ import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.StringPredicates;
 
@@ -89,6 +91,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         setConfig(REMOVAL_STRATEGY, checkNotNull(val, "removalStrategy"));
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void setRemovalStrategy(Closure val) {
         setRemovalStrategy(GroovyJavaMethods.functionFromClosure(val));
@@ -248,6 +251,11 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             setAttribute(SERVICE_UP, calculateServiceUp());
             for (Policy it : getPolicies()) { it.suspend(); }
             resize(0);
+            
+            // also stop any remaining stoppable children -- eg those on fire
+            // (this ignores the quarantine node which is not stoppable)
+            StartableMethods.stop(this);
+            
             setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
             setAttribute(SERVICE_UP, calculateServiceUp());
         } catch (Exception e) {
@@ -322,16 +330,22 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 memberLoc = getLocation();
             }
             
-            Collection<Entity> addedEntities = growByOne(memberLoc);
-            if (addedEntities.size() < 1) {
-                String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
-                throw new IllegalStateException(msg);
-            }
-            
-            stopAndRemoveNode(member);
-            
-            return Iterables.get(addedEntities, 0).getId();
+            Entity replacement = replaceMember(member, memberLoc);
+            return replacement.getId();
         }
+    }
+
+    // Called holding mutex; sub-classes beware!
+    protected Entity replaceMember(Entity member, Location memberLoc) {
+        Collection<Entity> addedEntities = growByOne(memberLoc, ImmutableMap.of());
+        if (addedEntities.size() < 1) {
+            String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
+            throw new IllegalStateException(msg);
+        }
+        
+        stopAndRemoveNode(member);
+        
+        return Iterables.get(addedEntities, 0);
     }
 
     protected Multimap<Location, Entity> getMembersByLocation() {
@@ -399,7 +413,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         Map<Entity, Location> addedEntityLocations = Maps.newLinkedHashMap();
         Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
         for (Location chosenLocation : chosenLocations) {
-            Entity entity = addNode(chosenLocation);
+            Entity entity = addNode(chosenLocation, ImmutableMap.of());
             addedEntities.add(entity);
             addedEntityLocations.put(entity, chosenLocation);
             Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(chosenLocation));
@@ -437,10 +451,10 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
      * Increases the cluster size by the given number. Returns successfully added nodes. 
      * Called when synchronized on mutex, so overriders beware!
      */
-    protected Collection<Entity> growByOne(Location loc) {
+    protected Collection<Entity> growByOne(Location loc, Map<?,?> extraFlags) {
         // TODO remove duplication from #grow(int)
         Collection<Entity> addedEntities = Lists.newArrayList();
-        Entity entity = addNode(loc);
+        Entity entity = addNode(loc, extraFlags);
         addedEntities.add(entity);
         Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(loc));
         Task<?> task = entity.invoke(Startable.START, args);
@@ -545,24 +559,17 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     protected Map<?,?> getCustomChildFlags() {
         return getConfig(CUSTOM_CHILD_FLAGS);
     }
-    
-    protected Entity addNode(Location loc) {
-        return addNode();
-    }
-    
-    /**
-     * @deprecated since 0.6; use {@link #addNode(Location)}, so can take that location into account when configuring node
-     */
-    protected Entity addNode() {
-        Map<?,?> creation = Maps.newLinkedHashMap(getCustomChildFlags());
+
+    protected Entity addNode(Location loc, Map<?,?> extraFlags) {
+        Map<?,?> creation = MutableMap.builder().putAll(getCustomChildFlags()).putAll(extraFlags).build();
         if (LOG.isDebugEnabled()) LOG.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] {this, getId(), creation});
 
-        Entity entity = createNode(null, creation);
+        Entity entity = createNode(loc, creation);
         Entities.manage(entity);
         addMember(entity);
         return entity;
     }
-
+    
     protected Entity createNode(@Nullable Location loc, Map<?,?> flags) {
         return createNode(flags);
     }
@@ -570,7 +577,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     /**
      * @deprecated since 0.6; use {@link #createNode(Location, Map)}, so can take that location into account when configuring node
      */
-    protected Entity createNode(Map flags) {
+    protected Entity createNode(Map<?,?> flags) {
         EntitySpec<?> memberSpec = getMemberSpec();
         if (memberSpec != null) {
             return addChild(EntitySpec.create(memberSpec).configure(flags));
@@ -580,7 +587,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         if (factory == null) { 
             throw new IllegalStateException("No member spec nor entity factory supplied for dynamic cluster "+this);
         }
-        EntityFactory<?> factoryToUse = (factory instanceof EntityFactoryForLocation) ? ((EntityFactoryForLocation)factory).newFactoryForLocation(getLocation()) : factory;
+        EntityFactory<?> factoryToUse = (factory instanceof EntityFactoryForLocation) ? ((EntityFactoryForLocation<?>)factory).newFactoryForLocation(getLocation()) : factory;
         Entity entity = factoryToUse.newEntity(flags, this);
         if (entity==null) {
             throw new IllegalStateException("EntityFactory factory routine returned null entity, in "+this);

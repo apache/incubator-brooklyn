@@ -47,6 +47,9 @@ public interface CassandraCluster extends DynamicCluster, DatastoreMixins.HasDat
     @SuppressWarnings("serial")
     ConfigKey<Supplier<Set<Entity>>> SEED_SUPPLIER = ConfigKeys.newConfigKey(new TypeToken<Supplier<Set<Entity>>>() { }, "cassandra.cluster.seedSupplier", "For determining the seed nodes", null);
 
+    @SetFromFlag("tokenGenerator")
+    ConfigKey<TokenGenerator> TOKEN_GENERATOR = ConfigKeys.newConfigKey(TokenGenerator.class, "cassandra.cluster.tokenGenerator", "For determining the tokens of nodes", null);
+
     /**
      * Additional time after the nodes in the cluster are up when starting
      * before announcing the cluster as up.
@@ -115,9 +118,10 @@ public interface CassandraCluster extends DynamicCluster, DatastoreMixins.HasDat
     /**
      * Can insert a delay after the first node comes up.
      * <p>
-     * Not needed with 1.2.9 (and does not help with the bug in 1.2.2)
+     * Reportedly not needed with 1.2.9, but we are still seeing some seed failures so re-introducing it.
+     * (This does not seem to help with the bug in 1.2.2.)
      */
-    Duration DELAY_AFTER_FIRST = Duration.ZERO;
+    Duration DELAY_AFTER_FIRST = Duration.ONE_MINUTE;
 
     /**
      * Whether to wait for the first node to start up

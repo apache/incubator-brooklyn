@@ -117,7 +117,7 @@ public class CassandraClusterLiveTest {
         }
     }
 
-    protected void checkConnectionRepeatedly(int totalAttemptsAllowed, int numRetriesPerAttempt, CassandraNode first, CassandraNode second) throws Exception {
+    protected static void checkConnectionRepeatedly(int totalAttemptsAllowed, int numRetriesPerAttempt, CassandraNode first, CassandraNode second) throws Exception {
         int attemptNum = 0;
         while (true) {
             try {
@@ -135,7 +135,7 @@ public class CassandraClusterLiveTest {
         }
     }
 
-    protected void checkConnection(int numRetries, CassandraNode first, CassandraNode second) throws ConnectionException {
+    protected static void checkConnection(int numRetries, CassandraNode first, CassandraNode second) throws ConnectionException {
         // have been seeing intermittent SchemaDisagreementException errors on AWS, probably due to Astyanax / how we are using it
         // (confirmed that clocks are in sync)
         AstyanaxSample astyanaxFirst = new AstyanaxSample(first);
@@ -151,7 +151,7 @@ public class CassandraClusterLiveTest {
         astyanaxSecond.readData(numRetries);
     }
 
-    protected Boolean areVersionsConsistent(CassandraNode node) {
+    protected static Boolean areVersionsConsistent(CassandraNode node) {
         try {
             Map<String, List<String>> v = new AstyanaxSample(node).getAstyanaxContextForCluster().getEntity().describeSchemaVersions();
             return v.size() == 1;
@@ -160,7 +160,7 @@ public class CassandraClusterLiveTest {
         }
     }
 
-    protected boolean isSocketOpen(CassandraNode node) {
+    protected static boolean isSocketOpen(CassandraNode node) {
         try {
             Socket s = new Socket(node.getAttribute(Attributes.HOSTNAME), node.getThriftPort());
             s.close();

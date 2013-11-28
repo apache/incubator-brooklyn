@@ -3,6 +3,7 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.math.BigInteger;
 import java.util.Set;
 
 import brooklyn.config.ConfigKey;
@@ -11,7 +12,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.java.UsesJavaMXBeans;
 import brooklyn.entity.java.UsesJmx;
@@ -92,7 +92,9 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
             String.class, "cassandra.replication.rackName", "Rack name (used for configuring replication)", 
             null);
 
-    AttributeSensor<Long> TOKEN = Sensors.newLongSensor("cassandra.token", "Cassandra Token");
+    @SetFromFlag("token")
+    BasicAttributeSensorAndConfigKey<BigInteger> TOKEN = new BasicAttributeSensorAndConfigKey<BigInteger>(
+            BigInteger.class, "cassandra.token", "Cassandra Token");
 
     AttributeSensor<Integer> PEERS = Sensors.newIntegerSensor( "cassandra.peers", "Number of peers in cluster");
 
@@ -122,6 +124,10 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
             "List of cluster nodes to seed this node");
 
     ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.START_TIMEOUT, 3*60);
+    
+    ConfigKey<String> LISTEN_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.listenAddressSensor", "sensor name from which to take the listen address; default (null) is a smart lookup");
+    ConfigKey<String> BROADCAST_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.broadcastAddressSensor", "sensor name from which to take the broadcast address; default (null) is a smart lookup");
+    ConfigKey<String> RPC_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.rpcAddressSensor", "sensor name from which to take the RPC address; default (null) is 0.0.0.0");
 
     public static Effector<String> EXECUTE_SCRIPT = CassandraCluster.EXECUTE_SCRIPT;
 
@@ -133,8 +139,16 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     String getClusterName();
     String getListenAddress();
     String getBroadcastAddress();
+    String getRpcAddress();
     String getSeeds();
-    Long getToken();
+    
+    String getPrivateIp();
+    String getPublicIp();
+    
+    /** in range 0 to (2^127)-1; or null if not yet set or known */
+    BigInteger getToken();
+    /** string value of token (with no commas, which freemarker introduces!) or blank if none */
+    String getTokenAsString();
 
     /* For configuration */
     

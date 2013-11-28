@@ -46,7 +46,7 @@ import com.google.common.base.Functions;
         "with an auto-scaling policy, " +
         "wired to a database initialized with the provided SQL; " +
         "defaults to a 'Hello World' chatroom app.",
-    iconUrl="classpath://com/acme/sample/brooklyn/sample-icon.png")
+    iconUrl="classpath://sample-icon.png")
 public class ClusterWebServerDatabaseSample extends AbstractApplication {
 
     public static final Logger LOG = LoggerFactory.getLogger(ClusterWebServerDatabaseSample.class);

@@ -22,6 +22,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
@@ -43,7 +44,6 @@ import brooklyn.util.time.Time;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 
 /**
  * Start a {@link CassandraNode} in a {@link Location} accessible over ssh.
@@ -121,8 +121,8 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     private Map<String, Integer> getPortMap() {
         return ImmutableMap.<String, Integer>builder()
-                .put("jmxPort", getJmxPort())
-                .put("rmiPort", getRmiRegistryPort())
+                .put("jmxPort", entity.getAttribute(UsesJmx.JMX_PORT))
+                .put("rmiPort", entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT))
                 .put("gossipPort", getGossipPort())
                 .put("sslGossipPort:", getSslGossipPort())
                 .put("thriftPort", getThriftPort())
@@ -147,10 +147,11 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
         ImmutableList.Builder<String> commands = new ImmutableList.Builder<String>()
                 .add(String.format("cp -R %s/{bin,conf,lib,interface,pylib,tools} .", getExpandedInstallDir()))
-                .add("mkdir data")
+                .add("mkdir -p data")
                 .add(String.format("sed -i.bk 's/log4j.appender.R.File=.*/log4j.appender.R.File=%s/g' %s/conf/log4j-server.properties", logFileEscaped, getRunDir()))
                 .add(String.format("sed -i.bk '/JMX_PORT/d' %s/conf/cassandra-env.sh", getRunDir()))
-                .add(String.format("sed -i.bk 's/-Xss180k/-Xss280k/g' %s/conf/cassandra-env.sh", getRunDir())); // Stack size
+                // Script sets 180k on Linux which gives Java error:  The stack size specified is too small, Specify at least 228k 
+                .add(String.format("sed -i.bk 's/-Xss180k/-Xss280k/g' %s/conf/cassandra-env.sh", getRunDir())); 
 
         newScript(CUSTOMIZING)
                 .body.append(commands.build())
@@ -176,7 +177,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
             try {
                 getMachine().copyTo(customSnitchJarStream, jarDestinationFile);
             } finally {
-                Closeables.closeQuietly(customSnitchJarStream);
+                Streams.closeQuietly(customSnitchJarStream);
             }
         }
     }
@@ -241,8 +242,9 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         newScript(MutableMap.of("usePidFile", getPidFile()), STOPPING).body.append("true").execute();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected Map getCustomJavaSystemProperties() {
+    protected Map<?,?> getCustomJavaSystemProperties() {
         return MutableMap.<String, String>builder()
                 .putAll(super.getCustomJavaSystemProperties())
                 .put("cassandra.confing", getCassandraConfigFileName())

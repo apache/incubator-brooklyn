@@ -1,6 +1,6 @@
 <archetype xmlns="http://maven.apache.org/plugins/maven-archetype-plugin/archetype/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/plugins/maven-archetype-plugin/archetype/1.0.0 http://maven.apache.org/xsd/archetype-1.0.0.xsd">
-  
+
   <fileSets>
     <fileSet filtered="true" packaged="true">
       <directory>src/main/java</directory>
@@ -8,10 +8,22 @@
         <include>**/*.java</include>
       </includes>
     </fileSet>
+    
     <fileSet filtered="true" packaged="true">
       <directory>src/test/java</directory>
       <includes>
         <include>**/*.java</include>
+      </includes>
+    </fileSet>
+    
+    <!-- we cannot have src/main/resources/** be "packaged" (package dirs prepended) and non-packaged;
+         so we put everything non-packaged here.
+         (also note for src/main/java, the root pom uses google-replacer to drop the "package" directory) -->
+           
+    <fileSet filtered="false" packaged="false">
+      <directory></directory>
+      <includes>
+        <include>**/*.png</include>
       </includes>
     </fileSet>
     <fileSet filtered="true" packaged="false">
@@ -24,14 +36,8 @@
         <exclude>src/main/java/**</exclude> 
         <exclude>src/test/java/**</exclude> 
         <exclude>pom.xml</exclude>
-        <exclude>**/*.png</exclude> 
+        <exclude>**.png</exclude> 
       </excludes>
-    </fileSet>
-    <fileSet filtered="false" packaged="false">
-      <directory></directory>
-      <includes>
-        <include>**/*.png</include>
-      </includes>
     </fileSet>
   </fileSets>
 

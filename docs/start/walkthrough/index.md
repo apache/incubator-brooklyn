@@ -38,7 +38,8 @@ $ mvn archetype:generate \
     -DgroupId=com.acme.sample \
     -DartifactId=brooklyn-sample \
     -Dversion=0.1.0-SNAPSHOT \
-    -Dpackage=com.acme.sample.brooklyn
+    -Dpackage=com.acme.sample.brooklyn \
+    --batch-mode
 $ cd brooklyn-sample
 {% endhighlight %}
 

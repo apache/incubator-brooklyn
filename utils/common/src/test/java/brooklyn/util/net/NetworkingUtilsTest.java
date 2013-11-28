@@ -73,12 +73,16 @@ public class NetworkingUtilsTest {
         }
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testIsPortAvailableReportsTrueWhenPortIsFree() throws Exception {
         int port = 58769;
+        int numFree = 0;
         for (int i = 0; i < 10; i++) {
-            assertTrue(Networking.isPortAvailable(port));
+            if (Networking.isPortAvailable(port))
+                numFree++;
         }
+        if (numFree<=5)
+            fail("This test requires that at least some ports near 58769+ not be in use.");
     }
     
     @Test
