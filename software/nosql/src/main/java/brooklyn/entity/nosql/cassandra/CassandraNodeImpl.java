@@ -454,7 +454,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
 
         if (jmxFeed != null) jmxFeed.stop();
         if (jmxMxBeanFeed != null) jmxMxBeanFeed.stop();
-        if (jmxHelper.isConnected()) jmxHelper.disconnect();
+        if (jmxHelper != null && jmxHelper.isConnected()) jmxHelper.disconnect();
         if (functionFeed != null) functionFeed.stop();
     }
 
