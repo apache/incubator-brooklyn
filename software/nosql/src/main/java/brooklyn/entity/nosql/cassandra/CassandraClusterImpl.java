@@ -69,7 +69,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     private final Object mutex = new Object[0];
 
     // TODO Serialize the token generator state?
-    private final TokenGenerator defaultTokenGenerator = new BasicTokenGenerator();
+    private final TokenGenerator defaultTokenGenerator = new TokenGenerators.PosNeg63TokenGenerator();
     
     private final Supplier<Set<Entity>> defaultSeedSupplier = new Supplier<Set<Entity>>() {
         // Mutex for (re)calculating our seeds

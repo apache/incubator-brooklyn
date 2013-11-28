@@ -1,0 +1,139 @@
+package brooklyn.entity.nosql.cassandra;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import brooklyn.util.collections.MutableList;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
+public class TokenGenerators {
+
+    public static abstract class AbstractTokenGenerator implements TokenGenerator {
+        
+        public static final BigInteger TWO = BigInteger.valueOf(2);
+        
+        public abstract BigInteger max();
+        public abstract BigInteger min();
+        public abstract BigInteger range();
+
+        private final Set<BigInteger> currentTokens = Sets.newTreeSet();
+
+        private final List<BigInteger> nextTokens = Lists.newArrayList();
+        
+        public AbstractTokenGenerator() { 
+            assert range().equals(max().subtract(min()).add(BigInteger.ONE)); 
+        }
+        
+        /**
+         * Unless we're explicitly starting a new cluster or resizing by a pre-defined number of nodes, then
+         * let Cassandra decide (i.e. return null).
+         */
+        @Override
+        public synchronized BigInteger newToken() {
+            BigInteger result = (nextTokens.isEmpty()) ? null : nextTokens.remove(0);
+            if (result != null) currentTokens.add(result);
+            return result;
+        }
+
+        @Override
+        public synchronized BigInteger getTokenForReplacementNode(BigInteger oldToken) {
+            checkNotNull(oldToken, "oldToken");
+            return normalize(oldToken.subtract(BigInteger.ONE));
+        }
+
+        @Override
+        public synchronized void growingCluster(int numNewNodes) {
+            if (currentTokens.isEmpty() && nextTokens.isEmpty()) {
+                nextTokens.addAll(generateEquidistantTokens(numNewNodes));
+            } else {
+                // simple strategy which iteratively finds best midpoint
+                // TODO ideally this would be informed by load!
+                for (int i=0; i<numNewNodes; i++) {
+                    nextTokens.add(generateBestNextToken());
+                }
+            }
+        }
+
+        @Override
+        public synchronized void shrinkingCluster(Set<BigInteger> nodesToRemove) {
+            currentTokens.remove(nodesToRemove);
+        }
+
+        @Override
+        public synchronized void refresh(Set<BigInteger> currentNodes) {
+            currentTokens.clear();
+            currentTokens.addAll(currentNodes);
+        }
+
+        private List<BigInteger> generateEquidistantTokens(int numTokens) {
+            List<BigInteger> result = Lists.newArrayList();
+            for (int i = 0; i < numTokens; i++) {
+                BigInteger token = range().multiply(BigInteger.valueOf(i)).divide(BigInteger.valueOf(numTokens)).add(min());
+                result.add(token);
+            }
+            return result;
+        }
+        
+        private BigInteger normalize(BigInteger input) {
+            while (input.compareTo(min()) < 0)
+                input = input.add(range());
+            while (input.compareTo(max()) > 0)
+                input = input.subtract(range());
+            return input;
+        }
+        
+        private BigInteger generateBestNextToken() {
+            List<BigInteger> allTokens = MutableList.<BigInteger>of().appendAll(currentTokens).appendAll(nextTokens);
+            Collections.sort(allTokens);
+            Iterator<BigInteger> ti = allTokens.iterator();
+            
+            BigInteger thisValue = ti.next();
+            BigInteger prevValue = allTokens.get(allTokens.size()-1).subtract(range());
+            
+            BigInteger bestNewTokenSoFar = normalize(prevValue.add(thisValue).divide(TWO));
+            BigInteger biggestRangeSizeSoFar = thisValue.subtract(prevValue);
+            
+            while (ti.hasNext()) {
+                prevValue = thisValue;
+                thisValue = ti.next();
+                
+                BigInteger rangeHere = thisValue.subtract(prevValue);
+                if (rangeHere.compareTo(biggestRangeSizeSoFar) > 0) {
+                    bestNewTokenSoFar = prevValue.add(thisValue).divide(TWO);
+                    biggestRangeSizeSoFar = rangeHere;
+                }
+            }
+            return bestNewTokenSoFar;
+        }
+
+    }
+
+    public static class PosNeg63TokenGenerator extends AbstractTokenGenerator {
+        public static final BigInteger MIN_TOKEN = TWO.pow(63).negate();
+        public static final BigInteger MAX_TOKEN = TWO.pow(63).subtract(BigInteger.ONE);
+        public static final BigInteger RANGE = TWO.pow(64);
+
+        @Override public BigInteger max() { return MAX_TOKEN; }
+        @Override public BigInteger min() { return MIN_TOKEN; }
+        @Override public BigInteger range() { return RANGE; }
+    }
+    
+    /** token generator used by cassandra pre v1.2 */
+    public static class NonNeg127TokenGenerator extends AbstractTokenGenerator {
+        public static final BigInteger MIN_TOKEN = BigInteger.ZERO;
+        public static final BigInteger MAX_TOKEN = TWO.pow(127).subtract(BigInteger.ONE);
+        public static final BigInteger RANGE = TWO.pow(127);
+
+        @Override public BigInteger max() { return MAX_TOKEN; }
+        @Override public BigInteger min() { return MIN_TOKEN; }
+        @Override public BigInteger range() { return RANGE; }
+    }
+    
+}

@@ -131,11 +131,11 @@ public class CassandraClusterTest {
         for (Entity member : cluster.getMembers()) {
             tokens.add(member.getConfig(CassandraNode.TOKEN));
         }
-        assertEquals(tokens, ImmutableSet.of(BigInteger.ZERO, new BigInteger("85070591730234615865843651857942052863")));
+        assertEquals(tokens, ImmutableSet.of(new BigInteger("-9223372036854775808"), BigInteger.ZERO));
     }
     
     public static class MockInputForTemplate {
-        public BigInteger getToken() { return new BigInteger("85070591730234615865843651857942052863"); }
+        public BigInteger getToken() { return new BigInteger("-9223372036854775808"); }
         public String getTokenAsString() { return "" + getToken(); }
         public String getSeeds() { return ""; }
         public int getGossipPort() { return 1234; }
@@ -158,8 +158,8 @@ public class CassandraClusterTest {
 
         String templateContents = new ResourceUtils(this).getResourceAsString(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL.getConfigKey().getDefaultValue());
         String processedTemplate = TemplateProcessor.processTemplateContents(templateContents, substitutions);
-        Assert.assertEquals(processedTemplate.indexOf("052,863"), -1);
-        Assert.assertTrue(processedTemplate.indexOf("052863") > 0);
+        Assert.assertEquals(processedTemplate.indexOf("775,808"), -1);
+        Assert.assertTrue(processedTemplate.indexOf("775808") > 0);
     }
     
     @Test(groups="Integration")
