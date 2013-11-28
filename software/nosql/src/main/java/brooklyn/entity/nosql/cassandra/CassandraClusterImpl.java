@@ -121,14 +121,6 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             result.addAll(contenders);
             return ImmutableSet.copyOf(Iterables.limit(result, num));
         }
-        private boolean containsDownEntity(Set<Entity> seeds) {
-            for (Entity seed : seeds) {
-                if (!seedTracker.isViableSeed(seed)) {
-                    return true;
-                }
-            }
-            return false;
-        }
     };
     
     protected SeedTracker seedTracker = new SeedTracker();
@@ -359,14 +351,14 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         for (List<? extends AttributeSensor<? extends Number>> es : summingEnricherSetup) {
             AttributeSensor<? extends Number> t = es.get(0);
             AttributeSensor<? extends Number> total = es.get(1);
-            CustomAggregatingEnricher<?,?> totaller = CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), t, total);
+            CustomAggregatingEnricher<?,?> totaller = CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), t, total, null, null);
             addEnricher(totaller);
         }
         
         for (List<? extends AttributeSensor<? extends Number>> es : averagingEnricherSetup) {
             AttributeSensor<Number> t = (AttributeSensor<Number>) es.get(0);
             AttributeSensor<Double> average = (AttributeSensor<Double>) es.get(1);
-            CustomAggregatingEnricher<?,?> averager = CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), t, average, null);
+            CustomAggregatingEnricher<?,?> averager = CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), t, average, null, null);
             addEnricher(averager);
         }
 

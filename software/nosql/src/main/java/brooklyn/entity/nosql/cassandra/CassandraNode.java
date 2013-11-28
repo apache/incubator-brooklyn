@@ -124,6 +124,10 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
             "List of cluster nodes to seed this node");
 
     ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.START_TIMEOUT, 3*60);
+    
+    ConfigKey<String> LISTEN_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.listenAddressSensor", "sensor name from which to take the listen address; default (null) is a smart lookup");
+    ConfigKey<String> BROADCAST_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.broadcastAddressSensor", "sensor name from which to take the broadcast address; default (null) is a smart lookup");
+    ConfigKey<String> RPC_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.rpcAddressSensor", "sensor name from which to take the RPC address; default (null) is 0.0.0.0");
 
     public static Effector<String> EXECUTE_SCRIPT = CassandraCluster.EXECUTE_SCRIPT;
 
@@ -135,6 +139,7 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     String getClusterName();
     String getListenAddress();
     String getBroadcastAddress();
+    String getRpcAddress();
     String getSeeds();
     
     /** in range 0 to (2^127)-1; or null if not yet set or known */

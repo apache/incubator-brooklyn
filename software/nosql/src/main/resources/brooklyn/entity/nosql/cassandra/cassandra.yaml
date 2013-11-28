@@ -326,7 +326,7 @@ start_rpc: true
 # 
 # Leaving this blank has the same effect it does for ListenAddress,
 # (i.e. it will be based on the configured hostname of the node).
-rpc_address: 0.0.0.0
+rpc_address: ${entity.rpcAddress}
 # port for Thrift to listen for clients on
 rpc_port: ${entity.thriftPort?c}
 

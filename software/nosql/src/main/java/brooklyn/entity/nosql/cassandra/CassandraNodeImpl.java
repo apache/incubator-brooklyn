@@ -24,10 +24,13 @@ import brooklyn.enricher.RollingTimeWindowMeanEnricher;
 import brooklyn.enricher.TimeWeightedDeltaEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
@@ -60,7 +63,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
 
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeImpl.class);
 
-    private final AtomicReference<Boolean> requiresAlwaysPublicIp = new AtomicReference<Boolean>();
+    private final AtomicReference<Boolean> cloudWantsPublicIp = new AtomicReference<Boolean>();
     
     public CassandraNodeImpl() {
     }
@@ -69,17 +72,17 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
      * Some clouds (e.g. Rackspace) give us VMs that have two nics: one for private and one for public.
      * If the private IP is used then it doesn't work, even for a cluster purely internal to Rackspace!
      * 
-     * TODO Need to investigate that further, e.g.:
+     * TODO Ugly. Need to understand more and find a better fix. Perhaps in Cassandra itself if necessary.
+     * Also need to investigate further:
+     *  - does it still fail if BroadcastAddress is set to private IP?
      *  - is `openIptables` opening it up for both interfaces?
      *  - for aws->rackspace comms between nodes (thus using the public IP), will it be listening on an accessible port?
-     *  
-     * FIXME Really ugly code; surely can do better?!
-     * 
-     * @return
+     *  - ideally do a check, open a server on one port on the machine, see if it is contactable on the public address;
+     *    and set that as a flag on the cloud
      */
-    protected boolean requiresAlwaysPublicIp() {
-        if (requiresAlwaysPublicIp.get() != null) {
-            return requiresAlwaysPublicIp.get();
+    protected boolean cloudWantsPublicIp() {
+        if (cloudWantsPublicIp.get() != null) {
+            return cloudWantsPublicIp.get();
         }
         MachineProvisioningLocation<?> loc = getProvisioningLocation();
         if (loc != null) {
@@ -87,14 +90,14 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 Method method = loc.getClass().getMethod("getProvider");
                 method.setAccessible(true);
                 String provider = (String) method.invoke(loc);
-                boolean result = (provider != null) && (provider.contains("rackspace") || provider.contains("cloudservers"));
-                log.info("Inferred requiresAlwaysPublicIp={} for {}; using location {}, based on provider {}", new Object[] {result, this, loc, provider});
-                requiresAlwaysPublicIp.set(result);
+                boolean result = (provider != null) && (provider.contains("rackspace") || provider.contains("cloudservers")) || (provider.contains("softlayer"));
+                log.debug("Inferred cloudWantsPublicIp={} for {}; using location {}, based on provider {}", new Object[] {result, this, loc, provider});
+                cloudWantsPublicIp.set(result);
             } catch (Exception e) {
-                log.info("Inferred requiresAlwaysPublicIp={} for {}; using location {}, based on: {}", new Object[] {false, this, loc, e});
-                requiresAlwaysPublicIp.set(false);
+                log.debug("Inferred cloudWantsPublicIp={} for {}; using location {}, based on: {}", new Object[] {false, this, loc, e});
+                cloudWantsPublicIp.set(false);
             }
-            return requiresAlwaysPublicIp.get();
+            return cloudWantsPublicIp.get();
         }
         return false;
     }
@@ -111,9 +114,13 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         }
         return token;
     }
-    
+
     @Override public String getListenAddress() {
-        if (requiresAlwaysPublicIp()) {
+        String sensorName = getConfig(LISTEN_ADDRESS_SENSOR);
+        if (Strings.isNonBlank(sensorName))
+            return Entities.submit(this, DependentConfiguration.attributeWhenReady(this, Sensors.newStringSensor(sensorName))).getUnchecked();
+        
+        if (cloudWantsPublicIp()) {
             return getAttribute(CassandraNode.ADDRESS);
         } else {
             String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
@@ -121,6 +128,10 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         }
     }
     @Override public String getBroadcastAddress() {
+        String sensorName = getConfig(BROADCAST_ADDRESS_SENSOR);
+        if (Strings.isNonBlank(sensorName))
+            return Entities.submit(this, DependentConfiguration.attributeWhenReady(this, Sensors.newStringSensor(sensorName))).getUnchecked();
+        
         String snitchName = getConfig(CassandraNode.ENDPOINT_SNITCH_NAME);
         if (snitchName.equals("Ec2MultiRegionSnitch") || snitchName.contains("MultiCloudSnitch")) {
             // http://www.datastax.com/documentation/cassandra/2.0/mobile/cassandra/architecture/architectureSnitchEC2MultiRegion_c.html
@@ -133,9 +144,15 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             return getAttribute(CassandraNode.HOSTNAME);
         }
     }
+    @Override public String getRpcAddress() {
+        String sensorName = getConfig(RPC_ADDRESS_SENSOR);
+        if (Strings.isNonBlank(sensorName))
+            return Entities.submit(this, DependentConfiguration.attributeWhenReady(this, Sensors.newStringSensor(sensorName))).getUnchecked();
+        return "0.0.0.0";
+    }
     
     public String getPrivateIp() {
-        if (requiresAlwaysPublicIp()) {
+        if (cloudWantsPublicIp()) {
             return getAttribute(CassandraNode.ADDRESS);
         } else {
             String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
@@ -162,7 +179,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 // http://www.datastax.com/documentation/cassandra/2.0/mobile/cassandra/architecture/architectureSnitchEC2MultiRegion_c.html
                 // says the seeds should be public IPs.
                 seedsHostnames.add(entity.getAttribute(CassandraNode.ADDRESS));
-            } else if (requiresAlwaysPublicIp()) {
+            } else if (cloudWantsPublicIp()) {
                 seedsHostnames.add(entity.getAttribute(CassandraNode.HOSTNAME));
             } else {
                 Optional<String> optionalSeedHostname = Machines.findSubnetOrPublicHostname(entity);
@@ -241,11 +258,13 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     
     private volatile JmxFeed jmxFeed;
     private volatile FunctionFeed functionFeed;
+    private JmxFeed jmxMxBeanFeed;
     private JmxHelper jmxHelper;
     private ObjectName storageServiceMBean = JmxHelper.createObjectName("org.apache.cassandra.db:type=StorageService");
     private ObjectName readStageMBean = JmxHelper.createObjectName("org.apache.cassandra.request:type=ReadStage");
     private ObjectName mutationStageMBean = JmxHelper.createObjectName("org.apache.cassandra.request:type=MutationStage");
     private ObjectName snitchMBean = JmxHelper.createObjectName("org.apache.cassandra.db:type=EndpointSnitchInfo");
+
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
@@ -379,7 +398,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     }
     
     protected void connectEnrichers(Duration windowPeriod) {
-        JavaAppUtils.connectMXBeanSensors(this);
+        jmxMxBeanFeed = JavaAppUtils.connectMXBeanSensors(this);
         JavaAppUtils.connectJavaAppServerPolicies(this);
 
         addEnricher(TimeWeightedDeltaEnricher.<Long>getPerSecondDeltaEnricher(this, READ_COMPLETED, READS_PER_SECOND_LAST));
@@ -400,6 +419,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         super.disconnectSensors();
 
         if (jmxFeed != null) jmxFeed.stop();
+        if (jmxMxBeanFeed != null) jmxMxBeanFeed.stop();
         if (jmxHelper.isConnected()) jmxHelper.disconnect();
         if (functionFeed != null) functionFeed.stop();
     }
