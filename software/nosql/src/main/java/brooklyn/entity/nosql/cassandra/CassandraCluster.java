@@ -47,7 +47,7 @@ public interface CassandraCluster extends DynamicCluster, DatastoreMixins.HasDat
     @SuppressWarnings("serial")
     ConfigKey<Supplier<Set<Entity>>> SEED_SUPPLIER = ConfigKeys.newConfigKey(new TypeToken<Supplier<Set<Entity>>>() { }, "cassandra.cluster.seedSupplier", "For determining the seed nodes", null);
 
-    @SetFromFlag("seedSupplier")
+    @SetFromFlag("tokenGenerator")
     ConfigKey<TokenGenerator> TOKEN_GENERATOR = ConfigKeys.newConfigKey(TokenGenerator.class, "cassandra.cluster.tokenGenerator", "For determining the tokens of nodes", null);
 
     /**
