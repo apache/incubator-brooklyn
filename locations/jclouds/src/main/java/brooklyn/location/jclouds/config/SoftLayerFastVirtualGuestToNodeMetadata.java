@@ -16,24 +16,19 @@
  */
 package brooklyn.location.jclouds.config;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.Map;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.jclouds.collect.Memoized;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.NodeMetadata.Status;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
 import org.jclouds.compute.functions.GroupNamingConvention;
-import org.jclouds.domain.Location;
+import org.jclouds.softlayer.compute.functions.DatacenterToLocation;
 import org.jclouds.softlayer.domain.VirtualGuest;
 
 import com.google.common.base.Function;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -52,15 +47,17 @@ public class SoftLayerFastVirtualGuestToNodeMetadata implements
             .put(VirtualGuest.State.UNRECOGNIZED, Status.UNRECOGNIZED).build();
 
     private final GroupNamingConvention nodeNamingConvention;
+    private final DatacenterToLocation datacenterConverter;
 
     @Inject
     SoftLayerFastVirtualGuestToNodeMetadata(
-            @Memoized Supplier<Set<? extends Location>> locations,
-            GroupNamingConvention.Factory namingConvention) {
-        this.nodeNamingConvention = checkNotNull(namingConvention,
-                "namingConvention").createWithoutPrefix();
+          DatacenterToLocation datacenterConverter,
+          GroupNamingConvention.Factory namingConvention
+        ) {
+        this.datacenterConverter = datacenterConverter;
+        this.nodeNamingConvention = namingConvention.createWithoutPrefix();
     }
-
+    
     @Override
     public NodeMetadata apply(VirtualGuest from) {
         // convert the result object to a jclouds NodeMetadata
@@ -79,6 +76,20 @@ public class SoftLayerFastVirtualGuestToNodeMetadata implements
         if (from.getPrimaryBackendIpAddress() != null)
             builder.privateAddresses(ImmutableSet.<String> of(from
                     .getPrimaryBackendIpAddress()));
+        if (from.getDatacenter()!=null) {
+            builder.location(
+                // this is how it is done in org/jclouds/softlayer/compute/functions/VirtualGuestToNodeMetadata.java
+                // but it requires two lookups (Account.ActivePackages then Product_Package.46) which take 30s or more:
+//                FluentIterable.from(locations.get()).firstMatch(
+//                    LocationPredicates.idEquals(from.getDatacenter().getId() + "")).orNull()
+                // also note if the Supplier<Location> is injected (using the following in the constructor)
+                // then it works for softlayer but it breaks OTHER clouds eg rackspace with a guice circular reference!
+//                @Memoized Supplier<Set<? extends Location>> locations
+                
+                // this little lightweight snippet does it without any expensive lookups or guice errors :)
+                datacenterConverter.apply(from.getDatacenter())
+            );
+        }
         return builder.build();
     }
 
