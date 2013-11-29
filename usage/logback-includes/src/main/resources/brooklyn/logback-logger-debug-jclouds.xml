@@ -1,4 +1,10 @@
 <included>
+    <!--
+
+        including this file after all other debug configuration will move all of the jclouds
+        logging messages to a separate file, named 'brooklyn-application.jclouds.log'
+
+      -->
 
     <!-- include jclouds log file appender -->
     <include resource="brooklyn/logback-appender-jclouds.xml"/>
@@ -8,11 +14,6 @@
         <appender-ref ref="JCLOUDS-FILE" />
     </logger>
     <logger name="jclouds" additivity="false">
-        <appender-ref ref="JCLOUDS-FILE" />
-    </logger>
-
-    <!-- always send this to the jcluds file -->
-    <logger name="jclouds.ssh" level="INFO" additivity="false">
         <appender-ref ref="JCLOUDS-FILE" />
     </logger>
 
