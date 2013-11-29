@@ -74,6 +74,7 @@ import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
+import brooklyn.location.jclouds.JcloudsPredicates.NodeInLocation;
 import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
 import brooklyn.location.jclouds.zone.AwsAvailabilityZoneExtension;
 import brooklyn.management.AccessController;
@@ -115,7 +116,6 @@ import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
-import com.google.inject.Module;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -353,11 +353,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     
     @Override
     public Map<String, MachineMetadata> listMachines() {
-        Set<? extends ComputeMetadata> nodes = getComputeService().listNodes();
+        Set<? extends ComputeMetadata> nodes = 
+            getRegion()!=null ? getComputeService().listNodesDetailsMatching(new NodeInLocation(getRegion(), true))
+                : getComputeService().listNodes();
         Map<String,MachineMetadata> result = new LinkedHashMap<String, MachineMetadata>();
-        for (ComputeMetadata node: nodes) {
+        
+        for (ComputeMetadata node: nodes)
             result.put(node.getId(), getMachineMetadata(node));
-        }
+        
         return result;
     }
 
