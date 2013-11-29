@@ -54,6 +54,10 @@ define([
             $(".output .toggler-region", this.$el).hide()
             $(".output .throbber", this.$el).show()
             $(".output", this.$el).show()
+            that.updateTextareaWithData($(".output .result"), undefined, false, false);
+            that.updateTextareaWithData($(".output .error"), undefined, false, false);
+            that.updateTextareaWithData($(".output .stdout"), undefined, false, false);
+            that.updateTextareaWithData($(".output .stderr"), undefined, false, false);
             $.ajax({
                 type:"POST",
                 url:"/v1/script/groovy",
