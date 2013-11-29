@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/applications/{application}/entities/{entity}/policies")
-@Apidoc("Entity policies")
+@Apidoc("Entity Policies")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface PolicyApi {

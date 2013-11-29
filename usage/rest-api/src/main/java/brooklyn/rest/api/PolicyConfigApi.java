@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/applications/{application}/entities/{entity}/policies/{policy}/config")
-@Apidoc("Policy config")
+@Apidoc("Entity Policy Config")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface PolicyConfigApi {

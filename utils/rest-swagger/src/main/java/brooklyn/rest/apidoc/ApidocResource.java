@@ -189,6 +189,8 @@ abstract public class ApidocResource {
 
     @GET
     @Path("/{resource}")
+    @ApiOperation(value = "Returns detail on the given API resource endpoint", 
+        responseClass = "DocumentationEndPoint", multiValueResponse = true)
     public Response details(
             @Context ResourceConfig rc, 
             @Context HttpHeaders headers, 

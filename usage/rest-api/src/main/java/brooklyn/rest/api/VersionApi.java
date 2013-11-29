@@ -13,10 +13,12 @@ import javax.ws.rs.core.MediaType;
 @Apidoc("Version")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/** @deprecated since 0.7.0; use /v1/server/version */
+@Deprecated
 public interface VersionApi {
 
   @GET
-  @ApiOperation(value = "Return version identifier information for this Brooklyn instance", responseClass = "String", multiValueResponse = false)
+  @ApiOperation(value = "Return version identifier information for this Brooklyn instance; deprecated, use /server/version", responseClass = "String", multiValueResponse = false)
   public String getVersion() ;
 
 }
