@@ -268,13 +268,17 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     
     public final static String PID_FILENAME = "pid.txt";
 
+    /** specify as a flag to define the process owner if not the same as the brooklyn user; 'stop' and
+     * 'kill' will sudo to this user before issuing the 'kill' command (only valid if USE_PID_FILE set) */
+    protected final static String PROCESS_OWNER = "processOwner";
+
     /** sets up a script for the given phase, including default wrapper commands
      * (e.g. INSTALLING, LAUNCHING, etc)
      * <p>
      * flags supported include:
      * - usePidFile: true, or a filename, meaning to create (for launching) that pid
+     * - processOwner: the user that owns the running process
      * @param phase
-     * @return
      */
     protected ScriptHelper newScript(String phase) {
         return newScript(Maps.newLinkedHashMap(), phase);
@@ -290,7 +294,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                         "mkdir -p $INSTALL_DIR",
                         "cd $INSTALL_DIR",
                         "test -f BROOKLYN && exit 0"
-                        ).footer.append(
+                        );
+                s.footer.append(
                         "date > $INSTALL_DIR/BROOKLYN"
                         );
             }
@@ -303,55 +308,56 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             }
         }
 
-        if (ImmutableSet.of(LAUNCHING, STOPPING, KILLING, RESTARTING).contains(phase))
+        if (ImmutableSet.of(LAUNCHING, STOPPING, KILLING, RESTARTING).contains(phase)) {
             s.failIfBodyEmpty();
-        if (ImmutableSet.of(INSTALLING, LAUNCHING).contains(phase))
+        }
+        if (ImmutableSet.of(INSTALLING, LAUNCHING).contains(phase)) {
             s.updateTaskAndFailOnNonZeroResultCode();
-        if (phase.equalsIgnoreCase(CHECK_RUNNING))
+        }
+        if (phase.equalsIgnoreCase(CHECK_RUNNING)) {
             s.setTransient();
+        }
 
         if (truth(flags.get(USE_PID_FILE))) {
             String pidFile = (flags.get(USE_PID_FILE) instanceof CharSequence ? flags.get(USE_PID_FILE) : getRunDir()+"/"+PID_FILENAME).toString();
-            if (LAUNCHING.equals(phase))
+            String processOwner = (flags.containsKey(PROCESS_OWNER) ? flags.get(PROCESS_OWNER) : getMachine().getUser()).toString();
+            if (LAUNCHING.equals(phase)) {
                 s.footer.prepend("echo $! > "+pidFile);
-            else if (CHECK_RUNNING.equals(phase))
+            } else if (CHECK_RUNNING.equals(phase)) {
                 s.body.append(
                         "test -f "+pidFile+" || exit 1", //no pid, not running
 
                         //old method, for supplied service, or entity.id
-                        //					"ps aux | grep ${service} | grep \$(cat ${pidFile}) > /dev/null"
+                        //"ps aux | grep ${service} | grep \$(cat ${pidFile}) > /dev/null"
                         //new way, preferred?
                         "ps -p `cat "+pidFile+"`"
-
-                        ).requireResultCode(Predicates.or(Predicates.equalTo(0), Predicates.equalTo(1)));
-            // 1 is not running
-
-            else if (STOPPING.equals(phase))
+                        );
+                s.requireResultCode(Predicates.or(Predicates.equalTo(0), Predicates.equalTo(1)));
+                // 1 is not running
+            } else if (STOPPING.equals(phase)) {
                 s.body.append(
                         "export PID=`cat "+pidFile+"`",
                         "[[ -n \"$PID\" ]] || exit 0",
-                        "kill $PID",
-                        "kill -9 $PID",
-                        "rm "+pidFile
+                        BashCommands.sudoAsUser(processOwner, "kill $PID"),
+                        BashCommands.sudoAsUser(processOwner, "kill -9 $PID"),
+                        "rm -f "+pidFile
                         );
-                
-            else if (KILLING.equals(phase))
+            } else if (KILLING.equals(phase)) {
                 s.body.append(
                         "export PID=`cat "+pidFile+"`",
                         "[[ -n \"$PID\" ]] || exit 0",
-                        "kill -9 $PID",
-                        "rm "+pidFile
+                        BashCommands.sudoAsUser(processOwner, "kill -9 $PID"),
+                        "rm -f "+pidFile
                         );
-                
-            else if (RESTARTING.equals(phase))
+            } else if (RESTARTING.equals(phase)) {
                 s.footer.prepend(
                         "test -f "+pidFile+" || exit 1", //no pid, not running
                         "ps -p `cat "+pidFile+"` || exit 1" //no process; can't restart,
                         );
-            // 1 is not running
-
-            else
+                // 1 is not running
+            } else {
                 log.warn(USE_PID_FILE+": script option not valid for "+s.summary);
+            }
         }
 
         return s;
