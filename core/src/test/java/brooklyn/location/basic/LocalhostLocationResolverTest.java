@@ -157,7 +157,14 @@ public class LocalhostLocationResolverTest {
     }
 
     @Test
-    public void testResolvesName() throws Exception {
+    public void testResolvesExplicitName() throws Exception {
+        Location location = resolve("localhost:(name=myname)");
+        assertTrue(location instanceof LocalhostMachineProvisioningLocation);
+        assertEquals(location.getDisplayName(), "myname");
+    }
+    
+    @Test
+    public void testResolvesDefaultName() throws Exception {
         Location location = resolve("localhost");
         assertTrue(location instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location.getDisplayName(), "localhost");
@@ -165,10 +172,6 @@ public class LocalhostLocationResolverTest {
         Location location2 = resolve("localhost:()");
         assertTrue(location2 instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location2.getDisplayName(), "localhost");
-
-        Location location3 = resolve("localhost:(name=myname)");
-        assertTrue(location3 instanceof LocalhostMachineProvisioningLocation);
-        assertEquals(location3.getDisplayName(), "myname");
     }
     
     private BasicLocationRegistry getLocationResolver() {
