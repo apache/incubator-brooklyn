@@ -494,12 +494,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
             children.add(child);
         }
         
-//    	if (managementContext != null && !isManaged()) {
-//    	    // Some entities within their init/constructor will add child locations.
-////    	     However, if we are not yet managed then when the chilld does 
-//    	    // FIXME GOT HERE
-//            managementContext.getLocationManager().manage(child);
-//    	}
         if (isManaged()) {
             Entities.manage(child, managementContext);
         } else if (managementContext != null) {
