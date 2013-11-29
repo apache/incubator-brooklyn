@@ -25,7 +25,7 @@ public interface ServerApi {
     @POST
     @Path("/shutdown")
     @ApiOperation(value = "Terminate this Brooklyn server instance")
-    @Consumes( {MediaType.APPLICATION_FORM_URLENCODED})
+    @Consumes({MediaType.APPLICATION_FORM_URLENCODED})
     public void shutdown(
         @FormParam("stopAppsFirst") @DefaultValue("false") boolean stopAppsFirst,
         @FormParam("delayMillis") @DefaultValue("250") long delayMillis);

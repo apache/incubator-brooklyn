@@ -12,6 +12,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.management.Task;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.api.ServerApi;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
@@ -43,7 +44,9 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                     }
                 }
 
+                ((ManagementContextInternal)mgmt()).terminate(); 
                 timer.waitForExpiryUnchecked();
+                
                 System.exit(0);
             }
         }.start();
