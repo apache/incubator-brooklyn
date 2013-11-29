@@ -3,6 +3,7 @@ package brooklyn.rest.api;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -28,5 +29,10 @@ public interface ServerApi {
     public void shutdown(
         @FormParam("stopAppsFirst") @DefaultValue("false") boolean stopAppsFirst,
         @FormParam("delayMillis") @DefaultValue("250") long delayMillis);
+
+    @GET
+    @Path("/version")
+    @ApiOperation(value = "Return version identifier information for this Brooklyn instance", responseClass = "String", multiValueResponse = false)
+    public String getVersion();
 
 }

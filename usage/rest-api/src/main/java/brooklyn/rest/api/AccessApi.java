@@ -18,7 +18,7 @@ import com.wordnik.swagger.core.ApiParam;
 
 @Beta
 @Path("/v1/access")
-@Apidoc("Access")
+@Apidoc("Access Control")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface AccessApi {

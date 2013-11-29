@@ -23,11 +23,14 @@ define([
         },
         
         loadSwagger: function() {
+        	var that = this;
+        	
             require([
                "/assets/js/libs/swagger.js",
                 "/assets/js/libs/swagger-ui.js"
             ], function() {
-                        
+            	$('.throbber', that.$el).hide().delay(100).fadeTo(250, 0.9);
+            	$('div#message-bar.swagger-ui-wrap', that.$el).hide().delay(100).fadeTo(250, 1);
                 var swaggerUi = new SwaggerUi({
                     basePath:"",
                     discoveryUrl:"/v1/apidoc",
@@ -35,11 +38,17 @@ define([
                     supportHeaderParams: false,
                     supportedSubmitMethods: ['get', 'post', 'put'],
                     onComplete: function(swaggerApi, swaggerUi){
+                    	that.$el.fadeTo(200, 1);
+                    	$('.throbber', that.$el).hide();
+                    	$('div#message-bar.swagger-ui-wrap', that.$el).hide();
                         console.info("Loaded SwaggerUI");
                         console.debug(swaggerApi);
                         console.debug(swaggerUi);
                     },
                     onFailure: function(data) {
+                    	that.$el.fadeTo(200, 0.2);
+                    	$('.throbber', that.$el).hide();
+                    	$('div#message-bar.swagger-ui-wrap', that.$el).hide();
                         console.error("Unable to Load SwaggerUI");
                         console.debug(data);
                     },

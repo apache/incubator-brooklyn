@@ -6,6 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
@@ -46,6 +47,11 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                 System.exit(0);
             }
         }.start();
+    }
+
+    @Override
+    public String getVersion() {
+        return BrooklynVersion.get();
     }
 
 }

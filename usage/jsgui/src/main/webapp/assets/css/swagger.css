@@ -1,3 +1,5 @@
+/* BROOKLYN removed
+
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -22,6 +24,8 @@ body {
     line-height: 1;
 }
 
+ */
+ 
 ol, ul {
     list-style: none;
 }
@@ -1514,10 +1518,32 @@ body ul#resources li.resource ul.endpoints li.endpoint ul.operations li.operatio
 .model-signature span:nth-child(odd)    { color:#333; }
 .model-signature span:nth-child(even)    { color:#C5862B; }
 
+/* BROOKLYN removed 
 #message-bar {
     margin-top: 45px;
 }
-
+ */
+ 
 a {
     cursor: hand; cursor: pointer;
+}
+
+
+/** BROOKLYN added
+*/
+div#message-bar {
+	text-align: left;
+	margin-top: 12px;
+	margin-bottom: 12px;
+}
+div.apidoc-title {
+	font-weight: bold;
+	padding-left: 24px;
+	font-size: 1.8em;
+	color: #668866;
+	padding-top: 24px;
+	padding-bottom: 24px;
+}
+form.sandbox > table {
+	margin-bottom: 30px;
 }

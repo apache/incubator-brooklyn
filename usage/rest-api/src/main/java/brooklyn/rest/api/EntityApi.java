@@ -16,7 +16,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/v1/applications/{application}/entities")
-@Apidoc("Application entities")
+@Apidoc("Entities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface EntityApi {

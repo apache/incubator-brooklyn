@@ -42,7 +42,7 @@ public class ApiDocResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testApiDocDetails() throws Exception {
         Documentation response = client().resource("/v1/apidoc/brooklyn.rest.resources.ApidocResource").get(Documentation.class);
-        assertEquals(countOperations(response), 1);
+        assertEquals(countOperations(response), 2);
     }
 
     @Test
@@ -63,6 +63,7 @@ public class ApiDocResourceTest extends BrooklynRestResourceTest {
         assertEquals(countOperations(response), 8);
     }
 
+    @SuppressWarnings("rawtypes")
     @Test
     public void testAllAreLoadable() throws Exception {
         // sometimes -- e.g. if an annotation refers to a class name with the wrong case -- the call returns a 500 and breaks apidoc; ensure we don't trigger that.  
