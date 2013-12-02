@@ -1,4 +1,4 @@
-package io.brooklyn.camp.brooklyn;
+package brooklyn.launcher;
 
 import com.google.common.annotations.Beta;
 

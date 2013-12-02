@@ -67,6 +67,14 @@
             <version>4.2.1</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-camp</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        
     </dependencies>
 
     <build>
