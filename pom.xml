@@ -692,6 +692,7 @@
                 <module>usage/logback-includes</module>
                 <module>usage/logback-xml</module>
                 <module>utils/rest-swagger</module>
+                <module>usage/camp</module>
                 <module>usage/rest-api</module>
                 <module>usage/rest-server</module>
                 <module>usage/rest-client</module>
@@ -724,7 +725,6 @@
                 <module>sandbox/mgmt</module>
                 <module>sandbox/web-acceptance</module>
                 <module>sandbox/dropwizard</module>
-                <module>sandbox/camp</module>
                 <module>sandbox/nosql</module>
                 <module>sandbox/monitoring</module>
             </modules>
