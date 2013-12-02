@@ -203,12 +203,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     
     @Override
     public JcloudsLocation newSubLocation(Map<?,?> newFlags) {
+        return newSubLocation(getClass(), newFlags);
+    }
+
+    @Override
+    public JcloudsLocation newSubLocation(Class<? extends AbstractCloudMachineProvisioningLocation> type, Map<?,?> newFlags) {
         // TODO should be able to use ConfigBag.newInstanceExtending; would require moving stuff around to api etc
-        return getManagementContext().getLocationManager().createLocation(LocationSpec.create(getClass())
+        return (JcloudsLocation) getManagementContext().getLocationManager().createLocation(LocationSpec.create(type)
                 .parent(this)
                 .configure(getRawLocalConfigBag().getAllConfig())
-                .configure(newFlags)
-                .configure(MACHINE_CREATION_SEMAPHORE, getMachineCreationSemaphore()));
+                .configure(MACHINE_CREATION_SEMAPHORE, getMachineCreationSemaphore())
+                .configure(newFlags));
     }
 
     @Override
