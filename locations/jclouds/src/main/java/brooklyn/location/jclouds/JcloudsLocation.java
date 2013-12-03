@@ -997,7 +997,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             sshProps.put("port", port);
             if (initialPassword.isPresent()) sshProps.put("password", initialPassword.get());
             if (initialPrivateKey.isPresent()) sshProps.put("privateKeyData", initialPrivateKey.get());
-            if (initialPrivateKey.isPresent()) sshProps.put("privateKeyData", initialPrivateKey.get());
             
             Map<String,Object> execProps = Maps.newLinkedHashMap();
             execProps.put(ShellTool.PROP_RUN_AS_ROOT.getName(), true);
@@ -1051,7 +1050,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      * Returns the commands required to create the user, to be used for connecting (e.g. over ssh)
      * to the machine; also returns the expected login credentials.
      * <p>
-     * The return login credentials may be null if we haven't done any user-setup and no specific 
+     * The returned login credentials may be null if we haven't done any user-setup and no specific 
      * user was supplied (i.e. if {@code dontCreateUser} was true and {@code user} was null or blank).
      * In which case, the caller should use the jclouds node's login credentials.
      * <p>
@@ -1062,12 +1061,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      *       non-empty (including with the default value), then that user will subsequently be used,
      *       otherwise the (inferred) {@code loginUser} will be used.
      *   <li>{@code loginUser} refers to the existing user that jclouds should use when setting up the VM.
-     *       Normally this will inferred from the image (i,e. doesn't need to be explicitly set), but sometimes 
+     *       Normally this will be inferred from the image (i.e. doesn't need to be explicitly set), but sometimes 
      *       the image gets it wrong so this can be a handy override.
      *   <li>{@code user} is the username for brooklyn to subsequently use when ssh'ing to the machine.
      *       If not explicitly set, its value will default to the username of the user running brooklyn.
      *       <ul>
-     *         <li>If the {@link user} value is null or empty, then the (inferred) {@code loginUser} will 
+     *         <li>If the {@code user} value is null or empty, then the (inferred) {@code loginUser} will 
      *             subsequently be used, setting up the password/authorizedKeys for that loginUser.
      *         <li>If the {@code user} is "root", then setup the password/authorizedKeys for root.
      *         <li>If the {@code user} equals the (inferred) {@code loginUser}, then don't try to create this
@@ -1090,10 +1089,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      *       </ul>
      * </ul>
      *   
-     *   <li>
-     * @param image
-     * @param config
-     * @return
+     * @param image  The image being used to create the VM
+     * @param config Configuration for creating the VM
+     * @return       The commands required to create the user, along with the expected login credentials.
      */
     protected UserCreation createUserStatements(Image image, ConfigBag config) {
         //NB: we ignore private key here because, by default we probably should not be installing it remotely;
