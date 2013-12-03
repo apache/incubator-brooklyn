@@ -400,7 +400,6 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
         return ImmutableList.copyOf(additionalOptions);
     }
 
-    /** some fields don't implement hashcode, so we ignore them */
     @Override
     public int hashCode() {
         return Objects.hashCode(
@@ -412,6 +411,7 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
                 imageDescriptionRegex,
                 imageNameRegex,
                 imageVersionRegex,
+                // might not be implement hashCode, so ignore
 //                imageCondition,
 //                imageChooserFunction,
                 is64bit,
@@ -425,6 +425,7 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
                 minDisk,
                 options,
                 additionalOptions,
+                // might not implement hashCode, so ignore
 //                template,
                 0);
     }

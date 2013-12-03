@@ -16,14 +16,14 @@ import brooklyn.util.collections.MutableList;
 import com.google.common.base.Function;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
+import com.google.common.math.DoubleMath;
 
 public class ImageChoosers {
 
     private static final Logger log = LoggerFactory.getLogger(ImageChoosers.class);
     
     protected static int compare(double left, double right) {
-        double delta = left - right;
-        return delta < 0.000000001 ? -1 : delta > 0.00000001 ? 1 : 0;
+        return DoubleMath.fuzzyCompare(left, right, 0.00000001);
     }
     
     protected static boolean imageNameContains(Image img, String pattern) {
