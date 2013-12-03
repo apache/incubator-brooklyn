@@ -35,6 +35,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public class JcloudsSshMachineLocation extends SshMachineLocation implements HasSubnetHostname {
@@ -99,7 +100,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
      */
     @Override
     public String getSubnetHostname() {
-        String publicHostname = jcloudsParent.getPublicHostname(node, getRawLocalConfigBag());
+        String publicHostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getRawLocalConfigBag());
         
         if ("aws-ec2".equals(jcloudsParent.getProvider())) {
             // prefer hostname over IP for aws (resolves to private ip in subnet, and to public from outside)
@@ -118,7 +119,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
             return privateAddress.get();
         }
         
-        String hostname = jcloudsParent.getPublicHostname(node, getRawLocalConfigBag());
+        String hostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getRawLocalConfigBag());
         if (hostname != null && !Networking.isValidIp4(hostname)) {
             try {
                 return InetAddress.getByName(hostname).getHostAddress();
