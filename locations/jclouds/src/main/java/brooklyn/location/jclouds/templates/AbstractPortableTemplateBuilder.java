@@ -23,23 +23,24 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
     private Hardware hardware;
     private Image image;
     private Template template;
-    private String hypervisorRegex;
-    private OsFamily os;
     private String locationId;
     private String imageId;
     private String hardwareId;
+    private OsFamily os;
     private String osNameRegex;
     private String osDescriptionRegex;
     private String osVersionRegex;
     private String osArchitectureRegex;
+    private String hypervisorRegex;
     private Boolean is64bit;
     private String imageNameRegex;
     private String imageDescriptionRegex;
     private String imageVersionRegex;
-    private Predicate<Image> imageCondition;
     private Double minCores;
     private Integer minRam;
     private Double minDisk;
+    private Predicate<Image> imageCondition;
+    private Function<Iterable<? extends Image>, Image> imageChooserFunction;
     /** this is the last options instance set by a call to options(TemplateOptions) */
     private TemplateOptions options;
     /** these are extra options that we want _added_, in order, on top of the last options set */
@@ -107,30 +108,6 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
         commands.add(new Function<TemplateBuilder,TemplateBuilder>() { 
             public TemplateBuilder apply(TemplateBuilder b) { return b.biggest(); }});
         return (T)this;
-    }
-
-    @Override
-    public T hypervisorMatches(final String hypervisorRegex) {
-        this.hypervisorRegex = hypervisorRegex;
-        commands.add(new Function<TemplateBuilder,TemplateBuilder>() { 
-            public TemplateBuilder apply(TemplateBuilder b) { return b.hypervisorMatches(hypervisorRegex); }});
-        return (T)this;
-    }
-    
-    public String getHypervisorMatchesRegex() {
-        return hypervisorRegex;
-    }
-
-    @Override
-    public T osFamily(final OsFamily os) {
-        this.os = os;
-        commands.add(new Function<TemplateBuilder,TemplateBuilder>() { 
-            public TemplateBuilder apply(TemplateBuilder b) { return b.osFamily(os); }});
-        return (T)this;
-    }
-    
-    public OsFamily getOsFamily() {
-        return os;
     }
 
     @Override
@@ -230,6 +207,30 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
     }
 
     @Override
+    public T osFamily(final OsFamily os) {
+        this.os = os;
+        commands.add(new Function<TemplateBuilder,TemplateBuilder>() { 
+            public TemplateBuilder apply(TemplateBuilder b) { return b.osFamily(os); }});
+        return (T)this;
+    }
+    
+    public OsFamily getOsFamily() {
+        return os;
+    }
+
+    @Override
+    public T hypervisorMatches(final String hypervisorRegex) {
+        this.hypervisorRegex = hypervisorRegex;
+        commands.add(new Function<TemplateBuilder,TemplateBuilder>() { 
+            public TemplateBuilder apply(TemplateBuilder b) { return b.hypervisorMatches(hypervisorRegex); }});
+        return (T)this;
+    }
+    
+    public String getHypervisorMatchesRegex() {
+        return hypervisorRegex;
+    }
+
+    @Override
     public T imageNameMatches(final String imageNameRegex) {
         this.imageNameRegex = imageNameRegex;
         commands.add(new Function<TemplateBuilder,TemplateBuilder>() { 
@@ -314,7 +315,18 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
     public Double getMinDisk() {
         return minDisk;
     }
+
+    public T imageChooser(final Function<Iterable<? extends Image>, Image> imageChooserFunction) {
+        this.imageChooserFunction = imageChooserFunction;
+        commands.add(new Function<TemplateBuilder,TemplateBuilder>() { 
+            public TemplateBuilder apply(TemplateBuilder b) { return b.imageChooser(imageChooserFunction); }});
+        return (T)this;
+    }
     
+    public Function<Iterable<? extends Image>, Image> imageChooser() {
+        return imageChooserFunction;
+    }
+
     /** clears everything set in this template, including any default from the compute service */
     // not sure this is that useful, as the default is only applied if there are no changes
     public T blank() {
@@ -388,28 +400,32 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
         return ImmutableList.copyOf(additionalOptions);
     }
 
-    /** some fields don't implement hashcode, so we ignore them */
     @Override
     public int hashCode() {
         return Objects.hashCode(
-                additionalOptions,
-                hardwareId,
                 hypervisorRegex,
-//                imageCondition,
-                imageDescriptionRegex,
+                os,
+                locationId,
+                hardwareId,
                 imageId,
+                imageDescriptionRegex,
                 imageNameRegex,
                 imageVersionRegex,
+                // might not be implement hashCode, so ignore
+//                imageCondition,
+//                imageChooserFunction,
                 is64bit,
                 locationId,
-                minCores,
-                minRam,
-                options,
-                os,
                 osArchitectureRegex,
                 osDescriptionRegex,
                 osNameRegex,
                 osVersionRegex,
+                minCores,
+                minRam,
+                minDisk,
+                options,
+                additionalOptions,
+                // might not implement hashCode, so ignore
 //                template,
                 0);
     }
@@ -422,26 +438,27 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
         AbstractPortableTemplateBuilder other = (AbstractPortableTemplateBuilder) obj;
         if (!Objects.equal(additionalOptions, other.additionalOptions)) return false;
         if (!Objects.equal(commands, other.commands)) return false;
+        if (!Objects.equal(locationId, other.locationId)) return false;
         if (!Objects.equal(hardware, other.hardware)) return false;
         if (!Objects.equal(hardwareId, other.hardwareId)) return false;
-        if (!Objects.equal(hypervisorRegex, other.hypervisorRegex)) return false;
         if (!Objects.equal(image, other.image)) return false;
-        if (!Objects.equal(imageCondition, other.imageCondition)) return false;
-        if (!Objects.equal(imageDescriptionRegex, other.imageDescriptionRegex)) return false;
         if (!Objects.equal(imageId, other.imageId)) return false;
+        if (!Objects.equal(imageDescriptionRegex, other.imageDescriptionRegex)) return false;
         if (!Objects.equal(imageNameRegex, other.imageNameRegex)) return false;
         if (!Objects.equal(imageVersionRegex, other.imageVersionRegex)) return false;
-        if (!Objects.equal(is64bit, other.is64bit)) return false;
-        if (!Objects.equal(locationId, other.locationId)) return false;
-        if (!Objects.equal(minCores, other.minCores)) return false;
-        if (!Objects.equal(minRam, other.minRam)) return false;
-        if (!Objects.equal(options, other.options)) return false;
+        if (!Objects.equal(imageCondition, other.imageCondition)) return false;
+        if (!Objects.equal(imageChooserFunction, other.imageChooserFunction)) return false;
         if (!Objects.equal(os, other.os)) return false;
         if (!Objects.equal(osArchitectureRegex, other.osArchitectureRegex)) return false;
         if (!Objects.equal(osDescriptionRegex, other.osDescriptionRegex)) return false;
         if (!Objects.equal(osNameRegex, other.osNameRegex)) return false;
         if (!Objects.equal(osVersionRegex, other.osVersionRegex)) return false;
-        if (!Objects.equal(template, other.template)) return false;
+        if (!Objects.equal(is64bit, other.is64bit)) return false;
+        if (!Objects.equal(hypervisorRegex, other.hypervisorRegex)) return false;
+        if (!Objects.equal(minCores, other.minCores)) return false;
+        if (!Objects.equal(minRam, other.minRam)) return false;
+        if (!Objects.equal(minDisk, other.minDisk)) return false;
+        if (!Objects.equal(options, other.options)) return false;
         if (!Objects.equal(template, other.template)) return false;
         return true;
     }
@@ -479,8 +496,11 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
                         + imageVersionRegex + ", " : "")
                 + (imageCondition != null ? "imageCondition=" + imageCondition
                         + ", " : "")
+                + (imageChooserFunction != null ? "imageChooserFunction=" + imageChooserFunction
+                        + ", " : "")
                 + (minCores != null ? "minCores=" + minCores + ", " : "")
-                + (minRam != null ? "minRam=" + minRam + ", " : "");
+                + (minRam != null ? "minRam=" + minRam + ", " : "")
+                + (minDisk != null ? "minDisk=" + minDisk + ", " : "");
         if (s.endsWith(", ")) s = s.substring(0, s.length()-2);
         return s;
     }    
