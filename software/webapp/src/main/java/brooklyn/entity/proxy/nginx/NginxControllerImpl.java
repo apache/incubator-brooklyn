@@ -1,12 +1,24 @@
+/*
+ * Copyright 2012-2013 by Cloudsoft Corp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.proxy.nginx;
-
-import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -26,34 +38,16 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 /**
- * An entity that represents an Nginx proxy (e.g. for routing requests to servers in a cluster).
- * <p>
- * The default driver *builds* nginx from source (because binaries are not reliably available, esp not with sticky sessions).
- * This requires gcc and other build tools installed. The code attempts to install them but inevitably 
- * this entity may be more finicky about the OS/image where it runs than others.
- * <p>
- * Paritcularly on OS X we require Xcode and command-line gcc installed and on the path.
- * <p>
- * See {@link http://library.linode.com/web-servers/nginx/configuration/basic} for useful info/examples
- * of configuring nginx.
- * <p>
- * https configuration is supported, with the certificates providable on a per-UrlMapping basis or a global basis.
- * (not supported to define in both places.) 
- * per-Url is useful if different certificates are used for different server names,
- * or different ports if that is supported.
- * see more info on Ssl in {@link ProxySslConfig}.
+ * Implementation of the {@link NginxController} entity.
  */
 public class NginxControllerImpl extends AbstractControllerImpl implements NginxController {
 
@@ -63,18 +57,6 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     
     public NginxControllerImpl() {
         super();
-    }
-
-    public NginxControllerImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-
-    public NginxControllerImpl(Map properties){
-        this(properties, null);
-    }
-
-    public NginxControllerImpl(Map properties, Entity parent) {
-        super(properties, parent);
     }
 
     @Override
@@ -155,7 +137,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     }
 
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return NginxDriver.class;
     }
 
@@ -174,7 +156,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         String cfg = getConfigFile();
         if (cfg==null) return;
         
-        if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, targetting {} and {}", new Object[] {this, serverPoolAddresses, findUrlMappings()});
+        if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, targetting {} and {}", new Object[] {this, serverPoolAddresses, getUrlMappings()});
         if (LOG.isTraceEnabled()) LOG.trace("Reconfiguring {}, config file:\n{}", this, cfg);
         
         NginxSshDriver driver = (NginxSshDriver)getDriver();
@@ -187,7 +169,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         
         installSslKeys("global", getConfig(SSL_CONFIG));
         
-        for (UrlMapping mapping: findUrlMappings()) {
+        for (UrlMapping mapping : getUrlMappings()) {
             //cache ensures only the first is installed, which is what is assumed below
             installSslKeys(mapping.getDomain(), mapping.getConfig(UrlMapping.SSL_CONFIG));
         }
@@ -223,235 +205,24 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     }
 
     public String getConfigFile() {
-        // TODO should refactor this method to a new class with methods e.g. NginxConfigFileGenerator...
-        
         NginxSshDriver driver = (NginxSshDriver)getDriver();
         if (driver==null) {
             if (LOG.isDebugEnabled()) LOG.debug("No driver for {}, so not generating config file (is entity stopping? state={})", 
                 this, getAttribute(NginxController.SERVICE_STATE));
             return null;
         }
-        
-        StringBuilder config = new StringBuilder();
-        config.append("\n");
-        config.append(format("pid %s/logs/nginx.pid;\n",driver.getRunDir()));
-        config.append("events {\n");
-        config.append("  worker_connections 8196;\n");
-        config.append("}\n");
-        config.append("http {\n");
-        
-        ProxySslConfig globalSslConfig = getConfig(SSL_CONFIG);
-        boolean ssl = globalSslConfig != null;
 
-        if (ssl) {
-            verifyConfig(globalSslConfig);
-            appendSslConfig("global", config, "    ", globalSslConfig, true, true);
+        String templateUrl = getConfig(NginxController.SERVER_CONF_TEMPLATE_URL);
+        if (ResourceUtils.create(this).doesUrlExist(templateUrl)) {
+            return NginxConfigTemplate.generator(driver).configFile();
+        } else {
+            return NginxConfigFileGenerator.generator(driver).configFile();
         }
-        
-        // If no servers, then defaults to returning 404
-        // TODO Give nicer page back 
-        if (getDomain()!=null || serverPoolAddresses==null || serverPoolAddresses.isEmpty()) {
-            config.append("  server {\n");
-            config.append(getCodeForServerConfig());
-            config.append("    listen "+getPort()+";\n");
-            config.append(getCodeFor404());
-            config.append("  }\n");
-        }
-        
-        // For basic round-robin across the server-pool
-        if (serverPoolAddresses != null && serverPoolAddresses.size() > 0) {
-            config.append(format("  upstream "+getId()+" {\n"));
-            if (isSticky()){
-                config.append("    sticky;\n");
-            }
-            for (String address: serverPoolAddresses){
-                config.append("    server "+address+";\n");
-            }
-            config.append("  }\n");
-            config.append("  server {\n");
-            config.append(getCodeForServerConfig());
-            config.append("    listen "+getPort()+";\n");
-            if (getDomain()!=null)
-                config.append("    server_name "+getDomain()+";\n");
-            config.append("    location / {\n");
-            config.append("      proxy_pass "+(globalSslConfig != null && globalSslConfig.getTargetIsSsl() ? "https" : "http")+"://"+getId()+";\n");
-            config.append("    }\n");
-            config.append("  }\n");
-        }
-        
+    }
+
+    public Iterable<UrlMapping> getUrlMappings() {
         // For mapping by URL
-        Iterable<UrlMapping> mappings = findUrlMappings();
-        Multimap<String, UrlMapping> mappingsByDomain = LinkedHashMultimap.create();
-        for (UrlMapping mapping : mappings) {
-            Collection<String> addrs = mapping.getAttribute(UrlMapping.TARGET_ADDRESSES);
-            if (addrs != null && addrs.size() > 0) {
-                mappingsByDomain.put(mapping.getDomain(), mapping);
-            }
-        }
-        
-        for (UrlMapping um : mappings) {
-            Collection<String> addrs = um.getAttribute(UrlMapping.TARGET_ADDRESSES);
-            if (addrs != null && addrs.size() > 0) {
-                String location = um.getPath() != null ? um.getPath() : "/";
-                config.append(format("  upstream "+um.getUniqueLabel()+" {\n"));
-                if (isSticky()){
-                    config.append("    sticky;\n");
-                }
-                for (String address: addrs) {
-                    config.append("    server "+address+";\n");
-                }
-                config.append("  }\n");
-            }
-        }
-        
-        for (String domain : mappingsByDomain.keySet()) {
-            config.append("  server {\n");
-            config.append(getCodeForServerConfig());
-            config.append("    listen "+getPort()+";\n");
-            config.append("    server_name "+domain+";\n");
-            boolean hasRoot = false;
-
-            // set up SSL
-            ProxySslConfig localSslConfig = null;
-            for (UrlMapping mappingInDomain : mappingsByDomain.get(domain)) {
-                ProxySslConfig sslConfig = mappingInDomain.getConfig(UrlMapping.SSL_CONFIG);
-                if (sslConfig!=null) {
-                    verifyConfig(sslConfig);
-                    if (localSslConfig!=null) {
-                        if (localSslConfig.equals(sslConfig)) {
-                            //ignore identical config specified on multiple mappings
-                        } else {
-                            LOG.warn("{} mapping {} provides SSL config for {} when a different config had already been provided by another mapping, ignoring this one",
-                                    new Object[] {this, mappingInDomain, domain});
-                        }
-                    } else if (globalSslConfig!=null) {
-                        if (globalSslConfig.equals(sslConfig)) {
-                            //ignore identical config specified on multiple mappings
-                        } else {
-                            LOG.warn("{} mapping {} provides SSL config for {} when a different config had been provided at root nginx scope, ignoring this one",
-                                    new Object[] {this, mappingInDomain, domain});
-                        }
-                    } else {
-                        //new config, is okay
-                        localSslConfig = sslConfig;
-                    }
-                }
-            }
-            boolean serverSsl;
-            if (localSslConfig!=null) {
-                serverSsl = appendSslConfig(""+domain, config, "    ", localSslConfig, true, true);
-            } else if (globalSslConfig!=null) {
-                // can't set ssl_certificate globally, so do it per server
-                serverSsl = true; 
-            }
-
-            for (UrlMapping mappingInDomain : mappingsByDomain.get(domain)) {
-                // TODO Currently only supports "~" for regex. Could add support for other options,
-                // such as "~*", "^~", literals, etc.
-                boolean isRoot = mappingInDomain.getPath()==null || mappingInDomain.getPath().length()==0 || mappingInDomain.getPath().equals("/");
-                if (isRoot && hasRoot) {
-                    LOG.warn(""+this+" mapping "+mappingInDomain+" provides a duplicate / proxy, ignoring");
-                } else {
-                    hasRoot |= isRoot;
-                    String location = isRoot ? "/" : "~ " + mappingInDomain.getPath();
-                    config.append("    location "+location+" {\n");
-                    Collection<UrlRewriteRule> rewrites = mappingInDomain.getConfig(UrlMapping.REWRITES);
-                    if (rewrites != null && rewrites.size() > 0) {
-                        for (UrlRewriteRule rule: rewrites) {
-                            config.append("      rewrite \"^"+rule.getFrom()+"$\" \""+rule.getTo()+"\"");
-                            if (rule.isBreak()) config.append(" break");
-                            config.append(" ;\n");
-                        }
-                    }
-                    config.append("      proxy_pass "+
-                        (localSslConfig != null && localSslConfig.getTargetIsSsl() ? "https" :
-                         (localSslConfig == null && globalSslConfig != null && globalSslConfig.getTargetIsSsl()) ? "https" :
-                         "http")+
-                        "://"+mappingInDomain.getUniqueLabel()+" ;\n");
-                    config.append("    }\n");
-                }
-            }
-            if (!hasRoot) {
-                //provide a root block giving 404 if there isn't one for this server
-                config.append("    location / { \n"+getCodeFor404()+"    }\n");
-            }
-            config.append("  }\n");
-        }
-        
-        config.append("}\n");
-
-        return config.toString();
-    }
-
-    protected String getCodeForServerConfig() {
-        // See http://wiki.nginx.org/HttpProxyModule
-        return ""+
-            // this prevents nginx from reporting version number on error pages
-            "    server_tokens off;\n"+
-            
-            // this prevents nginx from using the internal proxy_pass codename as Host header passed upstream.
-            // Not using $host, as that causes integration test to fail with a "connection refused" testing
-            // url-mappings, at URL "http://localhost:${port}/atC0" (with a trailing slash it does work).
-            "    proxy_set_header Host $http_host;\n"+
-            
-            // following added, as recommended for wordpress in:
-            // http://zeroturnaround.com/labs/wordpress-protips-go-with-a-clustered-approach/#!/
-            "    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"+
-            "    proxy_set_header X-Real-IP $remote_addr;\n";
-    }
-    
-    protected String getCodeFor404() {
-        return "    return 404;\n";
-    }
-    
-    void verifyConfig(ProxySslConfig proxySslConfig) {
-          if(Strings.isEmpty(proxySslConfig.getCertificateDestination()) && Strings.isEmpty(proxySslConfig.getCertificateSourceUrl())){
-            throw new IllegalStateException("ProxySslConfig can't have a null certificateDestination and null certificateSourceUrl. One or both need to be set");
-        }
-    }
-
-    public boolean appendSslConfig(String id, StringBuilder out, String prefix, ProxySslConfig ssl,
-                                   boolean sslBlock, boolean certificateBlock) {
-        if (ssl == null) return false;
-        if (sslBlock) {
-            out.append(prefix);
-            out.append("ssl on;\n");
-        }
-        if (ssl.getReuseSessions()) {
-            out.append(prefix);
-            out.append("proxy_ssl_session_reuse on;");
-        }
-        if (certificateBlock) {
-            String cert;
-            if (Strings.isEmpty(ssl.getCertificateDestination())) {
-                cert = "" + id + ".crt";
-            } else {
-                cert = ssl.getCertificateDestination();
-            }
-
-            out.append(prefix);
-            out.append("ssl_certificate " + cert + ";\n");
-
-            String key;
-            if (!Strings.isEmpty(ssl.getKeyDestination())) {
-                key = ssl.getKeyDestination();
-            } else if (!Strings.isEmpty(ssl.getKeySourceUrl())) {
-                key = "" + id + ".key";
-            } else {
-                key = null;
-            }
-
-            if (key != null) {
-                out.append(prefix);
-                out.append("ssl_certificate_key " + key + ";\n");
-            }
-        }
-        return true;
-    }
-
-    protected Iterable<UrlMapping> findUrlMappings() {
-        // For mapping by URL
-        Group urlMappingGroup = getConfig(URL_MAPPINGS);
+        Group urlMappingGroup = getConfig(NginxController.URL_MAPPINGS);
         if (urlMappingGroup != null) {
             return Iterables.filter(urlMappingGroup.getMembers(), UrlMapping.class);
         } else {

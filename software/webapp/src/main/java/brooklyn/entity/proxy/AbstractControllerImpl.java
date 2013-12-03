@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
@@ -24,6 +25,7 @@ import brooklyn.entity.rebind.RebindContext;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.management.Task;
 import brooklyn.mementos.EntityMemento;
@@ -61,20 +63,36 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     public AbstractControllerImpl() {
         this(MutableMap.of(), null, null);
     }
-    public AbstractControllerImpl(Map properties) {
+    public AbstractControllerImpl(Map<?, ?> properties) {
         this(properties, null, null);
     }
     public AbstractControllerImpl(Entity parent) {
         this(MutableMap.of(), parent, null);
     }
-    public AbstractControllerImpl(Map properties, Entity parent) {
+    public AbstractControllerImpl(Map<?, ?> properties, Entity parent) {
         this(properties, parent, null);
     }
     public AbstractControllerImpl(Entity parent, Cluster cluster) {
         this(MutableMap.of(), parent, cluster);
     }
-    public AbstractControllerImpl(Map properties, Entity parent, Cluster cluster) {
+    public AbstractControllerImpl(Map<?, ?> properties, Entity parent, Cluster cluster) {
         super(properties, parent);
+    }
+
+    @Override
+    public AbstractEntity configure(Map flags) {
+        AbstractEntity result = super.configure(flags);
+        
+        // Support old "cluster" flag (deprecated)
+        if (flags.containsKey("cluster")) {
+            Group cluster = (Group) flags.get("cluster");
+            LOG.warn("Deprecated use of AbstractController.cluster: entity {}; value {}", this, cluster);
+            if (getConfig(SERVER_POOL) == null) {
+                setConfig(SERVER_POOL, cluster);
+            }
+        }
+        
+        return result;
     }
 
     @Override
@@ -93,18 +111,21 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     /**
      * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
-     * Can pass in the 'serverPool'.
+     * Can pass in the 'cluster'.
      */
     @Override
     public void bind(Map flags) {
         if (flags.containsKey("serverPool")) {
             setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("serverPool"));
+        } else if (flags.containsKey("cluster")) {
+            // @deprecated since 0.5.0
+            LOG.warn("Deprecated use of AbstractController.cluster: entity {}; value {}", this, flags.get("cluster"));
+            setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("cluster"));
         }
     }
 
     @Override
     public void onManagementNoLongerMaster() {
-        super.onManagementNoLongerMaster();
         isActive = false;
         serverPoolMemberTrackerPolicy.reset();
     }
@@ -145,8 +166,14 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         return getAttribute(PORT_NUMBER_SENSOR);
     }
 
-    protected AttributeSensor<String> getHostnameSensor() {
+    @Override
+    public AttributeSensor<String> getHostnameSensor() {
         return getAttribute(HOSTNAME_SENSOR);
+    }
+
+    @Override
+    public Set<String> getServerPoolAddresses() {
+        return serverPoolAddresses;
     }
 
     @Override
@@ -160,6 +187,9 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     protected String inferUrl(boolean requireManagementAccessible) {
         String protocol = checkNotNull(getProtocol(), "no protocol configured");
         String domain = getDomain();
+        if (domain != null && domain.startsWith("*.")) {
+            domain = domain.replace("*.", ""); // Strip wildcard
+        }
         Integer port = checkNotNull(getPort(), "no port configured (the requested port may be in use)");
         if (requireManagementAccessible) {
             HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, port);
@@ -187,11 +217,11 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void preStart() {
         super.preStart();
-        
+
+        ConfigToAttributes.apply(this, DOMAIN_NAME);
         setAttribute(PROTOCOL, inferProtocol());
-        setAttribute(DOMAIN_NAME);
         setAttribute(ROOT_URL, inferUrl());
-        
+ 
         checkNotNull(getPortNumberSensor(), "no sensor configured to infer port number");
     }
     
@@ -247,7 +277,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     public void update() {
         Task<?> task = updateAsync();
-        if (task != null) task.getUnchecked();
+        task.getUnchecked();
     }
     
     public synchronized Task<?> updateAsync() {
@@ -326,14 +356,9 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
                 serverPoolAddresses.remove(oldAddress);
             }
             
-        } else if (newAddress.equals(oldAddress)) {
-            if (LOG.isTraceEnabled())
-                LOG.trace("Ignoring unchanged address "+oldAddress);
-            return;
-            
         } else {
             if (oldAddress != null) {
-                LOG.info("Replacing in {}, member {} with old address {}, new address {}", new Object[] {this, member, oldAddress, newAddress});
+                LOG.info("Replacing in  {}, member {} with old address {}, new address {}", new Object[] {this, member, oldAddress, newAddress});
                 serverPoolAddresses.remove(oldAddress);
             } else {
                 LOG.info("Adding to {}, new member {} with address {}", new Object[] {this, member, newAddress});
