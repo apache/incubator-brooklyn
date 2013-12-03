@@ -1,7 +1,6 @@
 package io.brooklyn.camp.brooklyn;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.brooklyn.camp.brooklyn.spi.lookup.BrooklynUrlLookup;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponent;
@@ -21,12 +20,10 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.webapp.JavaWebAppService;
-import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.test.Asserts;
@@ -46,11 +43,9 @@ public class JavaWebAppsIntegrationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-              .start();
-        ((BrooklynProperties)launcher.getServerDetails().getManagementContext().getConfig()).
-          put(BrooklynUrlLookup.BROOKLYN_ROOT_URL, launcher.getServerDetails().getWebServerUrl());
-        brooklynMgmt = launcher.getServerDetails().getManagementContext();
+        BrooklynCampPlatformLauncherNoServer launcher = new BrooklynCampPlatformLauncherNoServer();
+        launcher.launch();
+        brooklynMgmt = launcher.getBrooklynMgmt();
       
         platform = new BrooklynCampPlatform(
               PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(),

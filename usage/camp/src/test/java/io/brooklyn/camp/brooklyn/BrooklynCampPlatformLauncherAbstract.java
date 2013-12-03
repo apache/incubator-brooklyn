@@ -1,10 +1,8 @@
 package io.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.brooklyn.spi.lookup.BrooklynUrlLookup;
 import io.brooklyn.camp.spi.PlatformRootSummary;
-import brooklyn.config.BrooklynProperties;
-import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.annotations.Beta;
 
@@ -12,32 +10,24 @@ import com.google.common.annotations.Beta;
 @Beta
 public abstract class BrooklynCampPlatformLauncherAbstract {
 
-    protected BrooklynLauncher launcher;
     protected BrooklynCampPlatform platform;
+    protected LocalManagementContext mgmt;
     
     public void launch() {
-        assert launcher == null;
         assert platform == null;
-        
-        launcher = BrooklynLauncher.newInstance().start();
-        ((BrooklynProperties)launcher.getServerDetails().getManagementContext().getConfig()).
-            put(BrooklynUrlLookup.BROOKLYN_ROOT_URL, launcher.getServerDetails().getWebServerUrl());
-        
+
+        mgmt = newMgmtContext();        
         platform = new BrooklynCampPlatform(
                 PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(),
-                launcher.getServerDetails().getManagementContext());
-        
-        launchServers();
+                mgmt);
     }
 
-    public abstract void launchServers();
-    
-    public BrooklynLauncher getBrooklynLauncher() {
-        return launcher;
+    protected LocalManagementContext newMgmtContext() {
+        return new LocalManagementContext();
     }
 
     public ManagementContext getBrooklynMgmt() {
-        return launcher.getServerDetails().getManagementContext();
+        return mgmt;
     }
     
     public BrooklynCampPlatform getCampPlatform() {

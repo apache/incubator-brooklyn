@@ -23,7 +23,7 @@
         
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-launcher</artifactId>
+            <artifactId>brooklyn-core</artifactId>
             <version>${brooklyn.version}</version>
         </dependency>
         
@@ -47,20 +47,22 @@
         </dependency>
 
         
-        <!-- demo... -->
+        <!-- demo and tests -->
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-software-webapp</artifactId>
             <version>${brooklyn.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-all</artifactId>
+            <artifactId>brooklyn-software-database</artifactId>
             <version>${brooklyn.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn.example</groupId>
-            <artifactId>brooklyn-example-simple-web-cluster</artifactId>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-nosql</artifactId>
             <version>${brooklyn.version}</version>
             <scope>test</scope>
         </dependency>

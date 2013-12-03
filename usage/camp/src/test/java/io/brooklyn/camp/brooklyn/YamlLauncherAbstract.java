@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.Entities;
-import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
@@ -29,14 +28,12 @@ public abstract class YamlLauncherAbstract {
        
     protected final BrooklynCampPlatformLauncherAbstract platformLauncher;
 
-    protected final BrooklynLauncher launcher;
     protected final BrooklynCampPlatform platform;
     protected final ManagementContext brooklynMgmt;
 
     public YamlLauncherAbstract() {
         this.platformLauncher = newPlatformLauncher();
         platformLauncher.launch();
-        this.launcher = platformLauncher.getBrooklynLauncher();
         this.platform = platformLauncher.getCampPlatform();
         this.brooklynMgmt = platformLauncher.getBrooklynMgmt();
     }

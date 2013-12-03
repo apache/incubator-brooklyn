@@ -7,11 +7,6 @@ import com.google.common.annotations.Beta;
 @Beta
 public class BrooklynCampPlatformLauncherNoServer extends BrooklynCampPlatformLauncherAbstract {
 
-    @Override
-    public void launchServers() {
-        // no-op
-    }
-    
     public static void main(String[] args) {
         new BrooklynCampPlatformLauncherNoServer().launch();
     }
