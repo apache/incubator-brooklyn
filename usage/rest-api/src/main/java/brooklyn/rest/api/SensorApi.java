@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/applications/{application}/entities/{entity}/sensors")
-@Apidoc("Entity sensors")
+@Apidoc("Entity Sensors")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface SensorApi {
