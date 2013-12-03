@@ -320,7 +320,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
         if (truth(flags.get(USE_PID_FILE))) {
             String pidFile = (flags.get(USE_PID_FILE) instanceof CharSequence ? flags.get(USE_PID_FILE) : getRunDir()+"/"+PID_FILENAME).toString();
-            String processOwner = (flags.containsKey(PROCESS_OWNER) ? flags.get(PROCESS_OWNER) : getMachine().getUser()).toString();
+            String processOwner = (String) flags.get(PROCESS_OWNER);
             if (LAUNCHING.equals(phase)) {
                 s.footer.prepend("echo $! > "+pidFile);
             } else if (CHECK_RUNNING.equals(phase)) {
@@ -338,15 +338,15 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                 s.body.append(
                         "export PID=`cat "+pidFile+"`",
                         "[[ -n \"$PID\" ]] || exit 0",
-                        BashCommands.sudoAsUser(processOwner, "kill $PID"),
-                        BashCommands.sudoAsUser(processOwner, "kill -9 $PID"),
+                        processOwner != null ? BashCommands.sudoAsUser(processOwner, "kill $PID") : "kill $PID",
+                        processOwner != null ? BashCommands.sudoAsUser(processOwner, "kill -9 $PID") : "kill -9 $PID",
                         "rm -f "+pidFile
                         );
             } else if (KILLING.equals(phase)) {
                 s.body.append(
                         "export PID=`cat "+pidFile+"`",
                         "[[ -n \"$PID\" ]] || exit 0",
-                        BashCommands.sudoAsUser(processOwner, "kill -9 $PID"),
+                        processOwner != null ? BashCommands.sudoAsUser(processOwner, "kill -9 $PID") : "kill -9 $PID",
                         "rm -f "+pidFile
                         );
             } else if (RESTARTING.equals(phase)) {
