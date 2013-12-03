@@ -12,11 +12,11 @@ public class SshFetchTaskFactory implements TaskFactory<SshFetchTaskWrapper> {
     
     private static final Logger log = LoggerFactory.getLogger(SshFetchTaskFactory.class);
     
-    boolean dirty = false;
+    private boolean dirty = false;
     
-    SshMachineLocation machine;
-    String remoteFile;
-    final ConfigBag config = ConfigBag.newInstance();
+    protected SshMachineLocation machine;
+    protected String remoteFile;
+    protected final ConfigBag config = ConfigBag.newInstance();
 
     /** constructor where machine will be added later */
     public SshFetchTaskFactory(String remoteFile) {

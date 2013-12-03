@@ -87,10 +87,11 @@ public class SshEffectorTasks {
         
         @Override
         public synchronized ProcessTaskWrapper<RET> newTask() {
-            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+            Entity entity = null;
             if (machine==null) {
                 if (log.isDebugEnabled())
                     log.debug("Using an SshEffectorTask not in an effector without any machine; will attempt to infer the machine: "+this);
+                entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
                 if (entity!=null)
                     machine(EffectorTasks.getSshMachine(entity));
             }
@@ -121,6 +122,9 @@ public class SshEffectorTasks {
         public SshPutEffectorTaskFactory(String remoteFile) {
             super(remoteFile);
         }
+        public SshPutEffectorTaskFactory(SshMachineLocation machine, String remoteFile) {
+            super(machine, remoteFile);
+        }
         @Override
         public SshPutTaskWrapper newTask(Entity entity, Effector<Void> effector, ConfigBag parameters) {
             machine(EffectorTasks.getSshMachine(entity));
@@ -129,9 +133,17 @@ public class SshEffectorTasks {
         }
         @Override
         public SshPutTaskWrapper newTask() {
-            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
-            if (entity!=null)
-                machine(EffectorTasks.getSshMachine(entity));
+            Entity entity = null;
+            if (machine==null) {
+                if (log.isDebugEnabled())
+                    log.debug("Using an SshPutEffectorTask not in an effector without any machine; will attempt to infer the machine: "+this);
+                entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+                if (entity!=null) {
+                    machine(EffectorTasks.getSshMachine(entity));
+                }
+
+            }
+            applySshFlags(getConfig(), entity, getMachine());
             return super.newTask();
         }
     }
@@ -140,16 +152,23 @@ public class SshEffectorTasks {
         public SshFetchEffectorTaskFactory(String remoteFile) {
             super(remoteFile);
         }
+        public SshFetchEffectorTaskFactory(SshMachineLocation machine, String remoteFile) {
+            super(machine, remoteFile);
+        }
         @Override
         public SshFetchTaskWrapper newTask(Entity entity, Effector<String> effector, ConfigBag parameters) {
             machine(EffectorTasks.getSshMachine(entity));
+            applySshFlags(getConfig(), entity, getMachine());
             return super.newTask();
         }
         @Override
         public SshFetchTaskWrapper newTask() {
-            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
-            if (entity!=null)
-                machine(EffectorTasks.getSshMachine(entity));
+            Entity entity = null;
+            if (machine==null) {
+                entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+                if (entity!=null)
+                    machine(EffectorTasks.getSshMachine(entity));
+            }
             applySshFlags(getConfig(), entity, getMachine());
             return super.newTask();
         }

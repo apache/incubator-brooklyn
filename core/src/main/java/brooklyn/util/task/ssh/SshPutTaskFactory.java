@@ -18,7 +18,7 @@ public class SshPutTaskFactory extends SshPutTaskStub implements TaskFactory<Ssh
     
     private static final Logger log = LoggerFactory.getLogger(SshPutTaskFactory.class);
     
-    boolean dirty = false;
+    private boolean dirty = false;
 
     /** constructor where machine will be added later */
     public SshPutTaskFactory(String remoteFile) {
