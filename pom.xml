@@ -82,7 +82,7 @@
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.4</ant.version>
 
-        <jclouds.version>1.6.2-incubating</jclouds.version>
+        <jclouds.version>1.6.3</jclouds.version>
         <guava.version>14.0.1</guava.version>
         <groovy.version>1.8.6</groovy.version>
         <logback.version>1.0.7</logback.version>

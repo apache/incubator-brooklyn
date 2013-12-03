@@ -378,7 +378,7 @@ public class BashCommands {
 
     /** 
      * @see downloadUrlAs(Map, String, String, String)
-     * @deprecated since 0.5.0 - Use {@link downloadUrlAs(List<String>, String)}, and rely on {@link DownloadResolverManager} to include the local-repo
+     * @deprecated since 0.5.0 - Use {@link #downloadUrlAs(List, String)}, and rely on {@link DownloadResolverManager} to include the local-repo
      */
     @Deprecated
     public static List<String> downloadUrlAs(String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
