@@ -64,17 +64,16 @@ public class TemplateProcessor {
     }
 
     public static String processTemplateContents(String templateContents, EntityDriver driver, Map<String,? extends Object> extraSubstitutions) {
-         Map<String, Object> config = driver.getEntity().getApplication().getManagementContext().getConfig().asMapWithStringKeys();
-         Map<String, Object> substitutions = ImmutableMap.<String, Object>builder()
-                    .putAll(config)
-                    .put("driver", driver)
-                    .put("entity", driver.getEntity())
-                    .put("location", driver.getLocation())
-                    .put("config", ((EntityInternal) driver.getEntity()).getConfigMap().asMapWithStringKeys())
-                    .putAll(extraSubstitutions)
-                    .build();
+        Map<String, Object> config = driver.getEntity().getApplication().getManagementContext().getConfig().asMapWithStringKeys();
+        ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder()
+                .putAll(config)
+                .put("driver", driver)
+                .put("entity", driver.getEntity())
+                .put("config", ((EntityInternal) driver.getEntity()).getConfigMap().asMapWithStringKeys());
+        if (driver.getLocation() != null) builder.put("location", driver.getLocation());
+        builder.putAll(extraSubstitutions);
 
-         return processTemplateContents(templateContents, substitutions);
+        return processTemplateContents(templateContents, builder.build());
     }
 
     public static String processTemplateContents(String templateContents, Map<String, ? extends Object> substitutions) {
