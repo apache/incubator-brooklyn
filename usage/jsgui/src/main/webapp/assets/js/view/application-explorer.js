@@ -20,7 +20,6 @@ define([
             'click .delete':'deleteApplication'
         },
         initialize:function () {
-            var that = this;
             this.$el.html(this.template({}))
             $(".nav1").removeClass("active");
             $(".nav1_apps").addClass("active");
@@ -29,7 +28,6 @@ define([
                 collection:this.collection
             })
             this.$('div#app-tree').html(this.treeView.renderFull().el)
-            this.collection.fetch({reset: true})
             ViewUtils.fetchRepeatedlyWithDelay(this, this.collection)
         },
         refreshApplicationsInPlace: function() {
