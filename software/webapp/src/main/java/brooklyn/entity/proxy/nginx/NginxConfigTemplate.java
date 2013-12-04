@@ -43,6 +43,10 @@ public class NginxConfigTemplate {
     }
 
     public String configFile() {
+        // Check template URL exists
+        String templateUrl = driver.getEntity().getConfig(NginxController.SERVER_CONF_TEMPLATE_URL);
+        ResourceUtils.create(this).checkUrlExists(templateUrl);
+
         // Check SSL configuration
         ProxySslConfig ssl = driver.getEntity().getConfig(NginxController.SSL_CONFIG);
         if (Strings.isEmpty(ssl.getCertificateDestination()) && Strings.isEmpty(ssl.getCertificateSourceUrl())) {
@@ -61,7 +65,6 @@ public class NginxConfigTemplate {
         Map<String, Object> substitutions = MutableMap.<String, Object>of("ssl", ssl, "urlMappings", mappings, "domainMappings", mappingsByDomain);
 
         // Get template contents and process
-        String templateUrl = driver.getEntity().getConfig(NginxController.SERVER_CONF_TEMPLATE_URL);
         String contents = ResourceUtils.create(driver.getEntity()).getResourceAsString(templateUrl);
         return TemplateProcessor.processTemplateContents(contents, driver, substitutions);
     }

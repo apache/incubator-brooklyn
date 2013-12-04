@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
@@ -80,22 +79,6 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
 
     @Override
-    public AbstractEntity configure(Map flags) {
-        AbstractEntity result = super.configure(flags);
-        
-        // Support old "cluster" flag (deprecated)
-        if (flags.containsKey("cluster")) {
-            Group cluster = (Group) flags.get("cluster");
-            LOG.warn("Deprecated use of AbstractController.cluster: entity {}; value {}", this, cluster);
-            if (getConfig(SERVER_POOL) == null) {
-                setConfig(SERVER_POOL, cluster);
-            }
-        }
-        
-        return result;
-    }
-
-    @Override
     public void init() {
         super.init();
         
@@ -111,21 +94,18 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     /**
      * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
-     * Can pass in the 'cluster'.
+     * Can pass in the 'serverPool'.
      */
     @Override
     public void bind(Map flags) {
         if (flags.containsKey("serverPool")) {
             setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("serverPool"));
-        } else if (flags.containsKey("cluster")) {
-            // @deprecated since 0.5.0
-            LOG.warn("Deprecated use of AbstractController.cluster: entity {}; value {}", this, flags.get("cluster"));
-            setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("cluster"));
-        }
+        } 
     }
 
     @Override
     public void onManagementNoLongerMaster() {
+        super.onManagementNoLongerMaster(); // TODO remove when deprecated method in parent removed
         isActive = false;
         serverPoolMemberTrackerPolicy.reset();
     }
@@ -218,7 +198,8 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     protected void preStart() {
         super.preStart();
 
-        ConfigToAttributes.apply(this, DOMAIN_NAME);
+        ConfigToAttributes.apply(this);
+
         setAttribute(PROTOCOL, inferProtocol());
         setAttribute(ROOT_URL, inferUrl());
  
@@ -277,7 +258,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     public void update() {
         Task<?> task = updateAsync();
-        task.getUnchecked();
+        if (task != null) task.getUnchecked();
     }
     
     public synchronized Task<?> updateAsync() {
@@ -355,10 +336,13 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
                 LOG.info("Removing from {}, member {} with old address {}, because inferred address is now null", new Object[] {this, member, oldAddress});
                 serverPoolAddresses.remove(oldAddress);
             }
-            
+        } else if (Objects.equal(newAddress, oldAddress)) {
+            if (LOG.isTraceEnabled())
+                LOG.trace("Ignoring unchanged address "+oldAddress);
+            return;
         } else {
             if (oldAddress != null) {
-                LOG.info("Replacing in  {}, member {} with old address {}, new address {}", new Object[] {this, member, oldAddress, newAddress});
+                LOG.info("Replacing in {}, member {} with old address {}, new address {}", new Object[] {this, member, oldAddress, newAddress});
                 serverPoolAddresses.remove(oldAddress);
             } else {
                 LOG.info("Adding to {}, new member {} with address {}", new Object[] {this, member, newAddress});
@@ -404,34 +388,33 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
                 new Object[] {member, ip, port, this});
         return null;
     }
-	
+
     @Override
     public RebindSupport<EntityMemento> getRebindSupport() {
         return new BasicEntityRebindSupport(this) {
             @Override public EntityMemento getMemento() {
                 // Note: using MutableMap so accepts nulls
-            	Map<String, Object> flags = Maps.newLinkedHashMap();
-            	flags.put("serverPoolAddresses", serverPoolAddresses);
-            	flags.put("serverPoolTargets", MementoTransformer.transformEntitiesToIds(serverPoolTargets));
+                Map<String, Object> flags = Maps.newLinkedHashMap();
+                flags.put("serverPoolAddresses", serverPoolAddresses);
+                flags.put("serverPoolTargets", MementoTransformer.transformEntitiesToIds(serverPoolTargets));
                 return super.getMementoWithProperties(flags);
             }
             @SuppressWarnings({ "unchecked", "serial" })
             @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
-            	super.doReconstruct(rebindContext, memento);
-            	// TODO If pool-target entity couldn't be resolved, then  serverPoolAddresses and serverPoolTargets
-            	// will be out-of-sync (for ever more?)
-            	serverPoolAddresses.addAll((Collection<String>) memento.getCustomField("serverPoolAddresses"));
-				serverPoolTargets.putAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomField("serverPoolTargets"), new TypeToken<Map<Entity,String>>() {}, true));
+                super.doReconstruct(rebindContext, memento);
+                // TODO If pool-target entity couldn't be resolved, then  serverPoolAddresses and serverPoolTargets
+                // will be out-of-sync (for ever more?)
+                serverPoolAddresses.addAll((Collection<String>) memento.getCustomField("serverPoolAddresses"));
+                serverPoolTargets.putAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomField("serverPoolTargets"), new TypeToken<Map<Entity,String>>() {}, true));
             }
         };
     }
-    
+
     private final Function<Entity, String> entityIdFunction = new Function<Entity, String>() {
-		@Override
-		@Nullable
-		public String apply(@Nullable Entity input) {
-			return (input != null) ? input.getId() : null;
-		}
-    	
-	};
+        @Override
+        @Nullable
+        public String apply(@Nullable Entity input) {
+            return (input != null) ? input.getId() : null;
+        }
+    };
 }

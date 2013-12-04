@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.proxy.AbstractControllerImpl;
@@ -213,7 +214,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         }
 
         String templateUrl = getConfig(NginxController.SERVER_CONF_TEMPLATE_URL);
-        if (ResourceUtils.create(this).doesUrlExist(templateUrl)) {
+        if (templateUrl != null) {
             return NginxConfigTemplate.generator(driver).configFile();
         } else {
             return NginxConfigFileGenerator.generator(driver).configFile();

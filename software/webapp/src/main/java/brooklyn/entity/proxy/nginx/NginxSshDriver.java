@@ -37,7 +37,7 @@ import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
@@ -286,7 +286,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 if (result != 0)
                     throw new IllegalStateException(format("unable to install static content for %s at %s (failed to expand archive %s)", entity, getMachine(), archiveUrl));
             } catch (InterruptedException e) {
-                throw new RuntimeInterruptedException(e);
+                throw Exceptions.propagate(e);
             } finally {
                 getMachine().releaseMutex("installing");
             }
