@@ -76,7 +76,6 @@ define([
         },
         
         updateNode: function(id, parentId, isApp) {
-//            log("updating node "+id)
             var that = this;
             var nModel = that.collection.get(id);
             var node = $('#'+id, that.$el)
@@ -88,15 +87,19 @@ define([
                 else if (!isApp && node && node.parent().data('depth')==0) isApp = true;
             }
 
-            if (!isApp && !parentId && nModel) parentId = nModel.get('parentId');
-            if (!isApp && !parentId && node) parentId = node.closest("entity_tree_node_wrapper").data('parentId');
+            if (!isApp && !parentId && nModel)
+                parentId = nModel.get('parentId');
+            if (!isApp && !parentId && node)
+                parentId = node.closest("entity_tree_node_wrapper").data('parentId');
             if (!isApp && !parentId) {
                 log("no parentId yet available for "+id+"; skipping;")
                 return false;                
             }
             
-            var statusIconUrl = nModel ? ViewUtils.computeStatusIcon(nModel.get("serviceUp"),nModel.get("serviceState")) : null;
-            
+            var statusIconUrl = nModel
+                ? ViewUtils.computeStatusIcon(nModel.get("serviceUp"),nModel.get("serviceState"))
+                : null;
+
             var newNode = this.template({
                 id:id,
                 parentId:parentId,
@@ -140,7 +143,10 @@ define([
                 }
 
                 // add it, with surrounding html, in parent's node-children child
-                var sortKey = id.toLowerCase();
+                var entityName = nModel && nModel.get("name")
+                        ? nModel.get("name")
+                        : this.collection.getEntityNameFromId(id);
+                var sortKey = entityName.toLowerCase() + id.toLowerCase();
                 var newNodeWrapper = $(
                         '<div data-sort-key="'+sortKey+'" class="toggler-group tree-box '+
                             (depth==0 ? "outer" : "inner "+(depth%2==1 ? "depth-odd" : "depth-even")+
@@ -169,15 +175,17 @@ define([
                 this.addEventsToNode(parentsChildren)
             } else {
                 // updating
-                var $node = $(node), $newNode = $(newNode);
+                var $node = $(node),
+                    $newNode = $(newNode);
                 
                 // preserve old display status (just chevron direction at present)
                 if ($node.find('.tree-node-state').hasClass('icon-chevron-down')) {
                     $newNode.find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down')
                     // and if visible, see if any children have been added
-                    var children = nModel.get("childrenIds")
+                    var children = nModel.get("children");
                     var newChildren = []
-                    _.each(children, function(childId) { 
+                    _.each(children, function(child) {
+                        var childId = child.id;
                     	if (!that.collection.get(childId)) {
                     		newChildren.push(childId);
                     	}
@@ -203,11 +211,13 @@ define([
             if (this.collection.getApplications().length==0) {
                 that.$el.append(_.template(TreeEmptyHtml))
             } else {
-                _.each(this.collection.getApplications(),
-                        function(appId) { that.updateNode(appId, null, true) })
+                _.each(this.collection.getApplications(), function(appId) {
+                    that.updateNode(appId, null, true);
+                });
                 
-                _.each(this.collection.getNonApplications(),
-                        function(id) { that.updateNode(id) })
+                _.each(this.collection.getNonApplications(), function(id) {
+                    that.updateNode(id);
+                });
             }
             
             this.highlightEntity();
@@ -384,13 +394,14 @@ define([
                 // not yet loaded; parallel thread should load
                 return;
             }
-            var childrenIds = model.get('childrenIds');
-            _.each(childrenIds, function(id) {
+            var children = model.get('children');
+            _.each(children, function(child) {
+                var id = child.id;
                 if (!$('#'+id, that.$el).length)
                     // load, but only if necessary
                     that.updateNode(id, idToExpand) 
             })
-            if (this.collection.includeEntities(childrenIds)) {
+            if (this.collection.includeEntities(children)) {
                 // we have to load entities before we can proceed
                 this.collection.fetch({
                     success: function() {

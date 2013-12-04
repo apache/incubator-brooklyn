@@ -165,7 +165,9 @@ define([
             this.$el.html(this.template({}))
             
             this.addEntityBox()
-            
+
+            // TODO: Make into models, allow options to override, then pass in in test
+            // with overrridden url. Can then think about fixing tests in application-add-wizard-spec.js.
             $.get('/v1/catalog/entities', {}, function (result) {
                 self.catalogEntityItems = result
                 self.catalogEntityIds = _.map(result, function(item) { return item.id })
@@ -472,7 +474,7 @@ define([
                     })
                 }
                 configs = configs.sort( function(a,b) { return b.priority - a.priority } )
-                for (c in configs) {
+                for (var c in configs) {
                     that.$('.config-table').append(configs[c].html)
                 }
                 // TODO add any manual config supplied by user (in previous turn visiting this tab)

@@ -22,7 +22,6 @@ define([
             expect(app1.get("children")[0].name).toBe("tomcat1")
             expect(app1.get("children")[0].type).toBe("brooklyn.entity.webapp.tomcat.TomcatServer")
             expect(apps.at(1).get("children").length).toBe(2)
-            expect(app1.get("childrenIds").length).toBe(1)
         })
 
         it("has working getDisplayName", function () {
@@ -40,5 +39,12 @@ define([
             expect(children.length).toBe(1)
             expect(children.at(0).getDisplayName()).toBe("tomcat1")
         })
+
+        it("returns entity names for ids", function() {
+            expect(apps.getEntityNameFromId("fXyyQ7Ap")).toBe("tomcat1");
+            expect(apps.getEntityNameFromId("child-02")).toBe("tomcat2");
+            expect(apps.getEntityNameFromId("child-04")).toBe("tomcat04");
+            expect(apps.getEntityNameFromId("nonexistant")).toBeFalsy();
+        });
     })
 })

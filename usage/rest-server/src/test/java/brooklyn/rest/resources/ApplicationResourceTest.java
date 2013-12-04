@@ -233,10 +233,13 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     }
     
     Assert.assertNotNull(app);
-    Collection childrenIds = (Collection) app.get("childrenIds");
-    Assert.assertEquals(childrenIds.size(), 1);
-    String entityId = (String) childrenIds.iterator().next();
-    
+    Collection children = (Collection) app.get("children");
+    Assert.assertEquals(children.size(), 1);
+    Map child = (Map) children.iterator().next();
+    String entityId = (String) child.get("id");
+    String name = (String) child.get("name");
+    Assert.assertEquals(name, "simple-ent");
+
     Collection entities = client().resource("/v1/applications/fetch?items="+app.get("id")+","+entityId).
             get(Collection.class);
     log.info("Applications+Entity fetched are: "+entities);
