@@ -143,10 +143,11 @@ define([
                 }
 
                 // add it, with surrounding html, in parent's node-children child
+                // tildes in sortKey force entities with no name to bottom of list (z < ~).
                 var entityName = nModel && nModel.get("name")
                         ? nModel.get("name")
                         : this.collection.getEntityNameFromId(id);
-                var sortKey = entityName.toLowerCase() + id.toLowerCase();
+                var sortKey = entityName.toLowerCase() + "~~~" + id.toLowerCase();
                 var newNodeWrapper = $(
                         '<div data-sort-key="'+sortKey+'" class="toggler-group tree-box '+
                             (depth==0 ? "outer" : "inner "+(depth%2==1 ? "depth-odd" : "depth-even")+
@@ -156,8 +157,7 @@ define([
                         '</div>')
                 $('#'+id, newNodeWrapper).html(newNode);
 
-                // Maintain entities sorted by id. Would like to sort by name but it's
-                // not always available in the model.
+                // Maintain entities sorted by name, then id.
                 var placed = false;
                 var contender = $(".toggler-group", parentsChildren).first();
                 while (contender.length && !placed) {
