@@ -117,7 +117,7 @@ public class Machines {
     }
 
     public static Optional<String> findSubnetIp(Entity entity) {
-        String sh = entity.getAttribute(Attributes.SUBNET_HOSTNAME);
+        String sh = entity.getAttribute(Attributes.SUBNET_ADDRESS);
         if (sh!=null) return Optional.of(sh);
         return findSubnetIp(entity.getLocations());
     }

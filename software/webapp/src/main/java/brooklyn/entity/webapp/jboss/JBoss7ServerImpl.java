@@ -11,7 +11,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
@@ -71,7 +70,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                         .onSuccess(HttpValueFunctions.responseCode()))
                 .poll(new HttpPollConfig<Boolean>(MANAGEMENT_URL_UP)
                         .onSuccess(HttpValueFunctions.responseCodeEquals(200))
-                        .onError(Functions.constant(false)))
+                        .onFailureOrException(Functions.constant(false)))
                 .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
                         .vars(includeRuntimeUriVars)
                         .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class)))

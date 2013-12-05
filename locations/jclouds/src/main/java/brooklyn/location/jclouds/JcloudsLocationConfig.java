@@ -9,9 +9,6 @@ import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.domain.LoginCredentials;
 
-import com.google.common.base.Function;
-import com.google.common.reflect.TypeToken;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
@@ -19,6 +16,9 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
 import brooklyn.util.internal.ssh.SshTool;
+
+import com.google.common.base.Function;
+import com.google.common.reflect.TypeToken;
 
 public interface JcloudsLocationConfig extends CloudLocationConfig {
 
@@ -72,6 +72,8 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Whether to stop iptables entirely; " +
             "if true then ssh in to stop the iptables service, as part of machine provisioning", false);
 
+    public static final ConfigKey<Boolean> OS_64_BIT = ConfigKeys.newBooleanConfigKey("os64Bit", 
+            "Whether to require 64-bit OS images");  /* not sure of jclouds semantics if false; does it force 32-bit or just not care? */
     public static final ConfigKey<Integer> MIN_RAM = new BasicConfigKey<Integer>(Integer.class, "minRam", 
             "Minimum amount of RAM (in MB), for use in selecting the machine/hardware profile", null);
     public static final ConfigKey<Integer> MIN_CORES = new BasicConfigKey<Integer>(Integer.class, "minCores", 
@@ -162,7 +164,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<Function<Iterable<? extends Image>,Image>> IMAGE_CHOOSER = ConfigKeys.newConfigKey(
         new TypeToken<Function<Iterable<? extends Image>,Image>>() {},
         "imageChooser", "An image chooser function to control which images are preferred", 
-        ImageChoosers.BROOKLYN_DEFAULT_IMAGE_CHOOSER);
+        new BrooklynImageChooser().chooser());
 
     // TODO
     
