@@ -96,7 +96,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     if (!entity.getChildren().isEmpty())
-        aRoot.put("childrenIds", childEntitiesIdAsArray(entity));
+        aRoot.put("children", childEntitiesIdAndNameAsArray(entity));
 
     return aRoot;
   }
@@ -109,31 +109,34 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     return node;
   }
 
-  private ArrayNode childEntitiesIdAsArray(Entity entity) {
+  private ArrayNode childEntitiesIdAndNameAsArray(Entity entity) {
       ArrayNode node = mapper.createArrayNode();
       for (Entity e : entity.getChildren()) {
-        node.add(e.getId());
+          ObjectNode holder = mapper.createObjectNode();
+          holder.put("id", e.getId());
+          holder.put("name", e.getDisplayName());
+          node.add(holder);
       }
       return node;
   }
 
-  public JsonNode fetch(String items) {
-      Map<String,JsonNode> resultM = MutableMap.<String, JsonNode>of();
+  @Override
+  public JsonNode fetch(String entityIds) {
+      Map<String, JsonNode> jsonEntitiesById = MutableMap.of();
       for (Application application : mgmt().getApplications())
-        resultM.put(application.getId(), fromEntity(application));
-      if (items!=null) {
-          String[] itemsO = items.split(",");
-          for (String item: itemsO) {
-              Entity itemE = mgmt().getEntityManager().getEntity( item.trim() );
-              while (itemE != null && itemE.getParent()!=null) {
-                  resultM.put(itemE.getId(), fromEntity(itemE));
-                  itemE= itemE.getParent();
+          jsonEntitiesById.put(application.getId(), fromEntity(application));
+      if (entityIds != null) {
+          for (String entityId: entityIds.split(",")) {
+              Entity entity = mgmt().getEntityManager().getEntity(entityId.trim());
+              while (entity != null && entity.getParent() != null) {
+                  jsonEntitiesById.put(entity.getId(), fromEntity(entity));
+                  entity = entity.getParent();
               }
           }
       }
       
       ArrayNode result = mapper.createArrayNode();
-      for (JsonNode n: resultM.values()) result.add(n);
+      for (JsonNode n: jsonEntitiesById.values()) result.add(n);
       return result;
   }
   
