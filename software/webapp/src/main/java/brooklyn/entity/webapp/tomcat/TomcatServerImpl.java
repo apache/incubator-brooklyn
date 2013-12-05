@@ -70,7 +70,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
     @Override
     public void disconnectSensors() {
         super.disconnectSensors();
-        if (getDriver().isJmxEnabled()) {
+        if (getDriver() != null && getDriver().isJmxEnabled()) {
            if (jmxFeed != null) jmxFeed.stop();
         } else {
             disconnectServiceUpIsRunning();
