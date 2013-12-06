@@ -13,6 +13,8 @@ public interface CassandraNodeDriver extends JavaSoftwareProcessDriver {
 
     Integer getThriftPort();
 
+    Integer getNativeTransportPort();
+
     String getClusterName();
 
     String getCassandraConfigTemplateUrl();

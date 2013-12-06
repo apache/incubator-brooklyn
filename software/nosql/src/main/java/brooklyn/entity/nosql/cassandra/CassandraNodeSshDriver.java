@@ -70,6 +70,9 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     public Integer getThriftPort() { return entity.getAttribute(CassandraNode.THRIFT_PORT); }
 
     @Override
+    public Integer getNativeTransportPort() { return entity.getAttribute(CassandraNode.NATIVE_TRANSPORT_PORT); }
+
+    @Override
     public String getClusterName() { return entity.getAttribute(CassandraNode.CLUSTER_NAME); }
 
     public String getEndpointSnitchName() {

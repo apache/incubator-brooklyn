@@ -59,6 +59,9 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     @SetFromFlag("thriftPort")
     PortAttributeSensorAndConfigKey THRIFT_PORT = new PortAttributeSensorAndConfigKey("cassandra.thrift.port", "Cassandra Thrift RPC port", PortRanges.fromString("9160+"));
 
+    @SetFromFlag("nativePort")
+    PortAttributeSensorAndConfigKey NATIVE_TRANSPORT_PORT = new PortAttributeSensorAndConfigKey("cassandra.native.port", "Cassandra Native Transport port", PortRanges.fromString("9042+"));
+
     @SetFromFlag("customSnitchJarUrl")
     ConfigKey<String> CUSTOM_SNITCH_JAR_URL = ConfigKeys.newStringConfigKey("cassandra.config.customSnitchUrl", 
             "URL for a jar file to be uploaded (e.g. \"classpath://brooklyn/entity/nosql/cassandra/multiCloudSnitch.jar\"); defaults to null which means nothing to upload", 
@@ -136,6 +139,7 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     Integer getGossipPort();
     Integer getSslGossipPort();
     Integer getThriftPort();
+    Integer getNativeTransportPort();
     String getClusterName();
     String getListenAddress();
     String getBroadcastAddress();
