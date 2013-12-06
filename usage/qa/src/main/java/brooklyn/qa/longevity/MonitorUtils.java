@@ -45,7 +45,10 @@ public class MonitorUtils {
      */
     public static boolean isUrlUp(URL url) {
         try {
-            HttpPollValue result = HttpTool.httpGet(HttpTool.httpClientBuilder().build(), URI.create(url.toString()), ImmutableMap.<String,String>of());
+            HttpPollValue result = HttpTool.httpGet(
+                    HttpTool.httpClientBuilder().trustAll().build(), 
+                    URI.create(url.toString()), 
+                    ImmutableMap.<String,String>of());
             int statuscode = result.getResponseCode();
 
             if (statuscode != 200) {

@@ -25,6 +25,7 @@ import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeSocketFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.ByteArrayEntity;
@@ -64,6 +65,8 @@ public class HttpTool {
         private Boolean https;
         private SchemeSocketFactory socketFactory;
         private ConnectionReuseStrategy reuseStrategy;
+        private boolean trustAll;
+        private boolean trustSelfSigned;
 
         public HttpClientBuilder clientConnectionManager(ClientConnectionManager val) {
             this.clientConnectionManager = checkNotNull(val, "clientConnectionManager");
@@ -105,6 +108,14 @@ public class HttpTool {
             this.socketFactory = checkNotNull(val, "socketFactory");
             return this;
         }
+        public HttpClientBuilder trustAll() {
+            this.trustAll = true;
+            return this;
+        }
+        public HttpClientBuilder trustSelfSigned() {
+            this.trustSelfSigned = true;
+            return this;
+        }
         public HttpClient build() {
             final DefaultHttpClient httpClient;
             if (clientConnectionManager != null) {
@@ -127,12 +138,22 @@ public class HttpTool {
                         port = (uri != null && uri.getPort() >= 0) ? uri.getPort() : 443;
                     }
                     if (socketFactory == null) {
-                        TrustStrategy trustStrategy = new TrustAllStrategy();
-                        X509HostnameVerifier hostnameVerifier = SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
-                        socketFactory = new SSLSocketFactory(trustStrategy, hostnameVerifier);
+                        if (trustAll) {
+                            TrustStrategy trustStrategy = new TrustAllStrategy();
+                            X509HostnameVerifier hostnameVerifier = SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
+                            socketFactory = new SSLSocketFactory(trustStrategy, hostnameVerifier);
+                        } else if (trustSelfSigned) {
+                            TrustStrategy trustStrategy = new TrustSelfSignedStrategy();
+                            X509HostnameVerifier hostnameVerifier = SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
+                            socketFactory = new SSLSocketFactory(trustStrategy, hostnameVerifier);
+                        } else {
+                            // Using default https scheme: based on default java truststore, which is pretty strict!
+                        }
                     }
-                    Scheme sch = new Scheme("https", port, socketFactory);
-                    httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+                    if (socketFactory != null) {
+                        Scheme sch = new Scheme("https", port, socketFactory);
+                        httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+                    }
                 } catch (Exception e) {
                     LOG.warn("Error setting trust for uri {}", uri);
                     throw Exceptions.propagate(e);

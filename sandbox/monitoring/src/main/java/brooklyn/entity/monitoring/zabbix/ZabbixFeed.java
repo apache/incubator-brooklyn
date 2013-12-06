@@ -273,7 +273,9 @@ public class ZabbixFeed extends AbstractFeed {
         log.info("starting zabbix feed for {}", entity);
 
         // TODO if supplier returns null, we may wish to defer initialization until url available?
+        // TODO for https should we really trust all?
         final HttpClient httpClient = HttpTool.httpClientBuilder()
+                .trustAll()
                 .clientConnectionManager(new ThreadSafeClientConnManager())
                 .reuseStrategy(new NoConnectionReuseStrategy())
                 .uri(baseUriProvider.get())

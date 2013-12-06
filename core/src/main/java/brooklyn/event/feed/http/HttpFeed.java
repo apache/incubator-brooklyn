@@ -306,9 +306,11 @@ public class HttpFeed extends AbstractFeed {
         }
     }
 
+    // TODO Should we really trustAll for https? Make configurable?
     private HttpClient createHttpClient(HttpPollIdentifier pollIdentifier) {
         URI uri = pollIdentifier.uriProvider.get();
         HttpClientBuilder builder = HttpTool.httpClientBuilder()
+                .trustAll()
                 .laxRedirect(true);
         if (uri != null) builder.uri(uri);
         if (uri != null) builder.credential(pollIdentifier.credentials);
