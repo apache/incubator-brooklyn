@@ -270,7 +270,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     }
 
     @Override
-    public Class<CassandraNodeDriver> getDriverInterface() {
+    public Class<? extends CassandraNodeDriver> getDriverInterface() {
         return CassandraNodeDriver.class;
     }
     

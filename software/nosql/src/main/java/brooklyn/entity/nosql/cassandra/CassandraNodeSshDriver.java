@@ -51,7 +51,8 @@ import com.google.common.collect.Sets;
 public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver implements CassandraNodeDriver {
 
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeSshDriver.class);
-    private String expandedInstallDir;
+    
+    protected String expandedInstallDir;
 
     public CassandraNodeSshDriver(CassandraNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -88,9 +89,13 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     public String getMirrorUrl() { return entity.getConfig(CassandraNode.MIRROR_URL); }
     
-    private String getExpandedInstallDir() {
+    protected String getExpandedInstallDir() {
         if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
         return expandedInstallDir;
+    }
+    
+    protected String getShortName() {
+        return "apache-cassandra";
     }
     
     @Override
@@ -99,7 +104,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-cassandra-%s", getVersion()));
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("%s-%s", getShortName(), getVersion()));
         
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
@@ -119,7 +124,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         return result;
     }
 
-    private Map<String, Integer> getPortMap() {
+    protected Map<String, Integer> getPortMap() {
         return ImmutableMap.<String, Integer>builder()
                 .put("jmxPort", entity.getAttribute(UsesJmx.JMX_PORT))
                 .put("rmiPort", entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT))
@@ -134,14 +139,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         log.debug("Customizing {} (Cluster {})", entity, getClusterName());
         Networking.checkPortsValid(getPortMap());
         
-        if (entity.getConfig(CassandraNode.INITIAL_SEEDS)==null) {
-            if (isClustered()) {
-                entity.setConfig(CassandraNode.INITIAL_SEEDS, 
-                    DependentConfiguration.attributeWhenReady(entity.getParent(), CassandraCluster.CURRENT_SEEDS));
-            } else {
-                entity.setConfig(CassandraNode.INITIAL_SEEDS, MutableSet.<Entity>of(entity));
-            }
-        }
+        customizeInitialSeeds();
 
         String logFileEscaped = getLogFileLocation().replace("/", "\\/"); // escape slashes
 
@@ -167,6 +165,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         String rackdcDestinationFile = String.format("%s/conf/%s", getRunDir(), getCassandraRackdcConfigFileName());
         getMachine().copyTo(new ByteArrayInputStream(rackdcFileContents.getBytes()), rackdcDestinationFile);
 
+        customizeCopySnitch();
+    }
+
+    protected void customizeCopySnitch() {
         // Copy the custom snitch jar file across
         String customSnitchJarUrl = entity.getConfig(CassandraNode.CUSTOM_SNITCH_JAR_URL);
         if (Strings.isNonBlank(customSnitchJarUrl)) {
@@ -178,6 +180,17 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 getMachine().copyTo(customSnitchJarStream, jarDestinationFile);
             } finally {
                 Streams.closeQuietly(customSnitchJarStream);
+            }
+        }
+    }
+
+    protected void customizeInitialSeeds() {
+        if (entity.getConfig(CassandraNode.INITIAL_SEEDS)==null) {
+            if (isClustered()) {
+                entity.setConfig(CassandraNode.INITIAL_SEEDS, 
+                    DependentConfiguration.attributeWhenReady(entity.getParent(), CassandraCluster.CURRENT_SEEDS));
+            } else {
+                entity.setConfig(CassandraNode.INITIAL_SEEDS, MutableSet.<Entity>of(entity));
             }
         }
     }
@@ -214,7 +227,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                         // log the date to attempt to debug occasional http://wiki.apache.org/cassandra/FAQ#schema_disagreement
                         // (can be caused by machines out of synch time-wise; but in our case it seems to be caused by other things!)
                         "echo date on cassandra server `hostname` when launching is `date`",
-                        String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
+                        launchEssentialCommand())
                 .execute();
         if (!isClustered()) {
             InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
@@ -228,6 +241,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         if (isClustered() && isFirst) {
             ((EntityLocal)getEntity().getParent()).setAttribute(CassandraCluster.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
         }
+    }
+
+    protected String launchEssentialCommand() {
+        return String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile());
     }
 
     public String getPidFile() { return String.format("%s/cassandra.pid", getRunDir()); }
@@ -244,10 +261,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<?,?> getCustomJavaSystemProperties() {
+    protected Map<String,String> getCustomJavaSystemProperties() {
         return MutableMap.<String, String>builder()
                 .putAll(super.getCustomJavaSystemProperties())
-                .put("cassandra.confing", getCassandraConfigFileName())
+                .put("cassandra.config", getCassandraConfigFileName())
                 .build();
     }
     
