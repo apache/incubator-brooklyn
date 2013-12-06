@@ -31,8 +31,10 @@ public class HttpPollValue {
     private final long durationMillisOfFirstResponse;
     private final long durationMillisOfFullContent;
     private int responseCode;
+    private String reasonPhrase;
     private Map<String,List<String>> headerLists;
     private byte[] content;
+
 
     public HttpPollValue(HttpResponse response, long startTime) {
         this.response = response;
@@ -73,6 +75,15 @@ public class HttpPollValue {
             }
         }
         return responseCode;
+    }
+
+    public String getReasonPhrase() {
+        synchronized (mutex) {
+            if (reasonPhrase == null) {
+                reasonPhrase = response.getStatusLine().getReasonPhrase();
+            }
+        }
+        return reasonPhrase;
     }
 
     /** returns the timestamp (millis since 1970) when this request was started */ 

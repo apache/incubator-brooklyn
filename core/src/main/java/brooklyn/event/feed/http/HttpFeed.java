@@ -2,32 +2,17 @@ package brooklyn.event.feed.http;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +22,8 @@ import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
-import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpTool.HttpClientBuilder;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
@@ -298,13 +284,19 @@ public class HttpFeed extends AbstractFeed {
                 pollJob = new Callable<HttpPollValue>() {
                     public HttpPollValue call() throws Exception {
                         if (log.isTraceEnabled()) log.trace("http polling for {} sensors at {}", entity, pollInfo);
-                        return httpGet(httpClient, pollInfo.uriProvider.get(), pollInfo.headers);
+                        return HttpTool.httpGet(httpClient, pollInfo.uriProvider.get(), pollInfo.headers);
                     }};
             } else if (pollInfo.method.equals("post")) {
                 pollJob = new Callable<HttpPollValue>() {
                     public HttpPollValue call() throws Exception {
                         if (log.isTraceEnabled()) log.trace("http polling for {} sensors at {}", entity, pollInfo);
-                        return httpPost(httpClient, pollInfo.uriProvider.get(), pollInfo.headers, pollInfo.body);
+                        return HttpTool.httpPost(httpClient, pollInfo.uriProvider.get(), pollInfo.headers, pollInfo.body);
+                    }};
+            } else if (pollInfo.method.equals("head")) {
+                pollJob = new Callable<HttpPollValue>() {
+                    public HttpPollValue call() throws Exception {
+                        if (log.isTraceEnabled()) log.trace("http polling for {} sensors at {}", entity, pollInfo);
+                        return HttpTool.httpHead(httpClient, pollInfo.uriProvider.get(), pollInfo.headers);
                     }};
             } else {
                 throw new IllegalStateException("Unexpected http method: "+pollInfo.method);
@@ -314,79 +306,19 @@ public class HttpFeed extends AbstractFeed {
         }
     }
 
+    // TODO Should we really trustAll for https? Make configurable?
     private HttpClient createHttpClient(HttpPollIdentifier pollIdentifier) {
-        final DefaultHttpClient httpClient = new DefaultHttpClient();
-
         URI uri = pollIdentifier.uriProvider.get();
-        // TODO if supplier returns null, we may wish to defer initialization until url available?
-        if (uri != null && "https".equalsIgnoreCase(uri.getScheme())) {
-            try {
-                int port = (uri.getPort() >= 0) ? uri.getPort() : 443;
-                SSLSocketFactory socketFactory = new SSLSocketFactory(
-                        new TrustAllStrategy(), SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-                Scheme sch = new Scheme("https", port, socketFactory);
-                httpClient.getConnectionManager().getSchemeRegistry().register(sch);
-            } catch (Exception e) {
-                log.warn("Error in HTTP Feed of {}, setting trust for uri {}", entity, uri);
-                throw Exceptions.propagate(e);
-            }
-        }
-
-        // Set credentials
-        if (uri != null && pollIdentifier.credentials.isPresent()) {
-            String hostname = uri.getHost();
-            int port = uri.getPort();
-            httpClient.getCredentialsProvider().setCredentials(
-                    new AuthScope(hostname, port), pollIdentifier.credentials.get());
-        }
-
-        return httpClient;
+        HttpClientBuilder builder = HttpTool.httpClientBuilder()
+                .trustAll()
+                .laxRedirect(true);
+        if (uri != null) builder.uri(uri);
+        if (uri != null) builder.credential(pollIdentifier.credentials);
+        return builder.build();
     }
 
     @SuppressWarnings("unchecked")
     private Poller<HttpPollValue> getPoller() {
         return (Poller<HttpPollValue>) poller;
-    }
-    
-    private HttpPollValue httpGet(HttpClient httpClient, URI uri, Map<String,String> headers) throws ClientProtocolException, IOException {
-        HttpGet httpGet = new HttpGet(uri);
-        for (Map.Entry<String,String> entry : headers.entrySet()) {
-            httpGet.addHeader(entry.getKey(), entry.getValue());
-        }
-
-        long startTime = System.currentTimeMillis();
-        HttpResponse httpResponse = httpClient.execute(httpGet);
-        try {
-            return new HttpPollValue(httpResponse, startTime);
-        } finally {
-            EntityUtils.consume(httpResponse.getEntity());
-        }
-    }
-    
-    private HttpPollValue httpPost(HttpClient httpClient, URI uri, Map<String,String> headers, byte[] body) throws ClientProtocolException, IOException {
-        HttpPost httpPost = new HttpPost(uri);
-        for (Map.Entry<String,String> entry : headers.entrySet()) {
-            httpPost.addHeader(entry.getKey(), entry.getValue());
-        }
-        if (body != null) {
-            HttpEntity httpEntity = new ByteArrayEntity(body);
-            httpPost.setEntity(httpEntity);
-        }
-        
-        long startTime = System.currentTimeMillis();
-        HttpResponse httpResponse = httpClient.execute(httpPost);
-        
-        try {
-            return new HttpPollValue(httpResponse, startTime);
-        } finally {
-            EntityUtils.consume(httpResponse.getEntity());
-        }
-    }
-    
-    private static class TrustAllStrategy implements TrustStrategy {
-        @Override
-        public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-            return true;
-        }
     }
 }

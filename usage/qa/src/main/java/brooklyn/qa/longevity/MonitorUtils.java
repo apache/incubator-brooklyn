@@ -1,18 +1,6 @@
 package brooklyn.qa.longevity;
 
-import brooklyn.util.stream.StreamGobbler;
-
-import com.google.common.base.Objects;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Maps;
-import com.google.common.io.ByteStreams;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -29,7 +17,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.event.feed.http.HttpPollValue;
+import brooklyn.util.http.HttpTool;
+import brooklyn.util.stream.StreamGobbler;
+
+import com.google.common.base.Objects;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.google.common.io.ByteStreams;
 
 public class MonitorUtils {
 
@@ -46,14 +45,14 @@ public class MonitorUtils {
      */
     public static boolean isUrlUp(URL url) {
         try {
-            HttpClient httpclient = new DefaultHttpClient();
-            HttpGet httpget = new HttpGet(new URI(url.toString()));
-            HttpResponse response = httpclient.execute(httpget);
-            StatusLine statusLine = response.getStatusLine();
-            int statuscode = statusLine.getStatusCode();
+            HttpPollValue result = HttpTool.httpGet(
+                    HttpTool.httpClientBuilder().trustAll().build(), 
+                    URI.create(url.toString()), 
+                    ImmutableMap.<String,String>of());
+            int statuscode = result.getResponseCode();
 
             if (statuscode != 200) {
-                LOG.info("Error reading URL {}: {}, {}", new Object[]{url, statuscode, statusLine.getReasonPhrase()});
+                LOG.info("Error reading URL {}: {}, {}", new Object[]{url, statuscode, result.getReasonPhrase()});
                 return false;
             } else {
                 return true;
