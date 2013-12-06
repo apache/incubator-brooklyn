@@ -103,7 +103,15 @@ public class BrooklynImageChooser {
         if (os!=null && os.getFamily()!=null) {
             // preference for these open, popular OS (but only wrt versions above) 
             if (os.getFamily().equals(OsFamily.CENTOS)) score += 2;
-            else if (os.getFamily().equals(OsFamily.UBUNTU)) score += 2;
+            else if (os.getFamily().equals(OsFamily.UBUNTU)) {
+                score += 1;
+                
+                // 12.04 is LTS, so prefer it slightly above others
+                if ("12.04".equals(os.getVersion())) score += 1;
+                
+                // NB some 13.10 images take 20m+ before they are sshable on AWS
+                // with "vesafb: module verification error" showing in the AWS system log
+            }
 
             // slight preference for these 
             else if (os.getFamily().equals(OsFamily.RHEL)) score += 1;
