@@ -141,6 +141,7 @@ public class CassandraClusterTest {
         public int getGossipPort() { return 1234; }
         public int getSslGossipPort() { return 1234; }
         public int getThriftPort() { return 1234; }
+        public int getNativeTransportPort() { return 1234; }
         public String getClusterName() { return "Mock"; }
         public String getEndpointSnitchName() { return ""; }
         public String getListenAddress() { return "0"; }

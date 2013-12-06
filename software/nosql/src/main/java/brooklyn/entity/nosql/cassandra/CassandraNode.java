@@ -59,6 +59,9 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     @SetFromFlag("thriftPort")
     PortAttributeSensorAndConfigKey THRIFT_PORT = new PortAttributeSensorAndConfigKey("cassandra.thrift.port", "Cassandra Thrift RPC port", PortRanges.fromString("9160+"));
 
+    @SetFromFlag("nativePort")
+    PortAttributeSensorAndConfigKey NATIVE_TRANSPORT_PORT = new PortAttributeSensorAndConfigKey("cassandra.native.port", "Cassandra Native Transport port", PortRanges.fromString("9042+"));
+
     @SetFromFlag("customSnitchJarUrl")
     ConfigKey<String> CUSTOM_SNITCH_JAR_URL = ConfigKeys.newStringConfigKey("cassandra.config.customSnitchUrl", 
             "URL for a jar file to be uploaded (e.g. \"classpath://brooklyn/entity/nosql/cassandra/multiCloudSnitch.jar\"); defaults to null which means nothing to upload", 
@@ -129,13 +132,14 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     ConfigKey<String> BROADCAST_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.broadcastAddressSensor", "sensor name from which to take the broadcast address; default (null) is a smart lookup");
     ConfigKey<String> RPC_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.rpcAddressSensor", "sensor name from which to take the RPC address; default (null) is 0.0.0.0");
 
-    public static Effector<String> EXECUTE_SCRIPT = CassandraCluster.EXECUTE_SCRIPT;
+    Effector<String> EXECUTE_SCRIPT = CassandraCluster.EXECUTE_SCRIPT;
 
     /* Accessors used from template */
     
     Integer getGossipPort();
     Integer getSslGossipPort();
     Integer getThriftPort();
+    Integer getNativeTransportPort();
     String getClusterName();
     String getListenAddress();
     String getBroadcastAddress();

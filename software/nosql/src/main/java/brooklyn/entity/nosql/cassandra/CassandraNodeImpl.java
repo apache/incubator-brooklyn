@@ -130,6 +130,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @Override public Integer getGossipPort() { return getAttribute(CassandraNode.GOSSIP_PORT); }
     @Override public Integer getSslGossipPort() { return getAttribute(CassandraNode.SSL_GOSSIP_PORT); }
     @Override public Integer getThriftPort() { return getAttribute(CassandraNode.THRIFT_PORT); }
+    @Override public Integer getNativeTransportPort() { return getAttribute(CassandraNode.NATIVE_TRANSPORT_PORT); }
     @Override public String getClusterName() { return getAttribute(CassandraNode.CLUSTER_NAME); }
     
     @Override public BigInteger getToken() {
@@ -471,7 +472,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     
     @Override
     public String executeScript(String commands) {
-        return ((CassandraNodeSshDriver)getDriver()).executeScriptHere(commands);
+        return getDriver().executeScriptAsync(commands).block().getStdout();
     }
     
 }

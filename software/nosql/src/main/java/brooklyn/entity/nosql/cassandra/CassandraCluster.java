@@ -100,7 +100,7 @@ public interface CassandraCluster extends DynamicCluster, DatastoreMixins.HasDat
     AttributeSensor<Double> PROCESS_CPU_TIME_FRACTION_IN_WINDOW_PER_NODE = Sensors.newDoubleSensor("cassandra.cluster.metrics.processCpuTime.fraction.windowed", "Fraction of CPU time used (percentage, over time window), averaged over all nodes");
 
     MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraCluster.class, "update");
-    
+
     brooklyn.entity.Effector<String> EXECUTE_SCRIPT = Effectors.effector(DatastoreMixins.EXECUTE_SCRIPT)
         .description("executes the given script contents using cassandra-cli")
         .buildAbstract();
