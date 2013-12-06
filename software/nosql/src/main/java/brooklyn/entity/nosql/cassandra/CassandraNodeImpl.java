@@ -472,7 +472,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     
     @Override
     public String executeScript(String commands) {
-        return ((CassandraNodeSshDriver)getDriver()).executeScriptHere(commands);
+        return getDriver().executeScriptAsync(commands).block().getStdout();
     }
     
 }

@@ -4,6 +4,7 @@
 package brooklyn.entity.nosql.cassandra;
 
 import brooklyn.entity.java.JavaSoftwareProcessDriver;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 
 public interface CassandraNodeDriver extends JavaSoftwareProcessDriver {
 
@@ -23,4 +24,5 @@ public interface CassandraNodeDriver extends JavaSoftwareProcessDriver {
 
     boolean isClustered();
 
+    ProcessTaskWrapper<Integer> executeScriptAsync(String commands);
 }

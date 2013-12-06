@@ -132,7 +132,7 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     ConfigKey<String> BROADCAST_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.broadcastAddressSensor", "sensor name from which to take the broadcast address; default (null) is a smart lookup");
     ConfigKey<String> RPC_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.rpcAddressSensor", "sensor name from which to take the RPC address; default (null) is 0.0.0.0");
 
-    public static Effector<String> EXECUTE_SCRIPT = CassandraCluster.EXECUTE_SCRIPT;
+    Effector<String> EXECUTE_SCRIPT = CassandraCluster.EXECUTE_SCRIPT;
 
     /* Accessors used from template */
     

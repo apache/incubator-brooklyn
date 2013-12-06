@@ -36,6 +36,7 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -225,7 +226,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 Tasks.setBlockingDetails("Pausing to ensure Cassandra (singleton) has started before running creation script");
                 Time.sleep(Duration.seconds(20));
                 Tasks.resetBlockingDetails();
-                executeScriptHere(Streams.readFullyString(creationScript));
+                executeScriptAsync(Streams.readFullyString(creationScript));
             }
         }
         if (isClustered() && isFirst) {
@@ -263,13 +264,17 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .build();
     }
 
-    public String executeScriptHere(String commands) {
+    public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
         String filename = "cassandra-commands-"+Identifiers.makeRandomId(8);
         DynamicTasks.queue(SshEffectorTasks.put(Urls.mergePaths(getRunDir(), filename)).contents(commands).summary("copying cassandra-cli script to execute "+filename));
+        return executeScriptFromInstalledFileAsync(filename);
+    }
+
+    public ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String filenameAlreadyInstalledAtServer) {
         return DynamicTasks.queue(SshEffectorTasks.ssh(
-            "cd "+getRunDir(), 
-            String.format("./bin/cassandra-cli --port %s --file %s", ""+getEntity().getAttribute(CassandraNode.THRIFT_PORT), filename))
-            .summary("executing cassandra-cli script "+filename)).block().getStdout();
+                "cd "+getRunDir(),
+                String.format("./bin/cassandra-cli --port %s --file %s", ""+getEntity().getAttribute(CassandraNode.THRIFT_PORT), filenameAlreadyInstalledAtServer))
+                .summary("executing cassandra-cli script "+filenameAlreadyInstalledAtServer));
     }
     
 }
