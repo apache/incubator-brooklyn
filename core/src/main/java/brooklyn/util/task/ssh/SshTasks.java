@@ -34,10 +34,11 @@ import com.google.common.collect.Maps;
 
 /**
  * Conveniences for generating {@link Task} instances to perform SSH activities on an {@link SshMachineLocation}.
- * See also {@link SshEffectorTasks} for inferring the {@link SshMachineLocation} from context
- * and taking properties from entities and global management context.
- * (In general Brooklyn should prefer SshEffectorTasks over this for that reason!)
+ * <p>
+ * To infer the {@link SshMachineLocation} and take properties from entities and global management context the
+ * {@link SshEffectorTasks} should be preferred over this class.
  *  
+ * @see SshEffectorTasks
  * @since 0.6.0
  */
 @Beta

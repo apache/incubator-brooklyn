@@ -21,6 +21,7 @@ import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.ssh.BashCommands;
@@ -39,19 +40,24 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 
-/** convenience classes and methods for working with {@link SshTasks}, where the
- * {@link SshMachineLocation} is inferred either from the effector generation or
- * the context task 
+/**
+ * Conveniences for generating {@link Task} instances to perform SSH activities.
+ * <p>
+ * If the {@link SshMachineLocation machine} is not specified directly it
+ * will be inferred from the {@link Entity} context of either the {@link Effector}
+ * or the current {@link Task}.
  * 
- * @since 0.6.0 */
+ * @see SshTasks
+ * @since 0.6.0
+ */
 @Beta
 public class SshEffectorTasks {
 
     private static final Logger log = LoggerFactory.getLogger(SshEffectorTasks.class);
     
     public static final ConfigKey<Boolean> IGNORE_ENTITY_SSH_FLAGS = ConfigKeys.newBooleanConfigKey("ignoreEntitySshFlags",
-        "Whether to ignore any ssh flags (behaviour constraints) set on the entity or location "
-        + "where this is running, using only flags explicitly specified", false);
+        "Whether to ignore any ssh flags (behaviour constraints) set on the entity or location " +
+        "where this is running, using only flags explicitly specified", false);
     
     /** like {@link EffectorBody} but providing conveniences when in a {@link SoftwareProcess}
      * (or other entity with a single machine location) */
@@ -76,7 +82,9 @@ public class SshEffectorTasks {
         public SshEffectorTaskFactory(String ...commands) {
             super(commands);
         }
-
+        public SshEffectorTaskFactory(SshMachineLocation machine, String ...commands) {
+            super(machine, commands);
+        }
         @Override
         public ProcessTaskWrapper<RET> newTask(Entity entity, Effector<RET> effector, ConfigBag parameters) {
             markDirty();
@@ -84,14 +92,12 @@ public class SshEffectorTasks {
             machine(EffectorTasks.getSshMachine(entity));
             return newTask();
         }
-        
         @Override
         public synchronized ProcessTaskWrapper<RET> newTask() {
-            Entity entity = null;
+            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
             if (machine==null) {
                 if (log.isDebugEnabled())
-                    log.debug("Using an SshEffectorTask not in an effector without any machine; will attempt to infer the machine: "+this);
-                entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+                    log.debug("Using an ssh task not in an effector without any machine; will attempt to infer the machine: "+this);
                 if (entity!=null)
                     machine(EffectorTasks.getSshMachine(entity));
             }
@@ -133,11 +139,10 @@ public class SshEffectorTasks {
         }
         @Override
         public SshPutTaskWrapper newTask() {
-            Entity entity = null;
+            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
             if (machine==null) {
                 if (log.isDebugEnabled())
-                    log.debug("Using an SshPutEffectorTask not in an effector without any machine; will attempt to infer the machine: "+this);
-                entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+                    log.debug("Using an ssh put task not in an effector without any machine; will attempt to infer the machine: "+this);
                 if (entity!=null) {
                     machine(EffectorTasks.getSshMachine(entity));
                 }
@@ -163,9 +168,10 @@ public class SshEffectorTasks {
         }
         @Override
         public SshFetchTaskWrapper newTask() {
-            Entity entity = null;
+            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
             if (machine==null) {
-                entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+                if (log.isDebugEnabled())
+                    log.debug("Using an ssh fetch task not in an effector without any machine; will attempt to infer the machine: "+this);
                 if (entity!=null)
                     machine(EffectorTasks.getSshMachine(entity));
             }
@@ -199,7 +205,7 @@ public class SshEffectorTasks {
     /** as {@link #codePidRunning(String)} but returning boolean */
     public static SshEffectorTaskFactory<Boolean> isPidRunning(Integer pid) {
         return codePidRunning(pid).summary("PID "+pid+" is-running check (boolean)").returning(new Function<ProcessTaskWrapper<?>, Boolean>() {
-            public Boolean apply(@Nullable ProcessTaskWrapper<?> input) { return ((Integer)0).equals(input.getExitCode()); }
+            public Boolean apply(@Nullable ProcessTaskWrapper<?> input) { return Integer.valueOf(0).equals(input.getExitCode()); }
         });
     }
 
@@ -247,8 +253,9 @@ public class SshEffectorTasks {
     }
 
     /** extracts the values for the main brooklyn.ssh.config.* config keys (i.e. those declared in ConfigKeys) 
-     * as declared on the entity, and inserts them in a map using the unprefixed state, for ssh. */
-    /* currently this is computed for each call, which may be wasteful, but it is reliable in the face of config changes. 
+     * as declared on the entity, and inserts them in a map using the unprefixed state, for ssh.
+     * <p>
+     * currently this is computed for each call, which may be wasteful, but it is reliable in the face of config changes.
      * we could cache the Map.  note that we do _not_ cache (or even own) the SshTool; 
      * the SshTool is created or re-used by the SshMachineLocation making use of these properties */
     @Beta
