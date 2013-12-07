@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
+
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -318,7 +320,51 @@ public class Jsonya {
             // nothing to flatten
             target.add(item);
         }
+        
+        @Override
+        public String toString() {
+            return render(get());
+        }
+    }
 
+    public static String render(Object focus) {
+        if (focus instanceof Map) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("{");
+            boolean first = true;
+            for (Object entry: ((Map<?,?>)focus).entrySet()) {
+                if (!first) sb.append(",");
+                else first = false;
+                sb.append(" ");
+                sb.append( render(((Map.Entry<?,?>)entry).getKey()) );
+                sb.append(": ");
+                sb.append( render(((Map.Entry<?,?>)entry).getValue()) );
+            }
+            sb.append(" }");
+            return sb.toString();
+        }
+        if (focus instanceof Collection) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            boolean first = true;
+            for (Object entry: ((Map<?,?>)focus).entrySet()) {
+                if (!first) sb.append(",");
+                else first = false;
+                sb.append(" ");
+                sb.append( render(((Map.Entry<?,?>)entry).getKey()) );
+                sb.append(": ");
+                sb.append( render(((Map.Entry<?,?>)entry).getValue()) );
+            }
+            sb.append(" ]");
+            return sb.toString();
+        }
+        if (focus instanceof String) {
+            return JavaStringEscapes.wrapJavaString((String)focus);
+        }
+        if (focus == null || focus instanceof Number || focus instanceof Boolean)
+            return ""+focus;
+        
+        return render(""+focus);
     }
     
 }

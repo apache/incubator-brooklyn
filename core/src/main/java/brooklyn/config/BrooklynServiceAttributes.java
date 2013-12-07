@@ -40,6 +40,6 @@ public class BrooklynServiceAttributes {
      * or where multiple NICs are available and java's InetAddress.getLocalHost() strategy is not doing what is desired);
      * use this to supply a specific address (e.g. "127.0.0.1" or a specific IP on a specific NIC or FW)
      */
-    public static StringSystemProperty LOCALHOST_IP_ADDRESS = new StringSystemProperty("brooklyn.localhost.address");
+    public static StringSystemProperty LOCALHOST_IP_ADDRESS = new StringSystemProperty("brooklyn.location.localhost.address");
     
 }

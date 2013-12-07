@@ -109,5 +109,11 @@ public class JsonyaTest {
         Assert.assertEquals(n.root().at("europe", "uk", "glasgow", "weather").get(), "even wetter");
     }
     
-
+    @Test
+    public void testJsonyaToString() {
+        Assert.assertEquals(europeMap().toString(), 
+            "{ \"europe\": { \"uk\": { \"edinburgh\": { \"population\": 500000, \"weather\": \"wet\", \"lighting\": \"dark\" } },"
+            + " \"france\": { \"population\": 80000000 } } }");
+    }
+    
 }

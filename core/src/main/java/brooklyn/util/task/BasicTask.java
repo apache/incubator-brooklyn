@@ -696,13 +696,14 @@ public class BasicTask<T> implements TaskInternal<T> {
     public static final TaskFinalizer WARN_IF_NOT_RUN = new TaskFinalizer() {
         @Override
         public void onTaskFinalization(Task<?> t) {
-            if (!t.isDone()) {
-                // shouldn't happen
-                log.warn("Task "+this+" is being finalized before completion");
+            if (!Tasks.isAncestorCancelled(t) && !t.isSubmitted()) {
+                log.warn("Task "+t+" was never submitted; did the code forget to run it?");
                 return;
             }
-            if (!Tasks.isAncestorCancelled(t) && !t.isSubmitted()) {
-                log.warn("Task "+this+" was never submitted; did the code forget to run it?");
+            if (!t.isDone()) {
+                // shouldn't happen
+                log.warn("Task "+t+" is being finalized before completion");
+                return;
             }
         }
     };
