@@ -18,9 +18,9 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.math.DoubleMath;
 
-public class ImageChoosers {
+public class BrooklynImageChooser {
 
-    private static final Logger log = LoggerFactory.getLogger(ImageChoosers.class);
+    private static final Logger log = LoggerFactory.getLogger(BrooklynImageChooser.class);
     
     protected static int compare(double left, double right) {
         return DoubleMath.fuzzyCompare(left, right, 0.00000001);
@@ -41,7 +41,7 @@ public class ImageChoosers {
         return img.getName().toLowerCase().matches("(.*[^a-z])?"+pattern.toLowerCase()+"([^a-z].*)?");
     }
     
-    public static double punishmentForOldOsVersions(Image img, OsFamily family, double minVersion) {
+    public double punishmentForOldOsVersions(Image img, OsFamily family, double minVersion) {
         OperatingSystem os = img.getOperatingSystem();
         if (os!=null && family.equals(os.getFamily())) {
             String v = os.getVersion();
@@ -58,12 +58,15 @@ public class ImageChoosers {
         return 0;
     }
     
-    public static List<String> BLACKLISTED_IMAGE_IDS = Arrays.asList(
+    public List<String> blackListedImageIds() {
+        return Arrays.asList(
                 // bad natty image - causes 403 on attempts to apt-get; https://bugs.launchpad.net/ubuntu/+bug/987182
                 "us-east-1/ami-1cb30875"
             );
+    }
 
-    public static List<String> WHITELISTED_IMAGE_IDS = Arrays.asList(
+    public List<String> whilelistedImageIds() {
+        return Arrays.asList(
         // these are the ones we recommend in brooklyn.properties, but now autodetection should be more reliable
 //                "us-east-1/ami-d0f89fb9",
 //                "us-west-1/ami-fe002cbb",
@@ -74,62 +77,66 @@ public class ImageChoosers {
 //                "ap-southeast-2/ami-04ea7a3e",
 //                "ap-northeast-1/ami-fe6ceeff"
             );
+    }
     
-    public static final Ordering<Image> GOOD_AND_BAD_IMAGES_ORDERING = new Ordering<Image>() {
-        public double score(Image img) {
-            double score = 0;
+    public double score(Image img) {
+        double score = 0;
 
-            if (BLACKLISTED_IMAGE_IDS.contains(img.getId()))
-                score -= 50;
+        if (blackListedImageIds().contains(img.getId()))
+            score -= 50;
 
-            if (WHITELISTED_IMAGE_IDS.contains(img.getId()))
-                // NB: this should be less than deprecated punishment to catch deprecation of whitelisted items
-                score += 20;
+        if (whilelistedImageIds().contains(img.getId()))
+            // NB: this should be less than deprecated punishment to catch deprecation of whitelisted items
+            score += 20;
 
-            if (imageNameContainsWordCaseInsensitive(img, "deprecated")) score -= 30;
-            if (imageNameContainsWordCaseInsensitive(img, "alpha")) score -= 10;
-            if (imageNameContainsWordCaseInsensitive(img, "beta")) score -= 5;
-            if (imageNameContainsWordCaseInsensitive(img, "testing")) score -= 5;
-            if (imageNameContainsWordCaseInsensitive(img, "rc")) score -= 3;
+        if (imageNameContainsWordCaseInsensitive(img, "deprecated")) score -= 30;
+        if (imageNameContainsWordCaseInsensitive(img, "alpha")) score -= 10;
+        if (imageNameContainsWordCaseInsensitive(img, "beta")) score -= 5;
+        if (imageNameContainsWordCaseInsensitive(img, "testing")) score -= 5;
+        if (imageNameContainsWordCaseInsensitive(img, "rc")) score -= 3;
 
-            // prefer these guys, in stock brooklyn provisioning
-            score += punishmentForOldOsVersions(img, OsFamily.UBUNTU, 11);
-            score += punishmentForOldOsVersions(img, OsFamily.CENTOS, 6);
-            
-            OperatingSystem os = img.getOperatingSystem();
-            if (os!=null && os.getFamily()!=null) {
-                // preference for these open, popular OS (but only wrt versions above) 
-                if (os.getFamily().equals(OsFamily.CENTOS)) score += 2;
-                else if (os.getFamily().equals(OsFamily.UBUNTU)) score += 2;
-                
-                // slight preference for these 
-                else if (os.getFamily().equals(OsFamily.RHEL)) score += 1;
-                else if (os.getFamily().equals(OsFamily.AMZN_LINUX)) score += 1;
-                else if (os.getFamily().equals(OsFamily.DEBIAN)) score += 1;
-                
-                // prefer to take our chances with unknown / unlabelled linux than something explicitly windows
-                else if (os.getFamily().equals(OsFamily.WINDOWS)) score -= 1;
+        // prefer these guys, in stock brooklyn provisioning
+        score += punishmentForOldOsVersions(img, OsFamily.UBUNTU, 11);
+        score += punishmentForOldOsVersions(img, OsFamily.CENTOS, 6);
+
+        OperatingSystem os = img.getOperatingSystem();
+        if (os!=null && os.getFamily()!=null) {
+            // preference for these open, popular OS (but only wrt versions above) 
+            if (os.getFamily().equals(OsFamily.CENTOS)) score += 2;
+            else if (os.getFamily().equals(OsFamily.UBUNTU)) score += 2;
+
+            // slight preference for these 
+            else if (os.getFamily().equals(OsFamily.RHEL)) score += 1;
+            else if (os.getFamily().equals(OsFamily.AMZN_LINUX)) score += 1;
+            else if (os.getFamily().equals(OsFamily.DEBIAN)) score += 1;
+
+            // prefer to take our chances with unknown / unlabelled linux than something explicitly windows
+            else if (os.getFamily().equals(OsFamily.WINDOWS)) score -= 1;
+        }
+
+        // TODO prefer known providerIds
+
+        if (log.isTraceEnabled())
+            log.trace("initial score "+score+" for "+img);
+
+        return score;
+    }
+
+    public Ordering<Image> orderingScoredWithoutDefaults() {
+        return new Ordering<Image>() {
+            @Override
+            public int compare(Image left, Image right) {
+                return BrooklynImageChooser.compare(score(left), score(right));
             }
-            
-            // TODO prefer known providerIds
-
-            if (log.isTraceEnabled())
-                log.trace("Score "+score+" for "+img);
-            
-            return score;
-        }
-
-        @Override
-        public int compare(Image left, Image right) {
-            return ImageChoosers.compare(score(left), score(right));
-        }
-    };
-
-    public static final Ordering<Image> BROOKLYN_DEFAULT_IMAGES_ORDERING = new Ordering<Image>() {
-        @Override
-        public int compare(Image left, Image right) {
-            return ComparisonChain.start()
-                    .compare(left, right, GOOD_AND_BAD_IMAGES_ORDERING)
+        };
+    }
+    
+    public static Ordering<Image> orderingWithDefaults(final Ordering<Image> primaryOrdering) {
+        return new Ordering<Image>() {
+            @Override
+            public int compare(Image left, Image right) {
+                return ComparisonChain.start()
+                    .compare(left, right, primaryOrdering)
                     // fall back to default strategy otherwise, except preferring *non*-null values
                     // TODO use AlphaNum string comparator
                     .compare(left.getName(), right.getName(), Ordering.<String> natural().nullsFirst())
@@ -139,8 +146,9 @@ public class ImageChoosers {
                     .compare(left.getOperatingSystem().getVersion(), right.getOperatingSystem().getVersion(), Ordering.<String> natural().nullsFirst())
                     .compare(left.getOperatingSystem().getDescription(), right.getOperatingSystem().getDescription(), Ordering.<String> natural().nullsFirst())
                     .compare(left.getOperatingSystem().getArch(), right.getOperatingSystem().getArch(), Ordering.<String> natural().nullsFirst()).result();
-        }
-    };
+            }
+        };
+    }
     
     public static Function<Iterable<? extends Image>, Image> imageChooserFromOrdering(final Ordering<Image> ordering) {
         return new Function<Iterable<? extends Image>, Image>() {
@@ -170,6 +178,12 @@ public class ImageChoosers {
         return maxes;
      }
     
-    public static final Function<Iterable<? extends Image>,Image> BROOKLYN_DEFAULT_IMAGE_CHOOSER = imageChooserFromOrdering(BROOKLYN_DEFAULT_IMAGES_ORDERING);
+    public Ordering<Image> ordering() {
+        return orderingWithDefaults(orderingScoredWithoutDefaults());
+    }
+
+    public Function<Iterable<? extends Image>,Image> chooser() {
+        return imageChooserFromOrdering(ordering());
+    }
     
 }

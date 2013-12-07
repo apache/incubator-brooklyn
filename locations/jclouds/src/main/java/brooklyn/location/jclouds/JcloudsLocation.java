@@ -483,7 +483,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 machineCreationSemaphore.acquire();
                 LOG.info("Acquired in {} machine-creation permit, after waiting {}", this, Time.makeTimeStringRounded(stopwatch));
             } else {
-                LOG.info("Acquired in {} machine-creation permit immediately", this);
+                LOG.debug("Acquired in {} machine-creation permit immediately", this);
             }
 
             LoginCredentials initialCredentials = null;
@@ -618,6 +618,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (e instanceof RunNodesException && ((RunNodesException)e).getNodeErrors().size() > 0) {
                 node = Iterables.get(((RunNodesException)e).getNodeErrors().keySet(), 0);
             }
+            // sometimes AWS nodes come up busted (eg ssh not allowed); just throw it back (and maybe try for another one)
             boolean destroyNode = (node != null) && Boolean.TRUE.equals(setup.get(DESTROY_ON_FAILURE));
             
             LOG.error("Failed to start VM for {}{}: {}", 
@@ -670,6 +671,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     
     /** properties which cause customization of the TemplateBuilder */
     public static final Map<ConfigKey<?>,CustomizeTemplateBuilder> SUPPORTED_TEMPLATE_BUILDER_PROPERTIES = ImmutableMap.<ConfigKey<?>,CustomizeTemplateBuilder>builder()
+            .put(OS_64_BIT, new CustomizeTemplateBuilder() {
+                    public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
+                        Boolean os64Bit = TypeCoercions.coerce(v, Boolean.class);
+                        if (os64Bit!=null)
+                            tb.os64Bit(os64Bit);
+                    }})
             .put(MIN_RAM, new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
                         tb.minRam(TypeCoercions.coerce(v, Integer.class));
