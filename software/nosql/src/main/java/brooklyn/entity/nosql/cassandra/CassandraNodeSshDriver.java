@@ -4,7 +4,6 @@
 package brooklyn.entity.nosql.cassandra;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -94,8 +93,8 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         return expandedInstallDir;
     }
     
-    protected String getShortName() {
-        return "apache-cassandra";
+    protected String getDefaultUnpackedDirectoryName() {
+        return "apache-cassandra-"+getVersion();
     }
     
     @Override
@@ -104,7 +103,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("%s-%s", getShortName(), getVersion()));
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getDefaultUnpackedDirectoryName());
         
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
