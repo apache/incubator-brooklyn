@@ -57,7 +57,6 @@ public abstract class AbstractEffector<T> extends EffectorBase<T> implements Eff
             @Override
             public Task<T> newTask(final Entity entity, final Effector<T> effector, final ConfigBag parameters) {
                 return 
-                    //new BasicTask<T>(
                     new DynamicSequentialTask<T>(
                         getFlagsForTaskInvocationAt(entity),
                 new Callable<T>() {

@@ -59,10 +59,10 @@ public class BasicExecutionManager implements ExecutionManager {
     private static final boolean RENAME_THREADS = Boolean.parseBoolean(System.getProperty("brooklyn.executionManager.renameThreads"));
     
     private static class PerThreadCurrentTaskHolder {
-        public static final ThreadLocal<Task> perThreadCurrentTask = new ThreadLocal<Task>();
+        public static final ThreadLocal<Task<?>> perThreadCurrentTask = new ThreadLocal<Task<?>>();
     }
 
-    public static ThreadLocal<Task> getPerThreadCurrentTask() {
+    public static ThreadLocal<Task<?>> getPerThreadCurrentTask() {
         return PerThreadCurrentTaskHolder.perThreadCurrentTask;
     }
 
@@ -81,9 +81,9 @@ public class BasicExecutionManager implements ExecutionManager {
     //(but more testing is needed before we are sure it is thread-safe!)
     //synch blocks are as finely grained as possible for efficiency
     //Not using a CopyOnWriteArraySet for each, because profiling showed this being a massive perf bottleneck.
-    private ConcurrentMap<Object,Set<Task>> tasksByTag = new ConcurrentHashMap<Object,Set<Task>>();
+    private ConcurrentMap<Object,Set<Task<?>>> tasksByTag = new ConcurrentHashMap<Object,Set<Task<?>>>();
     
-    private ConcurrentMap<String,Task> tasksById = new ConcurrentHashMap<String,Task>();
+    private ConcurrentMap<String,Task<?>> tasksById = new ConcurrentHashMap<String,Task<?>>();
 
     private ConcurrentMap<Object, TaskScheduler> schedulerByTag = new ConcurrentHashMap<Object, TaskScheduler>();
     
@@ -144,9 +144,9 @@ public class BasicExecutionManager implements ExecutionManager {
      * a reference to it as a tag.
      */
     public void deleteTag(Object tag) {
-        Set<Task> tasks = tasksByTag.remove(tag);
+        Set<Task<?>> tasks = tasksByTag.remove(tag);
         if (tasks != null) {
-            for (Task task : tasks) {
+            for (Task<?> task : tasks) {
                 deleteTask(task);
             }
         }
@@ -155,7 +155,7 @@ public class BasicExecutionManager implements ExecutionManager {
     public void deleteTask(Task<?> task) {
         Set<?> tags = checkNotNull(task, "task").getTags();
         for (Object tag : tags) {
-            Set<Task> tasks = getMutableTasksWithTagOrNull(tag);
+            Set<Task<?>> tasks = getMutableTasksWithTagOrNull(tag);
             if (tasks != null) tasks.remove(task);
         }
         tasksById.remove(task.getId());
@@ -181,33 +181,33 @@ public class BasicExecutionManager implements ExecutionManager {
         return tasksById.size();
     }
 
-    private Set<Task> getMutableTasksWithTag(Object tag) {
+    private Set<Task<?>> getMutableTasksWithTag(Object tag) {
         Preconditions.checkNotNull(tag);
-        tasksByTag.putIfAbsent(tag, Collections.synchronizedSet(new LinkedHashSet<Task>()));
+        tasksByTag.putIfAbsent(tag, Collections.synchronizedSet(new LinkedHashSet<Task<?>>()));
         return tasksByTag.get(tag);
     }
 
-    private Set<Task> getMutableTasksWithTagOrNull(Object tag) {
+    private Set<Task<?>> getMutableTasksWithTagOrNull(Object tag) {
         return tasksByTag.get(tag);
     }
 
     @Override
-    public Task getTask(String id) {
+    public Task<?> getTask(String id) {
         return tasksById.get(id);
     }
     
     @Override
     public Set<Task<?>> getTasksWithTag(Object tag) {
-        Set<Task> result = getMutableTasksWithTag(tag);
+        Set<Task<?>> result = getMutableTasksWithTag(tag);
         synchronized (result) {
-            return (Set)Collections.unmodifiableSet(new LinkedHashSet<Task>(result));
+            return (Set<Task<?>>)Collections.unmodifiableSet(new LinkedHashSet<Task<?>>(result));
         }
     }
     
     @Override
     public Set<Task<?>> getTasksWithAnyTag(Iterable<?> tags) {
-        Set result = new LinkedHashSet<Task>();
-        Iterator ti = tags.iterator();
+        Set<Task<?>> result = new LinkedHashSet<Task<?>>();
+        Iterator<?> ti = tags.iterator();
         while (ti.hasNext()) {
             result.addAll(getTasksWithTag(ti.next()));
         }
@@ -219,9 +219,9 @@ public class BasicExecutionManager implements ExecutionManager {
         //NB: for this method retrieval for multiple tags could be made (much) more efficient (if/when it is used with multiple tags!)
         //by first looking for the least-used tag, getting those tasks, and then for each of those tasks
         //checking whether it contains the other tags (looking for second-least used, then third-least used, etc)
-        Set result = new LinkedHashSet<Task>();
+        Set<Task<?>> result = new LinkedHashSet<Task<?>>();
         boolean first = true;
-        Iterator ti = tags.iterator();
+        Iterator<?> ti = tags.iterator();
         while (ti.hasNext()) {
             Object tag = ti.next();
             if (first) { 
@@ -236,13 +236,13 @@ public class BasicExecutionManager implements ExecutionManager {
 
     public Set<Object> getTaskTags() { return Collections.unmodifiableSet(Sets.newLinkedHashSet(tasksByTag.keySet())); }
 
-    public Task<?> submit(Runnable r) { return submit(new LinkedHashMap(1), r); }
-    public Task<?> submit(Map<?,?> flags, Runnable r) { return submit(flags, new BasicTask(flags, r)); }
+    public Task<?> submit(Runnable r) { return submit(new LinkedHashMap<Object,Object>(1), r); }
+    public Task<?> submit(Map<?,?> flags, Runnable r) { return submit(flags, new BasicTask<Void>(flags, r)); }
 
-    public Task<?> submit(Callable c) { return submit(new LinkedHashMap(1), c); }
+    public <T> Task<T> submit(Callable<T> c) { return submit(new LinkedHashMap<Object,Object>(1), c); }
     public <T> Task<T> submit(Map<?,?> flags, Callable<T> c) { return submit(flags, new BasicTask<T>(flags, c)); }
 
-    public <T> Task<T> submit(TaskAdaptable<T> t) { return submit(new LinkedHashMap(1), t); }
+    public <T> Task<T> submit(TaskAdaptable<T> t) { return submit(new LinkedHashMap<Object,Object>(1), t); }
     public <T> Task<T> submit(Map<?,?> flags, TaskAdaptable<T> task) {
         if (!(task instanceof Task))
             task = task.asTask();
@@ -253,22 +253,24 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     public <T> Task<T> scheduleWith(Task<T> task) { return scheduleWith(Collections.emptyMap(), task); }
-	public <T> Task<T> scheduleWith(Map flags, Task<T> task) {
+	public <T> Task<T> scheduleWith(Map<?,?> flags, Task<T> task) {
 		synchronized (task) {
 			if (((TaskInternal<?>)task).getResult()!=null) return task;
 			return submitNewTask(flags, task);
 		}
 	}
 
-	protected Task submitNewScheduledTask(final Map flags, final ScheduledTask task) {
+	@SuppressWarnings("unchecked")
+    protected Task<?> submitNewScheduledTask(final Map<?,?> flags, final ScheduledTask task) {
 		task.submitTimeUtc = System.currentTimeMillis();
 		tasksById.put(task.getId(), task);
 		if (!task.isDone()) {
-			task.result = delayedRunner.schedule(new Callable() { public Object call() {
+			task.result = delayedRunner.schedule(new Callable<Object>() { @SuppressWarnings("rawtypes")
+            public Object call() {
 				if (task.startTimeUtc==-1) task.startTimeUtc = System.currentTimeMillis();
 				final TaskInternal<?> taskScheduled = (TaskInternal<?>) task.newTask();
 				taskScheduled.setSubmittedByTask(task);
-				final Callable oldJob = taskScheduled.getJob();
+				final Callable<?> oldJob = taskScheduled.getJob();
 				taskScheduled.setJob(new Callable() { public Object call() {
 					task.recentRun = taskScheduled;
 					synchronized (task) {
@@ -298,9 +300,10 @@ public class BasicExecutionManager implements ExecutionManager {
 		return task;
 	}
 
-    protected <T> Task<T> submitNewTask(final Map flags, final Task<T> task) {
+    @SuppressWarnings("unchecked")
+    protected <T> Task<T> submitNewTask(final Map<?,?> flags, final Task<T> task) {
         if (task instanceof ScheduledTask)
-            return submitNewScheduledTask(flags, (ScheduledTask)task);
+            return (Task<T>) submitNewScheduledTask(flags, (ScheduledTask)task);
         
         tasksById.put(task.getId(), task);
         totalTaskCount.incrementAndGet();
@@ -323,7 +326,7 @@ public class BasicExecutionManager implements ExecutionManager {
                 }
                 beforeStart(flags, task);
                 if (!task.isCancelled()) {
-                    result = (T) ((TaskInternal)task).getJob().call();
+                    result = ((TaskInternal<T>)task).getJob().call();
                 } else throw new CancellationException();
             } catch(Throwable e) {
                 error = e;
@@ -381,8 +384,7 @@ public class BasicExecutionManager implements ExecutionManager {
         return task;
     }
     
-    @SuppressWarnings("deprecation")
-    protected void beforeSubmit(Map flags, Task<?> task) {
+    protected void beforeSubmit(Map<?,?> flags, Task<?> task) {
         incompleteTaskCount.incrementAndGet();
         
         Task<?> currentTask = Tasks.current();
@@ -390,15 +392,14 @@ public class BasicExecutionManager implements ExecutionManager {
         ((TaskInternal<?>)task).setSubmitTimeUtc(System.currentTimeMillis());
         
         if (flags.get("tag")!=null) ((TaskInternal<?>)task).getMutableTags().add(flags.remove("tag"));
-        if (flags.get("tags")!=null) ((TaskInternal<?>)task).getMutableTags().addAll((Collection)flags.remove("tags"));
+        if (flags.get("tags")!=null) ((TaskInternal<?>)task).getMutableTags().addAll((Collection<?>)flags.remove("tags"));
 
         for (Object tag: ((TaskInternal<?>)task).getTags()) {
             getMutableTasksWithTag(tag).add(task);
         }
     }
 
-    @SuppressWarnings("deprecation")
-    protected void beforeStart(Map flags, Task<?> task) {
+    protected void beforeStart(Map<?,?> flags, Task<?> task) {
         activeTaskCount.incrementAndGet();
         
         //set thread _before_ start time, so we won't get a null thread when there is a start-time
@@ -415,8 +416,7 @@ public class BasicExecutionManager implements ExecutionManager {
         ExecutionUtils.invoke(flags.get("newTaskStartCallback"), task);
     }
 
-    @SuppressWarnings("deprecation")
-    protected void afterEnd(Map flags, Task<?> task) {
+    protected void afterEnd(Map<?,?> flags, Task<?> task) {
         activeTaskCount.decrementAndGet();
         incompleteTaskCount.decrementAndGet();
 
@@ -424,13 +424,13 @@ public class BasicExecutionManager implements ExecutionManager {
         ExecutionUtils.invoke(flags.get("newTaskEndCallback"), task);
 
         PerThreadCurrentTaskHolder.perThreadCurrentTask.remove();
-        ((TaskInternal)task).setEndTimeUtc(System.currentTimeMillis());
+        ((TaskInternal<?>)task).setEndTimeUtc(System.currentTimeMillis());
         //clear thread _after_ endTime set, so we won't get a null thread when there is no end-time
         if (RENAME_THREADS) {
             String newThreadName = "brooklyn-"+Identifiers.makeRandomId(8);
             task.getThread().setName(newThreadName);
         }
-        ((TaskInternal)task).setThread(null);
+        ((TaskInternal<?>)task).setThread(null);
         synchronized (task) { task.notifyAll(); }
 
         for (ExecutionListener listener : listeners) {
