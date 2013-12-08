@@ -70,6 +70,29 @@ public class SolrNodeSshDriver extends JavaSoftwareProcessSshDriver implements S
         if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
         return expandedInstallDir;
     }
+
+    /*
+       Solr ships with a working Jetty server, with optimized settings for Solr, inside the example directory. It is recommended
+       that you use the provided Jetty server for optimal performance. If you absolutely must use a different servlet container
+       then continue to the next section on how to install Solr.
+
+       To install Solr
+
+       1. Unpack the Solr distribution to your desired location.
+       2. Stop your Java servlet container.
+       3. Copy the solr.war file from the Solr distribution to the webapps directory of your servlet container. Do not change
+          the name of this file: it must be named solr.war.
+       4. Copy the Solr Home directory apache-solr-4.x.0/example/solr/ from the distribution to your desired Solr Home location.
+       5. Start your servlet container, passing to it the location of your Solr Home in one of these ways:
+          - Set the Java system property solr.solr.home to your Solr Home. (for example: java -Dsolr.solr.home=/some/dir -jar start.jar).
+          - Configure the servlet container so that a JNDI lookup of java:comp/env/solr/home by the Solr webapp will point to your Solr Home.
+          - Start the servlet container in the directory containing ./solr: the default Solr Home is solr under the JVM's current working directory.
+
+       To confirm your installation, go to the Solr Admin page at http://localhost:8983/solr/. Note that your servlet container may
+       have started on a different port: check the documentation for your servlet container to troubleshoot that issue. Also note that
+       if that port is already in use, Solr will not start. In that case, shut down the servlet container running on that port, or
+       change your Solr port.
+    */
     
     @Override
     public void install() {
