@@ -52,6 +52,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.Tasks;
 
@@ -120,8 +121,8 @@ public class Entities {
                         "description", "Invoking effector \""+effector.getName()+"\" on "+tasks.size()+(tasks.size() == 1 ? " entity" : " entities"),
                         "tag", BrooklynTasks.tagForCallerEntity(callingEntity)),
                 tasks);
-        ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(invoke);
-        return invoke;
+        
+        return DynamicTasks.queueIfPossible(invoke).orSubmitAsync(callingEntity).asTask();
     }
     public static <T> Task<List<T>> invokeEffectorListWithMap(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<T> effector, final Map<String,?> parameters) {

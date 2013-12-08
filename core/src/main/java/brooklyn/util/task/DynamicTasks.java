@@ -6,6 +6,9 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityInternal;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
@@ -51,6 +54,7 @@ public class DynamicTasks {
     public static class TaskQueueingResult<T> implements TaskWrapper<T> {
         private final Task<T> task;
         private final boolean wasQueued;
+        private ExecutionContext execContext = null;
         
         private TaskQueueingResult(TaskAdaptable<T> task, boolean wasQueued) {
             this.task = task.asTask();
@@ -72,13 +76,26 @@ public class DynamicTasks {
         public boolean isQueuedOrSubmitted() {
             return wasQueued || Tasks.isQueuedOrSubmitted(task);
         }
+        /** specifies an execContext to use if the task has to be explicitly submitted;
+         * if omitted it will attempt to find one based on the current thread's context */
+        public TaskQueueingResult<T> executionContext(ExecutionContext execContext) {
+            this.execContext = execContext;
+            return this;
+        }
+        /** as {@link #executionContext(ExecutionContext)} but inferring from the entity */
+        public TaskQueueingResult<T> executionContext(Entity entity) {
+            this.execContext = ((EntityInternal)entity).getManagementSupport().getExecutionContext();
+            return this;
+        }
         private boolean orSubmitInternal() {
             if (!wasQueued()) {
                 if (isQueuedOrSubmitted()) {
                     log.warn("Redundant call to execute "+getTask()+"; skipping");
                     return false;
                 } else {
-                    BasicExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
+                    ExecutionContext ec = execContext;
+                    if (ec==null)
+                        ec = BasicExecutionContext.getCurrentExecutionContext();
                     if (ec==null)
                         throw new IllegalStateException("Cannot execute "+getTask()+" without an execution context; ensure caller is in an ExecutionContext");
                     ec.submit(getTask());
@@ -88,15 +105,21 @@ public class DynamicTasks {
                 return false;
             }
         }
-        /** causes the task to be submitted (asynchronously) if it hasn't already been */
+        /** causes the task to be submitted (asynchronously) if it hasn't already been,
+         * requiring an entity execution context (will try to find a default if not set) */
         public TaskQueueingResult<T> orSubmitAsync() {
             orSubmitInternal();
             return this;
         }
+        /** convenience for setting {@link #executionContext(ExecutionContext)} then submitting async */
+        public TaskQueueingResult<T> orSubmitAsync(Entity entity) {
+            executionContext(entity);
+            return orSubmitAsync();
+        }
         /** causes the task to be submitted *synchronously* if it hasn't already been submitted;
          * useful in contexts such as libraries where callers may be either on a legacy call path 
-         * (which assumes all commands complete immediately)
-         *  */
+         * (which assumes all commands complete immediately);
+         * requiring an entity execution context (will try to find a default if not set) */
         public TaskQueueingResult<T> orSubmitAndBlock() {
             if (orSubmitInternal()) task.getUnchecked();
             return this;

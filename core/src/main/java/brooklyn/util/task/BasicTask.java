@@ -26,7 +26,6 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.management.ExecutionManager;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
@@ -616,7 +615,7 @@ public class BasicTask<T> implements TaskInternal<T> {
 		}
 		if (verbosity>=2) {
 			StackTraceElement[] st = ti.getStackTrace();
-			st = StackTraceSimplifier.cleanStackTrace(st);
+			st = brooklyn.util.javalang.StackTraceSimplifier.cleanStackTrace(st);
 			if (st!=null && st.length>0)
 				rv += "\n" +"At: "+st[0];
 			for (int ii=1; ii<st.length; ii++) {

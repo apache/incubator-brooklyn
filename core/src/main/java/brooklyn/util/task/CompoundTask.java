@@ -28,6 +28,7 @@ import brooklyn.util.collections.MutableMap;
  */
 public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasTaskChildren {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(CompoundTask.class);
                 
     protected final List<Task<? extends T>> children;
