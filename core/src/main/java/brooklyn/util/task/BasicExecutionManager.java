@@ -268,30 +268,37 @@ public class BasicExecutionManager implements ExecutionManager {
 			task.result = delayedRunner.schedule(new Callable<Object>() { @SuppressWarnings("rawtypes")
             public Object call() {
 				if (task.startTimeUtc==-1) task.startTimeUtc = System.currentTimeMillis();
-				final TaskInternal<?> taskScheduled = (TaskInternal<?>) task.newTask();
-				taskScheduled.setSubmittedByTask(task);
-				final Callable<?> oldJob = taskScheduled.getJob();
-				taskScheduled.setJob(new Callable() { public Object call() {
-					task.recentRun = taskScheduled;
-					synchronized (task) {
-					    task.notifyAll();
-					}
-					Object result;
-					try {
-					    result = oldJob.call();
-					} catch (Exception e) {
-					    log.warn("Error executing "+oldJob+" ("+task.getDescription()+")", e);
-					    throw Exceptions.propagate(e);
-				    }
-					task.runCount++;
-					if (task.period!=null && !task.isCancelled()) {
-						task.delay = task.period;
-						submitNewScheduledTask(flags, task);
-					}
-					return result;
-				}});
-				task.nextRun = taskScheduled;
-				return submit(taskScheduled);
+				try {
+				    beforeStart(flags, task);
+				    final TaskInternal<?> taskScheduled = (TaskInternal<?>) task.newTask();
+				    taskScheduled.setSubmittedByTask(task);
+				    final Callable<?> oldJob = taskScheduled.getJob();
+				    taskScheduled.setJob(new Callable() { public Object call() {
+				        task.recentRun = taskScheduled;
+				        synchronized (task) {
+				            task.notifyAll();
+				        }
+				        Object result;
+				        try {
+				            result = oldJob.call();
+				        } catch (Exception e) {
+				            log.warn("Error executing "+oldJob+" ("+task.getDescription()+")", e);
+				            throw Exceptions.propagate(e);
+				        }
+				        task.runCount++;
+				        if (task.period!=null && !task.isCancelled()) {
+				            task.delay = task.period;
+				            submitNewScheduledTask(flags, task);
+				        }
+				        return result;
+				    }});
+				    task.nextRun = taskScheduled;
+				    BasicExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
+				    if (ec!=null) return ec.submit(taskScheduled);
+				    else return submit(taskScheduled);
+				} finally {
+				    afterEnd(flags, task);
+				}
 			}},
 			task.delay.toNanoseconds(), TimeUnit.NANOSECONDS);
 		} else {

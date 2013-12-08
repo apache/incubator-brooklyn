@@ -149,6 +149,7 @@ public class Entities {
     public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
         Task<T> t = Effectors.invocation(entityToCall, effector, parameters).asTask();
+        
         // we pass to callingEntity for consistency above, but in exec-context it should be
         // re-dispatched to targetEntity
         ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(

@@ -341,4 +341,9 @@ public class JmxFeed extends AbstractFeed {
             log.warn("Failed to unregister listener: "+objectName+", "+listener+"; continuing...", e);
         }
     }
+    
+    @Override
+    public String toString() {
+        return "JmxFeed["+jmxUri+"]";
+    }
 }

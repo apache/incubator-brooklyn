@@ -136,15 +136,16 @@ public class FunctionFeed extends AbstractFeed {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void preStart() {
         for (final FunctionPollIdentifier pollInfo : polls.keySet()) {
             Set<FunctionPollConfig<?,?>> configs = polls.get(pollInfo);
             long minPeriod = Integer.MAX_VALUE;
-            Set<AttributePollHandler<Object>> handlers = Sets.newLinkedHashSet();
+            Set<AttributePollHandler<?>> handlers = Sets.newLinkedHashSet();
 
             for (FunctionPollConfig<?,?> config : configs) {
-                handlers.add(new AttributePollHandler<Object>(config, entity, this));
+                handlers.add(new AttributePollHandler(config, entity, this));
                 if (config.getPeriod() > 0) minPeriod = Math.min(minPeriod, config.getPeriod());
             }
             

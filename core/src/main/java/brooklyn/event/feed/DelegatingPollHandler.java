@@ -52,4 +52,32 @@ public class DelegatingPollHandler<V> implements PollHandler<V> {
             delegate.onException(exception);
         }
     }
+    
+    @Override
+    public String toString() {
+        return super.toString()+"["+getDescription()+"]";
+    }
+    
+    @Override
+    public String getDescription() {
+        if (delegates.isEmpty())
+            return "(empty delegate list)";
+        if (delegates.size()==1) 
+            return delegates.get(0).getDescription();
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        int count = 0;
+        for (AttributePollHandler<? super V> delegate : delegates) {
+            if (count>0) sb.append(";");
+            sb.append(" ");
+            sb.append(delegate.getDescription());
+            if (count>2) {
+                sb.append("; ...");
+                break;
+            }
+        }
+        sb.append(" ]");
+        return sb.toString();
+    }
+    
 }

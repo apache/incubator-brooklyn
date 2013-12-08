@@ -7,12 +7,16 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicTask;
+import brooklyn.util.task.DynamicSequentialTask;
 import brooklyn.util.task.ScheduledTask;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
 
@@ -30,18 +34,16 @@ public class Poller<V> {
     private final EntityLocal entity;
     private final Set<Callable<?>> oneOffJobs = new LinkedHashSet<Callable<?>>();
     private final Set<PollJob<V>> pollJobs = new LinkedHashSet<PollJob<V>>();
-    private final Set<Task> oneOffTasks = new LinkedHashSet<Task>();
+    private final Set<Task<?>> oneOffTasks = new LinkedHashSet<Task<?>>();
     private final Set<ScheduledTask> tasks = new LinkedHashSet<ScheduledTask>();
     private volatile boolean running = false;
     
     private static class PollJob<V> {
-        final Callable<V> job;
         final PollHandler<? super V> handler;
-        final long pollPeriod;
+        final Duration pollPeriod;
         final Runnable wrappedJob;
         
-        PollJob(final Callable<V> job, final PollHandler<? super V> handler, long period) {
-            this.job = job;
+        PollJob(final Callable<V> job, final PollHandler<? super V> handler, Duration period) {
             this.handler = handler;
             this.pollPeriod = period;
             
@@ -74,6 +76,9 @@ public class Poller<V> {
     }
 
     public void scheduleAtFixedRate(Callable<V> job, PollHandler<? super V> handler, long period) {
+        scheduleAtFixedRate(job, handler, Duration.millis(period));
+    }
+    public void scheduleAtFixedRate(Callable<V> job, PollHandler<? super V> handler, Duration period) {
         if (running) {
             throw new IllegalStateException("Cannot schedule additional tasks after poller has started");
         }
@@ -81,6 +86,7 @@ public class Poller<V> {
         pollJobs.add(foo);
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void start() {
         // TODO Previous incarnation of this logged this logged polledSensors.keySet(), but we don't know that anymore
         // Is that ok, are can we do better?
@@ -99,13 +105,18 @@ public class Poller<V> {
         }
         
         for (final PollJob<V> pollJob : pollJobs) {
-            if (pollJob.pollPeriod > 0) {
+            final String scheduleName = pollJob.handler.getDescription();
+            if (pollJob.pollPeriod.compareTo(Duration.ZERO) > 0) {
                 Callable<Task<?>> pollingTaskFactory = new Callable<Task<?>>() {
                     public Task<?> call() {
-                        return new BasicTask<V>(MutableMap.of("entity", entity), pollJob.wrappedJob); }
+                        DynamicSequentialTask<V> task = new DynamicSequentialTask<V>(MutableMap.of("displayName", scheduleName, "entity", entity), 
+                            new Callable<V>() { public V call() { pollJob.wrappedJob.run(); return null; } } );
+                        BrooklynTasks.setTransient(task);
+                        return task;
+                    }
                 };
                 ScheduledTask task = new ScheduledTask(MutableMap.of("period", pollJob.pollPeriod), pollingTaskFactory);
-                tasks.add((ScheduledTask) ((EntityInternal)entity).getExecutionContext().submit(task));
+                tasks.add((ScheduledTask)Entities.submit(entity, task));
             } else {
                 if (log.isDebugEnabled()) log.debug("Activating poll (but leaving off, as period {}) for {} (using {})", new Object[] {pollJob.pollPeriod, entity, this});
             }
@@ -120,7 +131,7 @@ public class Poller<V> {
         }
         
         running = false;
-        for (Task task : oneOffTasks) {
+        for (Task<?> task : oneOffTasks) {
             task.cancel(true);
         }
         for (ScheduledTask task : tasks) {

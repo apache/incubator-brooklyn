@@ -365,6 +365,14 @@ public class ZabbixFeed extends AbstractFeed {
             public void onException(Exception exception) {
                 log.warn("zabbix exception registering host", exception);
             }
+            @Override
+            public String toString() {
+                return super.toString()+"["+getDescription()+"]";
+            }
+            @Override
+            public String getDescription() {
+                return "Zabbix rest poll";
+            }
         };
 
         // Schedule registration attempt once per second

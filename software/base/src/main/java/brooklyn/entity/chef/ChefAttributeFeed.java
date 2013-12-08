@@ -12,6 +12,7 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.time.Duration;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -24,6 +25,7 @@ import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -329,5 +331,16 @@ public class ChefAttributeFeed extends AbstractFeed {
                 entity.setAttribute(attribute, null);
             }
         }
+        
+        @Override
+        public String toString() {
+            return super.toString()+"["+getDescription()+"]";
+        }
+        
+        @Override
+        public String getDescription() {
+            return ""+chefAttributeSensors;
+        }
     }
+    
 }

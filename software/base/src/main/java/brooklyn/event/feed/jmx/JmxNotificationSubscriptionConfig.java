@@ -11,7 +11,7 @@ import brooklyn.event.feed.FeedConfig;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 
-public class JmxNotificationSubscriptionConfig<T> extends FeedConfig<Object, T, JmxNotificationSubscriptionConfig<T>>{
+public class JmxNotificationSubscriptionConfig<T> extends FeedConfig<javax.management.Notification, T, JmxNotificationSubscriptionConfig<T>>{
 
     private ObjectName objectName;
     private NotificationFilter notificationFilter;
