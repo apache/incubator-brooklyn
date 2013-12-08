@@ -125,7 +125,7 @@ define([
                 FormatJSON(this.task.toJSON()), false, false, 150, 400)
 
             ViewUtils.updateTextareaWithData($(".task-detail .for-textarea", this.$el), 
-                this.task.get('detailedStatus'), false, false, 30, 100)
+                this.task.get('detailedStatus'), false, false, 30, 250)
 
             this.updateFieldWith('streams',
                 function(v) {
