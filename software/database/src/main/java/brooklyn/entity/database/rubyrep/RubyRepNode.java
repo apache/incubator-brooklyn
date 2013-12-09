@@ -4,7 +4,7 @@ import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.database.DatabaseNode;
+import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
@@ -39,8 +39,8 @@ public interface RubyRepNode extends SoftwareProcess {
             String.class, "database.rubyrep.leftDatabaseUrl", "URL of the left database");
 
     @SetFromFlag("leftDatabase")
-    static final ConfigKey<? extends DatabaseNode> LEFT_DATABASE = new BasicConfigKey<DatabaseNode>(
-            DatabaseNode.class, "database.rubyrep.leftDatabase", "Brooklyn database entity to use as the left DBMS");
+    static final ConfigKey<? extends DatastoreCommon> LEFT_DATABASE = new BasicConfigKey<DatastoreCommon>(
+            DatastoreCommon.class, "database.rubyrep.leftDatabase", "Brooklyn database entity to use as the left DBMS");
 
     @SetFromFlag("leftDatabaseName")
     static final ConfigKey<String> LEFT_DATABASE_NAME = new BasicConfigKey<String>(
@@ -59,8 +59,8 @@ public interface RubyRepNode extends SoftwareProcess {
             String.class, "database.rubyrep.rightDatabaseUrl", "Right database URL");
 
     @SetFromFlag("rightDatabase")
-    static final ConfigKey<? extends DatabaseNode> RIGHT_DATABASE = new BasicConfigKey<DatabaseNode>(
-            DatabaseNode.class, "database.rubyrep.rightDatabase");
+    static final ConfigKey<? extends DatastoreCommon> RIGHT_DATABASE = new BasicConfigKey<DatastoreCommon>(
+            DatastoreCommon.class, "database.rubyrep.rightDatabase");
 
     @SetFromFlag("rightDatabaseName")
     static final ConfigKey<String> RIGHT_DATABASE_NAME = new BasicConfigKey<String>(

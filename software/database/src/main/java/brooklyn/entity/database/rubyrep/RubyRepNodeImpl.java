@@ -1,15 +1,10 @@
 package brooklyn.entity.database.rubyrep;
 
-import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.database.DatabaseNode;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
-import com.google.common.base.Functions;
-
 import java.net.URI;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
+
+import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
+import brooklyn.event.basic.DependentConfiguration;
 
 public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode {
 
@@ -34,19 +29,19 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
     public void init() {
         super.init();
 
-        DatabaseNode leftNode = getConfig(LEFT_DATABASE);
-        DatabaseNode rightNode = getConfig(RIGHT_DATABASE);
+        DatastoreCommon leftNode = getConfig(LEFT_DATABASE);
+        DatastoreCommon rightNode = getConfig(RIGHT_DATABASE);
 
         if (leftNode != null) {
-            setConfig(LEFT_DATABASE_URL, DependentConfiguration.attributeWhenReady(leftNode, DatabaseNode.DATASTORE_URL));
+            setConfig(LEFT_DATABASE_URL, DependentConfiguration.attributeWhenReady(leftNode, DatastoreCommon.DATASTORE_URL));
         }
         if (rightNode != null) {
-            setConfig(RIGHT_DATABASE_URL, DependentConfiguration.attributeWhenReady(rightNode, DatabaseNode.DATASTORE_URL));
+            setConfig(RIGHT_DATABASE_URL, DependentConfiguration.attributeWhenReady(rightNode, DatastoreCommon.DATASTORE_URL));
         }
     }
 
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return RubyRepDriver.class;
     }
 

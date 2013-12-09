@@ -51,6 +51,11 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
     @Override
     public Integer getMaxConnections() { return getConfig(MAX_CONNECTIONS); }
 
+    @Override
+    public String getShortName() {
+        return "PostgreSQL";
+    }
+
     public static class ChefPostgreSqlLifecycle extends ChefLifecycleEffectorTasks {
         {
             usePidFile("/var/run/postgresql/*.pid");

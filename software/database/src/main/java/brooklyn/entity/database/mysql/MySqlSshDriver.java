@@ -231,10 +231,11 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     }
 
     public ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String filenameAlreadyInstalledAtServer) {
-        return DynamicTasks.queue(SshEffectorTasks.ssh(
-            "cd "+getRunDir(), 
-            getBasedir()+"/bin/mysql --defaults-file=mymysql.cnf < "+filenameAlreadyInstalledAtServer)
-            .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
+        return DynamicTasks.queue(
+                SshEffectorTasks.ssh(
+                                "cd "+getRunDir(),
+                                getBasedir()+"/bin/mysql --defaults-file=mymysql.cnf < "+filenameAlreadyInstalledAtServer)
+                        .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
     }
 
 }

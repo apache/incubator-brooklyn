@@ -20,6 +20,8 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
 public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
@@ -69,19 +71,17 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
         super.connectSensors();
         setAttribute(DATASTORE_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MYSQL_PORT)));
         
-        /*        
-         * TODO status gives us things like:
-         *   Uptime: 2427  Threads: 1  Questions: 581  Slow queries: 0  Opens: 53  Flush tables: 1  Open tables: 35  Queries per second avg: 0.239
-         * So can extract lots of sensors from that.
-         */
-        Location machine = Iterables.get(getLocations(), 0, null);
-        
-        if (machine instanceof SshMachineLocation) {
+        // TODO status gives us things like:
+        //   Uptime: 2427  Threads: 1  Questions: 581  Slow queries: 0  Opens: 53  Flush tables: 1  Open tables: 35  Queries per second avg: 0.239
+        // So can extract lots of sensors from that.
+
+        Optional<Location> location = Iterables.tryFind(getLocations(), Predicates.instanceOf(SshMachineLocation.class));
+        if (location.isPresent()) {
             String cmd = getDriver().getStatusCmd();
             feed = SshFeed.builder()
                     .entity(this)
                     .period(Duration.FIVE_SECONDS)
-                    .machine((SshMachineLocation)machine)
+                    .machine((SshMachineLocation) location.get())
                     .poll(new SshPollConfig<Boolean>(SERVICE_UP)
                             .command(cmd)
                             .setOnSuccess(true)
@@ -105,6 +105,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     @Override
     protected void disconnectSensors() {
         if (feed != null) feed.stop();
+        super.disconnectSensors();
     }
 
     public int getPort() {

@@ -24,6 +24,7 @@ import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.trait.HasShortName;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
@@ -40,7 +41,7 @@ import brooklyn.util.flags.SetFromFlag;
  */
 @Catalog(name="PostgreSQL Node", description="PostgreSQL is an object-relational database management system (ORDBMS)", iconUrl="classpath:///postgresql-logo.jpeg")
 @ImplementedBy(PostgreSqlNodeImpl.class)
-public interface PostgreSqlNode extends SoftwareProcess, DatastoreCommon {
+public interface PostgreSqlNode extends SoftwareProcess, HasShortName, DatastoreCommon {
 
     @SetFromFlag("configFileUrl")
     ConfigKey<String> CONFIGURATION_FILE_URL = ConfigKeys.newStringConfigKey(

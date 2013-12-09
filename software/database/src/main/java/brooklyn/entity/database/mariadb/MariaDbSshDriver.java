@@ -16,20 +16,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
-import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
@@ -93,12 +92,7 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     @Override
     public void install() {
-        // mariadb-${version}-${driver.osTag}.tar.gz
-
-        ManagementContext managementContext = ((EntityInternal) entity).getManagementContext();
-        DownloadResolverManager downloadManager = managementContext.getEntityDownloadsManager();
-        DownloadResolver resolver = downloadManager.newDownloader(
-                this, ImmutableMap.of("filename", getInstallFilename()));
+        DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", getInstallFilename()));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("mariadb-%s-%s", getVersion(), getOsTag()));
@@ -117,8 +111,7 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(format("tar xfvz %s", saveAs));
 
-        newScript(INSTALLING).
-            body.append(commands).execute();
+        newScript(INSTALLING).body.append(commands).execute();
     }
 
     public MariaDbNodeImpl getEntity() { return (MariaDbNodeImpl) super.getEntity(); }
@@ -130,10 +123,10 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     public void customize() {
         copyDatabaseConfigScript();
 
-        newScript(CUSTOMIZING).
-            updateTaskAndFailOnNonZeroResultCode().
-            body.append(
-                "chmod 600 mymysql.cnf",
+        newScript(CUSTOMIZING)
+            .updateTaskAndFailOnNonZeroResultCode()
+            .body.append(
+                "chmod 600 my.cnf",
                 getBasedir()+"/scripts/mysql_install_db "+
                     "--basedir="+getBasedir()+" --datadir="+getDatadir()+" "+
                     "--defaults-file=my.cnf"
@@ -161,9 +154,7 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
     
     private void copyDatabaseConfigScript() {
-        newScript(CUSTOMIZING).
-                body.append("echo copying config script").
-                execute();  //create the directory
+        newScript(CUSTOMIZING).execute();  //create the directory
 
         String configScriptContents = processTemplate(entity.getAttribute(MariaDbNode.TEMPLATE_CONFIGURATION_URL));
         Reader configContents = new StringReader(configScriptContents);
@@ -173,24 +164,25 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     private boolean copyDatabaseCreationScript() {
         InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
-        if (creationScript==null) 
-            return false;
+        if (creationScript==null) return false;
         getMachine().copyTo(creationScript, getRunDir() + "/creation-script.sql");
         return true;
     }
 
     public String getMariaDbServerOptionsString() {
         Map<String, Object> options = entity.getConfig(MariaDbNode.MARIADB_SERVER_CONF);
-        if (!truth(options)) return "";
-        String result = "";
-        for (Map.Entry<String, Object> entry : options.entrySet()) {
-            if("".equals(entry.getValue())){
-                result += ""+entry.getKey()+"\n";
-            }else{
-                result += ""+entry.getKey()+" = "+entry.getValue()+"\n";
+        StringBuilder result = new StringBuilder();
+        if (truth(options)) {
+            for (Map.Entry<String, Object> entry : options.entrySet()) {
+                result.append(entry.getKey());
+                String value = entry.getValue().toString();
+                if (!Strings.isEmpty(value)) {
+                    result.append(" = ").append(value);
+                }
+                result.append('\n');
             }
         }
-        return result;
+        return result.toString();
     }
 
     @Override
@@ -234,10 +226,11 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
 
     public ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String filenameAlreadyInstalledAtServer) {
-        return DynamicTasks.queue(SshEffectorTasks.ssh(
-            "cd "+getRunDir(), 
-            getBasedir()+"/bin/mysql --defaults-file=my.cnf < "+filenameAlreadyInstalledAtServer)
-            .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
+        return DynamicTasks.queue(
+                SshEffectorTasks.ssh(
+                                "cd "+getRunDir(),
+                                getBasedir()+"/bin/mysql --defaults-file=my.cnf < "+filenameAlreadyInstalledAtServer)
+                        .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
     }
 
 }

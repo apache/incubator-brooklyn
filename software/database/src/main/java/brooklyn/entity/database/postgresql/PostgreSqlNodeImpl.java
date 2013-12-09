@@ -56,7 +56,7 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
         setAttribute(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
 
         Optional<Location> location = Iterables.tryFind(getLocations(), Predicates.instanceOf(SshMachineLocation.class));
-        if (location .isPresent()) {
+        if (location.isPresent()) {
             String cmd = getDriver().getStatusCmd();
 
             feed = SshFeed.builder()
@@ -80,6 +80,11 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
         super.disconnectSensors();
     }
     
+    @Override
+    public String getShortName() {
+        return "PostgreSQL";
+    }
+
     @Override
     public String executeScript(String commands) {
         return getDriver()
