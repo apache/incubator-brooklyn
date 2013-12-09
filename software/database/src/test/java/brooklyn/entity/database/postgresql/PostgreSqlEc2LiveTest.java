@@ -3,6 +3,7 @@ package brooklyn.entity.database.postgresql;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
+import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
@@ -14,11 +15,11 @@ public class PostgreSqlEc2LiveTest extends AbstractEc2LiveTest {
     @Override
     protected void doTest(Location loc) throws Exception {
         PostgreSqlNode psql = app.createAndManageChild(EntitySpec.create(PostgreSqlNode.class)
-                .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT));
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, PostgreSqlIntegrationTest.CREATION_SCRIPT));
 
         app.start(ImmutableList.of(loc));
 
-        new VogellaExampleAccess("org.postgresql.Driver", psql.getAttribute(PostgreSqlNode.DATASTORE_URL)).readModifyAndRevertDataBase();
+        new VogellaExampleAccess("org.postgresql.Driver", psql.getAttribute(DatastoreCommon.DATASTORE_URL)).readModifyAndRevertDataBase();
     }
     
     @Test(enabled=false)

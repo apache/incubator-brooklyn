@@ -14,7 +14,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.database.DatabaseNode;
+import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.database.mysql.MySqlIntegrationTest;
 import brooklyn.entity.database.mysql.MySqlNode;
@@ -23,6 +23,7 @@ import brooklyn.entity.database.postgresql.PostgreSqlNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
@@ -43,19 +44,18 @@ public class RubyRepIntegrationTest {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        if (tapp != null) Entities.destroyAll(tapp);
-        tapp = null;
+        Entities.destroyAllCatching(managementContext);
     }
 
     @Test(groups = "Integration")
     public void test_localhost_mysql() throws Exception {
         MySqlNode db1 = tapp.createAndManageChild(EntitySpec.create(MySqlNode.class)
-                .configure("creationScriptContents", MySqlIntegrationTest.CREATION_SCRIPT)
-                .configure("port", "9111"));
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, MySqlIntegrationTest.CREATION_SCRIPT)
+                .configure(MySqlNode.MYSQL_PORT, PortRanges.fromInteger(9111)));
 
         MySqlNode db2 = tapp.createAndManageChild(EntitySpec.create(MySqlNode.class)
-                .configure("creationScriptContents", MySqlIntegrationTest.CREATION_SCRIPT)
-                .configure("port", "9112"));
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, MySqlIntegrationTest.CREATION_SCRIPT)
+                .configure(MySqlNode.MYSQL_PORT, PortRanges.fromInteger(9112)));
 
 
         startInLocation(tapp, db1, db2, new LocalhostMachineProvisioningLocation());
@@ -69,10 +69,12 @@ public class RubyRepIntegrationTest {
     public void test_localhost_postgres() throws Exception {
         String createTwoDbsScript = PostgreSqlIntegrationTest.CREATION_SCRIPT +
                 PostgreSqlIntegrationTest.CREATION_SCRIPT.replaceAll("CREATE USER.*", "").replaceAll(" feedback", " feedback1");
-        
+
         PostgreSqlNode db1 = tapp.createAndManageChild(EntitySpec.create(PostgreSqlNode.class)
-                .configure("creationScriptContents", createTwoDbsScript)
-                .configure("port", "9113"));
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, createTwoDbsScript)
+                .configure(PostgreSqlNode.POSTGRESQL_PORT, PortRanges.fromInteger(9113))
+                .configure(PostgreSqlNode.MAX_CONNECTIONS, 10)
+                .configure(PostgreSqlNode.SHARED_MEMORY, "512kB")); // Very low so kernel configuration not needed
 
         startInLocation(tapp, db1, "feedback", db1, "feedback1", new LocalhostMachineProvisioningLocation());
         testReplication(db1, "feedback", db1, "feedback1");
@@ -81,26 +83,27 @@ public class RubyRepIntegrationTest {
     @Test(enabled = false, groups = "Integration") // TODO this doesn't appear to be supported by RubyRep
     public void test_localhost_postgres_mysql() throws Exception {
         PostgreSqlNode db1 = tapp.createAndManageChild(EntitySpec.create(PostgreSqlNode.class)
-                .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
-                .configure("port", "9115"));
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, PostgreSqlIntegrationTest.CREATION_SCRIPT)
+                .configure(PostgreSqlNode.POSTGRESQL_PORT, PortRanges.fromInteger(9115))
+                .configure(PostgreSqlNode.MAX_CONNECTIONS, 10)
+                .configure(PostgreSqlNode.SHARED_MEMORY, "512kB")); // Very low so kernel configuration not needed
 
         MySqlNode db2 = tapp.createAndManageChild(EntitySpec.create(MySqlNode.class)
-                .configure("creationScriptContents", MySqlIntegrationTest.CREATION_SCRIPT)
-                .configure("port", "9116"));
-
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, MySqlIntegrationTest.CREATION_SCRIPT)
+                .configure(MySqlNode.MYSQL_PORT, PortRanges.fromInteger(9116)));
 
         startInLocation(tapp, db1, db2, new LocalhostMachineProvisioningLocation());
         testReplication(db1, db2);
     }
 
-    public static void startInLocation(TestApplication tapp, DatabaseNode db1, DatabaseNode db2, Location... locations) throws Exception {
+    public static void startInLocation(TestApplication tapp, DatastoreCommon db1, DatastoreCommon db2, Location... locations) throws Exception {
         startInLocation(tapp, db1, "feedback", db2, "feedback", locations);
     }
 
     /**
      * Configures rubyrep to connect to the two databases and starts the app
      */
-    public static void startInLocation(TestApplication tapp, DatabaseNode db1, String dbName1, DatabaseNode db2, String dbName2, Location... locations) throws Exception {
+    public static void startInLocation(TestApplication tapp, DatastoreCommon db1, String dbName1, DatastoreCommon db2, String dbName2, Location... locations) throws Exception {
         tapp.createAndManageChild(EntitySpec.create(RubyRepNode.class)
                 .configure("leftDatabase", db1)
                 .configure("rightDatabase", db2)
@@ -115,25 +118,22 @@ public class RubyRepIntegrationTest {
 
         tapp.start(Arrays.asList(locations));
     }
-    
 
-    public static void testReplication(DatabaseNode db1, DatabaseNode db2) throws Exception {
+    public static void testReplication(DatastoreCommon db1, DatastoreCommon db2) throws Exception {
         testReplication(db1, "feedback", db2, "feedback");
     }
 
     /**
      * Tests replication between the two databases by altering the first and checking the change is applied to the second
      */
-    public static void testReplication(DatabaseNode db1, String dbName1, DatabaseNode db2, String dbName2) throws Exception {
-        String db1Url = db1.getAttribute(DatabaseNode.DB_URL);
-        String db2Url = db2.getAttribute(DatabaseNode.DB_URL);
+    public static void testReplication(DatastoreCommon db1, String dbName1, DatastoreCommon db2, String dbName2) throws Exception {
+        String db1Url = db1.getAttribute(DatastoreCommon.DATASTORE_URL);
+        String db2Url = db2.getAttribute(DatastoreCommon.DATASTORE_URL);
 
         log.info("Testing replication between " + db1Url + " and " + db2Url);
 
-        VogellaExampleAccess vea1 = new VogellaExampleAccess(db1 instanceof MySqlNode ? "com.mysql.jdbc.Driver" : "org.postgresql.Driver",
-                db1Url, dbName1);
-        VogellaExampleAccess vea2 = new VogellaExampleAccess(db2 instanceof MySqlNode ? "com.mysql.jdbc.Driver" : "org.postgresql.Driver",
-                db2Url, dbName2);
+        VogellaExampleAccess vea1 = new VogellaExampleAccess(db1 instanceof MySqlNode ? "com.mysql.jdbc.Driver" : "org.postgresql.Driver", db1Url, dbName1);
+        VogellaExampleAccess vea2 = new VogellaExampleAccess(db2 instanceof MySqlNode ? "com.mysql.jdbc.Driver" : "org.postgresql.Driver", db2Url, dbName2);
 
         try {
             vea1.connect();

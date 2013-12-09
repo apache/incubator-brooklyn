@@ -9,6 +9,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.chef.ChefLiveTestSupport;
+import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -63,15 +64,16 @@ public class PostgreSqlChefTest extends ChefLiveTestSupport {
     @Test(groups="Live")
     public void testPostgresScriptAndAccess() throws Exception {
         ChefLiveTestSupport.installBrooklynChefHostedConfig(app);
-        PortRange randomPort = PortRanges.fromString(""+(5420+new Random().nextInt(10))+"+");
+        PortRange randomPort = PortRanges.fromString(String.format("%d+", 5420 + new Random().nextInt(10)));
         psql = app.createAndManageChild(PostgreSqlSpecs.specChef()
-                .configure(PostgreSqlNode.CREATION_SCRIPT_CONTENTS, PostgreSqlIntegrationTest.CREATION_SCRIPT)
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, PostgreSqlIntegrationTest.CREATION_SCRIPT)
                 .configure(PostgreSqlNode.POSTGRESQL_PORT, randomPort)
+                .configure(PostgreSqlNode.SHARED_MEMORY, "8MB")
             );
 
         app.start(ImmutableList.of(targetLocation));
 
-        String url = psql.getAttribute(PostgreSqlNode.DATASTORE_URL);
+        String url = psql.getAttribute(DatastoreCommon.DATASTORE_URL);
         log.info("Trying to connect to "+psql+" at "+url);
         Assert.assertNotNull(url);
         Assert.assertTrue(url.contains("542"));

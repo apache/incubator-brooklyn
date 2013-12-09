@@ -3,6 +3,7 @@ package brooklyn.entity.database.mariadb;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
+import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
@@ -16,11 +17,11 @@ public class MariaDbLiveEc2Test extends AbstractEc2LiveTest {
     protected void doTest(Location loc) throws Exception {
 
         MariaDbNode mariadb = app.createAndManageChild(EntitySpec.create(MariaDbNode.class)
-                .configure("creationScriptContents", MariaDbIntegrationTest.CREATION_SCRIPT));
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, MariaDbIntegrationTest.CREATION_SCRIPT));
 
         app.start(ImmutableList.of(loc));
 
-        new VogellaExampleAccess("com.mysql.jdbc.Driver", mariadb.getAttribute(MariaDbNode.DB_URL)).readModifyAndRevertDataBase();
+        new VogellaExampleAccess("com.mysql.jdbc.Driver", mariadb.getAttribute(DatastoreCommon.DATASTORE_URL)).readModifyAndRevertDataBase();
     }
 
 }
