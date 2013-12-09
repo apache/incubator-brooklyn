@@ -3,6 +3,7 @@ package brooklyn.entity.nosql.mongodb;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
@@ -37,7 +39,7 @@ import com.google.common.collect.Iterables;
  *
  * Removal strategy is always {@link #NON_PRIMARY_REMOVAL_STRATEGY}.
  */
-public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDBReplicaSet {
+public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDBReplicaSet, Iterable<MongoDBServer> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBReplicaSetImpl.class);
 
@@ -131,13 +133,8 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     @Override
     public Collection<MongoDBServer> getSecondaries() {
         // IS_SECONDARY predicate guarantees cast in transform is safe.
-        return FluentIterable.from(getMembers())
+        return FluentIterable.from(this)
                 .filter(IS_SECONDARY)
-                .transform(new Function<Entity, MongoDBServer>() {
-                    @Override public MongoDBServer apply(@Nullable Entity input) {
-                        return MongoDBServer.class.cast(input);
-                    }
-                })
                 .toList();
     }
 
@@ -175,9 +172,13 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         if (mustInitialise.compareAndSet(true, false)) {
             if (LOG.isInfoEnabled())
                 LOG.info("First server up in {} is: {}", getReplicaSetName(), server);
-            server.getClient().initializeReplicaSet(getReplicaSetName(), nextMemberId.getAndIncrement());
-            setAttribute(PRIMARY, server);
-            setAttribute(Startable.SERVICE_UP, true);
+            boolean replicaSetInitialised = server.getClient().initializeReplicaSet(getReplicaSetName(), nextMemberId.getAndIncrement());
+            if (replicaSetInitialised) {
+                setAttribute(PRIMARY, server);
+                setAttribute(Startable.SERVICE_UP, true);
+            } else {
+                setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            }
         } else {
             if (LOG.isDebugEnabled())
                 LOG.debug("Scheduling addition of member to {}: {}", getReplicaSetName(), server);
@@ -279,4 +280,14 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         setAttribute(Startable.SERVICE_UP, false);
     }
 
+    @Override
+    public Iterator<MongoDBServer> iterator() {
+        return FluentIterable.from(getMembers())
+                .transform(new Function<Entity, MongoDBServer>() {
+                    @Override public MongoDBServer apply(@Nullable Entity input) {
+                        return MongoDBServer.class.cast(input);
+                    }
+                })
+                .iterator();
+    }
 }

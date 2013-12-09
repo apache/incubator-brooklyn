@@ -71,9 +71,8 @@ public class MongoClientSupport implements Closeable {
             return Optional.absent();
         }
         if (!status.ok()) {
-            LOG.debug("Unexpected result of {} on {}: {}",
+            LOG.warn("Unexpected result of {} on {}: {}",
                     new Object[]{command, getServerAddress(), status.getErrorMessage()});
-            return Optional.absent();
         }
         return Optional.of(status);
     }
