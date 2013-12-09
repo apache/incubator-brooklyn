@@ -24,6 +24,7 @@ import brooklyn.entity.rebind.RebindContext;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.management.Task;
 import brooklyn.mementos.EntityMemento;
@@ -61,19 +62,19 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     public AbstractControllerImpl() {
         this(MutableMap.of(), null, null);
     }
-    public AbstractControllerImpl(Map properties) {
+    public AbstractControllerImpl(Map<?, ?> properties) {
         this(properties, null, null);
     }
     public AbstractControllerImpl(Entity parent) {
         this(MutableMap.of(), parent, null);
     }
-    public AbstractControllerImpl(Map properties, Entity parent) {
+    public AbstractControllerImpl(Map<?, ?> properties, Entity parent) {
         this(properties, parent, null);
     }
     public AbstractControllerImpl(Entity parent, Cluster cluster) {
         this(MutableMap.of(), parent, cluster);
     }
-    public AbstractControllerImpl(Map properties, Entity parent, Cluster cluster) {
+    public AbstractControllerImpl(Map<?, ?> properties, Entity parent, Cluster cluster) {
         super(properties, parent);
     }
 
@@ -99,12 +100,12 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     public void bind(Map flags) {
         if (flags.containsKey("serverPool")) {
             setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("serverPool"));
-        }
+        } 
     }
 
     @Override
     public void onManagementNoLongerMaster() {
-        super.onManagementNoLongerMaster();
+        super.onManagementNoLongerMaster(); // TODO remove when deprecated method in parent removed
         isActive = false;
         serverPoolMemberTrackerPolicy.reset();
     }
@@ -145,8 +146,14 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         return getAttribute(PORT_NUMBER_SENSOR);
     }
 
-    protected AttributeSensor<String> getHostnameSensor() {
+    @Override
+    public AttributeSensor<String> getHostnameSensor() {
         return getAttribute(HOSTNAME_SENSOR);
+    }
+
+    @Override
+    public Set<String> getServerPoolAddresses() {
+        return serverPoolAddresses;
     }
 
     @Override
@@ -160,6 +167,9 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     protected String inferUrl(boolean requireManagementAccessible) {
         String protocol = checkNotNull(getProtocol(), "no protocol configured");
         String domain = getDomain();
+        if (domain != null && domain.startsWith("*.")) {
+            domain = domain.replace("*.", ""); // Strip wildcard
+        }
         Integer port = checkNotNull(getPort(), "no port configured (the requested port may be in use)");
         if (requireManagementAccessible) {
             HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, port);
@@ -187,11 +197,12 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void preStart() {
         super.preStart();
-        
+
+        ConfigToAttributes.apply(this);
+
         setAttribute(PROTOCOL, inferProtocol());
-        setAttribute(DOMAIN_NAME);
         setAttribute(ROOT_URL, inferUrl());
-        
+ 
         checkNotNull(getPortNumberSensor(), "no sensor configured to infer port number");
     }
     
@@ -325,12 +336,10 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
                 LOG.info("Removing from {}, member {} with old address {}, because inferred address is now null", new Object[] {this, member, oldAddress});
                 serverPoolAddresses.remove(oldAddress);
             }
-            
-        } else if (newAddress.equals(oldAddress)) {
+        } else if (Objects.equal(newAddress, oldAddress)) {
             if (LOG.isTraceEnabled())
                 LOG.trace("Ignoring unchanged address "+oldAddress);
             return;
-            
         } else {
             if (oldAddress != null) {
                 LOG.info("Replacing in {}, member {} with old address {}, new address {}", new Object[] {this, member, oldAddress, newAddress});
@@ -379,34 +388,33 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
                 new Object[] {member, ip, port, this});
         return null;
     }
-	
+
     @Override
     public RebindSupport<EntityMemento> getRebindSupport() {
         return new BasicEntityRebindSupport(this) {
             @Override public EntityMemento getMemento() {
                 // Note: using MutableMap so accepts nulls
-            	Map<String, Object> flags = Maps.newLinkedHashMap();
-            	flags.put("serverPoolAddresses", serverPoolAddresses);
-            	flags.put("serverPoolTargets", MementoTransformer.transformEntitiesToIds(serverPoolTargets));
+                Map<String, Object> flags = Maps.newLinkedHashMap();
+                flags.put("serverPoolAddresses", serverPoolAddresses);
+                flags.put("serverPoolTargets", MementoTransformer.transformEntitiesToIds(serverPoolTargets));
                 return super.getMementoWithProperties(flags);
             }
             @SuppressWarnings({ "unchecked", "serial" })
             @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
-            	super.doReconstruct(rebindContext, memento);
-            	// TODO If pool-target entity couldn't be resolved, then  serverPoolAddresses and serverPoolTargets
-            	// will be out-of-sync (for ever more?)
-            	serverPoolAddresses.addAll((Collection<String>) memento.getCustomField("serverPoolAddresses"));
-				serverPoolTargets.putAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomField("serverPoolTargets"), new TypeToken<Map<Entity,String>>() {}, true));
+                super.doReconstruct(rebindContext, memento);
+                // TODO If pool-target entity couldn't be resolved, then  serverPoolAddresses and serverPoolTargets
+                // will be out-of-sync (for ever more?)
+                serverPoolAddresses.addAll((Collection<String>) memento.getCustomField("serverPoolAddresses"));
+                serverPoolTargets.putAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomField("serverPoolTargets"), new TypeToken<Map<Entity,String>>() {}, true));
             }
         };
     }
-    
+
     private final Function<Entity, String> entityIdFunction = new Function<Entity, String>() {
-		@Override
-		@Nullable
-		public String apply(@Nullable Entity input) {
-			return (input != null) ? input.getId() : null;
-		}
-    	
-	};
+        @Override
+        @Nullable
+        public String apply(@Nullable Entity input) {
+            return (input != null) ? input.getId() : null;
+        }
+    };
 }

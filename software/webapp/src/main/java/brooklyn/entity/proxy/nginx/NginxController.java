@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012-2013 by Cloudsoft Corp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.proxy.nginx;
 
 import java.util.Map;
@@ -13,7 +28,6 @@ import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.HasShortName;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableMap;
@@ -36,11 +50,11 @@ import com.google.common.collect.ImmutableMap;
  * or different ports if that is supported.
  * see more info on Ssl in {@link ProxySslConfig}.
  */
-@Catalog(name="nginx server", description="A single nginx server: an HTTP and reverse proxy server", iconUrl="classpath:///nginx-logo.jpeg")
+@Catalog(name="Nginx Server", description="A single Nginx server. Provides HTTP and reverse proxy services", iconUrl="classpath:///nginx-logo.jpeg")
 @ImplementedBy(NginxControllerImpl.class)
 public interface NginxController extends AbstractController, HasShortName {
 
-    MethodEffector<Void> GET_CURRENT_CONFIGURATION = 
+    MethodEffector<Void> GET_CURRENT_CONFIGURATION =
             new MethodEffector<Void>(NginxController.class, "getCurrentConfiguration");
     
     @SetFromFlag("version")
@@ -48,13 +62,12 @@ public interface NginxController extends AbstractController, HasShortName {
             ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.3.7");
 
     @SetFromFlag("stickyVersion")
-    ConfigKey<String> STICKY_VERSION =
-        new BasicConfigKey<String>(String.class, "nginx.sticky.version", 
-                "Version of ngnix-sticky-module to be installed, if required", "1.0");
+    ConfigKey<String> STICKY_VERSION = ConfigKeys.newStringConfigKey(
+            "nginx.sticky.version", "Version of ngnix-sticky-module to be installed, if required", "1.0");
 
     @SetFromFlag("pcreVersion")
-    ConfigKey<String> PCRE_VERSION =
-        new BasicConfigKey<String>(String.class, "pcre.version", "Version of PCRE to be installed, if required", "8.32");
+    ConfigKey<String> PCRE_VERSION = ConfigKeys.newStringConfigKey(
+            "pcre.version", "Version of PCRE to be installed, if required", "8.32");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
@@ -67,20 +80,28 @@ public interface NginxController extends AbstractController, HasShortName {
                     "pcre", "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${addonversion}.tar.gz"));
 
     @SetFromFlag("sticky")
-    BasicConfigKey<Boolean> STICKY =
-        new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
+    ConfigKey<Boolean> STICKY = ConfigKeys.newBooleanConfigKey(
+            "nginx.sticky", "Whether to use sticky sessions", true);
 
     @SetFromFlag("httpPollPeriod")
-    BasicConfigKey<Long> HTTP_POLL_PERIOD =
-        new BasicConfigKey<Long>(Long.class, "nginx.sensorpoll.http", "poll period (in milliseconds)", 1000L);
+    ConfigKey<Long> HTTP_POLL_PERIOD = ConfigKeys.newLongConfigKey(
+            "nginx.sensorpoll.http", "Poll period (in milliseconds)", 1000L);
 
     @SetFromFlag("withLdOpt")
-    ConfigKey<String> WITH_LD_OPT = new BasicConfigKey<String>(
-            String.class, "nginx.install.withLdOpt", "String to pass in with --with-ld-opt=\"<val>\" (and for OS X has pcre auto-appended to this)", "-L /usr/local/lib");
+    ConfigKey<String> WITH_LD_OPT = ConfigKeys.newStringConfigKey(
+            "nginx.install.withLdOpt", "String to pass in with --with-ld-opt=\"<val>\" (and for OS X has pcre auto-appended to this)", "-L /usr/local/lib");
 
     @SetFromFlag("withCcOpt")
-    ConfigKey<String> WITH_CC_OPT = new BasicConfigKey<String>(
-            String.class, "nginx.install.withCcOpt", "String to pass in with --with-cc-opt=\"<val>\"", "-I /usr/local/include");
+    ConfigKey<String> WITH_CC_OPT = ConfigKeys.newStringConfigKey(
+            "nginx.install.withCcOpt", "String to pass in with --with-cc-opt=\"<val>\"", "-I /usr/local/include");
+
+    @SetFromFlag("configTemplate")
+    ConfigKey<String> SERVER_CONF_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
+            "nginx.config.templateUrl", "The server.conf configuration file URL (FreeMarker template)", "classpath://brooklyn/entity/proxy/nginx/server.conf");
+
+    @SetFromFlag("staticContentArchive")
+    ConfigKey<String> STATIC_CONTENT_ARCHIVE_URL = ConfigKeys.newStringConfigKey(
+            "nginx.config.staticContentArchiveUrl", "The URL of an archive file of static content (To be copied to the server)");
 
     boolean isSticky();
 
@@ -89,6 +110,6 @@ public interface NginxController extends AbstractController, HasShortName {
 
     String getConfigFile();
 
-    boolean appendSslConfig(String id, StringBuilder out, String prefix, ProxySslConfig ssl,
-            boolean sslBlock, boolean certificateBlock);
+    Iterable<UrlMapping> getUrlMappings();
+
 }
