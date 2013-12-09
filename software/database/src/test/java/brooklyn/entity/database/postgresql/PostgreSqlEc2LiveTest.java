@@ -18,7 +18,7 @@ public class PostgreSqlEc2LiveTest extends AbstractEc2LiveTest {
 
         app.start(ImmutableList.of(loc));
 
-        new VogellaExampleAccess("org.postgresql.Driver", psql.getAttribute(PostgreSqlNode.DB_URL)).readModifyAndRevertDataBase();
+        new VogellaExampleAccess("org.postgresql.Driver", psql.getAttribute(PostgreSqlNode.DATASTORE_URL)).readModifyAndRevertDataBase();
     }
     
     @Test(enabled=false)

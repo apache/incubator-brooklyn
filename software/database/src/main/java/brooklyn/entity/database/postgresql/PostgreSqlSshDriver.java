@@ -141,11 +141,15 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
         String configUrl = getEntity().getConfig(PostgreSqlNode.CONFIGURATION_FILE_URL);
         if (Strings.isBlank(configUrl)) {
+            // http://wiki.postgresql.org/wiki/Tuning_Your_PostgreSQL_Server
+            // If the same setting is listed multiple times, the last one wins.
             DynamicTasks.queue(SshEffectorTasks.ssh(
                     executeCommandThenAsUserTeeOutputToFile(
                             chainGroup(
                                     "echo \"listen_addresses = '*'\"",
-                                    "echo \"port = " + getPostgreSqlPort() +  "\"",
+                                    "echo \"port = " + getEntity().getPostgreSqlPort() +  "\"",
+                                    "echo \"max_connections = " + getEntity().getMaxConnections() +  "\"",
+                                    "echo \"shared_buffers = " + getEntity().getSharedMemory() +  "\"",
                                     "echo \"external_pid_file = " + getRunDir() + "/postgresql.pid" +  "\""),
                             "postgres", getDataDir() + "/postgresql.conf")));
         } else {
@@ -207,10 +211,6 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     public String getPidFile() {
         return getRunDir() + "/postgresql.pid";
-    }
-
-    public Integer getPostgreSqlPort() {
-        return getEntity().getAttribute(PostgreSqlNode.POSTGRESQL_PORT);
     }
 
     protected String callPgctl(String command, boolean waitForIt) {

@@ -29,7 +29,16 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
     public PostgreSqlDriver getDriver() {
         return (PostgreSqlDriver) super.getDriver();
     }
-    
+
+    @Override
+    public Integer getPostgreSqlPort() { return getAttribute(POSTGRESQL_PORT); }
+
+    @Override
+    public String getSharedMemory() { return getConfig(SHARED_MEMORY); }
+
+    @Override
+    public Integer getMaxConnections() { return getConfig(MAX_CONNECTIONS); }
+
     @Override
     public void init() {
         super.init();

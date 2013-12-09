@@ -71,7 +71,7 @@ public class PostgreSqlChefTest extends ChefLiveTestSupport {
 
         app.start(ImmutableList.of(targetLocation));
 
-        String url = psql.getAttribute(PostgreSqlNode.DB_URL);
+        String url = psql.getAttribute(PostgreSqlNode.DATASTORE_URL);
         log.info("Trying to connect to "+psql+" at "+url);
         Assert.assertNotNull(url);
         Assert.assertTrue(url.contains("542"));

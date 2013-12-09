@@ -41,7 +41,16 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
         super.init();
         new ChefPostgreSqlLifecycle().attachLifecycleEffectors(this);
     }
-    
+
+    @Override
+    public Integer getPostgreSqlPort() { return getAttribute(POSTGRESQL_PORT); }
+
+    @Override
+    public String getSharedMemory() { return getConfig(SHARED_MEMORY); }
+
+    @Override
+    public Integer getMaxConnections() { return getConfig(MAX_CONNECTIONS); }
+
     public static class ChefPostgreSqlLifecycle extends ChefLifecycleEffectorTasks {
         {
             usePidFile("/var/run/postgresql/*.pid");
@@ -56,7 +65,7 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
                         .knifeConvergeRunList("postgresql::server")
                         .knifeAddAttributes(Jsonya
                             .at("postgresql", "config").add(
-                                "port", entity().getAttribute(PostgreSqlNode.POSTGRESQL_PORT), 
+                                "port", entity().getPostgreSqlPort(), 
                                 "listen_addresses", "*").getRootMap())
                         .knifeAddAttributes(Jsonya
                             .at("postgresql", "pg_hba").list().map().add(
@@ -71,18 +80,22 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
             // now run the creation script
             String creationScript;
             String creationScriptUrl = entity().getConfig(PostgreSqlNode.CREATION_SCRIPT_URL);
-            if (creationScriptUrl != null)
+            if (creationScriptUrl != null) {
                 creationScript = ResourceUtils.create(entity()).getResourceAsString(creationScriptUrl);
-            else creationScript = entity().getConfig(PostgreSqlNode.CREATION_SCRIPT_CONTENTS);
-            entity().invoke(PostgreSqlNodeChefImpl.EXECUTE_SCRIPT, 
-                    ConfigBag.newInstance().configure(ExecuteScriptEffectorBody.SCRIPT, creationScript).getAllConfig()).getUnchecked();
+            } else {
+                creationScript = entity().getConfig(PostgreSqlNode.CREATION_SCRIPT_CONTENTS);
+            }
+            entity().executeScript(creationScript);
 
             // and finally connect sensors
-            ((PostgreSqlNodeChefImpl)entity()).connectSensors();
+            entity().connectSensors();
         }
         protected void preStopCustom() {
-            ((PostgreSqlNodeChefImpl)entity()).disconnectSensors();
+            entity().disconnectSensors();
             super.preStopCustom();
+        }
+        protected PostgreSqlNodeChefImpl entity() {
+            return (PostgreSqlNodeChefImpl) super.entity();
         }
     }
     
@@ -123,9 +136,8 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
 
     @Override
     public String executeScript(String commands) {
-        return Entities.invokeEffector(this, this, EXECUTE_SCRIPT, ConfigBag.newInstance().
-            configure(ExecuteScriptEffectorBody.SCRIPT, commands).getAllConfig())
-            .getUnchecked();
+        return Entities.invokeEffector(this, this, EXECUTE_SCRIPT,
+                ConfigBag.newInstance().configure(ExecuteScriptEffectorBody.SCRIPT, commands).getAllConfig()).getUnchecked();
     }
-    
+
 }
