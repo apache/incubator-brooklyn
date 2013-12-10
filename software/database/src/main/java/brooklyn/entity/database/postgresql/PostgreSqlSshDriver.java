@@ -55,6 +55,8 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
     private final Iterable<String> pgctlLocations = ImmutableList.of(
             "/usr/lib/postgresql/9.*/bin/",
             "/opt/local/lib/postgresql9*/bin/",
+            "/usr/lib/postgresql/8.*/bin/",
+            "/opt/local/lib/postgresql8*/bin/",
             "/usr/local/bin/",
             "/usr/bin/",
             "/bin/"
