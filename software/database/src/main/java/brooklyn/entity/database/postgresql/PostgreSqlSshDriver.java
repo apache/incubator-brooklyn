@@ -182,6 +182,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         if (copyDatabaseCreationScript()) {
             newScript("running postgres creation script")
                     .body.append(
+                            "cd " + getInstallDir(),
                             callPgctl("start", true),
                             sudoAsUser("postgres", getInstallDir() + "/bin/psql -p " + entity.getAttribute(PostgreSqlNode.POSTGRESQL_PORT) + " --file " + getRunDir() + "/creation-script.sql"),
                             callPgctl("stop", true))
