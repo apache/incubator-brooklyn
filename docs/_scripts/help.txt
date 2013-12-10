@@ -30,7 +30,7 @@ updating a snapshot version, in /v/VERSION/ on the server:
 
 
 export TARGET=`pwd -P`/../../brooklyncentral.github.com
-export BV=0.6.0-SNAPSHOT   # BROOKLYN_VERSION
+export BV=0.6.1-SNAPSHOT   # BROOKLYN_VERSION
 
 
 # build, copy
