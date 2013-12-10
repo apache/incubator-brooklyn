@@ -20,6 +20,7 @@ import java.util.Map;
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -54,8 +55,11 @@ import com.google.common.collect.ImmutableMap;
 @ImplementedBy(NginxControllerImpl.class)
 public interface NginxController extends AbstractController, HasShortName {
 
-    MethodEffector<Void> GET_CURRENT_CONFIGURATION =
-            new MethodEffector<Void>(NginxController.class, "getCurrentConfiguration");
+    MethodEffector<String> GET_CURRENT_CONFIGURATION =
+            new MethodEffector<String>(NginxController.class, "getCurrentConfiguration");
+
+    MethodEffector<Void> DEPLOY =
+            new MethodEffector<Void>(NginxController.class, "deploy");
     
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
@@ -113,6 +117,9 @@ public interface NginxController extends AbstractController, HasShortName {
 
     @Effector(description="Gets the current server configuration (by brooklyn recalculating what the config should be); does not affect the server")
     String getCurrentConfiguration();
+
+    @Effector(description="Deploys an archive of static content to the server")
+    void deploy(@EffectorParam(name="archiveUrl", description="The URL of the static content archive to deploy") String archiveUrl);
 
     String getConfigFile();
 

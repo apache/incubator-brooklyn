@@ -29,7 +29,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
-import brooklyn.entity.java.JarBuilder;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
@@ -266,43 +265,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // Install static content archive, if specified
         String archiveUrl = entity.getConfig(NginxController.STATIC_CONTENT_ARCHIVE_URL);
         if (Strings.isNonBlank(archiveUrl)) {
-            // TODO from VanilaJavaApp - move this logic to superclass or helper
-            // If a local folder, then jar it up
-            if (new File(archiveUrl).isDirectory()) {
-                try {
-                    File jarFile = JarBuilder.buildJar(new File(archiveUrl));
-                    archiveUrl = jarFile.getAbsolutePath();
-                } catch (IOException e) {
-                    throw new IllegalStateException("Error archiving directory "+archiveUrl, e);
-                }
-            }
-
-            int result = getMachine().installTo(resource, archiveUrl, getRunDir() + "/");
-            if (result != 0)
-                throw new IllegalStateException(format("unable to install static content archive %s for %s at %s", archiveUrl, entity, getMachine()));
-
-            String destName = archiveUrl;
-            destName = destName.contains("?") ? destName.substring(0, destName.indexOf('?')) : destName;
-            destName = destName.substring(destName.lastIndexOf('/') + 1);
-
-            try { // Use the location mutex to prevent package manager locking issues
-                getMachine().acquireMutex("installing", "customizing"+getEntity().getId());
-
-                // if it's a jar, zip or tgz then expand
-                if (destName.toLowerCase().endsWith(".zip") || destName.toLowerCase().endsWith(".jar")) {
-                    result = getMachine().execCommands("unzipping", ImmutableList.of(BashCommands.INSTALL_UNZIP, format("cd %s && unzip %s", getRunDir(), destName)));
-                } else if (destName.toLowerCase().endsWith(".tgz") || destName.toLowerCase().endsWith(".tar.gz")) {
-                    result = getMachine().execCommands("untarring gz", ImmutableList.of(BashCommands.INSTALL_TAR, format("cd %s && tar xvfz %s", getRunDir(), destName)));
-                } else if (destName.toLowerCase().endsWith(".tar")) {
-                    result = getMachine().execCommands("untarring", ImmutableList.of(BashCommands.INSTALL_TAR, format("cd %s && tar xvf %s", getRunDir(), destName)));
-                }
-                if (result != 0)
-                    throw new IllegalStateException(format("unable to install static content for %s at %s (failed to expand archive %s)", entity, getMachine(), archiveUrl));
-            } catch (InterruptedException e) {
-                throw Exceptions.propagate(e);
-            } finally {
-                getMachine().releaseMutex("installing");
-            }
+            getEntity().deploy(archiveUrl);
         }
 
         customizationCompleted = true;
