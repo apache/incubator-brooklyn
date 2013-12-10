@@ -8,11 +8,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -183,11 +191,15 @@ public class ResourceUtils {
 //                    u = getLoader().getResource("/"+urlNoSlash);
 //                    if (u!=null) return u.openStream();
                 }
-                if (url.startsWith("~")) {
-                    // but first, if it starts with tilde, treat specially
-                    url = Strings.removeFromStart(tidyFileUrl("file:"+url), "file://", "file:");
+                File f;
+                // but first, if it starts with tilde, treat specially
+                if (url.startsWith("~/")) {
+                    f = new File(System.getProperty("user.home"), url.substring(2));
+                } else if (url.startsWith("~\\")) {
+                    f = new File(System.getProperty("user.home"), url.substring(2));
+                } else {
+                    f = new File(url);
                 }
-                File f = new File(url);
                 if (f.exists()) return new FileInputStream(f);
             } catch (IOException e) {
                 //catch the above because both u and modified url will be interesting
@@ -201,37 +213,53 @@ public class ResourceUtils {
         }
     }
     
+    private final static Pattern pattern = Pattern.compile("^file:/*~/+(.*)$");
+
     public static URL tidy(URL url) {
+        // File class has helpful methods for URIs but not URLs. So we convert.
+        URI in;
         try {
-            if ("file".equals(url.getProtocol()))
-                return new URL(tidyFileUrl(url.toString()));
-            return url;
-        } catch (MalformedURLException e) {
-            /* see comments on MalformedURLException in org.reflections.utils.ClasspathHelper */
-            return url;
+            in = url.toURI();
+        } catch (URISyntaxException e) {
+            throw Exceptions.propagate(e);
         }
+        URI out;
+
+        Matcher matcher = pattern.matcher(in.toString());
+        if (matcher.matches()) {
+            // home-relative
+            File home = new File(System.getProperty("user.home"));
+            File file = new File(home, matcher.group(1));
+            out = file.toURI();
+        } else if (in.getScheme().equals("file:")) {
+            // some other file, so canonicalize
+            File file = new File(in);
+            out = file.toURI();
+        } else {
+            // some other scheme, so no-op
+            out = in;
+        }
+
+        URL urlOut;
+        try {
+            urlOut = out.toURL();
+        } catch (MalformedURLException e) {
+            throw Exceptions.propagate(e);
+        }
+        if (!urlOut.equals(in) && log.isDebugEnabled()) {
+            log.debug("quietly changing " + url + " to " + urlOut);
+        }
+        return urlOut;
     }
     
     public static String tidyFileUrl(String url) {
-        if (url.matches("file://[A-Za-z]:[/\\\\].*")) {
-            // file://c:/path/to/x is sometimes mistakenly supplied
-            // where file:///c:/path/to/x is the correct syntax.
-            // treat the former as the latter since the former doesn't have any other interpretation
-            if (log.isDebugEnabled())
-                log.debug("quietly changing "+url+" to file:/// prefix");
-            url = "file:///"+url.substring(7);
+        try {
+            return tidy(new URL(url)).toString();
+        } catch (MalformedURLException e) {
+            throw Exceptions.propagate(e);
         }
-
-        String urlRelativeToHome = Strings.removeFromStart(url, "file://~/", "file:~/");
-        if (!url.equals(urlRelativeToHome)) {
-            // allow ~ syntax for home dir
-            url = "file://"+System.getProperty("user.home")+"/"+urlRelativeToHome;
-            if (log.isDebugEnabled())
-                log.debug("quietly changing to "+url+" from file://~/ URL");
-        }
-        return url;
     }
-    
+
     public static String mergeFilePaths(String... items) {
         char separatorChar = File.separatorChar;
         StringBuilder result = new StringBuilder();
@@ -244,14 +272,15 @@ public class ResourceUtils {
     }
     
     public static String tidyFilePath(String path) {
-        String pathRelativeToHome = Strings.removeFromStart(path, "~/");
-        if (path.equals(pathRelativeToHome)) {
+        Iterable<String> pathParts = Splitter.on(File.separator).split(path);
+        if (!Iterables.isEmpty(pathParts) && Iterables.get(pathParts, 0).equals("~")) {
+            pathParts = Iterables.concat(ImmutableSet.of(System.getProperty("user.home")), Iterables.skip(pathParts, 1));
+            String result = Joiner.on(File.separator).join(pathParts);
+            if (log.isDebugEnabled()) log.debug("quietly changing to "+path+" to "+result);
+            return result;
+        } else {
             return path;
         }
-        // allow ~ syntax for home dir
-        String result = mergeFilePaths(System.getProperty("user.home"), pathRelativeToHome);
-        if (log.isDebugEnabled()) log.debug("quietly changing to "+path+" to "+result);
-        return result;
     }
     
     /** returns the protocol (e.g. http) if one appears to be specified, or else null;
