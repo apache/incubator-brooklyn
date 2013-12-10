@@ -18,6 +18,8 @@ package brooklyn.entity.database.postgresql;
 import static brooklyn.util.ssh.BashCommands.*;
 import static java.lang.String.format;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 import javax.annotation.Nullable;
@@ -32,7 +34,9 @@ import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Urls;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
@@ -40,10 +44,12 @@ import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 
 /**
  * The SSH implementation of the {@link PostgreSqlDriver}.
@@ -171,7 +177,13 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         // Wait for commands to complete before running the creation script
         DynamicTasks.waitForLast();
 
-        executeDatabaseCreationScript();
+        // Capture log file contents if there is an error configuring the database
+        try {
+            executeDatabaseCreationScript();
+        } catch (RuntimeException r) {
+            copyLogFileContents();
+            throw Exceptions.propagate(r);
+        }
 
         // Try establishing an external connection. If you get a "Connection refused...accepting TCP/IP connections
         // on port 5432?" error then the port is probably closed. Check that the firewall allows external TCP/IP
@@ -209,6 +221,18 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     public String getPidFile() {
         return getRunDir() + "/postgresql.pid";
+    }
+
+    public void copyLogFileContents() {
+        try {
+            File file = File.createTempFile("postgresql-log", getEntity().getId());
+            int result = getMachine().copyFrom(getLogFile(), file.getAbsolutePath());
+            if (result != 0) throw new IllegalStateException("Could not access log file " + getLogFile());
+            log.info("Saving {} contents as {}", getLogFile(), file);
+            Streams.logStreamTail(log, "postgresql.log", Streams.byteArrayOfString(Files.toString(file, Charsets.UTF_8)), 1024);
+        } catch (IOException ioe) {
+            log.debug("Error reading copied log file: {}", ioe);
+        }
     }
 
     protected String callPgctl(String command, boolean waitForIt) {
