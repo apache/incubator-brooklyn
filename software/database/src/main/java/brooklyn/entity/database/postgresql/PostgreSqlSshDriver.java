@@ -15,16 +15,8 @@
  */
 package brooklyn.entity.database.postgresql;
 
-import static brooklyn.util.ssh.BashCommands.alternativesGroup;
-import static brooklyn.util.ssh.BashCommands.chainGroup;
-import static brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
-import static brooklyn.util.ssh.BashCommands.executeCommandThenAsUserTeeOutputToFile;
-import static brooklyn.util.ssh.BashCommands.fail;
-import static brooklyn.util.ssh.BashCommands.ifExecutableElse1;
-import static brooklyn.util.ssh.BashCommands.installPackage;
-import static brooklyn.util.ssh.BashCommands.sudo;
-import static brooklyn.util.ssh.BashCommands.sudoAsUser;
-import static brooklyn.util.ssh.BashCommands.warn;
+import static brooklyn.util.ssh.BashCommands.*;
+import static java.lang.String.format;
 
 import java.io.InputStream;
 
@@ -135,7 +127,10 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
                         sudo("chown postgres:postgres " + getLogFile()),
                         sudo("touch " + getPidFile()),
                         sudo("chown postgres:postgres " + getPidFile()),
-                        callPgctl("initdb", true))
+                        alternativesGroup(
+                                chainGroup(format("test -e %s", getInstallDir() + "/bin/initdb"),
+                                        sudoAsUser("postgres", getInstallDir() + "/bin/initdb -D " + getDataDir())),
+                                callPgctl("initdb", true)))
                 .failOnNonZeroResultCode()
                 .execute();
 
@@ -150,7 +145,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
                                     "echo \"port = " + getEntity().getPostgreSqlPort() +  "\"",
                                     "echo \"max_connections = " + getEntity().getMaxConnections() +  "\"",
                                     "echo \"shared_buffers = " + getEntity().getSharedMemory() +  "\"",
-                                    "echo \"external_pid_file = " + getRunDir() + "/postgresql.pid" +  "\""),
+                                    "echo \"external_pid_file = " + getPidFile() +  "\""),
                             "postgres", getDataDir() + "/postgresql.conf")));
         } else {
             String contents = processTemplate(configUrl);
