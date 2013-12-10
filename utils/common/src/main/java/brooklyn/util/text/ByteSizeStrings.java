@@ -2,13 +2,13 @@ package brooklyn.util.text;
 
 public class ByteSizeStrings {
 
-    String suffixBytes = "b";
-    String suffixKilo = "kb";
-    String suffixMega = "mb";
-    String suffixGiga = "gb";
-    int bytesPerMetricUnit = 1000;
-    int maxLen = 4;
-    int precision = 3;
+    private String suffixBytes = "B";
+    private String suffixKilo = "kB";
+    private String suffixMega = "MB";
+    private String suffixGiga = "GB";
+    private int bytesPerMetricUnit = 1000;
+    private int maxLen = 4;
+    private int precision = 3;
     
     public String makeSizeString(long size) {
         long t = size;
