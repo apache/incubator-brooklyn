@@ -56,10 +56,9 @@ public class NginxConfigFileGenerator {
         config.append("}\n");
         config.append("http {\n");
 
-        ProxySslConfig globalSslConfig = nginx.getConfig(NginxController.SSL_CONFIG);
-        boolean ssl = globalSslConfig != null;
+        ProxySslConfig globalSslConfig = nginx.getSslConfig();
 
-        if (ssl) {
+        if (nginx.isSsl()) {
             verifyConfig(globalSslConfig);
             appendSslConfig("global", config, "    ", globalSslConfig, true, true);
         }

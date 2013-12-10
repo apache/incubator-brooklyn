@@ -55,10 +55,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     private static final Logger LOG = LoggerFactory.getLogger(NginxControllerImpl.class);
 
     private volatile HttpFeed httpFeed;
-    
-    public NginxControllerImpl() {
-        super();
-    }
+    private final Set<String> installedKeysCache = Sets.newLinkedHashSet();
 
     @Override
     public void reload() {
@@ -168,7 +165,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         
         driver.getMachine().copyTo(new ByteArrayInputStream(cfg.getBytes()), driver.getRunDir()+"/conf/server.conf");
         
-        installSslKeys("global", getConfig(SSL_CONFIG));
+        installSslKeys("global", getSslConfig());
         
         for (UrlMapping mapping : getUrlMappings()) {
             //cache ensures only the first is installed, which is what is assumed below
@@ -176,12 +173,12 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         }
     }
     
-    private final Set<String> installedKeysCache = Sets.newLinkedHashSet();
-
-    /** installs SSL keys named as  ID.{crt,key}  where nginx can find them;
-     * currently skips re-installs (does not support changing)
+    /**
+     * Installs SSL keys named as {@code id.crt} and {@code id.key} where nginx can find them.
+     * <p>
+     * Currently skips re-installs (does not support changing)
      */
-    protected void installSslKeys(String id, ProxySslConfig ssl) {
+    public void installSslKeys(String id, ProxySslConfig ssl) {
         if (ssl == null) return;
 
         if (installedKeysCache.contains(id)) return;

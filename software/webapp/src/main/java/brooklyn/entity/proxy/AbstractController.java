@@ -27,6 +27,10 @@ public interface AbstractController extends SoftwareProcess, LoadBalancer {
 
     boolean isActive();
 
+    ProxySslConfig getSslConfig();
+
+    boolean isSsl();
+
     String getProtocol();
 
     /** returns primary domain this controller responds to, or null if it responds to all domains */
