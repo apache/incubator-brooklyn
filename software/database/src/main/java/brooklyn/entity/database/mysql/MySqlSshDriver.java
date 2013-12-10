@@ -16,20 +16,18 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails.OsVersions;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.ComparableVersion;
@@ -47,14 +45,16 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     public static final Logger log = LoggerFactory.getLogger(MySqlSshDriver.class);
 
-    private String _expandedInstallDir;
-        
+    private String expandedInstallDir;
+
     public MySqlSshDriver(MySqlNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
+
+        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFile());
     }
-    
+
     public String getOsTag() {
-//      e.g. "osx10.6-x86_64"; see http://www.mysql.com/downloads/mysql/#downloads
+        // e.g. "osx10.6-x86_64"; see http://www.mysql.com/downloads/mysql/#downloads
         OsDetails os = getLocation().getOsDetails();
         if (os == null) return "linux2.6-i686";
         if (os.isMac()) {
@@ -70,40 +70,46 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         String osp2 = os.is64bit() ? "x86_64" : "i686";
         return osp1+"-"+osp2;
     }
-	
-	public String getMirrorUrl() {
+
+    public String getMirrorUrl() {
         return entity.getConfig(MySqlNode.MIRROR_URL);
-	}
-    
-    public String getBasedir() { return getExpandedInstallDir(); }
-	
-    public String getDatadir() {
+    }
+
+    public String getBaseDir() { return getExpandedInstallDir(); }
+
+    public String getDataDir() {
         String result = entity.getConfig(MySqlNode.DATA_DIR);
         return (result == null) ? "." : result;
+    }
+
+    public String getLogFile() {
+        return Urls.mergePaths(getRunDir(), "console.log");
+    }
+
+    public String getConfigFile() {
+        return "mymysql.cnf";
     }
 
     public String getInstallFilename() {
         return String.format("mysql-%s-%s.tar.gz", getVersion(), getOsTag());
     }
-    
+
     private String getExpandedInstallDir() {
-        if (_expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return _expandedInstallDir;
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
     }
-    
+
     @Override
     public void install() {
-        //mysql-${version}-${driver.osTag}.tar.gz
-        
-        DownloadResolver resolver = ((EntityInternal)entity).getManagementContext().getEntityDownloadsManager().newDownloader(
-                this, ImmutableMap.of("filename", getInstallFilename()));
+        DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", getInstallFilename()));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        _expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("mysql-%s-%s", getVersion(), getOsTag()));
-        
+        expandedInstallDir = getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("mysql-%s-%s", getVersion(), getOsTag()));
+
         List<String> commands = new LinkedList<String>();
         commands.add(BashCommands.INSTALL_TAR);
         commands.add(BashCommands.INSTALL_CURL);
+
         commands.add("echo installing extra packages");
         commands.add(installPackage(ImmutableMap.of("yum", "libgcc_s.so.1"), null));
         commands.add(installPackage(ImmutableMap.of("yum", "libaio.so.1 libncurses.so.5", "apt", "libaio1 libaio-dev"), null));
@@ -114,31 +120,30 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         commands.addAll(commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(format("tar xfvz %s", saveAs));
 
-        newScript(INSTALLING).
-            body.append(commands).execute();
+        newScript(INSTALLING).body.append(commands).execute();
     }
 
     public MySqlNodeImpl getEntity() { return (MySqlNodeImpl) super.getEntity(); }
     public int getPort() { return getEntity().getPort(); }
     public String getSocketUid() { return getEntity().getSocketUid(); }
     public String getPassword() { return getEntity().getPassword(); }
-    
+
     @Override
     public void customize() {
         copyDatabaseConfigScript();
 
-        newScript(CUSTOMIZING).
-            updateTaskAndFailOnNonZeroResultCode().
-            body.append(
-                "chmod 600 mymysql.cnf",
-                getBasedir()+"/scripts/mysql_install_db "+
-                    "--basedir="+getBasedir()+" --datadir="+getDatadir()+" "+
-                    "--defaults-file=mymysql.cnf"
-            ).execute();
+        newScript(CUSTOMIZING)
+            .updateTaskAndFailOnNonZeroResultCode()
+            .body.append(
+                "chmod 600 "+getConfigFile(),
+                getBaseDir()+"/scripts/mysql_install_db "+
+                    "--basedir="+getBaseDir()+" --datadir="+getDataDir()+" "+
+                    "--defaults-file="+getConfigFile())
+            .execute();
 
         // launch, then we will configure it
         launch();
-        
+
         CountdownTimer timer = Duration.seconds(20).countdownTimer();
         boolean hasCreationScript = copyDatabaseCreationScript();
         timer.waitForExpiryUnchecked();
@@ -146,7 +151,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         DynamicTasks.queue(
             SshEffectorTasks.ssh(
                 "cd "+getRunDir(),
-                getBasedir()+"/bin/mysqladmin --defaults-file=mymysql.cnf --password= password "+getPassword()
+                getBaseDir()+"/bin/mysqladmin --defaults-file="+getConfigFile()+" --password= password "+getPassword()
             ).summary("setting password"));
 
         if (hasCreationScript)
@@ -158,45 +163,43 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     }
 
     private void copyDatabaseConfigScript() {
-        newScript(CUSTOMIZING).
-                body.append("echo copying config script").
-                execute();  //create the directory
+        newScript(CUSTOMIZING).execute();  //create the directory
 
         String configScriptContents = processTemplate(entity.getAttribute(MySqlNode.TEMPLATE_CONFIGURATION_URL));
         Reader configContents = new StringReader(configScriptContents);
 
-        getMachine().copyTo(configContents, getRunDir() + "/mymysql.cnf");
+        getMachine().copyTo(configContents, Urls.mergePaths(getRunDir(), getConfigFile()));
     }
 
     private boolean copyDatabaseCreationScript() {
         InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
-        if (creationScript==null) 
-            return false;
+        if (creationScript==null) return false;
         getMachine().copyTo(creationScript, getRunDir() + "/creation-script.sql");
         return true;
     }
 
     public String getMySqlServerOptionsString() {
         Map<String, Object> options = entity.getConfig(MySqlNode.MYSQL_SERVER_CONF);
-        if (!truth(options)) return "";
-        String result = "";
-        for (Map.Entry<String, Object> entry : options.entrySet()) {
-            if("".equals(entry.getValue())){
-                result += ""+entry.getKey()+"\n";
-            }else{
-                result += ""+entry.getKey()+" = "+entry.getValue()+"\n";
+        StringBuilder result = new StringBuilder();
+        if (truth(options)) {
+            for (Map.Entry<String, Object> entry : options.entrySet()) {
+                result.append(entry.getKey());
+                String value = entry.getValue().toString();
+                if (!Strings.isEmpty(value)) {
+                    result.append(" = ").append(value);
+                }
+                result.append('\n');
             }
         }
-        return result;
+        return result.toString();
     }
 
     @Override
     public void launch() {
-        newScript(MutableMap.of("usePidFile", true), LAUNCHING).
-            updateTaskAndFailOnNonZeroResultCode().
-            body.append(
-                format("nohup %s/bin/mysqld --defaults-file=mymysql.cnf --user=`whoami` > out.log 2> err.log < /dev/null &", getBasedir()) 
-            ).execute();
+        newScript(MutableMap.of("usePidFile", true), LAUNCHING)
+            .updateTaskAndFailOnNonZeroResultCode()
+            .body.append(format("nohup %s/bin/mysqld --defaults-file=%s --user=`whoami` > %s 2>&1 < /dev/null &", getBaseDir(), getConfigFile(), getLogFile()))
+            .execute();
     }
 
     @Override
@@ -215,15 +218,15 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public void kill() {
         newScript(MutableMap.of("usePidFile", true), KILLING).execute();
     }
-    
+
     @Override
     public String getStatusCmd() {
-        // TODO Is this very bad, to include the password in the command being executed 
+        // TODO Is this very bad, to include the password in the command being executed
         // (so is in `ps` listing temporarily, and in .bash_history)
-        return format("%s/bin/mysqladmin --user=%s --password=%s --socket=/tmp/mysql.sock.%s.%s status", 
+        return format("%s/bin/mysqladmin --user=%s --password=%s --socket=/tmp/mysql.sock.%s.%s status",
                 getExpandedInstallDir(), "root", getPassword(), getSocketUid(), getPort());
     }
-    
+
     public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
         String filename = "mysql-commands-"+Identifiers.makeRandomId(8);
         DynamicTasks.queue(SshEffectorTasks.put(Urls.mergePaths(getRunDir(), filename)).contents(commands).summary("copying datastore script to execute "+filename));
@@ -234,7 +237,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         return DynamicTasks.queue(
                 SshEffectorTasks.ssh(
                                 "cd "+getRunDir(),
-                                getBasedir()+"/bin/mysql --defaults-file=mymysql.cnf < "+filenameAlreadyInstalledAtServer)
+                                getBaseDir()+"/bin/mysql --defaults-file="+getConfigFile()+" < "+filenameAlreadyInstalledAtServer)
                         .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
     }
 

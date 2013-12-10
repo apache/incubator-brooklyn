@@ -1,6 +1,7 @@
 package brooklyn.entity.database.mariadb;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
 import static brooklyn.util.ssh.BashCommands.installPackage;
 import static brooklyn.util.ssh.BashCommands.ok;
 import static java.lang.String.format;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
@@ -45,6 +47,8 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     public MariaDbSshDriver(MariaDbNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
+
+        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFile());
     }
 
     public String getOsTag() {
@@ -71,13 +75,19 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         return entity.getConfig(MariaDbNode.MIRROR_URL);
     }
 
-    public String getBasedir() {
-        return getExpandedInstallDir();
-    }
+    public String getBaseDir() { return getExpandedInstallDir(); }
 
-    public String getDatadir() {
+    public String getDataDir() {
         String result = entity.getConfig(MariaDbNode.DATA_DIR);
         return (result == null) ? "." : result;
+    }
+
+    public String getLogFile() {
+        return Urls.mergePaths(getRunDir(), "console.log");
+    }
+
+    public String getConfigFile() {
+        return "my.cnf";
     }
 
     public String getInstallFilename() {
@@ -85,8 +95,7 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
 
     private String getExpandedInstallDir() {
-        if (expandedInstallDir == null)
-            throw new IllegalStateException("'expandedInstallDir' is null; most likely install was not called");
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
         return expandedInstallDir;
     }
 
@@ -104,11 +113,12 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         commands.add("echo installing extra packages");
         commands.add(installPackage(ImmutableMap.of("yum", "libgcc_s.so.1"), null));
         commands.add(installPackage(ImmutableMap.of("yum", "libaio.so.1 libncurses.so.5", "apt", "libaio1 libaio-dev"), null));
+
         // these deps are needed on some OS versions but others don't need them so ignore failures (ok(...))
         commands.add(ok(installPackage(ImmutableMap.of("yum", "libaio", "apt", "ia32-libs"), null)));
         commands.add("echo finished installing extra packages");
 
-        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
+        commands.addAll(commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(format("tar xfvz %s", saveAs));
 
         newScript(INSTALLING).body.append(commands).execute();
@@ -126,15 +136,15 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         newScript(CUSTOMIZING)
             .updateTaskAndFailOnNonZeroResultCode()
             .body.append(
-                "chmod 600 my.cnf",
-                getBasedir()+"/scripts/mysql_install_db "+
-                    "--basedir="+getBasedir()+" --datadir="+getDatadir()+" "+
-                    "--defaults-file=my.cnf"
-            ).execute();
+                "chmod 600 "+getConfigFile(),
+                getBaseDir()+"/scripts/mysql_install_db "+
+                    "--basedir="+getBaseDir()+" --datadir="+getDataDir()+" "+
+                    "--defaults-file="+getConfigFile())
+            .execute();
 
         // launch, then we will configure it
         launch();
-        
+
         CountdownTimer timer = Duration.seconds(20).countdownTimer();
         boolean hasCreationScript = copyDatabaseCreationScript();
         timer.waitForExpiryUnchecked();
@@ -142,7 +152,7 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         DynamicTasks.queue(
             SshEffectorTasks.ssh(
                 "cd "+getRunDir(),
-                getBasedir()+"/bin/mysqladmin --defaults-file=my.cnf --password= password "+getPassword()
+                getBaseDir()+"/bin/mysqladmin --defaults-file="+getConfigFile()+" --password= password "+getPassword()
             ).summary("setting password"));
 
         if (hasCreationScript)
@@ -152,14 +162,14 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         // (if skipping, use a flag in launch to indicate we've just launched it)
         stop();
     }
-    
+
     private void copyDatabaseConfigScript() {
         newScript(CUSTOMIZING).execute();  //create the directory
 
         String configScriptContents = processTemplate(entity.getAttribute(MariaDbNode.TEMPLATE_CONFIGURATION_URL));
         Reader configContents = new StringReader(configScriptContents);
 
-        getMachine().copyTo(configContents, getRunDir() + "/my.cnf");
+        getMachine().copyTo(configContents, Urls.mergePaths(getRunDir(), getConfigFile()));
     }
 
     private boolean copyDatabaseCreationScript() {
@@ -187,11 +197,10 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     @Override
     public void launch() {
-        newScript(MutableMap.of("usePidFile", true), LAUNCHING).
-            updateTaskAndFailOnNonZeroResultCode().
-            body.append(
-                format("nohup %s/bin/mysqld --defaults-file=my.cnf --user=`whoami` > out.log 2> err.log < /dev/null &", getBasedir()) 
-            ).execute();
+        newScript(MutableMap.of("usePidFile", true), LAUNCHING)
+            .updateTaskAndFailOnNonZeroResultCode()
+            .body.append(format("nohup %s/bin/mysqld --defaults-file=%s --user=`whoami` > %s 2>&1 < /dev/null &", getBaseDir(), getConfigFile(), getLogFile()))
+            .execute();
     }
 
     @Override
@@ -213,12 +222,12 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     @Override
     public String getStatusCmd() {
-        // TODO Is this very bad, to include the password in the command being executed 
+        // TODO Is this very bad, to include the password in the command being executed
         // (so is in `ps` listing temporarily, and in .bash_history)
-        return format("%s/bin/mysqladmin --user=%s --password=%s --socket=/tmp/mysql.sock.%s.%s status", 
+        return format("%s/bin/mysqladmin --user=%s --password=%s --socket=/tmp/mysql.sock.%s.%s status",
                 getExpandedInstallDir(), "root", getPassword(), getSocketUid(), getPort());
     }
-    
+
     public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
         String filename = "mariadb-commands-"+Identifiers.makeRandomId(8);
         DynamicTasks.queue(SshEffectorTasks.put(Urls.mergePaths(getRunDir(), filename)).contents(commands).summary("copying datastore script to execute "+filename));
@@ -229,7 +238,7 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         return DynamicTasks.queue(
                 SshEffectorTasks.ssh(
                                 "cd "+getRunDir(),
-                                getBasedir()+"/bin/mysql --defaults-file=my.cnf < "+filenameAlreadyInstalledAtServer)
+                                getBaseDir()+"/bin/mysql --defaults-file="+getConfigFile()+" < "+filenameAlreadyInstalledAtServer)
                         .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
     }
 
