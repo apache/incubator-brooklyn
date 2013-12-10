@@ -103,6 +103,12 @@ public interface NginxController extends AbstractController, HasShortName {
     ConfigKey<String> STATIC_CONTENT_ARCHIVE_URL = ConfigKeys.newStringConfigKey(
             "nginx.config.staticContentArchiveUrl", "The URL of an archive file of static content (To be copied to the server)");
 
+    BasicAttributeSensorAndConfigKey<String> ACCESS_LOG_LOCATION = new BasicAttributeSensorAndConfigKey<String>(String.class,
+            "nginx.log.access", "Nginx access log file location", "logs/access.log");
+
+    BasicAttributeSensorAndConfigKey<String> ERROR_LOG_LOCATION = new BasicAttributeSensorAndConfigKey<String>(String.class,
+            "nginx.log.error", "Nginx error log file location", "logs/error.log");
+
     boolean isSticky();
 
     @Effector(description="Gets the current server configuration (by brooklyn recalculating what the config should be); does not affect the server")

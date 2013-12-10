@@ -50,7 +50,7 @@ public class NginxConfigFileGenerator {
     public String configFile() {
         StringBuilder config = new StringBuilder();
         config.append("\n");
-        config.append(format("pid %s/logs/nginx.pid;\n", driver.getRunDir()));
+        config.append(format("pid %s;\n", driver.getPidFile()));
         config.append("events {\n");
         config.append("  worker_connections 8196;\n");
         config.append("}\n");
