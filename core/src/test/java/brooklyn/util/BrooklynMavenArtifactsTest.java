@@ -41,15 +41,15 @@ public class BrooklynMavenArtifactsTest {
     @Test(groups="Integration")
     public void testHistoricHosted() {
         // NB: this should be a version known to be up at sonatype or maven central, NOT necessarily the current version!
-        String snapshot = MavenRetriever.hostedUrl(MavenArtifact.fromCoordinate("io.brooklyn:brooklyn-utils-common:jar:0.6.0-SNAPSHOT"));
+        String snapshot = MavenRetriever.hostedUrl(MavenArtifact.fromCoordinate("io.brooklyn:brooklyn-utils-common:jar:0.7.0-SNAPSHOT"));
         log.info("Sample snapshot URL is: "+snapshot);
         checkValidArchive(snapshot);
         ResourceUtils.create(this).checkUrlExists(snapshot);
         
         // NB: this should be a version known to be up at sonatype or maven central, NOT necessarily the current version!
-        String release = MavenRetriever.hostedUrl(MavenArtifact.fromCoordinate("io.brooklyn:brooklyn-utils-common:jar:0.6.0-M1"));
+        String release = MavenRetriever.hostedUrl(MavenArtifact.fromCoordinate("io.brooklyn:brooklyn-utils-common:jar:0.6.0"));
         log.info("Sample release URL is: "+release);
-        checkValidArchive(snapshot);
+        checkValidArchive(release);
     }
 
     private void checkValidArchive(String url) {
