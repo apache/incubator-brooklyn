@@ -135,6 +135,15 @@ public class CloudMachineNamer {
     }
 
     public static String sanitize(String s) {
-        return s.replaceAll("[^_A-Za-z0-9]+", "-");
+        String result = s.replaceAll("[^_A-Za-z0-9]+", "-");
+        if (result.endsWith("-")) {
+            if (result.length() == 1) {
+                return "x";
+            } else {
+                return result.substring(0, result.length()-1);
+            }
+        } else {
+            return result;
+        }
     }
 }
