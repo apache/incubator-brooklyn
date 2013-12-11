@@ -259,10 +259,11 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     @Override
     public void stop() {
-        newScript(MutableMap.of("usePidFile", getPidFile(), "processOwner", "postgresql"), STOPPING)
+        newScript(MutableMap.of("usePidFile", false), STOPPING)
                 .body.append(callPgctl((entity.getConfig(PostgreSqlNode.DISCONNECT_ON_STOP) ? "-m immediate " : "") + "stop", false))
                 .failOnNonZeroResultCode()
                 .execute();
+        newScript(MutableMap.of("usePidFile", getPidFile(), "processOwner", "postgres"), STOPPING).execute();
     }
 
     @Override
