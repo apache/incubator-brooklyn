@@ -46,9 +46,9 @@ public class PostgreSqlIntegrationTest {
 
     //from http://www.vogella.de/articles/MySQLJava/article.html
     public static final String CREATION_SCRIPT =
-            "CREATE USER sqluser WITH PASSWORD 'sqluserpw'; " +
-            "CREATE DATABASE feedback OWNER sqluser; " +
-            "\\c feedback; " +
+            "CREATE USER sqluser WITH PASSWORD 'sqluserpw';\n" +
+            "CREATE DATABASE feedback OWNER sqluser;\n" +
+            "\\c feedback;\n" +
             "CREATE TABLE COMMENTS ( " +
                     "id INT8 NOT NULL,  " +
                     "MYUSER VARCHAR(30) NOT NULL, " +
@@ -58,8 +58,8 @@ public class PostgreSqlIntegrationTest {
                     "SUMMARY VARCHAR(40) NOT NULL, " +
                     "COMMENTS VARCHAR(400) NOT NULL, " +
                     "PRIMARY KEY (ID) " +
-                "); " +
-            "GRANT ALL ON comments TO sqluser; " +
+                ");\n" +
+            "GRANT ALL ON comments TO sqluser;\n" +
             "INSERT INTO COMMENTS values (1, 'lars', 'myemail@gmail.com','http://www.vogella.de', '2009-09-14 10:33:11', 'Summary','My first comment' );";
 
     @Test(groups = "Integration")

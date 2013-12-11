@@ -21,8 +21,16 @@ public class PostgreSqlEc2LiveTest extends AbstractEc2LiveTest {
 
         new VogellaExampleAccess("org.postgresql.Driver", psql.getAttribute(DatastoreCommon.DATASTORE_URL)).readModifyAndRevertDataBase();
     }
-    
+
+    @Override
+    @Test(enabled=false, groups = "Live")
+    public void test_Debian_6() throws Exception { } // Disabled because PostgreSql 9.1 not available
+
+    @Override
+    @Test(enabled=false, groups = "Live")
+    public void test_Ubuntu_10_0() throws Exception { } // Disabled because PostgreSql 9.1 not available
+
     @Test(enabled=false)
-    public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
+    public void testDummy() { } // Convince testng IDE integration that this really does have test methods
 }
 
