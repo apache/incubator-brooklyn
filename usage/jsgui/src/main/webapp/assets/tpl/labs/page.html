@@ -86,7 +86,10 @@ $(document).ready(function() {
 
 
 <br/><br/>
-<div><b>Debug Config</b></div><br/>
+<h1>Experimental Config</h1><br/>
+
+<br/><br/>
+<div><b>Refresh pages (globally in JS)</b></div><br/>
 
 <script>
 var updateGlobalRefreshDisplay = function() {
@@ -114,8 +117,13 @@ disabling globally can be helpful when testing)</i></span>
 
 
 
+
 <br/><br/>
-<div><b>Debug Config</b></div><br/>
+<h1>Debug</h1><br/>
+
+
+<br/><br/>
+<div><b>Fade Practice</b></div><br/>
 
 <script>
 var fadeHello = function() {
@@ -133,6 +141,34 @@ var showHello = function() {
 </script>
 <div id="hello">I'm a region which fades.</div>
 <div><span onclick="javascript:fadeHello()">fade</span>  <span onclick="javascript:showHello()">show</span></div>
+
+
+
+<br/><br/>
+<div><b>Ajax Practice</b></div><br/>
+
+	    <script type="text/javascript">
+	    function fetchSummat() {
+	    	log("fetching")
+            $.ajax({
+                type:"GET",
+                url:"/v1/applications/dI6fIDvw/entities/dI6fIDvw/sensors/service.state",
+                success:function (data) {
+                	log("fetch success - "+data)
+                	var a = data;
+                	log(typeof a)
+                	log(a)
+                },
+                error: function(data) {
+                	log("fetch fail")
+                }})
+	    }
+	    </script>
+
+<div>
+	<span onclick="javascript:fetchSummat()">fetch</span>
+</div>
+
 
 
 </div>

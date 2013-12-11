@@ -11,7 +11,6 @@ import io.brooklyn.camp.spi.collection.ResolvableLink;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,7 @@ import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityTypes;
 import brooklyn.entity.basic.StartableApplication;
@@ -40,6 +40,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
@@ -48,7 +49,6 @@ import com.google.common.collect.Maps;
 
 public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateInstantiator {
 
-    public static String TARGET_LOCATION = "localhost";
     private static final Logger log = LoggerFactory.getLogger(BrooklynAssemblyTemplateInstantiator.class);
     
     @Override
@@ -85,11 +85,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                     "("+template+")");
 
         // TODO name (and description) -- not prescribed by camp spec (cf discussion with gil)
-        String name = null;
-        
-        // TODO insertion of config / params
-        final Map<String,String> configO = MutableMap.of();
-        
+        String name = template.getName();
+                
         String type = item.getJavaType();
         final Application instance;
 
@@ -107,17 +104,31 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                 ApplicationBuilder appBuilder = (ApplicationBuilder) constructor.newInstance();
                 
                 if (!Strings.isEmpty(name)) appBuilder.appDisplayName(name);
-                
+        
+                // TODO use addEntityConfig instaed
+                final Map<?,?> configO = (Map<?,?>) template.getCustomAttributes().get("brooklyn.config");
+
                 log.info("REST placing '{}' under management", appBuilder);
                 appBuilder.configure( convertFlagsToKeys(appBuilder.getType(), configO) );
                 instance = appBuilder.manage(mgmt);
                 
+                List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(template.getCustomAttributes(), false);
+                if (locations!=null)
+                    ((EntityInternal)instance).addLocations(locations);
+                
             } else if (Application.class.isAssignableFrom(clazz)) {
+                // TODO use addEntityConfig instaed
+                final Map<?,?> configO = (Map<?,?>) template.getCustomAttributes().get("brooklyn.config");
+                
                 brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
                 instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
-                
+
                 log.info("REST placing '{}' under management", instance);
                 Entities.startManagement(instance, mgmt);
+                
+                List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(template.getCustomAttributes(), false);
+                if (locations!=null)
+                    ((EntityInternal)instance).addLocations(locations);
                 
             } else {
                 throw new IllegalArgumentException("Class "+clazz+" must extend one of ApplicationBuilder or Application");
@@ -156,22 +167,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
     }
     
     public Task<?> start(Application app, CampPlatform platform) {
-        // Start all the managed entities by asking the app instance to start in background
-//        Function<String, Location> buildLocationFromId = new Function<String, Location>() {
-//            @Override
-//            public Location apply(String id) {
-//                id = fixLocation(id);
-//                return getLocationRegistry().resolve(id);
-//            }
-//        };
-//        ArrayList<Location> locations = Lists.newArrayList(transform(spec.getLocations(), buildLocationFromId));
-
-        // TODO support other places besides localhost
-        List<Location> locations = 
-                getBrooklynManagementContext(platform).getLocationRegistry().resolve(Arrays.asList(TARGET_LOCATION));
-        
         return Entities.invokeEffector((EntityLocal)app, app, Startable.START,
-                MutableMap.of("locations", locations));
+            // locations already set in the entities themselves;
+            // TODO make it so that this arg does not have to be supplied to START !
+            MutableMap.of("locations", MutableList.of()));
     }
 
     // TODO exact copy of BrooklynRestResoureUtils
@@ -194,8 +193,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
 
     // TODO exact copy of BRRU
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private <T extends Entity> brooklyn.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<String,String> configO) {
-        Map<String, String> config = (configO == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(configO);
+    private <T extends Entity> brooklyn.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<?,?> configO) {
+        Map<?, ?> config = (configO == null) ? Maps.<Object,Object>newLinkedHashMap() : Maps.newLinkedHashMap(configO);
         
         EntitySpec result;
         if (clazz.isInterface()) {
@@ -215,44 +214,42 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
 
     protected Application createApplicationFromNonCatalogCampTemplate(AssemblyTemplate template, CampPlatform platform) {
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
-        ManagementContext mgmt = getBrooklynManagementContext(platform);
+        final ManagementContext mgmt = getBrooklynManagementContext(platform);
         BrooklynCatalog catalog = mgmt.getCatalog();
 
         EntitySpec<StartableApplication> appSpec = EntitySpec.create(StartableApplication.class, BasicApplicationImpl.class);
-
+        String name = template.getName();
+        if (!Strings.isBlank(name))
+            appSpec.displayName(name);
+        
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
-            final PlatformComponentTemplate ct = ctl.resolve();
-            final String bTypeName = Strings.removeFromStart(ct.getType(), "brooklyn:");
+            final PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
+            final String bTypeName = Strings.removeFromStart(appChildComponentTemplate.getType(), "brooklyn:");
             final Class<? extends Entity> bType = loadEntityType(catalog, bTypeName);
             
             appSpec.addInitializer(new EntityInitializer() {
-                @SuppressWarnings({ "rawtypes", "unchecked" })
                 @Override
                 public void apply(EntityLocal entity) {
-                    EntitySpec<? extends Entity> child = EntitySpec.create(bType);
-                    Map<String, Object> attrs = MutableMap.copyOf(ct.getCustomAttributes());
+                    EntitySpec<? extends Entity> childSpec = EntitySpec.create(bType);
+                    Map<String, Object> appChildAttrs = MutableMap.copyOf(appChildComponentTemplate.getCustomAttributes());
 
-                    child.configure(BrooklynCampConstants.TEMPLATE_ID, ct.getId());
+                    String name = appChildComponentTemplate.getName();
+                    if (!Strings.isBlank(name))
+                        childSpec.displayName(name);
                     
-                    String planId = (String) attrs.remove("planId");
+                    childSpec.configure(BrooklynCampConstants.TEMPLATE_ID, appChildComponentTemplate.getId());
+                    
+                    String planId = (String) appChildAttrs.remove("planId");
                     if (planId!=null)
-                        child.configure(BrooklynCampConstants.PLAN_ID, planId);
+                        childSpec.configure(BrooklynCampConstants.PLAN_ID, planId);
                      
-                    Map<?,?> config = (Map<?, ?>) attrs.remove("brooklyn.config");
-                    if (config!=null) {
-                        for (Map.Entry<?,?> entry: config.entrySet()) {
-                            // set as config key (rather than flags) so that it is inherited
-                            Object key = entry.getKey();
-                            if (key instanceof ConfigKey)
-                                child.configure( (ConfigKey)key, entry.getValue() );
-                            else if (key instanceof HasConfigKey)
-                                child.configure( (HasConfigKey)key, entry.getValue() );
-                            else
-                                child.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), entry.getValue());
-                        }
-                    }
+                    addEntityConfig(childSpec, (Map<?,?>)appChildAttrs.remove("brooklyn.config"));
                    
-                    entity.addChild(child);
+                    Entity appChild = entity.addChild(childSpec);
+                    
+                    List<Location> appChildLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(appChildAttrs, true);
+                    if (appChildLocations!=null)
+                        ((EntityInternal)appChild).addLocations(appChildLocations);
                 }
             });
         }
@@ -260,7 +257,29 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         log.info("REST placing '{}' under management", appSpec);
         StartableApplication app = mgmt.getEntityManager().createEntity(appSpec);
         Entities.startManagement(app, mgmt);
+        
+        List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(template.getCustomAttributes(), false);
+        if (locations!=null)
+            ((EntityInternal)app).addLocations(locations);
+
         return app;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    protected void addEntityConfig(EntitySpec<? extends Entity> child, Map<?, ?> config) {
+        if (config==null) 
+            return ;
+        
+        for (Map.Entry<?,?> entry: config.entrySet()) {
+            // set as config key (rather than flags) so that it is inherited
+            Object key = entry.getKey();
+            if (key instanceof ConfigKey)
+                child.configure( (ConfigKey)key, entry.getValue() );
+            else if (key instanceof HasConfigKey)
+                child.configure( (HasConfigKey)key, entry.getValue() );
+            else
+                child.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), entry.getValue());
+        }
     }
 
 }

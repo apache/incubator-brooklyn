@@ -7,6 +7,7 @@ import io.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslInterpreter;
 import io.brooklyn.camp.brooklyn.spi.platform.BrooklynImmutableCampPlatform;
 import io.brooklyn.camp.brooklyn.spi.platform.HasBrooklynManagementContext;
 import io.brooklyn.camp.spi.PlatformRootSummary;
+import brooklyn.config.BrooklynProperties;
 import brooklyn.management.ManagementContext;
 
 /** {@link CampPlatform} implementation which includes Brooklyn entities 
@@ -39,6 +40,11 @@ public class BrooklynCampPlatform extends AggregatingCampPlatform implements Has
     
     protected void addInterpreters() {
         pdp().addInterpreter(new BrooklynDslInterpreter());
+    }
+
+    public BrooklynCampPlatform setConfigKeyAtManagmentContext() {
+        ((BrooklynProperties)bmc.getConfig()).put(BrooklynCampConstants.CAMP_PLATFORM, this);
+        return this;
     }
 
 }

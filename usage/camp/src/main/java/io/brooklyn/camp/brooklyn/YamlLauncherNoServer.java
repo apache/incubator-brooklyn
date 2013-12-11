@@ -1,7 +1,5 @@
 package io.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
-
 import com.google.common.annotations.Beta;
 
 /** convenience for launching YAML files directly */
@@ -14,14 +12,10 @@ public class YamlLauncherNoServer extends YamlLauncherAbstract {
     }
 
     public static void main(String[] args) {
-        BrooklynAssemblyTemplateInstantiator.TARGET_LOCATION = "localhost";
-        
         YamlLauncherNoServer l = new YamlLauncherNoServer();
+        l.setShutdownAppsOnExit(true);
         
-//        l.launchAppYaml("java-web-app-and-db-with-function.yaml");
-//        l.launchAppYaml("java-web-app-and-memsql.yaml");
-//        l.launchAppYaml("memsql.yaml");
-        l.launchAppYaml("playing.yaml");
+        l.launchAppYaml("java-web-app-and-db-with-function.yaml");
     }
     
 }

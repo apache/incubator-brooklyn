@@ -1,5 +1,8 @@
 package brooklyn.rest;
 
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -62,7 +65,11 @@ public class BrooklynRestApiLauncher {
     final static int FAVOURITE_PORT = 8081;
     
     public static Server startRestResourcesViaFilter() throws Exception {
-        return startRestResourcesViaFilter(new LocalManagementContext());
+        BrooklynCampPlatformLauncherAbstract platform = new BrooklynCampPlatformLauncherNoServer()
+            .useManagementContext(new LocalManagementContext())
+            .launch();
+        
+        return startRestResourcesViaFilter(platform.getBrooklynMgmt());
     }
     public static Server startRestResourcesViaFilter(ManagementContext managementContext) throws Exception {
         WebAppContext context = new WebAppContext();
@@ -78,7 +85,11 @@ public class BrooklynRestApiLauncher {
     }
 
     public static Server startRestResourcesViaServlet() throws Exception {
-        return startRestResourcesViaServlet(new LocalManagementContext());
+        BrooklynCampPlatformLauncherAbstract platform = new BrooklynCampPlatformLauncherNoServer()
+            .useManagementContext(new LocalManagementContext())
+            .launch();
+        
+        return startRestResourcesViaServlet(platform.getBrooklynMgmt());
     }
     public static Server startRestResourcesViaServlet(ManagementContext managementContext) throws Exception {
         ResourceConfig config = new DefaultResourceConfig();

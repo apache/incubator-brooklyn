@@ -30,6 +30,7 @@ public abstract class YamlLauncherAbstract {
 
     protected final BrooklynCampPlatform platform;
     protected final ManagementContext brooklynMgmt;
+    protected boolean shutdownAppsOnExit = false;
 
     public YamlLauncherAbstract() {
         this.platformLauncher = newPlatformLauncher();
@@ -38,6 +39,14 @@ public abstract class YamlLauncherAbstract {
         this.brooklynMgmt = platformLauncher.getBrooklynMgmt();
     }
 
+    public boolean getShutdownAppsOnExit() {
+        return shutdownAppsOnExit;
+    }
+    
+    public void setShutdownAppsOnExit(boolean shutdownAppsOnExit) {
+        this.shutdownAppsOnExit = shutdownAppsOnExit;
+    }
+    
     protected abstract BrooklynCampPlatformLauncherAbstract newPlatformLauncher();
 
     public void launchAppYaml(String filename) {
@@ -49,6 +58,8 @@ public abstract class YamlLauncherAbstract {
             Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
             log.info("Launching "+app);
 
+            if (getShutdownAppsOnExit()) Entities.invokeStopOnShutdown(app);
+            
             Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
             log.info("Waiting on "+tasks.size()+" task(s)");
             for (Task<?> t: tasks) t.blockUntilEnded();

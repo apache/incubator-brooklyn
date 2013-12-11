@@ -1,4 +1,5 @@
 name: postgresql-chef
+location: localhost
 services:
 - type: ChefComponent
   pid.file: /var/run/postgresql/*.pid

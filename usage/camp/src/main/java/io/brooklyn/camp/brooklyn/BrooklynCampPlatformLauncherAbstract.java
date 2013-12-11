@@ -11,15 +11,29 @@ import com.google.common.annotations.Beta;
 public abstract class BrooklynCampPlatformLauncherAbstract {
 
     protected BrooklynCampPlatform platform;
-    protected LocalManagementContext mgmt;
+    protected ManagementContext mgmt;
     
-    public void launch() {
+    public BrooklynCampPlatformLauncherAbstract useManagementContext(ManagementContext mgmt) {
+        if (this.mgmt!=null && mgmt!=this.mgmt)
+            throw new IllegalStateException("Attempt to change mgmt context; not supported.");
+        
+        this.mgmt = mgmt;
+        
+        return this;
+    }
+    
+    public BrooklynCampPlatformLauncherAbstract launch() {
         assert platform == null;
 
-        mgmt = newMgmtContext();        
+        if (getBrooklynMgmt()==null)
+            useManagementContext(newMgmtContext());
+        
         platform = new BrooklynCampPlatform(
                 PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(),
-                mgmt);
+                getBrooklynMgmt())
+            .setConfigKeyAtManagmentContext();
+        
+        return this;
     }
 
     protected LocalManagementContext newMgmtContext() {

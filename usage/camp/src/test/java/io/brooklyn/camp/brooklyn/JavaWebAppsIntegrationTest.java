@@ -20,10 +20,15 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Iterables;
+
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.webapp.JavaWebAppService;
+import brooklyn.entity.webapp.WebAppService;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.test.Asserts;
@@ -67,6 +72,11 @@ public class JavaWebAppsIntegrationTest {
             
             final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
             log.info("App - "+app);
+            Assert.assertEquals(app.getDisplayName(), "sample-single-jboss");
+                        
+            // locations set on AT in this yaml
+            Assert.assertEquals(app.getLocations().size(), 1);
+
             Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
             log.info("Waiting on "+tasks.size()+" task(s)");
             for (Task<?> t: tasks) {
@@ -76,6 +86,10 @@ public class JavaWebAppsIntegrationTest {
             log.info("App started:");
             Entities.dumpInfo(app);
 
+            Assert.assertEquals(app.getChildren().size(), 1);
+            Assert.assertEquals(app.getChildren().iterator().next().getDisplayName(), "jboss1");
+            Assert.assertEquals(app.getChildren().iterator().next().getLocations().size(), 1);
+            
             final String url = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
                 @Override public String call() throws Exception {
                     String url = app.getChildren().iterator().next().getAttribute(JavaWebAppService.ROOT_URL);
@@ -108,6 +122,9 @@ public class JavaWebAppsIntegrationTest {
             final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
             log.info("App - "+app);
             
+            // locations set on individual services here
+            Assert.assertEquals(app.getLocations().size(), 0);
+            
             Iterator<ResolvableLink<PlatformComponent>> pcs = assembly.getPlatformComponents().links().iterator();
             PlatformComponent pc1 = pcs.next().resolve();
             Entity cluster = brooklynMgmt.getEntityManager().getEntity(pc1.getId());
@@ -115,10 +132,6 @@ public class JavaWebAppsIntegrationTest {
             
             PlatformComponent pc2 = pcs.next().resolve();
             log.info("pc2 - "+pc2);
-            // FIXME doesn't work -- 
-//            Object javaSysprops = ((EntityInternal)cluster).getConfigMap().getRawConfig(UsesJava.JAVA_SYSPROPS);
-//            Object dbUrl = ((Map<?,?>)javaSysprops).get("brooklyn.example.db.url");
-//            Assert.assertTrue(dbUrl instanceof DeferredSupplier, "dbUrl is "+dbUrl);
             
             Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
             log.info("Waiting on "+tasks.size()+" task(s)");
@@ -129,10 +142,14 @@ public class JavaWebAppsIntegrationTest {
             log.info("App started:");
             Entities.dumpInfo(app);
 
+            Assert.assertEquals(Lifecycle.RUNNING, app.getAttribute(Attributes.SERVICE_STATE));
+            Assert.assertEquals(Boolean.TRUE, app.getAttribute(Attributes.SERVICE_UP));
+            
             final String url = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
                     @Override public String call() throws Exception {
-                        String url = app.getChildren().iterator().next().getAttribute(JavaWebAppService.ROOT_URL);
-                        return checkNotNull(url, "url of %s", app);
+                        Entity cluster = Iterables.getOnlyElement( Iterables.filter(app.getChildren(), WebAppService.class) );
+                        String url = cluster.getAttribute(JavaWebAppService.ROOT_URL);
+                        return checkNotNull(url, "url of %s", cluster);
                     }});
             
             String site = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {

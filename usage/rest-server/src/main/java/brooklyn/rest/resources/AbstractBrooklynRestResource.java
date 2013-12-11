@@ -1,5 +1,7 @@
 package brooklyn.rest.resources;
 
+import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
@@ -81,4 +83,10 @@ public abstract class AbstractBrooklynRestResource {
         }
     }
 
+    protected CampPlatform camp() {
+        CampPlatform camp = mgmt().getConfig().getConfig(BrooklynCampConstants.CAMP_PLATFORM);
+        if (camp!=null) return camp;
+        throw new IllegalStateException("CAMP platform server not enabled");
+    }
+    
 }

@@ -1,5 +1,6 @@
 package brooklyn.entity.effector;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
@@ -13,6 +14,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.location.Location;
+import brooklyn.location.basic.LocationFunctions;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
@@ -155,7 +158,12 @@ public class EffectorTasks {
      * @throws IllegalStateException if there is not a unique such {@link SshMachineLocation} */
     public static SshMachineLocation getSshMachine(Entity entity) {
         try {
-            return (SshMachineLocation) Iterables.getOnlyElement( entity.getLocations() );
+            Collection<Location> locations = entity.getLocations();
+            if (locations.size()==1)
+                return (SshMachineLocation) Iterables.getOnlyElement( entity.getLocations() );
+            
+            Collection<Location> sshs = LocationFunctions.filter(locations, LocationFunctions.isOfType(SshMachineLocation.class));
+            return (SshMachineLocation) Iterables.getOnlyElement( sshs );
         } catch (Exception e) {
             throw new IllegalStateException("Entity "+entity+" (in "+Tasks.current()+") requires a single SshMachineLocation, but has "+entity.getLocations(), e);
         }

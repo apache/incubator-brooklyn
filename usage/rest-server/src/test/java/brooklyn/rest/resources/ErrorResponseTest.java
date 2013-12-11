@@ -38,8 +38,7 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
     public void setUp() throws Exception {
         super.setUp();
 
-        ClientResponse aResponse = client().resource("/v1/applications")
-                .post(ClientResponse.class, simpleSpec);
+        ClientResponse aResponse = clientDeploy(simpleSpec);
         waitForApplicationToBeRunning(aResponse.getLocation());
 
         String policiesEndpoint = "/v1/applications/simple-app/entities/simple-ent/policies";

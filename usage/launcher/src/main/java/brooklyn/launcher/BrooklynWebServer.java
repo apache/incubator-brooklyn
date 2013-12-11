@@ -141,9 +141,9 @@ public class BrooklynWebServer {
      * wars (map of context-prefix to url),
      * attrs (map of attribute-name : object pairs passed to the servlet)
      */
-    public BrooklynWebServer(Map flags, ManagementContext managementContext) {
+    public BrooklynWebServer(Map<?,?> flags, ManagementContext managementContext) {
         this.managementContext = managementContext;
-        Map leftovers = FlagUtils.setFieldsFromFlags(flags, this);
+        Map<?,?> leftovers = FlagUtils.setFieldsFromFlags(flags, this);
         if (!leftovers.isEmpty())
             log.warn("Ignoring unknown flags " + leftovers);
         

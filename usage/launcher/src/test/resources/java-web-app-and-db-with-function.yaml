@@ -1,5 +1,4 @@
 name: java-cluster-db-example
-location: localhost
 services:
 - serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   name: My Web
@@ -8,16 +7,10 @@ services:
     http.port: 9280+
     proxy.http.port: 9210+
     java.sysprops: 
-      brooklyn.example.db.url: 
-        # alternate syntax
-        $brooklyn:formatString:
-        - jdbc:%s%s?user=%s\\&password=%s
-        - $brooklyn:component("db").attributeWhenReady("database.url")
-        - visitors
-        - brooklyn
-        - br00k11n
+      brooklyn.example.db.url: $brooklyn:formatString("jdbc:%s%s?user=%s\\&password=%s",
+         component("db").attributeWhenReady("database.url"), "visitors", "brooklyn", "br00k11n")
 - serviceType: brooklyn.entity.database.mysql.MySqlNode
-  name: My DB
   id: db
+  name: My DB
   brooklyn.config:
     creationScriptUrl: classpath://visitors-creation-script.sql

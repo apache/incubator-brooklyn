@@ -1,29 +1,17 @@
 package brooklyn.launcher;
 
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
-import io.brooklyn.camp.brooklyn.YamlLauncherAbstract;
-import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
+import brooklyn.launcher.camp.SimpleYamlLauncher;
 
-import com.google.common.annotations.Beta;
-
-/** convenience for launching YAML files directly */
-@Beta
-public class YamlLauncher extends YamlLauncherAbstract {
-
-    @Override
-    protected BrooklynCampPlatformLauncherAbstract newPlatformLauncher() {
-        return new BrooklynCampPlatformLauncher();
-    }
+public class YamlLauncher {
 
     public static void main(String[] args) {
-        BrooklynAssemblyTemplateInstantiator.TARGET_LOCATION = "localhost";
+        SimpleYamlLauncher l = new SimpleYamlLauncher();
+        l.setShutdownAppsOnExit(true);
         
-        YamlLauncher l = new YamlLauncher();
-        
-//        l.launchAppYaml("java-web-app-and-db-with-function.yaml");
+        l.launchAppYaml("java-web-app-and-db-with-function.yaml");
 //        l.launchAppYaml("java-web-app-and-memsql.yaml");
 //        l.launchAppYaml("memsql.yaml");
-        l.launchAppYaml("playing.yaml");
+//        l.launchAppYaml("classpath://mongo-blueprint.yaml");
     }
-    
+
 }

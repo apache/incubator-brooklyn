@@ -1,0 +1,11 @@
+name: Storm Sample App
+services:
+- type: brooklyn.entity.messaging.storm.StormDeployment
+  name: Storm Deployment
+  brooklyn.config:
+    storm.supervisors.count: 2
+    storm.zookeepers.count: 1
+- serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+  name: Analytics Web App
+  brooklyn.config:
+    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0-M2/brooklyn-example-hello-world-sql-webapp-0.6.0-M2.war

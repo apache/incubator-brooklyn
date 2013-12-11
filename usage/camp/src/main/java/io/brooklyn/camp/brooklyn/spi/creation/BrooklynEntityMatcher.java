@@ -98,6 +98,9 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         // optionally would be nice to support multiple/mixed instantiators, 
         // ie at the component level, perhaps with the first one responsible for building the app
         atc.instantiator(BrooklynAssemblyTemplateInstantiator.class);
+
+        String name = ((Service)deploymentPlanItem).getName();
+        if (!Strings.isBlank(name)) builder.name(name);
         
         // configuration
         Map<String, Object> attrs = MutableMap.copyOf( ((Service)deploymentPlanItem).getCustomAttributes() );
@@ -105,6 +108,13 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         if (attrs.containsKey("id"))
             builder.customAttribute("planId", attrs.remove("id"));
 
+        Object location = attrs.remove("location");
+        if (location!=null)
+            builder.customAttribute("location", location);
+        Object locations = attrs.remove("locations");
+        if (locations!=null)
+            builder.customAttribute("locations", locations);
+        
         Map<Object, Object> brooklynConfig = MutableMap.of();
         Object origBrooklynConfig = attrs.remove("brooklyn.config");
         if (origBrooklynConfig!=null) {

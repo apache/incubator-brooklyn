@@ -11,8 +11,10 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
+import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
+import brooklyn.location.basic.LocationFunctions;
 import brooklyn.util.flags.TypeCoercions;
 
 /**
@@ -43,6 +45,10 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
         if (value==null) return null;
         Collection<Location> locations = entity.getLocations();
         if (!locations.isEmpty()) {
+            if (locations.size()>1) {
+                Collection<Location> l2 = LocationFunctions.filter(locations, LocationFunctions.isNotOfType(MachineProvisioningLocation.class));
+                if (l2.size()==1) locations = l2;
+            }
             if (locations.size()==1) {
                 Location l = locations.iterator().next();
                 if (l instanceof PortSupplier) {

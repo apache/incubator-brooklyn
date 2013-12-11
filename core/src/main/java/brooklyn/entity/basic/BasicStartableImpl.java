@@ -33,7 +33,7 @@ public class BasicStartableImpl extends AbstractEntity implements BasicStartable
         // essentially does StartableMethods.start(this, locations),
         // but optionally filters locations for each child
         
-        LocationsFilter filter = getConfig(LOCATIONS_FILTER);
+        brooklyn.location.basic.LocationFunctions.LocationsFilter filter = getConfig(LOCATIONS_FILTER);
         Iterable<Entity> startables = filterStartableManagedEntities(getChildren());
         if (startables == null || Iterables.isEmpty(startables)) return;
 
