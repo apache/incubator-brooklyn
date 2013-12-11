@@ -457,6 +457,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
             if (initialCredentials != null) {
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(initialCredentials).build();
+                if (truth(initialCredentials.getPassword())) setup.put(PASSWORD, initialCredentials.getPassword());
+                if (truth(initialCredentials.getPrivateKey())) setup.put(PRIVATE_KEY_DATA, initialCredentials.getPrivateKey());
             } else {
                 // only happens if something broke above...
                 initialCredentials = LoginCredentials.fromCredentials(node.getCredentials());
@@ -850,49 +852,42 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String password = truth(explicitPassword) ? explicitPassword : Identifiers.makeRandomId(12);
         List<Statement> statements = Lists.newArrayList();
         
-        if (!truth(user) || user.equals(loginUser) || truth(dontCreateUser)) {
-            if (truth(dontCreateUser) && truth(user) && !user.equals(loginUser)) {
-                // TODO For dontCreateUser, we only want to treat it special if user was explicitly supplied
-                // (rather than it just being the default config key value). If user was explicit, then should
-                // set the password + authorize the key for that user. Presumably the caller knows that this
-                // user pre-exists on the given VM image.
-                LOG.info("Not creating user {}, and not setting its password or authorizing keys (temporarily using loginUser {})", user, loginUser);
+        if (truth(dontCreateUser)) {
+            // TODO For dontCreateUser, we probably only want to treat it special if user was explicitly supplied
+            // (rather than it just being the default config key value). If user was explicit, then should
+            // set the password + authorize the key for that user. Presumably the caller knows that this
+            // user pre-exists on the given VM image.
+            if (!truth(user)) {
+                // loginCreds result will be null; use creds returned by jclouds on the node
+                LOG.info("Not setting up any user (subsequently using loginUser {})", loginUser);
+                config.put(USER, loginUser);
+                
             } else {
-            
-                // For subsequent ssh'ing, we'll be using the loginUser
-                if (!truth(user)) {
-                    config.put(USER, loginUser);
-                }
-
-                // Using loginUser; setup the publicKey/password so can login as expected
-                if (password != null) {
-                    statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), loginUser, password));
-                    result = LoginCredentials.builder().user(loginUser).password(password).build();
-                }
-                if (publicKeyData!=null) {
-                    template.getOptions().authorizePublicKey(publicKeyData);
-                    if (privateKeyData != null) {
-                        result = LoginCredentials.builder().user(loginUser).privateKey(privateKeyData).build();
-                    }
-                }
-
-            }
-        } else if (truth(dontCreateUser)) {
-            // Expect user to already exist; setup the publicKey/password so can login as expected
-            if (password != null) {
-                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), user, password));
-                result = LoginCredentials.builder().user(user).password(password).build();
-            }
-            if (publicKeyData!=null) {
-                template.getOptions().authorizePublicKey(publicKeyData);
+                LOG.info("Not creating user {}, and not setting its password or authorizing keys", user);
+                
                 if (privateKeyData != null) {
-                    result = LoginCredentials.builder().user(loginUser).privateKey(privateKeyData).build();
+                    result = LoginCredentials.builder().user(user).privateKey(privateKeyData).build();
+                } else if (explicitPassword != null) {
+                    result = LoginCredentials.builder().user(user).password(password).build();
                 }
             }
-
+            
+        } else if (!truth(user) || user.equals(loginUser)) {
             // For subsequent ssh'ing, we'll be using the loginUser
             if (!truth(user)) {
                 config.put(USER, loginUser);
+            }
+
+            // Using the pre-existing loginUser; setup the publicKey/password so can login as expected
+            if (password != null) {
+                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), loginUser, password));
+                result = LoginCredentials.builder().user(loginUser).password(password).build();
+            }
+            if (publicKeyData!=null) {
+                statements.add(new AuthorizeRSAPublicKeys("~"+loginUser+"/.ssh", ImmutableList.of(publicKeyData)));
+                if (privateKeyData != null) {
+                    result = LoginCredentials.builder().user(loginUser).privateKey(privateKeyData).build();
+                }
             }
             
         } else if (user.equals(ROOT_USERNAME)) {
