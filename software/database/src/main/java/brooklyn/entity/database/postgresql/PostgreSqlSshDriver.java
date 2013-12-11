@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
@@ -58,16 +59,6 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     public static final Logger log = LoggerFactory.getLogger(PostgreSqlSshDriver.class);
 
-    private final Iterable<String> pgctlLocations = ImmutableList.of(
-            "/usr/lib/postgresql/9.*/bin/",
-            "/opt/local/lib/postgresql9*/bin/",
-            "/usr/lib/postgresql/8.*/bin/",
-            "/opt/local/lib/postgresql8*/bin/",
-            "/usr/local/bin/",
-            "/usr/bin/",
-            "/bin/"
-    );
-
     public PostgreSqlSshDriver(PostgreSqlNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
 
@@ -76,6 +67,16 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     @Override
     public void install() {
+        String version = getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION);
+        String shortVersion = version.replace(".", "");
+
+        Iterable<String> pgctlLocations = ImmutableList.of(
+                "/usr/lib/postgresql/"+version+"/bin/",
+                "/opt/local/lib/postgresql"+shortVersion+"/bin/",
+                "/usr/local/bin/",
+                "/usr/bin/",
+                "/bin/");
+
         DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(),
                 // sudo is absolutely required here, in customize we set user to postgres
                 true)).orSubmitAndBlock();
@@ -85,12 +86,12 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
                 .append("which pg_ctl")
                 .appendAll(Iterables.transform(pgctlLocations, StringFunctions.formatter("test -x %s/pg_ctl")))
                 .append(installPackage(ImmutableMap.of(
-                                "yum", "postgresql postgresql-server",
-                                "apt", "postgresql",
-                                "port", "postgresql91 postgresql91-server"
-                        ), "postgresql"))
+                                "yum", "postgresql"+shortVersion+" postgresql"+shortVersion+"-server",
+                                "apt", "postgresql-"+version,
+                                "port", "postgresql"+shortVersion+" postgresql"+shortVersion+"-server"
+                        ), null))
                 // due to impl of installPackage, it will not come to the line below I don't think
-                .append(warn("WARNING: failed to find or install postgresql binaries (will likely fail later unless binaries found in path)"));
+                .append(warn(format("WARNING: failed to find or install postgresql %s binaries", version)));
 
         // Link to correct binaries folder (different versions of pg_ctl and psql don't always play well together)
         MutableList<String> linkFromHere = MutableList.<String>of()
@@ -100,7 +101,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
                                 "echo 'found pg_ctl in '$PG_DIR' on path so linking PG bin/ to that dir'",
                                 "ln -s $PG_DIR bin")))
                 .appendAll(Iterables.transform(pgctlLocations, givenDirIfFileExistsInItLinkToDir("pg_ctl", "bin")))
-                .append(fail("WARNING: failed to find postgresql binaries for pg_ctl; aborting", 9));
+                .append(fail(format("WARNING: failed to find postgresql %s binaries for pg_ctl; aborting", version), 9));
 
         newScript(INSTALLING)
                 .body.append(
@@ -153,7 +154,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
                                     "echo \"port = " + getEntity().getPostgreSqlPort() +  "\"",
                                     "echo \"max_connections = " + getEntity().getMaxConnections() +  "\"",
                                     "echo \"shared_buffers = " + getEntity().getSharedMemory() +  "\"",
-                                    "echo \"external_pid_file = " + getPidFile() +  "\""),
+                                    "echo \"external_pid_file = '" + getPidFile() +  "'\""),
                             "postgres", getDataDir() + "/postgresql.conf")));
         } else {
             String contents = processTemplate(configUrl);

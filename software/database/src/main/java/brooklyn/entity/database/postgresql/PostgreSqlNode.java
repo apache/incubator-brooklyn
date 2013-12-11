@@ -42,6 +42,9 @@ import brooklyn.util.flags.SetFromFlag;
 @Catalog(name="PostgreSQL Node", description="PostgreSQL is an object-relational database management system (ORDBMS)", iconUrl="classpath:///postgresql-logo-200px.png")
 @ImplementedBy(PostgreSqlNodeImpl.class)
 public interface PostgreSqlNode extends SoftwareProcess, HasShortName, DatastoreCommon {
+    
+    @SetFromFlag("version")
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "9.1");
 
     @SetFromFlag("configFileUrl")
     ConfigKey<String> CONFIGURATION_FILE_URL = ConfigKeys.newStringConfigKey(
