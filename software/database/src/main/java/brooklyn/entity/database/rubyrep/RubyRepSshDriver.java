@@ -2,9 +2,7 @@ package brooklyn.entity.database.rubyrep;
 
 import static java.lang.String.format;
 
-import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -66,13 +64,14 @@ public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements Ru
     protected void customizeConfiguration() throws ExecutionException, InterruptedException, URISyntaxException {
         log.info("Copying creation script " + getEntity().toString());
 
+        // TODO check these semantics are what we really want?
         String configScriptUrl = entity.getConfig(RubyRepNode.CONFIGURATION_SCRIPT_URL);
         Reader configContents;
         if (configScriptUrl != null) {
             // If set accept as-is
             configContents = Streams.reader(resource.getResourceFromUrl(configScriptUrl));
         } else {
-            String configScriptContents = processTemplate(entity.getAttribute(RubyRepNode.TEMPLATE_CONFIGURATION_URL));
+            String configScriptContents = processTemplate(entity.getConfig(RubyRepNode.TEMPLATE_CONFIGURATION_URL));
             configContents = Streams.newReaderWithContents(configScriptContents);
         }
 

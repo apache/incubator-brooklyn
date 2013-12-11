@@ -33,10 +33,10 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
         DatastoreCommon rightNode = getConfig(RIGHT_DATABASE);
 
         if (leftNode != null) {
-            setConfig(LEFT_DATABASE_URL, DependentConfiguration.attributeWhenReady(leftNode, DatastoreCommon.DATASTORE_URL));
+            setAttribute(LEFT_DATASTORE_URL, DependentConfiguration.attributeWhenReady(leftNode, DatastoreCommon.DATASTORE_URL).getUnchecked());
         }
         if (rightNode != null) {
-            setConfig(RIGHT_DATABASE_URL, DependentConfiguration.attributeWhenReady(rightNode, DatastoreCommon.DATASTORE_URL));
+            setAttribute(RIGHT_DATASTORE_URL, DependentConfiguration.attributeWhenReady(rightNode, DatastoreCommon.DATASTORE_URL).getUnchecked());
         }
     }
 
@@ -57,7 +57,7 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
     }
     
     public URI getLeftDatabaseUrl() {
-        return URI.create(getAttribute(LEFT_DATABASE_URL));
+        return URI.create(getAttribute(LEFT_DATASTORE_URL));
     }
     
     public String getLeftDatabaseName() {
@@ -73,7 +73,7 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
     }
 
     public URI getRightDatabaseUrl() {
-        return URI.create(getAttribute(RIGHT_DATABASE_URL));
+        return URI.create(getAttribute(RIGHT_DATASTORE_URL));
     }
 
     public String getRightDatabaseName() {

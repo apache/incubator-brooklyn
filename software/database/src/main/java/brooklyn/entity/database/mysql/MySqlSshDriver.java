@@ -1,9 +1,7 @@
 package brooklyn.entity.database.mysql;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
-import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
-import static brooklyn.util.ssh.BashCommands.installPackage;
-import static brooklyn.util.ssh.BashCommands.ok;
+import static brooklyn.util.ssh.BashCommands.*;
 import static java.lang.String.format;
 
 import java.io.InputStream;
