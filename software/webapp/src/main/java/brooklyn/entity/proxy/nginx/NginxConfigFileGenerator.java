@@ -50,16 +50,15 @@ public class NginxConfigFileGenerator {
     public String configFile() {
         StringBuilder config = new StringBuilder();
         config.append("\n");
-        config.append(format("pid %s/logs/nginx.pid;\n", driver.getRunDir()));
+        config.append(format("pid %s;\n", driver.getPidFile()));
         config.append("events {\n");
         config.append("  worker_connections 8196;\n");
         config.append("}\n");
         config.append("http {\n");
 
-        ProxySslConfig globalSslConfig = nginx.getConfig(NginxController.SSL_CONFIG);
-        boolean ssl = globalSslConfig != null;
+        ProxySslConfig globalSslConfig = nginx.getSslConfig();
 
-        if (ssl) {
+        if (nginx.isSsl()) {
             verifyConfig(globalSslConfig);
             appendSslConfig("global", config, "    ", globalSslConfig, true, true);
         }

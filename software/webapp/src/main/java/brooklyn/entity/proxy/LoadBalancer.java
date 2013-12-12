@@ -57,7 +57,7 @@ public interface LoadBalancer extends Entity, Startable {
     @SetFromFlag("port")
     /** port where this controller should live */
     public static final PortAttributeSensorAndConfigKey PROXY_HTTP_PORT = new PortAttributeSensorAndConfigKey(
-            "proxy.http.port", "Main HTTP port where this proxy listens", ImmutableList.of(8000,"8001+"));
+            "proxy.http.port", "Main HTTP port where this proxy listens", ImmutableList.of(8000, "8001+"));
     
     @SetFromFlag("protocol")
     public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(

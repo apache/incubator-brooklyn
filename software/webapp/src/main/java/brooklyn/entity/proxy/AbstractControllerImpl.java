@@ -116,7 +116,17 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     @Override
     public boolean isActive() {
-    	return isActive;
+        return isActive;
+    }
+    
+    @Override
+    public boolean isSsl() {
+        return getSslConfig() != null;
+    }
+    
+    @Override
+    public ProxySslConfig getSslConfig() {
+        return getConfig(SSL_CONFIG);
     }
     
     @Override

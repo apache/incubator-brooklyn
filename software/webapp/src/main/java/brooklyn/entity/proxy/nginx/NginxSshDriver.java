@@ -17,10 +17,7 @@ package brooklyn.entity.proxy.nginx;
 
 import static java.lang.String.format;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -32,7 +29,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
-import brooklyn.entity.java.JarBuilder;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
@@ -46,7 +42,6 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.text.Strings;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -62,13 +57,17 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     // it look higher level and therefore more appealing.
 
     public static final Logger log = LoggerFactory.getLogger(NginxSshDriver.class);
-    private static final String NGINX_PID_FILE = "logs/nginx.pid";
+    public static final String NGINX_PID_FILE = "logs/nginx.pid";
 
-    protected boolean customizationCompleted = false;
+    private boolean customizationCompleted = false;
     private String expandedInstallDir;
 
     public NginxSshDriver(NginxControllerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
+
+        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
+        entity.setAttribute(NginxController.ACCESS_LOG_LOCATION, getAccessLogLocation());
+        entity.setAttribute(NginxController.ERROR_LOG_LOCATION, getErrorLogLocation());
     }
 
     @Override
@@ -76,12 +75,27 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         return (NginxControllerImpl) super.getEntity();
     }
 
-    protected String getLogFileLocation() {
-        return format("%s/logs/error.log", getRunDir());
+    public String getLogFileLocation() {
+        return format("%s/console", getRunDir());
     }
 
-    protected Integer getHttpPort() {
-        return entity.getAttribute(NginxController.PROXY_HTTP_PORT);
+    public String getAccessLogLocation() {
+        String accessLog = entity.getConfig(NginxController.ACCESS_LOG_LOCATION);
+        return format("%s/%s", getRunDir(), accessLog);
+    }
+
+    public String getErrorLogLocation() {
+        String errorLog = entity.getConfig(NginxController.ERROR_LOG_LOCATION);
+        return format("%s/%s", getRunDir(), errorLog);
+    }
+
+    /** By default Nginx writes the pid of the master process to {@code logs/nginx.pid} */
+    public String getPidFile() {
+        return format("%s/%s", getRunDir(), NGINX_PID_FILE);
+    }
+
+    public Integer getHttpPort() {
+        return getEntity().getPort();
     }
 
     private String getExpandedInstallDir() {
@@ -102,9 +116,8 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void install() {
-        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(),
-                // will fail later if can't sudo (if sudo is required)
-                false)).orSubmitAndBlock();
+        // will fail later if can't sudo (if sudo is required)
+        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), false)).orSubmitAndBlock();
 
         DownloadResolver nginxResolver = mgmt().getEntityDownloadsManager().newDownloader(this);
         List<String> nginxUrls = nginxResolver.getTargets();
@@ -246,56 +259,20 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         newScript(CUSTOMIZING)
                 .body.append(
                         format("mkdir -p %s", getRunDir()),
-                        format("cp -R %s/dist/{conf,html,logs,sbin} %s", getExpandedInstallDir(), getRunDir())
-                )
+                        format("cp -R %s/dist/{conf,html,logs,sbin} %s", getExpandedInstallDir(), getRunDir()))
                 .execute();
 
         // Install static content archive, if specified
         String archiveUrl = entity.getConfig(NginxController.STATIC_CONTENT_ARCHIVE_URL);
         if (Strings.isNonBlank(archiveUrl)) {
-            // TODO from VanilaJavaApp - move this logic to superclass or helper
-            // If a local folder, then jar it up
-            if (new File(archiveUrl).isDirectory()) {
-                try {
-                    File jarFile = JarBuilder.buildJar(new File(archiveUrl));
-                    archiveUrl = jarFile.getAbsolutePath();
-                } catch (IOException e) {
-                    throw new IllegalStateException("Error archiving directory "+archiveUrl, e);
-                }
-            }
-
-            int result = getMachine().installTo(resource, archiveUrl, getRunDir() + "/");
-            if (result != 0)
-                throw new IllegalStateException(format("unable to install static content archive %s for %s at %s", archiveUrl, entity, getMachine()));
-
-            String destName = archiveUrl;
-            destName = destName.contains("?") ? destName.substring(0, destName.indexOf('?')) : destName;
-            destName = destName.substring(destName.lastIndexOf('/') + 1);
-
-            try { // Use the location mutex to prevent package manager locking issues
-                getMachine().acquireMutex("installing", "customizing"+getEntity().getId());
-
-                // if it's a jar, zip or tgz then expand
-                if (destName.toLowerCase().endsWith(".zip") || destName.toLowerCase().endsWith(".jar")) {
-                    result = getMachine().execCommands("unzipping", ImmutableList.of(BashCommands.INSTALL_UNZIP, format("cd %s && unzip %s", getRunDir(), destName)));
-                } else if (destName.toLowerCase().endsWith(".tgz") || destName.toLowerCase().endsWith(".tar.gz")) {
-                    result = getMachine().execCommands("untarring gz", ImmutableList.of(BashCommands.INSTALL_TAR, format("cd %s && tar xvfz %s", getRunDir(), destName)));
-                } else if (destName.toLowerCase().endsWith(".tar")) {
-                    result = getMachine().execCommands("untarring", ImmutableList.of(BashCommands.INSTALL_TAR, format("cd %s && tar xvf %s", getRunDir(), destName)));
-                }
-                if (result != 0)
-                    throw new IllegalStateException(format("unable to install static content for %s at %s (failed to expand archive %s)", entity, getMachine(), archiveUrl));
-            } catch (InterruptedException e) {
-                throw Exceptions.propagate(e);
-            } finally {
-                getMachine().releaseMutex("installing");
-            }
+            getEntity().deploy(archiveUrl);
         }
 
         customizationCompleted = true;
         getEntity().doExtraConfigurationDuringStart();
     }
 
+    @Override
     public boolean isCustomizationCompleted() {
         return customizationCompleted;
     }
@@ -307,28 +284,25 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // invoked from PortAttrSensorAndConfigKey, which is invoked from MachineLifecycleTasks.preStartCustom
         Networking.checkPortsValid(MutableMap.of("httpPort", getHttpPort()));
 
-        // By default, nginx writes the pid of the master process to "logs/nginx.pid"
-        Map<Object,Object> flags = MutableMap.<Object,Object>of("usePidFile", false);
-
         // We wait for evidence of running because, using
         // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
         // we saw the ssh session return before the tomcat process was fully running
         // so the process failed to start.
-        newScript(flags, LAUNCHING).
-                body.append(
-                format("cd %s", getRunDir()),
-                BashCommands.requireExecutable("./sbin/nginx"),
-                sudoBashCIfPrivilegedPort(getHttpPort(), format(
-                        "nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir())),
-                format("for i in {1..10}\n" +
-                        "do\n" +
-                        "    test -f %s && ps -p `cat %s` && exit\n" +
-                        "    sleep 1\n" +
-                        "done\n" +
-                        "echo \"No explicit error launching nginx but couldn't find process by pid; continuing but may subsequently fail\"\n" +
-                        "cat ./console | tee /dev/stderr",
-                        getRunDir()+"/"+NGINX_PID_FILE, getRunDir()+"/"+NGINX_PID_FILE)
-        ).execute();
+        newScript(MutableMap.of("usePidFile", false), LAUNCHING)
+                .body.append(
+                        format("cd %s", getRunDir()),
+                        BashCommands.requireExecutable("./sbin/nginx"),
+                        sudoBashCIfPrivilegedPort(getHttpPort(), format(
+                                "nohup ./sbin/nginx -p %s/ -c conf/server.conf > %s 2>&1 &", getRunDir(), getLogFileLocation())),
+                        format("for i in {1..10}\n" +
+                                "do\n" +
+                                "    test -f %1$s && ps -p `cat %1$s` && exit\n" +
+                                "    sleep 1\n" +
+                                "done\n" +
+                                "echo \"No explicit error launching nginx but couldn't find process by pid; continuing but may subsequently fail\"\n" +
+                                "cat %2$s | tee /dev/stderr",
+                                getPidFile(), getLogFileLocation()))
+                .execute();
     }
 
     public static String sudoIfPrivilegedPort(int port, String command) {
@@ -341,23 +315,19 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public boolean isRunning() {
-        Map<Object,Object> flags = MutableMap.<Object,Object>of("usePidFile", NGINX_PID_FILE);
-        return newScript(flags, CHECK_RUNNING).execute() == 0;
+        return newScript(MutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).execute() == 0;
     }
 
     @Override
     public void stop() {
         // Don't `kill -9`, as that doesn't stop the worker processes
-        String pidFile = NGINX_PID_FILE;
-        Map<Object,Object> flags = MutableMap.<Object,Object>of("usePidFile", false);
-
-        newScript(flags, STOPPING).
+        newScript(MutableMap.of("usePidFile", false), STOPPING).
                 body.append(
-                format("cd %s", getRunDir()),
-                format("export PID=`cat %s`", pidFile),
-                "[[ -n \"$PID\" ]] || exit 0",
-                sudoIfPrivilegedPort(getHttpPort(), "kill $PID")
-        ).execute();
+                        format("cd %s", getRunDir()),
+                        format("export PID=`cat %s`", getPidFile()),
+                        "test -n \"$PID\" || exit 0",
+                        sudoIfPrivilegedPort(getHttpPort(), "kill $PID"))
+                .execute();
     }
 
     @Override
@@ -398,9 +368,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // this call to reload. So we this can be a no-op, and just rely on that subsequent call to update.
 
         Lifecycle lifecycle = entity.getAttribute(NginxController.SERVICE_STATE);
-        boolean running = isRunning();
-
-        if (!running) {
+        if (!isRunning()) {
             log.debug("Ignoring reload of nginx "+entity+", because service is not running (state "+lifecycle+")");
             return;
         }
@@ -412,22 +380,21 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
      * Instructs nginx to reload its configuration (without restarting, so don't lose any requests).
      * Can be overridden if necessary, to change the call used for reloading.
      */
-    protected void doReloadNow() {
-        /*
-         * We use kill -HUP because that is recommended at http://wiki.nginx.org/CommandLine,
-         * but there is no noticeable difference (i.e. no impact on #365) compared to:
-         *   sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
-         *
-         * Note that if conf file is invalid, you'll get no stdout/stderr from `kill` but you
-         * do from using `nginx ... -s reload` so that can be handly when manually debugging.
-         */
+    private void doReloadNow() {
+        // We use kill -HUP because that is recommended at http://wiki.nginx.org/CommandLine,
+        // but there is no noticeable difference (i.e. no impact on #365) compared to:
+        //   sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
+        //
+        // Note that if conf file is invalid, you'll get no stdout/stderr from `kill` but you
+        // do from using `nginx ... -s reload` so that can be handly when manually debugging.
+
         log.debug("reloading nginx by simularing restart (kill -HUP) - {}", entity);
-        newScript(RESTARTING).
-            body.append(
-                format("cd %s", getRunDir()),
-                format("export PID=`cat %s`", NGINX_PID_FILE),
-                sudoIfPrivilegedPort(getHttpPort(), "kill -HUP $PID")
-        ).execute();
+        newScript(RESTARTING)
+                .body.append(
+                        format("cd %s", getRunDir()),
+                        format("export PID=`cat %s`", getPidFile()),
+                        sudoIfPrivilegedPort(getHttpPort(), "kill -HUP $PID"))
+                .execute();
     }
 
     /**
@@ -456,7 +423,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                     } catch (Exception e) {
                         if (log.isDebugEnabled()) log.debug("Failed executing {}; reseting count to {} and propagating exception: {}", new Object[] {summary, preCount, e});
                         counter.set(preCount);
-                        throw Throwables.propagate(e);
+                        throw Exceptions.propagate(e);
                     }
                 } else {
                     if (log.isDebugEnabled()) log.debug("Not executing {} because executed by another thread subsequent to us attempting (preCount {}; count {})", new Object[] {summary, preCount, counter});
