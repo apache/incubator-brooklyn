@@ -21,4 +21,6 @@ public interface PollHandler<V> {
 
     public void onException(Exception exception);
 
+    public String getDescription();
+    
 }

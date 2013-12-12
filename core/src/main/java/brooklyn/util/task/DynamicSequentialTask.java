@@ -123,7 +123,9 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                 for (Task<?> t: secondaryJobsAll)
                     ((TaskInternal<?>)t).markQueued();
             }
-            // TODO overkill having a thread/task for this, but it works (room for optimization...)
+            // TODO overkill having a thread/task for this, but it works
+            // optimisation would either use newTaskEndCallback property on task to submit
+            // or use some kind of single threaded executor for the queued tasks
             Task<List<Object>> secondaryJobMaster = Tasks.<List<Object>>builder().dynamic(false)
                     .name("DST manager (internal)")
                     .body(new Callable<List<Object>>() {

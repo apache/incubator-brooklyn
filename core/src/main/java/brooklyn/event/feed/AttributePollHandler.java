@@ -25,6 +25,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
 
     private final FeedConfig<V,?,?> config;
     private final EntityLocal entity;
+    @SuppressWarnings("rawtypes")
     private final AttributeSensor sensor;
     private final AbstractFeed feed;
     
@@ -40,7 +41,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     private volatile boolean currentProblemLoggedAsWarning = false;
     private volatile boolean lastWasProblem = false;
     
-    public AttributePollHandler(FeedConfig config, EntityLocal entity, AbstractFeed feed) {
+    public AttributePollHandler(FeedConfig<V,?,?> config, EntityLocal entity, AbstractFeed feed) {
         this.config = checkNotNull(config, "config");
         this.entity = checkNotNull(entity, "entity");
         this.sensor = checkNotNull(config.getSensor(), "sensor");
@@ -53,6 +54,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         return !config.hasCheckSuccessHandler() || config.getCheckSuccess().apply(val);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void onSuccess(V val) {
         if (lastWasProblem) {
@@ -82,6 +84,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void onFailure(V val) {
         if (!config.hasFailureHandler()) {
@@ -113,6 +116,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         onException(error);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void onException(Exception exception) {
         if (!feed.isConnected()) {
@@ -184,6 +188,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
      * Does post-processing on the result of the actual poll, to convert it to the attribute's new value.
      * Or returns PollConfig.UNSET if the post-processing indicates that the attribute should not be changed.
      */
+    @SuppressWarnings("unchecked")
     protected Object transformValue(Object val) {
         if (config.hasSuccessHandler()) {
             return coerce(config.getOnSuccess().apply((V)val));
@@ -202,6 +207,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         return coerce(config.getOnException().apply(error));
     }
 
+    @SuppressWarnings("unchecked")
     private Object coerce(Object v) {
         if (v != PollConfig.UNSET) {
             return TypeCoercions.coerce(v, sensor.getType());
@@ -212,6 +218,12 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     
     @Override
     public String toString() {
-        return super.toString()+"["+sensor+" @ "+entity+" <- "+feed+"]";
+        return super.toString()+"["+getDescription()+"]";
     }
+    
+    @Override
+    public String getDescription() {
+        return sensor.getName()+" @ "+entity.getId()+" <- "+config;
+    }
+    
 }

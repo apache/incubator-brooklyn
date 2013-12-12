@@ -47,8 +47,17 @@ define([
             return entities;
         },
         includeEntities: function (entities) {
+        	// accepts id as string or object with id field
             var oldLength = this.includedEntities.length;
-            this.includedEntities = _.uniq(this.includedEntities.concat(entities))
+            var newList = [].concat(this.includedEntities)
+            for (entityId in entities) {
+            	var entity = entities[entityId]
+            	if (typeof entity === 'string')
+            		newList.push(entity)
+            	else
+            		newList.push(entity.id)
+            }
+            this.includedEntities = _.uniq(newList)
             return (this.includedEntities.length > oldLength);
         },
         /**
@@ -84,7 +93,7 @@ define([
         },
         url: function() {
             if (this.includedEntities.length) {
-                var ids = _.pluck(this.includedEntities, "id").join(",");
+                var ids = this.includedEntities.join(",");
                 return "/v1/applications/fetch?items="+ids;
             } else
                 return "/v1/applications/fetch";

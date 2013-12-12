@@ -49,4 +49,9 @@ public class JmxAttributePollConfig<T> extends PollConfig<Object, T, JmxAttribut
     public JmxAttributePollConfig<T> attributeName(String val) {
         this.attributeName = val; return this;
     }
+    
+    @Override
+    public String toString() {
+        return "jmx["+objectName+":"+attributeName+"]";
+    }
 }

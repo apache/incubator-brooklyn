@@ -3,9 +3,13 @@ package brooklyn.rest.resources;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
+import brooklyn.rest.util.JsonUtils;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
+
+import org.codehaus.jackson.map.ObjectMapper;
 
 public abstract class AbstractBrooklynRestResource {
 
@@ -17,7 +21,8 @@ public abstract class AbstractBrooklynRestResource {
     
     private ManagementContext managementContext;
     private BrooklynRestResourceUtils brooklynRestResourceUtils;
-
+    private final ObjectMapper mapper = new ObjectMapper();
+    
     public synchronized ManagementContext mgmt() {
         if (managementContext!=null) return managementContext;
         managementContext = (ManagementContext) servletContext.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
@@ -40,4 +45,30 @@ public abstract class AbstractBrooklynRestResource {
         return brooklynRestResourceUtils;
     }
     
+    protected ObjectMapper mapper() {
+        return mapper;
+    }
+
+    /** returns an object which jersey will handle nicely, converting to json,
+     * sometimes wrapping in quotes if needed (for outermost json return types) */ 
+    protected Object getValueForDisplay(Object value, boolean preferJson, boolean isJerseyReturnValue) {
+        if (preferJson) {
+            if (value==null) return null;
+            Object result = JsonUtils.toJsonable(value, mapper());
+            
+            if (isJerseyReturnValue) {
+                if (result instanceof String)
+                    // Jersey does not do json encoding if the return type is a string,
+                    // expecting the returner to do the json encoding himself
+                    // cf discussion at https://github.com/dropwizard/dropwizard/issues/231
+                    result = JavaStringEscapes.wrapJavaString((String)result);
+            }
+            
+            return result;
+        } else {
+            if (value==null) return "";
+            return value.toString();            
+        }
+    }
+
 }

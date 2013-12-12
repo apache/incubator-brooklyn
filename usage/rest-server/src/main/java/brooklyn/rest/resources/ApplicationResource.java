@@ -6,12 +6,13 @@ import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
@@ -41,20 +42,18 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
 
   private static final Logger log = LoggerFactory.getLogger(ApplicationResource.class);
   
-  private final ObjectMapper mapper = new ObjectMapper();
-
   /** @deprecated since 0.6.0 use {@link #fetch(String)} (with slightly different, but better semantics) */
   @Deprecated
   @Override
   public JsonNode applicationTree() {
-    ArrayNode apps = mapper.createArrayNode();
+    ArrayNode apps = mapper().createArrayNode();
     for (Application application : mgmt().getApplications())
       apps.add(recursiveTreeFromEntity(application));
     return apps;
   }
   
   private ObjectNode entityBase(Entity entity) {
-      ObjectNode aRoot = mapper.createObjectNode();
+      ObjectNode aRoot = mapper().createObjectNode();
       aRoot.put("name", entity.getDisplayName());
       aRoot.put("id", entity.getId());
       aRoot.put("type", entity.getEntityType().getName());
@@ -102,7 +101,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
   }
   
   private ArrayNode childEntitiesRecursiveAsArray(Entity entity) {
-    ArrayNode node = mapper.createArrayNode();
+    ArrayNode node = mapper().createArrayNode();
     for (Entity e : entity.getChildren()) {
       node.add(recursiveTreeFromEntity(e));
     }
@@ -110,9 +109,9 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
   }
 
   private ArrayNode childEntitiesIdAndNameAsArray(Entity entity) {
-      ArrayNode node = mapper.createArrayNode();
+      ArrayNode node = mapper().createArrayNode();
       for (Entity e : entity.getChildren()) {
-          ObjectNode holder = mapper.createObjectNode();
+          ObjectNode holder = mapper().createObjectNode();
           holder.put("id", e.getId());
           holder.put("name", e.getDisplayName());
           node.add(holder);
@@ -135,7 +134,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
           }
       }
       
-      ArrayNode result = mapper.createArrayNode();
+      ArrayNode result = mapper().createArrayNode();
       for (JsonNode n: jsonEntitiesById.values()) result.add(n);
       return result;
   }

@@ -37,12 +37,22 @@ define([
                     $(nRow).attr('id', aData[0])
                     $(nRow).addClass('activity-row')
                 },
+                "aaSorting": [[ 2, "desc" ]],
                 "aoColumnDefs": [
                                  {
                                      "mRender": function ( data, type, row ) {
-                                         return Util.prep(data)
+                                         return Util.escape(data)
                                      },
-                                     "aTargets": [ 1, 2, 3 ]
+                                     "aTargets": [ 1, 3 ]
+                                 },
+                                 {
+                                     "mRender": function ( data, type, row ) {
+                                    	 if ( type === 'display' ) {
+                                    		 data = moment(data).calendar();
+                                    	 }
+                                    	 return Util.escape(data)
+                                     },
+                                     "aTargets": [ 2 ]
                                  },
                                  { "bVisible": false,  "aTargets": [ 0 ] }
                              ]            
@@ -100,7 +110,7 @@ define([
                 ViewUtils.updateMyDataTable(that.table, topLevelTasks, function(task, index) {
                     return [ task.get("id"),
                              task.get("displayName"),
-                             moment(task.get("submitTimeUtc")).calendar(),
+                             task.get("submitTimeUtc"),
                              task.get("currentStatus")
                     ]; 
                 });
@@ -172,7 +182,7 @@ define([
                 $('tr#'+id).next().find('td.row-expansion').attr('id', id)
             } else {
                 // just update
-                $('tr#'+id).next().find('.task-description').html(Util.prep(task.attributes.description))
+                $('tr#'+id).next().find('.task-description').html(Util.escape(task.attributes.description))
             }
             
             var html = _.template(ActivityRowDetailsMainHtml, { 

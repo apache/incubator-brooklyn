@@ -453,6 +453,9 @@ define([
             }
         },
         computeStatusIcon: function(serviceUp, lifecycleState) {
+        	if (lifecycleState != null)
+        		lifecycleState = lifecycleState.toLowerCase();
+        	
             if (serviceUp===false || serviceUp=="false") serviceUp=false;
             else if (serviceUp===true || serviceUp=="true") serviceUp=true;
             else {

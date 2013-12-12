@@ -279,6 +279,16 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
                 entity.setAttribute(attribute, null);
             }
         }
+        
+        @Override
+        public String toString() {
+            return super.toString()+"["+getDescription()+"]";
+        }
+        
+        @Override
+        public String getDescription() {
+            return ""+sensorMap;
+        }
     }
 
     static class PerfCounterValueIterator implements Iterator<String> {

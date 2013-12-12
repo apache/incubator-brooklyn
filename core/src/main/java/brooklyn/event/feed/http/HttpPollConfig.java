@@ -3,8 +3,9 @@ package brooklyn.event.feed.http;
 import java.net.URI;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.feed.FeedConfig;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.URLParamEncoder;
@@ -14,8 +15,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
-import javax.annotation.Nullable;
 
 public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConfig<T>> {
 
@@ -115,4 +114,8 @@ public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConf
         return MutableMap.<K,V>builder().putAll(map1).putAll(map2).build();
     }
 
+    @Override
+    public String toString() {
+        return "http["+suburl+"]";
+    }
 }

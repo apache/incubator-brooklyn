@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.concurrent.TimeUnit;
 
 import brooklyn.event.AttributeSensor;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
 
 /**
@@ -15,6 +16,7 @@ import brooklyn.util.time.Duration;
 public class PollConfig<V, T, This extends PollConfig<V,T,This>> extends FeedConfig<V,T,This> {
 
     private long period = -1;
+    private String description;
 
     public PollConfig(AttributeSensor<T> sensor) {
         super(sensor);
@@ -44,4 +46,16 @@ public class PollConfig<V, T, This extends PollConfig<V,T,This>> extends FeedCon
         checkArgument(val >= 0, "period must be greater than or equal to zero");
         return period(units.toMillis(val));
     }
+    
+    public This description(String description) {
+        this.description = description;
+        return self();
+    }
+    
+    @Override
+    public String toString() {
+        if (description!=null) return description;
+        return JavaClassNames.simpleClassName(this);
+    }
+
 }

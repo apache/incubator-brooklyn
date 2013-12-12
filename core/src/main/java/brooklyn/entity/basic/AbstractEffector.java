@@ -11,12 +11,12 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.effector.EffectorBase;
-import brooklyn.entity.effector.EffectorWithBody;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
+import brooklyn.entity.effector.EffectorWithBody;
 import brooklyn.management.Task;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.task.BasicTask;
+import brooklyn.util.task.DynamicSequentialTask;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -56,7 +56,8 @@ public abstract class AbstractEffector<T> extends EffectorBase<T> implements Eff
         return new EffectorTaskFactory<T>() {
             @Override
             public Task<T> newTask(final Entity entity, final Effector<T> effector, final ConfigBag parameters) {
-                return new BasicTask<T>(
+                return 
+                    new DynamicSequentialTask<T>(
                         getFlagsForTaskInvocationAt(entity),
                 new Callable<T>() {
                     @Override public T call() {

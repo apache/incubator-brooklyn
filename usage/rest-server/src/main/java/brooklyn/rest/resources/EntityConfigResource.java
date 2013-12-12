@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.BasicConfigKey;
@@ -43,21 +42,27 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     Map<ConfigKey<?>, Object> source = ((EntityInternal)entity).getAllConfig();
     Map<String, Object> result = Maps.newLinkedHashMap();
     for (Map.Entry<ConfigKey<?>, Object> ek: source.entrySet()) {
-        result.put(ek.getKey().getName(), getValueForDisplay(entity, ek.getValue()));
+        result.put(ek.getKey().getName(), getValueForDisplay(ek.getValue(), true, false));
     }
     return result;
   }
 
   @Override
-  public String get(String application, String entityToken, String configKeyName) {
+  public Object get(String application, String entityToken, String configKeyName) {
+      return get(true, application, entityToken, configKeyName);
+  }
+  
+  @Override
+  public String getPlain(String application, String entityToken, String configKeyName) {
+      return (String)get(true, application, entityToken, configKeyName);
+  }
+  
+  public Object get(boolean preferJson, String application, String entityToken, String configKeyName) {
     EntityLocal entity = brooklyn().getEntity(application, entityToken);
     ConfigKey<?> ck = entity.getEntityType().getConfigKey(configKeyName);
     if (ck==null) ck = new BasicConfigKey<Object>(Object.class, configKeyName);
-    return getValueForDisplay(entity, ((AbstractEntity)entity).getConfigMap().getRawConfig(ck));
-  }
-
-  private String getValueForDisplay(EntityLocal entity, Object value) {
-    return brooklyn().getStringValueForDisplay(value);
+    
+    return getValueForDisplay(((EntityInternal)entity).getConfigMap().getRawConfig(ck), preferJson, true);
   }
 
 }
