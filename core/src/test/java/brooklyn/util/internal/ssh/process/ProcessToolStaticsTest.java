@@ -1,6 +1,7 @@
 package brooklyn.util.internal.ssh.process;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.Arrays;
 
 import org.testng.Assert;
@@ -22,7 +23,7 @@ public class ProcessToolStaticsTest {
     
     @Test
     public void testRunsWithStdout() throws Exception {
-        int code = ProcessTool.execSingleProcess(Arrays.asList("echo", "hello", "world"), null, out, err, this);
+        int code = ProcessTool.execSingleProcess(Arrays.asList("echo", "hello", "world"), null, (File)null, out, err, this);
         Assert.assertEquals(err.toString().trim(), "");
         Assert.assertEquals(out.toString().trim(), "hello world");
         Assert.assertEquals(code, 0);
@@ -31,7 +32,7 @@ public class ProcessToolStaticsTest {
     @Test(groups="Integration") // *nix only
     public void testRunsWithBashEnvVarAndStderr() throws Exception {
         int code = ProcessTool.execSingleProcess(Arrays.asList("/bin/bash", "-c", "echo hello $NAME | tee /dev/stderr"), 
-                MutableMap.of("NAME", "BOB"), out, err, this);
+                MutableMap.of("NAME", "BOB"), (File)null, out, err, this);
         Assert.assertEquals(err.toString().trim(), "hello BOB", "err is: "+err);
         Assert.assertEquals(out.toString().trim(), "hello BOB", "out is: "+out);
         Assert.assertEquals(code, 0);
@@ -40,7 +41,7 @@ public class ProcessToolStaticsTest {
     @Test(groups="Integration") // *nix only
     public void testRunsManyCommandsWithBashEnvVarAndStderr() throws Exception {
         int code = ProcessTool.execProcesses(Arrays.asList("echo hello $NAME", "export NAME=JOHN", "echo goodbye $NAME | tee /dev/stderr"), 
-                MutableMap.of("NAME", "BOB"), out, err, " ; ", this);
+                MutableMap.of("NAME", "BOB"), (File)null, out, err, " ; ", false, this);
         Assert.assertEquals(err.toString().trim(), "goodbye JOHN", "err is: "+err);
         Assert.assertEquals(out.toString().trim(), "hello BOB\ngoodbye JOHN", "out is: "+out);
         Assert.assertEquals(code, 0);

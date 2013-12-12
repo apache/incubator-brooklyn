@@ -2,19 +2,17 @@ package brooklyn.event.feed.shell;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
@@ -23,11 +21,13 @@ import brooklyn.event.feed.Poller;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollValue;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.stream.StreamGobbler;
-import brooklyn.util.time.Time;
+import brooklyn.management.ExecutionContext;
+import brooklyn.util.task.system.ProcessTaskFactory;
+import brooklyn.util.task.system.ProcessTaskWrapper;
+import brooklyn.util.task.system.internal.SystemProcessTaskFactory.ConcreteSystemProcessTaskFactory;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
@@ -184,11 +184,19 @@ public class ShellFeed extends AbstractFeed {
                 handlers.add(new AttributePollHandler<SshPollValue>(config, entity, this));
                 if (config.getPeriod() > 0) minPeriod = Math.min(minPeriod, config.getPeriod());
             }
-            
+
+            final ProcessTaskFactory<?> taskFactory = newTaskFactory(pollInfo.command, pollInfo.env, pollInfo.dir, 
+                    pollInfo.input, pollInfo.context, pollInfo.timeout);
+            final ExecutionContext executionContext = ((EntityInternal) entity).getManagementSupport().getExecutionContext();
+
             getPoller().scheduleAtFixedRate(
                     new Callable<SshPollValue>() {
-                        public SshPollValue call() throws Exception {
-                            return exec(pollInfo.command, pollInfo.env, pollInfo.dir, pollInfo.input, pollInfo.context, pollInfo.timeout);
+                        @Override public SshPollValue call() throws Exception {
+                            ProcessTaskWrapper<?> taskWrapper = taskFactory.newTask();
+                            executionContext.submit(taskWrapper);
+                            taskWrapper.block();
+                            Optional<Integer> exitCode = Optional.fromNullable(taskWrapper.getExitCode());
+                            return new SshPollValue(null, exitCode.or(-1), taskWrapper.getStdout(), taskWrapper.getStderr());
                         }}, 
                     new DelegatingPollHandler(handlers), 
                     minPeriod);
@@ -208,69 +216,17 @@ public class ShellFeed extends AbstractFeed {
      * @param dir     Working directory, or null to inherit from current process
      * @param input   Input to send to the command (if not null)
      */
-    private SshPollValue exec(final String command, Map<String,String> env, File dir, String input, final String context, final long timeout) {
-        // TODO Implementation duplicates ShellUtils, but captures everything in return value (rather than just stdout)
-        
-        if (log.isTraceEnabled()) log.trace("Shell polling, executing {} with env {}", new Object[] {command, env});
-        String[] commandFull = new String[] {"bash", "-l", "-c", command};
-        List<String> envFull = new ArrayList<String>(env.size());
-        for (Map.Entry<String,String> entry : env.entrySet()) {
-            envFull.add(entry.getKey() + "=" + (entry.getValue() != null ? entry.getValue() : ""));
+    protected ProcessTaskFactory<?> newTaskFactory(final String command, Map<String,String> env, File dir, String input, final String summary, final long timeout) {
+        // FIXME Add generic timeout() support to task ExecutionManager
+        if (timeout > 0) {
+            log.warn("Timeout ({}ms) not currently supported for ShellFeed {}", timeout, this);
         }
-        try {
-            final Process proc = Runtime.getRuntime().exec(commandFull, envFull.toArray(new String[envFull.size()]), dir);
-            
-            ByteArrayOutputStream stdoutS = new ByteArrayOutputStream();
-            ByteArrayOutputStream stderrS = new ByteArrayOutputStream();
-            StreamGobbler stdoutG = new StreamGobbler(proc.getInputStream(), stdoutS, log).setLogPrefix("["+context+":stdout] ");
-            stdoutG.start();
-            StreamGobbler stderrG = new StreamGobbler(proc.getErrorStream(), stderrS, log).setLogPrefix("["+context+":stderr] ");
-            stderrG.start();
-            if (input != null && input.length() > 0) {
-                proc.getOutputStream().write(input.getBytes());
-                proc.getOutputStream().flush();
-            }
-            
-            final AtomicBoolean ended = new AtomicBoolean(false);
-            final AtomicBoolean killed = new AtomicBoolean(false);
-            Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try { 
-                        if (timeout>0) {
-                            Thread.sleep(timeout);
-                            if (!ended.get()) {
-                                log.debug("Timeout exceeded for {}% {}", context, command);
-                                proc.destroy();
-                                killed.set(true);
-                            }
-                        } 
-                    } catch (Exception e) {
-                    }
-                }});
-            
-            if (timeout < Long.MAX_VALUE) t.start();
-            int exitStatus = proc.waitFor();
-            ended.set(true);
-            t.interrupt();
-            
-            stdoutG.blockUntilFinished();
-            stderrG.blockUntilFinished();
-            String stdout = new String(stdoutS.toByteArray());
-            String stderr = new String(stderrS.toByteArray());
-            
-            if (killed.get()) {
-                log.warn("Command timed out after {} (throwing): {}% {}\nstdout={}\nstderr={}", 
-                        new Object[] {Time.makeTimeString(timeout), context, command, stdout, stderr});
-                String msg = String.format("Command timed out after %s: %s (details logged)", 
-                        Time.makeTimeString(timeout), command);
-                throw new IllegalStateException(msg);
-            }
-            
-            if (log.isDebugEnabled()) log.debug("Completed local command: {}% {}: exit code {}", new Object[] {context, command, exitStatus});
-            return new SshPollValue(null, exitStatus, stdout, stderr);
-            
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
+
+        return new ConcreteSystemProcessTaskFactory<Object>(command)
+                .environmentVariables(env)
+                .loginShell(true)
+                .directory(dir)
+                .runAsCommand()
+                .summary(summary);
     }
 }

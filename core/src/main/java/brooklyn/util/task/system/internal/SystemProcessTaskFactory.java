@@ -1,5 +1,7 @@
 package brooklyn.util.task.system.internal;
 
+import java.io.File;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,8 +18,24 @@ public class SystemProcessTaskFactory<T extends SystemProcessTaskFactory<T,RET>,
 
     private static final Logger log = LoggerFactory.getLogger(SystemProcessTaskFactory.class);
     
+    // FIXME Plum this through?!
+    private File directory;
+    private Boolean loginShell;
+
     public SystemProcessTaskFactory(String ...commands) {
         super(commands);
+    }
+    
+    public T directory(File directory) {
+        markDirty();
+        this.directory = directory;
+        return self();
+    }
+    
+    public T loginShell(boolean loginShell) {
+        markDirty();
+        this.loginShell = loginShell;
+        return self();
     }
     
     @Override
@@ -45,12 +63,20 @@ public class SystemProcessTaskFactory<T extends SystemProcessTaskFactory<T,RET>,
             this.taskTypeShortName = taskTypeShortName;
         }
         @Override
+        protected ConfigBag getConfigForRunning() {
+            ConfigBag result = super.getConfigForRunning();
+            if (directory != null) config.put(ProcessTool.PROP_DIRECTORY, directory);
+            if (loginShell != null) config.put(ProcessTool.PROP_LOGIN_SHELL, loginShell);
+            return result;
+        }
+        @Override
         protected void run(ConfigBag config) {
             if (this.runAsScript==Boolean.FALSE)
                 this.exitCode = newExecWithLoggingHelpers().execCommands(config.getAllConfigRaw(), getSummary(), getCommands(), getShellEnvironment());
             else // runScript = null or TRUE
                 this.exitCode = newExecWithLoggingHelpers().execScript(config.getAllConfigRaw(), getSummary(), getCommands(), getShellEnvironment());
         }
+        @Override
         protected String taskTypeShortName() { return taskTypeShortName; }
     }
     
