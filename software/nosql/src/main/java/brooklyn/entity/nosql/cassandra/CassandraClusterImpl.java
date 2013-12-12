@@ -399,7 +399,8 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
                 setAttribute(HOSTNAME, upNode.get().getAttribute(Attributes.HOSTNAME));
                 setAttribute(THRIFT_PORT, upNode.get().getAttribute(CassandraNode.THRIFT_PORT));
                 
-                Set<String> oldNodes = MutableSet.copyOf(getAttribute(CASSANDRA_CLUSTER_NODES));
+                List<String> currentNodes = getAttribute(CASSANDRA_CLUSTER_NODES);
+                Set<String> oldNodes = (currentNodes != null) ? MutableSet.copyOf(currentNodes) : MutableSet.<String>of();
                 Set<String> newNodes = MutableSet.<String>of();
                 for (Entity member: getMembers()) {
                     if (member.getAttribute(SERVICE_UP)==Boolean.TRUE) {
