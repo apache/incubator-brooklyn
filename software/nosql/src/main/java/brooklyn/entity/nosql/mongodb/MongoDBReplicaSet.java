@@ -1,14 +1,17 @@
 package brooklyn.entity.nosql.mongodb;
 
 import java.util.Collection;
+import java.util.List;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.reflect.TypeToken;
 
 /**
  * A replica set of {@link MongoDBServer}s, based on {@link DynamicCluster} which can be resized by a policy
@@ -27,15 +30,16 @@ import brooklyn.util.flags.SetFromFlag;
 public interface MongoDBReplicaSet extends DynamicCluster {
 
     @SetFromFlag("replicaSetName")
-    ConfigKey<String> REPLICA_SET_NAME = new BasicConfigKey<String>(
-            String.class, "mongodb.replicaSet.name", "Name of the MongoDB replica set", "BrooklynCluster");
+    ConfigKey<String> REPLICA_SET_NAME = ConfigKeys.newStringConfigKey(
+            "mongodb.replicaSet.name", "Name of the MongoDB replica set", "BrooklynCluster");
 
-    AttributeSensor<MongoDBServer> PRIMARY = new BasicAttributeSensor<MongoDBServer>(
-            MongoDBServer.class, "mongodb.replicaSet.primary", "The primary member of the replica set");
+    AttributeSensor<MongoDBServer> PRIMARY_ENTITY = Sensors.newSensor(
+            MongoDBServer.class, "mongodb.replicaSet.primary.entity", "The entity acting as primary");
 
-    AttributeSensor<Collection<MongoDBServer>> SECONDARIES = new BasicAttributeSensor(
-            Collection.class, "mongodb.replicaSet.secondaries", "The secondary members of the replica set");
-
+    @SuppressWarnings("serial")
+    AttributeSensor<List<String>> REPLICA_SET_ENDPOINTS = Sensors.newSensor(new TypeToken<List<String>>() {}, 
+        "mongodb.replicaSet.endpoints", "Endpoints active for this replica set");
+    
     /**
      * The name of the replica set.
      */

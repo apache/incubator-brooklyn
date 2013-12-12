@@ -65,13 +65,13 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
                 .baseUri(String.format("http://%s:%d/_stats", getAttribute(HOSTNAME), getHttpPort()))
                 .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] { "httpd", "requests", "count" }, Integer.class))
-                        .onError(Functions.constant(-1)))
+                        .onFailureOrException(Functions.constant(-1)))
                 .poll(new HttpPollConfig<Integer>(ERROR_COUNT)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] { "httpd_status_codes", "404", "count" }, Integer.class))
-                        .onError(Functions.constant(-1)))
+                        .onFailureOrException(Functions.constant(-1)))
                 .poll(new HttpPollConfig<Integer>(TOTAL_PROCESSING_TIME)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] { "couchdb", "request_time", "count" }, Integer.class))
-                        .onError(Functions.constant(-1)))
+                        .onFailureOrException(Functions.constant(-1)))
                 .poll(new HttpPollConfig<Integer>(MAX_PROCESSING_TIME)
                         .onSuccess(HttpValueFunctions.chain(HttpValueFunctions.jsonContents(new String[] { "couchdb", "request_time", "max" }, Double.class), new Function<Double, Integer>() {
                             @Override
@@ -79,7 +79,7 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
                                 return Integer.valueOf(input.intValue());
                             }
                         }))
-                        .onError(Functions.constant(-1)))
+                        .onFailureOrException(Functions.constant(-1)))
                 .build();
 
         WebAppServiceMethods.connectWebAppServerPolicies(this);

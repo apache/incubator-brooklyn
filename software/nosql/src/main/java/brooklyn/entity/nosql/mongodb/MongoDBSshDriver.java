@@ -38,7 +38,9 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
 
     public String getDataDirectory() {
-        return entity.getConfig(MongoDBServer.DATA_DIRECTORY, getRunDir() + "/data");
+        String result = entity.getConfig(MongoDBServer.DATA_DIRECTORY);
+        if (result!=null) return result;
+        return getRunDir() + "/data";
     }
 
     @Override
@@ -49,7 +51,7 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getBaseName());
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
 
@@ -60,7 +62,7 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     @Override
     public void customize() {
-        Map ports = ImmutableMap.of("port", getServerPort());
+        Map<?,?> ports = ImmutableMap.of("port", getServerPort());
         Networking.checkPortsValid(ports);
         String command = String.format("mkdir -p %s", getDataDirectory());
         newScript(CUSTOMIZING)
@@ -113,7 +115,7 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     @Override
     public boolean isRunning() {
-        Map flags = ImmutableMap.of("usePidFile", getPidFile());
+        Map<?,?> flags = ImmutableMap.of("usePidFile", getPidFile());
         return newScript(flags, CHECK_RUNNING).execute() == 0;
     }
 

@@ -2,9 +2,12 @@ package brooklyn.entity.nosql.mongodb;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,14 +19,21 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.CustomAggregatingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -53,6 +63,17 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     private AbstractMembershipTrackingPolicy policy;
     private final AtomicBoolean mustInitialise = new AtomicBoolean(true);
 
+    @SuppressWarnings("unchecked")
+    protected static final List<AttributeSensor<Long>> SENSORS_TO_SUM = Arrays.asList(MongoDBServer.OPCOUNTERS_INSERTS, 
+        MongoDBServer.OPCOUNTERS_QUERIES,
+        MongoDBServer.OPCOUNTERS_UPDATES,
+        MongoDBServer.OPCOUNTERS_DELETES,
+        MongoDBServer.OPCOUNTERS_GETMORE,
+        MongoDBServer.OPCOUNTERS_COMMAND,
+        MongoDBServer.NETWORK_BYTES_IN,
+        MongoDBServer.NETWORK_BYTES_OUT,
+        MongoDBServer.NETWORK_NUM_REQUESTS);
+    
     public MongoDBReplicaSetImpl() {
     }
 
@@ -112,7 +133,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
      * Sets {@link MongoDBServer#REPLICA_SET_ENABLED} and {@link MongoDBServer#REPLICA_SET_NAME}.
      */
     @Override
-    protected Map getCustomChildFlags() {
+    protected Map<?,?> getCustomChildFlags() {
         return ImmutableMap.builder()
                 .putAll(super.getCustomChildFlags())
                 .put(MongoDBServer.REPLICA_SET_ENABLED, true)
@@ -160,14 +181,19 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
      */
     @Override
     public Integer resize(Integer desired) {
+        // TODO support more modes than all-nodes-voting
+        // (as per https://github.com/brooklyncentral/brooklyn/issues/1116)
+        
         if ((desired >= MIN_MEMBERS && desired <= MAX_MEMBERS && desired % 2 == 1) || desired == 0)
             return super.resize(desired);
+        
         if (desired % 2 == 0)
-            LOG.warn("Ignored request to resize replica set {} to even number of members", getReplicaSetName());
+            throw new IllegalStateException("Ignored request to resize replica set to even number of members (only voting nodes permitted currently)");
         if (desired < MIN_MEMBERS)
-            LOG.warn("Ignored request to resize replica set {} to because smaller than min size of {}", getReplicaSetName(), MIN_MEMBERS);
+            throw new IllegalStateException("Ignored request to resize replica set to size smaller than minimum (only voting nodes permitted currently)");
         if (desired > MAX_MEMBERS)
-            LOG.warn("Ignored request to resize replica set {} to because larger than max size of {}", getReplicaSetName(), MAX_MEMBERS);
+            throw new IllegalStateException("Ignored request to resize replica set to size larger than maximum (only voting nodes permitted currently)");
+        
         return getCurrentSize();
     }
 
@@ -184,7 +210,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 LOG.info("First server up in {} is: {}", getReplicaSetName(), server);
             boolean replicaSetInitialised = server.getClient().initializeReplicaSet(getReplicaSetName(), nextMemberId.getAndIncrement());
             if (replicaSetInitialised) {
-                setAttribute(PRIMARY, server);
+                setAttribute(PRIMARY_ENTITY, server);
                 setAttribute(Startable.SERVICE_UP, true);
             } else {
                 setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
@@ -230,6 +256,8 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     private void serverRemoved(MongoDBServer server) {
         if (LOG.isDebugEnabled())
             LOG.debug("Scheduling removal of member from {}: {}", getReplicaSetName(), server);
+        if (server.equals(getAttribute(PRIMARY_ENTITY)))
+            setAttribute(PRIMARY_ENTITY, null);
         executor.submit(removeMember(server));
     }
 
@@ -276,6 +304,47 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
 
         addPolicy(policy);
         policy.setGroup(this);
+
+        for (AttributeSensor<Long> sensor: SENSORS_TO_SUM)
+            addEnricher(CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), sensor, sensor, null, null));
+        
+        addEnricher(CustomAggregatingEnricher.newEnricher(MutableMap.of("allMembers", true), MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT, MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT,
+            new Function<Collection<String>,String>() {
+                @Override
+                public String apply(Collection<String> input) {
+                    if (input==null || input.isEmpty()) return null;
+                    Set<String> distinct = MutableSet.of();
+                    for (String endpoint: input)
+                        if (!Strings.isBlank(endpoint))
+                            distinct.add(endpoint);
+                    if (distinct.size()>1) 
+                        LOG.warn("Mongo replica set "+MongoDBReplicaSetImpl.this+" detetcted multiple masters (transitioning?): "+distinct);
+                    return input.iterator().next();
+                }
+            }));
+
+        addEnricher(CustomAggregatingEnricher.newEnricher(MutableMap.of("allMembers", true), MongoDBServer.MONGO_SERVER_ENDPOINT, REPLICA_SET_ENDPOINTS,
+            new Function<Collection<String>,List<String>>() {
+                @Override
+                public List<String> apply(Collection<String> input) {
+                    Set<String> endpoints = new TreeSet<String>();
+                    for (String endpoint: input) {
+                        if (!Strings.isBlank(endpoint)) {
+                            endpoints.add(endpoint);
+                        }
+                    }
+                    return MutableList.copyOf(endpoints);
+                }
+            }));
+
+
+        subscribeToMembers(this, MongoDBServer.IS_PRIMARY_IN_REPLICA_SET, new SensorEventListener<Boolean>() {
+            @Override public void onEvent(SensorEvent<Boolean> event) {
+                if (Boolean.TRUE == event.getValue())
+                    setAttribute(PRIMARY_ENTITY, (MongoDBServer)event.getSource());
+            }
+        });
+
     }
 
     @Override

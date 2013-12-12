@@ -1,21 +1,24 @@
 package brooklyn.entity.nosql.mongodb;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
+import org.bson.BasicBSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
+import brooklyn.util.collections.MutableMap;
+
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
-import org.bson.BasicBSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBServer {
 
@@ -33,7 +36,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
     }
 
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return MongoDBDriver.class;
     }
 
@@ -42,10 +45,14 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         super.connectSensors();
         connectServiceUpIsRunning();
 
-        // See http://docs.mongodb.org/ecosystem/tools/http-interfaces/#http-console
-        Integer httpConsolePort = getAttribute(MongoDBServer.PORT) + 1000;
-        String httpConsole = String.format("http://%s:%d", getAttribute(HOSTNAME), httpConsolePort);
-        setAttribute(HTTP_INTERFACE_URL, httpConsole);
+        int httpConsolePort = getAttribute(PORT) + 1000;
+        if (httpConsolePort != getAttribute(HTTP_PORT)+1000) {
+            // see comment on HTTP_PORT
+            LOG.warn(this+" may not have opened HTTP_PORT correctly as the default was not available");
+            setAttribute(HTTP_PORT, httpConsolePort);
+        }
+        setAttribute(HTTP_INTERFACE_URL, String.format("http://%s:%d", getAttribute(HOSTNAME), httpConsolePort));
+        setAttribute(MONGO_SERVER_ENDPOINT, String.format("http://%s:%d", getAttribute(HOSTNAME), getAttribute(MongoDBServer.PORT)));
 
         try {
             client = MongoClientSupport.forServer(this);
@@ -56,7 +63,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
         serviceStats = FunctionFeed.builder()
                 .entity(this)
-                .poll(new FunctionPollConfig<Object, BasicBSONObject>(STATUS)
+                .poll(new FunctionPollConfig<Object, BasicBSONObject>(STATUS_BSON)
                         .period(2, TimeUnit.SECONDS)
                         .callable(new Callable<BasicBSONObject>() {
                             @Override
@@ -66,7 +73,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                                     : null;
                             }
                         })
-                        .onError(Functions.<BasicBSONObject>constant(null)))
+                        .onException(Functions.<BasicBSONObject>constant(null)))
                 .build();
 
         final boolean replicaSetEnabled = getConfig(REPLICA_SET_ENABLED);
@@ -94,14 +101,15 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                     .build();
         } else {
             setAttribute(REPLICA_SET_NAME, null);
-            setAttribute(REPLICA_SET_PRIMARY, false);
-            setAttribute(REPLICA_SET_SECONDARY, false);
+            setAttribute(IS_PRIMARY_IN_REPLICA_SET, false);
+            setAttribute(IS_SECONDARY_IN_REPLICA_SET, false);
         }
 
         // Take interesting details from STATUS.
-        subscribe(this, STATUS, new SensorEventListener<BasicBSONObject>() {
+        subscribe(this, STATUS_BSON, new SensorEventListener<BasicBSONObject>() {
                 @Override public void onEvent(SensorEvent<BasicBSONObject> event) {
                     BasicBSONObject map = event.getValue();
+                    setAttribute(STATUS_JSON, MutableMap.copyOf(map));
                     if (map != null && !map.isEmpty()) {
                         setAttribute(UPTIME_SECONDS, map.getDouble("uptime", 0));
 
@@ -124,9 +132,9 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                         BasicBSONObject repl = (BasicBSONObject) map.get("repl");
                         if (replicaSetEnabled && repl != null) {
                             setAttribute(REPLICA_SET_NAME, repl.getString("setName"));
-                            setAttribute(REPLICA_SET_PRIMARY, repl.getBoolean("ismaster"));
-                            setAttribute(REPLICA_SET_SECONDARY, repl.getBoolean("secondary"));
-                            setAttribute(REPLICA_SET_PRIMARY_NAME, repl.getString("primary"));
+                            setAttribute(IS_PRIMARY_IN_REPLICA_SET, repl.getBoolean("ismaster"));
+                            setAttribute(IS_SECONDARY_IN_REPLICA_SET, repl.getBoolean("secondary"));
+                            setAttribute(REPLICA_SET_PRIMARY_ENDPOINT, repl.getString("primary"));
                         }
                     }
                 }

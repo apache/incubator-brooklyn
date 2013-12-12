@@ -1,5 +1,7 @@
 package brooklyn.entity.nosql.mongodb;
 
+import java.util.Map;
+
 import org.bson.BasicBSONObject;
 
 import brooklyn.catalog.Catalog;
@@ -9,12 +11,12 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.reflect.TypeToken;
 
 @Catalog(name="MongoDB Server",
     description="MongoDB (from \"humongous\") is a scalable, high-performance, open source NoSQL database",
@@ -38,25 +40,33 @@ public interface MongoDBServer extends SoftwareProcess {
     PortAttributeSensorAndConfigKey PORT =
             new PortAttributeSensorAndConfigKey("mongodb.server.port", "Server port", "27017+");
 
+    // See http://docs.mongodb.org/ecosystem/tools/http-interfaces/#http-console
+    // This is *always* 1000 more than port. We disable if it is not available.
+    PortAttributeSensorAndConfigKey HTTP_PORT =
+        new PortAttributeSensorAndConfigKey("mongodb.server.httpPort", "HTTP port for the server (estimated)", "28017+");
+
     @SetFromFlag("dataDirectory")
-    ConfigKey<String> DATA_DIRECTORY = new BasicConfigKey<String>(String.class,
+    ConfigKey<String> DATA_DIRECTORY = ConfigKeys.newStringConfigKey(
             "mongodb.data.directory", "Data directory to store MongoDB journals");
 
     @SetFromFlag("mongodbConfTemplateUrl")
-    ConfigKey<String> MONGODB_CONF_TEMPLATE_URL = new BasicConfigKey<String>(String.class,
+    ConfigKey<String> MONGODB_CONF_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
             "mongodb.config.url", "Template file (in freemarker format) for a MongoDB configuration file",
             "classpath://brooklyn/entity/nosql/mongodb/default-mongodb.conf");
 
     @SetFromFlag("enableRestInterface")
-    ConfigKey<Boolean> ENABLE_REST_INTERFACE = new BasicConfigKey<Boolean>(Boolean.class,
+    ConfigKey<Boolean> ENABLE_REST_INTERFACE = ConfigKeys.newBooleanConfigKey(
             "mongodb.config.enable_rest", "Adds --rest to server startup flags when true", Boolean.FALSE);
 
-    AttributeSensor<String> HTTP_INTERFACE_URL = new BasicAttributeSensor<String>(String.class,
+    AttributeSensor<String> HTTP_INTERFACE_URL = Sensors.newStringSensor(
             "mongodb.server.http_interface", "URL of the server's HTTP console");
 
-    // BasicBSONObjects are Maps
-    AttributeSensor<BasicBSONObject> STATUS = new BasicAttributeSensor<BasicBSONObject>(BasicBSONObject.class,
-            "mongodb.server.status", "Server status");
+    AttributeSensor<BasicBSONObject> STATUS_BSON = Sensors.newSensor(BasicBSONObject.class,
+            "mongodb.server.status.bson", "Server status (BSON Map format, serialized as toString)");
+    
+    @SuppressWarnings("serial")
+    AttributeSensor<Map<?,?>> STATUS_JSON = Sensors.newSensor(new TypeToken<Map<?,?>>() {},
+        "mongodb.server.status.json", "Server status (Map format, nicely serialized to JSON)");
 
     AttributeSensor<Double> UPTIME_SECONDS = Sensors.newDoubleSensor(
             "mongodb.server.uptime", "Server uptime in seconds");
@@ -90,23 +100,26 @@ public interface MongoDBServer extends SoftwareProcess {
 
 
     /** A single server's replica set configuration **/
-    ConfigKey<Boolean> REPLICA_SET_ENABLED = new BasicConfigKey<Boolean>(Boolean.class,
+    ConfigKey<Boolean> REPLICA_SET_ENABLED = ConfigKeys.newBooleanConfigKey(
             "mongodb.server.replicaSet.enabled", "True if this server was started to be part of a replica set", Boolean.FALSE);
 
     AttributeSensorAndConfigKey<String, String> REPLICA_SET_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class,
             "mongodb.server.replicaSet.name", "The name of the replica set that the server belongs to");
 
-    AttributeSensor<ReplicaSetMemberStatus> REPLICA_SET_MEMBER_STATUS = new BasicAttributeSensor<ReplicaSetMemberStatus>(
+    AttributeSensor<ReplicaSetMemberStatus> REPLICA_SET_MEMBER_STATUS = Sensors.newSensor(
             ReplicaSetMemberStatus.class, "mongodb.server.replicaSet.memberStatus", "The status of this server in the replica set");
 
-    AttributeSensor<Boolean> REPLICA_SET_PRIMARY = Sensors.newBooleanSensor(
+    AttributeSensor<Boolean> IS_PRIMARY_IN_REPLICA_SET = Sensors.newBooleanSensor(
             "mongodb.server.replicaSet.isPrimary", "True if this server is the write master for the replica set");
 
-    AttributeSensor<Boolean> REPLICA_SET_SECONDARY = Sensors.newBooleanSensor(
+    AttributeSensor<Boolean> IS_SECONDARY_IN_REPLICA_SET = Sensors.newBooleanSensor(
             "mongodb.server.replicaSet.isSecondary", "True if this server is a secondary server in the replica set");
 
-    AttributeSensor<String> REPLICA_SET_PRIMARY_NAME = new BasicAttributeSensor<String>(String.class,
-            "mongodb.server.replicaSet.primary", "The name of the primary host in the replica set");
+    AttributeSensor<String> REPLICA_SET_PRIMARY_ENDPOINT = Sensors.newStringSensor(
+            "mongodb.server.replicaSet.primary.endpoint", "The host:port of the server which is acting as primary (master) for the replica set");
+
+    AttributeSensor<String> MONGO_SERVER_ENDPOINT = Sensors.newStringSensor(
+        "mongodb.server.endpoint", "The host:port where this server is listening");
 
     MongoClientSupport getClient();
 }

@@ -37,8 +37,8 @@ public class SshjClientConnection implements SshAction<SSHClient> {
         protected String privateKeyPassphrase;
         protected String privateKeyData;
         protected File privateKeyFile;
-        protected int connectTimeout;
-        protected int sessionTimeout;
+        protected long connectTimeout;
+        protected long sessionTimeout;
         protected boolean strictHostKeyChecking;
 
         public Builder hostAndPort(HostAndPort hostAndPort) {
@@ -82,12 +82,12 @@ public class SshjClientConnection implements SshAction<SSHClient> {
             return this;
         }
 
-        public Builder connectTimeout(int connectTimeout) {
+        public Builder connectTimeout(long connectTimeout) {
             this.connectTimeout = connectTimeout;
             return this;
         }
 
-        public Builder sessionTimeout(int sessionTimeout) {
+        public Builder sessionTimeout(long sessionTimeout) {
             this.sessionTimeout = sessionTimeout;
             return this;
         }
@@ -122,8 +122,16 @@ public class SshjClientConnection implements SshAction<SSHClient> {
         this.privateKeyData = builder.privateKeyData;
         this.privateKeyFile = builder.privateKeyFile;
         this.strictHostKeyChecking = builder.strictHostKeyChecking;
-        this.connectTimeout = builder.connectTimeout;
-        this.sessionTimeout = builder.sessionTimeout;
+        this.connectTimeout = checkInt("connectTimeout", builder.connectTimeout, Integer.MAX_VALUE);
+        this.sessionTimeout = checkInt("sessionTimeout", builder.sessionTimeout, Integer.MAX_VALUE);
+    }
+
+    static Integer checkInt(String context, long value, Integer ifTooLarge) {
+        if (value > Integer.MAX_VALUE) {
+            LOG.warn("Value '"+value+"' for "+context+" too large in SshjClientConnection; using "+value);
+            return ifTooLarge;
+        }
+        return (int)value;
     }
 
     public boolean isConnected() {
