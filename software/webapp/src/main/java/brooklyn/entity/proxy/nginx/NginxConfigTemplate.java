@@ -49,7 +49,7 @@ public class NginxConfigTemplate {
 
         // Check SSL configuration
         ProxySslConfig ssl = driver.getEntity().getConfig(NginxController.SSL_CONFIG);
-        if (Strings.isEmpty(ssl.getCertificateDestination()) && Strings.isEmpty(ssl.getCertificateSourceUrl())) {
+        if (ssl != null && Strings.isEmpty(ssl.getCertificateDestination()) && Strings.isEmpty(ssl.getCertificateSourceUrl())) {
             throw new IllegalStateException("ProxySslConfig can't have a null certificateDestination and null certificateSourceUrl. One or both need to be set");
         }
 

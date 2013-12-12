@@ -99,7 +99,7 @@ public class NginxIntegrationTest {
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("serverPool", serverPool)
                 .configure("domain", "localhost")
-	            .configure("portNumberSensor", WebAppService.HTTP_PORT));
+                .configure("portNumberSensor", WebAppService.HTTP_PORT));
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
@@ -126,7 +126,49 @@ public class NginxIntegrationTest {
             assertFalse(it.getAttribute(SoftwareProcess.SERVICE_UP));
         }
     }
-    
+
+    /**
+     * Test that the Nginx proxy starts up and sets SERVICE_UP correctly using the config file template.
+     */
+    @Test(groups = "Integration")
+    public void testCanStartupAndShutdownUsingTemplate() {
+        serverPool = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
+                .configure("initialSize", 1)
+                .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
+
+        nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
+                .configure("serverPool", serverPool)
+                .configure("domain", "localhost")
+                .configure("portNumberSensor", WebAppService.HTTP_PORT)
+                .configure("configTemplate", "classpath://brooklyn/entity/proxy/nginx/server.conf"));
+
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+
+        // App-servers and nginx has started
+        assertEventually {
+            serverPool.members.each {
+                assertTrue it.getAttribute(SoftwareProcess.SERVICE_UP);
+            }
+            assertTrue nginx.getAttribute(SoftwareProcess.SERVICE_UP);
+        }
+
+        // URLs reachable
+        assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 200);
+        serverPool.members.each {
+            assertUrlStatusCodeEventually(it.getAttribute(WebAppService.ROOT_URL), 200);
+        }
+
+        app.stop();
+
+        // Services have stopped
+        assertFalse(nginx.getAttribute(SoftwareProcess.SERVICE_UP));
+        assertFalse(serverPool.getAttribute(SoftwareProcess.SERVICE_UP));
+        serverPool.members.each {
+            assertFalse(it.getAttribute(SoftwareProcess.SERVICE_UP));
+        }
+    }
+
     /**
      * Test that the Nginx proxy works, serving all domains, if no domain is set
      */
