@@ -157,7 +157,7 @@ public class CassandraClusterTest {
                 .put("driver", new MockInputForTemplate())
                 .build();
 
-        String templateContents = new ResourceUtils(this).getResourceAsString(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL.getConfigKey().getDefaultValue());
+        String templateContents = new ResourceUtils(this).getResourceAsString(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL.getDefaultValue());
         String processedTemplate = TemplateProcessor.processTemplateContents(templateContents, substitutions);
         Assert.assertEquals(processedTemplate.indexOf("775,808"), -1);
         Assert.assertTrue(processedTemplate.indexOf("775808") > 0);
