@@ -130,9 +130,13 @@ public class Streams {
     }
 
     public static ByteArrayOutputStream byteArrayOfString(String in) {
+        return byteArray(in.getBytes(Charsets.UTF_8));
+    }
+
+    public static ByteArrayOutputStream byteArray(byte[] in) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         try {
-            stream.write(in.getBytes());
+            stream.write(in);
         } catch (IOException e) {
             throw Exceptions.propagate(e);
         }
