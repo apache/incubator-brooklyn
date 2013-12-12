@@ -1,21 +1,18 @@
 package brooklyn.entity.messaging.storm;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.management.ObjectName;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.entity.java.JavaSoftwareProcessDriver;
-import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-
-import com.google.common.base.Functions;
-import com.google.common.base.Predicates;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 public class StormImpl extends SoftwareProcessImpl implements Storm {
     
@@ -51,6 +48,13 @@ public class StormImpl extends SoftwareProcessImpl implements Storm {
     protected void connectSensors() {
         super.connectSensors();
 
+        // give it plenty of time to start before we advertise ourselves
+        Time.sleep(Duration.TEN_SECONDS);
+        
+        if (getRole()==Role.UI)
+            setAttribute(STORM_UI_URL, 
+                "http://"+getAttribute(Attributes.HOSTNAME)+":"+getAttribute(UI_PORT)+"/");
+        
         if (((JavaSoftwareProcessDriver)getDriver()).isJmxEnabled()) {
             jmxHelper = new JmxHelper(this);
 //            jmxFeed = JmxFeed.builder()

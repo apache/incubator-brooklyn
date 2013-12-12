@@ -21,9 +21,9 @@ public interface ZooKeeperEnsemble extends DynamicCluster {
             .class, "zookeeper.cluster.name", "Name of the Zookeeper cluster", "BrooklynZookeeperCluster");
 
     @SetFromFlag("initialSize")
-    public static final ConfigKey<Integer> INITIAL_SIZE =
-            ConfigKeys.newIntegerConfigKey("zookeeper.cluster.initialSize", "Number of servers to start with", 3);
+    public static final ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(DynamicCluster.INITIAL_SIZE, 3);
 
+    @SuppressWarnings("serial")
     AttributeSensor<List<String>> ZOOKEEPER_SERVERS = Sensors.newSensor(new TypeToken<List<String>>() { },
             "zookeeper.servers", "Hostnames to connect to cluster with");
 

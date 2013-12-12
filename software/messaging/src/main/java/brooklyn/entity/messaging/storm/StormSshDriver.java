@@ -8,6 +8,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityAndAttribute;
@@ -15,11 +16,14 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -53,7 +57,16 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
     }
 
     public String getNimbusHostname() {
-        return entity.getConfig(Storm.NIMBUS_HOSTNAME);
+        String result = entity.getConfig(Storm.NIMBUS_HOSTNAME);
+        if (result!=null) 
+            return result;
+        
+        Entity nimbus = entity.getConfig(Storm.NIMBUS_ENTITY);
+        if (nimbus==null) {
+            log.warn("No nimbus hostname available; using 'localhost'");
+            return "localhost";
+        }
+        return Entities.submit(entity, DependentConfiguration.attributeWhenReady(nimbus, Attributes.HOSTNAME)).getUnchecked();
     }
 
     public Integer getUiPort() {
@@ -133,11 +146,40 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
 
     @Override
     public void launch() {
+        Entity nimbus = null;
+        boolean needsSleep = false;
+        
+        if (getRoleName().equals("supervisor")) {
+            nimbus = entity.getConfig(Storm.NIMBUS_ENTITY);
+            if (nimbus==null) {
+                log.warn("No nimbus entity available; not blocking before starting supervisors");
+            } else {
+                Entities.submit(entity, DependentConfiguration.attributeWhenReady(nimbus, Attributes.SERVICE_UP)).getUnchecked();
+                needsSleep = true;
+            }
+        }
+
         String subnetHostname = Machines.findSubnetOrPublicHostname(entity).get();
         log.info("Launching " + entity + " with role " + getRoleName() + " and " + "hostname (public) " 
                 + getEntity().getAttribute(Attributes.HOSTNAME) + ", " + "hostname (subnet) " + subnetHostname + ")");
-        newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING).body.append(
+
+        // ensure only one node at a time tries to start
+        // attempting to eliminate the causes of:
+        // 2013-12-12 09:21:45 supervisor [ERROR] Error on initialization of server mk-supervisor
+        // org.apache.zookeeper.KeeperException$NoNodeException: KeeperErrorCode = NoNode for /assignments
+
+        Object startMutex = entity.getConfig(Storm.START_MUTEX);
+        if (startMutex==null) startMutex = new Object();
+        
+        synchronized (startMutex) {
+            if (needsSleep) {
+                // give 10s extra to make sure nimbus is ready; we see weird zookeeper no /assignments node error otherwise
+                // (this could be optimized by recording nimbus service_up time)
+                Time.sleep(Duration.TEN_SECONDS);
+            }
+            newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING).body.append(
                 format("nohup ./bin/storm %s > %s 2>&1 &", getRoleName(), getLogFileLocation())).execute();
+        }
     }
 
     @Override

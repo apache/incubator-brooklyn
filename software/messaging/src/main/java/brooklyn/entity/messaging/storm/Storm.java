@@ -4,6 +4,8 @@
 package brooklyn.entity.messaging.storm;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.config.render.RendererHints;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
@@ -26,10 +28,15 @@ public interface Storm extends SoftwareProcess, UsesJmx {
 
     @SetFromFlag("nimbusHostname")
     ConfigKey<String> NIMBUS_HOSTNAME = ConfigKeys.newStringConfigKey("storm.nimbus.hostname");
+    
+    @SetFromFlag("nimbusEntity")
+    ConfigKey<Entity> NIMBUS_ENTITY = ConfigKeys.newConfigKey(Entity.class, "storm.nimbus.entity");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "https://dl.dropboxusercontent.com/s/fl4kr7w0oc8ihdw/storm-${version}.zip");
+
+    ConfigKey<Object> START_MUTEX = ConfigKeys.newConfigKey(Object.class, "storm.start.mutex");
 
     @SetFromFlag("role")
     BasicAttributeSensorAndConfigKey<Role> ROLE = new BasicAttributeSensorAndConfigKey<Role>(Role.class, "storm.role");
@@ -63,6 +70,16 @@ public interface Storm extends SoftwareProcess, UsesJmx {
     
     public enum Role {
         NIMBUS, SUPERVISOR, UI
+    }
+
+    AttributeSensor<String> STORM_UI_URL = StormUiUrl.STORM_UI_URL;
+    
+    class StormUiUrl {
+        public static final AttributeSensor<String> STORM_UI_URL = Sensors.newStringSensor("storm.ui.url", "URL");
+
+        static {
+            RendererHints.register(STORM_UI_URL, new RendererHints.NamedActionWithUrl("Open"));
+        }
     }
 
 }

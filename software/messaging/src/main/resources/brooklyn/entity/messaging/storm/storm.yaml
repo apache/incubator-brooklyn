@@ -13,6 +13,10 @@
  ui.port: ${driver.uiPort?c}
  ui.childopts: "-Xmx768m"
 
+[#if driver.roleName == "ui"]
+ nimbus.host: "${driver.nimbusHostname}"
+[/#if]
+
  nimbus.childopts: " ${driver.jvmOptsLine}"
  worker.childopts: " ${driver.jvmOptsLine}"
  supervisor.childopts: " ${driver.jvmOptsLine}" 
