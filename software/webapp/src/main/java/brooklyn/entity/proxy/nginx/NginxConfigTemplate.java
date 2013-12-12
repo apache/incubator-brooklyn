@@ -62,7 +62,11 @@ public class NginxConfigTemplate {
                 mappingsByDomain.put(mapping.getDomain(), mapping);
             }
         }
-        Map<String, Object> substitutions = MutableMap.<String, Object>of("ssl", ssl, "urlMappings", mappings, "domainMappings", mappingsByDomain);
+        MutableMap.Builder<String, Object> builder = MutableMap.<String, Object>builder()
+                .put("urlMappings", mappings)
+                .put("domainMappings", mappingsByDomain);
+        if (ssl != null) builder.put("ssl", ssl);
+        Map<String, Object> substitutions = builder.build();
 
         // Get template contents and process
         String contents = ResourceUtils.create(driver.getEntity()).getResourceAsString(templateUrl);
