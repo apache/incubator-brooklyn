@@ -50,6 +50,15 @@ public class BasicStartableTest {
     }
     
     @Test
+    public void testSetsLocations() throws Exception {
+        startable = app.addChild(EntitySpec.create(BasicStartable.class));
+        Entities.startManagement(startable);
+        app.start(ImmutableList.of(loc1, loc2));
+        
+        assertEqualsIgnoringOrder(startable.getLocations(), ImmutableSet.of(loc1, loc2));
+    }
+    
+    @Test
     public void testDefaultIsAllLocations() throws Exception {
         startable = app.addChild(EntitySpec.create(BasicStartable.class));
         entity = startable.addChild(EntitySpec.create(TestEntity.class));

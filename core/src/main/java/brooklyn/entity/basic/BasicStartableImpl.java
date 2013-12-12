@@ -28,6 +28,7 @@ public class BasicStartableImpl extends AbstractEntity implements BasicStartable
     @Override
     public void start(Collection<? extends Location> locations) {
         log.info("Starting entity "+this+" at "+locations);
+        addLocations(locations);
         
         // essentially does StartableMethods.start(this, locations),
         // but optionally filters locations for each child
