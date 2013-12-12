@@ -68,22 +68,22 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
             null);
 
     @SetFromFlag("cassandraConfigTemplateUrl")
-    BasicAttributeSensorAndConfigKey<String> CASSANDRA_CONFIG_TEMPLATE_URL = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "cassandra.config.templateUrl", "Template file (in freemarker format) for the cassandra.yaml config file", 
+    ConfigKey<String> CASSANDRA_CONFIG_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
+            "cassandra.config.templateUrl", "Template file (in freemarker format) for the cassandra.yaml config file", 
             "classpath://brooklyn/entity/nosql/cassandra/cassandra.yaml");
 
     @SetFromFlag("cassandraConfigFileName")
-    BasicAttributeSensorAndConfigKey<String> CASSANDRA_CONFIG_FILE_NAME = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "cassandra.config.fileName", "Name for the copied config file", "cassandra.yaml");
+    ConfigKey<String> CASSANDRA_CONFIG_FILE_NAME = ConfigKeys.newStringConfigKey(
+            "cassandra.config.fileName", "Name for the copied config file", "cassandra.yaml");
 
     @SetFromFlag("cassandraRackdcConfigTemplateUrl")
-    BasicAttributeSensorAndConfigKey<String> CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "cassandra.config.rackdc.templateUrl", "Template file (in freemarker format) for the cassandra-rackdc.properties config file", 
+    ConfigKey<String> CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
+            "cassandra.config.rackdc.templateUrl", "Template file (in freemarker format) for the cassandra-rackdc.properties config file", 
             "classpath://brooklyn/entity/nosql/cassandra/cassandra-rackdc.properties");
 
     @SetFromFlag("cassandraRackdcConfigFileName")
-    BasicAttributeSensorAndConfigKey<String> CASSANDRA_RACKDC_CONFIG_FILE_NAME = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "cassandra.config.rackdc.fileName", "Name for the copied rackdc config file", "cassandra-rackdc.properties");
+    ConfigKey<String> CASSANDRA_RACKDC_CONFIG_FILE_NAME = ConfigKeys.newStringConfigKey(
+            "cassandra.config.rackdc.fileName", "Name for the copied rackdc config file", "cassandra-rackdc.properties");
     
     @SetFromFlag("datacenterName")
     BasicAttributeSensorAndConfigKey<String> DATACENTER_NAME = new BasicAttributeSensorAndConfigKey<String>(

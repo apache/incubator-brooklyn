@@ -56,6 +56,8 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     public CassandraNodeSshDriver(CassandraNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
+
+        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
     }
 
     @Override
@@ -81,14 +83,14 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     }
 
     @Override
-    public String getCassandraConfigTemplateUrl() { return entity.getAttribute(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL); }
+    public String getCassandraConfigTemplateUrl() { return entity.getConfig(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL); }
 
     @Override
-    public String getCassandraConfigFileName() { return entity.getAttribute(CassandraNode.CASSANDRA_CONFIG_FILE_NAME); }
+    public String getCassandraConfigFileName() { return entity.getConfig(CassandraNode.CASSANDRA_CONFIG_FILE_NAME); }
 
-    public String getCassandraRackdcConfigTemplateUrl() { return entity.getAttribute(CassandraNode.CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL); }
+    public String getCassandraRackdcConfigTemplateUrl() { return entity.getConfig(CassandraNode.CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL); }
 
-    public String getCassandraRackdcConfigFileName() { return entity.getAttribute(CassandraNode.CASSANDRA_RACKDC_CONFIG_FILE_NAME); }
+    public String getCassandraRackdcConfigFileName() { return entity.getConfig(CassandraNode.CASSANDRA_RACKDC_CONFIG_FILE_NAME); }
 
     public String getMirrorUrl() { return entity.getConfig(CassandraNode.MIRROR_URL); }
     
