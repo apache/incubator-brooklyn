@@ -26,8 +26,10 @@ public final class AttributeMap implements Serializable {
 
     static final Logger log = LoggerFactory.getLogger(AttributeMap.class);
 
-    private final static Object NULL = new Object();
-
+    private static enum Marker {
+        NULL;
+    }
+    
     private final AbstractEntity entity;
 
     // Note that we synchronize on the top-level map, to handle concurrent updates and and gets (ENGR-2111)
@@ -149,11 +151,10 @@ public final class AttributeMap implements Serializable {
 
     @SuppressWarnings("unchecked")
     private <T> T typedNull() {
-        return (T) NULL;
+        return (T) Marker.NULL;
     }
     
-    @SuppressWarnings("unchecked")
     private boolean isNull(Object t) {
-        return t == NULL;
+        return t == Marker.NULL;
     }
 }

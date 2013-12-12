@@ -2,7 +2,6 @@ package brooklyn.entity.basic;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -10,8 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.util.collections.SetFromLiveMap;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
@@ -42,8 +43,8 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
         
         Set<Entity> oldMembers = members;
         
-        members = Collections.newSetFromMap(managementContext.getStorage().<Entity,Boolean>getMap(getId()+"-members"));
-
+        members = SetFromLiveMap.create(managementContext.getStorage().<Entity,Boolean>getMap(getId()+"-members"));
+        
         // Only override stored defaults if we have actual values. We might be in setManagementContext
         // because we are reconstituting an existing entity in a new brooklyn management-node (in which
         // case believe what is already in the storage), or we might be in the middle of creating a new 
@@ -65,7 +66,7 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
     @Override
     public boolean addMember(Entity member) {
         synchronized (members) {
-	        member.addGroup(this);
+	        member.addGroup((Group)getProxyIfAvailable());
 	        boolean changed = members.add(member);
 	        if (changed) {
                 log.debug("Group {} got new member {}", this, member);

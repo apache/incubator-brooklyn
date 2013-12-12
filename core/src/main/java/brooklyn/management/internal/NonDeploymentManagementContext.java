@@ -24,6 +24,7 @@ import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.ChangeListener;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.internal.storage.BrooklynStorage;
+import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.management.AccessController;
 import brooklyn.management.EntityManager;
@@ -268,6 +269,16 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         initialManagementContext.setBaseClassPathForScanning(urls);
     }
     
+    @Override
+    public void prePreManage(Entity entity) {
+        // no-op
+    }
+
+    @Override
+    public void prePreManage(Location location) {
+        // no-op
+    }
+
     private boolean isInitialManagementContextReal() {
         return (initialManagementContext != null && !(initialManagementContext instanceof NonDeploymentManagementContext));
     }

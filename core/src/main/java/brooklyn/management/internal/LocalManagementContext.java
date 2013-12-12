@@ -19,7 +19,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.internal.storage.BrooklynStorageFactory;
+import brooklyn.internal.storage.DataGridFactory;
 import brooklyn.location.Location;
 import brooklyn.management.AccessController;
 import brooklyn.management.ExecutionContext;
@@ -97,13 +97,13 @@ public class LocalManagementContext extends AbstractManagementContext {
      * Creates a new LocalManagementContext.
      *
      * @param brooklynProperties the BrooklynProperties.
-     * @param storageFactory the  BrooklynStorageFactory to use. If this instance is null, it means that the system
-     *                       is going to use BrooklynProperties to figure out which instance to load or otherwise
-     *                       use a default instance.
+     * @param datagridFactory the DataGridFactory to use. If this instance is null, it means that the system
+     *                        is going to use BrooklynProperties to figure out which instance to load or otherwise
+     *                        use a default instance.
      */
     @VisibleForTesting
-    public LocalManagementContext(BrooklynProperties brooklynProperties, BrooklynStorageFactory storageFactory) {
-        super(brooklynProperties,storageFactory);
+    public LocalManagementContext(BrooklynProperties brooklynProperties, DataGridFactory datagridFactory) {
+        super(brooklynProperties, datagridFactory);
         configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
         this.locationManager = new LocalLocationManager(this);
         this.accessManager = new LocalAccessManager();
@@ -111,10 +111,12 @@ public class LocalManagementContext extends AbstractManagementContext {
         INSTANCES.add(this);
     }
 
+    @Override
     public void prePreManage(Entity entity) {
         getEntityManager().prePreManage(entity);
     }
 
+    @Override
     public void prePreManage(Location location) {
         getLocationManager().prePreManage(location);
     }

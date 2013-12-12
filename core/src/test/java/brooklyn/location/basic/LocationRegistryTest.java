@@ -79,10 +79,11 @@ public class LocationRegistryTest {
         properties.put("brooklyn.location.named.foo", "byon:(hosts=\"root@192.168.1.{1,2,3,4}\")");
         mgmt = new LocalManagementContext(properties);
         Location l = mgmt.getLocationRegistry().resolve("foo");
-        Assert.assertEquals(l.getDisplayName(), null);
-        // TODO currently it gives null; it would be nice to use 'foo', 
+        Assert.assertNotNull(l.getDisplayName());
+        Assert.assertTrue(l.getDisplayName().startsWith(FixedListMachineProvisioningLocation.class.getSimpleName()), "name="+l.getDisplayName());
+        // TODO currently it gives default name; it would be nice to use 'foo', 
         // or at least to have access to the spec (and use it e.g. in places such as DynamicFabric)
-//        Assert.assertEquals(l.getDisplayName(), "foo");
+        // Assert.assertEquals(l.getDisplayName(), "foo");
     }
     
     @Test

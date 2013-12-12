@@ -23,9 +23,11 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.trait.Startable;
+import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.management.AccessController;
 import brooklyn.management.EntityManager;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
+import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicate;
@@ -61,10 +63,18 @@ public class LocalEntityManager implements EntityManager {
     /** Proxies of the managed entities that are applications */
     protected final Set<Application> applications = Sets.newLinkedHashSet();
 
+    private final BrooklynStorage storage;
+    private final Map<String,String> entityTypes;
+    private final Set<String> applicationIds;
+
     public LocalEntityManager(LocalManagementContext managementContext) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
+        this.storage = managementContext.getStorage();
         this.entityTypeRegistry = new BasicEntityTypeRegistry();
         this.entityFactory = new InternalEntityFactory(managementContext, entityTypeRegistry);
+        
+        entityTypes = storage.getMap("entities");
+        applicationIds = SetFromLiveMap.create(storage.<String,Boolean>getMap("applications"));
     }
 
     @Override
@@ -283,6 +293,8 @@ public class LocalEntityManager implements EntityManager {
         // the legacy way of creating the entity so didn't get a preManage() call
         entityProxiesById.put(e.getId(), proxyE);
         
+        entityTypes.put(e.getId(), realE.getClass().getName());
+        
         Object old = entitiesById.put(e.getId(), realE);
         if (old!=null) {
             if (old.equals(e)) {
@@ -296,6 +308,7 @@ public class LocalEntityManager implements EntityManager {
             preManagedEntitiesById.remove(e.getId());
             if ((e instanceof Application) && (e.getParent()==null)) {
                 applications.add((Application)proxyE);
+                applicationIds.add(e.getId());
             }
             entities.add(proxyE);
             return true;
@@ -310,10 +323,15 @@ public class LocalEntityManager implements EntityManager {
         Entity proxyE = toProxyEntityIfAvailable(e);
         
         e.clearParent();
-        if (e instanceof Application) applications.remove(proxyE);
+        if (e instanceof Application) {
+            applications.remove(proxyE);
+            applicationIds.remove(e.getId());
+        }
         entities.remove(proxyE);
         entityProxiesById.remove(e.getId());
         Object old = entitiesById.remove(e.getId());
+
+        entityTypes.remove(e.getId());
         
         if (old==null) {
             log.warn("{} call to stop management of unknown entity (already unmanaged?) {}", this, e);
@@ -371,20 +389,25 @@ public class LocalEntityManager implements EntityManager {
         if (e instanceof AbstractEntity) {
             return e;
         } else {
-            Entity result = entitiesById.get(e.getId());
+            Entity result = toRealEntityOrNull(e.getId());
             if (result == null) {
-                result = preManagedEntitiesById.get(e.getId());
-            }
-            if (result == null) {
-                result = preRegisteredEntitiesById.get(e.getId());
-            }
-            if (result == null) {
-                throw new IllegalStateException("No concrete entity known for "+e+" ("+e.getId()+", "+e.getEntityType().getName()+")");
+                throw new IllegalStateException("No concrete entity known for entity "+e+" ("+e.getId()+", "+e.getEntityType().getName()+")");
             }
             return result;
         }
     }
 
+    private Entity toRealEntityOrNull(String id) {
+        Entity result = entitiesById.get(id);
+        if (result == null) {
+            result = preManagedEntitiesById.get(id);
+        }
+        if (result == null) {
+            result = preRegisteredEntitiesById.get(id);
+        }
+        return result;
+    }
+    
     private boolean isRunning() {
         return managementContext.isRunning();
     }

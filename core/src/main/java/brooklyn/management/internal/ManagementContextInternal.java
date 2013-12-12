@@ -10,6 +10,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.internal.storage.BrooklynStorage;
+import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 
@@ -48,4 +49,19 @@ public interface ManagementContextInternal extends ManagementContext {
     AccessManager getAccessManager();
 
     UsageManager getUsageManager();
+    
+    /**
+     * Registers an entity that has been created, but that has not yet begun to be managed.
+     * <p>
+     * This differs from the idea of "preManaged" where the entities are in the process of being
+     * managed, but where management is not yet complete.
+     */
+    // TODO would benefit from better naming! The name has percolated up from LocalEntityManager.
+    //      should we just rename here as register or preManage?
+    void prePreManage(Entity entity);
+
+    /**
+     * Registers a location that has been created, but that has not yet begun to be managed.
+     */
+    void prePreManage(Location location);
 }

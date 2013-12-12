@@ -91,6 +91,8 @@ public class LocalhostResolver implements LocationResolver {
         
         if (namePart != null) {
             flags.put("name", namePart);
+        } else {
+            flags.put("name", "localhost");
         }
         if (registry != null) {
             String brooklynDataDir = (String) registry.getProperties().get(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName());
