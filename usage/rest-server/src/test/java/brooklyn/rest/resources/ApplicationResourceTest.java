@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
@@ -39,15 +40,17 @@ import brooklyn.rest.testing.mocks.CapitalizePolicy;
 import brooklyn.rest.testing.mocks.RestMockApp;
 import brooklyn.rest.testing.mocks.RestMockAppBuilder;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
+import brooklyn.util.exceptions.Exceptions;
+
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.UniformInterfaceException;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceTest extends BrooklynRestResourceTest {
@@ -323,7 +326,15 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     Map<String, String> readings = Maps.newHashMap();
     for (SensorSummary sensor : sensors) {
-      readings.put(sensor.getName(), client().resource(sensor.getLinks().get("self")).get(String.class));
+      try {
+      readings.put(sensor.getName(), client().resource(sensor.getLinks().get("self")).accept(MediaType.TEXT_PLAIN).get(String.class));
+      } catch (UniformInterfaceException uie) {
+        if (uie.getResponse().getStatus() == 204) { // no content
+          readings.put(sensor.getName(), null);
+        } else {
+          Exceptions.propagate(uie);
+        }
+      }
     }
 
     assertEquals(readings.get(RestMockSimpleEntity.SAMPLE_SENSOR.getName()), "foo4");
