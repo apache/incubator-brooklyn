@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
@@ -326,7 +327,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     Map<String, String> readings = Maps.newHashMap();
     for (SensorSummary sensor : sensors) {
       try {
-      readings.put(sensor.getName(), client().resource(sensor.getLinks().get("self")).get(String.class));
+      readings.put(sensor.getName(), client().resource(sensor.getLinks().get("self")).accept(MediaType.TEXT_PLAIN).get(String.class));
       } catch (UniformInterfaceException uie) {
         if (uie.getResponse().getStatus() == 204) { // no content
           readings.put(sensor.getName(), null);
