@@ -3,6 +3,7 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.util.List;
 import java.util.Set;
 
 import brooklyn.catalog.Catalog;
@@ -75,6 +76,10 @@ public interface CassandraCluster extends DynamicCluster, DatastoreMixins.HasDat
     AttributeSensor<Set<Entity>> CURRENT_SEEDS = Sensors.newSensor(new TypeToken<Set<Entity>>() { }, "cassandra.cluster.seeds.current", "Current set of seeds to use to bootstrap the cluster");
 
     AttributeSensor<String> HOSTNAME = Sensors.newStringSensor("cassandra.cluster.hostname", "Hostname to connect to cluster with");
+
+    @SuppressWarnings("serial")
+    AttributeSensor<List<String>> CASSANDRA_CLUSTER_NODES = Sensors.newSensor(new TypeToken<List<String>>() {},
+        "cassandra.cluster.nodes", "List of host:port of all active nodes in the cluster (thrift port, and public hostname/IP)");
 
     AttributeSensor<Integer> THRIFT_PORT = Sensors.newIntegerSensor("cassandra.cluster.thrift.port", "Cassandra Thrift RPC port to connect to cluster with");
 

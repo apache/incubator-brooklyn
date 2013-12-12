@@ -5,6 +5,7 @@ package brooklyn.entity.nosql.cassandra;
 
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +32,9 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
@@ -282,6 +285,9 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     public void start(Collection<? extends Location> locations) {
         Machines.warnIfLocalhost(locations, "CassandraCluster does not support multiple nodes on localhost, " +
         		"due to assumptions Cassandra makes about the use of the same port numbers used across the cluster.");
+
+        // force this to be set - even if it is using the default
+        setAttribute(CLUSTER_NAME, getConfig(CLUSTER_NAME));
         
         super.start(locations);
 
@@ -392,9 +398,24 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             if (upNode.isPresent()) {
                 setAttribute(HOSTNAME, upNode.get().getAttribute(Attributes.HOSTNAME));
                 setAttribute(THRIFT_PORT, upNode.get().getAttribute(CassandraNode.THRIFT_PORT));
+                
+                Set<String> oldNodes = MutableSet.copyOf(getAttribute(CASSANDRA_CLUSTER_NODES));
+                Set<String> newNodes = MutableSet.<String>of();
+                for (Entity member: getMembers()) {
+                    if (member.getAttribute(SERVICE_UP)==Boolean.TRUE) {
+                        newNodes.add(member.getAttribute(Attributes.HOSTNAME)+":"+member.getAttribute(CassandraNode.THRIFT_PORT));
+                    }
+                }
+                boolean changed;
+                if (oldNodes==null) changed = !newNodes.isEmpty();
+                else changed = (oldNodes.size() != newNodes.size()) || !oldNodes.containsAll(newNodes);
+                if (changed)
+                    setAttribute(CASSANDRA_CLUSTER_NODES, MutableList.copyOf(newNodes));
+                
             } else {
                 setAttribute(HOSTNAME, null);
                 setAttribute(THRIFT_PORT, null);
+                setAttribute(CASSANDRA_CLUSTER_NODES, Collections.<String>emptyList());
             }
 
         }
