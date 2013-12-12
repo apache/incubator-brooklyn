@@ -35,6 +35,7 @@ import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Function;
@@ -171,6 +172,13 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         checkArgument(locs.size() == 1, "Wrong number of locations supplied to start %s: %s", this, locs);
         addLocations(locs);
 
+        EntitySpec<?> spec = getConfig(MEMBER_SPEC);
+        if (spec!=null) {
+            setDefaultDisplayName("Cluster of "+JavaClassNames.simpleClassName(spec.getType())
+                +" ("+locs.iterator().next().getDisplayName()+")"
+                );
+        }
+        
         if (isAvailabilityZoneEnabled()) {
             setAttribute(SUB_LOCATIONS, findSubLocations(Iterables.getOnlyElement(locs)));
         }

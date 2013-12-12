@@ -37,8 +37,14 @@ public class StormImpl extends SoftwareProcessImpl implements Storm {
     public String getStormConfigTemplateUrl() { return getConfig(STORM_CONFIG_TEMPLATE_URL); }   
     
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return StormDriver.class;
+    }
+    
+    @Override
+    protected void preStart() {
+        setDefaultDisplayName("Storm Node ("+ (""+getConfig(ROLE)).toLowerCase() +")");
+        super.preStart();
     }
     
     @Override
@@ -47,17 +53,28 @@ public class StormImpl extends SoftwareProcessImpl implements Storm {
 
         if (((JavaSoftwareProcessDriver)getDriver()).isJmxEnabled()) {
             jmxHelper = new JmxHelper(this);
-            jmxFeed = JmxFeed.builder()
-                    .entity(this)
-                    .period(3000, TimeUnit.MILLISECONDS)
-                    .helper(jmxHelper)
-                    .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP_JMX)
-                            .objectName(stormBean)
-                            .attributeName("Initialized")
-                            .onSuccess(Functions.forPredicate(Predicates.notNull()))
-                            .onException(Functions.constant(false)))
-                    .build();
+//            jmxFeed = JmxFeed.builder()
+//                    .entity(this)
+//                    .period(3000, TimeUnit.MILLISECONDS)
+//                    .helper(jmxHelper)
+//                    .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP_JMX)
+//                            .objectName(stormBean)
+//                            .attributeName("Initialized")
+//                            .onSuccess(Functions.forPredicate(Predicates.notNull()))
+//                            .onException(Functions.constant(false)))
+//                    // TODO SERVICE_UP should really be a combo of JMX plus is running
+//                    .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
+//                            .objectName(stormBean)
+//                            .attributeName("Initialized")
+//                            .onSuccess(Functions.forPredicate(Predicates.notNull()))
+//                            .onException(Functions.constant(false)))
+//                    .build();
             JavaAppUtils.connectMXBeanSensors(this);
+            
+            // FIXME for now we do service up based on pid check -- we get a warning that:
+            // JMX object backtype.storm.daemon.nimbus:type=* not found at service:jmx:jmxmp://108.59.82.105:31001
+            // (JMX is up fine, but no such object there)
+            connectServiceUpIsRunning();
          } else {
             // if not using JMX
             log.warn("Storm running without JMX monitoring; limited visibility of service available");
@@ -70,7 +87,7 @@ public class StormImpl extends SoftwareProcessImpl implements Storm {
         super.disconnectSensors();
         disconnectServiceUpIsRunning();
         if (jmxFeed != null) jmxFeed.stop();
-        if (jmxHelper.isConnected()) jmxHelper.disconnect();
+        if (jmxHelper !=null && jmxHelper.isConnected()) jmxHelper.disconnect();
     }
 
 }

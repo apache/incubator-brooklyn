@@ -64,6 +64,28 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
         return MutableMap.of("uiPort", getUiPort());
     }
 
+    @Override
+    protected List<String> getCustomJavaConfigOptions() {
+        List<String> result = super.getCustomJavaConfigOptions();
+        if ("nimbus".equals(getRoleName()) || "supervisor".equals(getRoleName())) {
+            result.add("-verbose:gc");
+            result.add("-XX:+PrintGCTimeStamps");
+            result.add("-XX:+PrintGCDetails");
+        }
+        
+        if ("ui".equals(getRoleName())) {
+            result.add("-Xmx768m");
+        }
+        
+        return result;
+    }
+    
+    public String getJvmOptsLine() {
+        String opts = getShellEnvironment().get("JAVA_OPTS");
+        if (opts==null) return "";
+        return opts;
+    }
+    
     public List<String> getZookeeperServers() {
         ZooKeeperEnsemble zooKeeperEnsemble = entity.getConfig(Storm.ZOOKEEPER_ENSEMBLE);
         Supplier<List<String>> supplier = Entities.attributeSupplierWhenReady(new EntityAndAttribute<List<String>>(
@@ -84,8 +106,11 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
         expandedInstallDir = getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("storm-%s", getVersion()));
         ImmutableList.Builder<String> commandsBuilder = ImmutableList.<String> builder();
         if (!getLocation().getOsDetails().isMac()) {
-            commandsBuilder.add(BashCommands.installPackage(ImmutableMap.of("yum", "libuuid-devel"), "libuuid-devel"))
-                           .add(BashCommands.ifExecutableElse0("yum", "sudo yum -y groupinstall 'Development Tools'"));
+            commandsBuilder.add(BashCommands.installPackage(ImmutableMap.of(
+                    "yum", "libuuid-devel",
+                    "apt", "build-essential uuid-dev pkg-config libtool automake"), 
+                "libuuid-devel"))
+           .add(BashCommands.ifExecutableElse0("yum", "sudo yum -y groupinstall 'Development Tools'"));
         }
         commandsBuilder.add(BashCommands.installPackage(ImmutableMap.of("yum", "git"), "git"))
                        .add(BashCommands.INSTALL_UNZIP)
@@ -156,7 +181,7 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
                            .add((BashCommands.sudo("make install")))
                            .add("cd " + getInstallDir());
         } else {
-            commandsBuilder.add("export JAVA_HOME=/usr/lib/jvm/java")
+            commandsBuilder.add("export JAVA_HOME=$(dirname $(readlink -m `which java`))/../../ || export JAVA_HOME=/usr/lib/jvm/java")
                            .add("cd " + getInstallDir())
                            .add(BashCommands.commandToDownloadUrlAs(zeromqUrl, targz))
                            .add("tar xzf " + targz)
@@ -170,6 +195,14 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
                            .add("cd jzmq")
                            .add("./autogen.sh")
                            .add("./configure")
+                           
+                           // hack needed on ubuntu 12.04; ignore if it fails
+                           // see https://github.com/zeromq/jzmq/issues/114
+                           .add(BashCommands.ok(
+                               "pushd src ; touch classdist_noinst.stamp ; CLASSPATH=.:./.:$CLASSPATH "
+                               + "javac -d . org/zeromq/ZMQ.java org/zeromq/App.java org/zeromq/ZMQForwarder.java org/zeromq/EmbeddedLibraryTools.java org/zeromq/ZMQQueue.java org/zeromq/ZMQStreamer.java org/zeromq/ZMQException.java"))
+                           .add(BashCommands.ok("popd"))
+
                            .add("make")
                            .add((BashCommands.sudo("make install")))
                            .add("cd " + getInstallDir());
@@ -177,13 +210,15 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
         return commandsBuilder.build();
     }
 
-    @Override
-    protected Map getCustomJavaSystemProperties() {
-        String yaml = String.format("%s/conf/storm.yaml", getRunDir());
-        return MutableMap.<String, String>builder()
-                .putAll(super.getCustomJavaSystemProperties())
-                .put("storm.conf.file", yaml)
-                .build();
-    }
+//    @SuppressWarnings("unchecked")
+//    @Override
+//    protected Map<?,?> getCustomJavaSystemProperties() {
+//        // TODO not sure this has any effect as the config is read _from* storm.yaml
+//        String yaml = String.format("%s/conf/storm.yaml", getRunDir());
+//        return MutableMap.<String, String>builder()
+//                .putAll(super.getCustomJavaSystemProperties())
+//                .put("storm.conf.file", yaml)
+//                .build();
+//    }
     
 }

@@ -1,10 +1,10 @@
 package brooklyn.entity.messaging.storm;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.util.collections.MutableMap;
+import java.util.Map;
+
 import org.testng.annotations.Test;
 
-import java.util.Map;
+import brooklyn.util.collections.MutableMap;
 
 @Test(groups="Live")
 public class StormGceLiveTest extends AbstractCloudLiveTest {
@@ -14,7 +14,7 @@ public class StormGceLiveTest extends AbstractCloudLiveTest {
     private static final String URI = "https://www.googleapis.com/compute/v1beta15/projects/google/global/images/centos-6-v20130325";
     private static final String IMAGE_ID = "centos-6-v20130325";
 
-    private final BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+//    private final BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
 
     @Override
     public String getLocation() {
@@ -24,8 +24,8 @@ public class StormGceLiveTest extends AbstractCloudLiveTest {
     @Override
     public Map<String, ?> getFlags() {
         return MutableMap.of(
-                "identity", getIdentity(),
-                "credential", getCredential(),
+//                "identity", getIdentity(),
+//                "credential", getCredential(),
                 "locationId", LOCATION_ID,
                 "imageId", IMAGE_ID,
                 "uri", URI + IMAGE_ID,
@@ -34,11 +34,11 @@ public class StormGceLiveTest extends AbstractCloudLiveTest {
         );
     }
 
-    private String getIdentity() {
-        return brooklynProperties.getFirst("brooklyn.location.named." + NAMED_LOCATION + ".identity");
-    }
-
-    private String getCredential() {
-        return brooklynProperties.getFirst("brooklyn.location.named." + NAMED_LOCATION + ".credential");
-    }
+//    private String getIdentity() {
+//        return brooklynProperties.getFirst("brooklyn.location.named." + NAMED_LOCATION + ".identity");
+//    }
+//
+//    private String getCredential() {
+//        return brooklynProperties.getFirst("brooklyn.location.named." + NAMED_LOCATION + ".credential");
+//    }
 }
