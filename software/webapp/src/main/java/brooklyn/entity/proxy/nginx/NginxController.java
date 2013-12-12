@@ -97,7 +97,7 @@ public interface NginxController extends AbstractController, HasShortName {
 
     @SetFromFlag("configTemplate")
     ConfigKey<String> SERVER_CONF_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
-            "nginx.config.templateUrl", "The server.conf configuration file URL (FreeMarker template)", "classpath://brooklyn/entity/proxy/nginx/server.conf");
+            "nginx.config.templateUrl", "The server.conf configuration file URL (FreeMarker template)");
 
     @SetFromFlag("staticContentArchive")
     ConfigKey<String> STATIC_CONTENT_ARCHIVE_URL = ConfigKeys.newStringConfigKey(
