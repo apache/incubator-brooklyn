@@ -42,22 +42,6 @@ public interface SensorApi {
           @PathParam("entity") final String entityToken
       ) ;
 
-//  @GET
-//  @Path("/{sensor}")
-//  @ApiOperation(value = "Fetch sensor value (json)", responseClass = "Object")
-//  @ApiErrors(value = {
-//      @ApiError(code = 404, reason = "Could not find application, entity or sensor")
-//  })
-//  @Produces(MediaType.APPLICATION_JSON)
-//  public Object getJson(
-//          @ApiParam(value = "Application ID or name", required = true)
-//          @PathParam("application") final String application,
-//          @ApiParam(value = "Entity ID or name", required = true)
-//          @PathParam("entity") final String entityToken,
-//          @ApiParam(value = "Sensor name", required = true)
-//          @PathParam("sensor") String sensorName
-//  ) ;
-
   @GET
   @Path("/{sensor}")
   @ApiOperation(value = "Fetch sensor value (text/plain)", responseClass = "String")
@@ -88,6 +72,5 @@ public interface SensorApi {
           @ApiParam(value = "Sensor name", required = true)
           @PathParam("sensor") String sensorName
   ) ;
-
 
 }

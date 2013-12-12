@@ -25,12 +25,14 @@ public class MutableListTest {
         List<Object> a = MutableList.<Object>of("a", 1, "b", false);
         List<Object> b = Arrays.<Object>asList("a", 1, "b", false);
         Assert.assertEquals(a, b);
+        Assert.assertEquals(b, a);
     }
 
     public void testEqualsDifferentTypes2() {
         List<Object> a = MutableList.<Object>of("http");
         List<String> b = Arrays.<String>asList("http");
         Assert.assertEquals(a, b);
+        Assert.assertEquals(b, a);
     }
 
 }

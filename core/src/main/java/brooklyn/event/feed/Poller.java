@@ -109,8 +109,8 @@ public class Poller<V> {
             if (pollJob.pollPeriod.compareTo(Duration.ZERO) > 0) {
                 Callable<Task<?>> pollingTaskFactory = new Callable<Task<?>>() {
                     public Task<?> call() {
-                        DynamicSequentialTask<V> task = new DynamicSequentialTask<V>(MutableMap.of("displayName", scheduleName, "entity", entity), 
-                            new Callable<V>() { public V call() { pollJob.wrappedJob.run(); return null; } } );
+                        DynamicSequentialTask<Void> task = new DynamicSequentialTask<Void>(MutableMap.of("displayName", scheduleName, "entity", entity), 
+                            new Callable<Void>() { public Void call() { pollJob.wrappedJob.run(); return null; } } );
                         BrooklynTasks.setTransient(task);
                         return task;
                     }

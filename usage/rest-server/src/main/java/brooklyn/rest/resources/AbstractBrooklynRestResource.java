@@ -49,6 +49,8 @@ public abstract class AbstractBrooklynRestResource {
         return mapper;
     }
 
+    /** returns an object which jersey will handle nicely, converting to json,
+     * sometimes wrapping in quotes if needed (for outermost json return types) */ 
     protected Object getValueForDisplay(Object value, boolean preferJson, boolean isJerseyReturnValue) {
         if (preferJson) {
             if (value==null) return null;

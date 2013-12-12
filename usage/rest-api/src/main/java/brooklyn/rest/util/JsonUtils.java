@@ -13,6 +13,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.annotations.Beta;
 import com.google.common.primitives.Primitives;
 
 public class JsonUtils {
@@ -21,7 +22,13 @@ public class JsonUtils {
     
     public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
     
-    /** returns a representation of x which can be serialized as a json object */
+    /** returns a representation of x which is guaranteed to be convertible by jersey
+     * to valid json (converting toString here in any unusual cases) --
+     * with the exception that strings may have to be escaped in some json contexts;
+     * see comment at AbstractBrooklynRestResource#getValueForDisplay
+     * <p>
+     * iow, jsonable = anything which jersey methods can return and the framework 
+     * will turn it in to something sensible without failing */
     public static Object toJsonable(Object x) {
         if (x==null) return null;
         // primitives and strings are simple
@@ -31,12 +38,14 @@ public class JsonUtils {
         return x.toString();
     }
 
-    /** returns x if it can be nicely serialized by the given mapper;
+    /** as {@link #toJsonable(Object)},
+     * returns x if it can be nicely serialized by the given mapper;
      * otherwise returns toString to ensure that _a_ value is returned.
      * <p>
      * "nicely serialized" is taken to mean that an equal element is obtained
      * under after serialization and deserialization, which works for simple bean classes.
      * this is an imperfect but fairly useful measure. it may change in the future. */
+    @Beta
     public static Object toJsonable(Object x, ObjectMapper mapper) {
         if (x==null) return null;
         // primitives and strings are simple
