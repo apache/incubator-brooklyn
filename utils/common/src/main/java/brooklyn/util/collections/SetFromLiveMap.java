@@ -16,6 +16,8 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.Sets;
 
 /**
+ * Creates a Set backed by a given map (using the map's {@link Map#keySet()} for the contents of the set).
+ * <p>
  * As {@link Collections#newSetFromMap(Map)} and guava's {@link Sets#newSetFromMap(Map)}, but accepts
  * a non-empty map. Also supports others modifying the backing map simultaneously, if the backing map
  * is a ConcurrentMap.
