@@ -1,24 +1,25 @@
 package brooklyn.rest.resources;
 
+import static com.google.common.collect.Iterables.filter;
+import static com.google.common.collect.Iterables.transform;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.rest.api.SensorApi;
-import brooklyn.rest.transform.SensorTransformer;
 import brooklyn.rest.domain.SensorSummary;
-import brooklyn.rest.util.JsonUtils;
+import brooklyn.rest.transform.SensorTransformer;
+
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Map;
-
-import static com.google.common.collect.Iterables.filter;
-import static com.google.common.collect.Iterables.transform;
 
 public class SensorResource extends AbstractBrooklynRestResource implements SensorApi {
 
@@ -57,18 +58,27 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
 
     for (Sensor<?> sensor : sensors) {
       Object value = entity.getAttribute(findSensor(entity, sensor.getName()));
-      // TODO type
-      sensorMap.put(sensor.getName(), JsonUtils.toJsonable(value));
+      sensorMap.put(sensor.getName(), getValueForDisplay(value, true, false));
     }
     return sensorMap;
   }
 
-  @Override
-  public String get( final String application, final String entityToken, String sensorName) {
-      final EntityLocal entity = brooklyn().getEntity(application, entityToken);
-    Object value = entity.getAttribute(findSensor(entity, sensorName));
-    return (value != null) ? value.toString() : "";
-  }
+    protected Object get(boolean preferJson, String application, String entityToken, String sensorName) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        Object value = entity.getAttribute(findSensor(entity, sensorName));
+        
+        return getValueForDisplay(value, preferJson, true);
+    }
+
+    @Override
+    public String getPlain(String application, String entityToken, String sensorName) {
+        return (String) get(false, application, entityToken, sensorName);
+    }
+  
+    @Override
+    public Object get(final String application, final String entityToken, String sensorName) {
+        return get(true, application, entityToken, sensorName);
+    }
 
   private AttributeSensor<?> findSensor(EntityLocal entity, String name) {
       Sensor<?> s = entity.getEntityType().getSensor(name);

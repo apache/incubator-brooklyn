@@ -12,9 +12,6 @@ define([
         return _.escape(s);
     };
 
-    /** @deprecated Since 0.6. Use Util.escape */
-    Util.prep = Util.escape;
-
     function isWholeNumber(v) {
         return (Math.abs(Math.round(v) - v) < 0.000000000001);
     }
@@ -34,7 +31,18 @@ define([
                 return Math.round(vk)/xp;
             }
         }
-        return Number(v.toFixed(mantissa))
+        return Number(v.toFixed(mantissa));
+    };
+
+    Util.toDisplayString = function(data) {
+    	var escaped = Util.roundIfNumberToNumDecimalPlaces(data, 4);
+    	if (escaped != null) {
+    		if (typeof escaped === 'string')
+    			escaped = Util.escape(escaped);
+    		else
+    			escaped = JSON.stringify(escaped);
+    	}
+    	return escaped;
     };
 
     if (!String.prototype.trim) {

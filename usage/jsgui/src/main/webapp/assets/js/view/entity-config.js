@@ -39,9 +39,9 @@ define([
                                          return '<span class="config-name" '+ 
                                              'rel="tooltip" title='+
                                              (data['description'] ? 
-                                                     '"<b>'+Util.prep(data['description'])+'</b><br/>' : '')+
-                                             '('+Util.prep(data['type'])+')" data-placement="left">'+
-                                             Util.prep(data['name'])+'</span>';
+                                                     '"<b>'+Util.escape(data['description'])+'</b><br/>' : '')+
+                                             '('+Util.escape(data['type'])+')" data-placement="left">'+
+                                             Util.escape(data['name'])+'</span>';
                                      },
                                      "aTargets": [ 1 ]
                                  },
@@ -52,10 +52,10 @@ define([
                                          var icon="icon-file"
                                          var title="JSON direct link"
                                          var actionsText = 
-                                             "<a href='"+Util.prep(link)+"'"+
-                                             " class='"+Util.prep(icon)+"'"+
-                                             " title='"+Util.prep(title)+"'>"+
-                                                 Util.prep(text)+"</a>\n";
+                                             "<a href='"+Util.escape(link)+"'"+
+                                             " class='"+Util.escape(icon)+"'"+
+                                             " title='"+Util.escape(title)+"'>"+
+                                                 Util.escape(text)+"</a>\n";
                                          //just one action here
                                          return actionsText;
                                      },
@@ -63,7 +63,7 @@ define([
                                  },
                                  { // value
                                      "mRender": function ( data, type, row ) {
-                                         return Util.prep(Util.roundIfNumberToNumDecimalPlaces(data, 4))
+                                         return Util.toDisplayString(data)
                                      },
                                      "aTargets": [ 3 ]
                                  },
