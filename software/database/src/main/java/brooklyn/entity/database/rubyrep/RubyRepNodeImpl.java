@@ -2,6 +2,7 @@ package brooklyn.entity.database.rubyrep;
 
 import java.net.URI;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.event.basic.DependentConfiguration;
@@ -16,27 +17,25 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
 
     @Override
     public void disconnectSensors() {
-        super.disconnectSensors();
         disconnectServiceUpIsRunning();
+        super.disconnectSensors();
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
-     * Adds support for binding to brooklyn DatabaseNodes (so the user doesn't have to call attributeWhenReady, etc)
+     * Set the database {@link DatastoreCommon#DATASTORE_URL urls} as attributes when they become available on the entities.
      */
     @Override
-    public void init() {
-        super.init();
+    protected void preStart() {
+        super.preStart();
 
         DatastoreCommon leftNode = getConfig(LEFT_DATABASE);
-        DatastoreCommon rightNode = getConfig(RIGHT_DATABASE);
-
         if (leftNode != null) {
-            setAttribute(LEFT_DATASTORE_URL, DependentConfiguration.attributeWhenReady(leftNode, DatastoreCommon.DATASTORE_URL).getUnchecked());
+            setAttribute(LEFT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(leftNode, DatastoreCommon.DATASTORE_URL)).getUnchecked());
         }
+
+        DatastoreCommon rightNode = getConfig(RIGHT_DATABASE);
         if (rightNode != null) {
-            setAttribute(RIGHT_DATASTORE_URL, DependentConfiguration.attributeWhenReady(rightNode, DatastoreCommon.DATASTORE_URL).getUnchecked());
+            setAttribute(RIGHT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(rightNode, DatastoreCommon.DATASTORE_URL)).getUnchecked());
         }
     }
 
