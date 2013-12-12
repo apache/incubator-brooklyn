@@ -53,5 +53,10 @@ public class CloudMachineNamerTest {
                 CloudMachineNamer.sanitize("me & you like _underscores but not !!! or dots...dots...dots"),
                 "me-you-like-_underscores-but-not-or-dots-dots-dots"
             );
+        
+        Assert.assertEquals(CloudMachineNamer.sanitize("m-&-m"), "m-m");
+        Assert.assertEquals(CloudMachineNamer.sanitize("m--m"), "m-m");
+        Assert.assertEquals(CloudMachineNamer.sanitize("m&"), "m");
+        Assert.assertEquals(CloudMachineNamer.sanitize("&"), "x");
     }
 }
