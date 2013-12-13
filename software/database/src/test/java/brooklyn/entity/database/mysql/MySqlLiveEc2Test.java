@@ -23,5 +23,12 @@ public class MySqlLiveEc2Test extends AbstractEc2LiveTest {
         new VogellaExampleAccess("com.mysql.jdbc.Driver", mysql.getAttribute(DatastoreCommon.DATASTORE_URL)).readModifyAndRevertDataBase();
     }
 
+    @Override
+    @Test(enabled=false, groups = "Live")
+    public void test_Debian_7_2() throws Exception { } // Disabled because MySQl not available
+
+    @Test(enabled=false)
+    public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
+
 }
 

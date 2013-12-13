@@ -25,7 +25,15 @@ public class RubyRepEc2LiveTest extends AbstractEc2LiveTest {
         RubyRepIntegrationTest.startInLocation(app, db1, db2, loc);
         RubyRepIntegrationTest.testReplication(db1, db2);
     }
-    
+
+    @Override
+    @Test(enabled=false, groups = "Live")
+    public void test_Debian_6() throws Exception { } // Disabled because PostgreSql 9.1 not available
+
+    @Override
+    @Test(enabled=false, groups = "Live")
+    public void test_Ubuntu_10_0() throws Exception { } // Disabled because PostgreSql 9.1 not available
+
     @Test(enabled=false)
     public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
 }
