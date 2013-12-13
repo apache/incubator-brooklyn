@@ -2,10 +2,12 @@ package brooklyn.entity.database.rubyrep;
 
 import java.net.URI;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.util.time.Duration;
 
 public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode {
 
@@ -30,12 +32,12 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
 
         DatastoreCommon leftNode = getConfig(LEFT_DATABASE);
         if (leftNode != null) {
-            setAttribute(LEFT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(leftNode, DatastoreCommon.DATASTORE_URL)).getUnchecked());
+            setAttribute(LEFT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(leftNode, DatastoreCommon.DATASTORE_URL)).getUnchecked(getDatabaseStartupDelay()));
         }
 
         DatastoreCommon rightNode = getConfig(RIGHT_DATABASE);
         if (rightNode != null) {
-            setAttribute(RIGHT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(rightNode, DatastoreCommon.DATASTORE_URL)).getUnchecked());
+            setAttribute(RIGHT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(rightNode, DatastoreCommon.DATASTORE_URL)).getUnchecked(getDatabaseStartupDelay()));
         }
     }
 
@@ -44,9 +46,12 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
         return RubyRepDriver.class;
     }
 
-    /**
-     * Accessors used in freemarker template processing
-     */
+    public Duration getDatabaseStartupDelay() {
+        return Duration.seconds(getConfig(DATABASE_STARTUP_TIMEOUT));
+    }
+
+    // Accessors used in freemarker template processing
+
     public int getReplicationInterval() {
         return getConfig(REPLICATION_INTERVAL);
     }

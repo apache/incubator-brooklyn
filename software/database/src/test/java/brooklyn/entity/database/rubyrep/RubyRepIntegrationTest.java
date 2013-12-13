@@ -105,6 +105,7 @@ public class RubyRepIntegrationTest {
      */
     public static void startInLocation(TestApplication tapp, DatastoreCommon db1, String dbName1, DatastoreCommon db2, String dbName2, Location... locations) throws Exception {
         tapp.createAndManageChild(EntitySpec.create(RubyRepNode.class)
+                .configure("startupTimeout", 300)
                 .configure("leftDatabase", db1)
                 .configure("rightDatabase", db2)
                 .configure("leftUsername", "sqluser")

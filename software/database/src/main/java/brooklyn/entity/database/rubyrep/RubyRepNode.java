@@ -38,6 +38,10 @@ public interface RubyRepNode extends SoftwareProcess {
     ConfigKey<Integer> REPLICATION_INTERVAL = ConfigKeys.newIntegerConfigKey(
             "database.rubyrep.replicationInterval", "Replication Interval", 30);
 
+    @SetFromFlag("startupTimeout")
+    ConfigKey<Integer> DATABASE_STARTUP_TIMEOUT = ConfigKeys.newIntegerConfigKey(
+            "database.rubyrep.startupTimeout", "Time to wait until databases have started up (in seconds)", 120);
+
     // Left database
 
     AttributeSensor<String> LEFT_DATASTORE_URL = Sensors.newSensorWithPrefix("left", DatastoreMixins.DATASTORE_URL);
