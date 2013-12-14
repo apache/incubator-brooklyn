@@ -34,6 +34,22 @@ public class RubyRepEc2LiveTest extends AbstractEc2LiveTest {
     @Test(enabled=false, groups = "Live")
     public void test_Ubuntu_10_0() throws Exception { } // Disabled because PostgreSql 9.1 not available
 
+    @Override
+    @Test(enabled=false, groups = "Live")
+    public void test_Debian_7_2() throws Exception { } // Diabling all except Ubuntu 12.0 temporarily
+
+    @Override
+    @Test(enabled=false, groups = "Live")
+    public void test_CentOS_6_3() throws Exception { } // Diabling all except Ubuntu 12.0 temporarily
+
+    @Override
+    @Test(enabled=false, groups = "Live")
+    public void test_CentOS_5_6() throws Exception { } // Diabling all except Ubuntu 12.0 temporarily
+
+    @Override
+    @Test(enabled=false, groups = "Live")
+    public void test_Red_Hat_Enterprise_Linux_6() throws Exception { } // Diabling all except Ubuntu 12.0 temporarily
+
     @Test(enabled=false)
     public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
 }
