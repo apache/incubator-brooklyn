@@ -11,24 +11,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.database.mysql.MySqlSshDriver;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 
 public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements RubyRepDriver {
 
     public static final Logger log = LoggerFactory.getLogger(MySqlSshDriver.class);
 
+    private String expandedInstallDir;
+
     public RubyRepSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
 
         entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
+    }
+
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
     }
 
     @Override
@@ -38,13 +47,16 @@ public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements Ru
 
     @Override
     public void install() {
-        List<String> commands = Lists.newLinkedList();
+        DownloadResolver resolver = Entities.newDownloader(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName("rubrep");
 
-        String saveAs = format("rubyrep-%s.zip", getVersion());
-        // TODO for the time being it is hard coded download url since it isn't predictable
-        commands.addAll(BashCommands.downloadUrlAs("http://rubyforge.org/frs/download.php/74408/rubyrep-1.2.0.zip", getEntityVersionLabel("/"), saveAs));
-        commands.add(BashCommands.INSTALL_UNZIP);
-        commands.add("unzip " + saveAs);
+        List<String> commands = ImmutableList.<String>builder()
+                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
+                .add(BashCommands.INSTALL_UNZIP)
+                .add("unzip " + saveAs)
+                .build();
 
         newScript(INSTALLING).failOnNonZeroResultCode().body.append(commands).execute();
     }
@@ -52,7 +64,7 @@ public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements Ru
     @Override
     public void customize() {
         newScript(CUSTOMIZING).failOnNonZeroResultCode()
-                .body.append(format("cp -r %s/rubyrep-%s .", getInstallDir(), getVersion()))
+                .body.append(format("cp -R %s/rubyrep-%s .", getExpandedInstallDir(), getVersion()))
                 .execute();
         try {
             customizeConfiguration();

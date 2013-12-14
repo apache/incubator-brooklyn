@@ -2,6 +2,7 @@ package brooklyn.entity.database.rubyrep;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.database.DatastoreMixins;
@@ -9,6 +10,7 @@ import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -16,9 +18,12 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(RubyRepNodeImpl.class)
 public interface RubyRepNode extends SoftwareProcess {
 
-    // TODO see RubyRepSshDriver#install()
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.0");
+
+    @SetFromFlag("downloadUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new StringAttributeSensorAndConfigKey(
+            Attributes.DOWNLOAD_URL, "http://files.rubyforge.vm.bytemark.co.uk/rubyrep/rubyrep-${version}.zip");
 
     @SetFromFlag("configurationScriptUrl")
     ConfigKey<String> CONFIGURATION_SCRIPT_URL = ConfigKeys.newStringConfigKey(
