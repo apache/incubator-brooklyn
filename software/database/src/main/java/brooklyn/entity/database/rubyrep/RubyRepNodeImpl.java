@@ -2,7 +2,6 @@ package brooklyn.entity.database.rubyrep;
 
 import java.net.URI;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
