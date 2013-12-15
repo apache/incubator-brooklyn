@@ -48,6 +48,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
 
 /**
  * Implementation of {@link CassandraCluster}.
@@ -232,7 +233,6 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
      * Sets the default {@link #MEMBER_SPEC} to describe the Cassandra nodes.
      */
     @Override
-
     protected EntitySpec<?> getMemberSpec() {
         return getConfig(MEMBER_SPEC, EntitySpec.create(CassandraNode.class));
     }
@@ -398,27 +398,24 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             if (upNode.isPresent()) {
                 setAttribute(HOSTNAME, upNode.get().getAttribute(Attributes.HOSTNAME));
                 setAttribute(THRIFT_PORT, upNode.get().getAttribute(CassandraNode.THRIFT_PORT));
-                
+
                 List<String> currentNodes = getAttribute(CASSANDRA_CLUSTER_NODES);
-                Set<String> oldNodes = (currentNodes != null) ? MutableSet.copyOf(currentNodes) : MutableSet.<String>of();
+                Set<String> oldNodes = (currentNodes != null) ? ImmutableSet.copyOf(currentNodes) : ImmutableSet.<String>of();
                 Set<String> newNodes = MutableSet.<String>of();
                 for (Entity member: getMembers()) {
                     if (member.getAttribute(SERVICE_UP)==Boolean.TRUE) {
-                        newNodes.add(member.getAttribute(Attributes.HOSTNAME)+":"+member.getAttribute(CassandraNode.THRIFT_PORT));
+                        HostAndPort address = HostAndPort.fromParts(member.getAttribute(HOSTNAME), member.getAttribute(THRIFT_PORT));
+                        newNodes.add(address.toString());
                     }
                 }
-                boolean changed;
-                if (oldNodes==null) changed = !newNodes.isEmpty();
-                else changed = (oldNodes.size() != newNodes.size()) || !oldNodes.containsAll(newNodes);
-                if (changed)
+                if (Sets.difference(oldNodes, newNodes).size() > 0) {
                     setAttribute(CASSANDRA_CLUSTER_NODES, MutableList.copyOf(newNodes));
-                
+                }
             } else {
                 setAttribute(HOSTNAME, null);
                 setAttribute(THRIFT_PORT, null);
                 setAttribute(CASSANDRA_CLUSTER_NODES, Collections.<String>emptyList());
             }
-
         }
     }
     
