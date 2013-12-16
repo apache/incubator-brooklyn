@@ -12,7 +12,7 @@ import brooklyn.test.EntityTestUtils;
 
 import com.google.common.collect.ImmutableList;
 
-public class ZookeeperEc2LiveTest extends AbstractEc2LiveTest {
+public class ZooKeeperEc2LiveTest extends AbstractEc2LiveTest {
 
     /**
      * Test that can install, start and use a Zookeeper instance.
