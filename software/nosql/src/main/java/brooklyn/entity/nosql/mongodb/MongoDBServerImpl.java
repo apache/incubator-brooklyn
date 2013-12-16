@@ -100,7 +100,6 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                             .onException(Functions.constant(ReplicaSetMemberStatus.UNKNOWN)))
                     .build();
         } else {
-            setAttribute(REPLICA_SET_NAME, null);
             setAttribute(IS_PRIMARY_FOR_REPLICA_SET, false);
             setAttribute(IS_SECONDARY_FOR_REPLICA_SET, false);
         }
@@ -131,7 +130,6 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                         // Replica set stats
                         BasicBSONObject repl = (BasicBSONObject) map.get("repl");
                         if (replicaSetEnabled && repl != null) {
-                            setAttribute(REPLICA_SET_NAME, repl.getString("setName"));
                             setAttribute(IS_PRIMARY_FOR_REPLICA_SET, repl.getBoolean("ismaster"));
                             setAttribute(IS_SECONDARY_FOR_REPLICA_SET, repl.getBoolean("secondary"));
                             setAttribute(REPLICA_SET_PRIMARY_ENDPOINT, repl.getString("primary"));
@@ -156,6 +154,13 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
     @Override
     public MongoClientSupport getClient() {
         return client;
+    }
+
+    @Override
+    public MongoDBReplicaSet getReplicaSet() {
+        return Boolean.TRUE.equals(getConfig(MongoDBServer.REPLICA_SET_ENABLED))
+                ? getConfig(MongoDBServer.REPLICA_SET)
+                : null;
     }
 
     @Override

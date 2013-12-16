@@ -75,7 +75,8 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     @Override
     public void launch() {
-        Integer port = entity.getAttribute(MongoDBServer.PORT);
+        MongoDBServer server = MongoDBServer.class.cast(entity);
+        Integer port = server.getAttribute(MongoDBServer.PORT);
 
         ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
                 .add("--config", getConfFile())
@@ -85,11 +86,11 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
                 .add("--port", port.toString())
                 .add("--fork");
 
-        String replicaSetName = entity.getConfig(MongoDBServer.REPLICA_SET_NAME);
+        String replicaSetName = server.getReplicaSet().getName();
         if (!Strings.isNullOrEmpty(replicaSetName))
             argsBuilder.add("--replSet", replicaSetName);
 
-        if (Boolean.TRUE.equals(entity.getConfig(MongoDBServer.ENABLE_REST_INTERFACE)))
+        if (Boolean.TRUE.equals(server.getConfig(MongoDBServer.ENABLE_REST_INTERFACE)))
             argsBuilder.add("--rest");
 
         String args = Joiner.on(" ").join(argsBuilder.build());

@@ -12,6 +12,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
@@ -105,8 +106,9 @@ public interface MongoDBServer extends SoftwareProcess {
     ConfigKey<Boolean> REPLICA_SET_ENABLED = ConfigKeys.newBooleanConfigKey(
             "mongodb.server.replicaSet.enabled", "True if this server was started to be part of a replica set", Boolean.FALSE);
 
-    AttributeSensorAndConfigKey<String, String> REPLICA_SET_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class,
-            "mongodb.server.replicaSet.name", "The name of the replica set that the server belongs to");
+    ConfigKey<MongoDBReplicaSet> REPLICA_SET = new BasicConfigKey<MongoDBReplicaSet>(MongoDBReplicaSet.class,
+            "mongodb.replicaset", "The replica set to which the server belongs. " +
+            "Users are not required to set this directly when creating a new replica set.");
 
     AttributeSensor<ReplicaSetMemberStatus> REPLICA_SET_MEMBER_STATUS = Sensors.newSensor(
             ReplicaSetMemberStatus.class, "mongodb.server.replicaSet.memberStatus", "The status of this server in the replica set");
@@ -124,4 +126,10 @@ public interface MongoDBServer extends SoftwareProcess {
         "mongodb.server.endpoint", "The host:port where this server is listening");
 
     MongoClientSupport getClient();
+
+    /**
+     * @return The replica set the server belongs to, or null if {@link #REPLICA_SET_ENABLED} is false.
+     */
+    MongoDBReplicaSet getReplicaSet();
+
 }

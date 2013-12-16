@@ -55,7 +55,7 @@ public class MongoDBReplicaSetIntegrationTest {
      * Creates and starts a replica set, asserts it reaches the given size
      * and that the primary and secondaries are non-null.
      */
-    private MongoDBReplicaSet makeAndStartReplicaSet(final Integer size, String testDescription) {
+    private MongoDBReplicaSet makeAndStartReplicaSet(final Integer size, final String testDescription) {
         // Sets secondaryPreferred so we can read from slaves.
         final MongoDBReplicaSet replicaSet = app.createAndManageChild(EntitySpec.create(MongoDBReplicaSet.class)
                 .configure(DynamicCluster.INITIAL_SIZE, size)
@@ -70,6 +70,7 @@ public class MongoDBReplicaSetIntegrationTest {
             public void run() {
                 assertEquals(replicaSet.getCurrentSize(), size);
                 assertNotNull(replicaSet.getPrimary());
+                assertEquals(replicaSet.getPrimary().getReplicaSet().getName(), "test-rs-"+testDescription);
                 assertEquals(replicaSet.getSecondaries().size(), size-1);
             }
         });

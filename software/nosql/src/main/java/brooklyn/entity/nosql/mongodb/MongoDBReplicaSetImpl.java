@@ -130,19 +130,19 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     }
 
     /**
-     * Sets {@link MongoDBServer#REPLICA_SET_ENABLED} and {@link MongoDBServer#REPLICA_SET_NAME}.
+     * Sets {@link MongoDBServer#REPLICA_SET_ENABLED} and {@link MongoDBServer#REPLICA_SET}.
      */
     @Override
     protected Map<?,?> getCustomChildFlags() {
         return ImmutableMap.builder()
                 .putAll(super.getCustomChildFlags())
                 .put(MongoDBServer.REPLICA_SET_ENABLED, true)
-                .put(MongoDBServer.REPLICA_SET_NAME, getReplicaSetName())
+                .put(MongoDBServer.REPLICA_SET, this)
                 .build();
     }
 
     @Override
-    public String getReplicaSetName() {
+    public String getName() {
         return getConfig(REPLICA_SET_NAME);
     }
 
@@ -193,7 +193,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             throw new IllegalStateException("Ignored request to resize replica set to size smaller than minimum (only voting nodes permitted currently)");
         if (desired > MAX_MEMBERS)
             throw new IllegalStateException("Ignored request to resize replica set to size larger than maximum (only voting nodes permitted currently)");
-        
+
         return getCurrentSize();
     }
 
@@ -207,8 +207,8 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         // Set the primary if the replica set hasn't been initialised.
         if (mustInitialise.compareAndSet(true, false)) {
             if (LOG.isInfoEnabled())
-                LOG.info("First server up in {} is: {}", getReplicaSetName(), server);
-            boolean replicaSetInitialised = server.getClient().initializeReplicaSet(getReplicaSetName(), nextMemberId.getAndIncrement());
+                LOG.info("First server up in {} is: {}", getName(), server);
+            boolean replicaSetInitialised = server.getClient().initializeReplicaSet(getName(), nextMemberId.getAndIncrement());
             if (replicaSetInitialised) {
                 setAttribute(PRIMARY_ENTITY, server);
                 setAttribute(Startable.SERVICE_UP, true);
@@ -217,8 +217,8 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             }
         } else {
             if (LOG.isDebugEnabled())
-                LOG.debug("Scheduling addition of member to {}: {}", getReplicaSetName(), server);
-            executor.submit(addSecondaryWhenPrimaryIsNonNull(server));
+                LOG.debug("Scheduling addition of member to {}: {}", getName(), server);
+            addSecondaryWhenPrimaryIsNonNull(server);
         }
     }
 
@@ -229,8 +229,8 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
      * {@link MongoClientSupport}. Otherwise, reschedule the task to run again in three
      * seconds time (in the hope that next time the primary will be available).
      */
-    private Runnable addSecondaryWhenPrimaryIsNonNull(final MongoDBServer secondary) {
-        return new Runnable() {
+    private void addSecondaryWhenPrimaryIsNonNull(final MongoDBServer secondary) {
+        executor.submit(new Runnable() {
             @Override
             public void run() {
                 // SERVICE_UP is not guaranteed when additional members are added to the set.
@@ -239,31 +239,36 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 if (isAvailable && primary != null) {
                     primary.getClient().addMemberToReplicaSet(secondary, nextMemberId.incrementAndGet());
                     if (LOG.isInfoEnabled()) {
-                        LOG.info("{} added to replica set {}", secondary, getReplicaSetName());
+                        LOG.info("{} added to replica set {}", secondary, getName());
                     }
                 } else {
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("Rescheduling addition of member {} to replica set {}: service_up={}, primary={}",
-                            new Object[]{secondary, getReplicaSetName(), isAvailable, primary});
+                            new Object[]{secondary, getName(), isAvailable, primary});
                     }
                     // Could limit number of retries
                     executor.schedule(this, 3, TimeUnit.SECONDS);
                 }
             }
-        };
+        });
     }
 
-    private void serverRemoved(MongoDBServer server) {
+    /**
+     * Removes a server from the replica set.
+     * <p/>
+     * Submits a task that waits for the member to be down and for the replica set to have a primary
+     * member, then reconfigures the set to remove the member, to {@link #executor}. If either of the
+     * two conditions are not met then the task reschedules itself.
+     *
+     * @param member The server to be removed from the replica set.
+     */
+    private void serverRemoved(final MongoDBServer member) {
         if (LOG.isDebugEnabled())
-            LOG.debug("Scheduling removal of member from {}: {}", getReplicaSetName(), server);
+            LOG.debug("Scheduling removal of member from {}: {}", getName(), member);
         // FIXME is there a chance of race here?
-        if (server.equals(getAttribute(PRIMARY_ENTITY)))
+        if (member.equals(getAttribute(PRIMARY_ENTITY)))
             setAttribute(PRIMARY_ENTITY, null);
-        executor.submit(removeMember(server));
-    }
-
-    private Runnable removeMember(final MongoDBServer member) {
-        return new Runnable() {
+        executor.submit(new Runnable() {
             @Override
             public void run() {
                 // Wait until the server has been stopped before reconfiguring the set. Quoth the MongoDB doc:
@@ -274,24 +279,24 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 if (primary != null && !isAvailable) {
                     primary.getClient().removeMemberFromReplicaSet(member);
                     if (LOG.isInfoEnabled()) {
-                        LOG.info("Removed {} from replica set {}", member, getReplicaSetName());
+                        LOG.info("Removed {} from replica set {}", member, getName());
                     }
                 } else {
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("Rescheduling removal of member {} from replica set {}: service_up={}, primary={}",
-                            new Object[]{member, getReplicaSetName(), isAvailable, primary});
+                            new Object[]{member, getName(), isAvailable, primary});
                     }
                     executor.schedule(this, 3, TimeUnit.SECONDS);
                 }
             }
-        };
+        });
     }
 
     @Override
     public void start(Collection<? extends Location> locations) {
         // Promises that all the cluster's members have SERVICE_UP true on returning.
         super.start(locations);
-        policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", getReplicaSetName() + " membership tracker")) {
+        policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", getName() + " membership tracker")) {
             @Override protected void onEntityChange(Entity member) {
                 // Ignored
             }
