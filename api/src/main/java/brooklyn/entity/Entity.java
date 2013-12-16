@@ -16,7 +16,9 @@ import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 
 /**
  * The basic interface for a Brooklyn entity.
@@ -176,6 +178,11 @@ public interface Entity extends Identifiable, Rebindable {
     void addPolicy(Policy policy);
     
     /**
+     * Adds the given policy to this entity. Also calls policy.setEntity if available.
+     */
+    <T extends Policy> T addPolicy(PolicySpec<T> enricher);
+    
+    /**
      * Removes the given policy from this entity. 
      * @return True if the policy existed at this entity; false otherwise
      */
@@ -185,6 +192,11 @@ public interface Entity extends Identifiable, Rebindable {
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
      */
     void addEnricher(Enricher enricher);
+    
+    /**
+     * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
+     */
+    <T extends Enricher> T addEnricher(EnricherSpec<T> enricher);
     
     /**
      * Removes the given enricher from this entity. 

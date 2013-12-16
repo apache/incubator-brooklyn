@@ -22,11 +22,16 @@ import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.entity.proxying.InternalEntityFactory;
+import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.trait.Startable;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.management.AccessController;
 import brooklyn.management.EntityManager;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
+import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -44,6 +49,7 @@ public class LocalEntityManager implements EntityManager {
     private final LocalManagementContext managementContext;
     private final BasicEntityTypeRegistry entityTypeRegistry;
     private final InternalEntityFactory entityFactory;
+    private final InternalPolicyFactory policyFactory;
     
     /** Entities that have been created, but have not yet begun to be managed */
     protected final Map<String,Entity> preRegisteredEntitiesById = new WeakHashMap<String, Entity>();
@@ -71,7 +77,8 @@ public class LocalEntityManager implements EntityManager {
         this.managementContext = checkNotNull(managementContext, "managementContext");
         this.storage = managementContext.getStorage();
         this.entityTypeRegistry = new BasicEntityTypeRegistry();
-        this.entityFactory = new InternalEntityFactory(managementContext, entityTypeRegistry);
+        this.policyFactory = new InternalPolicyFactory(managementContext);
+        this.entityFactory = new InternalEntityFactory(managementContext, entityTypeRegistry, policyFactory);
         
         entityTypes = storage.getMap("entities");
         applicationIds = SetFromLiveMap.create(storage.<String,Boolean>getMap("applications"));
@@ -100,6 +107,26 @@ public class LocalEntityManager implements EntityManager {
     @Override
     public <T extends Entity> T createEntity(Map<?,?> config, Class<T> type) {
         return createEntity(EntitySpec.create(config, type));
+    }
+
+    @Override
+    public <T extends Policy> T createPolicy(PolicySpec<T> spec) {
+        try {
+            return policyFactory.createPolicy(spec);
+        } catch (Throwable e) {
+            log.warn("Failed to create policy using spec "+spec+" (rethrowing)", e);
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    @Override
+    public <T extends Enricher> T createEnricher(EnricherSpec<T> spec) {
+        try {
+            return policyFactory.createEnricher(spec);
+        } catch (Throwable e) {
+            log.warn("Failed to create enricher using spec "+spec+" (rethrowing)", e);
+            throw Exceptions.propagate(e);
+        }
     }
 
     @Override

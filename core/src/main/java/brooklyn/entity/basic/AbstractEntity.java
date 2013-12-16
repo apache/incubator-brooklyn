@@ -47,7 +47,9 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.SubscriptionTracker;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.collections.MutableList;
@@ -1001,6 +1003,20 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         
         getManagementSupport().getEntityChangeListener().onPoliciesChanged();
         emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
+    }
+
+    @Override
+    public <T extends Policy> T addPolicy(PolicySpec<T> spec) {
+        T policy = getManagementContext().getEntityManager().createPolicy(spec);
+        addPolicy(policy);
+        return policy;
+    }
+
+    @Override
+    public <T extends Enricher> T addEnricher(EnricherSpec<T> spec) {
+        T enricher = getManagementContext().getEntityManager().createEnricher(spec);
+        addEnricher(enricher);
+        return enricher;
     }
 
     @Override

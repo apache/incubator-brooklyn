@@ -1,6 +1,7 @@
 package brooklyn.entity.basic;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
 
 import java.util.Collection;
@@ -13,7 +14,9 @@ import org.testng.annotations.Test;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -90,7 +93,22 @@ public class PolicyRegistrationTest {
         assertEquals(entity.getPolicies(), ImmutableList.of());
         assertEqualsEventually(removed, ImmutableList.of(new PolicyDescriptor(policy1), new PolicyDescriptor(policy2)));
     }
+
+    @Test
+    public void testAddPolicySpec() {
+        EntitySpecTest.MyPolicy policy = entity.addPolicy(PolicySpec.create(EntitySpecTest.MyPolicy.class));
+        assertNotNull(policy);
+        assertEquals(entity.getPolicies(), ImmutableList.of(policy));
+        assertEqualsEventually(added, ImmutableList.of(new PolicyDescriptor(policy)));
+    }
     
+    @Test
+    public void testAddEnricherSpec() {
+        EntitySpecTest.MyEnricher enricher = entity.addEnricher(EnricherSpec.create(EntitySpecTest.MyEnricher.class));
+        assertNotNull(enricher);
+        assertEquals(entity.getEnrichers(), ImmutableList.of(enricher));
+    }
+
     @Test
     public void testRemoveAllPolicies() {
         entity.addPolicy(policy1);
