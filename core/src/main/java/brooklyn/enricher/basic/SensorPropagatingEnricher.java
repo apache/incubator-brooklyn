@@ -7,6 +7,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
@@ -19,7 +20,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-/** an enricher policy which just listens for the target sensor(s) on a child entity and passes it up */
+/** 
+ * an enricher policy which just listens for the target sensor(s) on a child entity and passes it up
+ * 
+ * @deprecated since 0.7.0; use {@link Enrichers#builder()}
+ */
 public class SensorPropagatingEnricher extends AbstractEnricher implements SensorEventListener<Object> {
     
     public static final Logger log = LoggerFactory.getLogger(SensorPropagatingEnricher.class);
@@ -50,15 +55,45 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
         return new SensorPropagatingEnricher(source, includes);
     }
 
-    /** listens to sensors from source, propagates them here renamed according to the map */
+    /**
+     * listens to sensors from source, propagates them here renamed according to the map
+     * 
+     * Instead, consider calling:
+     * <pre>
+     * {@code
+     * addEnricher(Enrichers.builder()
+     *         .from(source)
+     *         .propagating(sensors)
+     *         .build());
+     * }
+     * </pre>
+     *
+     * @deprecated since 0.7.0; use {@link Enrichers#builder()}
+     */
     public static SensorPropagatingEnricher newInstanceRenaming(Entity source, Map<? extends Sensor<?>, ? extends Sensor<?>> sensors) {
         return new SensorPropagatingEnricher(source, sensors);
     }
 
+    /**
+     * @deprecated since 0.7.0; use {@link Enrichers#builder()}
+     */
     public SensorPropagatingEnricher(Entity source, Sensor<?>... sensors) {
         this(source, ImmutableList.copyOf(sensors));
     }
     
+    /** 
+     * Instead, consider calling:
+     * <pre>
+     * {@code
+     * addEnricher(Enrichers.builder()
+     *         .from(source)
+     *         .propagating(sensors)
+     *         .build());
+     * }
+     * </pre>
+     *
+     * @deprecated since 0.7.0; use {@link Enrichers#builder()}
+     */
     public SensorPropagatingEnricher(Entity source, Collection<Sensor<?>> sensors) {
         this.source = source;
         this.sensors = ImmutableSet.copyOf(sensors);

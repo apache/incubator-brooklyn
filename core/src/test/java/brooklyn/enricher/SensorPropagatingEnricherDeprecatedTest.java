@@ -24,7 +24,7 @@ import brooklyn.util.javalang.AtomicReferences;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 
-public class SensorPropagatingEnricherTest {
+public class SensorPropagatingEnricherDeprecatedTest {
 
     private TestApplication app;
     private TestEntity entity;

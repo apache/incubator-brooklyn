@@ -1,15 +1,18 @@
 package brooklyn.enricher.basic;
 
 import groovy.lang.Closure;
+import brooklyn.enricher.Enrichers2;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
-import brooklyn.policy.Enricher;
 import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.base.Function;
 
+/**
+ * @deprecated since 0.7.0; use {@link Enrichers.builder()}
+ */
 public class SensorTransformingEnricher<T,U> extends AbstractTypeTransformingEnricher {
 
     private Function<? super T, ? extends U> transformation;
@@ -52,11 +55,35 @@ public class SensorTransformingEnricher<T,U> extends AbstractTypeTransformingEnr
         return transformation.apply(value);
     }
 
-    /** creates an enricher which listens to a source (from the producer), 
-     * transforms it and publishes it under the target */
+    /** 
+     * creates an enricher which listens to a source (from the producer), 
+     * transforms it and publishes it under the target
+     * 
+     * Instead, consider calling:
+     * <pre>
+     * {@code
+     * addEnricher(Enrichers2.builder()
+     *         .publishing(target)
+     *         .transforming(source)
+     *         .from(producer)
+     *         .computing(transformation)
+     *         .build());
+     * }
+     * </pre>
+     * 
+     * @deprecated since 0.7.0; use {@link Enrichers.builder()}
+     */
     public static <U,V> SensorTransformingEnricher<U,V> newInstanceTransforming(Entity producer, AttributeSensor<U> source,
             Function<U,V> transformation, AttributeSensor<V> target) {
-        return new SensorTransformingEnricher<U,V>(producer, source, target, transformation);
+        
+        Enrichers2.Builder builder = Enrichers2.builder()
+                .publishing(target)
+                .transforming(source)
+                .from(producer)
+                .computing(transformation);
+        
+        return Enrichers2.createEnricher(builder.build());
+        //return new SensorTransformingEnricher<U,V>(producer, source, target, transformation);
     }
 
     /** as {@link #newInstanceTransforming(Entity, AttributeSensor, Function, AttributeSensor)}
@@ -65,5 +92,4 @@ public class SensorTransformingEnricher<T,U> extends AbstractTypeTransformingEnr
             Function<T,T> transformation) {
         return newInstanceTransforming(producer, sensor, transformation, sensor);
     }
-
 }
