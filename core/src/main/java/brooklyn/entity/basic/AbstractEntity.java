@@ -124,6 +124,11 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     public static final BasicNotificationSensor<PolicyDescriptor> POLICY_REMOVED = new BasicNotificationSensor<PolicyDescriptor>(PolicyDescriptor.class,
             "entity.policy.removed", "Policy dynamically removed from entity");
 
+    public static final BasicNotificationSensor<Entity> CHILD_ADDED = new BasicNotificationSensor<Entity>(Entity.class,
+            "entity.children.added", "Child dynamically added to entity");
+    public static final BasicNotificationSensor<Entity> CHILD_REMOVED = new BasicNotificationSensor<Entity>(Entity.class,
+            "entity.children.removed", "Child dynamically removed from entity");
+
     @SetFromFlag(value="id")
     private String id = Identifiers.makeRandomId(8);
     
@@ -563,12 +568,19 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     @Override
     public <T extends Entity> T addChild(T child) {
         checkNotNull(child, "child must not be null (for entity %s)", this);
+        boolean changed;
         synchronized (children) {
             if (Entities.isAncestor(this, child)) throw new IllegalStateException("loop detected trying to add child "+child+" to "+this+"; it is already an ancestor");
             child.setParent(getProxyIfAvailable());
-            children.add(child);
+            changed = children.add(child);
             
             getManagementSupport().getEntityChangeListener().onChildrenChanged();
+        }
+        
+        // TODO not holding synchronization lock while notifying risks out-of-order if addChild+removeChild called in rapid succession.
+        // But doing notification in synchronization block may risk deadlock?
+        if (changed) {
+            emit(AbstractEntity.CHILD_ADDED, child);
         }
         return child;
     }
@@ -592,15 +604,20 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     
     @Override
     public boolean removeChild(Entity child) {
+        boolean changed;
         synchronized (children) {
-            boolean changed = children.remove(child);
+            changed = children.remove(child);
             child.clearParent();
             
             if (changed) {
                 getManagementSupport().getEntityChangeListener().onChildrenChanged();
             }
-            return changed;
         }
+        
+        if (changed) {
+            emit(AbstractEntity.CHILD_REMOVED, child);
+        }
+        return changed;
     }
 
     /**
