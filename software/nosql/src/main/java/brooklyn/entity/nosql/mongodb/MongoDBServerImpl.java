@@ -90,7 +90,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                                     return ReplicaSetMemberStatus.fromCode(state);
                                 }
                             })
-                            .onError(Functions.constant(ReplicaSetMemberStatus.UNKNOWN)))
+                            .onException(Functions.constant(ReplicaSetMemberStatus.UNKNOWN)))
                     .build();
         } else {
             setAttribute(REPLICA_SET_NAME, null);

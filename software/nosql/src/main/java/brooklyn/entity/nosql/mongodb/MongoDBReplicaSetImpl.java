@@ -3,6 +3,7 @@ package brooklyn.entity.nosql.mongodb;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
@@ -125,16 +127,21 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
 
     @Override
     public MongoDBServer getPrimary() {
-        return (MongoDBServer) Iterables.tryFind(getMembers(), IS_PRIMARY).orNull();
+        return Iterables.tryFind(getReplicas(), IS_PRIMARY).orNull();
     }
 
     @Override
     public Collection<MongoDBServer> getSecondaries() {
-        // IS_SECONDARY predicate guarantees cast in transform is safe.
-        return FluentIterable.from(getMembers())
+        return FluentIterable.from(getReplicas())
                 .filter(IS_SECONDARY)
+                .toList();
+    }
+
+    @Override
+    public Collection<MongoDBServer> getReplicas() {
+        return FluentIterable.from(getMembers())
                 .transform(new Function<Entity, MongoDBServer>() {
-                    @Override public MongoDBServer apply(@Nullable Entity input) {
+                    @Override public MongoDBServer apply(Entity input) {
                         return MongoDBServer.class.cast(input);
                     }
                 })
@@ -175,9 +182,13 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         if (mustInitialise.compareAndSet(true, false)) {
             if (LOG.isInfoEnabled())
                 LOG.info("First server up in {} is: {}", getReplicaSetName(), server);
-            server.getClient().initializeReplicaSet(getReplicaSetName(), nextMemberId.getAndIncrement());
-            setAttribute(PRIMARY, server);
-            setAttribute(Startable.SERVICE_UP, true);
+            boolean replicaSetInitialised = server.getClient().initializeReplicaSet(getReplicaSetName(), nextMemberId.getAndIncrement());
+            if (replicaSetInitialised) {
+                setAttribute(PRIMARY, server);
+                setAttribute(Startable.SERVICE_UP, true);
+            } else {
+                setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            }
         } else {
             if (LOG.isDebugEnabled())
                 LOG.debug("Scheduling addition of member to {}: {}", getReplicaSetName(), server);
