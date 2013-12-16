@@ -37,23 +37,25 @@ public interface ZooKeeperNode extends SoftwareProcess {
 
     @SetFromFlag("zookeeperPort")
     PortAttributeSensorAndConfigKey ZOOKEEPER_PORT = new PortAttributeSensorAndConfigKey("zookeeper.port", "Zookeeper port", "2181+");
-    
+
+    @SetFromFlag("zookeeperPort")
+    PortAttributeSensorAndConfigKey ZOOKEEPER_ELECTION_PORT  = new PortAttributeSensorAndConfigKey("zookeeper.election.port", "Zookeeper election ports", "3888+");
+
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "http://apache.fastbull.org/zookeeper/zookeeper-${version}/zookeeper-${version}.tar.gz");
-    
+
     /** Location of the ZK configuration file template to be copied to the server. */
     @SetFromFlag("zookeeperConfig")
     ConfigKey<String> ZOOKEEPER_CONFIG_TEMPLATE = ConfigKeys.newStringConfigKey(
             "zookeeper.configTemplate", "Zookeeper configuration template (in freemarker format)",
-            "classpath://brooklyn/entity/messaging/zookeeper/zookeeper.properties");    
+            "classpath://brooklyn/entity/messaging/zookeeper/zookeeper.properties");
+   AttributeSensor<Long> OUTSTANDING_REQUESTS = new BasicAttributeSensor<Long>(Long.class, "zookeeper.outstandingRequests", "Outstanding request count");
+   AttributeSensor<Long> PACKETS_RECEIVED = new BasicAttributeSensor<Long>(Long.class, "zookeeper.packets.received", "Total packets received");
 
-    AttributeSensor<Long> OUTSTANDING_REQUESTS = new BasicAttributeSensor<Long>(Long.class, "zookeeper.outstandingRequests", "Outstanding request count");
-    AttributeSensor<Long> PACKETS_RECEIVED = new BasicAttributeSensor<Long>(Long.class, "zookeeper.packets.received", "Total packets received");
     AttributeSensor<Long> PACKETS_SENT = new BasicAttributeSensor<Long>(Long.class, "zookeeper.packets.sent", "Total packets sent");
 
     Integer getZookeeperPort();
 
     String getHostname();
-
 }
