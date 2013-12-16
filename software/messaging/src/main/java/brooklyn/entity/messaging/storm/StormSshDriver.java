@@ -52,8 +52,8 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
     }
 
     public String getLocalDir() {
-        return entity.getAttribute(Storm.LOCAL_DIR) == null ? format("%s/storm", getRunDir()) : entity
-                .getAttribute(Storm.LOCAL_DIR);
+        return entity.getConfig(Storm.LOCAL_DIR) == null ? format("%s/storm", getRunDir()) : 
+            entity.getConfig(Storm.LOCAL_DIR);
     }
 
     public String getNimbusHostname() {

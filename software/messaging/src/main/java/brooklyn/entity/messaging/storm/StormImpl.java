@@ -28,7 +28,7 @@ public class StormImpl extends SoftwareProcessImpl implements Storm {
     public String getHostname() { return getAttribute(HOSTNAME); }
 
     @Override
-    public Role getRole() { return getAttribute(ROLE); }
+    public Role getRole() { return getConfig(ROLE); }
 
     @Override
     public String getStormConfigTemplateUrl() { return getConfig(STORM_CONFIG_TEMPLATE_URL); }   

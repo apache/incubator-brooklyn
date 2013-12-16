@@ -39,10 +39,10 @@ public interface Storm extends SoftwareProcess, UsesJmx {
     ConfigKey<Object> START_MUTEX = ConfigKeys.newConfigKey(Object.class, "storm.start.mutex");
 
     @SetFromFlag("role")
-    BasicAttributeSensorAndConfigKey<Role> ROLE = new BasicAttributeSensorAndConfigKey<Role>(Role.class, "storm.role");
+    ConfigKey<Role> ROLE = ConfigKeys.newConfigKey(Role.class, "storm.role");
 
     @SetFromFlag("localDir")
-    BasicAttributeSensorAndConfigKey<String> LOCAL_DIR = new BasicAttributeSensorAndConfigKey<String>(String.class,
+    ConfigKey<String> LOCAL_DIR = ConfigKeys.newStringConfigKey(
             "storm.local.dir", "Setting for Storm local dir");
     
     @SetFromFlag("uiPort")

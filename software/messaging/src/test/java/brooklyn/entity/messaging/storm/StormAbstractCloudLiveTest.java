@@ -35,17 +35,18 @@ import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
 import brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.EntityTestUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
-public abstract class AbstractCloudLiveTest extends
+public abstract class StormAbstractCloudLiveTest extends
         brooklyn.entity.BrooklynMgmtContextTestSupport {
 
     protected static final Logger log = LoggerFactory
-            .getLogger(AbstractCloudLiveTest.class);
+            .getLogger(StormAbstractCloudLiveTest.class);
     private Location location;
     private ZooKeeperEnsemble zooKeeperEnsemble;
     private Storm nimbus;
@@ -67,9 +68,11 @@ public abstract class AbstractCloudLiveTest extends
 
     public abstract String getLocation();
 
-    public abstract Map<String, ?> getFlags();
+    public Map<String, ?> getFlags() {
+        return MutableMap.of();
+    }
 
-    @Test(groups = "Live")
+    @Test(groups = {"Live","WIP"})  // needs repair to avoid hard dependency on Andrea's environment
     public void deployStorm() throws Exception {
         try {
             zooKeeperEnsemble = app.createAndManageChild(EntitySpec.create(
@@ -77,19 +80,19 @@ public abstract class AbstractCloudLiveTest extends
                     ZooKeeperEnsemble.INITIAL_SIZE, 1));
             nimbus = app.createAndManageChild(EntitySpec
                     .create(Storm.class)
-                    .configure("storm.role", NIMBUS)
+                    .configure(Storm.ROLE, NIMBUS)
                     .configure(NIMBUS_HOSTNAME, "localhost")
                     .configure(ZOOKEEPER_ENSEMBLE, zooKeeperEnsemble)
                     );
             supervisor = app.createAndManageChild(EntitySpec
                     .create(Storm.class)
-                    .configure("storm.role", SUPERVISOR)
+                    .configure(Storm.ROLE, SUPERVISOR)
                     .configure(ZOOKEEPER_ENSEMBLE, zooKeeperEnsemble)
                     .configure(NIMBUS_HOSTNAME,
                             attributeWhenReady(nimbus, Attributes.HOSTNAME)));
             ui = app.createAndManageChild(EntitySpec
                     .create(Storm.class)
-                    .configure("storm.role", UI)
+                    .configure(Storm.ROLE, UI)
                     .configure(ZOOKEEPER_ENSEMBLE, zooKeeperEnsemble)
                     .configure(NIMBUS_HOSTNAME,
                             attributeWhenReady(nimbus, Attributes.HOSTNAME)));
@@ -128,7 +131,8 @@ public abstract class AbstractCloudLiveTest extends
         conf.setDebug(debug);
         conf.setNumWorkers(numOfWorkers);
 
-        // TODO: generalize this package name
+        // FIXME - won't work for anyone but andrea turli
+        // also, the JAR needs to be with ref to src/test/java to have the right package, no?
         String jar = createJar("/Users/andrea/git/andreaturli/brooklyn/software/messaging/src/test/java/brooklyn/entity/messaging/storm/topologies");
         System.setProperty("storm.jar", jar);
         long startMs = System.currentTimeMillis();

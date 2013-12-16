@@ -62,7 +62,7 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
 
     @Override
     public boolean isRunning() {
-        return newScript(MutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).body.append("true").execute() == 0;
+        return newScript(MutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).execute() == 0;
     }
 
     @Override
