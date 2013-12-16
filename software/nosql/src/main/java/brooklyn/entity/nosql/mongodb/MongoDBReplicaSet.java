@@ -1,16 +1,14 @@
 package brooklyn.entity.nosql.mongodb;
 
+import java.util.Collection;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
-
-import java.util.Collection;
 
 /**
  * A replica set of {@link MongoDBServer}s, based on {@link DynamicCluster} which can be resized by a policy
@@ -52,5 +50,10 @@ public interface MongoDBReplicaSet extends DynamicCluster {
      * @return The secondary servers in the replica set.
      */
     Collection<MongoDBServer> getSecondaries();
+
+    /**
+     * @return All servers in the replica set.
+     */
+    Collection<MongoDBServer> getReplicas();
 
 }

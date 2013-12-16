@@ -39,7 +39,7 @@ import com.google.common.collect.Iterables;
  *
  * Removal strategy is always {@link #NON_PRIMARY_REMOVAL_STRATEGY}.
  */
-public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDBReplicaSet, Iterable<MongoDBServer> {
+public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDBReplicaSet {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBReplicaSetImpl.class);
 
@@ -127,14 +127,24 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
 
     @Override
     public MongoDBServer getPrimary() {
-        return (MongoDBServer) Iterables.tryFind(getMembers(), IS_PRIMARY).orNull();
+        return Iterables.tryFind(getReplicas(), IS_PRIMARY).orNull();
     }
 
     @Override
     public Collection<MongoDBServer> getSecondaries() {
-        // IS_SECONDARY predicate guarantees cast in transform is safe.
-        return FluentIterable.from(this)
+        return FluentIterable.from(getReplicas())
                 .filter(IS_SECONDARY)
+                .toList();
+    }
+
+    @Override
+    public Collection<MongoDBServer> getReplicas() {
+        return FluentIterable.from(getMembers())
+                .transform(new Function<Entity, MongoDBServer>() {
+                    @Override public MongoDBServer apply(Entity input) {
+                        return MongoDBServer.class.cast(input);
+                    }
+                })
                 .toList();
     }
 
@@ -280,14 +290,4 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         setAttribute(Startable.SERVICE_UP, false);
     }
 
-    @Override
-    public Iterator<MongoDBServer> iterator() {
-        return FluentIterable.from(getMembers())
-                .transform(new Function<Entity, MongoDBServer>() {
-                    @Override public MongoDBServer apply(@Nullable Entity input) {
-                        return MongoDBServer.class.cast(input);
-                    }
-                })
-                .iterator();
-    }
 }
