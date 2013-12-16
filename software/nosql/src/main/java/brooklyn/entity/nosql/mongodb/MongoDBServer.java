@@ -27,7 +27,7 @@ public interface MongoDBServer extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
-            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.2.4");
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.5.4");
 
     // e.g. http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.2.2.tgz,
     // http://fastdl.mongodb.org/osx/mongodb-osx-x86_64-2.2.2.tgz
@@ -100,7 +100,6 @@ public interface MongoDBServer extends SoftwareProcess {
 
     AttributeSensor<Long> NETWORK_NUM_REQUESTS = Sensors.newLongSensor(
             "mongodb.server.network.numRequests", "Server network requests");
-
 
     /** A single server's replica set configuration **/
     ConfigKey<Boolean> REPLICA_SET_ENABLED = ConfigKeys.newBooleanConfigKey(
