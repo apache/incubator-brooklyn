@@ -1,6 +1,7 @@
 package brooklyn.entity.nosql.mongodb;
 
 import com.google.common.base.Optional;
+import com.google.common.net.HostAndPort;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
@@ -14,7 +15,6 @@ import org.bson.BasicBSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
@@ -23,9 +23,9 @@ import java.net.UnknownHostException;
  *
  * @see <a href="http://docs.mongodb.org/manual/reference/command/">MongoDB database command documentation</a>
  */
-public class MongoClientSupport implements Closeable {
+public class MongoDBClientSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MongoClientSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBClientSupport.class);
 
     private final MongoClient client;
 
@@ -37,24 +37,29 @@ public class MongoClientSupport implements Closeable {
 
     private static final BasicBSONObject EMPTY_RESPONSE = new BasicBSONObject();
 
-    public MongoClientSupport(ServerAddress standalone) {
+    public MongoDBClientSupport(ServerAddress standalone) {
         // We could also use a MongoClient to access an entire replica set. See MongoClient(List<ServerAddress>).
         client = new MongoClient(standalone, connectionOptions);
     }
 
     /**
-     * Creates a {@link MongoClientSupport} instance in standalone mode.
+     * Creates a {@link MongoDBClientSupport} instance in standalone mode.
      * Returns {@link com.google.common.base.Optional#absent} if the server's host and port are unknown.
      */
-    public static MongoClientSupport forServer(MongoDBServer standalone) throws UnknownHostException {
+    public static MongoDBClientSupport forServer(MongoDBServer standalone) throws UnknownHostException {
         String hostname = standalone.getAttribute(MongoDBServer.HOSTNAME);
         Integer port = standalone.getAttribute(MongoDBServer.PORT);
         ServerAddress address = new ServerAddress(hostname, port);
-        return new MongoClientSupport(address);
+        return new MongoDBClientSupport(address);
     }
 
     private ServerAddress getServerAddress() {
         return client.getServerAddressList().get(0);
+    }
+
+    private HostAndPort getServerHostAndPort() {
+        ServerAddress address = getServerAddress();
+        return HostAndPort.fromParts(address.getHost(), address.getPort());
     }
 
     private Optional<CommandResult> runDBCommand(String database, String command) {
@@ -71,14 +76,13 @@ public class MongoClientSupport implements Closeable {
             return Optional.absent();
         }
         if (!status.ok()) {
-            LOG.warn("Unexpected result of {} on {}: {}",
+            LOG.debug("Unexpected result of {} on {}: {}",
                     new Object[]{command, getServerAddress(), status.getErrorMessage()});
         }
         return Optional.of(status);
     }
 
-    @Override
-    public void close() throws IOException {
+    void close() throws IOException {
         client.close();
     }
 
@@ -92,7 +96,7 @@ public class MongoClientSupport implements Closeable {
     }
 
     public boolean initializeReplicaSet(String replicaSetName, Integer id) {
-        ServerAddress primary = client.getServerAddressList().get(0);
+        HostAndPort primary = getServerHostAndPort();
         BasicBSONObject config = ReplicaSetConfig.builder(replicaSetName)
                 .member(primary, id)
                 .build();
@@ -110,7 +114,7 @@ public class MongoClientSupport implements Closeable {
     /**
      * Java equivalent of calling rs.conf() in the console.
      */
-    public BSONObject getReplicaSetConfig() {
+    private BSONObject getReplicaSetConfig() {
         try {
             return client.getDB("local").getCollection("system.replset").findOne();
         } catch (MongoException e) {

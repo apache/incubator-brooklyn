@@ -30,7 +30,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
     private FunctionFeed serviceStats;
     private FunctionFeed replicaSetStats;
-    private MongoClientSupport client;
+    private MongoDBClientSupport client;
 
     public MongoDBServerImpl() {
     }
@@ -55,7 +55,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         setAttribute(MONGO_SERVER_ENDPOINT, String.format("http://%s:%d", getAttribute(HOSTNAME), getAttribute(MongoDBServer.PORT)));
 
         try {
-            client = MongoClientSupport.forServer(this);
+            client = MongoDBClientSupport.forServer(this);
         } catch (UnknownHostException e) {
             LOG.warn("Unable to create client connection to {}, not connecting sensors: {} ", this, e.getMessage());
             return;
@@ -84,7 +84,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                             .period(2, TimeUnit.SECONDS)
                             .callable(new Callable<ReplicaSetMemberStatus>() {
                                 /**
-                                 * Calls {@link MongoClientSupport#getReplicaSetStatus} and
+                                 * Calls {@link MongoDBClientSupport#getReplicaSetStatus} and
                                  * extracts <code>myState</code> from the response.
                                  * @return
                                  *      The appropriate {@link brooklyn.entity.nosql.mongodb.ReplicaSetMemberStatus}
@@ -152,7 +152,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
     }
 
     @Override
-    public MongoClientSupport getClient() {
+    public MongoDBClientSupport getClient() {
         return client;
     }
 

@@ -125,7 +125,7 @@ public interface MongoDBServer extends SoftwareProcess {
     AttributeSensor<String> MONGO_SERVER_ENDPOINT = Sensors.newStringSensor(
         "mongodb.server.endpoint", "The host:port where this server is listening");
 
-    MongoClientSupport getClient();
+    MongoDBClientSupport getClient();
 
     /**
      * @return The replica set the server belongs to, or null if {@link #REPLICA_SET_ENABLED} is false.

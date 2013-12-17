@@ -226,7 +226,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
      * Adds a server as a secondary in the replica set.
      * <p/>
      * If {@link #getPrimary} returns non-null submit the secondary to the primary's
-     * {@link MongoClientSupport}. Otherwise, reschedule the task to run again in three
+     * {@link MongoDBClientSupport}. Otherwise, reschedule the task to run again in three
      * seconds time (in the hope that next time the primary will be available).
      */
     private void addSecondaryWhenPrimaryIsNonNull(final MongoDBServer secondary) {
