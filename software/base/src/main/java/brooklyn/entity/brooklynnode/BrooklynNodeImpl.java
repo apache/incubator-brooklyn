@@ -3,6 +3,8 @@ package brooklyn.entity.brooklynnode;
 import java.net.URI;
 import java.util.List;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +42,14 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         return BrooklynNodeDriver.class;
     }
 
-    public List<String> getClasspath() {
-        return getConfig(CLASSPATH);
+    public Iterable<String> getClasspath() {
+        String classpath = getConfig(CLASSPATH);
+        if (Strings.isBlank(classpath)) {
+            classpath = getManagementContext().getConfig().getConfig(CLASSPATH);
+        }
+        return Strings.isNonBlank(classpath)
+                ? Splitter.on(';').trimResults().omitEmptyStrings().split(classpath)
+                : ImmutableList.<String>of();
     }
     
     protected List<String> getEnabledHttpProtocols() {
