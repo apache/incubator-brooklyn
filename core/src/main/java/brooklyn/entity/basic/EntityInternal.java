@@ -5,12 +5,15 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
+import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.entity.rebind.Rebindable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.internal.EntityManagementSupport;
+import brooklyn.mementos.EntityMemento;
 
 import com.google.common.annotations.Beta;
 
@@ -19,7 +22,7 @@ import com.google.common.annotations.Beta;
  * for the brooklyn framework only).
  */
 @Beta
-public interface EntityInternal extends EntityLocal {
+public interface EntityInternal extends EntityLocal, Rebindable {
     
     void addLocations(Collection<? extends Location> locations);
 
@@ -96,4 +99,7 @@ public interface EntityInternal extends EntityLocal {
     Effector<?> getEffector(String effectorName);
     
     Map<String, String> toMetadataRecord();
+    
+    @Override
+    RebindSupport<EntityMemento> getRebindSupport();
 }

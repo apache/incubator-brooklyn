@@ -6,10 +6,7 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.entity.rebind.Rebindable;
 import brooklyn.entity.trait.Identifiable;
-import brooklyn.mementos.LocationMemento;
 
 /**
  * A location that an entity can be in. Examples of locations include a single machine
@@ -19,7 +16,7 @@ import brooklyn.mementos.LocationMemento;
  * 
  * Locations may not be {@link Serializable} in subsequent releases!
  */
-public interface Location extends Serializable, Identifiable, Rebindable {
+public interface Location extends Serializable, Identifiable {
 
     /**
      * A unique id for this location.
@@ -88,9 +85,6 @@ public interface Location extends Serializable, Identifiable, Rebindable {
     /** Returns all config set, either inherited (argument true) or locally-only (argument false) */
     public Map<String,Object> getAllConfig(boolean includeInherited);
     
-    @Override
-    RebindSupport<LocationMemento> getRebindSupport();
-
     /**
      * Whether this location has support for the given extension type.
      * See additional comments in {@link #getExtension(Class)}.

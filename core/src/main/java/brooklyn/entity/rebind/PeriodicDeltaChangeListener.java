@@ -10,7 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.location.Location;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -143,10 +145,10 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 } else {
                     PersisterDeltaImpl persisterDelta = new PersisterDeltaImpl();
                     for (Location location : prevDeltaCollector.locations) {
-                        persisterDelta.locations.add(location.getRebindSupport().getMemento());
+                        persisterDelta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
                     }
                     for (Entity entity : prevDeltaCollector.entities) {
-                        persisterDelta.entities.add(entity.getRebindSupport().getMemento());
+                        persisterDelta.entities.add(((EntityInternal)entity).getRebindSupport().getMemento());
                     }
                     for (Policy policy : prevDeltaCollector.policies) {
                         persisterDelta.policies.add(policy.getRebindSupport().getMemento());

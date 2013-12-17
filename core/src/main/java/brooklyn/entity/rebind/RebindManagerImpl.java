@@ -205,6 +205,7 @@ public class RebindManagerImpl implements RebindManager {
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating entity {}", entityMemento);
                 
                 Entity entity = newEntity(entityMemento, reflections);
+                managementContext.prePreManage(entity);
                 entities.put(entityMemento.getId(), entity);
                 rebindContext.registerEntity(entityMemento.getId(), entity);
             }
@@ -227,7 +228,7 @@ public class RebindManagerImpl implements RebindManager {
                 Location location = rebindContext.getLocation(locMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", locMemento);
     
-                location.getRebindSupport().reconstruct(rebindContext, locMemento);
+                ((LocationInternal)location).getRebindSupport().reconstruct(rebindContext, locMemento);
             }
     
             // Reconstruct policies
@@ -245,7 +246,7 @@ public class RebindManagerImpl implements RebindManager {
                 Entity entity = rebindContext.getEntity(entityMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
     
-                entity.getRebindSupport().reconstruct(rebindContext, entityMemento);
+                ((EntityInternal)entity).getRebindSupport().reconstruct(rebindContext, entityMemento);
             }
             
             LOG.info("RebindManager managing locations");

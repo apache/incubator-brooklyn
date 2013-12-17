@@ -15,6 +15,7 @@ import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMemento;
@@ -41,13 +42,13 @@ public class MementosGenerators {
             builder.applicationIds.add(app.getId());
         }
         for (Entity entity : managementContext.getEntityManager().getEntities()) {
-            builder.entities.put(entity.getId(), entity.getRebindSupport().getMemento());
+            builder.entities.put(entity.getId(), ((EntityInternal)entity).getRebindSupport().getMemento());
             
             for (Location location : entity.getLocations()) {
                 if (!builder.locations.containsKey(location.getId())) {
                     for (Location locationInHierarchy : TreeUtils.findLocationsInHierarchy(location)) {
                         if (!builder.locations.containsKey(locationInHierarchy.getId())) {
-                            builder.locations.put(locationInHierarchy.getId(), locationInHierarchy.getRebindSupport().getMemento());
+                            builder.locations.put(locationInHierarchy.getId(), ((LocationInternal)locationInHierarchy).getRebindSupport().getMemento());
                         }
                     }
                 }
