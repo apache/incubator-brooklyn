@@ -1,7 +1,6 @@
 package brooklyn.enricher.basic;
 
 import groovy.lang.Closure;
-import brooklyn.enricher.Enrichers2;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -12,6 +11,7 @@ import com.google.common.base.Function;
 
 /**
  * @deprecated since 0.7.0; use {@link Enrichers.builder()}
+ * @see Transformer if need to sub-class
  */
 public class SensorTransformingEnricher<T,U> extends AbstractTypeTransformingEnricher {
 
@@ -62,9 +62,9 @@ public class SensorTransformingEnricher<T,U> extends AbstractTypeTransformingEnr
      * Instead, consider calling:
      * <pre>
      * {@code
-     * addEnricher(Enrichers2.builder()
-     *         .publishing(target)
+     * addEnricher(Enrichers.builder()
      *         .transforming(source)
+     *         .publishing(target)
      *         .from(producer)
      *         .computing(transformation)
      *         .build());
@@ -75,15 +75,7 @@ public class SensorTransformingEnricher<T,U> extends AbstractTypeTransformingEnr
      */
     public static <U,V> SensorTransformingEnricher<U,V> newInstanceTransforming(Entity producer, AttributeSensor<U> source,
             Function<U,V> transformation, AttributeSensor<V> target) {
-        
-        Enrichers2.Builder builder = Enrichers2.builder()
-                .publishing(target)
-                .transforming(source)
-                .from(producer)
-                .computing(transformation);
-        
-        return Enrichers2.createEnricher(builder.build());
-        //return new SensorTransformingEnricher<U,V>(producer, source, target, transformation);
+        return new SensorTransformingEnricher<U,V>(producer, source, target, transformation);
     }
 
     /** as {@link #newInstanceTransforming(Entity, AttributeSensor, Function, AttributeSensor)}

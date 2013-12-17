@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
  * an enricher policy which just listens for the target sensor(s) on a child entity and passes it up
  * 
  * @deprecated since 0.7.0; use {@link Enrichers#builder()}
+ * @see Propagator if need to sub-class
  */
 public class SensorPropagatingEnricher extends AbstractEnricher implements SensorEventListener<Object> {
     
@@ -62,8 +63,8 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
      * <pre>
      * {@code
      * addEnricher(Enrichers.builder()
-     *         .from(source)
      *         .propagating(sensors)
+     *         .from(source)
      *         .build());
      * }
      * </pre>
@@ -86,8 +87,8 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
      * <pre>
      * {@code
      * addEnricher(Enrichers.builder()
-     *         .from(source)
      *         .propagating(sensors)
+     *         .from(source)
      *         .build());
      * }
      * </pre>

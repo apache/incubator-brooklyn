@@ -14,14 +14,16 @@ import brooklyn.event.basic.BasicSensorEvent;
  * <pre>
  * {@code
  * addEnricher(Enrichers.builder()
+ *         .combining(sources)
  *         .publishing(target)
- *         .computeSum(sources)
+ *         .computeSum()
  *         .build());
  * }
  * </pre>
  * <p>
  * 
  * @deprecated since 0.7.0; use {@link Enrichers.builder()}
+ * @see Combinor if need to sub-class
  */
 public class AddingEnricher extends AbstractEnricher implements SensorEventListener {
 

@@ -4,22 +4,18 @@ import groovy.lang.Closure;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.basic.AbstractAggregatingEnricher;
-import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.reflect.TypeToken;
 
@@ -118,9 +114,9 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
      * Instead, consider calling:
      * <pre>
      * {@code
-     * Enrichers.Builder builder = Enrichers2.builder()
-     *         .publishing(target)
+     * Enrichers.Builder builder = Enrichers.builder()
      *         .aggregating(source)
+     *         .publishing(target)
      *         .computing(GroovyJavaMethods.<Collection<S>, T>functionFromClosure((Closure<T>)aggregator))
      *         .defaultValueForUnreportedSensors(defaultValueForUnreportedSensors);
      * 
@@ -155,9 +151,9 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
      * Instead, consider calling:
      * <pre>
      * {@code
-     * Enrichers.Builder builder = Enrichers2.builder()
-     *         .publishing(target)
+     * Enrichers.Builder builder = Enrichers.builder()
      *         .aggregating(source)
+     *         .publishing(target)
      *         .computing(aggregator)
      *         .defaultValueForUnreportedSensors(defaultVal);
      * 
@@ -196,9 +192,9 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
      * Instead, consider calling:
      * <pre>
      * {@code
-     * Enrichers2.Builder builder = Enrichers2.builder()
-     *         .publishing(target)
+     * Enrichers.Builder builder = Enrichers.builder()
      *         .aggregating(source)
+     *         .publishing(target)
      *         .computingSum()
      *         .defaultValueForUnreportedSensors(defaultValueForUnreportedSensors)
      *         .valueToReportIfNoSensors(valueToReportIfNoSensors);
@@ -238,9 +234,9 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
      * Instead, consider calling:
      * <pre>
      * {@code
-     * Enrichers2.Builder builder = Enrichers2.builder()
-     *         .publishing(target)
+     * Enrichers.Builder builder = Enrichers.builder()
      *         .aggregating(source)
+     *         .publishing(target)
      *         .computingAverage()
      *         .defaultValueForUnreportedSensors(defaultValueForUnreportedSensors)
      *         .valueToReportIfNoSensors(valueToReportIfNoSensors);

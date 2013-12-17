@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
  * {@link Group} and should emit an aggregate<T> on the target sensor
  * 
  * @deprecated since 0.7.0; use {@link Enrichers.builder()}
+ * @see Aggregator if need to sub-class
  */
 public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher implements SensorEventListener<S> {
     
