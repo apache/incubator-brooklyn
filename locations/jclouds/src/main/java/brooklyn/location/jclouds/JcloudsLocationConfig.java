@@ -24,30 +24,30 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
 
     public static final ConfigKey<String> CLOUD_PROVIDER = LocationConfigKeys.CLOUD_PROVIDER;
 
-    public static final ConfigKey<Boolean> RUN_AS_ROOT = new BasicConfigKey<Boolean>(Boolean.class, "runAsRoot", 
+    public static final ConfigKey<Boolean> RUN_AS_ROOT = ConfigKeys.newBooleanConfigKey("runAsRoot", 
             "Whether to run initial setup as root (default true)", null);
-    public static final ConfigKey<String> LOGIN_USER = ConfigKeys.newStringConfigKey("loginUser", 
+    public static final ConfigKey<String> LOGIN_USER = ConfigKeys.newStringConfigKey("loginUser",
             "Override the user who logs in initially to perform setup " +
             "(otherwise it is detected from the cloud or known defaults in cloud or VM OS)", null);
-    public static final ConfigKey<String> LOGIN_USER_PASSWORD = ConfigKeys.newStringConfigKey("loginUser.password", 
+    public static final ConfigKey<String> LOGIN_USER_PASSWORD = ConfigKeys.newStringConfigKey("loginUser.password",
             "Custom password for the user who logs in initially", null);
-    public static final ConfigKey<String> LOGIN_USER_PRIVATE_KEY_DATA = ConfigKeys.newStringConfigKey("loginUser.privateKeyData", 
+    public static final ConfigKey<String> LOGIN_USER_PRIVATE_KEY_DATA = ConfigKeys.newStringConfigKey("loginUser.privateKeyData",
             "Custom private key for the user who logs in initially", null);   
-    public static final ConfigKey<String> KEY_PAIR = ConfigKeys.newStringConfigKey("keyPair", 
+    public static final ConfigKey<String> KEY_PAIR = ConfigKeys.newStringConfigKey("keyPair",
             "Custom keypair name to be re-used", null);
-    public static final ConfigKey<Boolean> AUTO_GENERATE_KEYPAIRS = new BasicConfigKey<Boolean>(Boolean.class, "jclouds.openstack-nova.auto-generate-keypairs", 
+    public static final ConfigKey<Boolean> AUTO_GENERATE_KEYPAIRS = ConfigKeys.newBooleanConfigKey("jclouds.openstack-nova.auto-generate-keypairs",
             "Whether to generate keypairs for Nova");
-    public static final ConfigKey<Boolean> AUTO_CREATE_FLOATING_IPS = new BasicConfigKey<Boolean>(Boolean.class, "jclouds.openstack-nova.auto-create-floating-ips", 
+    public static final ConfigKey<Boolean> AUTO_CREATE_FLOATING_IPS = ConfigKeys.newBooleanConfigKey("jclouds.openstack-nova.auto-create-floating-ips",
             "Whether to generate floating ips for Nova");
     // not supported in jclouds
 //    public static final ConfigKey<String> LOGIN_USER_PRIVATE_KEY_PASSPHRASE = ConfigKeys.newStringKey("loginUser.privateKeyPassphrase", 
 //            "Passphrase for the custom private key for the user who logs in initially", null);
-    public static final ConfigKey<String> LOGIN_USER_PRIVATE_KEY_FILE = ConfigKeys.newStringConfigKey("loginUser.privateKeyFile", 
+    public static final ConfigKey<String> LOGIN_USER_PRIVATE_KEY_FILE = ConfigKeys.newStringConfigKey("loginUser.privateKeyFile",
             "Custom private key for the user who logs in initially", null); 
-    public static final ConfigKey<String> EXTRA_PUBLIC_KEY_DATA_TO_AUTH = ConfigKeys.newStringConfigKey("extraSshPublicKeyData", 
+    public static final ConfigKey<String> EXTRA_PUBLIC_KEY_DATA_TO_AUTH = ConfigKeys.newStringConfigKey("extraSshPublicKeyData",
             "Additional public key data to add to authorized_keys", null);
     
-    public static final ConfigKey<Boolean> DONT_CREATE_USER = new BasicConfigKey<Boolean>(Boolean.class, "dontCreateUser", 
+    public static final ConfigKey<Boolean> DONT_CREATE_USER = ConfigKeys.newBooleanConfigKey("dontCreateUser", 
             "Whether to skip creation of 'user' when provisioning machines (default false)", false);
 
     public static final ConfigKey<LoginCredentials> CUSTOM_CREDENTIALS = new BasicConfigKey<LoginCredentials>(LoginCredentials.class, 
@@ -56,8 +56,10 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<String> GROUP_ID = ConfigKeys.newStringConfigKey("groupId");
     
     // jclouds compatibility
-    public static final ConfigKey<String> JCLOUDS_KEY_USERNAME = ConfigKeys.newStringConfigKey("userName", "Equivalent to 'user'; provided for jclouds compatibility", null);
-    public static final ConfigKey<String> JCLOUDS_KEY_ENDPOINT = ConfigKeys.newStringConfigKey(Constants.PROPERTY_ENDPOINT, "Equivalent to 'endpoint'; provided for jclouds compatibility", null);
+    public static final ConfigKey<String> JCLOUDS_KEY_USERNAME = ConfigKeys.newStringConfigKey(
+            "userName", "Equivalent to 'user'; provided for jclouds compatibility", null);
+    public static final ConfigKey<String> JCLOUDS_KEY_ENDPOINT = ConfigKeys.newStringConfigKey(
+            Constants.PROPERTY_ENDPOINT, "Equivalent to 'endpoint'; provided for jclouds compatibility", null);
 
     public static final ConfigKey<String> WAIT_FOR_SSHABLE = new BasicConfigKey<String>(String.class, "waitForSshable", 
             "Whether and how long to wait for a newly provisioned VM to be accessible via ssh; " +
@@ -74,11 +76,11 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
 
     public static final ConfigKey<Boolean> OS_64_BIT = ConfigKeys.newBooleanConfigKey("os64Bit", 
             "Whether to require 64-bit OS images (true), 32-bit images (false), or either (null)");
-    public static final ConfigKey<Integer> MIN_RAM = new BasicConfigKey<Integer>(Integer.class, "minRam", 
+    public static final ConfigKey<Integer> MIN_RAM = new BasicConfigKey<Integer>(Integer.class, "minRam",
             "Minimum amount of RAM (in MB), for use in selecting the machine/hardware profile", null);
-    public static final ConfigKey<Integer> MIN_CORES = new BasicConfigKey<Integer>(Integer.class, "minCores", 
+    public static final ConfigKey<Integer> MIN_CORES = new BasicConfigKey<Integer>(Integer.class, "minCores",
             "Minimum number of cores, for use in selecting the machine/hardware profile", null);
-    public static final ConfigKey<String> HARDWARE_ID = ConfigKeys.newStringConfigKey("hardwareId", 
+    public static final ConfigKey<String> HARDWARE_ID = ConfigKeys.newStringConfigKey("hardwareId",
             "A system-specific identifier for the hardware profile or machine type to be used when creating a VM", null);
     
     public static final ConfigKey<String> IMAGE_ID = ConfigKeys.newStringConfigKey("imageId", 
@@ -99,8 +101,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<TemplateBuilder> TEMPLATE_BUILDER = new BasicConfigKey<TemplateBuilder>(TemplateBuilder.class, "templateBuilder", 
             "A TemplateBuilder instance provided programmatically, to be used when creating a VM", null);
 
-
-    public static final ConfigKey<Object> SECURITY_GROUPS = new BasicConfigKey<Object>(Object.class, "securityGroups", 
+    public static final ConfigKey<Object> SECURITY_GROUPS = new BasicConfigKey<Object>(Object.class, "securityGroups",
             "Security groups to be applied when creating a VM, on supported clouds " +
             "(either a single group identifier as a String, or an Iterable<String> or String[])", null);
 
@@ -118,8 +119,8 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<Object> USER_METADATA = new BasicConfigKey<Object>(Object.class, "userMetadata", 
             "Arbitrary user metadata, as a map (or String of comma-separated key=value pairs), on supported clouds", null);
 
-    public static final ConfigKey<Boolean> MAP_DEV_RANDOM_TO_DEV_URANDOM = new BasicConfigKey<Boolean>(
-            Boolean.class, "installDevUrandom", "Map /dev/random to /dev/urandom to prevent halting on insufficient entropy", false);
+    public static final ConfigKey<Boolean> MAP_DEV_RANDOM_TO_DEV_URANDOM = ConfigKeys.newBooleanConfigKey(
+            "installDevUrandom", "Map /dev/random to /dev/urandom to prevent halting on insufficient entropy", false);
 
     public static final ConfigKey<JcloudsLocationCustomizer> JCLOUDS_LOCATION_CUSTOMIZER = new BasicConfigKey<JcloudsLocationCustomizer>(
             JcloudsLocationCustomizer.class, "customizer", "Optional location customizer", null);
@@ -127,12 +128,10 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<String> JCLOUDS_LOCATION_CUSTOMIZER_TYPE = ConfigKeys.newStringConfigKey(
             "customizerType", "Optional location customizer type (to be class-loaded and constructed with no-arg constructor)", null);
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static final ConfigKey<Collection<JcloudsLocationCustomizer>> JCLOUDS_LOCATION_CUSTOMIZERS = 
+    public static final ConfigKey<Collection<JcloudsLocationCustomizer>> JCLOUDS_LOCATION_CUSTOMIZERS =
             new BasicConfigKey<Collection<JcloudsLocationCustomizer>>(
-            // TODO messy uncast then cast ... how to fix this?
-            (Class<Collection<JcloudsLocationCustomizer>>) (Class) Collection.class,
-            "customizers", "Optional location customizers", null);
+                    new TypeToken<Collection<JcloudsLocationCustomizer>>() {},
+                    "customizers", "Optional location customizers", null);
 
     public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
     
@@ -142,14 +141,19 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
      * CUSTOM_MACHINE_SETUP_SCRIPT_URL accepts a URL location that points to a shell script. 
      * Please have a look at locations/jclouds/src/main/resources/sample/script/setup-server.sh as an example
      */
-    public static final ConfigKey<String> CUSTOM_MACHINE_SETUP_SCRIPT_URL = ConfigKeys.newStringConfigKey("setup.script", "Custom script to customize a node");
+    public static final ConfigKey<String> CUSTOM_MACHINE_SETUP_SCRIPT_URL = ConfigKeys.newStringConfigKey(
+            "setup.script", "Custom script to customize a node");
     
-    public static final ConfigKey<String> CUSTOM_MACHINE_SETUP_SCRIPT_VARS = ConfigKeys.newStringConfigKey("setup.script.vars", "vars to customize a setup.script i.e.: key1:value1,key2:value2");
+    public static final ConfigKey<String> CUSTOM_MACHINE_SETUP_SCRIPT_VARS = ConfigKeys.newStringConfigKey(
+            "setup.script.vars", "vars to customize a setup.script i.e.: key1:value1,key2:value2");
     
-    public static final ConfigKey<Boolean> GENERATE_HOSTNAME = new BasicConfigKey<Boolean>(Boolean.class, "generate.hostname", "Use the nodename generated by jclouds", false);
+    public static final ConfigKey<Boolean> GENERATE_HOSTNAME = ConfigKeys.newBooleanConfigKey(
+            "generate.hostname", "Use the nodename generated by jclouds", false);
 
-    public static final ConfigKey<Boolean> USE_PORT_FORWARDING = ConfigKeys.newBooleanConfigKey("portforwarding.enabled", "Whether to setup port-forwarding to subsequently access the VM (over the ssh port)", false);
-    public static final ConfigKey<JcloudsPortForwarderExtension> PORT_FORWARDER = ConfigKeys.newConfigKey(JcloudsPortForwarderExtension.class, "portforwarding.forwarder", "The port-forwarder to use");
+    public static final ConfigKey<Boolean> USE_PORT_FORWARDING = ConfigKeys.newBooleanConfigKey(
+            "portforwarding.enabled", "Whether to setup port-forwarding to subsequently access the VM (over the ssh port)", false);
+    public static final ConfigKey<JcloudsPortForwarderExtension> PORT_FORWARDER = ConfigKeys.newConfigKey(
+            JcloudsPortForwarderExtension.class, "portforwarding.forwarder", "The port-forwarder to use");
 
     public static final ConfigKey<Integer> MACHINE_CREATE_ATTEMPTS = ConfigKeys.newIntegerConfigKey(
             "machineCreateAttempts", "Number of times to retry if jclouds fails to create a VM", 1);
