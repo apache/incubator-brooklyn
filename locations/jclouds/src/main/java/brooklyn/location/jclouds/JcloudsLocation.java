@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 import org.jclouds.abiquo.compute.options.AbiquoTemplateOptions;
+import org.jclouds.cloudstack.compute.options.CloudStackTemplateOptions;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.config.AdminAccessConfiguration;
@@ -800,6 +801,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             ((EC2TemplateOptions)t).keyPair(((CharSequence)v).toString());
                         } else if (t instanceof NovaTemplateOptions) {
                             ((NovaTemplateOptions)t).keyPairName(((CharSequence)v).toString());
+                        } else if (t instanceof CloudStackTemplateOptions) {
+                            ((CloudStackTemplateOptions) t).keyPair(((CharSequence) v).toString());
                         } else {
                             LOG.info("ignoring keyPair({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
@@ -808,6 +811,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         if (t instanceof NovaTemplateOptions) {
                             ((NovaTemplateOptions)t).generateKeyPair((Boolean)v);
+                        } else if (t instanceof CloudStackTemplateOptions) {
+                            ((CloudStackTemplateOptions) t).generateKeyPair((Boolean) v);
                         } else {
                             LOG.info("ignoring auto_generate_keypair({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
