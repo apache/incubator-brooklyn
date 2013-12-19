@@ -5,9 +5,6 @@ import brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
 import brooklyn.entity.nosql.mongodb.MongoDBServer;
 import brooklyn.entity.proxying.EntitySpec;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class SimpleMongoDBReplicaSet extends ApplicationBuilder {
 
     protected void doBuild() {

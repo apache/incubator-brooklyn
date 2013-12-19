@@ -62,7 +62,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     private static final Logger LOG = LoggerFactory.getLogger(SshjTool.class);
 
     protected final int sshTries;
-    protected final int sshTriesTimeout;
+    protected final long sshTriesTimeout;
     protected final BackoffLimitedRetryHandler backoffLimitedRetryHandler;
 
     /** Terminal type name for {@code allocatePTY} option. */
@@ -93,10 +93,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     }
     
     public static class Builder<T extends SshjTool, B extends Builder<T,B>> extends AbstractSshToolBuilder<T,B> {
-        protected int connectTimeout;
-        protected int sessionTimeout;
+        protected long connectTimeout;
+        protected long sessionTimeout;
         protected int sshTries = 4;  //allow 4 tries by default, much safer
-        protected int sshTriesTimeout = 2*60*1000;  //allow 2 minutes by default (so if too slow trying sshTries times, abort anyway)
+        protected long sshTriesTimeout = 2*60*1000;  //allow 2 minutes by default (so if too slow trying sshTries times, abort anyway)
         protected long sshRetryDelay = 50L;
         
         @Override
@@ -232,7 +232,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File localFile) {
         InputStream contents = acquire(new GetFileAction(pathAndFileOnRemoteServer));
         try {
-            Files.copy(new InputStreamSupplier(contents), localFile);
+            Files.copy(InputStreamSupplier.of(contents), localFile);
             return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
         } catch (IOException e) {
             throw Exceptions.propagate(e);
@@ -679,7 +679,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 closeWhispering(output, this);
                 
                 try {
-                    int timeout = sshClientConnection.getSessionTimeout();
+                    long timeout = sshClientConnection.getSessionTimeout();
                     long timeoutEnd = System.currentTimeMillis() + timeout;
                     Exception last = null;
                     do {

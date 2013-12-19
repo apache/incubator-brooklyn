@@ -20,8 +20,10 @@ import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -316,6 +318,9 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
         if (phase.equalsIgnoreCase(CHECK_RUNNING)) {
             s.setTransient();
+            s.setFlag(SshTool.PROP_CONNECT_TIMEOUT, Duration.TEN_SECONDS.toMilliseconds());
+            s.setFlag(SshTool.PROP_SESSION_TIMEOUT, Duration.THIRTY_SECONDS.toMilliseconds());
+            s.setFlag(SshTool.PROP_SSH_TRIES, 1);
         }
 
         if (truth(flags.get(USE_PID_FILE))) {

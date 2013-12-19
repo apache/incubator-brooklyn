@@ -1,5 +1,19 @@
 package brooklyn.entity.nosql.mongodb;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
+import groovy.time.TimeDuration;
+
+import java.util.Collection;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
@@ -9,23 +23,16 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.javalang.JavaClassNames;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mongodb.DBObject;
-import groovy.time.TimeDuration;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import java.util.Collection;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotEquals;
-import static org.testng.Assert.assertNotNull;
 
 public class MongoDBReplicaSetIntegrationTest {
 
+    private static final Logger log = LoggerFactory.getLogger(MongoDBReplicaSetIntegrationTest.class);
+    
     private TestApplication app;
     private Collection<LocalhostMachineProvisioningLocation> localhostMachineProvisioningLocation;
 
@@ -131,7 +138,12 @@ public class MongoDBReplicaSetIntegrationTest {
     @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStopAReplicaSet" })
     public void testResizeToEvenNumberOfMembersIgnored() {
         final MongoDBReplicaSet replicaSet = makeAndStartReplicaSet(3, "resize-even-ignored");
-        replicaSet.resize(4);
+        try {
+            replicaSet.resize(4);
+        } catch (Exception e) {
+            log.info("Test "+JavaClassNames.niceClassAndMethod()+" resize threw error (not unexpected): "+e);
+            return ;
+        }
         TimeDuration thirtySeconds = new TimeDuration(0, 0, 30, 0);
         Asserts.succeedsContinually(ImmutableMap.of("timeout", thirtySeconds), new Runnable() {
             @Override
