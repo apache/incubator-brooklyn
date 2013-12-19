@@ -17,14 +17,7 @@ import brooklyn.util.CommandLineUtil;
 import com.google.common.collect.Lists;
 
 /**
- * Launches a 3-tier app with nginx, clustered jboss, and mysql.
- * <p>
- * Includes some advanced features such as KPI / derived sensors,
- * and annotations for use in a catalog.
- * <p>
- * This variant also increases minimum size to 2.  
- * Note the policy min size must have the same value,
- * otherwise it fights with cluster set up trying to reduce the cluster size!
+ * Sample showing a storm analyticscluster
  **/
 @Catalog(name="Storm Sample App",
 description="Creates a Storm analytics cluster",

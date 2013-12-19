@@ -108,7 +108,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
 
     /**
      * {@link Function} for use as the cluster's removal strategy. Chooses any entity with
-     * {@link MongoDBServer#REPLICA_SET_PRIMARY} true last of all.
+     * {@link MongoDBServer#IS_PRIMARY_REPLICA_SET} true last of all.
      */
     private static final Function<Collection<Entity>, Entity> NON_PRIMARY_REMOVAL_STRATEGY = new Function<Collection<Entity>, Entity>() {
         @Override
@@ -256,6 +256,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     private void serverRemoved(MongoDBServer server) {
         if (LOG.isDebugEnabled())
             LOG.debug("Scheduling removal of member from {}: {}", getReplicaSetName(), server);
+        // FIXME is there a chance of race here?
         if (server.equals(getAttribute(PRIMARY_ENTITY)))
             setAttribute(PRIMARY_ENTITY, null);
         executor.submit(removeMember(server));
@@ -308,6 +309,8 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         for (AttributeSensor<Long> sensor: SENSORS_TO_SUM)
             addEnricher(CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), sensor, sensor, null, null));
         
+        // FIXME would it be simpler to have a *subscription* on four or five sensors on allMembers, including SERVICE_UP
+        // (which we currently don't check), rather than an enricher, and call to an "update" method?
         addEnricher(CustomAggregatingEnricher.newEnricher(MutableMap.of("allMembers", true), MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT, MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT,
             new Function<Collection<String>,String>() {
                 @Override
@@ -338,7 +341,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             }));
 
 
-        subscribeToMembers(this, MongoDBServer.IS_PRIMARY_IN_REPLICA_SET, new SensorEventListener<Boolean>() {
+        subscribeToMembers(this, MongoDBServer.IS_PRIMARY_FOR_REPLICA_SET, new SensorEventListener<Boolean>() {
             @Override public void onEvent(SensorEvent<Boolean> event) {
                 if (Boolean.TRUE == event.getValue())
                     setAttribute(PRIMARY_ENTITY, (MongoDBServer)event.getSource());

@@ -16,6 +16,7 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.annotations.Beta;
 import com.google.common.reflect.TypeToken;
 
 @Catalog(name="MongoDB Server",
@@ -61,10 +62,12 @@ public interface MongoDBServer extends SoftwareProcess {
     AttributeSensor<String> HTTP_INTERFACE_URL = Sensors.newStringSensor(
             "mongodb.server.http_interface", "URL of the server's HTTP console");
 
+    @Beta
     AttributeSensor<BasicBSONObject> STATUS_BSON = Sensors.newSensor(BasicBSONObject.class,
             "mongodb.server.status.bson", "Server status (BSON Map format, serialized as toString)");
     
     @SuppressWarnings("serial")
+    @Beta
     AttributeSensor<Map<?,?>> STATUS_JSON = Sensors.newSensor(new TypeToken<Map<?,?>>() {},
         "mongodb.server.status.json", "Server status (Map format, nicely serialized to JSON)");
 
@@ -109,10 +112,10 @@ public interface MongoDBServer extends SoftwareProcess {
     AttributeSensor<ReplicaSetMemberStatus> REPLICA_SET_MEMBER_STATUS = Sensors.newSensor(
             ReplicaSetMemberStatus.class, "mongodb.server.replicaSet.memberStatus", "The status of this server in the replica set");
 
-    AttributeSensor<Boolean> IS_PRIMARY_IN_REPLICA_SET = Sensors.newBooleanSensor(
+    AttributeSensor<Boolean> IS_PRIMARY_FOR_REPLICA_SET = Sensors.newBooleanSensor(
             "mongodb.server.replicaSet.isPrimary", "True if this server is the write master for the replica set");
 
-    AttributeSensor<Boolean> IS_SECONDARY_IN_REPLICA_SET = Sensors.newBooleanSensor(
+    AttributeSensor<Boolean> IS_SECONDARY_FOR_REPLICA_SET = Sensors.newBooleanSensor(
             "mongodb.server.replicaSet.isSecondary", "True if this server is a secondary server in the replica set");
 
     AttributeSensor<String> REPLICA_SET_PRIMARY_ENDPOINT = Sensors.newStringSensor(

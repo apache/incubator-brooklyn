@@ -101,8 +101,8 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                     .build();
         } else {
             setAttribute(REPLICA_SET_NAME, null);
-            setAttribute(IS_PRIMARY_IN_REPLICA_SET, false);
-            setAttribute(IS_SECONDARY_IN_REPLICA_SET, false);
+            setAttribute(IS_PRIMARY_FOR_REPLICA_SET, false);
+            setAttribute(IS_SECONDARY_FOR_REPLICA_SET, false);
         }
 
         // Take interesting details from STATUS.
@@ -132,8 +132,8 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                         BasicBSONObject repl = (BasicBSONObject) map.get("repl");
                         if (replicaSetEnabled && repl != null) {
                             setAttribute(REPLICA_SET_NAME, repl.getString("setName"));
-                            setAttribute(IS_PRIMARY_IN_REPLICA_SET, repl.getBoolean("ismaster"));
-                            setAttribute(IS_SECONDARY_IN_REPLICA_SET, repl.getBoolean("secondary"));
+                            setAttribute(IS_PRIMARY_FOR_REPLICA_SET, repl.getBoolean("ismaster"));
+                            setAttribute(IS_SECONDARY_FOR_REPLICA_SET, repl.getBoolean("secondary"));
                             setAttribute(REPLICA_SET_PRIMARY_ENDPOINT, repl.getString("primary"));
                         }
                     }
