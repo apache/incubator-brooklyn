@@ -8,6 +8,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.drivers.EntityDriver;
+import brooklyn.location.Location;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
@@ -16,6 +19,7 @@ import brooklyn.util.exceptions.Exceptions;
 import com.google.common.annotations.Beta;
 import com.google.common.primitives.Primitives;
 
+@Beta
 public class JsonUtils {
 
     private static final Logger log = LoggerFactory.getLogger(JsonUtils.class);
@@ -51,12 +55,19 @@ public class JsonUtils {
         // primitives and strings are simple
         if (isPrimitiveOrBoxer(x.getClass()) || x instanceof String)
             return x;
+        
+        // these types should NOT be jsonified
+        if (x instanceof Entity || x instanceof EntityDriver || x instanceof Location)
+            return x.toString();
+        
         try {
             boolean resultIsGood;
             String result;
             
             result = mapper.writer().writeValueAsString(x);
             Class<?> type = x.getClass();
+            // FIXME contents of list/map/etc should use a recursive strategy
+            // (or configurethe mapper properly!)
             if (x instanceof List) type = MutableList.class;
             if (x instanceof Set) type = MutableSet.class;
             if (x instanceof Map) type = MutableMap.class;
@@ -72,6 +83,9 @@ public class JsonUtils {
                     log.trace("Inconsistent result serializing "+x+", as "+result+", but read in as "+check);
                 return x.toString();
             }
+        } catch (OutOfMemoryError e) {
+            log.warn("Memory leak trying to jsonify (returning as string): "+x);
+            return x.toString();
         } catch (Throwable e) {
             if (log.isTraceEnabled())
                 log.trace("Not able to serialize "+x+" ("+x.getClass()+"), returning toString: "+e);

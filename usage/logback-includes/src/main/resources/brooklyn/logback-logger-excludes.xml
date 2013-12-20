@@ -18,6 +18,10 @@
     <logger name="org.apache.whirr.service.ComputeCache" additivity="false">
         <appender-ref ref="FILE" />
     </logger>
+    <logger name="jclouds.ssh" additivity="false">
+        <!-- sometimes get '<< error authenticating (1 of 50)' at info when machine is booting, which get fixed soon after -->
+        <appender-ref ref="FILE" />
+    </logger>
 
     <!-- also noisy, using java.util.logging; see LoggingSetup for info on ensuring these get intercepted -->
     <logger name="org.apache.http.impl.client" additivity="false">

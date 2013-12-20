@@ -13,6 +13,7 @@ import java.util.Map;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.StackTraceSimplifier;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
@@ -23,6 +24,10 @@ import com.google.common.collect.ImmutableList;
  */
 public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implements VanillaJavaAppDriver {
 
+    // FIXME this should be a config, either on the entity or -- probably better -- 
+    // an alternative / override timeout on the SshTool for file copy commands
+    final static int NUM_RETRIES_FOR_COPYING = 4;
+    
     public VanillaJavaAppSshDriver(VanillaJavaAppImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -67,7 +72,9 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
                 toinstall = f;
             }
             
-            int result = machine.installTo(resource, toinstall, getRunDir() + "/" + "lib" + "/");
+            // FIXME define a new SshEffectorTasks.install task which does this
+            // (attempt to curl from the remote machine, then fall back to copying)
+            int result = install(toinstall, getRunDir() + "/" + "lib" + "/", NUM_RETRIES_FOR_COPYING);
             if (result != 0)
                 throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s",f,entity,machine));
             
@@ -87,6 +94,29 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
             if (result != 0)
                 throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s (failed to expand archive)",f,entity,machine));
         }
+    }
+
+    private int install(String urlToInstall, String target, int numAttempts) {
+        Exception lastError = null;
+        int retriesRemaining = numAttempts;
+        int attemptNum = 0;
+        do {
+            attemptNum++;
+            try {
+                return getMachine().installTo(resource, urlToInstall, target);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                lastError = e;
+                String stack = StackTraceSimplifier.toString(e);
+                if (stack.contains("net.schmizz.sshj.sftp.RemoteFile.write")) {
+                    log.warn("Failed to transfer "+urlToInstall+" to "+getMachine()+", retryable error, attempt "+attemptNum+"/"+numAttempts+": "+e);
+                    continue;
+                }
+                log.warn("Failed to transfer "+urlToInstall+" to "+getMachine()+", not a retryable error so failing: "+e);
+                throw Exceptions.propagate(e);
+            }
+        } while (--retriesRemaining > 0);
+        throw Exceptions.propagate(lastError);
     }
 
     @Override

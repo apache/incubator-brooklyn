@@ -145,7 +145,7 @@ public abstract class SshAbstractTool extends ShellAbstractTool implements SshTo
     }
 
     protected SshException propagate(Exception e, String message) throws SshException {
-        throw new SshException("(" + toString() + ") " + message + ":" + e.getMessage(), e);
+        throw new SshException("(" + toString() + ") " + message + ": " + e.getMessage(), e);
     }
     
 }
