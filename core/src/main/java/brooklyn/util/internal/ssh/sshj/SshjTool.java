@@ -359,7 +359,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                     LOG.debug("<< {} (rethrowing, out of retries): {}", fullMessage, e.getMessage());
                     throw propagate(e, fullMessage + "; out of retries");
                 } else if (sshTriesTimeout > 0 && stopwatch.elapsed(TimeUnit.MILLISECONDS) > sshTriesTimeout) {
-                    LOG.debug("<< {} (rethrowing, out of time): {}", fullMessage, e.getMessage());
+                    LOG.debug("<< {} (rethrowing, out of time - max {}): {}", new Object[] { fullMessage, Time.makeTimeString(sshTriesTimeout, true), e.getMessage() });
                     throw propagate(e, fullMessage + "; out of time");
                 } else {
                     if (LOG.isDebugEnabled()) LOG.debug("<< {}: {}", fullMessage, e.getMessage());

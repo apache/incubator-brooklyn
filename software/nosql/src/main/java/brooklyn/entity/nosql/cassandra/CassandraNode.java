@@ -64,7 +64,7 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
 
     @SetFromFlag("customSnitchJarUrl")
     ConfigKey<String> CUSTOM_SNITCH_JAR_URL = ConfigKeys.newStringConfigKey("cassandra.config.customSnitchUrl", 
-            "URL for a jar file to be uploaded (e.g. \"classpath://brooklyn/entity/nosql/cassandra/multiCloudSnitch.jar\"); defaults to null which means nothing to upload", 
+            "URL for a jar file to be uploaded (e.g. \"classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar\"); defaults to null which means nothing to upload", 
             null);
 
     @SetFromFlag("cassandraConfigTemplateUrl")

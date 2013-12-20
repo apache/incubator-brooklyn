@@ -217,6 +217,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             synchronized (portsObtained) {
                 if (r>0) portsObtained.add(r);
             }
+            LOG.debug("localhost.obtainPort("+range+"), returning "+r);
             return r;
         }
         public void releasePort(int portNumber) {

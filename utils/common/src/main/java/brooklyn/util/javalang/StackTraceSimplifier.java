@@ -1,5 +1,7 @@
 package brooklyn.util.javalang;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -148,6 +150,13 @@ public class StackTraceSimplifier {
     /** static convenience for {@link #cleaned(Throwable)} */
     public static <T extends Throwable> T cleanedStackTrace(T t) {
         return DEFAULT_INSTACE.cleaned(t);
+    }
+    
+    public static String toString(Throwable t) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        t.printStackTrace(pw);
+        return sw.getBuffer().toString();
     }
     
 }
