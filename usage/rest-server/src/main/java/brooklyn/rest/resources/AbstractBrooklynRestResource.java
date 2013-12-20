@@ -3,7 +3,6 @@ package brooklyn.rest.resources;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
-import brooklyn.rest.util.JsonUtils;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import javax.servlet.ServletContext;
@@ -11,8 +10,19 @@ import javax.ws.rs.core.Context;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.google.common.annotations.VisibleForTesting;
+
+import brooklyn.config.BrooklynServiceAttributes;
+import brooklyn.management.ManagementContext;
+import brooklyn.rest.util.BrooklynRestResourceUtils;
+import brooklyn.util.collections.Jsonya;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
+
 public abstract class AbstractBrooklynRestResource {
 
+    @VisibleForTesting
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
+    
     // can be injected by jersey when ManagementContext in not injected manually
     // (seems there is no way to make this optional so note it _must_ be injected;
     // most of the time that happens for free, but with test framework it doesn't,
@@ -22,7 +32,7 @@ public abstract class AbstractBrooklynRestResource {
     private ManagementContext managementContext;
     private BrooklynRestResourceUtils brooklynRestResourceUtils;
     private final ObjectMapper mapper = new ObjectMapper();
-    
+
     public synchronized ManagementContext mgmt() {
         if (managementContext!=null) return managementContext;
         managementContext = (ManagementContext) servletContext.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
@@ -54,7 +64,7 @@ public abstract class AbstractBrooklynRestResource {
     protected Object getValueForDisplay(Object value, boolean preferJson, boolean isJerseyReturnValue) {
         if (preferJson) {
             if (value==null) return null;
-            Object result = JsonUtils.toJsonable(value, mapper());
+            Object result = Jsonya.convertToJsonPrimitive(value);
             
             if (isJerseyReturnValue) {
                 if (result instanceof String)

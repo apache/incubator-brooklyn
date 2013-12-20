@@ -11,7 +11,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.domain.EntitySummary;
-import brooklyn.rest.util.JsonUtils;
 
 import com.google.common.collect.ImmutableMap;
 

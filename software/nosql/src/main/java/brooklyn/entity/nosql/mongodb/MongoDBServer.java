@@ -1,7 +1,5 @@
 package brooklyn.entity.nosql.mongodb;
 
-import java.util.Map;
-
 import org.bson.BasicBSONObject;
 
 import brooklyn.catalog.Catalog;
@@ -15,9 +13,6 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
-
-import com.google.common.annotations.Beta;
-import com.google.common.reflect.TypeToken;
 
 @Catalog(name="MongoDB Server",
     description="MongoDB (from \"humongous\") is a scalable, high-performance, open source NoSQL database",
@@ -62,15 +57,9 @@ public interface MongoDBServer extends SoftwareProcess {
     AttributeSensor<String> HTTP_INTERFACE_URL = Sensors.newStringSensor(
             "mongodb.server.http_interface", "URL of the server's HTTP console");
 
-    @Beta
     AttributeSensor<BasicBSONObject> STATUS_BSON = Sensors.newSensor(BasicBSONObject.class,
-            "mongodb.server.status.bson", "Server status (BSON Map format, serialized as toString)");
+            "mongodb.server.status.bson", "Server status (BSON/JSON map ojbect)");
     
-    @SuppressWarnings("serial")
-    @Beta
-    AttributeSensor<Map<?,?>> STATUS_JSON = Sensors.newSensor(new TypeToken<Map<?,?>>() {},
-        "mongodb.server.status.json", "Server status (Map format, nicely serialized to JSON)");
-
     AttributeSensor<Double> UPTIME_SECONDS = Sensors.newDoubleSensor(
             "mongodb.server.uptime", "Server uptime in seconds");
 

@@ -36,7 +36,6 @@ import brooklyn.rest.domain.UsageStatistic;
 import brooklyn.rest.domain.UsageStatistics;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
-import brooklyn.rest.util.JsonUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.internal.Repeater;
 
@@ -53,7 +52,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     private static final long TIMEOUT_MS = 10*1000;
     
     private Date testStartTime;
-    private DateFormat format = new SimpleDateFormat(JsonUtils.DATE_FORMAT);
+    private DateFormat format = new SimpleDateFormat(AbstractBrooklynRestResource.DATE_FORMAT);
     
     private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").
             entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).

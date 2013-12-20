@@ -3,15 +3,19 @@ package brooklyn.util.collections;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.primitives.Primitives;
 
 /** Jsonya = JSON-yet-another (tool) 
  * <p>
@@ -26,7 +30,7 @@ import com.google.common.base.Throwables;
 public class Jsonya {
 
     private Jsonya() {}
-    
+
     /** creates a {@link Navigator} backed by the given map (focussed at the root) */
     public static <T extends Map<?,?>> Navigator<T> of(T map) {
         return new Navigator<T>(map, MutableMap.class);
@@ -46,7 +50,44 @@ public class Jsonya {
     public static Navigator<MutableMap<Object,Object>> at(Object ...pathSegments) {
         return newInstance().atArray(pathSegments);
     }
+
+    /** as {@link #newInstance()} but using the given translator to massage objects inserted into the Jsonya structure */
+    public static Navigator<MutableMap<Object,Object>> newInstanceTranslating(Function<Object,Object> translator) {
+        return newInstance().useTranslator(translator);
+    }
+
+    /** as {@link #newInstanceTranslating(Function)} using an identity function
+     * (functionally equivalent to {@link #newInstance()} but explicit about it */
+    public static Navigator<MutableMap<Object,Object>> newInstanceLiteral() {
+        return newInstanceTranslating(Functions.identity());
+    }
+
+    /** as {@link #newInstanceTranslating(Function)} using a function which only supports JSON primitives:
+     * maps and collections are traversed, strings and primitives are inserted, and everything else has toString applied.
+     * see {@link JsonPrimitiveDeepTranslator} */
+    public static Navigator<MutableMap<Object,Object>> newInstancePrimitive() {
+        return newInstanceTranslating(new JsonPrimitiveDeepTranslator());
+    }
     
+    /** convenience for converting an object x to something which consists only of json primitives, doing
+     * {@link #toString()} on anything which is not recognised. see {@link JsonPrimitiveDeepTranslator} */
+    public static Object convertToJsonPrimitive(Object x) {
+        if (x==null) return null;
+        if (x instanceof Map) return newInstancePrimitive().put((Map<?,?>)x).getRootMap();
+        return newInstancePrimitive().put("data", x).getRootMap().get("data");
+    }
+
+    /** tells whether {@link #convertToJsonPrimitive(Object)} returns an object which is identical to
+     * the equivalent literal json structure. this is typically equivalent to saying serializing to json then
+     * deserializing will produce something where the result is equal to the input,
+     * modulo a few edge cases such as longs becoming ints.
+     * note that the converse (input equal to output) may not be the case,
+     * e.g. if the input contains special subclasses of collections of maps who care about type preservation. */
+    public static boolean isJsonPrimitiveCompatible(Object x) {
+        if (x==null) return true;
+        return convertToJsonPrimitive(x).equals(x);
+    }
+
     @SuppressWarnings({"rawtypes","unchecked"})
     public static class Navigator<T extends Map<?,?>> {
 
@@ -54,6 +95,7 @@ public class Jsonya {
         protected final Class<? extends Map> mapType;
         protected Object focus;
         protected Function<Object,Void> creationInPreviousFocus;
+        protected Function<Object,Object> translator;
 
         public Navigator(Object backingStore, Class<? extends Map> mapType) {
             this.root = Preconditions.checkNotNull(backingStore);
@@ -61,7 +103,7 @@ public class Jsonya {
             this.mapType = mapType;
         }
         
-        // -------------- access
+        // -------------- access and configuration
         
         /** returns the object at the focus, or null if none */
         public Object get() {
@@ -100,6 +142,30 @@ public class Jsonya {
             return (T)focus;
         }
 
+        /** specifies a translator function to use when new data is added;
+         * by default everything is added as a literal (ie {@link Functions#identity()}), 
+         * but if you want to do translation on the way in,
+         * set a translation function
+         * <p>
+         * note that translation should be idempotent as implementation may apply it multiple times in certain cases
+         */
+        public Navigator<T> useTranslator(Function<Object,Object> translator) {
+            this.translator = translator;
+            return this;
+        }
+        
+        protected Object translate(Object x) {
+            if (translator==null) return x;
+            return translator.apply(x);
+        }
+
+        protected Object translateKey(Object x) {
+            if (translator==null) return x;
+            // this could return the toString to make it strict json
+            // but json libraries seem to do that so not strictly necessary
+            return translator.apply(x);
+        }
+
         // ------------- navigation (map mainly)
 
         /** returns the navigator focussed at the indicated key sequence in the given map */
@@ -121,7 +187,7 @@ public class Jsonya {
             }
             if (focus instanceof List) {
                 Map m = newMap();
-                ((List)focus).add(m);
+                ((List)focus).add(translate(m));
                 focus = m;
                 return this;
             }
@@ -139,21 +205,21 @@ public class Jsonya {
             return this;
         }
         
-        protected static void putInternal(Map target, Object k1, Object v1, Object ...kvOthers) {
+        protected void putInternal(Map target, Object k1, Object v1, Object ...kvOthers) {
             assert (kvOthers.length % 2) == 0 : "even number of arguments required for put";
-            target.put(k1, v1);
+            target.put(translateKey(k1), translate(v1));
             for (int i=0; i<kvOthers.length; ) {
-                target.put(kvOthers[i++], kvOthers[i++]);    
+                target.put(translateKey(kvOthers[i++]), translate(kvOthers[i++]));    
             }
         }
 
         /** as {@link #put(Object, Object, Object...)} for the kv-pairs in the given map */
         public Navigator<T> put(Map map) {
             map();
-            ((Map)focus).putAll(map);
+            ((Map)focus).putAll((Map)translate(map));
             return this;
         }
-
+        
         protected Map newMap() {
             try {
                 return mapType.newInstance();
@@ -173,7 +239,8 @@ public class Jsonya {
             throw new IllegalStateException("focus here is "+focus+"; cannot descend to '"+pathSegment+"'");
         }
 
-        protected Navigator<T> downMap(final Object pathSegment) {
+        protected Navigator<T> downMap(Object pathSegmentO) {
+            final Object pathSegment = translateKey(pathSegmentO);
             final Map givenParentMap = (Map)focus;
             if (givenParentMap!=null) {
                 creationInPreviousFocus = null;
@@ -189,7 +256,7 @@ public class Jsonya {
                             parentMap = newMap();
                             previousCreation.apply(parentMap);
                         }
-                        parentMap.put(pathSegment, input);
+                        parentMap.put(pathSegment, translate(input));
                         return null;
                     }
                 };
@@ -259,12 +326,12 @@ public class Jsonya {
 
         /** adds the given arguments to a list at this point (will not descend into maps, and will not flatten lists) */
         public Navigator<T> addUnflattened(Object o1, Object ...others) {
-            ((Collection)focus).add(o1);
-            for (Object oi: others) ((Collection)focus).add(oi);
+            ((Collection)focus).add(translate(o1));
+            for (Object oi: others) ((Collection)focus).add(translate(oi));
             return this;
         }
         
-        protected static void addInternal(Object initialFocus, Object currentFocus, Object o1, Object ...others) {
+        protected void addInternal(Object initialFocus, Object currentFocus, Object o1, Object ...others) {
             if (currentFocus instanceof Map) {
                 Map target = (Map)currentFocus;
                 Map source;
@@ -275,15 +342,15 @@ public class Jsonya {
                         return ;
                     if (!(o1 instanceof Map))
                         throw new IllegalStateException("cannot add: focus here is "+currentFocus+" (in "+initialFocus+"); expected a collection, or a map (with a map being added, not "+o1+")");
-                    source = (Map)o1;
+                    source = (Map)translate(o1);
                 } else {
                     // build a source map from the arguments as key-value pairs
                     if ((others.length % 2)==0)
                         throw new IllegalArgumentException("cannot add an odd number of arguments to a map" +
                         		" ("+o1+" then "+Arrays.toString(others)+" in "+currentFocus+" in "+initialFocus+")");
-                    source = MutableMap.of(o1, others[0]);
+                    source = MutableMap.of(translateKey(o1), translate(others[0]));
                     for (int i=1; i<others.length; )
-                        source.put(others[i++], others[i++]);
+                        source.put(translateKey(others[i++]), translate(others[i++]));
                 }
                 // and add the source map to the target
                 for (Object entry : source.entrySet()) {
@@ -294,7 +361,7 @@ public class Jsonya {
                         target.put(key, sv);
                     } else {
                         addInternal(initialFocus, tv, sv);
-                    }                        
+                    }
                 }
                 return;
             }
@@ -306,7 +373,7 @@ public class Jsonya {
             for (Object oi: others) addFlattened((Collection)currentFocus, oi); 
         }
 
-        protected static void addFlattened(Collection target, Object item) {
+        protected void addFlattened(Collection target, Object item) {
             if (item instanceof Iterable) {
                 for (Object i: (Iterable)item)
                     addFlattened(target, i);
@@ -318,7 +385,7 @@ public class Jsonya {
                 return;
             }
             // nothing to flatten
-            target.add(item);
+            target.add(translate(item));
         }
         
         @Override
@@ -366,5 +433,82 @@ public class Jsonya {
         
         return render(""+focus);
     }
-    
+
+    /** Converts an object to one which uses standard JSON objects where possible
+     * (strings, numbers, booleans, maps, lists), and uses toString elsewhere */
+    public static class JsonPrimitiveDeepTranslator implements Function<Object,Object> {
+        public static JsonPrimitiveDeepTranslator INSTANCE = new JsonPrimitiveDeepTranslator();
+        
+        /** No need to instantiate except when subclassing. Use static {@link #INSTANCE}. */
+        protected JsonPrimitiveDeepTranslator() {}
+        
+        @Override
+        public Object apply(Object input) {
+            return apply(input, new HashSet<Object>());
+        }
+        
+        protected Object apply(Object input, Set<Object> stack) {
+            if (input==null) return applyNull(stack);
+            
+            if (isPrimitiveOrBoxer(input.getClass()))
+                return applyPrimitiveOrBoxer(input, stack);
+            
+            if (input instanceof String)
+                return applyString((String)input, stack);
+            
+            stack = new HashSet<Object>(stack);
+            if (!stack.add(input))
+                // fail if object is self-recursive; don't even try toString as that is dangerous
+                // (extra measure of safety, since maps and lists generally fail elsewhere with recursive entries, 
+                // eg in hashcode or toString)
+                return "[REF_ANCESTOR:"+stack.getClass()+"]";
+
+            if (input instanceof Collection<?>)
+                return applyCollection( (Collection<?>)input, stack );
+            
+            if (input instanceof Map<?,?>)
+                return applyMap( (Map<?,?>)input, stack );
+
+            return applyOther(input, stack);
+        }
+
+        protected Object applyNull(Set<Object> stack) {
+            return null;
+        }
+
+        protected Object applyPrimitiveOrBoxer(Object input, Set<Object> stack) {
+            return input;
+        }
+
+        protected Object applyString(String input, Set<Object> stack) {
+            return input.toString();
+        }
+
+        protected Object applyCollection(Collection<?> input, Set<Object> stack) {
+            MutableList<Object> result = MutableList.of();
+            
+            for (Object xi: input)
+                result.add(apply(xi, stack));
+
+            return result;
+        }
+
+        protected Object applyMap(Map<?, ?> input, Set<Object> stack) {
+            MutableMap<Object, Object> result = MutableMap.of();
+            
+            for (Map.Entry<?,?> xi: input.entrySet())
+                result.put(apply(xi.getKey(), stack), apply(xi.getValue(), stack));
+
+            return result;
+        }
+
+        protected Object applyOther(Object input, Set<Object> stack) {
+            return input.toString();
+        }        
+
+        public static boolean isPrimitiveOrBoxer(Class<?> type) {
+            return Primitives.allPrimitiveTypes().contains(type) || Primitives.allWrapperTypes().contains(type);
+        }
+    }
+
 }

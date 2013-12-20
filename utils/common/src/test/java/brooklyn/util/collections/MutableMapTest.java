@@ -1,5 +1,7 @@
 package brooklyn.util.collections;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.testng.Assert;
@@ -28,4 +30,12 @@ public class MutableMapTest {
         Assert.assertEquals(a, b);
     }
 
+    public void testListOfMaps() {
+        MutableMap<Object, Object> map = MutableMap.<Object,Object>of("a", 1, 2, Arrays.<Object>asList(true, "8"));
+        ArrayList<Object> l = new ArrayList<Object>();
+        l.add(true); l.add("8");
+        MutableMap<Object, Object> map2 = MutableMap.<Object,Object>of(2, l, "a", 1);
+        Assert.assertEquals(map, map2);
+    }
+    
 }

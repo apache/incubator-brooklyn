@@ -1,5 +1,6 @@
 package brooklyn.util.collections;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -115,5 +116,23 @@ public class JsonyaTest {
             "{ \"europe\": { \"uk\": { \"edinburgh\": { \"population\": 500000, \"weather\": \"wet\", \"lighting\": \"dark\" } },"
             + " \"france\": { \"population\": 80000000 } } }");
     }
-    
+
+    @Test
+    public void testPrimitivedAndLiteralledMap() {
+        Object foo = new Object() {
+            public String toString() { return "FOO"; }
+        };
+        
+        MutableMap<Object, Object> map = MutableMap.<Object,Object>of("a", 1, 2, Arrays.<Object>asList(true, 8, "8"), 'C', foo);
+        
+        Map<Object, Object> mapL = Jsonya.newInstanceLiteral().put(map).getRootMap();
+        Assert.assertEquals(mapL, map);
+        Assert.assertEquals(mapL.get('C'), foo);
+        
+        Map<Object, Object> mapP = Jsonya.newInstancePrimitive().put(map).getRootMap();
+        Assert.assertNotEquals(mapP, map);
+        Assert.assertEquals(mapP.get('C'), foo.toString());
+        Assert.assertEquals(MutableMap.copyOf(mapP).add('C', null), MutableMap.copyOf(map).add('C', null));
+    }
+
 }
