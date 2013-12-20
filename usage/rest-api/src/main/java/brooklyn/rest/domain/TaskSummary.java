@@ -10,7 +10,7 @@ import java.util.Set;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import brooklyn.rest.util.JsonUtils;
+import brooklyn.util.collections.Jsonya;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -98,7 +98,7 @@ public class TaskSummary {
   public Collection<Object> getTags() {
     List<Object> result = new ArrayList<Object>();
     for (Object t: tags)
-        result.add(JsonUtils.toJsonable(t));
+        result.add(Jsonya.convertToJsonPrimitive(t));
     return result;
   }
 

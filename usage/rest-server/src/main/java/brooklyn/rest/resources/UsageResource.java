@@ -22,7 +22,6 @@ import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.domain.UsageStatistic;
 import brooklyn.rest.domain.UsageStatistics;
 import brooklyn.rest.transform.ApplicationTransformer;
-import brooklyn.rest.util.JsonUtils;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
@@ -43,7 +42,7 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
     private static final ThreadLocal<SimpleDateFormat> DATE_FORMATTER = new ThreadLocal<SimpleDateFormat>(){
         @Override
         protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat(JsonUtils.DATE_FORMAT);
+            return new SimpleDateFormat(DATE_FORMAT);
         }
     };
     

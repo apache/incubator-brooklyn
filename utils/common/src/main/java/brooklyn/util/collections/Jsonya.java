@@ -51,21 +51,43 @@ public class Jsonya {
         return newInstance().atArray(pathSegments);
     }
 
-    // XXX
+    /** as {@link #newInstance()} but using the given translator to massage objects inserted into the Jsonya structure */
     public static Navigator<MutableMap<Object,Object>> newInstanceTranslating(Function<Object,Object> translator) {
         return newInstance().useTranslator(translator);
     }
 
-    // XXX
+    /** as {@link #newInstanceTranslating(Function)} using an identity function
+     * (functionally equivalent to {@link #newInstance()} but explicit about it */
     public static Navigator<MutableMap<Object,Object>> newInstanceLiteral() {
         return newInstanceTranslating(Functions.identity());
     }
 
-    // XXX
+    /** as {@link #newInstanceTranslating(Function)} using a function which only supports JSON primitives:
+     * maps and collections are traversed, strings and primitives are inserted, and everything else has toString applied.
+     * see {@link JsonPrimitiveDeepTranslator} */
     public static Navigator<MutableMap<Object,Object>> newInstancePrimitive() {
         return newInstanceTranslating(new JsonPrimitiveDeepTranslator());
     }
     
+    /** convenience for converting an object x to something which consists only of json primitives, doing
+     * {@link #toString()} on anything which is not recognised. see {@link JsonPrimitiveDeepTranslator} */
+    public static Object convertToJsonPrimitive(Object x) {
+        if (x==null) return null;
+        if (x instanceof Map) return newInstancePrimitive().put((Map<?,?>)x).getRootMap();
+        return newInstancePrimitive().put("data", x).getRootMap().get("data");
+    }
+
+    /** tells whether {@link #convertToJsonPrimitive(Object)} returns an object which is identical to
+     * the equivalent literal json structure. this is typically equivalent to saying serializing to json then
+     * deserializing will produce something where the result is equal to the input,
+     * modulo a few edge cases such as longs becoming ints.
+     * note that the converse (input equal to output) may not be the case,
+     * e.g. if the input contains special subclasses of collections of maps who care about type preservation. */
+    public static boolean isJsonPrimitiveCompatible(Object x) {
+        if (x==null) return true;
+        return convertToJsonPrimitive(x).equals(x);
+    }
+
     @SuppressWarnings({"rawtypes","unchecked"})
     public static class Navigator<T extends Map<?,?>> {
 

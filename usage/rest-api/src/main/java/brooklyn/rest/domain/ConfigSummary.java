@@ -5,17 +5,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.rest.util.JsonUtils;
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMap;
+import javax.annotation.Nullable;
+
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.util.collections.Jsonya;
 
-import javax.annotation.Nullable;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 
 public abstract class ConfigSummary {
 
@@ -87,7 +88,7 @@ public abstract class ConfigSummary {
           .toList();
     } else {
       this.type = config.getTypeName();
-      this.defaultValue = (config.getDefaultValue() == null) ? null : JsonUtils.toJsonable(config.getDefaultValue());
+      this.defaultValue = Jsonya.convertToJsonPrimitive(config.getDefaultValue());
       this.possibleValues = null;
     }
   }
