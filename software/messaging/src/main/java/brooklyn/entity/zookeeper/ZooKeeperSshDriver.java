@@ -15,18 +15,11 @@
  */
 package brooklyn.entity.zookeeper;
 
-import static java.lang.String.format;
-
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import brooklyn.entity.messaging.storm.Storm;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SshMachineLocation;
@@ -34,12 +27,17 @@ import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
-
 import brooklyn.util.task.Tasks;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import static java.lang.String.format;
 
 public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements ZooKeeperDriver {
 
@@ -63,6 +61,10 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
 
     protected String getConfigFileName() {
         return entity.getConfig(ZooKeeperNode.ZOOKEEPER_CONFIG_TEMPLATE);
+    }
+
+    protected int getMyId() {
+        return entity.getAttribute(ZooKeeperNode.MY_ID);
     }
 
    // FIXME All for one, and one for all! If any node fails then we're stuck waiting for its hostname/port forever.
@@ -123,7 +125,9 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
         Networking.checkPortsValid(getPortMap());
         newScript(CUSTOMIZING)
                 .body.append(
-                    format("cp -R %s/* .", getExpandedInstallDir())
+                    format("cp -R %s/* .", getExpandedInstallDir()),
+                    format("mkdir %s/zookeeper", getRunDir()),
+                    format("echo %d > %s/zookeeper/myid", getMyId(), getRunDir())
                 )
                 .execute();
         String destinationConfigFile = String.format("%s/conf/zoo.cfg", getRunDir());
