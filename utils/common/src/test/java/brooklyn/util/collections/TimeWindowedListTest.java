@@ -12,6 +12,7 @@ import brooklyn.util.collections.TimestampedValue;
 
 import com.google.common.collect.Lists;
 
+@SuppressWarnings({"rawtypes","unchecked"})
 public class TimeWindowedListTest {
 
     @Test
