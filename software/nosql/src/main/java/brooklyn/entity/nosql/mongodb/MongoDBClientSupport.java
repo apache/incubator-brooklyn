@@ -165,6 +165,7 @@ public class MongoDBClientSupport {
         }
 
         BasicBSONObject newConfig = ReplicaSetConfig.fromExistingConfig(existingConfig)
+                .primary(getServerHostAndPort())
                 .member(secondary, id)
                 .build();
         return reconfigureReplicaSet(newConfig);
@@ -184,6 +185,7 @@ public class MongoDBClientSupport {
             return false;
         }
         BasicBSONObject newConfig = ReplicaSetConfig.fromExistingConfig(existingConfig)
+                .primary(getServerHostAndPort())
                 .remove(server)
                 .build();
         return reconfigureReplicaSet(newConfig);

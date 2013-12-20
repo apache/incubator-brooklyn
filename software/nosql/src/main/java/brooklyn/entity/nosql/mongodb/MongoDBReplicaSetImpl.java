@@ -53,10 +53,6 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBReplicaSetImpl.class);
 
-    // 8th+ members should have 0 votes
-    private static final int MIN_MEMBERS = 3;
-    private static final int MAX_MEMBERS = 7;
-
     // Provides IDs for replica set members. The first member will have ID 0.
     private final AtomicInteger nextMemberId = new AtomicInteger(0);
 
@@ -108,7 +104,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
 
     /**
      * {@link Function} for use as the cluster's removal strategy. Chooses any entity with
-     * {@link MongoDBServer#IS_PRIMARY_REPLICA_SET} true last of all.
+     * {@link MongoDBServer#IS_PRIMARY_FOR_REPLICA_SET} true last of all.
      */
     private static final Function<Collection<Entity>, Entity> NON_PRIMARY_REMOVAL_STRATEGY = new Function<Collection<Entity>, Entity>() {
         @Override
@@ -167,34 +163,6 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                     }
                 })
                 .toList();
-    }
-
-    /**
-     * Ignore attempts to resize the replica set to an even number of entities to avoid
-     * having to introduce arbiters.
-     * @see <a href="http://docs.mongodb.org/manual/administration/replica-set-architectures/#arbiters">
-     *         http://docs.mongodb.org/manual/administration/replica-set-architectures/#arbiters</a>
-     * @param desired
-     *          The new size of the entity group. Ignored if even, less than {@link #MIN_MEMBERS}
-     *          or more than {@link #MAX_MEMBERS}.
-     * @return The eventual size of the replica set.
-     */
-    @Override
-    public Integer resize(Integer desired) {
-        // TODO support more modes than all-nodes-voting
-        // (as per https://github.com/brooklyncentral/brooklyn/issues/1116)
-        
-        if ((desired >= MIN_MEMBERS && desired <= MAX_MEMBERS && desired % 2 == 1) || desired == 0)
-            return super.resize(desired);
-        
-        if (desired % 2 == 0)
-            throw new IllegalStateException("Ignored request to resize replica set to even number of members (only voting nodes permitted currently)");
-        if (desired < MIN_MEMBERS)
-            throw new IllegalStateException("Ignored request to resize replica set to size smaller than minimum (only voting nodes permitted currently)");
-        if (desired > MAX_MEMBERS)
-            throw new IllegalStateException("Ignored request to resize replica set to size larger than maximum (only voting nodes permitted currently)");
-
-        return getCurrentSize();
     }
 
     /**
