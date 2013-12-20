@@ -49,9 +49,9 @@ public abstract class YamlLauncherAbstract {
     
     protected abstract BrooklynCampPlatformLauncherAbstract newPlatformLauncher();
 
-    public void launchAppYaml(String filename) {
+    public void launchAppYaml(String url) {
         try {
-            Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl(filename));
+            Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl(url));
             AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
 
             Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
@@ -64,7 +64,7 @@ public abstract class YamlLauncherAbstract {
             log.info("Waiting on "+tasks.size()+" task(s)");
             for (Task<?> t: tasks) t.blockUntilEnded();
 
-            log.info("Application started from YAML file "+filename+": "+app);
+            log.info("Application started from YAML file "+url+": "+app);
             Entities.dumpInfo(app);
         } catch (Exception e) {
             throw Exceptions.propagate(e);

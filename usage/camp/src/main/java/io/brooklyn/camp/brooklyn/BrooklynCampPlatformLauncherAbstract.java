@@ -23,7 +23,8 @@ public abstract class BrooklynCampPlatformLauncherAbstract {
     }
     
     public BrooklynCampPlatformLauncherAbstract launch() {
-        assert platform == null;
+        if (platform!=null)
+            throw new IllegalStateException("platform already created");
 
         if (getBrooklynMgmt()==null)
             useManagementContext(newMgmtContext());

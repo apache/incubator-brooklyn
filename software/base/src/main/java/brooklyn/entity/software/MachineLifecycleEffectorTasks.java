@@ -29,7 +29,7 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.LocationFunctions;
+import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
@@ -141,18 +141,10 @@ public abstract class MachineLifecycleEffectorTasks {
             MachineProvisioningLocation<?> provisioner = entity().getAttribute(SoftwareProcess.PROVISIONING_LOCATION);
             if (provisioner!=null) locations = Arrays.<Location>asList(provisioner);
         }
-        if (locations.isEmpty()) {
-            // look in parent if not set here
-            Entity parent = entity().getParent();
-            if (parent!=null) locations = parent.getLocations();
-        }
-        
-        if (locations.size() > 1) {
-            // if have more than one location then try disregarding any MachineProvisioningLocation
-            Collection<Location> locationsNonProvisioning = LocationFunctions.filter(locations, LocationFunctions.isNotOfType(MachineProvisioningLocation.class));
-            if (locationsNonProvisioning.size()==1)
-                locations = locationsNonProvisioning;
-        }
+        locations = Locations.getLocationsCheckingAncestors(locations, entity());
+
+        Optional<MachineLocation> ml = Locations.findUniqueMachineLocation(locations);
+        if (ml.isPresent()) return ml.get();
         
         if (locations.size() != 1 || Iterables.getOnlyElement(locations)==null)
             throw new IllegalArgumentException("Ambiguous locations detected when starting "+entity()+": "+locations);

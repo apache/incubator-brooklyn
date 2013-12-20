@@ -1,6 +1,6 @@
 name: Mongo3
 services:
 - serviceType: brooklyn.entity.nosql.mongodb.MongoDBReplicaSet
-  name: Mongo Replica Set
+  name: MongoDB Replica Set
   brooklyn.config:
     cluster.initial.size: 3

@@ -17,7 +17,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.ApplicationBuilder
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTasks
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.trait.Changeable
@@ -29,7 +29,6 @@ import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.exceptions.Exceptions
-import brooklyn.util.internal.TimeExtras
 
 import com.google.common.base.Predicates
 import com.google.common.collect.ImmutableList
@@ -40,8 +39,6 @@ import com.google.common.collect.Iterables
 class DynamicClusterTest {
 
     private static final int TIMEOUT_MS = 2000
-
-    static { TimeExtras.init() }
 
     TestApplication app
     SimulatedLocation loc
@@ -84,31 +81,6 @@ class DynamicClusterTest {
             fail();
         } catch (Exception e) {
             if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
-        }
-    }
-
-    @Test
-    public void startMethodFailsIfLocationsParameterIsMissing() {
-        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
-                .configure("factory", { new TestEntityImpl() }));
-        try {
-            cluster.start(null)
-            fail();
-        } catch (Exception e) {
-            if (!e.toString().contains("Null location supplied")) throw e;
-            if (Exceptions.getFirstThrowableOfType(e, NullPointerException.class) == null) throw e;
-        }
-    }
-
-    @Test
-    public void startMethodFailsIfLocationsParameterIsEmpty() {
-        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
-                .configure("factory", { new TestEntityImpl() }));
-        try {
-            cluster.start([])
-            fail();
-        } catch (Exception e) {
-            if (Exceptions.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
         }
     }
 

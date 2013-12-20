@@ -14,7 +14,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocationFunctions.LocationsFilter;
+import brooklyn.location.basic.Locations.LocationsFilter;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;

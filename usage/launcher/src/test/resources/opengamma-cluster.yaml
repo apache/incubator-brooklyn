@@ -1,4 +1,5 @@
 name: opengamma-cluster
+location: gce-europe-west1
 services:
 - type: Cluster
   name: OG Back-End

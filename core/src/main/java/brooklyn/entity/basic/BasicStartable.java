@@ -7,7 +7,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.location.basic.LocationFunctions;
+import brooklyn.location.basic.Locations;
 
 import com.google.common.collect.ImmutableList;
 
@@ -17,10 +17,10 @@ import com.google.common.collect.ImmutableList;
 @ImplementedBy(BasicStartableImpl.class)
 public interface BasicStartable extends Entity, Startable {
 
-    /** @deprecated since 0.7.0; use {@link LocationFunctions#LocationFilter} */
+    /** @deprecated since 0.7.0; use {@link Locations#LocationFilter} */
     @Deprecated
-    public interface LocationsFilter extends LocationFunctions.LocationsFilter {
-        /** @deprecated since 0.7.0; use {@link LocationFunctions#USE_FIRST_LOCATION} */
+    public interface LocationsFilter extends Locations.LocationsFilter {
+        /** @deprecated since 0.7.0; use {@link Locations#USE_FIRST_LOCATION} */
         public static final LocationsFilter USE_FIRST_LOCATION = new LocationsFilter() {
             private static final long serialVersionUID = 3100091615409115890L;
 
@@ -32,6 +32,6 @@ public interface BasicStartable extends Entity, Startable {
         };
     }
 
-    public static final ConfigKey<brooklyn.location.basic.LocationFunctions.LocationsFilter> LOCATIONS_FILTER = ConfigKeys.newConfigKey(brooklyn.location.basic.LocationFunctions.LocationsFilter.class,
+    public static final ConfigKey<brooklyn.location.basic.Locations.LocationsFilter> LOCATIONS_FILTER = ConfigKeys.newConfigKey(brooklyn.location.basic.Locations.LocationsFilter.class,
             "brooklyn.locationsFilter", "Provides a hook for customizing locations to be used for a given context");
 }

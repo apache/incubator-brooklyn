@@ -5,17 +5,18 @@ import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterables;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
-import brooklyn.location.MachineProvisioningLocation;
+import brooklyn.location.MachineLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
-import brooklyn.location.basic.LocationFunctions;
+import brooklyn.location.basic.Locations;
 import brooklyn.util.flags.TypeCoercions;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
 
 /**
  * A {@link Sensor} describing a port on a system,
@@ -43,14 +44,11 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
     }
     protected Integer convertConfigToSensor(PortRange value, Entity entity) {
         if (value==null) return null;
-        Collection<Location> locations = entity.getLocations();
+        Collection<? extends Location> locations = entity.getLocations();
         if (!locations.isEmpty()) {
-            if (locations.size()>1) {
-                Collection<Location> l2 = LocationFunctions.filter(locations, LocationFunctions.isNotOfType(MachineProvisioningLocation.class));
-                if (l2.size()==1) locations = l2;
-            }
-            if (locations.size()==1) {
-                Location l = locations.iterator().next();
+            Optional<MachineLocation> lo = Locations.findUniqueMachineLocation(locations);
+            if (lo.isPresent()) {
+                Location l = lo.get();
                 if (l instanceof PortSupplier) {
                     int p = ((PortSupplier)l).obtainPort(value);
                     if (p!=-1) {
@@ -84,4 +82,5 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
         }
         return null;
     }
+    
 }

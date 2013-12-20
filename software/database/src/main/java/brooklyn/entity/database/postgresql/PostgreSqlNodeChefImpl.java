@@ -16,7 +16,7 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.location.Location;
+import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.Jsonya;
@@ -24,7 +24,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 
-import com.google.common.collect.Iterables;
+import com.google.common.base.Optional;
 
 public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements PostgreSqlNode {
 
@@ -101,19 +101,19 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
     protected void connectSensors() {
         setAttribute(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
 
-        Location machine = Iterables.get(getLocations(), 0, null);
+        Optional<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
 
-        if (machine instanceof SshMachineLocation) {
+        if (machine.isPresent()) {
             feed = SshFeed.builder()
                     .entity(this)
-                    .machine((SshMachineLocation)machine)
+                    .machine(machine.get())
                     .poll(new SshPollConfig<Boolean>(SERVICE_UP)
                             .command("ps -ef | grep [p]ostgres")
                             .setOnSuccess(true)
                             .setOnFailureOrException(false))
                     .build();
         } else {
-            LOG.warn("Location(s) %s not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
+            LOG.warn("Location(s) {} not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
         }
     }
 

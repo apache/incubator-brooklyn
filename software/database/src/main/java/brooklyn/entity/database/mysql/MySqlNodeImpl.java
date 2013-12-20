@@ -11,7 +11,7 @@ import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
-import brooklyn.location.Location;
+import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -20,7 +20,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
+import com.google.common.base.Optional;
 
 public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
 
@@ -74,14 +74,14 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
          *   Uptime: 2427  Threads: 1  Questions: 581  Slow queries: 0  Opens: 53  Flush tables: 1  Open tables: 35  Queries per second avg: 0.239
          * So can extract lots of sensors from that.
          */
-        Location machine = Iterables.get(getLocations(), 0, null);
+        Optional<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
         
-        if (machine instanceof SshMachineLocation) {
+        if (machine.isPresent()) {
             String cmd = getDriver().getStatusCmd();
             feed = SshFeed.builder()
                     .entity(this)
                     .period(Duration.FIVE_SECONDS)
-                    .machine((SshMachineLocation)machine)
+                    .machine(machine.get())
                     .poll(new SshPollConfig<Boolean>(SERVICE_UP)
                             .command(cmd)
                             .setOnSuccess(true)
@@ -97,7 +97,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
                             .setOnFailureOrException(null) )
                     .build();
         } else {
-            LOG.warn("Location(s) %s not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
+            LOG.warn("Location(s) {} not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
             setAttribute(SERVICE_UP, true);
         }
     }
