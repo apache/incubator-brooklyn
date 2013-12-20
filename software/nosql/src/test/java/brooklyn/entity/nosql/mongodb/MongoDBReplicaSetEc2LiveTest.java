@@ -9,10 +9,13 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mongodb.DBObject;
+
 import groovy.time.TimeDuration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -24,6 +27,7 @@ import static org.testng.Assert.assertNotNull;
 
 public class MongoDBReplicaSetEc2LiveTest extends AbstractEc2LiveTest {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBReplicaSetEc2LiveTest.class);
     private static final Integer REPLICA_SET_SIZE = 3;
     private static final TimeDuration TIMEOUT = new TimeDuration(0, 0, 180, 0);

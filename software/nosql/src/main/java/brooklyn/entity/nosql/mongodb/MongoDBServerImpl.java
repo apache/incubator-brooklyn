@@ -15,7 +15,6 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
@@ -109,7 +108,6 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         subscribe(this, STATUS_BSON, new SensorEventListener<BasicBSONObject>() {
                 @Override public void onEvent(SensorEvent<BasicBSONObject> event) {
                     BasicBSONObject map = event.getValue();
-                    setAttribute(STATUS_JSON, MutableMap.copyOf(map));
                     if (map != null && !map.isEmpty()) {
                         setAttribute(UPTIME_SECONDS, map.getDouble("uptime", 0));
 
