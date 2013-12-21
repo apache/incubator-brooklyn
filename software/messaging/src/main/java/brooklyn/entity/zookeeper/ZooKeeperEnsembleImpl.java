@@ -42,7 +42,7 @@ public class ZooKeeperEnsembleImpl extends DynamicClusterImpl implements ZooKeep
         log.info("Initializing the ZooKeeper Ensemble");
         super.init();
 
-        AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "ZooKeeperEnsemble")) {
+        AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Members tracker")) {
             @Override
             protected void onEntityChange(Entity member) {
             }
@@ -52,10 +52,12 @@ public class ZooKeeperEnsembleImpl extends DynamicClusterImpl implements ZooKeep
                 if (member.getAttribute(ZooKeeperNode.MY_ID) == null) {
                     ((EntityInternal) member).setAttribute(ZooKeeperNode.MY_ID, myId.incrementAndGet());
                 }
+                setAttribute(SERVICE_UP, calculateServiceUp());
             }
 
             @Override
             protected void onEntityRemoved(Entity member) {
+                setAttribute(SERVICE_UP, calculateServiceUp());
             }
         };
         addPolicy(policy);

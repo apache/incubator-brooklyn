@@ -76,15 +76,15 @@ public abstract class AbstractZooKeeperImpl extends SoftwareProcessImpl implemen
                 .pollAttribute(new JmxAttributePollConfig<Long>(OUTSTANDING_REQUESTS)
                         .objectName(ZOOKEEPER_MBEAN)
                         .attributeName("OutstandingRequests")
-                        .onError(Functions.constant(-1l)))
+                        .onFailureOrException(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(PACKETS_RECEIVED)
                         .objectName(ZOOKEEPER_MBEAN)
                         .attributeName("PacketsReceived")
-                        .onError(Functions.constant(-1l)))
+                        .onFailureOrException(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(PACKETS_SENT)
                         .objectName(ZOOKEEPER_MBEAN)
                         .attributeName("PacketsSent")
-                        .onError(Functions.constant(-1l)))
+                        .onFailureOrException(Functions.constant(-1l)))
                 .build();
         }
     }

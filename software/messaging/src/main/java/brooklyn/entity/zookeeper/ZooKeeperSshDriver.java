@@ -76,10 +76,12 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
 
       for (Entity member : ensemble.getMembers()) {
          ZooKeeperNode server = (ZooKeeperNode) member;
+         Integer myid = attributeWhenReady(server, ZooKeeperNode.MY_ID);
          String hostname = attributeWhenReady(server, ZooKeeperNode.HOSTNAME);
          Integer port = attributeWhenReady(server, ZooKeeperNode.ZOOKEEPER_PORT);
+         Integer leaderPort = attributeWhenReady(server, ZooKeeperNode.ZOOKEEPER_LEADER_PORT);
          Integer electionPort = attributeWhenReady(server, ZooKeeperNode.ZOOKEEPER_ELECTION_PORT);
-         result.add(new ZooKeeperServerConfig(hostname, port, electionPort));
+         result.add(new ZooKeeperServerConfig(myid, hostname, port, leaderPort, electionPort));
       }
       return result;
    }
@@ -152,14 +154,21 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
    }
 
    public static class ZooKeeperServerConfig {
+      private final Integer myid;
       private final String hostname;
       private final Integer port;
+      private final Integer leaderPort;
       private final Integer electionPort;
 
-      public ZooKeeperServerConfig(String hostname, Integer port, Integer electionPort) {
+      public ZooKeeperServerConfig(Integer myid, String hostname, Integer port, Integer leaderPort, Integer electionPort) {
+         this.myid = myid;
          this.hostname = hostname;
          this.port = port;
+         this.leaderPort = leaderPort;
          this.electionPort = electionPort;
+      }
+      public Integer getMyid() {
+         return myid;
       }
       public String getHostname() {
          return hostname;
@@ -167,8 +176,11 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
       public Integer getPort() {
          return port;
       }
+      public Integer getLeaderPort() {
+          return leaderPort;
+      }
       public Integer getElectionPort() {
-         return electionPort;
+          return electionPort;
       }
    }
 }
