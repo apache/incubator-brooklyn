@@ -396,8 +396,8 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             setAttribute(SERVICE_UP, upNode.isPresent());
 
             if (upNode.isPresent()) {
-                setAttribute(HOSTNAME, upNode.get().getAttribute(HOSTNAME));
-                setAttribute(THRIFT_PORT, upNode.get().getAttribute(THRIFT_PORT));
+                setAttribute(HOSTNAME, upNode.get().getAttribute(Attributes.HOSTNAME));
+                setAttribute(THRIFT_PORT, upNode.get().getAttribute(CassandraNode.THRIFT_PORT));
 
                 List<String> currentNodes = getAttribute(CASSANDRA_CLUSTER_NODES);
                 Set<String> oldNodes = (currentNodes != null) ? ImmutableSet.copyOf(currentNodes) : ImmutableSet.<String>of();
@@ -408,7 +408,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
                         newNodes.add(address.toString());
                     }
                 }
-                if (Sets.difference(oldNodes, newNodes).size() > 0) {
+                if (Sets.symmetricDifference(oldNodes, newNodes).size() > 0) {
                     setAttribute(CASSANDRA_CLUSTER_NODES, MutableList.copyOf(newNodes));
                 }
             } else {
