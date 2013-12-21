@@ -57,6 +57,9 @@ public class Poller<V> {
                             handler.onFailure(val);
                         }
                     } catch (Exception e) {
+                        // 2013-12-21 AH adding add'l logging because seeing strange scheduled task abortion from here
+                        // even though all paths should be catching it
+                        log.debug("PollJob for "+job+" handling "+e+" using "+handler);
                         handler.onException(e);
                     }
                 }

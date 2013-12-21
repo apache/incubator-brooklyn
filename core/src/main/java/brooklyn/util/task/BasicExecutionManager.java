@@ -282,7 +282,7 @@ public class BasicExecutionManager implements ExecutionManager {
 				        try {
 				            result = oldJob.call();
 				        } catch (Exception e) {
-				            log.warn("Error executing "+oldJob+" ("+task.getDescription()+")", e);
+				            log.warn("Error executing "+oldJob+" (scheduled job of "+task+" - "+task.getDescription()+"); cancelling scheduled execution", e);
 				            throw Exceptions.propagate(e);
 				        }
 				        task.runCount++;

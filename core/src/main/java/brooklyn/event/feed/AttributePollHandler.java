@@ -122,7 +122,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         if (!feed.isConnected()) {
             if (log.isDebugEnabled()) log.debug("Read of {} from {} gave exception (while not connected or not yet connected): {}", new Object[] {this, entity, exception});
         } else {
-            logProblem("failure", exception);
+            logProblem("exception", exception);
         }
 
         if (config.hasExceptionHandler()) {

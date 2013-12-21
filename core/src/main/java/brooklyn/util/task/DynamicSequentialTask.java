@@ -187,6 +187,11 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             }
             return result;
         }
+        
+        @Override
+        public String toString() {
+            return "DstJob:"+DynamicSequentialTask.this;
+        }
     }
 
     @Override
