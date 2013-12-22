@@ -1,7 +1,5 @@
 package brooklyn.qa.longevity.webcluster;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -70,9 +68,5 @@ public class SinusoidalLoadGenerator extends AbstractEnricher {
     @Override
     public void destroy() {
         executor.shutdownNow();
-    }
-    
-    private <T> T getRequiredConfig(ConfigKey<T> key) {
-        return checkNotNull(getConfig(key), key);
     }
 }
