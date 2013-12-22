@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.basic.SensorPropagatingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
@@ -180,10 +180,14 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
     }
     
     void connectSensors() {
-        SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(getCluster(), SERVICE_UP, ROOT_URL).
-            addToEntityAndEmitAll(this);
-        SensorPropagatingEnricher.newInstanceListeningTo(getController(), LoadBalancer.HOSTNAME, SERVICE_UP, ROOT_URL).
-            addToEntityAndEmitAll(this);
+        addEnricher(Enrichers.builder()
+                .propagatingAllBut(SERVICE_UP, ROOT_URL)
+                .from(getCluster())
+                .build());
+        addEnricher(Enrichers.builder()
+                .propagating(LoadBalancer.HOSTNAME, SERVICE_UP, ROOT_URL)
+                .from(getController())
+                .build());
     }
 
     public Integer resize(Integer desiredSize) {

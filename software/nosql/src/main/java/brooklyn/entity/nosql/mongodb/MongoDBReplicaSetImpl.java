@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.CustomAggregatingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
@@ -280,39 +280,52 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         policy.setGroup(this);
 
         for (AttributeSensor<Long> sensor: SENSORS_TO_SUM)
-            addEnricher(CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), sensor, sensor, null, null));
+            addEnricher(Enrichers.builder()
+                    .aggregating(sensor)
+                    .publishing(sensor)
+                    .fromMembers()
+                    .valueToReportIfNoSensors(null)
+                    .defaultValueForUnreportedSensors(null)
+                    .build());
         
         // FIXME would it be simpler to have a *subscription* on four or five sensors on allMembers, including SERVICE_UP
         // (which we currently don't check), rather than an enricher, and call to an "update" method?
-        addEnricher(CustomAggregatingEnricher.newEnricher(MutableMap.of("allMembers", true), MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT, MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT,
-            new Function<Collection<String>,String>() {
-                @Override
-                public String apply(Collection<String> input) {
-                    if (input==null || input.isEmpty()) return null;
-                    Set<String> distinct = MutableSet.of();
-                    for (String endpoint: input)
-                        if (!Strings.isBlank(endpoint))
-                            distinct.add(endpoint);
-                    if (distinct.size()>1) 
-                        LOG.warn("Mongo replica set "+MongoDBReplicaSetImpl.this+" detetcted multiple masters (transitioning?): "+distinct);
-                    return input.iterator().next();
-                }
-            }));
+        addEnricher(Enrichers.builder()
+                .aggregating(MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT)
+                .publishing(MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT)
+                .fromMembers()
+                .valueToReportIfNoSensors(null)
+                .computing(new Function<Collection<String>,String>() {
+                        @Override
+                        public String apply(Collection<String> input) {
+                            if (input==null || input.isEmpty()) return null;
+                            Set<String> distinct = MutableSet.of();
+                            for (String endpoint: input)
+                                if (!Strings.isBlank(endpoint))
+                                    distinct.add(endpoint);
+                            if (distinct.size()>1) 
+                                LOG.warn("Mongo replica set "+MongoDBReplicaSetImpl.this+" detetcted multiple masters (transitioning?): "+distinct);
+                            return input.iterator().next();
+                        }})
+                .build());
 
-        addEnricher(CustomAggregatingEnricher.newEnricher(MutableMap.of("allMembers", true), MongoDBServer.MONGO_SERVER_ENDPOINT, REPLICA_SET_ENDPOINTS,
-            new Function<Collection<String>,List<String>>() {
-                @Override
-                public List<String> apply(Collection<String> input) {
-                    Set<String> endpoints = new TreeSet<String>();
-                    for (String endpoint: input) {
-                        if (!Strings.isBlank(endpoint)) {
-                            endpoints.add(endpoint);
-                        }
-                    }
-                    return MutableList.copyOf(endpoints);
-                }
-            }));
-
+        addEnricher(Enrichers.builder()
+                .aggregating(MongoDBServer.MONGO_SERVER_ENDPOINT)
+                .publishing(REPLICA_SET_ENDPOINTS)
+                .fromMembers()
+                .valueToReportIfNoSensors(null)
+                .computing(new Function<Collection<String>,List<String>>() {
+                        @Override
+                        public List<String> apply(Collection<String> input) {
+                            Set<String> endpoints = new TreeSet<String>();
+                            for (String endpoint: input) {
+                                if (!Strings.isBlank(endpoint)) {
+                                    endpoints.add(endpoint);
+                                }
+                            }
+                            return MutableList.copyOf(endpoints);
+                        }})
+                .build());
 
         subscribeToMembers(this, MongoDBServer.IS_PRIMARY_FOR_REPLICA_SET, new SensorEventListener<Boolean>() {
             @Override public void onEvent(SensorEvent<Boolean> event) {

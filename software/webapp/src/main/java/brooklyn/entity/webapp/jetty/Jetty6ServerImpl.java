@@ -5,14 +5,13 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.basic.AddingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
-import brooklyn.event.Sensor;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.util.time.Duration;
@@ -63,8 +62,11 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                     // NB: requestsActive may be useful
                     .build();
             
-            addEnricher(new AddingEnricher(new Sensor[] { RESPONSES_4XX_COUNT, RESPONSES_5XX_COUNT },
-                    ERROR_COUNT));
+            addEnricher(Enrichers.builder()
+                    .combining(RESPONSES_4XX_COUNT, RESPONSES_5XX_COUNT)
+                    .publishing(ERROR_COUNT)
+                    .computingSum()
+                    .build());
 
             jmxFeedMx = JavaAppUtils.connectMXBeanSensors(this);
             JavaAppUtils.connectJavaAppServerPolicies(this);

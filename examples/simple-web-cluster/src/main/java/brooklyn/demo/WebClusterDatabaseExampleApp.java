@@ -13,9 +13,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.Catalog;
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.Enrichers;
 import brooklyn.enricher.HttpLatencyDetector;
-import brooklyn.enricher.basic.SensorPropagatingEnricher;
-import brooklyn.enricher.basic.SensorTransformingEnricher;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
@@ -38,7 +37,7 @@ import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.CommandLineUtil;
 import brooklyn.util.ResourceUtils;
 
-import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 /**
@@ -128,12 +127,17 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
                 sizeRange(2, 5).
                 build());
 
-        addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(web,  
-                WebAppServiceConstants.ROOT_URL,
-                DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW,
-                HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW));
-        addEnricher(SensorTransformingEnricher.newInstanceTransforming(web, 
-                DynamicWebAppCluster.GROUP_SIZE, Functions.<Integer>identity(), APPSERVERS_COUNT));
+        addEnricher(Enrichers.builder()
+                .propagating(WebAppServiceConstants.ROOT_URL,
+                        DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW,
+                        HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW)
+                .from(web)
+                .build());
+
+        addEnricher(Enrichers.builder()
+                .propagating(ImmutableMap.of(DynamicWebAppCluster.GROUP_SIZE, APPSERVERS_COUNT))
+                .from(web)
+                .build());
     }
     
     public static void main(String[] argv) {

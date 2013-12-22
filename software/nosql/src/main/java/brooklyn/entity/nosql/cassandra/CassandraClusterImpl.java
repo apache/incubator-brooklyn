@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.CustomAggregatingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.DynamicGroup;
@@ -361,15 +361,28 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         for (List<? extends AttributeSensor<? extends Number>> es : summingEnricherSetup) {
             AttributeSensor<? extends Number> t = es.get(0);
             AttributeSensor<? extends Number> total = es.get(1);
-            CustomAggregatingEnricher<?,?> totaller = CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), t, total, null, null);
-            addEnricher(totaller);
+            addEnricher(Enrichers.builder()
+                    .aggregating(t)
+                    .publishing(total)
+                    .fromMembers()
+                    .computingSum()
+                    .defaultValueForUnreportedSensors(null)
+                    .valueToReportIfNoSensors(null)
+                    .build());
         }
         
         for (List<? extends AttributeSensor<? extends Number>> es : averagingEnricherSetup) {
             AttributeSensor<Number> t = (AttributeSensor<Number>) es.get(0);
             AttributeSensor<Double> average = (AttributeSensor<Double>) es.get(1);
-            CustomAggregatingEnricher<?,?> averager = CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), t, average, null, null);
-            addEnricher(averager);
+            addEnricher(Enrichers.builder()
+                    .aggregating(t)
+                    .publishing(average)
+                    .fromMembers()
+                    .computingAverage()
+                    .defaultValueForUnreportedSensors(null)
+                    .valueToReportIfNoSensors(null)
+                    .build());
+
         }
 
         subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {
