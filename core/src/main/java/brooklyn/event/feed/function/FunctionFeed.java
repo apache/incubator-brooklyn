@@ -44,7 +44,7 @@ import com.google.common.collect.Sets;
  *               return getDriver().isRunning();
  *             }
  *         })
- *         .onError(Functions.constant(Boolan.FALSE))
+ *         .onExceptionOrFailure(Functions.constant(Boolan.FALSE))
  *     .build();
  * }
  * 
