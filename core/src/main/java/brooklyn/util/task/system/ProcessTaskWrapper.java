@@ -89,8 +89,8 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
                 }
             }
             
-            if (exitCode!=0 && requireExitCodeZero!=Boolean.FALSE) {
-                if (requireExitCodeZero==Boolean.TRUE) {
+            if (exitCode!=0 && !Boolean.FALSE.equals(requireExitCodeZero)) {
+                if (Boolean.TRUE.equals(requireExitCodeZero)) {
                     logWithDetailsAndThrow(taskTypeShortName()+" task ended with exit code "+exitCode+" when 0 was required, in "+Tasks.current()+": "+getSummary(), null);
                 } else {
                     // warn, but allow, on non-zero not explicitly allowed

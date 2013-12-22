@@ -298,7 +298,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
 
     @Override
     public int execCommands(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        if (props.containsKey("blocks") && props.get("blocks") == Boolean.FALSE) {
+        if (Boolean.FALSE.equals(props.get("blocks"))) {
             throw new IllegalArgumentException("Cannot exec non-blocking: command="+commands);
         }
         OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
@@ -308,7 +308,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         List<String> allcmds = toCommandSequence(commands, env);
         String singlecmd = Joiner.on(separator).join(allcmds);
 
-        if (getOptionalVal(props, PROP_RUN_AS_ROOT)==Boolean.TRUE) {
+        if (Boolean.TRUE.equals(getOptionalVal(props, PROP_RUN_AS_ROOT))) {
             LOG.warn("Cannot run as root when executing as command; run as a script instead (will run as normal user): "+singlecmd);
         }
         

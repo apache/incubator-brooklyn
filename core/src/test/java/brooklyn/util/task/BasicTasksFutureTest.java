@@ -120,7 +120,7 @@ public class BasicTasksFutureTest {
 
     private void assertSoonGetsData(String key) throws InterruptedException {
         for (int i=0; i<10; i++) {
-            if (data.get(key)==Boolean.TRUE) {
+            if (Boolean.TRUE.equals(data.get(key))) {
                 log.info("got data for "+key);
                 return;
             }

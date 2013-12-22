@@ -100,7 +100,7 @@ public class CassandraClusterLiveTest {
                         + "2: "+(!so ? "unreachable" : sc==null ? "error" : sc)+";  "
                         + "peer group sizes: "+fp+","+sp;
                 log.info(msg);
-                if (fo && so && fc==Boolean.TRUE && sc==Boolean.TRUE && fp==2 && sp==2)
+                if (fo && so && Boolean.TRUE.equals(fc) && Boolean.TRUE.equals(sc) && fp==2 && sp==2)
                     break;
                 if (i==0) log.warn("NOT yet consistent, waiting");
                 if (i==120)

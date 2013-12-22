@@ -28,10 +28,11 @@ public abstract class AbstractSshExecTaskFactory<T extends AbstractProcessTaskFa
         return new ProcessTaskWrapper<RET>(this) {
             protected void run(ConfigBag config) {
                 Preconditions.checkNotNull(getMachine(), "machine");
-                if (this.runAsScript==Boolean.FALSE)
+                if (Boolean.FALSE.equals(this.runAsScript)) {
                     this.exitCode = getMachine().execCommands(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
-                else // runScript = null or TRUE
+                } else { // runScript = null or TRUE
                     this.exitCode = getMachine().execScript(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
+                }
             }
             protected String taskTypeShortName() { return "SSH"; }
         };

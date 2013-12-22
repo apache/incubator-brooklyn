@@ -71,10 +71,11 @@ public class SystemProcessTaskFactory<T extends SystemProcessTaskFactory<T,RET>,
         }
         @Override
         protected void run(ConfigBag config) {
-            if (this.runAsScript==Boolean.FALSE)
+            if (Boolean.FALSE.equals(this.runAsScript)) {
                 this.exitCode = newExecWithLoggingHelpers().execCommands(config.getAllConfigRaw(), getSummary(), getCommands(), getShellEnvironment());
-            else // runScript = null or TRUE
+            } else { // runScript = null or TRUE
                 this.exitCode = newExecWithLoggingHelpers().execScript(config.getAllConfigRaw(), getSummary(), getCommands(), getShellEnvironment());
+            }
         }
         @Override
         protected String taskTypeShortName() { return taskTypeShortName; }

@@ -77,7 +77,7 @@ public class CassandraClusterIntegrationTest extends BrooklynMgmtContextTestSupp
                     + (!open ? "unreachable" : consistant==null ? "error" : consistant)+"; "
                     + "peer group sizes: "+numPeers;
             log.info(msg);
-            if (open && consistant==Boolean.TRUE && numPeers==1)
+            if (open && Boolean.TRUE.equals(consistant) && numPeers==1)
                 break;
             if (i == 0) log.warn("NOT yet consistent, waiting");
             if (i >= 120) Assert.fail("Did not become consistent in time: "+msg);
