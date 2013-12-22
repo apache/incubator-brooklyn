@@ -74,13 +74,13 @@ public class TaskBuilder<T> {
         if (name!=null) flags.add("displayName", name);
         if (!tags.isEmpty()) flags.add("tags", tags);
         
-        if (dynamic==Boolean.FALSE && children.isEmpty())
+        if (Boolean.FALSE.equals(dynamic) && children.isEmpty())
             return new BasicTask<T>(flags, body);
         
         // prefer dynamic set unless (a) user has said not dynamic, or (b) it's parallel (since there is no dynamic parallel yet)
         // dynamic has better cancel (will interrupt the thread) and callers can submit tasks flexibly;
         // however dynamic uses an extra thread and task and is noisy for contexts which don't need it
-        if (dynamic==Boolean.TRUE || (dynamic==null && !parallel)) {
+        if (Boolean.TRUE.equals(dynamic) || (dynamic==null && !parallel)) {
             if (parallel)
                 throw new UnsupportedOperationException("No implementation of parallel dynamic aggregate task available");
             DynamicSequentialTask<T> result = new DynamicSequentialTask<T>(flags, body);

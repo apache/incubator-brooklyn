@@ -403,7 +403,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
                 Set<String> oldNodes = (currentNodes != null) ? ImmutableSet.copyOf(currentNodes) : ImmutableSet.<String>of();
                 Set<String> newNodes = MutableSet.<String>of();
                 for (Entity member : getMembers()) {
-                    if (member instanceof CassandraNode && member.getAttribute(SERVICE_UP) == Boolean.TRUE) {
+                    if (member instanceof CassandraNode && Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) {
                         HostAndPort address = HostAndPort.fromParts(member.getAttribute(HOSTNAME), member.getAttribute(THRIFT_PORT));
                         newNodes.add(address.toString());
                     }

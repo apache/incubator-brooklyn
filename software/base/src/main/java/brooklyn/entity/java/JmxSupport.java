@@ -107,7 +107,7 @@ public class JmxSupport implements UsesJmx {
         if (isJmx!=null)
             return;
         
-        if (entity.getConfig(USE_JMX)==Boolean.FALSE) {
+        if (Boolean.FALSE.equals(entity.getConfig(USE_JMX))) {
             isJmx = false;
             return;
         }

@@ -140,7 +140,7 @@ public class KnifeConvergeTaskFactory<RET> extends KnifeTaskFactory<RET> {
     
     protected Integer knifeWhichPort(HostAndPort hostAndPort) {
         if (port==null) {
-            if (portOmittedToUseKnifeDefault==Boolean.TRUE)
+            if (Boolean.TRUE.equals(portOmittedToUseKnifeDefault))
                 // user has explicitly said to use knife default, omitting port here
                 return null;
             // default is to use the machine port
@@ -191,7 +191,7 @@ public class KnifeConvergeTaskFactory<RET> extends KnifeTaskFactory<RET> {
     
     protected String buildKnifeCommand(int knifeCommandIndex) {
         String result = super.buildKnifeCommand(knifeCommandIndex);
-        if (runTwice == Boolean.TRUE)
+        if (Boolean.TRUE.equals(runTwice))
             result = BashCommands.alternatives(result, result);
         return result;
     }

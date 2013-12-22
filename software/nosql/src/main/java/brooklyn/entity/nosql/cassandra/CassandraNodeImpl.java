@@ -420,7 +420,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                                 // as the caller will not have set yet, but that will help ensure it is really healthy!
                                 setAttribute(SERVICE_UP,
                                         getAttribute(THRIFT_PORT_LATENCY)!=null && getAttribute(THRIFT_PORT_LATENCY)>=0 && 
-                                        getAttribute(SERVICE_UP_JMX)==Boolean.TRUE);
+                                        Boolean.TRUE.equals(getAttribute(SERVICE_UP_JMX)));
                             }
                         }))
                 .build();
