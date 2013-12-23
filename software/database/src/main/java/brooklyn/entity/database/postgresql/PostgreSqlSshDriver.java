@@ -126,7 +126,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
     @Override
     public void customize() {
         // Some OSes start postgres during package installation
-        DynamicTasks.queue(SshEffectorTasks.ssh(sudoAsUser("postgres", "/etc/init.d/postgresql stop"))).get();
+        DynamicTasks.queue(SshEffectorTasks.ssh(sudoAsUser("postgres", "/etc/init.d/postgresql stop")).allowingNonZeroExitCode()).get();
 
         newScript(CUSTOMIZING)
                 .body.append(
