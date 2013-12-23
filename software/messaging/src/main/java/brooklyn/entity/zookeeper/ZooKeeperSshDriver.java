@@ -15,21 +15,29 @@
  */
 package brooklyn.entity.zookeeper;
 
-import static java.lang.String.format;
-
-import java.util.List;
-import java.util.Map;
-
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
-
+import brooklyn.util.task.Tasks;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import static java.lang.String.format;
 
 public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements ZooKeeperDriver {
 
@@ -52,8 +60,31 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
     }
 
     protected String getConfigFileName() {
-        return "zookeeper.properties";
+        return entity.getConfig(ZooKeeperNode.ZOOKEEPER_CONFIG_TEMPLATE);
     }
+
+    protected int getMyId() {
+        return entity.getAttribute(ZooKeeperNode.MY_ID);
+    }
+
+   // FIXME All for one, and one for all! If any node fails then we're stuck waiting for its hostname/port forever.
+   // Need a way to terminate the wait based on the entity going on-fire etc.
+   // FIXME Race in getMemebers. Should we change DynamicCluster.grow to create the members and only then call start on them all?
+   public List<ZooKeeperServerConfig> getZookeeperServers() throws ExecutionException, InterruptedException {
+      ZooKeeperEnsemble ensemble = (ZooKeeperEnsemble) entity.getParent();
+      List<ZooKeeperServerConfig> result = Lists.newArrayList();
+
+      for (Entity member : ensemble.getMembers()) {
+         ZooKeeperNode server = (ZooKeeperNode) member;
+         Integer myid = attributeWhenReady(server, ZooKeeperNode.MY_ID);
+         String hostname = attributeWhenReady(server, ZooKeeperNode.HOSTNAME);
+         Integer port = attributeWhenReady(server, ZooKeeperNode.ZOOKEEPER_PORT);
+         Integer leaderPort = attributeWhenReady(server, ZooKeeperNode.ZOOKEEPER_LEADER_PORT);
+         Integer electionPort = attributeWhenReady(server, ZooKeeperNode.ZOOKEEPER_ELECTION_PORT);
+         result.add(new ZooKeeperServerConfig(myid, hostname, port, leaderPort, electionPort));
+      }
+      return result;
+   }
 
     @Override
     public Integer getZooKeeperPort() {
@@ -96,9 +127,13 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
         Networking.checkPortsValid(getPortMap());
         newScript(CUSTOMIZING)
                 .body.append(
-                    format("cp -R %s/* .", getExpandedInstallDir())
+                    format("cp -R %s/* .", getExpandedInstallDir()),
+                    format("mkdir %s/zookeeper", getRunDir()),
+                    format("echo %d > %s/zookeeper/myid", getMyId(), getRunDir())
                 )
                 .execute();
+        String destinationConfigFile = String.format("%s/conf/zoo.cfg", getRunDir());
+        copyTemplate(getConfigFileName(), destinationConfigFile);
     }
 
     public String getPidFile() { return String.format("%s/zookeeper.pid", getRunDir()); }
@@ -107,8 +142,45 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
     public void launch() {
         newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
         .body.append(
-                format("nohup java -cp zookeeper-%s.jar:lib/*:conf org.apache.zookeeper.server.quorum.QuorumPeerMain conf/zoo_sample.cfg > %s 2>&1 &", getVersion(), getLogFileLocation()))
+                format("nohup java -cp zookeeper-%s.jar:lib/*:conf org.apache.zookeeper.server.quorum.QuorumPeerMain conf/zoo.cfg > %s 2>&1 &", getVersion(), getLogFileLocation()))
         .execute();        
     }
 
+   @SuppressWarnings({ "unchecked", "serial" })
+   public static <T> T attributeWhenReady(final Entity entity, final AttributeSensor<T> sensor) throws ExecutionException, InterruptedException {
+      final Task<T> task = DependentConfiguration.attributeWhenReady(entity, sensor);
+      TypeToken<T> type = new TypeToken<T>(sensor.getType()) {};
+      return Tasks.resolveValue(task, (Class<T>) type.getRawType(), ((EntityInternal) entity).getExecutionContext(), "attributeSupplierWhenReady");
+   }
+
+   public static class ZooKeeperServerConfig {
+      private final Integer myid;
+      private final String hostname;
+      private final Integer port;
+      private final Integer leaderPort;
+      private final Integer electionPort;
+
+      public ZooKeeperServerConfig(Integer myid, String hostname, Integer port, Integer leaderPort, Integer electionPort) {
+         this.myid = myid;
+         this.hostname = hostname;
+         this.port = port;
+         this.leaderPort = leaderPort;
+         this.electionPort = electionPort;
+      }
+      public Integer getMyid() {
+         return myid;
+      }
+      public String getHostname() {
+         return hostname;
+      }
+      public Integer getPort() {
+         return port;
+      }
+      public Integer getLeaderPort() {
+          return leaderPort;
+      }
+      public Integer getElectionPort() {
+          return electionPort;
+      }
+   }
 }

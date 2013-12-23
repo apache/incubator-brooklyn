@@ -77,7 +77,7 @@ public abstract class StormAbstractCloudLiveTest extends
         try {
             zooKeeperEnsemble = app.createAndManageChild(EntitySpec.create(
                     ZooKeeperEnsemble.class).configure(
-                    ZooKeeperEnsemble.INITIAL_SIZE, 1));
+                    ZooKeeperEnsemble.INITIAL_SIZE, 3));
             nimbus = app.createAndManageChild(EntitySpec
                     .create(Storm.class)
                     .configure(Storm.ROLE, NIMBUS)
