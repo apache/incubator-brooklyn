@@ -48,11 +48,13 @@ public interface PostgreSqlNode extends SoftwareProcess, HasShortName, Datastore
 
     @SetFromFlag("configFileUrl")
     ConfigKey<String> CONFIGURATION_FILE_URL = ConfigKeys.newStringConfigKey(
-            "postgresql.config.file.url", "URL where PostgreSQL configuration file can be found");
+            "postgresql.config.file.url", "URL where PostgreSQL configuration file can be found; "
+                + "if not supplied the blueprint uses the default and customises it");
 
     @SetFromFlag("authConfigFileUrl")
     ConfigKey<String> AUTHENTICATION_CONFIGURATION_FILE_URL = ConfigKeys.newStringConfigKey(
-            "postgresql.authConfig.file.url", "URL where PostgreSQL host-based authentication configuration file can be found");
+            "postgresql.authConfig.file.url", "URL where PostgreSQL host-based authentication configuration file can be found; "
+                + "if not supplied the blueprint uses the default and customises it");
 
     @SetFromFlag("port")
     PortAttributeSensorAndConfigKey POSTGRESQL_PORT = new PortAttributeSensorAndConfigKey(
