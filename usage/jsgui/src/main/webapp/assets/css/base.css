@@ -24,6 +24,9 @@
 .add-app .modal-header{
 	border-bottom: 0;
 }
+.add-app .modal-footer {
+	min-height: 20px;
+}
 
 add-app .tab-content-scroller {
     overflow: auto !important;
@@ -1125,14 +1128,7 @@ swagger-ui-container{
 	color: #cc0000;
 }
 
-/** groovy script */
-#groovy-ui-container .hide {
-	display: none !important;
-}
-#groovy-ui-container .throbber {
-    padding-top: 8px;
-}
-#groovy-ui-container textarea {
+.code-textarea {
 	width: 100%;
 	height: 8em;
 	margin-right: 4px;
@@ -1141,6 +1137,14 @@ swagger-ui-container{
 	word-wrap: normal; 
 	overflow-x: scroll;
 	overflow-y: scroll;
+}
+
+/** groovy script */
+#groovy-ui-container .hide {
+	display: none !important;
+}
+#groovy-ui-container .throbber {
+    padding-top: 8px;
 }
 #groovy-ui-container .input textarea {
     height: 16em;

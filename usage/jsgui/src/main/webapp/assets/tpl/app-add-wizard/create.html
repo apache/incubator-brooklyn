@@ -1,22 +1,28 @@
 <div class="app-add-wizard-create-info-message label-message hide">
 	<div class="label-important">ERROR</div>  Invalid application type/spec
 </div>
+<div class="info-message label-message hide">
+	<div class="label-important">ERROR</div>  Failure performing specified action
+</div>
 
 <div id="app-add-wizard-create-body">
 
 	<ul class="nav nav-tabs" id="app-add-wizard-create-tab">
-		<li class="active"><a href="#templateTab" data-toggle="tab">Template</a></li>
-		<li><a href="#entitiesTab" data-toggle="tab">Entities</a></li>
+		<li class="active"><a href="#templateTab" data-toggle="tab">Catalog</a></li>
+		<li><a href="#yamlTab" data-toggle="tab">YAML</a></li>
 		
 		<li class="dropdown"><a class="dropdown-toggle" id="dropLanguage"
-			role="button" data-toggle="dropdown" href="#">Code <b class="caret"></b></a>
+			role="button" data-toggle="dropdown" href="#">Other <b class="caret"></b></a>
 			<ul id="menuLanguage" class="dropdown-menu" role="menu" aria-labelledby="dropLanguage">
+				<li><a tabindex="-1" data-toggle="tab" href="#entitiesTab">Build from Entities</a></li>
+				<li><a tabindex="-1" data-toggle="tab" href="#appClassTab">Specify App Class</a></li>
+<!-- TODO
+				<li class="divider"></li>
 				<li><a tabindex="-1" data-toggle="tab" href="#jsonTab">JSON</a></li>
 				<li><a tabindex="-1" data-toggle="tab" href="#xmlTab">XML</a></li>
-				<li class="divider"></li>
 				<li><a tabindex="-1" data-toggle="tab" href="#groovyTab">Groovy</a></li>
-				<li><a tabindex="-1" data-toggle="tab" href="#appClassTab">App Class</a></li>
 				<li><a tabindex="-1" data-toggle="tab" href="#uploadTab">JAR</a></li>
+ -->
 			</ul>
 		</li>
 	   <li class="text-filter pull-right"><input type="text"/></li>
@@ -29,9 +35,24 @@
     <div id="create-step-template-entries"/>
   </div>
   
+  <div class="tab-pane" id="yamlTab">
+    <div id="yamlAccordionish" style="margin: 12px 20px 12px 12px;">
+    	<textarea id="yaml_code" style="width: 100%; height: 260px;" class="code-textarea" placeholder="Enter CAMP Plan YAML code here"></textarea>
+    </div>
+  </div>
+
   <div class="tab-pane" id="entitiesTab">
     <div id="entitiesAccordionish"></div>
     <button id="add-app-entity" class="btn btn-info btn-mini" style="margin:5px;">Add Additional Entity</button>
+  </div>
+
+  <div class="tab-pane" id="appClassTab">
+        <div class="control-group">
+            <div class="app-add-wizard-create-entity-label-newline">Type</div>
+            <div class="controls app-type">
+                <input id="app-java-type" type="text" name="type" class="input-large app-add-wizard-create-entity-input application-type-input" placeholder="type">
+            </div>
+        </div>
   </div>
 
   <div class="tab-pane" id="jsonTab">
@@ -46,16 +67,6 @@
   <div class="tab-pane" id="uploadTab">
     <br/><br/><i>coming soon!</i>
   </div>
-  
-  
-  <div class="tab-pane" id="appClassTab">
-        <div class="control-group">
-            <div class="app-add-wizard-create-entity-label-newline">Type</div>
-            <div class="controls app-type">
-                <input id="app-java-type" type="text" name="type" class="input-large app-add-wizard-create-entity-input application-type-input" placeholder="type">
-            </div>
-        </div>
-  </div>
-  
+    
  </div></div>
 </div>

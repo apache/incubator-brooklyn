@@ -39,14 +39,16 @@ define([
         template:_.template(ModalHtml),
         initialize:function () {
             this.model = {}
-            this.model.spec = new Application.Spec
+            this.model.spec = new Application.Spec;
+            this.model.yaml = "";
+            this.model.mode = "spec";  // "spec" or "yaml"
             this.currentStep = 0;
             this.steps = [
                           {
                               step_id:'what-app',
                               title:'Create Application',
                               instructions:'Choose or build the application to deploy',
-                              view:new ModalWizard.StepCreate({ model:this.model })
+                              view:new ModalWizard.StepCreate({ model:this.model, wizard: this })
                           },
                           {
                               step_id:'name-and-locations',
@@ -89,33 +91,79 @@ define([
             this.currentView.updateForState()
             this.$(".modal-body").replaceWith(this.currentView.el)
 
-            setVisibility(this.$("#prev_step"), (this.currentStep > 0))
-            setVisibility(this.$("#next_step"), (this.currentStep < 1))
-            setVisibility(this.$("#preview_step"), (this.currentStep == 1))
-            setVisibility(this.$("#finish_step"), (this.currentStep >= 1))
+            this.updateButtonVisibility();
         },
+        updateButtonVisibility:function () {
+            setVisibility(this.$("#prev_step"), (this.currentStep > 0))
+
+            // yaml gets finish only
+            setVisibility(this.$("#next_step"), (this.currentStep < 1) && (this.model.mode != "yaml"))
+            setVisibility(this.$("#preview_step"), (this.currentStep == 1) && (this.model.mode != "yaml"))
+            
+            // finish from config step, preview step, and from first step if yaml tab selected (and valid)
+            var finishEnabled = (this.currentStep >= 1)
+            if (!finishEnabled && this.currentStep==0) {
+            	if (this.model.mode == "yaml") {
+            		// should do better validation than non-empty
+            		var yaml_code = this.$("#yaml_code").val()
+            		if (yaml_code) {
+            			finishEnabled = true;
+            		}
+            	}
+            }
+            setVisibility(this.$("#finish_step"), finishEnabled)
+        },
+        
         submitApplication:function (event) {
             var that = this
             var $modal = $('.add-app #modal-container .modal')
             $modal.fadeTo(500,0.5);
-            $.ajax({
-                url:'/v1/applications',
-                type:'post',
-                contentType:'application/json',
-                processData:false,
-                data:JSON.stringify(this.model.spec.toJSON()),
-                success:function (data) {
-                    $modal.modal('hide')
-                    $modal.fadeTo(500,1);
-                    if (that.options.callback) that.options.callback();
-                },
-                error:function (data) {
-                    that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
-                	that.steps[that.currentStep].view.showFailure()
-                }
-            })
+            
+            if (this.model.mode == "yaml") {
+            	$.ajax({
+            		url:'/v1/applications',
+            		type:'post',
+            		contentType:'application/yaml',
+            		processData:false,
+            		data:this.model.yaml,
+            		success:function (data) {
+            			that.onSubmissionComplete(true, data, $modal)
+            		},
+            		error:function (data) {
+            			that.onSubmissionComplete(false, data, $modal)
+            		}
+            	})
+
+            } else {
+            	$.ajax({
+            		url:'/v1/applications',
+            		type:'post',
+            		contentType:'application/json',
+            		processData:false,
+            		data:JSON.stringify(this.model.spec.toJSON()),
+            		success:function (data) {
+            			that.onSubmissionComplete(true, data, $modal)
+            		},
+            		error:function (data) {
+            			that.onSubmissionComplete(false, data, $modal)
+            		}
+            	})
+            }
+            
             return false
         },
+        onSubmissionComplete: function(succeeded, data, $modal) {
+        	var that = this;
+        	if (succeeded) {
+    			$modal.modal('hide')
+    			$modal.fadeTo(500,1);
+    			if (that.options.callback) that.options.callback();        		
+        	} else {
+    			that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
+    			that.steps[that.currentStep].view.showFailure()
+        	}
+        },
+        
         prevStep:function () {
             this.currentStep -= 1
             this.renderCurrentStep()
@@ -155,9 +203,12 @@ define([
             'click .template-lozenge':'templateClick',
             'change .text-filter input':'applyFilter',
             'keyup .text-filter input':'applyFilter',
+            'change #yaml_code':'onYamlCodeChange',
+            'keyup #yaml_code':'onYamlCodeChange',
             'shown a[data-toggle="tab"]':'onTabChange'
         },
         template:_.template(CreateHtml),
+        wizard: null,
         initialize:function () {
             var self = this
             self.catalogEntityIds = []
@@ -165,6 +216,7 @@ define([
             
             this.$el.html(this.template({}))
             
+            // for building from entities
             this.addEntityBox()
 
             // TODO: Make into models, allow options to override, then pass in in test
@@ -197,10 +249,24 @@ define([
             return this
         },
         onTabChange: function(e) {
-            if (e.target.text=="Template")
+            if (e.target.text=="Catalog") {
                 $("li.text-filter").show()
-            else
-                $("li.text-filter").hide()
+            } else {
+            	$("li.text-filter").hide()
+            }
+        	
+        	if (e.target.text=="YAML") {
+        		this.model.mode = "yaml";
+        	} else {
+        		this.model.mode = "spec";
+        	}
+
+        	if (this.options.wizard)
+        		this.options.wizard.updateButtonVisibility();
+        },
+        onYamlCodeChange: function() {
+        	if (this.options.wizard)
+        		this.options.wizard.updateButtonVisibility();
         },
         applyFilter: function(e) {
             var filter = $(e.currentTarget).val().toLowerCase()
@@ -256,7 +322,7 @@ define([
             var name = $('#entity-name',$entityGroup).val()
             var type = $('#entity-type',$entityGroup).val()
             if (type=="" || !_.contains(that.catalogEntityIds, type)) {
-                $('.entity-info-message',$entityGroup).show('slow').delay(2000).hide('slow')
+                that.showFailure()
                 return false
             }
             var saveTarget = this.model.spec.get("entities")[$entityGroup.index()];
@@ -350,13 +416,22 @@ define([
                     this.model.spec.set("entities", []);
                     return true
                 }
+            } else if (tabName=='#yamlTab') {
+            	this.model.yaml = this.$("#yaml_code").val();
+        		if (this.model.yaml) {
+        			return true;
+        		}
             } else {
                 console.info("NOT IMPLEMENTED YET")
                 // TODO - other tabs not implemented yet 
                 // do nothing, show error return false below
             }
-            this.$('div.app-add-wizard-create-info-message').show('slow').delay(2000).hide('slow')
+            this.$('div.app-add-wizard-create-info-message').slideDown(250).delay(2000).slideUp(500)
             return false
+        },
+        
+        showFailure: function() {
+        	this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
         }
 
     })
@@ -512,8 +587,10 @@ define([
             if (this.model.spec.get("locations").length !== 0) {
                 return true
             }
-            this.$('div.info-message').show('slow').delay(2000).hide('slow')
             return false
+        },
+        showFailure: function() {
+        	this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
         }
     })
 
@@ -552,7 +629,7 @@ define([
             return false
         },
         showFailure:function () {
-        	this.$('div.info-message').show('slow').delay(2000).hide('slow')
+        	this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
         }
     })
 
