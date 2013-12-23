@@ -1,15 +1,12 @@
 package brooklyn.entity.database.rubyrep;
 
-import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.database.DatabaseNode;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
-import com.google.common.base.Functions;
-
 import java.net.URI;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
+
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
+import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.util.time.Duration;
 
 public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode {
 
@@ -21,38 +18,39 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
 
     @Override
     public void disconnectSensors() {
-        super.disconnectSensors();
         disconnectServiceUpIsRunning();
+        super.disconnectSensors();
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
-     * Adds support for binding to brooklyn DatabaseNodes (so the user doesn't have to call attributeWhenReady, etc)
+     * Set the database {@link DatastoreCommon#DATASTORE_URL urls} as attributes when they become available on the entities.
      */
     @Override
-    public void init() {
-        super.init();
+    protected void preStart() {
+        super.preStart();
 
-        DatabaseNode leftNode = getConfig(LEFT_DATABASE);
-        DatabaseNode rightNode = getConfig(RIGHT_DATABASE);
-
+        DatastoreCommon leftNode = getConfig(LEFT_DATABASE);
         if (leftNode != null) {
-            setConfig(LEFT_DATABASE_URL, DependentConfiguration.attributeWhenReady(leftNode, DatabaseNode.DATASTORE_URL));
+            setAttribute(LEFT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(leftNode, DatastoreCommon.DATASTORE_URL)).getUnchecked(getDatabaseStartupDelay()));
         }
+
+        DatastoreCommon rightNode = getConfig(RIGHT_DATABASE);
         if (rightNode != null) {
-            setConfig(RIGHT_DATABASE_URL, DependentConfiguration.attributeWhenReady(rightNode, DatabaseNode.DATASTORE_URL));
+            setAttribute(RIGHT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(rightNode, DatastoreCommon.DATASTORE_URL)).getUnchecked(getDatabaseStartupDelay()));
         }
     }
 
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return RubyRepDriver.class;
     }
 
-    /**
-     * Accessors used in freemarker template processing
-     */
+    public Duration getDatabaseStartupDelay() {
+        return Duration.seconds(getConfig(DATABASE_STARTUP_TIMEOUT));
+    }
+
+    // Accessors used in freemarker template processing
+
     public int getReplicationInterval() {
         return getConfig(REPLICATION_INTERVAL);
     }
@@ -62,7 +60,7 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
     }
     
     public URI getLeftDatabaseUrl() {
-        return URI.create(getAttribute(LEFT_DATABASE_URL));
+        return URI.create(getAttribute(LEFT_DATASTORE_URL));
     }
     
     public String getLeftDatabaseName() {
@@ -78,7 +76,7 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
     }
 
     public URI getRightDatabaseUrl() {
-        return URI.create(getAttribute(RIGHT_DATABASE_URL));
+        return URI.create(getAttribute(RIGHT_DATASTORE_URL));
     }
 
     public String getRightDatabaseName() {

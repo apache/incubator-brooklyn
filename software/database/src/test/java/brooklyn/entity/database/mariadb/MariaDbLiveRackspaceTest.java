@@ -1,11 +1,18 @@
 package brooklyn.entity.database.mariadb;
 
+import java.util.Arrays;
+
 import org.testng.annotations.Test;
 
+import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.util.net.Protocol;
+import brooklyn.util.ssh.IptablesCommands;
+import brooklyn.util.ssh.IptablesCommands.Chain;
+import brooklyn.util.ssh.IptablesCommands.Policy;
 
 import com.google.common.collect.ImmutableList;
 
@@ -61,20 +68,19 @@ public class MariaDbLiveRackspaceTest extends MariaDbIntegrationTest {
 
     public void test(String osRegex) throws Exception {
         MariaDbNode mariadb = tapp.createAndManageChild(EntitySpec.create(MariaDbNode.class)
-                .configure("creationScriptContents", CREATION_SCRIPT));
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, CREATION_SCRIPT));
 
         brooklynProperties.put("brooklyn.location.jclouds.rackspace-cloudservers-uk.imageNameRegex", osRegex);
         brooklynProperties.remove("brooklyn.location.jclouds.rackspace-cloudservers-uk.image-id");
-        brooklynProperties.put("inboundPorts", "22, 3306");
+        brooklynProperties.remove("brooklyn.location.jclouds.rackspace-cloudservers-uk.imageId");
+        brooklynProperties.put("brooklyn.location.jclouds.rackspace-cloudservers-uk.inboundPorts", Arrays.asList(22, 3306));
         JcloudsLocation jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve("jclouds:rackspace-cloudservers-uk");
 
         tapp.start(ImmutableList.of(jcloudsLocation));
 
         SshMachineLocation l = (SshMachineLocation) mariadb.getLocations().iterator().next();
-        //hack to get the port for mysql open; is the inbounds property not respected on rackspace??
-        l.exec(ImmutableList.of("iptables -I INPUT -p tcp --dport 3306 -j ACCEPT"));
+        l.execCommands("add iptables rule", ImmutableList.of(IptablesCommands.insertIptablesRule(Chain.INPUT, Protocol.TCP, 3306, Policy.ACCEPT)));
 
-        new VogellaExampleAccess("com.mysql.jdbc.Driver", mariadb.getAttribute(MariaDbNode.DB_URL)).readModifyAndRevertDataBase();
-       
+        new VogellaExampleAccess("com.mysql.jdbc.Driver", mariadb.getAttribute(DatastoreCommon.DATASTORE_URL)).readModifyAndRevertDataBase();
     } 
 }

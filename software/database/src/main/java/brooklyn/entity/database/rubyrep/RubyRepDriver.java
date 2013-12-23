@@ -1,10 +1,10 @@
 package brooklyn.entity.database.rubyrep;
 
-import brooklyn.entity.java.JavaSoftwareProcessDriver;
+import brooklyn.entity.basic.SoftwareProcessDriver;
 
 /**
- * The {@link brooklyn.entity.basic.SoftwareProcessDriver} for PostgreSQL.
+ * The driver interface for {@link RubyRepNode}.
  */
-public interface RubyRepDriver extends JavaSoftwareProcessDriver {
+public interface RubyRepDriver extends SoftwareProcessDriver {
 
 }
