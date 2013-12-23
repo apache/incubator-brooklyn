@@ -63,6 +63,12 @@ public abstract class AbstractEc2LiveTest extends BrooklynMgmtContextTestSupport
     }
 
     @Test(groups = {"Live"})
+    public void test_Debian_7_2() throws Exception {
+        // release codename "wheezy"
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-db2278b2", "loginUser", "admin", "hardwareId", SMALL_HARDWARE_ID));
+    }
+
+    @Test(groups = {"Live"})
     public void test_Ubuntu_10_0() throws Exception {
         // Image: {id=us-east-1/ami-5e008437, providerId=ami-5e008437, name=RightImage_Ubuntu_10.04_x64_v5.8.8.3, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=10.04, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, version=5.8.8.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
         runTest(ImmutableMap.of("imageId", "us-east-1/ami-5e008437", "loginUser", "root", "hardwareId", SMALL_HARDWARE_ID));

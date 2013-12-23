@@ -85,6 +85,7 @@ public class MariaDbNodeImpl extends SoftwareProcessImpl implements MariaDbNode 
     @Override
     protected void disconnectSensors() {
         if (feed != null) feed.stop();
+        super.disconnectSensors();
     }
 
     public int getPort() {

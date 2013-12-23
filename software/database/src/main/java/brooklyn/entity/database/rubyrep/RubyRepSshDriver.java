@@ -1,58 +1,74 @@
 package brooklyn.entity.database.rubyrep;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 
-import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringReader;
 import java.net.URISyntaxException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.database.mysql.MySqlSshDriver;
-import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.stream.Streams;
 
-public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements RubyRepDriver {
+import com.google.common.collect.ImmutableList;
 
-    public static final Logger log = LoggerFactory.getLogger(MySqlSshDriver.class);
+public class RubyRepSshDriver extends AbstractSoftwareProcessSshDriver implements RubyRepDriver {
+
+    public static final Logger log = LoggerFactory.getLogger(RubyRepSshDriver.class);
+
+    private String expandedInstallDir;
 
     public RubyRepSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
+
+        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
     }
 
-    @Override
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
+
     protected String getLogFileLocation() {
         return getRunDir() + "/log/rubyrep.log";
     }
 
     @Override
     public void install() {
-        List<String> commands = new LinkedList<String>();
+        DownloadResolver resolver = Entities.newDownloader(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
 
-        String saveAs = format("rubyrep-%s.zip", getVersion());
-        // TODO for the time being it is hard coded download url since it isn't predictable
-        commands.addAll(BashCommands.downloadUrlAs("http://rubyforge.org/frs/download.php/74408/rubyrep-1.2.0.zip", getEntityVersionLabel("/"), saveAs));
-        commands.add(BashCommands.installExecutable("unzip"));
-        commands.add("unzip " + saveAs);
+        List<String> commands = ImmutableList.<String>builder()
+                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
+                .add(BashCommands.INSTALL_UNZIP)
+                .add("unzip " + saveAs)
+                .build();
 
-        newScript(INSTALLING).failOnNonZeroResultCode().failOnNonZeroResultCode().
-                body.append(commands).execute();
+        newScript(INSTALLING)
+                .body.append(commands)
+                .failOnNonZeroResultCode()
+                .execute();
+
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rubyrep-%s", getVersion()));
     }
 
     @Override
     public void customize() {
-        newScript(CUSTOMIZING).failOnNonZeroResultCode()
-                .body.append(format("cp -r %s/rubyrep-%s .", getInstallDir(), getVersion())
-        ).execute();
+        newScript(CUSTOMIZING)
+                .body.append(format("cp -R %s %s", getExpandedInstallDir(), getRunDir()))
+                .failOnNonZeroResultCode()
+                .execute();
         try {
             customizeConfiguration();
         } catch (Exception e) {
@@ -63,42 +79,34 @@ public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements Ru
     protected void customizeConfiguration() throws ExecutionException, InterruptedException, URISyntaxException {
         log.info("Copying creation script " + getEntity().toString());
 
+        // TODO check these semantics are what we really want?
         String configScriptUrl = entity.getConfig(RubyRepNode.CONFIGURATION_SCRIPT_URL);
         Reader configContents;
         if (configScriptUrl != null) {
             // If set accept as-is
-            configContents = new InputStreamReader(resource.getResourceFromUrl(configScriptUrl));
+            configContents = Streams.reader(resource.getResourceFromUrl(configScriptUrl));
         } else {
-            String configScriptContents = processTemplate(entity.getAttribute(RubyRepNode.TEMPLATE_CONFIGURATION_URL));
-            configContents = new StringReader(configScriptContents);
+            String configScriptContents = processTemplate(entity.getConfig(RubyRepNode.TEMPLATE_CONFIGURATION_URL));
+            configContents = Streams.newReaderWithContents(configScriptContents);
         }
 
-        log.info("Sending " + configContents);
         getMachine().copyTo(configContents, getRunDir() + "/rubyrep.conf");
     }
 
     @Override
     public void launch() {
         newScript(MutableMap.of("usePidFile", true), LAUNCHING)
-                .body.append(format("nohup rubyrep-%s/jruby/bin/jruby rubyrep-%s/bin/rubyrep replicate -c rubyrep.conf > ./console 2>&1 &", getVersion(), getVersion())
-        ).execute();
+                .body.append(format("nohup rubyrep-%s/jruby/bin/jruby rubyrep-%s/bin/rubyrep replicate -c rubyrep.conf > ./console 2>&1 &", getVersion(), getVersion()))
+                .execute();
     }
 
     @Override
     public boolean isRunning() {
-        Map flags = MutableMap.of("usePidFile", true);
-        return newScript(flags, CHECK_RUNNING).execute() == 0;
+        return newScript(MutableMap.of("usePidFile", true), CHECK_RUNNING).execute() == 0;
     }
 
     @Override
     public void stop() {
-        Map flags = MutableMap.of("usePidFile", true);
-        newScript(flags, STOPPING).execute();
-    }
-
-    @Override
-    public void kill() {
-        Map flags = MutableMap.of("usePidFile", true);
-        newScript(flags, KILLING).execute();
+        newScript(MutableMap.of("usePidFile", true), STOPPING).execute();
     }
 }

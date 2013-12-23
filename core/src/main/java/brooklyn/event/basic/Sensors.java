@@ -1,6 +1,8 @@
 package brooklyn.event.basic;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 
 import com.google.common.reflect.TypeToken;
 
@@ -56,6 +58,16 @@ public class Sensors {
 
     public static AttributeSensor<Boolean> newBooleanSensor(String name, String description) {
         return newSensor(Boolean.class, name, description);
+    }
+
+    // ---- extensions to sensors
+    
+    public static <T> AttributeSensor<T> newSensorRenamed(String newName, AttributeSensor<T> sensor) {
+        return new BasicAttributeSensor<T>(sensor.getTypeToken(), newName, sensor.getDescription());
+    }
+
+    public static <T> AttributeSensor<T> newSensorWithPrefix(String prefix, AttributeSensor<T> sensor) {
+        return newSensorRenamed(prefix+sensor.getName(), sensor);
     }
 
 }

@@ -5,7 +5,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.database.DatabaseNode;
+import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.HasShortName;
 import brooklyn.event.AttributeSensor;
@@ -19,7 +19,7 @@ import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="MariaDB Node", description="MariaDB is an open source relational database management system (RDBMS)", iconUrl="classpath:///mariadb-logo-180x119.png")
 @ImplementedBy(MariaDbNodeImpl.class)
-public interface MariaDbNode extends SoftwareProcess, DatabaseNode, HasShortName {
+public interface MariaDbNode extends SoftwareProcess, DatastoreCommon, HasShortName {
 
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION =
@@ -64,7 +64,7 @@ public interface MariaDbNode extends SoftwareProcess, DatabaseNode, HasShortName
         "mariadb.socketUid", "Socket uid, for use in file /tmp/mysql.sock.<uid>.3306 (or randomly generated if not set)", null);
 
     /** @deprecated since 0.7.0 use DATASTORE_URL */ @Deprecated
-    public static final AttributeSensor<String> MARIADB_URL = DB_URL;
+    public static final AttributeSensor<String> MARIADB_URL = DATASTORE_URL;
 
     @SetFromFlag("configurationTemplateUrl")
     static final BasicAttributeSensorAndConfigKey<String> TEMPLATE_CONFIGURATION_URL = new StringAttributeSensorAndConfigKey(

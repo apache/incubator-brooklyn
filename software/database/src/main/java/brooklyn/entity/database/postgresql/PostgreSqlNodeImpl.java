@@ -10,6 +10,7 @@ import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Optional;
 
@@ -26,18 +27,27 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
     public PostgreSqlDriver getDriver() {
         return (PostgreSqlDriver) super.getDriver();
     }
-    
+
+    @Override
+    public Integer getPostgreSqlPort() { return getAttribute(POSTGRESQL_PORT); }
+
+    @Override
+    public String getSharedMemory() { return getConfig(SHARED_MEMORY); }
+
+    @Override
+    public Integer getMaxConnections() { return getConfig(MAX_CONNECTIONS); }
+
     @Override
     public void init() {
         super.init();
         getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
             @Override
             public String call(ConfigBag parameters) {
-                return executeScript((String)parameters.getStringKey("commands"));
+                return executeScript((String) parameters.getStringKey("commands"));
             }
         });
     }
-    
+
     @Override
     protected void connectSensors() {
         super.connectSensors();
@@ -51,13 +61,14 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
             feed = SshFeed.builder()
                     .entity(this)
                     .machine(machine.get())
+                    .period(Duration.millis(getConfig(POLL_PERIOD)))
                     .poll(new SshPollConfig<Boolean>(SERVICE_UP)
                             .command(cmd)
                             .setOnSuccess(true)
                             .setOnFailureOrException(false))
                     .build();
         } else {
-            LOG.warn("Location(s) {} not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
+            LOG.warn("Location set {} does not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
             setAttribute(SERVICE_UP, true);
         }
     }
@@ -65,11 +76,19 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
     @Override
     protected void disconnectSensors() {
         if (feed != null) feed.stop();
+        super.disconnectSensors();
     }
     
     @Override
-    public String executeScript(String commands) {
-        return getDriver().executeScriptAsync(commands).block().getStdout();
+    public String getShortName() {
+        return "PostgreSQL";
     }
 
+    @Override
+    public String executeScript(String commands) {
+        return getDriver()
+                .executeScriptAsync(commands)
+                .block()
+                .getStdout();
+    }
 }

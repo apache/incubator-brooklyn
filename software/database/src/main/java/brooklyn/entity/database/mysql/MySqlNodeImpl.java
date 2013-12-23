@@ -105,6 +105,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     @Override
     protected void disconnectSensors() {
         if (feed != null) feed.stop();
+        super.disconnectSensors();
     }
 
     public int getPort() {

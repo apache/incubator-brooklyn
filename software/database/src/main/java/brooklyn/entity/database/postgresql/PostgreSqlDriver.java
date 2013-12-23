@@ -7,6 +7,8 @@ import brooklyn.util.task.system.ProcessTaskWrapper;
  * The {@link brooklyn.entity.basic.SoftwareProcessDriver} for PostgreSQL.
  */
 public interface PostgreSqlDriver extends SoftwareProcessDriver {
-    public String getStatusCmd();
-    public ProcessTaskWrapper<Integer> executeScriptAsync(String commands);
+
+    String getStatusCmd();
+
+    ProcessTaskWrapper<Integer> executeScriptAsync(String commands);
 }
