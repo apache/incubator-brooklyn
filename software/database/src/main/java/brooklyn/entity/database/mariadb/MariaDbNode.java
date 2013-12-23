@@ -5,6 +5,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.HasShortName;
@@ -19,7 +20,7 @@ import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="MariaDB Node", description="MariaDB is an open source relational database management system (RDBMS)", iconUrl="classpath:///mariadb-logo-180x119.png")
 @ImplementedBy(MariaDbNodeImpl.class)
-public interface MariaDbNode extends SoftwareProcess, DatastoreCommon, HasShortName {
+public interface MariaDbNode extends SoftwareProcess, DatastoreCommon, HasShortName, DatabaseNode {
 
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION =

@@ -20,6 +20,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.effector.Effectors;
@@ -41,7 +42,7 @@ import brooklyn.util.flags.SetFromFlag;
  */
 @Catalog(name="PostgreSQL Node", description="PostgreSQL is an object-relational database management system (ORDBMS)", iconUrl="classpath:///postgresql-logo-200px.png")
 @ImplementedBy(PostgreSqlNodeImpl.class)
-public interface PostgreSqlNode extends SoftwareProcess, HasShortName, DatastoreCommon {
+public interface PostgreSqlNode extends SoftwareProcess, HasShortName, DatastoreCommon, DatabaseNode {
     
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "9.1");

@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.database.DatabaseNode;
+import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.JavaWebAppService;
@@ -61,7 +61,7 @@ public class SampleUnitTest {
         Assert.assertEquals(app.getChildren().size(), 2);
         
         Entity webappCluster = Iterables.find(app.getChildren(), Predicates.instanceOf(WebAppService.class));
-        Entity database = Iterables.find(app.getChildren(), Predicates.instanceOf(DatabaseNode.class));
+        Entity database = Iterables.find(app.getChildren(), Predicates.instanceOf(DatastoreCommon.class));
         
         Assert.assertNotNull( webappCluster.getConfig(JavaWebAppService.ROOT_WAR) );
         Assert.assertNotNull( database.getConfig(MySqlNode.CREATION_SCRIPT_URL) );
