@@ -39,7 +39,7 @@ public interface SshTool extends ShellTool {
     public static final ConfigKey<String> PROP_PASSWORD = newStringConfigKey("password", "Password to use to connect", null);
     
     public static final ConfigKey<String> PROP_PRIVATE_KEY_FILE = newStringConfigKey("privateKeyFile", "the path of an ssh private key file; leave blank to use defaults (i.e. ~/.ssh/id_rsa and id_dsa)", null);
-    public static final ConfigKey<String> PROP_PRIVATE_KEY_DATA = newStringConfigKey("privateKeyData", "the private ssh key (e.g. contents of an id_rsa.pub or id_dsa.pub file)", null);
+    public static final ConfigKey<String> PROP_PRIVATE_KEY_DATA = newStringConfigKey("privateKeyData", "the private ssh key (e.g. contents of an id_rsa or id_dsa file)", null);
     public static final ConfigKey<String> PROP_PRIVATE_KEY_PASSPHRASE = newStringConfigKey("privateKeyPassphrase", "the passphrase for the ssh private key", null);
     public static final ConfigKey<Boolean> PROP_STRICT_HOST_KEY_CHECKING = newConfigKey("strictHostKeyChecking", "whether to check the remote host's identification; defaults to false", false);
     public static final ConfigKey<Boolean> PROP_ALLOCATE_PTY = newConfigKey("allocatePTY", "whether to allocate PTY (vt100); if true then stderr is sent to stdout, but sometimes required for sudo'ing due to requiretty", false);
