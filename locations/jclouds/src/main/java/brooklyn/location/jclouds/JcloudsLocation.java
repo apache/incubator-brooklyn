@@ -564,8 +564,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
             
             // Create a JcloudsSshMachineLocation, and register it
-            String vmHostname = getPublicHostname(node, sshHostAndPort, setup);
-            sshMachineLocation = registerJcloudsSshMachineLocation(node, vmHostname, sshHostAndPort, setup);
+            sshMachineLocation = registerJcloudsSshMachineLocation(computeService, node, initialCredentials, sshHostAndPort, setup);
             
             // Apply same securityGroups rules to iptables, if iptables is running on the node
             if (waitForSshable) {
@@ -1260,7 +1259,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 hostname = getPublicHostname(node, Optional.<HostAndPort>absent(), setup);
             }
 
-            return registerJcloudsSshMachineLocation(node, hostname, Optional.<HostAndPort>absent(), setup);
+            return registerJcloudsSshMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
             
         } catch (IOException e) {
             throw Exceptions.propagate(e);
@@ -1274,7 +1273,19 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     // -------------- create the SshMachineLocation instance, and connect to it etc ------------------------
     
-    protected JcloudsSshMachineLocation registerJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
+    /** @deprecated since 0.7.0 use {@link #registerJcloudsSshMachineLocation(ComputeService, NodeMetadata, String, Optional, ConfigBag)} */
+    @Deprecated
+    protected final JcloudsSshMachineLocation registerJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
+        LOG.warn("Using deprecated registerJcloudsSshMachineLocation: now wants computeService passed", new Throwable("source of deprecated registerJcloudsSshMachineLocation invocation"));
+        return registerJcloudsSshMachineLocation(null, node, null, sshHostAndPort, setup);
+    }
+    
+    protected JcloudsSshMachineLocation registerJcloudsSshMachineLocation(ComputeService computeService, NodeMetadata node, LoginCredentials initialCredentials, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
+        if (initialCredentials==null)
+            initialCredentials = node.getCredentials();
+        
+        String vmHostname = getPublicHostname(node, sshHostAndPort, setup);
+        
         JcloudsSshMachineLocation machine = createJcloudsSshMachineLocation(node, vmHostname, sshHostAndPort, setup);
         machine.setParent(this);
         vmInstanceIds.put(machine, node.getId());
@@ -1587,7 +1598,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      * Prefers public, reachable IPs. 
      * For some clouds (e.g. aws-ec2), it will attempt to find the public hostname.
      */
-    String getPublicHostname(NodeMetadata node, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) {
+    protected String getPublicHostname(NodeMetadata node, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) {
         String provider = (setup != null) ? setup.get(CLOUD_PROVIDER) : null;
         if (provider == null) provider= getProvider();
         
