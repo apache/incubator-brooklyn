@@ -47,6 +47,7 @@ import com.sun.jersey.api.client.GenericType;
 
 public class UsageResourceTest extends BrooklynRestResourceTest {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(UsageResourceTest.class);
 
     private static final long TIMEOUT_MS = 10*1000;
@@ -270,8 +271,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     }
 
     private String createApp(ApplicationSpec spec) {
-        ClientResponse response = client().resource("/v1/applications")
-                .post(ClientResponse.class, spec);
+        ClientResponse response = clientDeploy(spec);
         assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
         TaskSummary createTask = response.getEntity(TaskSummary.class);
         waitForTask(createTask.getId());
@@ -329,6 +329,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         return new Date(timeDown);
     }
     
+    @SuppressWarnings("unused")
     private Date roundUp(Date date) {
         long time = date.getTime();
         long timeDown = ((long)(time / 1000)) * 1000;
@@ -387,6 +388,8 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     }
     
     public static class DynamicLocalhostMachineProvisioningLocation extends LocalhostMachineProvisioningLocation {
+        private static final long serialVersionUID = 2163357613938738967L;
+
         @Override
         public SshMachineLocation obtain(Map<?, ?> flags) throws NoMachinesAvailableException {
             return super.obtain(flags);

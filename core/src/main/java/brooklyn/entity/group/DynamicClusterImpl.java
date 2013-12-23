@@ -28,6 +28,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
+import brooklyn.location.basic.Locations;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.Task;
 import brooklyn.policy.Policy;
@@ -140,7 +141,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
     
     private Location getLocation() {
-        return Iterables.getOnlyElement(getLocations());
+        Collection<? extends Location> ll = Locations.getLocationsCheckingAncestors(getLocations(), this);
+        return Iterables.getOnlyElement(ll);
     }
     
     protected boolean isAvailabilityZoneEnabled() {
@@ -167,20 +169,22 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
     
     @Override
-    public void start(Collection<? extends Location> locs) {
-        checkNotNull(locs, "Null location supplied to start %s", this);
-        checkArgument(locs.size() == 1, "Wrong number of locations supplied to start %s: %s", this, locs);
-        addLocations(locs);
+    public void start(Collection<? extends Location> locsO) {
+        if (locsO!=null) {
+            checkArgument(locsO.size() <= 1, "Wrong number of locations supplied to start %s: %s", this, locsO);
+            addLocations(locsO);
+        }
+        Location loc = getLocation();
 
         EntitySpec<?> spec = getConfig(MEMBER_SPEC);
         if (spec!=null) {
             setDefaultDisplayName("Cluster of "+JavaClassNames.simpleClassName(spec.getType())
-                +" ("+locs.iterator().next().getDisplayName()+")"
+                +" ("+loc+")"
                 );
         }
         
         if (isAvailabilityZoneEnabled()) {
-            setAttribute(SUB_LOCATIONS, findSubLocations(Iterables.getOnlyElement(locs)));
+            setAttribute(SUB_LOCATIONS, findSubLocations(loc));
         }
 
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);

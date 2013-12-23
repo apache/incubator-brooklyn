@@ -128,7 +128,6 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         }
         
         if (locations.isEmpty()) locations = this.getLocations();
-        Iterables.getOnlyElement(locations); //assert just one
         addLocations(locations);
         
         LoadBalancer loadBalancer = getController();

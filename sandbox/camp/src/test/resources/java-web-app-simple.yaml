@@ -1,8 +1,0 @@
-name: sample-single-jboss
-description: Single JBoss using Brooklyn
-origin: http://brooklyn.io
-services:
-- serviceType: brooklyn.entity.webapp.jboss.JBoss7Server
-  brooklyn.config:
-    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-webapp/0.5.0/brooklyn-example-hello-world-webapp-0.5.0.war
-    http.port: 9280+

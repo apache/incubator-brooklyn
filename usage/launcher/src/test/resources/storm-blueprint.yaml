@@ -1,0 +1,8 @@
+name: Storm Sample App
+location: aws-ec2:us-east-1
+services:
+- type: brooklyn.entity.messaging.storm.StormDeployment
+  name: Storm Deployment
+  brooklyn.config:
+    storm.supervisors.count: 5
+    storm.zookeepers.count: 3

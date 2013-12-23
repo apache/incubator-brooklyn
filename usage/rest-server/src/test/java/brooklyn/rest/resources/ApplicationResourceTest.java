@@ -14,6 +14,8 @@ import java.util.concurrent.TimeoutException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -42,15 +44,15 @@ import brooklyn.rest.testing.mocks.RestMockAppBuilder;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import brooklyn.util.exceptions.Exceptions;
 
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.UniformInterfaceException;
-
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceTest extends BrooklynRestResourceTest {
@@ -84,10 +86,10 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   }
   
   @Test
-  public void testDeployApplication() throws InterruptedException, TimeoutException {
-    ClientResponse response = client().resource("/v1/applications")
-        .post(ClientResponse.class, simpleSpec);
-
+  public void testDeployApplication() throws InterruptedException, TimeoutException, JsonGenerationException, JsonMappingException, UniformInterfaceException, ClientHandlerException, IOException {
+    ClientResponse response = clientDeploy(simpleSpec);
+    
+    assertTrue(response.getStatus()/100 == 2, "response is "+response);
     assertEquals(getManagementContext().getApplications().size(), 1);
     assertRegexMatches(response.getLocation().getPath(), "/v1/applications/.*");
 //    Object taskO = response.getEntity(Object.class);
@@ -100,7 +102,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   }
 
   @Test(dependsOnMethods = {"testDeleteApplication"})
-  // this must happen after we've deleted the main applicaiton, as testLocatedLocations assumes a single location
+  // this must happen after we've deleted the main application, as testLocatedLocations assumes a single location
   public void testDeployApplicationImpl() throws Exception {
     ApplicationSpec spec = ApplicationSpec.builder()
             .type(RestMockApp.class.getCanonicalName())
@@ -108,9 +110,9 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             .locations(ImmutableSet.of("localhost"))
             .build();
       
-    ClientResponse response = client().resource("/v1/applications")
-        .post(ClientResponse.class, spec);
-
+    ClientResponse response = clientDeploy(spec);
+    assertTrue(response.getStatus()/100 == 2, "response is "+response);
+    
     // Expect app to be running
     URI appUri = response.getLocation();
     waitForApplicationToBeRunning(response.getLocation());
@@ -125,9 +127,9 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             .locations(ImmutableSet.of("localhost"))
             .build();
       
-    ClientResponse response = client().resource("/v1/applications")
-        .post(ClientResponse.class, spec);
-
+    ClientResponse response = clientDeploy(spec);
+    assertTrue(response.getStatus()/100 == 2, "response is "+response);
+    
     // Expect app to be running
     URI appUri = response.getLocation();
     waitForApplicationToBeRunning(response.getLocation());
@@ -142,9 +144,9 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             .locations(ImmutableSet.of("localhost"))
             .build();
       
-    ClientResponse response = client().resource("/v1/applications")
-        .post(ClientResponse.class, spec);
-
+    ClientResponse response = clientDeploy(spec);
+    assertTrue(response.getStatus()/100 == 2, "response is "+response);
+    
     // Expect app to be running
     URI appUri = response.getLocation();
     waitForApplicationToBeRunning(response.getLocation());
@@ -157,11 +159,27 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     assertEquals(Iterables.getOnlyElement(entities).getName(), "child1");
     assertEquals(Iterables.getOnlyElement(entities).getType(), RestMockSimpleEntity.class.getCanonicalName());
   }
+  
+
+  @Test(dependsOnMethods = {"testDeployApplication", "testLocatedLocation"})
+  public void testDeployApplicationYaml() throws Exception {
+    String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { serviceType: "+BasicApplication.class.getCanonicalName()+" } ] }";
+      
+    ClientResponse response = client().resource("/v1/applications")
+        .entity(yaml, "application/x-yaml")
+        .post(ClientResponse.class);
+    assertTrue(response.getStatus()/100 == 2, "response is "+response);
+    
+    // Expect app to be running
+    URI appUri = response.getLocation();
+    waitForApplicationToBeRunning(response.getLocation());
+    assertEquals(client().resource(appUri).get(ApplicationSummary.class).getSpec().getName(), "simple-app-yaml");
+  }
 
   @Test
   public void testDeployWithInvalidEntityType() {
     try {
-      client().resource("/v1/applications").post(
+      clientDeploy(
           ApplicationSpec.builder().name("invalid-app").
               entities(ImmutableSet.of(new EntitySpec("invalid-ent", "not.existing.entity"))).
               locations(ImmutableSet.of("localhost")).
@@ -177,7 +195,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   @Test
   public void testDeployWithInvalidLocation() {
     try {
-      client().resource("/v1/applications").post(
+        clientDeploy(
           ApplicationSpec.builder().name("invalid-app").
               entities(ImmutableSet.<EntitySpec>of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
               locations(ImmutableSet.of("3423")).

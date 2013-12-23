@@ -1,5 +1,7 @@
 package brooklyn.rest.testing;
 
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
+
 import org.testng.annotations.AfterClass;
 
 import brooklyn.entity.basic.Entities;
@@ -26,6 +28,10 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
             manager = new LocalManagementContext();
             BrooklynRestApiLauncherTest.forceUseOfDefaultCatalogWithJavaClassPath(manager);
             BasicLocationRegistry.setupLocationRegistryForTesting(manager);
+            
+            new BrooklynCampPlatformLauncherNoServer()
+                .useManagementContext(manager)
+                .launch();
         }
         return manager;
     }

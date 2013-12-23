@@ -49,20 +49,31 @@ public class Machines {
         return Optional.fromNullable(result);
     }
 
-    public static Optional<MachineLocation> findUniqueMachineLocation(Iterable<? extends Location> locations) {
-        Iterator<? extends Location> li = locations.iterator();
-        MachineLocation result = null;
-        while (li.hasNext()) {
-            Object candidate = li.next();
-            if (candidate instanceof MachineLocation) {
-                if (result==null) result = (MachineLocation)candidate;
+    @SuppressWarnings("unchecked")
+    protected static <T> Optional<T> findUniqueElement(Iterable<?> items, Class<T> type) {
+        if (items==null) return null;
+        Iterator<?> i = items.iterator();
+        T result = null;
+        while (i.hasNext()) {
+            Object candidate = i.next();
+            if (type.isInstance(candidate)) {
+                if (result==null) result = (T)candidate;
                 else {
-                    log.debug("Multiple MachineLocations in "+locations+"; ignoring");
+                    if (log.isTraceEnabled())
+                        log.trace("Multiple instances of "+type+" in "+items+"; ignoring");
                     return Optional.absent();
                 }
             }
         }
         return Optional.fromNullable(result);
+    }
+    
+    public static Optional<MachineLocation> findUniqueMachineLocation(Iterable<? extends Location> locations) {
+        return findUniqueElement(locations, MachineLocation.class);
+    }
+
+    public static Optional<SshMachineLocation> findUniqueSshMachineLocation(Iterable<? extends Location> locations) {
+        return findUniqueElement(locations, SshMachineLocation.class);
     }
 
     public static Optional<String> findSubnetHostname(Iterable<? extends Location> ll) {

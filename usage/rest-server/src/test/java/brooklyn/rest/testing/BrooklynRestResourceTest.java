@@ -8,13 +8,20 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
+import javax.ws.rs.core.MediaType;
+
+import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.Status;
+
+import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
 import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.Repeater;
 
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.spi.inject.Errors;
 
@@ -34,7 +41,22 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
         super.tearDown();
     }
 
+    protected ClientResponse clientDeploy(ApplicationSpec spec) {
+        try {
+            // dropwizard TestClient won't skip deserialization of trivial things like string and byte[] and inputstream
+            // if we pass in an object it serializes, so we have to serialize things ourselves
+            return client().resource("/v1/applications")
+                .entity(new ObjectMapper().writer().writeValueAsBytes(spec), MediaType.APPLICATION_OCTET_STREAM)
+                .post(ClientResponse.class);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
     protected void waitForApplicationToBeRunning(final URI applicationRef) {
+        if (applicationRef==null)
+            throw new NullPointerException("No application URI available (consider using BrooklynRestResourceTest.clientDeploy)");
+        
         boolean started = Repeater.create("Wait for application startup")
                 .until(new Callable<Boolean>() {
                     @Override

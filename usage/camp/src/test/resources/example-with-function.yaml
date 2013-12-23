@@ -1,0 +1,16 @@
+name: example-with-function
+description: |
+  Tests a variety of simple functional expressions
+origin: http://brooklyn.io
+location: localhost
+services:
+- serviceType: brooklyn.entity.webapp.jboss.JBoss7Server
+  brooklyn.config:
+    # test the various ways to use literals, either a function
+    literalValue1: '$brooklyn:literal("$brooklyn: is a fun place")' 
+    literalValue2: "$brooklyn:literal(\"$brooklyn: is a fun place\")" 
+    literalValue3: >
+      $brooklyn:literal("$brooklyn: is a fun place")
+    literalValue4: "$brooklyn:formatString(\"%s: is a fun place\", \"$brooklyn\")" 
+    # function whose value is used as a key
+    $brooklyn:literal("$brooklyn:1"): key to the city 

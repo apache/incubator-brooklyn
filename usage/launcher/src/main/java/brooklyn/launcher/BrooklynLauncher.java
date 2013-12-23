@@ -1,6 +1,7 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 import java.io.Closeable;
 import java.net.InetAddress;
@@ -32,11 +33,11 @@ import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
+import brooklyn.util.stream.Streams;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.Closeables;
 
 /**
  * Example usage is:
@@ -298,6 +299,12 @@ public class BrooklynLauncher {
 
         // Create the locations
         locations.addAll(managementContext.getLocationRegistry().resolve(locationSpecs));
+
+        // Add a CAMP platform (TODO include a flag for this?)
+        new BrooklynCampPlatformLauncherNoServer()
+            .useManagementContext(managementContext)
+            .launch();
+        // TODO start CAMP rest _server_ in the below (at /camp) ?
         
         // Start the web-console
         if (startWebApps) {
@@ -397,7 +404,7 @@ public class BrooklynLauncher {
         
         for (Location loc : locations) {
             if (loc instanceof Closeable) {
-                Closeables.closeQuietly((Closeable)loc);
+                Streams.closeQuietly((Closeable)loc);
             }
         }
     }

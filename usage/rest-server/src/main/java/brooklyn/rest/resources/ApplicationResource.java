@@ -4,13 +4,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
+import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
+import io.brooklyn.camp.spi.Assembly;
+import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
+import java.io.Reader;
+import java.io.StringReader;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -21,7 +26,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.trait.Startable;
 import brooklyn.management.Task;
 import brooklyn.rest.api.ApplicationApi;
 import brooklyn.rest.domain.ApplicationSpec;
@@ -33,7 +41,9 @@ import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Collections2;
 
@@ -149,8 +159,12 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
       return ApplicationTransformer.summaryFromApplication(brooklyn().getApplication(application));
   }
 
-  @Override
   public Response create(ApplicationSpec applicationSpec) {
+      return createFromAppSpec(applicationSpec);
+  }
+
+  /** @deprecated since 0.7.0 see #create */ @Deprecated 
+  protected Response createFromAppSpec(ApplicationSpec applicationSpec) {
       checkApplicationTypesAreValid(applicationSpec);
       checkLocationsAreValid(applicationSpec);
       // TODO duplicate prevention
@@ -160,7 +174,76 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
       URI ref = URI.create(app.getApplicationId());
       return created(ref).entity(ts).build();
   }
+  
+  @Override
+  public Response createFromYaml(String yaml) {
+      log.debug("Creating app from yaml");
+      Reader input = new StringReader(yaml);
+      AssemblyTemplate at = camp().pdp().registerDeploymentPlan(input);
+      return launch(at);
+  }
 
+  private Response launch(AssemblyTemplate at) {
+    try {
+          AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
+          Assembly assembly;
+          Task<?> task = null;
+          if (instantiator instanceof BrooklynAssemblyTemplateInstantiator) {
+              Application app = ((BrooklynAssemblyTemplateInstantiator) instantiator).create(at, camp());
+              assembly = camp().assemblies().get(app.getApplicationId());
+              
+              task = Entities.invokeEffector((EntityLocal)app, app, Startable.START,
+                  // locations already set in the entities themselves;
+                  // TODO make it so that this arg does not have to be supplied to START !
+                  MutableMap.of("locations", MutableList.of()));
+          } else {
+              assembly = instantiator.instantiate(at, camp());
+          }
+          Entity app = mgmt().getEntityManager().getEntity(assembly.getId());
+          log.info("Launched from YAML: "+assembly+" ("+task+")");
+
+          URI ref = URI.create(app.getApplicationId());
+          ResponseBuilder response = created(ref);
+          if (task!=null)
+              response.entity(TaskTransformer.FROM_TASK.apply(task));
+          return response.build();
+          
+      } catch (Exception e) {
+          throw Exceptions.propagate(e);
+      }
+}
+  
+  @Override
+  public Response createPoly(byte[] inputToAutodetectType) {
+      log.debug("Creating app from autodetecting input");
+      try {
+          ApplicationSpec appSpec = mapper().readValue(inputToAutodetectType, ApplicationSpec.class);
+          return createFromAppSpec(appSpec);
+      } catch (Exception e) {
+          log.debug("Input is not legacy ApplicationSpec JSON (will try others): "+e);
+      }
+      
+      // TODO not json - try ZIP, etc
+      
+      // finally try yaml
+      AssemblyTemplate template = null;
+      try {
+          template = camp().pdp().registerDeploymentPlan(new StringReader(new String(inputToAutodetectType)));
+      } catch (Exception e) {
+          log.debug("Input is not valid YAML: "+e);
+      }
+      if (template!=null)
+          return launch(template);
+      
+      return Response.serverError().entity("Unsupported format; not able to autodetect.").build();
+  }
+
+  @Override
+    public Response createFromForm(String contents) {
+        log.debug("Creating app from form");
+        return createPoly(contents.getBytes());
+    }
+  
   @Override
   public Response delete(String application) {
       Task<?> t = brooklyn().destroy(brooklyn().getApplication(application));
