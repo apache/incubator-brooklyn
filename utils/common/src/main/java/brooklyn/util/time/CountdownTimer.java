@@ -8,7 +8,7 @@ import com.google.common.base.Stopwatch;
 
 public class CountdownTimer {
 
-    Stopwatch stopwatch = new Stopwatch();
+    Stopwatch stopwatch = Stopwatch.createUnstarted();
     Duration limit;
     
     private CountdownTimer(Duration limit) {

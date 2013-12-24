@@ -6,8 +6,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 import java.util.Set;
 
-import org.jclouds.aws.ec2.AWSEC2ApiMetadata;
-import org.jclouds.aws.ec2.AWSEC2Client;
+import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.ec2.domain.AvailabilityZoneInfo;
 
 import brooklyn.location.Location;
@@ -47,8 +46,8 @@ public class AwsAvailabilityZoneExtension extends AbstractAvailabilityZoneExtens
     
     protected Set<AvailabilityZoneInfo> getAvailabilityZones() {
         String regionName = loc.getRegion();
-        AWSEC2Client ec2Client = loc.getComputeService().getContext().unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi();
-        return ec2Client.getAvailabilityZoneAndRegionServices().describeAvailabilityZonesInRegion(regionName);
+        AWSEC2Api ec2Client = loc.getComputeService().getContext().unwrapApi(AWSEC2Api.class);
+        return ec2Client.getAvailabilityZoneAndRegionApi().get().describeAvailabilityZonesInRegion(regionName);
     }
     
     protected JcloudsLocation newSubLocation(Location parent, AvailabilityZoneInfo zone) {
