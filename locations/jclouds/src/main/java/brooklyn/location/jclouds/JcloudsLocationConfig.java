@@ -128,6 +128,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<String> JCLOUDS_LOCATION_CUSTOMIZER_TYPE = ConfigKeys.newStringConfigKey(
             "customizerType", "Optional location customizer type (to be class-loaded and constructed with no-arg constructor)", null);
 
+    @SuppressWarnings("serial")
     public static final ConfigKey<Collection<JcloudsLocationCustomizer>> JCLOUDS_LOCATION_CUSTOMIZERS =
             new BasicConfigKey<Collection<JcloudsLocationCustomizer>>(
                     new TypeToken<Collection<JcloudsLocationCustomizer>>() {},
@@ -137,6 +138,9 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     
     public static final ConfigKey<Integer> OVERRIDE_RAM = ConfigKeys.newIntegerConfigKey("overrideRam", "Custom ram value");    
     
+    public static final ConfigKey<String> NETWORK_NAME = ConfigKeys.newStringConfigKey(
+        "networkName", "Network name to specify as template option (e.g. GCE)");
+
     /**
      * CUSTOM_MACHINE_SETUP_SCRIPT_URL accepts a URL location that points to a shell script. 
      * Please have a look at locations/jclouds/src/main/resources/sample/script/setup-server.sh as an example
