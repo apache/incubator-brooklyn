@@ -436,4 +436,8 @@ public class BrooklynRestResourceUtils {
         return !Urls.isUrlWithProtocol(url) || url.startsWith("classpath:");
     }
 
+    public void reloadBrooklynProperties() {
+        mgmt.reloadBrooklynProperties();
+    }
+
 }

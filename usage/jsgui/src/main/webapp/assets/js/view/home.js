@@ -17,6 +17,7 @@ define([
         tagName:"div",
         events:{
             'click #add-new-application':'createApplication',
+            'click #reload-brooklyn-properties': 'reloadBrooklynProperties',
             'click .addApplication':'createApplication'
         },
         
@@ -134,6 +135,25 @@ define([
                         that.collection.fetch({reset:true});
                     }).modal('show')
             }
+        },
+
+        reloadBrooklynProperties: function() {
+            $.ajax({
+                type: "POST",
+                url: "/v1/applications/reloadBrooklynProperties",
+                contentType: "application/json",
+                success: function() {
+                    console.log("Reloaded brooklyn properties");
+                },
+                error: function(data) {
+                    self.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
+                    // TODO render the error better than poor-man's flashing
+                    // (would just be connection error -- with timeout=0 we get a task even for invalid input)
+
+                    console.error("ERROR invoking effector");
+                    console.debug(data)
+                }
+            });
         }
     })
 

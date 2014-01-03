@@ -66,7 +66,6 @@ define([
             // call Backbone destroy() which does HTTP DELETE on the model
             this.collection.get(event.currentTarget['id']).destroy({wait:true})
         }
-        
     })
 
     return ApplicationExplorerView

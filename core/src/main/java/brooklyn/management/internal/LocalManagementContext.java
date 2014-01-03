@@ -251,4 +251,12 @@ public class LocalManagementContext extends AbstractManagementContext {
     public String toString() {
         return LocalManagementContext.class.getSimpleName()+"["+getManagementPlaneId()+"-"+getManagementNodeId()+"]";
     }
+
+    @Override
+    public void reloadBrooklynProperties() {
+        BrooklynProperties.Factory.Builder builder = new BrooklynProperties.Factory.Builder();
+        BrooklynProperties properties = builder.build();
+        configMap.putAll(checkNotNull(properties, "brooklynProperties"));
+        log.info(properties.toString());
+    }
 }

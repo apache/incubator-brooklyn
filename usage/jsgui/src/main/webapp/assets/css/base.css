@@ -421,6 +421,10 @@ input[type="color"]:focus,.uneditable-input:focus {
     text-align: right;
 }
 
+#reload-brooklyn-properties-resource {
+	text-align: right;
+}
+
 /* general pages */
 .sidebar_at_right {
     border-right: 4px solid #BBB;

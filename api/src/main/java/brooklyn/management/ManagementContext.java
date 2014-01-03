@@ -138,4 +138,10 @@ public interface ManagementContext {
      * again to get the {@link AccessController}.
      */
     AccessController getAccessController();
+
+    /**
+     * Reloads locations from brooklyn.properties. Any changes will apply only to newly created applications
+     * @return 
+     */
+    void reloadBrooklynProperties();
 }
