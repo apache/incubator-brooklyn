@@ -1,18 +1,17 @@
 package brooklyn.location.jclouds;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import javax.annotation.Nullable;
-
+import brooklyn.location.OsDetails;
+import brooklyn.location.basic.BasicOsDetails;
+import brooklyn.location.basic.HasSubnetHostname;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.net.Networking;
+import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.net.HostAndPort;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.callables.RunScriptOnNode;
 import org.jclouds.compute.domain.ExecResponse;
@@ -24,19 +23,17 @@ import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.InterpretableStatement;
 import org.jclouds.scriptbuilder.domain.Statement;
 
-import brooklyn.location.OsDetails;
-import brooklyn.location.basic.BasicOsDetails;
-import brooklyn.location.basic.HasSubnetHostname;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.net.Networking;
+import javax.annotation.Nullable;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.net.HostAndPort;
-import com.google.common.util.concurrent.ListenableFuture;
+import static brooklyn.util.GroovyJavaMethods.truth;
 
 public class JcloudsSshMachineLocation extends SshMachineLocation implements HasSubnetHostname {
     
@@ -200,10 +197,8 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
     public OsDetails getOsDetails() {
         if (node.getOperatingSystem() != null) {
             return new BasicOsDetails(
-                    node.getOperatingSystem().getName() != null
-                            ? node.getOperatingSystem().getName() : "linux",
-                    node.getOperatingSystem().getArch() != null
-                            ? node.getOperatingSystem().getArch() : BasicOsDetails.OsArchs.I386,
+                    node.getOperatingSystem().getFamily().toString(),
+                    node.getOperatingSystem().is64Bit() ? BasicOsDetails.OsArchs.X_86_64 : BasicOsDetails.OsArchs.I386,
                     node.getOperatingSystem().getVersion() != null
                             ? node.getOperatingSystem().getVersion() : "unknown",
                     node.getOperatingSystem().is64Bit());

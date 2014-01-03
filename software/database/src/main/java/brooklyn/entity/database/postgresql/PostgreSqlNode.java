@@ -45,7 +45,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface PostgreSqlNode extends SoftwareProcess, HasShortName, DatastoreCommon, DatabaseNode {
     
     @SetFromFlag("version")
-    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "9.1");
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "9.3-1");//"9.1-4");
 
     @SetFromFlag("configFileUrl")
     ConfigKey<String> CONFIGURATION_FILE_URL = ConfigKeys.newStringConfigKey(
