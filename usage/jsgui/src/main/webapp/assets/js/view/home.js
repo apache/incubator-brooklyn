@@ -138,12 +138,14 @@ define([
         },
 
         reloadBrooklynProperties: function() {
+            var self = this;
             $.ajax({
                 type: "POST",
                 url: "/v1/applications/reloadBrooklynProperties",
                 contentType: "application/json",
                 success: function() {
                     console.log("Reloaded brooklyn properties");
+                    self.options.locations.fetch();
                 },
                 error: function(data) {
                     self.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
