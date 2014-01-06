@@ -103,12 +103,9 @@ public interface MongoDBServer extends SoftwareProcess {
             "mongodb.server.network.numRequests", "Server network requests");
 
     /** A single server's replica set configuration **/
-    ConfigKey<Boolean> REPLICA_SET_ENABLED = ConfigKeys.newBooleanConfigKey(
-            "mongodb.server.replicaSet.enabled", "True if this server was started to be part of a replica set", Boolean.FALSE);
-
     ConfigKey<MongoDBReplicaSet> REPLICA_SET = new BasicConfigKey<MongoDBReplicaSet>(MongoDBReplicaSet.class,
             "mongodb.replicaset", "The replica set to which the server belongs. " +
-            "Users are not required to set this directly when creating a new replica set.");
+            "Users should not set this directly when creating a new replica set.");
 
     AttributeSensor<ReplicaSetMemberStatus> REPLICA_SET_MEMBER_STATUS = Sensors.newSensor(
             ReplicaSetMemberStatus.class, "mongodb.server.replicaSet.memberStatus", "The status of this server in the replica set");
@@ -128,8 +125,12 @@ public interface MongoDBServer extends SoftwareProcess {
     MongoDBClientSupport getClient();
 
     /**
-     * @return The replica set the server belongs to, or null if {@link #REPLICA_SET_ENABLED} is false.
+     * @return The replica set the server belongs to, or null if the server is a standalone instance.
      */
     MongoDBReplicaSet getReplicaSet();
 
+    /**
+     * @return True if the server is a child of {@link MongoDBReplicaSet}.
+     */
+    boolean isReplicaSetMember();
 }

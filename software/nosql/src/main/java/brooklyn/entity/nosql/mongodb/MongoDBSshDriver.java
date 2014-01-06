@@ -1,11 +1,18 @@
 package brooklyn.entity.nosql.mongodb;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
@@ -17,19 +24,19 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
 public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implements MongoDBDriver {
 
-    public static final Logger log = LoggerFactory.getLogger(MongoDBSshDriver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBSshDriver.class);
 
     private String expandedInstallDir;
 
-    public MongoDBSshDriver(EntityLocal entity, SshMachineLocation machine) {
+    public MongoDBSshDriver(MongoDBServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
+    }
+
+    @Override
+    public MongoDBServerImpl getEntity() {
+        return MongoDBServerImpl.class.cast(super.getEntity());
     }
 
     private String getExpandedInstallDir() {
@@ -75,7 +82,7 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     @Override
     public void launch() {
-        MongoDBServer server = MongoDBServer.class.cast(entity);
+        MongoDBServer server = getEntity();
         Integer port = server.getAttribute(MongoDBServer.PORT);
 
         ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
@@ -86,16 +93,18 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
                 .add("--port", port.toString())
                 .add("--fork");
 
-        String replicaSetName = server.getReplicaSet().getName();
-        if (!Strings.isNullOrEmpty(replicaSetName))
+        if (server.isReplicaSetMember()) {
+            String replicaSetName = server.getReplicaSet().getName();
+            checkState(!Strings.isNullOrEmpty(replicaSetName), "Replica set name must not be null or empty");
             argsBuilder.add("--replSet", replicaSetName);
+        }
 
         if (Boolean.TRUE.equals(server.getConfig(MongoDBServer.ENABLE_REST_INTERFACE)))
             argsBuilder.add("--rest");
 
         String args = Joiner.on(" ").join(argsBuilder.build());
         String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args);
-        log.info(command);
+        LOG.info(command);
         newScript(LAUNCHING)
                 .updateTaskAndFailOnNonZeroResultCode()
                 .body.append(command).execute();

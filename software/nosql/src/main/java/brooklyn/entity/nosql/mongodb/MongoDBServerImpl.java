@@ -76,8 +76,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                         .onException(Functions.<BasicBSONObject>constant(null)))
                 .build();
 
-        final boolean replicaSetEnabled = getConfig(REPLICA_SET_ENABLED);
-        if (replicaSetEnabled) {
+        if (isReplicaSetMember()) {
             replicaSetStats = FunctionFeed.builder()
                     .entity(this)
                     .poll(new FunctionPollConfig<Object, ReplicaSetMemberStatus>(REPLICA_SET_MEMBER_STATUS)
@@ -129,7 +128,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
                         // Replica set stats
                         BasicBSONObject repl = (BasicBSONObject) map.get("repl");
-                        if (replicaSetEnabled && repl != null) {
+                        if (isReplicaSetMember() && repl != null) {
                             setAttribute(IS_PRIMARY_FOR_REPLICA_SET, repl.getBoolean("ismaster"));
                             setAttribute(IS_SECONDARY_FOR_REPLICA_SET, repl.getBoolean("secondary"));
                             setAttribute(REPLICA_SET_PRIMARY_ENDPOINT, repl.getString("primary"));
@@ -158,9 +157,12 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
     @Override
     public MongoDBReplicaSet getReplicaSet() {
-        return Boolean.TRUE.equals(getConfig(MongoDBServer.REPLICA_SET_ENABLED))
-                ? getConfig(MongoDBServer.REPLICA_SET)
-                : null;
+        return getConfig(MongoDBServer.REPLICA_SET);
+    }
+
+    @Override
+    public boolean isReplicaSetMember() {
+        return getReplicaSet() != null;
     }
 
     @Override

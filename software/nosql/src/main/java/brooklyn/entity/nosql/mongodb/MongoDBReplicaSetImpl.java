@@ -60,7 +60,8 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     private final AtomicBoolean mustInitialise = new AtomicBoolean(true);
 
     @SuppressWarnings("unchecked")
-    protected static final List<AttributeSensor<Long>> SENSORS_TO_SUM = Arrays.asList(MongoDBServer.OPCOUNTERS_INSERTS, 
+    protected static final List<AttributeSensor<Long>> SENSORS_TO_SUM = Arrays.asList(
+        MongoDBServer.OPCOUNTERS_INSERTS,
         MongoDBServer.OPCOUNTERS_QUERIES,
         MongoDBServer.OPCOUNTERS_UPDATES,
         MongoDBServer.OPCOUNTERS_DELETES,
@@ -132,8 +133,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     protected Map<?,?> getCustomChildFlags() {
         return ImmutableMap.builder()
                 .putAll(super.getCustomChildFlags())
-                .put(MongoDBServer.REPLICA_SET_ENABLED, true)
-                .put(MongoDBServer.REPLICA_SET, this)
+                .put(MongoDBServer.REPLICA_SET, getProxy())
                 .build();
     }
 
@@ -204,7 +204,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 // SERVICE_UP is not guaranteed when additional members are added to the set.
                 Boolean isAvailable = secondary.getAttribute(MongoDBServer.SERVICE_UP);
                 MongoDBServer primary = getPrimary();
-                if (isAvailable && primary != null) {
+                if (Boolean.TRUE.equals(isAvailable) && primary != null) {
                     primary.getClient().addMemberToReplicaSet(secondary, nextMemberId.incrementAndGet());
                     if (LOG.isInfoEnabled()) {
                         LOG.info("{} added to replica set {}", secondary, getName());
