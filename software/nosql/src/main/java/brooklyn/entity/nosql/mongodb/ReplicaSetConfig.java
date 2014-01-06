@@ -203,14 +203,19 @@ public class ReplicaSetConfig {
     private void setVotingMembers() {
         if (LOG.isDebugEnabled())
             LOG.debug("Setting voting and non-voting members of replica set: {}", name);
-        boolean seenPrimary = !primary.isPresent();
+        boolean seenPrimary = false;
         String expectedPrimary = primary.isPresent()
                 ? primary.get().getHostText() + ":" + primary.get().getPort()
                 : "";
 
         // Ensure an odd number of voters
         int setSize = this.members.size();
-        int votingMembers = Math.min(setSize % 2 == 0 ? setSize - 1 : setSize, MAXIMUM_VOTING_MEMBERS);
+        int nonPrimaryVotingMembers = Math.min(setSize % 2 == 0 ? setSize - 1 : setSize, MAXIMUM_VOTING_MEMBERS);
+        if (primary.isPresent()) {
+            if (LOG.isTraceEnabled())
+                LOG.trace("Reserving vote for primary: " + expectedPrimary);
+            nonPrimaryVotingMembers -= 1;
+        }
 
         for (Object member : this.members) {
             if (member instanceof BasicBSONObject) {
@@ -220,11 +225,10 @@ public class ReplicaSetConfig {
                 // is this member noted as the primary?
                 if (this.primary.isPresent() && expectedPrimary.equals(host)) {
                     bsonObject.put("votes", 1);
-                    --votingMembers;
                     seenPrimary = true;
                     if (LOG.isDebugEnabled())
                         LOG.debug("Voting member (primary) of set {}: {}", name, host);
-                } else if (votingMembers-- > 0) {
+                } else if (nonPrimaryVotingMembers-- > 0) {
                     bsonObject.put("votes", 1);
                     if (LOG.isDebugEnabled())
                         LOG.debug("Voting member of set {}: {}", name, host);
@@ -238,9 +242,10 @@ public class ReplicaSetConfig {
             }
         }
 
-        if (!seenPrimary) {
+        if (primary.isPresent() && !seenPrimary) {
             LOG.warn("Cannot give replica set primary a vote in reconfigured set: " +
-                    "primary was indicated as {} but no member with that host and port was seen in the set.",
+                    "primary was indicated as {} but no member with that host and port was seen in the set. " +
+                    "The replica set now has an even number of voters.",
                     this.primary);
         }
     }

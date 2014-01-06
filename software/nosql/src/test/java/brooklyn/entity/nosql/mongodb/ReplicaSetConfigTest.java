@@ -1,5 +1,6 @@
 package brooklyn.entity.nosql.mongodb;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -53,18 +54,33 @@ public class ReplicaSetConfigTest {
         return setConfig.build();
     }
 
-    private Collection<BasicBSONObject> votingMembersOfSet(BasicBSONObject config) {
+    private Collection<HostAndPort> votingMembersOfSet(BasicBSONObject config) {
         BasicBSONList membersObject = BasicBSONList.class.cast(config.get("members"));
         List<BasicBSONObject> members = Lists.newArrayList();
         for (Object object : membersObject) members.add(BasicBSONObject.class.cast(object));
-        return FluentIterable.from(members).filter(IS_VOTING_MEMBER).toList();
+        return FluentIterable.from(members)
+                .filter(IS_VOTING_MEMBER)
+                .transform(new Function<BasicBSONObject, HostAndPort>() {
+                    @Override public HostAndPort apply(BasicBSONObject input) {
+                        return HostAndPort.fromString(input.getString("host"));
+                    }
+                })
+                .toList();
     }
 
-    private Collection<BasicBSONObject> nonVotingMembersOfSet(BasicBSONObject config) {
+    private Collection<HostAndPort> nonVotingMembersOfSet(BasicBSONObject config) {
         BasicBSONList membersObject = BasicBSONList.class.cast(config.get("members"));
         List<BasicBSONObject> members = Lists.newArrayList();
         for (Object object : membersObject) members.add(BasicBSONObject.class.cast(object));
-        return FluentIterable.from(members).filter(Predicates.not(IS_VOTING_MEMBER)).toList();
+        return FluentIterable
+                .from(members)
+                .filter(Predicates.not(IS_VOTING_MEMBER))
+                .transform(new Function<BasicBSONObject, HostAndPort>() {
+                    @Override public HostAndPort apply(BasicBSONObject input) {
+                        return HostAndPort.fromString(input.getString("host"));
+                    }
+                })
+                .toList();
     }
 
     @Test
@@ -162,11 +178,10 @@ public class ReplicaSetConfigTest {
     @Test
     public void testFourthServerOfFourIsGivenVoteWhenAnotherServerIsRemoved() {
         BasicBSONObject config = makeSetWithNMembers(4);
-        BasicBSONObject toRemove = votingMembersOfSet(config).iterator().next();
-        HostAndPort removedHostAndPort = HostAndPort.fromString(toRemove.getString("host"));
+        HostAndPort toRemove = votingMembersOfSet(config).iterator().next();
 
         BasicBSONObject updated = ReplicaSetConfig.fromExistingConfig(config)
-                .remove(HostAndPort.fromString(toRemove.getString("host")))
+                .remove(toRemove)
                 .build();
 
         assertEquals(votingMembersOfSet(updated).size(), 3);
@@ -176,7 +191,7 @@ public class ReplicaSetConfigTest {
         for (Object object : newMembers) {
             BasicBSONObject member = BasicBSONObject.class.cast(object);
             HostAndPort memberHostAndPort = HostAndPort.fromString(member.getString("host"));
-            assertNotEquals(memberHostAndPort, removedHostAndPort);
+            assertNotEquals(memberHostAndPort, toRemove);
         }
     }
 
@@ -192,5 +207,19 @@ public class ReplicaSetConfigTest {
     @Test(expectedExceptions = IllegalStateException.class)
     public void testMoreMembersThanMaximumAllowsRejected() {
         makeSetWithNMembers(ReplicaSetConfig.MAXIMUM_REPLICA_SET_SIZE + 1);
+    }
+
+    @Test
+    public void testPrimaryGivenVoteWhenLastInMemberList() {
+        BasicBSONObject config = ReplicaSetConfig.builder("rs")
+            .member("host-a", 1, 1)
+            .member("host-b", 2, 2)
+            .member("host-c", 3, 3)
+            .member("host-d", 4, 4)
+            .primary(HostAndPort.fromParts("host-d", 4))
+            .build();
+        assertEquals(votingMembersOfSet(config).size(), 3);
+        assertEquals(nonVotingMembersOfSet(config).size(), 1);
+        assertTrue(votingMembersOfSet(config).contains(HostAndPort.fromParts("host-d", 4)));
     }
 }
