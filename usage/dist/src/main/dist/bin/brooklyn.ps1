@@ -98,11 +98,11 @@ if ( $env:JAVA_OPTS -eq $null ) {
 $javaargs += "-Dbrooklyn.localhost.address=127.0.0.1 $($JAVA_OPTS)"
 
 # workaround for http://bugs.sun.com/view_bug.do?bug_id=4787931
-$javaargs += "-Duser.home=$env:USERPROFILE"
+$javaargs += "-Duser.home=`"$env:USERPROFILE`""
 
 # add the classpath
 $javaargs += "-cp"
-$javaargs += $INITIAL_CLASSPATH
+$javaargs += "`"$($INITIAL_CLASSPATH)`""
 
 # main class
 $javaargs += "brooklyn.cli.Main"
