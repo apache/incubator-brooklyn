@@ -17,7 +17,7 @@ public class SolrJSupport {
     public final String hostname;
     public final int solrPort;
     
-    public SolrJSupport(SolrNode node) {
+    public SolrJSupport(SolrServer node) {
         this(node.getAttribute(Attributes.HOSTNAME), node.getSolrPort());
     }
     

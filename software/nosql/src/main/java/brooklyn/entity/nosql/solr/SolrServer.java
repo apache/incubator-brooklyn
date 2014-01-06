@@ -24,34 +24,27 @@ import brooklyn.util.flags.SetFromFlag;
  */
 @Catalog(name="Apache Solr Node", description="Solr is the popular, blazing fast open source enterprise search " +
         "platform from the Apache Lucene project.", iconUrl="classpath:///solr-logo.jpeg")
-@ImplementedBy(SolrNodeImpl.class)
-public interface SolrNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans {
+@ImplementedBy(SolrServerImpl.class)
+public interface SolrServer extends SoftwareProcess, UsesJmx, UsesJavaMXBeans {
 
     @SetFromFlag("version")
-    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "4.5.1");
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "4.6.0");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
-            SoftwareProcess.DOWNLOAD_URL, "${driver.mirrorUrl}/${version}/apache-solr-${version}-bin.tar.gz");
+            SoftwareProcess.DOWNLOAD_URL, "${driver.mirrorUrl}/${version}/solr-${version}.tgz");
 
     /** download mirror, if desired */
     @SetFromFlag("mirrorUrl")
-    ConfigKey<String> MIRROR_URL = new BasicConfigKey<String>(String.class, "solr.install.mirror.url", "URL of mirror", "http://www.mirrorservice.org/sites/ftp.apache.org/solr");
+    ConfigKey<String> MIRROR_URL = ConfigKeys.newStringConfigKey("solr.install.mirror.url", "URL of mirror",
+            "http://mirrors.ukfast.co.uk/sites/ftp.apache.org/lucene/solr/");
 
     @SetFromFlag("tgzUrl")
     ConfigKey<String> TGZ_URL = new BasicConfigKey<String>(String.class, "solr.install.tgzUrl", "URL of TGZ download file");
 
-    @SetFromFlag("gossipPort")
-    PortAttributeSensorAndConfigKey SOLR_PORT = new PortAttributeSensorAndConfigKey("solr.gossip.port", "Solr Gossip communications port", PortRanges.fromString("7000+"));
-
-    @SetFromFlag("solrConfigTemplateUrl")
-    BasicAttributeSensorAndConfigKey<String> SOLR_CONFIG_TEMPLATE_URL = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "solr.config.templateUrl", "Template file (in freemarker format) for the solr.yaml config file", 
-            "classpath://brooklyn/entity/nosql/solr/solr.yaml");
-
-    @SetFromFlag("solrConfigFileName")
-    BasicAttributeSensorAndConfigKey<String> SOLR_CONFIG_FILE_NAME = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "solr.config.fileName", "Name for the copied config file", "solr.yaml");
+    @SetFromFlag("solrPort")
+    PortAttributeSensorAndConfigKey SOLR_PORT = new PortAttributeSensorAndConfigKey("solr.http.port", "Solr HTTP communications port",
+            PortRanges.fromString("8983+"));
 
     /* Metrics for read/write performance. */
     
@@ -68,6 +61,5 @@ public interface SolrNode extends SoftwareProcess, UsesJmx, UsesJavaMXBeans {
     /* Accessors used from template */
     
     Integer getSolrPort();
-    String getListenAddress();
-    String getBroadcastAddress();
+
 }

@@ -50,22 +50,22 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 /**
- * Implementation of {@link SolrNode}.
+ * Implementation of {@link SolrServer}.
  */
-public class SolrNodeImpl extends SoftwareProcessImpl implements SolrNode {
+public class SolrServerImpl extends SoftwareProcessImpl implements SolrServer {
 
-    private static final Logger log = LoggerFactory.getLogger(SolrNodeImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(SolrServerImpl.class);
 
-    public SolrNodeImpl() {
+    public SolrServerImpl() {
     }
     
-    @Override public Integer getSolrPort() { return getAttribute(SolrNode.SOLR_PORT); }
-    @Override public String getListenAddress() { return getAttribute(SolrNode.ADDRESS); }
-    @Override public String getBroadcastAddress() { return getAttribute(SolrNode.HOSTNAME); }
+    @Override public Integer getSolrPort() { return getAttribute(SolrServer.SOLR_PORT); }
+    @Override public String getListenAddress() { return getAttribute(SolrServer.ADDRESS); }
+    @Override public String getBroadcastAddress() { return getAttribute(SolrServer.HOSTNAME); }
 
     @Override
-    public Class<SolrNodeDriver> getDriverInterface() {
-        return SolrNodeDriver.class;
+    public Class<SolrServerDriver> getDriverInterface() {
+        return SolrServerDriver.class;
     }
 
     @Override

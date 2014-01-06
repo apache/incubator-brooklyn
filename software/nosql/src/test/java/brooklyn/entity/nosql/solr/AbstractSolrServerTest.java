@@ -11,10 +11,10 @@ import brooklyn.location.Location;
 /**
  * Solr test framework for integration and live tests.
  */
-public class AbstractSolrNodeTest extends BrooklynMgmtContextTestSupport {
+public class AbstractSolrServerTest extends BrooklynMgmtContextTestSupport {
 
     protected Location testLocation;
-    protected SolrNode solr;
+    protected SolrServer solr;
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {

@@ -41,14 +41,14 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 
 /**
- * Start a {@link SolrNode} in a {@link Location} accessible over ssh.
+ * Start a {@link SolrServer} in a {@link Location} accessible over ssh.
  */
-public class SolrNodeSshDriver extends JavaSoftwareProcessSshDriver implements SolrNodeDriver {
+public class SolrServerSshDriver extends JavaSoftwareProcessSshDriver implements SolrServerDriver {
 
-    private static final Logger log = LoggerFactory.getLogger(SolrNodeSshDriver.class);
+    private static final Logger log = LoggerFactory.getLogger(SolrServerSshDriver.class);
     private String expandedInstallDir;
 
-    public SolrNodeSshDriver(SolrNodeImpl entity, SshMachineLocation machine) {
+    public SolrServerSshDriver(SolrServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
@@ -56,15 +56,15 @@ public class SolrNodeSshDriver extends JavaSoftwareProcessSshDriver implements S
     protected String getLogFileLocation() { return String.format("%s/solr.log", getRunDir()); }
 
     @Override
-    public Integer getSolrPort() { return entity.getAttribute(SolrNode.SOLR_PORT); }
+    public Integer getSolrPort() { return entity.getAttribute(SolrServer.SOLR_PORT); }
 
     @Override
-    public String getSolrConfigTemplateUrl() { return entity.getAttribute(SolrNode.SOLR_CONFIG_TEMPLATE_URL); }
+    public String getSolrConfigTemplateUrl() { return entity.getAttribute(SolrServer.SOLR_CONFIG_TEMPLATE_URL); }
 
     @Override
-    public String getSolrConfigFileName() { return entity.getAttribute(SolrNode.SOLR_CONFIG_FILE_NAME); }
+    public String getSolrConfigFileName() { return entity.getAttribute(SolrServer.SOLR_CONFIG_FILE_NAME); }
 
-    public String getMirrorUrl() { return entity.getConfig(SolrNode.MIRROR_URL); }
+    public String getMirrorUrl() { return entity.getConfig(SolrServer.MIRROR_URL); }
     
     private String getExpandedInstallDir() {
         if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");

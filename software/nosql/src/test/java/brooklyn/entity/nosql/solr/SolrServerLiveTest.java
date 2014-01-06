@@ -20,14 +20,14 @@ import com.google.common.collect.ImmutableList;
 /**
  * Solr live tests.
  *
- * Test the operation of the {@link SolrNode} class using the jclouds {@code rackspace-cloudservers-uk}
+ * Test the operation of the {@link SolrServer} class using the jclouds {@code rackspace-cloudservers-uk}
  * and {@code aws-ec2} providers, with different OS images. The tests use the {@link SolrJSupport} class
  * to exercise the node, and will need to have {@code brooklyn.jclouds.provider.identity} and {@code .credential}
  * set, usually in the {@code .brooklyn/bropoklyn.properties} file.
  */
-public class SolrNodeLiveTest extends AbstractSolrNodeTest {
+public class SolrServerLiveTest extends AbstractSolrServerTest {
 
-    private static final Logger log = LoggerFactory.getLogger(SolrNodeLiveTest.class);
+    private static final Logger log = LoggerFactory.getLogger(SolrServerLiveTest.class);
 
     @DataProvider(name = "virtualMachineData")
     public Object[][] provideVirtualMachineData() {
@@ -46,9 +46,9 @@ public class SolrNodeLiveTest extends AbstractSolrNodeTest {
         testLocation = app.getManagementContext().getLocationRegistry()
                 .resolve(provider + (Strings.isNonEmpty(region) ? ":" + region : ""), properties);
 
-        solr = app.createAndManageChild(EntitySpec.create(SolrNode.class)
+        solr = app.createAndManageChild(EntitySpec.create(SolrServer.class)
                 .configure("solrPort", "9876+"));
         app.start(ImmutableList.of(testLocation));
-        EntityTestUtils.assertAttributeEqualsEventually(solr, SolrNode.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(solr, SolrServer.SERVICE_UP, true);
     }
 }
