@@ -313,7 +313,11 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         connectEnrichers();
         
         // track members
-        policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Cassandra Cluster Tracker")) {
+        Map<String, Object> flags = MutableMap.<String, Object>builder()
+                .put("name", "Cassandra Cluster Tracker")
+                .put("sensorsToTrack", ImmutableSet.of(Attributes.SERVICE_UP, Attributes.HOSTNAME, CassandraNode.THRIFT_PORT))
+                .build();
+        policy = new AbstractMembershipTrackingPolicy(flags) {
             @Override
             protected void onEntityChange(Entity member) {
                 if (log.isDebugEnabled()) log.debug("Node {} updated in Cluster {}", member, this);
@@ -404,8 +408,11 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
                 Set<String> newNodes = MutableSet.<String>of();
                 for (Entity member : getMembers()) {
                     if (member instanceof CassandraNode && Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) {
-                        HostAndPort address = HostAndPort.fromParts(member.getAttribute(HOSTNAME), member.getAttribute(THRIFT_PORT));
-                        newNodes.add(address.toString());
+                        String hostname = member.getAttribute(HOSTNAME);
+                        Integer thriftPort = member.getAttribute(THRIFT_PORT);
+                        if (hostname != null && thriftPort != null) {
+                            newNodes.add(HostAndPort.fromParts(hostname, thriftPort).toString());
+                        }
                     }
                 }
                 if (Sets.symmetricDifference(oldNodes, newNodes).size() > 0) {
