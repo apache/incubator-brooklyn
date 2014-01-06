@@ -25,6 +25,11 @@ define(["underscore", "jquery", "backbone",
                 self.trigger("entity.expunged");
             });
             modal.render().$el.modal("show");
+            this.expungeModal = modal;
+        },
+        beforeClose: function() {
+            if (this.expungeModal)
+                this.expungeModal.close();
         }
     });
     return EntityLifecycleView;
