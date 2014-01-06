@@ -115,7 +115,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     private final EntityDriverManager entityDriverManager;
     
-    private final DownloadResolverManager downloadsManager;
+    protected DownloadResolverManager downloadsManager;
 
     private final BrooklynStorage storage;
 

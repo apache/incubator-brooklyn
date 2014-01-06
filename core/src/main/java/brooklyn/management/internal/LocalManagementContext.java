@@ -18,6 +18,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.internal.storage.DataGridFactory;
 import brooklyn.location.Location;
@@ -256,7 +257,10 @@ public class LocalManagementContext extends AbstractManagementContext {
     public void reloadBrooklynProperties() {
         BrooklynProperties.Factory.Builder builder = new BrooklynProperties.Factory.Builder();
         BrooklynProperties properties = builder.build();
-        configMap.putAll(checkNotNull(properties, "brooklynProperties"));
-        log.info(properties.toString());
+        configMap = properties;
+        this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
+
+        // Force reload of location registry
+        this.locationRegistry = null;
     }
 }

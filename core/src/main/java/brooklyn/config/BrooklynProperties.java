@@ -136,6 +136,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         putAll(System.getenv());
         return this;
     }
+
     public BrooklynProperties addSystemProperties() {
         putAll(System.getProperties());
         return this;
