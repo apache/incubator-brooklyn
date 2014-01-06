@@ -34,7 +34,9 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
@@ -474,6 +476,12 @@ public class TypeCoercions {
             @Override
             public Double apply(BigDecimal input) {
                 return input.doubleValue();
+            }
+        });
+        registerAdapter(String.class, List.class, new Function<String,List>() {
+            @Override
+            public List<String> apply(final String input) {
+                return ImmutableList.copyOf(Splitter.on(",").trimResults().omitEmptyStrings().split(input));
             }
         });
     }
