@@ -93,8 +93,7 @@ public interface EntityApi {
       responseClass = "brooklyn.rest.domain.TaskSummary"
   )
   @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Undefined entity or location"),
-      @ApiError(code = 412, reason = "Application already registered")
+      @ApiError(code = 404, reason = "Undefined application or entity")
   })
   @Path("/{entity}/expunge")
   public Response expunge(@PathParam("application") final String application, @PathParam("entity") final String entity, @QueryParam("release") final boolean release);

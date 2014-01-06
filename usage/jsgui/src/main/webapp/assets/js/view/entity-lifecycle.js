@@ -3,9 +3,9 @@
  *
  * @type {*}
  */
-define(["underscore", "jquery", "backbone", "brooklyn-utils",
+define(["underscore", "jquery", "backbone",
     "text!tpl/apps/lifecycle.html", "view/expunge-invoke"
-], function(_, $, Backbone, Util, LifecycleHtml, ExpungeInvokeView) {
+], function(_, $, Backbone, LifecycleHtml, ExpungeInvokeView) {
     var EntityLifecycleView = Backbone.View.extend({
         template: _.template(LifecycleHtml),
         events: {

@@ -14,7 +14,7 @@ define([
             'click .entity-tabs a':'tabSelected'
         },
         initialize:function () {
-        	var self = this;
+            var self = this;
             this.$el.html(this.template({}))
             this.configView = new ConfigView({
                 model:this.model
@@ -38,11 +38,11 @@ define([
                 sensors:this.sensorsView.model
             })
             this.lifecycleView = new LifecycleView({
-            	model: this.model,
-            	application:this.options.application
+                model: this.model,
+                application:this.options.application
             })
             this.lifecycleView.on("entity.expunged", function() {
-            	self.trigger("entity.expunged");
+                self.trigger("entity.expunged");
             });
             this.$("#summary").html(this.summaryView.render().el)
             this.$("#lifecycle").html(this.lifecycleView.render().el)
@@ -59,6 +59,7 @@ define([
             this.effectorsView.close()
             this.policiesView.close()
             this.activitiesView.close()
+            this.lifecycleView.close()
         },
         render:function () {
             this.summaryView.render()

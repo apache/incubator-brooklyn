@@ -450,7 +450,8 @@ define([
             })
             var self = this;
             this.detailsView.on("entity.expunged", function() {
-            	self.displayEntityId(self.collection.first().id);
+                self.preselectTab("summary");
+                self.displayEntityId(self.collection.first().id);
             });
             $("div#details").html(this.detailsView.render().el)
             // preserve the tab selected before
