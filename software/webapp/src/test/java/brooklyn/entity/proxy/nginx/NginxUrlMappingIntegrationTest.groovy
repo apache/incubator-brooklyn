@@ -23,7 +23,9 @@ import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.management.EntityManager
+import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils
+import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
 
@@ -132,7 +134,7 @@ public class NginxUrlMappingIntegrationTest {
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
-        c2.getChildren().each { it.deploy(war.toString(), "c2.war") }
+        c2.getMembers().each { it.deploy(war.toString(), "c2.war") }
     
         Entities.dumpInfo(app);
         
@@ -141,35 +143,35 @@ public class NginxUrlMappingIntegrationTest {
         executeUntilSucceeds {
             //cluster 0
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost1:${port}", "Hello");
-                assertUrlHasText("http://localhost1:${port}/", "Hello");
-                assertUrlHasText("http://localhost1:${port}/hello/frank", "http://localhost1:${port}/hello/frank");
+                HttpTestUtils.assertContentContainsText("http://localhost1:${port}", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost1:${port}/", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost1:${port}/hello/frank", "http://localhost1:${port}/hello/frank");
             }
             //cluster 1
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost2:${port}/hello-world", "Hello");
-                assertUrlHasText("http://localhost2:${port}/hello-world/", "Hello");
-                assertUrlHasText("http://localhost2:${port}/hello-world/hello/bob", "http://localhost2:${port}/hello-world/hello/bob");
+                HttpTestUtils.assertContentContainsText("http://localhost2:${port}/hello-world", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost2:${port}/hello-world/", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost2:${port}/hello-world/hello/bob", "http://localhost2:${port}/hello-world/hello/bob");
             }
             //cluster 2
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost3:${port}/c2", "Hello");
-                assertUrlHasText("http://localhost3:${port}/c2/", "Hello");
-                assertUrlHasText("http://localhost3:${port}/c2/hello/joe", "http://localhost3:${port}/c2/hello/new%20joe");
+                HttpTestUtils.assertContentContainsText("http://localhost3:${port}/c2", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost3:${port}/c2/", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost3:${port}/c2/hello/joe", "http://localhost3:${port}/c2/hello/new%20joe");
             }
         }
         
         //these should *not* be available
-        assertEquals(urlRespondsStatusCode("http://localhost:${port}/"), 404);
-        assertEquals(urlRespondsStatusCode("http://localhost1:${port}/hello-world"), 404);
-        assertEquals(urlRespondsStatusCode("http://localhost2:${port}/"), 404);
-        assertEquals(urlRespondsStatusCode("http://localhost2:${port}/hello-world/notexists"), 404);
-        assertEquals(urlRespondsStatusCode("http://localhost3:${port}/"), 404);
+        HttpTestUtils.assertHttpStatusCodeEquals("http://localhost:${port}/", 404);
+        HttpTestUtils.assertHttpStatusCodeEquals("http://localhost1:${port}/hello-world", 404);
+        HttpTestUtils.assertHttpStatusCodeEquals("http://localhost2:${port}/", 404);
+        HttpTestUtils.assertHttpStatusCodeEquals("http://localhost2:${port}/hello-world/notexists", 404);
+        HttpTestUtils.assertHttpStatusCodeEquals("http://localhost3:${port}/", 404);
         
         //make sure nginx default welcome page isn't displayed
-        assertFails { assertUrlHasText(timeout:1, "http://localhost:${port}/", "ginx"); }
-        assertFails { assertUrlHasText(timeout:1, "http://localhost2:${port}/", "ginx"); }
-        assertFails { assertUrlHasText(timeout:1, "http://localhost3:${port}/", "ginx"); }
+        Asserts.assertFails { HttpTestUtils.assertContentContainsText([timeout:1], "http://localhost:${port}/", "ginx"); }
+        Asserts.assertFails { HttpTestUtils.assertContentContainsText([timeout:1], "http://localhost2:${port}/", "ginx"); }
+        Asserts.assertFails { HttpTestUtils.assertContentContainsText([timeout:1], "http://localhost3:${port}/", "ginx"); }
     }
 
     @Test(groups = "Integration")
@@ -203,10 +205,10 @@ public class NginxUrlMappingIntegrationTest {
         app.start([ new LocalhostMachineProvisioningLocation() ])
         int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         
-        for (Entity child : c0.getChildren()) {
+        for (Entity child : c0.getMembers()) {
             ((JBoss7Server)child).deploy(war.toString(), "atC0.war")
         }
-        for (Entity child : c1.getChildren()) {
+        for (Entity child : c1.getMembers()) {
             ((JBoss7Server)child).deploy(war.toString(), "atC1.war")
         }
 
@@ -214,12 +216,12 @@ public class NginxUrlMappingIntegrationTest {
         // Do more than one request for each in-case just lucky with round-robin...
         executeUntilSucceeds {
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost:${port}/atC0", "Hello");
-                assertUrlHasText("http://localhost:${port}/atC0/", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost:${port}/atC0", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost:${port}/atC0/", "Hello");
             }
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost:${port}/atC1", "Hello");
-                assertUrlHasText("http://localhost:${port}/atC1/", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost:${port}/atC1", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost:${port}/atC1/", "Hello");
             }
         }
     }
@@ -246,11 +248,11 @@ public class NginxUrlMappingIntegrationTest {
         int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         
         // Wait for deployment to be successful
-        assertUrlStatusCodeEventually("http://localhost2:${port}/", 200);
+        HttpTestUtils.assertHttpStatusCodeEventuallyEquals("http://localhost2:${port}/", 200);
         
         // Now remove mapping; will no longer route requests
         Entities.unmanage(u0);
-        assertUrlStatusCodeEventually("http://localhost2:${port}/", 404);
+        HttpTestUtils.assertHttpStatusCodeEventuallyEquals("http://localhost2:${port}/", 404);
     }
     
     @Test(groups = "Integration")
@@ -276,7 +278,7 @@ public class NginxUrlMappingIntegrationTest {
         Entities.manage(u1);
         
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
-                .configure("cluster", coreCluster)
+                .configure("serverPool", coreCluster)
                 .configure("domain", "localhost")
                 .configure("port", "8000+")
                 .configure("portNumberSensor", WebAppService.HTTP_PORT)
@@ -287,11 +289,11 @@ public class NginxUrlMappingIntegrationTest {
         
         // check nginx forwards localhost1 to c1, and localhost to core group 
         executeUntilSucceeds {
-            assertUrlHasText("http://localhost1:${port}/hello-world", "Hello");
-            assertEquals(urlRespondsStatusCode("http://localhost1:${port}"), 404);
+            HttpTestUtils.assertContentContainsText("http://localhost1:${port}/hello-world", "Hello");
+            HttpTestUtils.assertHttpStatusCodeEquals("http://localhost1:${port}", 404);
             
-            assertUrlHasText("http://localhost:${port}", "Hello");
-            assertEquals(urlRespondsStatusCode("http://localhost:${port}/hello-world"), 404);
+            HttpTestUtils.assertContentContainsText("http://localhost:${port}", "Hello");
+            HttpTestUtils.assertHttpStatusCodeEquals("http://localhost:${port}/hello-world", 404);
         }
     }
     
@@ -321,25 +323,25 @@ public class NginxUrlMappingIntegrationTest {
         // Confirm routes requests to the correct cluster
         executeUntilSucceeds {
             // health check
-            assertUrlHasText("http://localhost1:${port}", "Hello");
-            assertUrlHasText("http://localhost1:${port}/hello/frank", "http://localhost1:${port}/hello/frank");
+            HttpTestUtils.assertContentContainsText("http://localhost1:${port}", "Hello");
+            HttpTestUtils.assertContentContainsText("http://localhost1:${port}/hello/frank", "http://localhost1:${port}/hello/frank");
             
             // goodbye rewritten to hello
-            assertUrlHasText("http://localhost1:${port}/goodbye/frank", "http://localhost1:${port}/hello/frank");
+            HttpTestUtils.assertContentContainsText("http://localhost1:${port}/goodbye/frank", "http://localhost1:${port}/hello/frank");
             // hello al rewritten to hello Big Al
-            assertUrlHasText("http://localhost1:${port}/hello/aled", "http://localhost1:${port}/hello/Big%20Aled");
+            HttpTestUtils.assertContentContainsText("http://localhost1:${port}/hello/aled", "http://localhost1:${port}/hello/Big%20Aled");
             // hello andrew rewritten to hello Sir Andrew
-            assertUrlHasText("http://localhost1:${port}/hello/andrew", "http://localhost1:${port}/hello/Sir%20Andrew");
+            HttpTestUtils.assertContentContainsText("http://localhost1:${port}/hello/andrew", "http://localhost1:${port}/hello/Sir%20Andrew");
             
             // goodbye alex rewritten to hello Big Alex (two rewrites)
-            assertUrlHasText("http://localhost1:${port}/goodbye/alex", "http://localhost1:${port}/hello/Big%20Alex");
+            HttpTestUtils.assertContentContainsText("http://localhost1:${port}/goodbye/alex", "http://localhost1:${port}/hello/Big%20Alex");
             // but goodbye andrew rewritten only to hello Andrew -- test the "break" logic above (won't continue rewriting)
-            assertUrlHasText("http://localhost1:${port}/goodbye/andrew", "http://localhost1:${port}/hello/andrew");
+            HttpTestUtils.assertContentContainsText("http://localhost1:${port}/goodbye/andrew", "http://localhost1:${port}/hello/andrew");
             
             // al rewrite can be anywhere
-            assertUrlHasText("http://localhost1:${port}/hello/hello/alex", "http://localhost1:${port}/hello/hello/Big%20Alex");
+            HttpTestUtils.assertContentContainsText("http://localhost1:${port}/hello/hello/alex", "http://localhost1:${port}/hello/hello/Big%20Alex");
             // but an rewrite must be at beginning
-            assertUrlHasText("http://localhost1:${port}/hello/hello/andrew", "http://localhost1:${port}/hello/hello/andrew");
+            HttpTestUtils.assertContentContainsText("http://localhost1:${port}/hello/hello/andrew", "http://localhost1:${port}/hello/hello/andrew");
         }
     }
     
@@ -366,7 +368,7 @@ public class NginxUrlMappingIntegrationTest {
         app.start([ new LocalhostMachineProvisioningLocation() ])
         int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         
-        Entity c1jboss = Iterables.getOnlyElement(c1.getChildren());
+        Entity c1jboss = Iterables.getOnlyElement(c1.getMembers());
         
         // Wait for app-server to be responsive, and url-mapping to update its TARGET_ADDRESSES (through async subscription)
         executeUntilSucceeds {
@@ -374,14 +376,12 @@ public class NginxUrlMappingIntegrationTest {
             assertEquals(u1.getAttribute(UrlMapping.TARGET_ADDRESSES).size(), 1);
         }
 
-        // check nginx forwards localhost1 to c1 
-        executeUntilSucceeds {
-            assertUrlHasText("http://localhost1:${port}", "Hello");
-        }
+        // check nginx forwards localhost1 to c1
+        HttpTestUtils.assertContentEventuallyContainsText("http://localhost1:${port}", "Hello");
         
         // Resize target cluster of url-mapping
         c1.resize(2);
-        List c1jbosses = new ArrayList(c1.getChildren());
+        List c1jbosses = new ArrayList(c1.getMembers());
         c1jbosses.remove(c1jboss);
         Entity c1jboss2 = Iterables.getOnlyElement(c1jbosses);
 
@@ -403,7 +403,7 @@ public class NginxUrlMappingIntegrationTest {
         
         // and check forwarding to c1 by nginx still works
         for (int i = 0; i < 2; i++) {
-            assertUrlHasText("http://localhost1:${port}", "Hello");
+            HttpTestUtils.assertContentContainsText("http://localhost1:${port}", "Hello");
         }
     }
     
@@ -433,7 +433,7 @@ public class NginxUrlMappingIntegrationTest {
         app.start([ new LocalhostMachineProvisioningLocation() ])
         int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         
-        for (Entity child : c0.getChildren()) {
+        for (Entity child : c0.getMembers()) {
             ((JBoss7Server)child).deploy(war.toString(), "atC0.war")
         }
 
@@ -441,13 +441,13 @@ public class NginxUrlMappingIntegrationTest {
         // Do more than one request for each in-case just lucky with round-robin...
         executeUntilSucceeds {
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost:${port}/atC0/", "Hello");
-                assertUrlHasText("http://localhost:${port}/atC0", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost:${port}/atC0/", "Hello");
+                HttpTestUtils.assertContentContainsText("http://localhost:${port}/atC0", "Hello");
             }
         }
 
-        // And empty-core should return 404        
-        assertEquals(urlRespondsStatusCode("http://localhost:${port}"), 404);
+        // And empty-core should return 404
+        HttpTestUtils.assertHttpStatusCodeEquals("http://localhost:${port}", 404);
     }
     
     @Test(groups = "Integration")
@@ -480,6 +480,6 @@ public class NginxUrlMappingIntegrationTest {
     private void assertAppServerRespondsEventually(final JBoss7Server server) {
         String hostname = server.getAttribute(Attributes.HOSTNAME);
         int port = server.getAttribute(Attributes.HTTP_PORT);
-        assertUrlStatusCodeEventually("http://"+hostname+":"+port, 200);
+        HttpTestUtils.assertHttpStatusCodeEventuallyEquals("http://"+hostname+":"+port, 200);
     }
 }
