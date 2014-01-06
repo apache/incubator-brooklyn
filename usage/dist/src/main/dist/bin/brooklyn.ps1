@@ -63,8 +63,7 @@ if ( $javabin -eq $null ) {
     throw "java.exe does not exist where specified. Please check JAVA_HOME or PATH environment variables."
 }
 
-﻿# set up the classpath
-
+# set up the classpath
 $cp = Get-ChildItem ${BROOKLYN_HOME}\conf | Select-Object -ExpandProperty FullName
 
 if ( Test-Path ${BROOKLYN_HOME}\patch ) {
