@@ -89,8 +89,6 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     private Map<String, Integer> getPortMap() {
         return ImmutableMap.<String, Integer>builder()
-//                .put("jmxPort", getJmxPort())
-//                .put("rmiPort", getRmiRegistryPort())
                 .put("solrPort", getSolrPort())
                 .build();
     }
@@ -101,10 +99,12 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
         Networking.checkPortsValid(getPortMap());
 
         ImmutableList.Builder<String> commands = new ImmutableList.Builder<String>()
+                .add("mkdir contrib")
+                .add("mkdir solr")
                 .add(String.format("cp -R %s/example/{etc,contexts,lib,logs,resources,webapps} .", getExpandedInstallDir()))
                 .add(String.format("cp %s/example/start.jar .", getExpandedInstallDir()))
                 .add(String.format("cp %s/dist/*.jar lib/", getExpandedInstallDir()))
-                .add("mkdir solr");
+                .add(String.format("cp %s/contrib/*/lib/*.jar contrib/", getExpandedInstallDir()));
 
         newScript(CUSTOMIZING)
                 .body.append(commands.build())
