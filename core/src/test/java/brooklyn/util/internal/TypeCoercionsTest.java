@@ -95,6 +95,12 @@ public class TypeCoercionsTest {
     }
 
     @Test
+    public void testStringToListCoercion() {
+        List<?> s = TypeCoercions.coerce("a,b,c", List.class);
+        Assert.assertEquals(s, ImmutableList.of("a", "b", "c"));
+    }
+
+    @Test
     public void testAs() {
         Integer x = TypeCoercions.coerce(new WithAs("3"), Integer.class);
         Assert.assertEquals(x, (Integer)3);
