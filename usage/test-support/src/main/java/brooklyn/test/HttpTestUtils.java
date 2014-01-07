@@ -3,7 +3,6 @@ package brooklyn.test;
 import static com.google.common.base.Predicates.instanceOf;
 import static com.google.common.base.Throwables.getCausalChain;
 import static com.google.common.collect.Iterables.find;
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -11,6 +10,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -171,7 +171,7 @@ public class HttpTestUtils {
                 acceptableCodes.add((Integer)code);
             }
             int actualCode = getHttpStatusCode(url);
-            assertTrue(acceptableCodes.contains(actualCode), "code="+expectedCode+"; url="+url);
+            assertTrue(acceptableCodes.contains(actualCode), "code="+actualCode+"; expected="+Arrays.toString(expectedCode)+"; url="+url);
             
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

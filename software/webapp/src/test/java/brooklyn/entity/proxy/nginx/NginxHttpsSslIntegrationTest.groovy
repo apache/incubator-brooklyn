@@ -66,7 +66,7 @@ public class NginxHttpsSslIntegrationTest {
         
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("sticky", false)
-                .configure("cluster", cluster)
+                .configure("serverPool", cluster)
                 .configure("domain", "localhost")
                 .configure("port", "8443+")
                 .configure("ssl", ssl));
@@ -117,7 +117,7 @@ public class NginxHttpsSslIntegrationTest {
         
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("sticky", false)
-                .configure("cluster", cluster)
+                .configure("serverPool", cluster)
                 .configure("domain", "localhost")
                 .configure("port", "8443+")
                 .configure("ssl", ssl));
