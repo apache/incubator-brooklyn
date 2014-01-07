@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 by Cloudsoft Corp.
+ * Copyright 2012-2014 by Cloudsoft Corp.
  */
 package brooklyn.entity.nosql.solr;
 
@@ -10,7 +10,5 @@ public interface SolrServerDriver extends JavaSoftwareProcessDriver {
     Integer getSolrPort();
 
     String getSolrConfigTemplateUrl();
-
-    String getSolrConfigFileName();
 
 }

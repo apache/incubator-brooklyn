@@ -97,6 +97,14 @@
             </exclusions>
         </dependency>
 
+        <!-- for solr testing -->
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-solrj</artifactId>
+            <version>4.6.0</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.jclouds.provider</groupId>
             <artifactId>aws-ec2</artifactId>

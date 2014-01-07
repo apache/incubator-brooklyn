@@ -1,0 +1,19 @@
+[#ftl]
+<?xml version="1.0">
+<solr>
+  <int name="coreLoadThreads">4</int>
+
+  <solrcloud>
+    <str name="host">${driver.hostname}</str>
+    <int name="hostPort">${entity.solrPort}</int>
+    <str name="hostContext">solr</str>
+    <int name="zkClientTimeout">15000</int>
+    <bool name="genericCoreNodeNames">true</bool>
+  </solrcloud>
+
+  <shardHandlerFactory name="shardHandlerFactory"
+    class="HttpShardHandlerFactory">
+    <int name="socketTimeout">0</int>
+    <int name="connTimeout">0</int>
+  </shardHandlerFactory>
+</solr>

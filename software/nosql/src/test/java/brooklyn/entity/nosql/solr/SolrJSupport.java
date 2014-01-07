@@ -1,10 +1,14 @@
 /*
- * Copyright 2012-2013 by Cloudsoft Corp.
+ * Copyright 2012-2014 by Cloudsoft Corp.
  */
 package brooklyn.entity.nosql.solr;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Map;
+
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrInputDocument;
 
 import brooklyn.entity.basic.Attributes;
 
@@ -12,17 +16,31 @@ import brooklyn.entity.basic.Attributes;
  * Solr testing using SolrJ API.
  */
 public class SolrJSupport {
-    private static final Logger log = LoggerFactory.getLogger(SolrJSupport.class);
 
-    public final String hostname;
-    public final int solrPort;
+    private final HttpSolrServer server;
     
     public SolrJSupport(SolrServer node) {
         this(node.getAttribute(Attributes.HOSTNAME), node.getSolrPort());
     }
     
     public SolrJSupport(String hostname, int solrPort) {
-        this.hostname = hostname;
-        this.solrPort = solrPort;
+        server = new HttpSolrServer(String.format("http://%s:%d/solr/", hostname, solrPort));
+        server.setMaxRetries(1);
+        server.setConnectionTimeout(5000);
+    }
+
+    public void addDocument(Map<String, Object> fields) throws Exception {
+        SolrInputDocument doc = new SolrInputDocument();
+        for (String field : fields.keySet()) {
+            doc.setField(field, fields.get(field));
+        }
+        server.add(doc, 1);
+    }
+
+    public Iterable<SolrDocument> getDocuments() throws Exception {
+        SolrQuery solrQuery = new SolrQuery();
+        solrQuery.setQuery("*:*");
+        
+        return server.query(solrQuery).getResults();
     }
 }

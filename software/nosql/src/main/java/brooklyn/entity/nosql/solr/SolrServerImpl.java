@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 by Cloudsoft Corp.
+ * Copyright 2012-2014 by Cloudsoft Corp.
  */
 package brooklyn.entity.nosql.solr;
 
@@ -25,9 +25,13 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JavaAppUtils;
+import brooklyn.entity.webapp.WebAppServiceMethods;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
+import brooklyn.event.feed.http.HttpFeed;
+import brooklyn.event.feed.http.HttpPollConfig;
+import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
@@ -60,8 +64,6 @@ public class SolrServerImpl extends SoftwareProcessImpl implements SolrServer {
     }
     
     @Override public Integer getSolrPort() { return getAttribute(SolrServer.SOLR_PORT); }
-    @Override public String getListenAddress() { return getAttribute(SolrServer.ADDRESS); }
-    @Override public String getBroadcastAddress() { return getAttribute(SolrServer.HOSTNAME); }
 
     @Override
     public Class<SolrServerDriver> getDriverInterface() {
@@ -72,52 +74,62 @@ public class SolrServerImpl extends SoftwareProcessImpl implements SolrServer {
     public void init() {
         super.init();
     }
-    
-    private volatile JmxFeed jmxFeed;
-    private JmxHelper jmxHelper;
-    private ObjectName storageServiceMBean = JmxHelper.createObjectName("org.apache.solr.db:type=StorageService");
-    
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
+
+    private volatile HttpFeed httpFeed;
+//    private volatile JmxFeed jmxFeed;
+//    private JmxHelper jmxHelper;
+//    private ObjectName storageServiceMBean = JmxHelper.createObjectName("org.apache.solr.db:type=StorageService");
+
+    @Override 
     protected void connectSensors() {
         super.connectSensors();
 
-        jmxHelper = new JmxHelper(this);
-        jmxFeed = JmxFeed.builder()
+        httpFeed = HttpFeed.builder()
                 .entity(this)
-                .period(3000, TimeUnit.MILLISECONDS)
-                .helper(jmxHelper)
-                .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP_JMX)
-                        .objectName(storageServiceMBean)
-                        .attributeName("Initialized")
-                        .onSuccess(Functions.forPredicate(Predicates.notNull()))
-                        .onException(Functions.constant(false)))
+                .period(500, TimeUnit.MILLISECONDS)
+                .baseUri(String.format("http://%s:%d/solr", getAttribute(HOSTNAME), getSolrPort()))
+                .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
+                        .onSuccess(HttpValueFunctions.responseCodeEquals(200))
+                        .onFailureOrException(Functions.constant(false)))
                 .build();
-        
-        connectEnrichers();
+
+//        jmxHelper = new JmxHelper(this);
+//        jmxFeed = JmxFeed.builder()
+//                .entity(this)
+//                .period(3000, TimeUnit.MILLISECONDS)
+//                .helper(jmxHelper)
+//                .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP_JMX)
+//                        .objectName(storageServiceMBean)
+//                        .attributeName("Initialized")
+//                        .onSuccess(Functions.forPredicate(Predicates.notNull()))
+//                        .onException(Functions.constant(false)))
+//                .build();
+//
+//        connectEnrichers();
     }
 
-    protected void connectEnrichers() {
-        connectEnrichers(Duration.TEN_SECONDS);
-    }
-    
-    protected void connectEnrichers(Duration windowPeriod) {
-        JavaAppUtils.connectMXBeanSensors(this);
-        JavaAppUtils.connectJavaAppServerPolicies(this);
-        
-        if (windowPeriod!=null) {
-            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, READS_PER_SECOND_LAST, 
-                    READS_PER_SECOND_IN_WINDOW, windowPeriod));
-            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, WRITES_PER_SECOND_LAST, 
-                    WRITES_PER_SECOND_IN_WINDOW, windowPeriod));
-        }
-    }
-    
+//    protected void connectEnrichers() {
+//        connectEnrichers(Duration.TEN_SECONDS);
+//    }
+//
+//    protected void connectEnrichers(Duration windowPeriod) {
+//        JavaAppUtils.connectMXBeanSensors(this);
+//        JavaAppUtils.connectJavaAppServerPolicies(this);
+//
+//        if (windowPeriod!=null) {
+//            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, READS_PER_SECOND_LAST, 
+//                    READS_PER_SECOND_IN_WINDOW, windowPeriod));
+//            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, WRITES_PER_SECOND_LAST, 
+//                    WRITES_PER_SECOND_IN_WINDOW, windowPeriod));
+//        }
+//    }
+
     @Override
     public void disconnectSensors() {
         super.disconnectSensors();
 
-        if (jmxFeed != null) jmxFeed.stop();
-        if (jmxHelper.isConnected()) jmxHelper.disconnect();
+        if (httpFeed != null) httpFeed.stop();
+//        if (jmxFeed != null) jmxFeed.stop();
+//        if (jmxHelper.isConnected()) jmxHelper.disconnect();
     }
 }

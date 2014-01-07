@@ -1,7 +1,9 @@
 /*
- * Copyright 2012-2013 by Cloudsoft Corp.
+ * Copyright 2012-2014 by Cloudsoft Corp.
  */
 package brooklyn.entity.nosql.solr;
+
+import java.util.Map;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
@@ -18,6 +20,9 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a Solr node.
@@ -45,6 +50,16 @@ public interface SolrServer extends SoftwareProcess, UsesJmx, UsesJavaMXBeans {
     @SetFromFlag("solrPort")
     PortAttributeSensorAndConfigKey SOLR_PORT = new PortAttributeSensorAndConfigKey("solr.http.port", "Solr HTTP communications port",
             PortRanges.fromString("8983+"));
+
+    @SetFromFlag("solrConfigTemplateUrl")
+    ConfigKey<String> SOLR_CONFIG_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
+            "solr.config.templateUrl", "Template file (in freemarker format) for the solr.xml config file", 
+            "classpath://brooklyn/entity/nosql/solr/solr.xml");
+
+    @SetFromFlag("coreConfigMap")
+    ConfigKey<Map<String, String>> SOLR_CORE_CONFIG = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "solr.core.config", "Map of core names to core configuration archive URL",
+            Maps.<String, String>newHashMap());
 
     /* Metrics for read/write performance. */
     
