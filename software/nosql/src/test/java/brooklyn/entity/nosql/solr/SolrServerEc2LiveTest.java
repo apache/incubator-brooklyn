@@ -4,6 +4,7 @@
 package brooklyn.entity.nosql.solr;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import org.apache.solr.common.SolrDocument;
 import org.slf4j.Logger;
@@ -34,15 +35,17 @@ public class SolrServerEc2LiveTest extends AbstractEc2LiveTest {
 
         EntityTestUtils.assertAttributeEqualsEventually(solr, Startable.SERVICE_UP, true);
 
-        SolrJSupport client = new SolrJSupport(solr);
+        SolrJSupport client = new SolrJSupport(solr, "example");
 
         Iterable<SolrDocument> results = client.getDocuments();
-        assertEquals(0, Iterables.size(results));
+        assertTrue(Iterables.isEmpty(results));
 
         client.addDocument(MutableMap.<String, Object>of("id", "1", "description", "first"));
         client.addDocument(MutableMap.<String, Object>of("id", "2", "description", "second"));
         client.addDocument(MutableMap.<String, Object>of("id", "3", "description", "third"));
+        client.commit();
 
-        assertEquals(3, Iterables.size(results));
+        results = client.getDocuments();
+        assertEquals(Iterables.size(results), 3);
     }
 }

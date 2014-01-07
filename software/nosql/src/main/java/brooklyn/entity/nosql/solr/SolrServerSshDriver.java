@@ -124,11 +124,12 @@ public class SolrServerSshDriver extends JavaSoftwareProcessSshDriver implements
         }
     }
 
+    // TODO This should really be a library or parent method
     public void configure(String core, String url) {
         URI archive = Urls.toUri(url);
 
         // If a local folder, then jar it up
-        if (new File(archive).isDirectory()) {
+        if (archive.getScheme().equals("file") && new File(archive).isDirectory()) {
             try {
                 File jarFile = JarBuilder.buildJar(new File(archive));
                 archive = jarFile.toURI();
@@ -146,6 +147,7 @@ public class SolrServerSshDriver extends JavaSoftwareProcessSshDriver implements
         try {
             getMachine().acquireMutex("installing", "installing core config "+file);
 
+            // FIXME Duplicate code path at getMachine().installTo(...)
             int result = copyResource(archive.toASCIIString(), dest);
             if (result != 0)
                 throw new IllegalStateException(format("unable to copy core %s config file %s", core, file));

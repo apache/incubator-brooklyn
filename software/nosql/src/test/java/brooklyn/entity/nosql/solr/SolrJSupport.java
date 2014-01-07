@@ -19,14 +19,18 @@ public class SolrJSupport {
 
     private final HttpSolrServer server;
     
-    public SolrJSupport(SolrServer node) {
-        this(node.getAttribute(Attributes.HOSTNAME), node.getSolrPort());
+    public SolrJSupport(SolrServer node, String core) {
+        this(node.getAttribute(Attributes.HOSTNAME), node.getSolrPort(), core);
     }
     
-    public SolrJSupport(String hostname, int solrPort) {
-        server = new HttpSolrServer(String.format("http://%s:%d/solr/", hostname, solrPort));
+    public SolrJSupport(String hostname, int solrPort, String core) {
+        server = new HttpSolrServer(String.format("http://%s:%d/solr/%s", hostname, solrPort, core));
         server.setMaxRetries(1);
         server.setConnectionTimeout(5000);
+    }
+
+    public void commit() throws Exception {
+        server.commit();
     }
 
     public void addDocument(Map<String, Object> fields) throws Exception {
@@ -34,7 +38,7 @@ public class SolrJSupport {
         for (String field : fields.keySet()) {
             doc.setField(field, fields.get(field));
         }
-        server.add(doc, 1);
+        server.add(doc, 100);
     }
 
     public Iterable<SolrDocument> getDocuments() throws Exception {
