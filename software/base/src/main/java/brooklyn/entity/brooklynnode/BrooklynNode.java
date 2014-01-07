@@ -147,9 +147,8 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
             String.class, "brooklynnode.webconsole.bindAddress", "Specifies the IP address of the NIC to bind the Brooklyn Management Console to", null);
 
     @SetFromFlag("classpath")
-    @Beta // ideally this should be List<String>, but this will require support for defining lists in brooklyn.properties
-    public static final BasicAttributeSensorAndConfigKey<String> CLASSPATH = new BasicAttributeSensorAndConfigKey(
-            String.class, "brooklynnode.classpath", "classpath to use, as a string of semi-colon separated URL entries", null);
+    public static final BasicAttributeSensorAndConfigKey<List<String>> CLASSPATH = new BasicAttributeSensorAndConfigKey(
+            List.class, "brooklynnode.classpath", "classpath to use", null);
 
     @SetFromFlag("portMapper")
     public static final ConfigKey<Function<? super Integer, ? extends Integer>> PORT_MAPPER = (ConfigKey) ConfigKeys.newConfigKey(Function.class,
