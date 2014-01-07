@@ -105,6 +105,7 @@ public class SolrServerSshDriver extends JavaSoftwareProcessSshDriver implements
         ImmutableList.Builder<String> commands = new ImmutableList.Builder<String>()
                 .add(String.format("cp -R %s/example/{etc,contexts,lib,logs,resources,webapps} .", getExpandedInstallDir()))
                 .add(String.format("cp %s/example/start.jar .", getExpandedInstallDir()))
+                .add(String.format("cp %s/dist/*.jar lib/", getExpandedInstallDir()))
                 .add("mkdir solr");
 
         newScript(CUSTOMIZING)
