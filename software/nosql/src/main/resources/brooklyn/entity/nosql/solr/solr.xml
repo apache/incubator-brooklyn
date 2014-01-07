@@ -1,11 +1,11 @@
 [#ftl]
-<?xml version="1.0">
+<?xml version="1.0"?>
 <solr>
   <int name="coreLoadThreads">4</int>
 
   <solrcloud>
     <str name="host">${driver.hostname}</str>
-    <int name="hostPort">${entity.solrPort}</int>
+    <int name="hostPort">${entity.solrPort?c}</int>
     <str name="hostContext">solr</str>
     <int name="zkClientTimeout">15000</int>
     <bool name="genericCoreNodeNames">true</bool>
