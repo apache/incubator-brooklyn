@@ -16,13 +16,12 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JarBuilder;
-import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
@@ -38,7 +37,7 @@ import com.google.common.collect.Sets;
 /**
  * Start a {@link SolrServer} in a {@link Location} accessible over ssh.
  */
-public class SolrServerSshDriver extends JavaSoftwareProcessSshDriver implements SolrServerDriver {
+public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implements SolrServerDriver {
 
     private static final Logger log = LoggerFactory.getLogger(SolrServerSshDriver.class);
     private String expandedInstallDir;
@@ -47,7 +46,6 @@ public class SolrServerSshDriver extends JavaSoftwareProcessSshDriver implements
         super(entity, machine);
     }
 
-    @Override
     protected String getLogFileLocation() { return String.format("%s/logs/solr.log", getRunDir()); }
 
     @Override

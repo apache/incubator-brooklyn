@@ -10,14 +10,10 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.java.UsesJavaMXBeans;
-import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -30,7 +26,7 @@ import com.google.common.reflect.TypeToken;
 @Catalog(name="Apache Solr Node", description="Solr is the popular, blazing fast open source enterprise search " +
         "platform from the Apache Lucene project.", iconUrl="classpath:///solr-logo.jpeg")
 @ImplementedBy(SolrServerImpl.class)
-public interface SolrServer extends SoftwareProcess, UsesJmx, UsesJavaMXBeans {
+public interface SolrServer extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "4.6.0");
@@ -60,16 +56,6 @@ public interface SolrServer extends SoftwareProcess, UsesJmx, UsesJavaMXBeans {
     ConfigKey<Map<String, String>> SOLR_CORE_CONFIG = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
             "solr.core.config", "Map of core names to core configuration archive URL",
             Maps.<String, String>newHashMap());
-
-    /* Metrics for read/write performance. */
-    
-    AttributeSensor<Boolean> SERVICE_UP_JMX = Sensors.newBooleanSensor("solr.service.jmx.up", "Whether JMX is up for this service");
-
-    AttributeSensor<Double> READS_PER_SECOND_LAST = Sensors.newDoubleSensor("solr.reads.perSec.last", "Reads/sec (last datapoint)");
-    AttributeSensor<Double> WRITES_PER_SECOND_LAST = Sensors.newDoubleSensor("solr.write.perSec.last", "Writes/sec (last datapoint)");
-
-    AttributeSensor<Double> READS_PER_SECOND_IN_WINDOW = Sensors.newDoubleSensor("solr.reads.perSec.windowed", "Reads/sec (over time window)");
-    AttributeSensor<Double> WRITES_PER_SECOND_IN_WINDOW = Sensors.newDoubleSensor("solr.writes.perSec.windowed", "Writes/sec (over time window)");
 
     ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.START_TIMEOUT, 3*60);
     
