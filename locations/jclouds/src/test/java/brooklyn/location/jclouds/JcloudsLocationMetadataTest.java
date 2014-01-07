@@ -23,8 +23,8 @@ public class JcloudsLocationMetadataTest implements JcloudsLocationConfig {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        brooklynProperties = BrooklynProperties.Factory.newDefault();
-        managementContext = new LocalManagementContext(brooklynProperties);
+        managementContext = new LocalManagementContext(BrooklynProperties.Factory.newDefault());
+        brooklynProperties = managementContext.getBrooklynProperties();
     }
     
     @AfterMethod(alwaysRun=true)
