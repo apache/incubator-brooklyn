@@ -100,11 +100,13 @@ import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -475,24 +477,28 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         JcloudsSshMachineLocation sshMachineLocation = null;
         
         try {
-            LOG.info("Creating VM in "+setup.getDescription()+" for "+this);
+            LOG.info("Creating VM "+setup.getDescription()+" in "+this);
 
             Semaphore machineCreationSemaphore = getMachineCreationSemaphore();
             boolean acquired = machineCreationSemaphore.tryAcquire(0, TimeUnit.SECONDS);
             if (!acquired) {
                 LOG.info("Waiting in {} for machine-creation permit ({} other queuing requests already)", new Object[] {this, machineCreationSemaphore.getQueueLength()});
-                Stopwatch stopwatch = new Stopwatch().start();
+                Stopwatch blockStopwatch = Stopwatch.createStarted();
                 machineCreationSemaphore.acquire();
-                LOG.info("Acquired in {} machine-creation permit, after waiting {}", this, Time.makeTimeStringRounded(stopwatch));
+                LOG.info("Acquired in {} machine-creation permit, after waiting {}", this, Time.makeTimeStringRounded(blockStopwatch));
             } else {
                 LOG.debug("Acquired in {} machine-creation permit immediately", this);
             }
-
+            
+            Stopwatch provisioningStopwatch = Stopwatch.createStarted();
+            Duration templateTimestamp, provisionTimestamp, usableTimestamp, customizedTimestamp;
+            
             LoginCredentials initialCredentials = null;
             Set<? extends NodeMetadata> nodes;
+            Template template;
             try {
                 // Setup the template
-                Template template = buildTemplate(computeService, setup);
+                template = buildTemplate(computeService, setup);
                 if (waitForSshable && !usePortForwarding) {
                     initialCredentials = initTemplateForCreateUser(template, setup);
                 }
@@ -508,7 +514,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     LOG.debug("NOTE: unused flags passed to obtain VM in "+setup.getDescription()+": "+
                             setup.getUnusedConfig());
                 
+                templateTimestamp = Duration.of(provisioningStopwatch);
+                
                 nodes = computeService.createNodesInGroup(groupId, 1, template);
+                provisionTimestamp = Duration.of(provisioningStopwatch);
             } finally {
                 machineCreationSemaphore.release();
             }
@@ -563,14 +572,22 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             } else {
                 LOG.debug("Skipping ssh check for {} ({}) due to config waitForSshable=false", node, setup.getDescription());
             }
+            usableTimestamp = Duration.of(provisioningStopwatch);
             
             // Create a JcloudsSshMachineLocation, and register it
             sshMachineLocation = registerJcloudsSshMachineLocation(computeService, node, initialCredentials, sshHostAndPort, setup);
+            if (template!=null && sshMachineLocation.getTemplate()==null) {
+                sshMachineLocation.template = template;
+            }
             
+            List<String> customisationForLogging = new ArrayList<String>();
             // Apply same securityGroups rules to iptables, if iptables is running on the node
             if (waitForSshable) {
+                
                 String setupScript = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_URL);
                 if (Strings.isNonBlank(setupScript)) {
+                    customisationForLogging.add("custom setup script "+setupScript);
+                    
                     String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
                     Map<String, String> substitutions = (setupVarsString != null)
                             ? Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString)
@@ -580,12 +597,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
                 }
                 
-                if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM))
+                if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM)) {
+                    customisationForLogging.add("point /dev/random to urandom");
+                    
                     sshMachineLocation.execCommands("using urandom instead of random", 
                             Arrays.asList("sudo mv /dev/random /dev/random-real", "sudo ln -s /dev/urandom /dev/random"));
+                }
 
                 
                 if (setup.get(GENERATE_HOSTNAME)) {
+                    customisationForLogging.add("configure hostname");
+                    
                     sshMachineLocation.execCommands("Generate hostname " + node.getName(), 
                             Arrays.asList("sudo hostname " + node.getName(),
                                     "sudo sed -i \"s/HOSTNAME=.*/HOSTNAME=" + node.getName() + "/g\" /etc/sysconfig/network",
@@ -594,6 +616,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
 
                 if (setup.get(OPEN_IPTABLES)) {
+                    customisationForLogging.add("open iptables");
+                    
                     List<String> iptablesRules = createIptablesRulesForNetworkInterface((Iterable<Integer>) setup.get(INBOUND_PORTS));
                     iptablesRules.add(IptablesCommands.saveIptablesRules());
                     sshMachineLocation.execCommands("Inserting iptables rules", iptablesRules);
@@ -601,6 +625,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
                 
                 if (setup.get(STOP_IPTABLES)) {
+                    customisationForLogging.add("stop iptables");
+                    
                     List<String> cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());
                     sshMachineLocation.execCommands("Stopping iptables", cmds);
                 }
@@ -614,6 +640,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 customizer.customize(this, computeService, sshMachineLocation);
             }
             
+            customizedTimestamp = Duration.of(provisioningStopwatch);
+            
+            LOG.info("Finished VM "+setup.getDescription()+" creation:"
+                + " "+sshMachineLocation.getUser()+"@"+sshMachineLocation.getAddress() + " ready after "+Duration.of(provisioningStopwatch).toStringRounded()
+                + " ("+template+" template built in "+Duration.of(templateTimestamp).toStringRounded()+";"
+                + " "+node+" provisioned in "+Duration.of(provisionTimestamp).subtract(templateTimestamp).toStringRounded()+";"
+                + " "+sshMachineLocation+" ssh usable in "+Duration.of(usableTimestamp).subtract(provisionTimestamp).toStringRounded()+";"
+                + " and os customized in "+Duration.of(customizedTimestamp).subtract(usableTimestamp).toStringRounded()+" - "+Joiner.on(", ").join(customisationForLogging)+")");
+
             return sshMachineLocation;
         } catch (Exception e) {
             if (e instanceof RunNodesException && ((RunNodesException)e).getNodeErrors().size() > 0) {
@@ -1507,7 +1542,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             delayMs = Time.parseTimeString(WAIT_FOR_SSHABLE.getDefaultValue());
         
         String user = expectedCredentials.getUser();
-        LOG.info("Started VM {}; waiting {} for it to be sshable on {}@{}{}", new Object[] {
+        LOG.debug("VM {}: reported online, now waiting {} for it to be sshable on {}@{}{}", new Object[] {
                 setup.getDescription(), Time.makeTimeStringRounded(delayMs),
                 user, vmIp, Objects.equal(user, getUser(setup)) ? "" : " (setup user is different: "+getUser(setup)+")"});
         
@@ -1530,7 +1565,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }};
         }
         
-        Stopwatch stopwatch = new Stopwatch().start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         
         boolean reachable = new Repeater()
             .repeat()
@@ -1545,7 +1580,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     Time.makeTimeStringRounded(delayMs));
         }
         
-        LOG.info("VM {}; is sshable after {} on {}@{}",new Object[] {
+        LOG.debug("VM {}: is sshable after {} on {}@{}",new Object[] {
                 setup.getDescription(), Time.makeTimeStringRounded(stopwatch),
                 user, vmIp});
     }

@@ -67,33 +67,40 @@ public abstract class AbstractGoogleComputeLiveTest {
     }
 
     @Test(groups = {"Live"})
-    public void test_GCEL_10_04() throws Exception {
-        // release codename "squeeze"
-        runTest(ImmutableMap.of("imageId", "gcel-10-04-v20130325", "loginUser", "admin", "hardwareId", STANDARD_HARDWARE_ID));
+    public void test_DefaultImage() throws Exception {
+        runTest(ImmutableMap.<String,String>of());
     }
 
-    @Test(groups = {"Live"})
-    public void test_GCEL_12_04() throws Exception {
-        // release codename "squeeze"
-        runTest(ImmutableMap.of("imageId", "gcel-12-04-v20130325", "loginUser", "admin", "hardwareId", STANDARD_HARDWARE_ID));
-    }
-
-    @Test(groups = {"Live"})
-    public void test_Ubuntu_10_04() throws Exception {
-        // release codename "squeeze"
-        runTest(ImmutableMap.of("imageId", "ubuntu-10-04-v20120912", "loginUser", "admin", "hardwareId", STANDARD_HARDWARE_ID));
-    }
-
-    @Test(groups = {"Live"})
-    public void test_Ubuntu_12_04() throws Exception {
-        // release codename "squeeze"
-        runTest(ImmutableMap.of("imageId", "ubuntu-10-04-v20120912", "loginUser", "admin", "hardwareId", STANDARD_HARDWARE_ID));
-    }
-
-    @Test(groups = {"Live"})
-    public void test_CentOS_6() throws Exception {
-        runTest(ImmutableMap.of("imageId", "centos-6-v20130325", "hardwareId", STANDARD_HARDWARE_ID));
-    }
+    // most of these not available
+    
+//    @Test(groups = {"Live"})
+//    public void test_GCEL_10_04() throws Exception {
+//        // release codename "squeeze"
+//        runTest(ImmutableMap.of("imageId", "gcel-10-04-v20130325", "loginUser", "admin", "hardwareId", STANDARD_HARDWARE_ID));
+//    }
+//
+//    @Test(groups = {"Live"})
+//    public void test_GCEL_12_04() throws Exception {
+//        // release codename "squeeze"
+//        runTest(ImmutableMap.of("imageId", "gcel-12-04-v20130325", "loginUser", "admin", "hardwareId", STANDARD_HARDWARE_ID));
+//    }
+//
+//    @Test(groups = {"Live"})
+//    public void test_Ubuntu_10_04() throws Exception {
+//        // release codename "squeeze"
+//        runTest(ImmutableMap.of("imageId", "ubuntu-10-04-v20120912", "loginUser", "admin", "hardwareId", STANDARD_HARDWARE_ID));
+//    }
+//
+//    @Test(groups = {"Live"})
+//    public void test_Ubuntu_12_04() throws Exception {
+//        // release codename "squeeze"
+//        runTest(ImmutableMap.of("imageId", "ubuntu-10-04-v20120912", "loginUser", "admin", "hardwareId", STANDARD_HARDWARE_ID));
+//    }
+//
+//    @Test(groups = {"Live"})
+//    public void test_CentOS_6() throws Exception {
+//        runTest(ImmutableMap.of("imageId", "centos-6-v20130325", "hardwareId", STANDARD_HARDWARE_ID));
+//    }
 
     protected void runTest(Map<String,?> flags) throws Exception {
         String tag = getClass().getSimpleName().toLowerCase();

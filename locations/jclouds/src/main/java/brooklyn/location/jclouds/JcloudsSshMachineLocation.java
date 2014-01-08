@@ -18,7 +18,9 @@ import org.jclouds.compute.callables.RunScriptOnNode;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.domain.Processor;
+import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.InterpretableStatement;
@@ -40,11 +42,16 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 public class JcloudsSshMachineLocation extends SshMachineLocation implements HasSubnetHostname {
     
+    private static final long serialVersionUID = -443866395634771659L;
+
     @SetFromFlag
     JcloudsLocation jcloudsParent;
     
     @SetFromFlag
     NodeMetadata node;
+    
+    @SetFromFlag
+    Template template;
     
     private RunScriptOnNode.Factory runScriptFactory;
     
@@ -86,6 +93,10 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
 
     public NodeMetadata getNode() {
         return node;
+    }
+    
+    public Template getTemplate() {
+        return template;
     }
     
     public JcloudsLocation getParent() {
@@ -198,16 +209,20 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
 
     @Override
     public OsDetails getOsDetails() {
-        if (node.getOperatingSystem() != null) {
-            return new BasicOsDetails(
-                    node.getOperatingSystem().getName() != null
-                            ? node.getOperatingSystem().getName() : "linux",
-                    node.getOperatingSystem().getArch() != null
-                            ? node.getOperatingSystem().getArch() : BasicOsDetails.OsArchs.I386,
-                    node.getOperatingSystem().getVersion() != null
-                            ? node.getOperatingSystem().getVersion() : "unknown",
-                    node.getOperatingSystem().is64Bit());
+        OperatingSystem os = node.getOperatingSystem();
+        if (os==null && getTemplate()!=null && getTemplate().getImage()!=null)
+            // some nodes (eg cloudstack, gce) might not get OS available on the node,
+            // so also try taking it from the template if available
+            os = getTemplate().getImage().getOperatingSystem();
+        
+        if (os != null) {
+            // TODO os family, os description (name is often null)
+            return new BasicOsDetails(os.getName() != null ? os.getName() : "linux",
+                    os.getArch() != null ? os.getArch() : BasicOsDetails.OsArchs.I386,
+                    os.getVersion() != null ? os.getVersion() : "unknown",
+                    os.is64Bit());
         }
+        
         return super.getOsDetails();
     }
     
@@ -226,9 +241,12 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         putIfNotNull(builder, "instanceTypeId", (hardware != null ? hardware.getProviderId() : null));
         putIfNotNull(builder, "ram", "" + (hardware != null ? hardware.getRam() : null));
         putIfNotNull(builder, "cpus", "" + (processors != null ? processors.size() : null));
-        putIfNotNull(builder, "osName", getOsDetails().getName());
-        putIfNotNull(builder, "osArch", getOsDetails().getArch());
-        putIfNotNull(builder, "64bit", getOsDetails().is64bit() ? "true" : "false");
+        
+        OsDetails osDetails = getOsDetails();
+        putIfNotNull(builder, "osName", osDetails.getName());
+        putIfNotNull(builder, "osArch", osDetails.getArch());
+        putIfNotNull(builder, "64bit", osDetails.is64bit() ? "true" : "false");
+        
         return builder.build();
     }
     

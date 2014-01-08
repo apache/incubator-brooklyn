@@ -6,6 +6,7 @@ import java.math.RoundingMode;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 
 /** simple class determines a length of time */
 public class Duration implements Comparable<Duration> {
@@ -127,13 +128,14 @@ public class Duration implements Comparable<Duration> {
     
 
     /** tries to convert given object to a Duration, parsing strings, treating numbers as millis, etc;
-     * throws IAE if not convertable */
+     * throws IAE if not convertible */
     public static Duration of(Object o) {
         if (o==null) return null;
         if (o instanceof Duration) return (Duration)o;
         if (o instanceof String) return parse((String)o);
         if (o instanceof Number) return millis((Number)o);
-        
+        if (o instanceof Stopwatch) return millis(((Stopwatch)o).elapsed(TimeUnit.MILLISECONDS));
+
         try {
             // this allows it to work with groovy TimeDuration
             Method millisMethod = o.getClass().getMethod("toMilliseconds");
@@ -151,6 +153,10 @@ public class Duration implements Comparable<Duration> {
     
     public Duration add(Duration other) {
         return nanos(nanos() + other.nanos());
+    }
+
+    public Duration subtract(Duration other) {
+        return nanos(nanos() - other.nanos());
     }
 
     public Duration multiply(long x) {
