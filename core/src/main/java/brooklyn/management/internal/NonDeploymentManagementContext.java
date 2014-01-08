@@ -301,8 +301,8 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     
     @Override
     public void reloadBrooklynProperties() {
-        // TODO Auto-generated method stub
-        
+        checkInitialManagementContextReal();
+        initialManagementContext.reloadBrooklynProperties();
     }
 
     private class NonDeploymentExecutionContext extends AbstractExecutionContext {
