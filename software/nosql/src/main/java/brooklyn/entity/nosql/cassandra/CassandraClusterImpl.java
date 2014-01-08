@@ -408,8 +408,8 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
                 Set<String> newNodes = MutableSet.<String>of();
                 for (Entity member : getMembers()) {
                     if (member instanceof CassandraNode && Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) {
-                        String hostname = member.getAttribute(HOSTNAME);
-                        Integer thriftPort = member.getAttribute(THRIFT_PORT);
+                        String hostname = member.getAttribute(Attributes.HOSTNAME);
+                        Integer thriftPort = member.getAttribute(CassandraNode.THRIFT_PORT);
                         if (hostname != null && thriftPort != null) {
                             newNodes.add(HostAndPort.fromParts(hostname, thriftPort).toString());
                         }
