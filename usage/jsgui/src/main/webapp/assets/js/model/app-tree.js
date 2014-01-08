@@ -47,15 +47,15 @@ define([
             return entities;
         },
         includeEntities: function (entities) {
-        	// accepts id as string or object with id field
+            // accepts id as string or object with id field
             var oldLength = this.includedEntities.length;
             var newList = [].concat(this.includedEntities)
             for (entityId in entities) {
-            	var entity = entities[entityId]
-            	if (typeof entity === 'string')
-            		newList.push(entity)
-            	else
-            		newList.push(entity.id)
+                var entity = entities[entityId]
+                if (typeof entity === 'string')
+                    newList.push(entity)
+                else
+                    newList.push(entity.id)
             }
             this.includedEntities = _.uniq(newList)
             return (this.includedEntities.length > oldLength);

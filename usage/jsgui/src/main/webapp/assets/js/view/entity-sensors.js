@@ -54,7 +54,7 @@ define([
                                  { // value
                                      "mRender": function ( data, type, row ) {
                                          var escaped = Util.toDisplayString(data),
-                                         	 sensorName = row[0],
+                                             sensorName = row[0],
                                              openHint = that.getSensorActions(sensorName).open;
                                          
                                          if (openHint) {

@@ -20,7 +20,7 @@ define([
         },
         initialize:function () {
             _.bindAll(this)
-        	this.$el.html(this.template({ }));
+            this.$el.html(this.template({ }));
             var that = this,
                 $table = this.$('#config-table');
             that.table = ViewUtils.myDataTable($table, {

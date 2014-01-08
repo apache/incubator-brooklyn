@@ -186,9 +186,9 @@ define([
                     var newChildren = []
                     _.each(children, function(child) {
                         var childId = child.id;
-                    	if (!that.collection.get(childId)) {
-                    		newChildren.push(childId);
-                    	}
+                        if (!that.collection.get(childId)) {
+                            newChildren.push(childId);
+                        }
                     })
                     if (newChildren.length) {
                         // reload if new child ID we don't recognise
@@ -224,21 +224,21 @@ define([
 
             // Render the details for the selected entity.
             if (this.detailsView) {
-            	this.detailsView.render()
+                this.detailsView.render()
             } else {
-            	// if nothing selected, select the first application
-            	if (!this.collection.isEmpty()) {
-            		var app0 = this.collection.first().id;
-            		_.defer(function () {
-            			if (!that.selectedEntityId)
-            				that.displayEntityId(app0, app0)
-        			});
-            	} else {
-            	    _.defer(function() {
-            	        $("div#details").html(_.template(EntityDetailsEmptyHtml));
-            	        $("div#details").find("a[href='#summary']").tab('show')
-            	    })
-            	}
+                // if nothing selected, select the first application
+                if (!this.collection.isEmpty()) {
+                    var app0 = this.collection.first().id;
+                    _.defer(function () {
+                        if (!that.selectedEntityId)
+                            that.displayEntityId(app0, app0)
+                    });
+                } else {
+                    _.defer(function() {
+                        $("div#details").html(_.template(EntityDetailsEmptyHtml));
+                        $("div#details").find("a[href='#summary']").tab('show')
+                    })
+                }
             }
             return this
         },
@@ -454,25 +454,25 @@ define([
         },
 
         highlightEntity:function (id) {
-        	if (id) this.selectedEntityId = id
-        	else id = this.selectedEntityId
-        	
-        	$(".entity_tree_node_wrapper").removeClass("active")
-        	if (id) {
-        	    var $selectedNode = $(".entity_tree_node_wrapper#"+id);
-        	    // make this node active
-        	    $selectedNode.addClass("active")
-        	    
-        		// open the parent nodes if needed
-        		var $nodeToOpenInParent = $selectedNode;
-        		while ($nodeToOpenInParent.length && !$nodeToOpenInParent.is(':visible')) {
-        		    $nodeToOpenInParent = $nodeToOpenInParent.closest('.node-children').closest('.tree-box');
-        		    this.showChildrenOf($nodeToOpenInParent)
-        		}
-        		
-        		// if we want to auto-expand the children of the selected node:
-//        		this.showChildrenOf($selectedNode.closest('.tree-box'), false)
-        	}
+            if (id) this.selectedEntityId = id
+            else id = this.selectedEntityId
+            
+            $(".entity_tree_node_wrapper").removeClass("active")
+            if (id) {
+                var $selectedNode = $(".entity_tree_node_wrapper#"+id);
+                // make this node active
+                $selectedNode.addClass("active")
+                
+                // open the parent nodes if needed
+                var $nodeToOpenInParent = $selectedNode;
+                while ($nodeToOpenInParent.length && !$nodeToOpenInParent.is(':visible')) {
+                    $nodeToOpenInParent = $nodeToOpenInParent.closest('.node-children').closest('.tree-box');
+                    this.showChildrenOf($nodeToOpenInParent)
+                }
+                
+                // if we want to auto-expand the children of the selected node:
+//              this.showChildrenOf($selectedNode.closest('.tree-box'), false)
+            }
         }
     })
 

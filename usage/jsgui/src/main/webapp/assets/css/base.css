@@ -1,42 +1,42 @@
 /* landing page */
 .logo {
-	display: inline-block;
-	padding-top: 10px;
-	float: left;
+    display: inline-block;
+    padding-top: 10px;
+    float: left;
 }
 
 .menubar-top {
-	display: inline-block;
-	vertical-align: bottom;
-	float: right;
-	text-align: right;
-	padding-top: 30px;
-	padding-right: 60px;
+    display: inline-block;
+    vertical-align: bottom;
+    float: right;
+    text-align: right;
+    padding-top: 30px;
+    padding-right: 60px;
 }
 
 #application-content {
-	margin-top: 40px;
-	margin-bottom: 40px;
+    margin-top: 40px;
+    margin-bottom: 40px;
 }
 .add-app .modal-body {
     padding: 0;
 }
 .add-app .modal-header{
-	border-bottom: 0;
+    border-bottom: 0;
 }
 .add-app .modal-footer {
-	min-height: 20px;
+    min-height: 20px;
 }
 
 add-app .tab-content-scroller {
     overflow: auto !important;
 }
 #application-content div#details {
-	margin-left: 8px !important;
+    margin-left: 8px !important;
 }
 #application-content .deploy,
 #application-content .preview {
-	padding: 15px;
+    padding: 15px;
 }
 #application-content .tab-content {
     max-height: 720px;
@@ -63,12 +63,12 @@ add-app .tab-content-scroller {
     float: left;   
 }
 #application-content div.template-lozenge div.icon {
-	margin: 2px 8px 2px 2px;
+    margin: 2px 8px 2px 2px;
 }
 #application-content div.template-lozenge div.icon img {
-	max-width: 50px;
-	max-height: 50px;
-	margin-top: 15px;
+    max-width: 50px;
+    max-height: 50px;
+    margin-top: 15px;
 }
 #application-content .template-lozenge.frame:hover {
     border: 3px solid #CCC;
@@ -77,7 +77,7 @@ add-app .tab-content-scroller {
     border: 3px solid #793;
 }
 #application-content .template-lozenge .icon {
-	float: left;
+    float: left;
 }
 #application-content .template-lozenge .blurb {
     overflow-y: auto;
@@ -88,56 +88,56 @@ add-app .tab-content-scroller {
     font-size: 90%;
 }
 #application-content .template-lozenge .description {
-	font-size: 85%;
+    font-size: 85%;
 }
 #preview_step {
-	margin-left: 18px;
+    margin-left: 18px;
 }
 #application-content .sensor-value,
 #application-content .config-value {
-	font-weight: 700;
-	max-width: 500px;
-	max-height: 40px;
-	white-space: nowrap;
-	overflow-x: hidden;
-	overflow-y: auto;
+    font-weight: 700;
+    max-width: 500px;
+    max-height: 40px;
+    white-space: nowrap;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 div#create-step-template-entries {
-	width: 472px;
-	margin-left: auto;
-	margin-right: auto;
-	padding-top: 12px;
-	padding-bottom: 36px;
+    width: 472px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 12px;
+    padding-bottom: 36px;
 }
 /* menu bar */
 .navbar .nav>li {
-	display: block;
-	float: left;
-	list-style: none;
-	margin: 15px 5px 0px 5px;
+    display: block;
+    float: left;
+    list-style: none;
+    margin: 15px 5px 0px 5px;
 }
 
 .navbar .nav>li>a:hover {
-	background-color: #A8B8B0;
-	foreground-color: #261;
-	color: #261;
-	text-decoration: none;
+    background-color: #A8B8B0;
+    foreground-color: #261;
+    color: #261;
+    text-decoration: none;
     text-shadow: 0 0px 0;
 }
 
 .navbar .nav>li>a {
-	background-color: #261;
-	color: #F0F4E8;
-	padding: 5px 7px 0px 7px;
-	-webkit-border-radius: 5px 5px 0 0;
-	-moz-border-radius: 5px 5px 0 0;
-	border-radius: 5px 5px 0 0;
-	line-height: 19px;
-	text-decoration: none;
-	text-shadow: 0 0px 0;
+    background-color: #261;
+    color: #F0F4E8;
+    padding: 5px 7px 0px 7px;
+    -webkit-border-radius: 5px 5px 0 0;
+    -moz-border-radius: 5px 5px 0 0;
+    border-radius: 5px 5px 0 0;
+    line-height: 19px;
+    text-decoration: none;
+    text-shadow: 0 0px 0;
 }
 .navbar .nav > li > a.active {
-	background-color: #492;
+    background-color: #492;
 }
 
 ul.dropdown-menu {
@@ -145,36 +145,36 @@ ul.dropdown-menu {
 }
 
 .navbar .dropdown-menu li > a:hover, .dropdown-menu .active > a, .dropdown-menu .active > a:hover {
-	background-color: #58AA33; /* that seems necessary to result in the color we want, viz ~ 77AA3E; */
+    background-color: #58AA33; /* that seems necessary to result in the color we want, viz ~ 77AA3E; */
 }
 
 /* tabs eg catalog page */
 .nav-tabs>li,.nav-pills>li {
-	float: left;
-	margin: 0px 1px -1px 1px;
+    float: left;
+    margin: 0px 1px -1px 1px;
 }
 
 .nav-tabs {
-	border-bottom: 1px solid #DDD;
-	padding-left: 8px;
-	padding-right: 8px;
-	height: 35px;
+    border-bottom: 1px solid #DDD;
+    padding-left: 8px;
+    padding-right: 8px;
+    height: 35px;
 }
 
 .nav-tabs>li>a {
-	padding-top: 5px;
-	padding-bottom: 3px;
-	line-height: 18px;
-	border: 1px solid transparent;
-	-webkit-border-radius: 5px 5px 0 0;
-	-moz-border-radius: 5px 5px 0 0;
-	border-radius: 5px 5px 0 0;
+    padding-top: 5px;
+    padding-bottom: 3px;
+    line-height: 18px;
+    border: 1px solid transparent;
+    -webkit-border-radius: 5px 5px 0 0;
+    -moz-border-radius: 5px 5px 0 0;
+    border-radius: 5px 5px 0 0;
 }
 
 li.text-filter input {
-	width: 10em;
-	margin-top: 3px;
-    /* taken from datatables_filter input */	
+    width: 10em;
+    margin-top: 3px;
+    /* taken from datatables_filter input */    
     background-image: url("../img/magnifying-glass-right.png");
     background-size:12px 12px;
     background-repeat: no-repeat;
@@ -265,15 +265,15 @@ input[type="datetime"]:focus,input[type="datetime-local"]:focus,input[type="date
 input[type="month"]:focus,input[type="time"]:focus,input[type="week"]:focus,input[type="number"]:focus,
 input[type="email"]:focus,input[type="url"]:focus,input[type="search"]:focus,input[type="tel"]:focus,
 input[type="color"]:focus,.uneditable-input:focus {
-	border-color: rgba(120, 180, 70, 0.8);
-	outline: 0;
-	outline: thin dotted 9;
-	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px
-		rgba(120, 180, 70, 0.6);
-	-moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px
-		rgba(120, 180, 70, 0.6);
-	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px
-		rgba(120, 180, 70, 0.6);
+    border-color: rgba(120, 180, 70, 0.8);
+    outline: 0;
+    outline: thin dotted 9;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px
+        rgba(120, 180, 70, 0.6);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px
+        rgba(120, 180, 70, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px
+        rgba(120, 180, 70, 0.6);
 }
 
 /* home page squares */
@@ -313,7 +313,7 @@ input[type="color"]:focus,.uneditable-input:focus {
 }
 
 .roundedSummary:last-child {
-	margin-right: 0px;
+    margin-right: 0px;
 }
 
 .roundedSummary:before { /* makes the summary vertically centered */
@@ -354,7 +354,7 @@ input[type="color"]:focus,.uneditable-input:focus {
 }
 
 .big {
-	font-size: 180%;
+    font-size: 180%;
 }
 
 .home-second-row {
@@ -365,7 +365,7 @@ input[type="color"]:focus,.uneditable-input:focus {
 }
 
 .home-widgets-row {
-	text-align: center;
+    text-align: center;
 }
 
 .map-container {
@@ -375,19 +375,19 @@ input[type="color"]:focus,.uneditable-input:focus {
     background-color: #f7f7f7;
     border: 1px solid #d4d4d4;
     padding: 13px !important;
-	width: 440px;
+    width: 440px;
     margin: 10px 0px 0px 13px !important;
-	display: inline-block;
-	text-align: left;
-	vertical-align: top;
-	margin: 0px 20px;
+    display: inline-block;
+    text-align: left;
+    vertical-align: top;
+    margin: 0px 20px;
 }
 .circles-map {
-	height: 350px;
-	border : 2px solid #909490;
-	-webkit-border-radius: 2px 2px 2px 2px;
-	-moz-border-radius: 2px 2px 2px 2px;
-	border-radius: 2px 2px 2px 2px;
+    height: 350px;
+    border : 2px solid #909490;
+    -webkit-border-radius: 2px 2px 2px 2px;
+    -moz-border-radius: 2px 2px 2px 2px;
+    border-radius: 2px 2px 2px 2px;
 }
 .circles-map-message:before { /* makes the message vertically centered */
     content: '';
@@ -397,33 +397,33 @@ input[type="color"]:focus,.uneditable-input:focus {
     margin-right: -0.25em; /* adjusts for horiz spacing */
 }
 .circles-map-message {
-	display: inline-block;
-	width: 100%;
-	height: 100%;
+    display: inline-block;
+    width: 100%;
+    height: 100%;
     color: #888;
     text-align: center;
     vertical-align: middle;
 }
 #applications-table-body a {
-	color: inherit;
+    color: inherit;
 }
 .apps-summary-container {
-	width: 440px;
-	display: inline-block;
-	text-align: left;
-	vertical-align: top;
+    width: 440px;
+    display: inline-block;
+    text-align: left;
+    vertical-align: top;
     display: inline-block;
     margin: 10px -6px 0px 24px;
     text-align: left;
     vertical-align: top;
 }
 #new-application-resource {
-	text-align: right;
+    text-align: right;
 }
 
 /* general pages */
 .sidebar_at_right {
-	border-right: 4px solid #BBB;
+    border-right: 4px solid #BBB;
 }
 
 .sidebar_at_left {
@@ -433,14 +433,14 @@ input[type="color"]:focus,.uneditable-input:focus {
 }
 
 .nav-tabs {
-	margin-bottom: 0px;
+    margin-bottom: 0px;
 }
 .tab-content-scroller {
     height: auto;
     overflow: auto;
 }
 .tab-content {
-	padding: 12px 18px 18px 18px;
+    padding: 12px 18px 18px 18px;
     border-right: 1px solid #DDD;
     border-left: 1px solid #DDD;
     min-height: 300px;
@@ -469,7 +469,7 @@ input[type="color"]:focus,.uneditable-input:focus {
 #tree-list {
 }
 ol.tree {
-	padding: 0;
+    padding: 0;
 }
 #tree-list li input + ol {
     background: url(../img/toggle-small-expand.png) 40px 5px no-repeat;
@@ -487,7 +487,7 @@ ol.tree {
     margin-left: 17px !important;
 }
 #tree-list li.application {
-	margin-top: 6px !important;
+    margin-top: 6px !important;
 }
 #tree-list li input + ol {
     height: auto;
@@ -500,7 +500,7 @@ ol.tree {
 }
 
 .label-message {
-	background-color: #DDD;
+    background-color: #DDD;
     -webkit-border-radius: 2px 2px 2px 2px;
     -moz-border-radius: 2px 2px 2px 2px;
     border-radius: 2px 2px 2px 2px;
@@ -509,35 +509,35 @@ ol.tree {
     font-weight: bold;
 } 
 .label-important {
-	display: inline;
-	padding: 4px;
-	color: #F0F0F0;
-	font-weight: bold;
+    display: inline;
+    padding: 4px;
+    color: #F0F0F0;
+    font-weight: bold;
     -webkit-border-radius: 2px 2px 2px 2px;
     -moz-border-radius: 2px 2px 2px 2px;
     border-radius: 2px 2px 2px 2px;
 }
 .label-important.full-width {
-	display: block;
-	text-align: center;
+    display: block;
+    text-align: center;
 }
 
 /** apps / entity explorer page */
 .apps-tree-toolbar {
-	text-align: right;
+    text-align: right;
 }
 .entity_tree_node, .entity_tree_node a {
-	color: #182018;
+    color: #182018;
 }
 .handy {
-	cursor: hand; cursor: pointer;
+    cursor: hand; cursor: pointer;
 }
 .entity_tree_node:hover {
-	cursor: hand; cursor: pointer;
+    cursor: hand; cursor: pointer;
 }
 .entity_tree_node a:hover {
-	color: #54932b !important;
-	text-decoration: none;
+    color: #54932b !important;
+    text-decoration: none;
 }
 .entity_tree_node_wrapper.active .entity_tree_node {
     font-weight: bold;
@@ -569,7 +569,7 @@ line-height: 18px;
     float: left;
 }
 .entity_tree_node_wrapper {
-	position: relative;
+    position: relative;
 }
 .tree-box {
     border: 1px solid #AAA;
@@ -600,7 +600,7 @@ line-height: 18px;
     margin-left: 3px;
 }
 .tree-box.inner.depth-first {
-	margin-left: 8px;
+    margin-left: 8px;
 }
 .tree-box.inner.depth-odd {
     background-color: #D8DAD8;
@@ -626,17 +626,17 @@ line-height: 18px;
 }
 .light-popup-body {
     padding: 3px 0px;
-	background-color: #606060;
-	color: #CDC;
-	font-weight: 300;
-	font-size: 85%;
+    background-color: #606060;
+    color: #CDC;
+    font-weight: 300;
+    font-size: 85%;
     border: 1px dotted #CDC;
     -webkit-border-radius: 2px 2px 2px 2px !important;
     -moz-border-radius: 2px 2px 2px 2px !important;
     border-radius: 2px 2px 2px 2px !important;
 }
 .light-popup-menu-item {
-	color: #D0D4D0;
+    color: #D0D4D0;
 }
 .light-popup-menu-item.tr-default {
     color: #E0E4E0;
@@ -658,34 +658,34 @@ table.dataTable tbody td.row-expansion {
     background: #D8E4D0;
 }
 table.dataTable.activity-table tbody td.row-expansion {
-	background: #FFFFFF;
+    background: #FFFFFF;
 }
 
 #activities-table-group div.for-activity-textarea {
-	/* correct for textarea width oddity */
-	margin-right: 10px;
-	margin-top: 6px;
+    /* correct for textarea width oddity */
+    margin-right: 10px;
+    margin-top: 6px;
 }
 #activities-table-group div.for-activity-textarea textarea {
     margin-bottom: 0px;
     border-color: #BBB;
 }
 #activities-root .toolbar-row i {
-	background-image: url("../img/glyphicons-halflings.png");
-	width: 18px;
+    background-image: url("../img/glyphicons-halflings.png");
+    width: 18px;
 }
 #activities-root .toolbar-row i.active {
-	background-image: url("../img/glyphicons-halflings-bright-green.png");
+    background-image: url("../img/glyphicons-halflings-bright-green.png");
 }
 #activities-root .toolbar-row {
-	padding-top: 1px;
+    padding-top: 1px;
 }
 #activities-root .toolbar-row i:hover,
 #activities-root .toolbar-row i.active:hover {
     background-image: url("../img/glyphicons-halflings-dark-green.png");
 }
 table.dataTable td.row-expansion {
-	padding-top: 0px;
+    padding-top: 0px;
 }
 .opened-row-details {
     display: block;
@@ -716,7 +716,7 @@ table.dataTable td.row-expansion {
     vertical-align: middle;
 }
 #params input {
-	margin-bottom: 0px;
+    margin-bottom: 0px;
 }
 
 table.dataTable tr.odd td.sorting_1 {
@@ -759,7 +759,7 @@ table.dataTable tr.even.selected td.sorting_1:hover {
 
 table.dataTable.activity-table tbody tr.activity-row,
 table.nonDatatables#policies-table tbody tr.policy-row {
-	cursor: hand; cursor: pointer;
+    cursor: hand; cursor: pointer;
 }
 
 table.dataTable thead th {
@@ -779,29 +779,29 @@ overflow: scroll;
  border-top-width: 1px; */
 }
 .bottom {
-	vertical-align: bottom;
+    vertical-align: bottom;
 }
 .smallpadside {
-	margin-left: 0.25em;
-	margin-right: 0.25em;
+    margin-left: 0.25em;
+    margin-right: 0.25em;
 }
 .table-scroll-wrapper {
     width: 100%;
     overflow: auto;
     background-color: #ececec;
-	border-style: solid;
-	border-color: #e8e8e8;
-	border-width: 1px 1px 1px 1px;
-	border-bottom-left-radius: 7px;
-	border-bottom-right-radius: 7px;
+    border-style: solid;
+    border-color: #e8e8e8;
+    border-width: 1px 1px 1px 1px;
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
 }
 .table-scroll-wrapper .dataTables_filter {
-	float: left;
-	padding-left: 6px;
+    float: left;
+    padding-left: 6px;
 }
 .table-scroll-wrapper .dataTables_filter label {
-	margin-bottom: 5px;
-	margin-top: 4px;
+    margin-bottom: 5px;
+    margin-top: 4px;
 }
 .dataTables_wrapper .brook-db-top-toolbar {
     font-size: 85%;
@@ -818,9 +818,9 @@ overflow: scroll;
 }
 
 .dataTables_info {
-	padding-top: 5px;
-	padding-left: 8px;
-	padding-bottom: 8px;
+    padding-top: 5px;
+    padding-left: 8px;
+    padding-bottom: 8px;
     font-size: 85%;
     width: auto;
     align: center;
@@ -893,8 +893,8 @@ table.nonDatatables thead th {
     padding: 3px 18px 3px 5px;
 }
 table.table.nonDatatables tbody > tr:first-child > td {
-	/* need both bottom of head, and top of body, to support empty table and override non-empty row top border */
-	border-top: 1px black solid;
+    /* need both bottom of head, and top of body, to support empty table and override non-empty row top border */
+    border-top: 1px black solid;
 }
 table.table.nonDatatables tbody tr.selected,
 table.table.nonDatatables tbody tr.selected td {
@@ -933,33 +933,33 @@ div.for-empty-table {
     line-height: 30px;
 }
 .editable-entity-heading:hover {
-	background-color: #F0F4F0;
+    background-color: #F0F4F0;
 }
 .editable-entity-body {
     border-top: 1px solid #E5E5E5;
     margin-top: -1px;
-	padding: 7px 6px 2px 6px;
-	overflow: hidden;
-	-webkit-border-radius: 4px;
+    padding: 7px 6px 2px 6px;
+    overflow: hidden;
+    -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
     border-radius: 4px;
 }
 
 #app-locations select {
-	min-height: 22px;
+    min-height: 22px;
 }
 #app-locations #selector-container {
-	margin-bottom: 4px;
+    margin-bottom: 4px;
 }
 div.application-name-label {
-	margin-bottom: 4px;
+    margin-bottom: 4px;
 }
 table.config-table {
-	margin-bottom: 6px;
-	margin-left: 2px;
+    margin-bottom: 6px;
+    margin-left: 2px;
 }
 .app-add-wizard-config-entry input {
-    margin: 3px 0 2px 0;	
+    margin: 3px 0 2px 0;    
     height: 12px;
     vertical-align: middle;
 }
@@ -967,7 +967,7 @@ table.config-table {
     height: 14px;
 }
 tr.app-add-wizard-config-entry:nth-child(odd) {
-	background-color: #f8f8f8;
+    background-color: #f8f8f8;
 }
 tr.app-add-wizard-config-entry:nth-child(even) {
 }
@@ -975,15 +975,15 @@ tr.app-add-wizard-config-entry {
     height: 20px;
 }
 .app-add-wizard-config-entry {
-	margin-bottom: 9px;
-	margin-top: 2px;
+    margin-bottom: 9px;
+    margin-top: 2px;
 }
 .app-add-wizard-config-entry button {
-	margin-left: 8px;
+    margin-left: 8px;
 }
 .app-add-wizard-create-entity-label-newline {
     padding-left: 2px;
-    padding-bottom: 3px;	
+    padding-bottom: 3px;    
 }
 .app-add-wizard-create-entity-label {
     width: 4em;
@@ -991,43 +991,43 @@ tr.app-add-wizard-config-entry {
     padding-top: 3px;
 }
 .app-add-wizard-create-entity-input {
-	width: 300px;
+    width: 300px;
 }
 #add-app-entity {
-	float: right;
+    float: right;
 }
 /* help page */
 #help-page p, #help-page ul {
-	margin-top: 8px;
+    margin-top: 8px;
 }
 .help-logo-right {
-	padding-left: 1.5em;
-	padding-top: 1.5em;
-	float: right;
+    padding-left: 1.5em;
+    padding-top: 1.5em;
+    float: right;
 }
 .help-logo-right img {
     border: 3px solid #6C6C6C;
     border-radius: 2px;
 }
 .control-group {
-	margin-top: 6px;
-	margin-bottom: 9px;
+    margin-top: 6px;
+    margin-bottom: 9px;
 }
 .control-group .deploy-label {
-	font-weight: 700;
+    font-weight: 700;
 }
 .deploy .control-group {
-	margin-bottom: 18px;
+    margin-bottom: 18px;
 }
 .deploy input#application-name {
-	/** margin supplied by control group */
-	margin-bottom: 0px;
+    /** margin supplied by control group */
+    margin-bottom: 0px;
 }
 
 #application-explorer div#summary textarea {
-	width: 100%;
-	cursor: auto;
-	margin-bottom: 2px;
+    width: 100%;
+    cursor: auto;
+    margin-bottom: 2px;
 }
 
 /* catalog */
@@ -1043,7 +1043,7 @@ tr.app-add-wizard-config-entry {
     background-color: #F8FAF8;
 }
 .accordion-body {
-	border-top: 1px dashed lightgray;
+    border-top: 1px dashed lightgray;
     padding: 8px 8px 12px 8px;
     overflow: auto;
     max-height: 400px;
@@ -1056,9 +1056,9 @@ tr.app-add-wizard-config-entry {
     cursor: hand; cursor: pointer;
 }
 .catalog-accordion-wrapper {
-	margin-bottom: 6px;
+    margin-bottom: 6px;
     background-color: #F0F0F0;
-	border-radius: 5px;
+    border-radius: 5px;
 }
 .accordion-item {
     -webkit-border-radius: 5px;
@@ -1068,14 +1068,14 @@ tr.app-add-wizard-config-entry {
     border: 1px solid lightgray;
 }
 .accordion-nav-row:hover {
-	text-decoration: underline;
-	cursor: hand; cursor: pointer;
+    text-decoration: underline;
+    cursor: hand; cursor: pointer;
 }
 .accordion-nav-row.active {
     font-weight: bold;
 }
 .catalog-details {
-	padding-left: 16px;
+    padding-left: 16px;
     padding-right: 25px;
     padding-top: 8px;
     padding-bottom: 8px;
@@ -1088,60 +1088,60 @@ tr.app-add-wizard-config-entry {
     cursor: auto;
 }
 .catalog-details#details-empty {
-	padding-top: 60px;
-	padding-bottom: 180px;
-	text-align: center;
+    padding-top: 60px;
+    padding-bottom: 180px;
+    text-align: center;
 }
 
 .float-right {
-	float: right;
+    float: right;
 }
 
 /* swagger */
 
 swagger-ui-container{
-	margin-bottom: 3em;
+    margin-bottom: 3em;
 }
 
 .swagger-ui-wrap {
-	max-width: 960px;
-	margin-left: auto;
-	margin-right: auto;
-	margin-bottom: 6em;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 6em;
 }
 
 .icon-btn {
-	cursor: pointer;
+    cursor: pointer;
 }
 
 #message-bar {
-	min-height: 30px;
-	text-align: center;
-	padding-top: 10px;
+    min-height: 30px;
+    text-align: center;
+    padding-top: 10px;
 }
 
 .message-success {
-	color: #89BF04;
+    color: #89BF04;
 }
 
 .message-fail {
-	color: #cc0000;
+    color: #cc0000;
 }
 
 .code-textarea {
-	width: 100%;
-	height: 8em;
-	margin-right: 4px;
-	font-family: Consolas, Lucida Console, Monaco, monospace;
-	white-space: pre;
-	word-wrap: normal; 
-	overflow-x: scroll;
-	overflow-y: scroll;
+    width: 100%;
+    height: 8em;
+    margin-right: 4px;
+    font-family: Consolas, Lucida Console, Monaco, monospace;
+    white-space: pre;
+    word-wrap: normal; 
+    overflow-x: scroll;
+    overflow-y: scroll;
 }
 
 /** groovy script */
 #groovy-ui-container .hide {
-	display: none !important;
+    display: none !important;
 }
 #groovy-ui-container .throbber {
     padding-top: 8px;
@@ -1150,11 +1150,11 @@ swagger-ui-container{
     height: 16em;
 }
 #groovy-ui-container .toggler-region {
-	margin-top: 0.5em;
-	margin-bottom: 1em;
+    margin-top: 0.5em;
+    margin-bottom: 1em;
 }
 #groovy-ui-container .groovy-scripting-text {
-	margin-top: 0.5em;
+    margin-top: 0.5em;
 }
 #groovy-ui-container div.submit {
    float: "right";
@@ -1168,31 +1168,31 @@ swagger-ui-container{
 }
 
 #groovy-ui-container .output {
-	width: 48%;
+    width: 48%;
     float: right;
 }
 .toggler-header {
-	cursor: hand; cursor: pointer;
-	margin-bottom: 3px;
+    cursor: hand; cursor: pointer;
+    margin-bottom: 3px;
 }
 .toggler-icon {
-	float: right;
+    float: right;
 }
 .user-hidden .toggler-icon {
 }
 
 /** trick for making textareas with width 100% line up (silly width 100% excludes padding) */
 div.for-textarea {
-	padding-left: 0.8em;
-	padding-right: 0.4em;
+    padding-left: 0.8em;
+    padding-right: 0.4em;
 }
 div.for-textarea > textarea {
-	padding-left: 0.3em;
-	padding-right: 0.3em;
-	margin-left: -0.6em;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+    margin-left: -0.6em;
 }
 #groovy-ui-container p {
-	margin-top: 4px;
+    margin-top: 4px;
 }
 #groovy-ui-container a {
     color: inherit;
@@ -1238,15 +1238,15 @@ input[type="file"] {
     float: left;
 }
 .subpanel-header-row {
-	color: black;
-	background-color: #B0B8B0;
-	padding-top: 12px;
-	padding-bottom: 12px;
-	margin-bottom: 24px;
-	padding-left: 12px;
-	vertical-align: top;
-	font-weight: 700;
-	font-size: 120%;
+    color: black;
+    background-color: #B0B8B0;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+    padding-left: 12px;
+    vertical-align: top;
+    font-weight: 700;
+    font-size: 120%;
 }
 
 .toggler-header {
@@ -1254,25 +1254,25 @@ input[type="file"] {
     padding: 2px 6px 2px 6px;
 }
 .activity-detail-panel .subpanel-header-row {
-	margin-bottom: 12px;
+    margin-bottom: 12px;
 }
 .activity-detail-panel .toggler-region {
-	margin-bottom: 12px;
+    margin-bottom: 12px;
 }
 .activity-detail-panel .toggler-region .activity-details-section {
-	margin: 4px 6px 0px 6px;
+    margin: 4px 6px 0px 6px;
 }
 .activity-detail-panel .activity-details-section.activity-description, 
 .activity-detail-panel .activity-details-section.activity-status {
-	margin-bottom: 12px;
+    margin-bottom: 12px;
 }
 .activity-detail-panel .activity-label {
-	display: inline-block;
-	width: 100px;
+    display: inline-block;
+    width: 100px;
 }
 .activity-detail-panel .toggler-region.tasks-submitted .table-scroll-wrapper,
 .activity-detail-panel .toggler-region.tasks-children .table-scroll-wrapper {
-	margin-bottom: 18px;
+    margin-bottom: 18px;
 }
 
 .activity-tag-giftlabel {

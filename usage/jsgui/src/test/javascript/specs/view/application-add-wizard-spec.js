@@ -9,16 +9,16 @@ define([
 ], function (_, $, Backbone, AppAddWizard, Application, Locations
 //        , 
 //        Entities,
-//		Step1Html, Step2Html, Step3Html,
-//		Step1LocationRowHtml, LocationOptionHtml,  
-//		Step2EntityEntryHtml, Step2ConfigEntryHtml
-		) {
+//      Step1Html, Step2Html, Step3Html,
+//      Step1LocationRowHtml, LocationOptionHtml,  
+//      Step2EntityEntryHtml, Step2ConfigEntryHtml
+        ) {
 
-	/* TEST disabled until we can more cleanly supply javascript.
-	 * should probably move to have one big model,
-	 * rather than passing around lots of small model items.
-	 */
-	
+    /* TEST disabled until we can more cleanly supply javascript.
+     * should probably move to have one big model,
+     * rather than passing around lots of small model items.
+     */
+    
 //    Backbone.View.prototype.close = function () {
 //        if (this.beforeClose) {
 //            this.beforeClose()

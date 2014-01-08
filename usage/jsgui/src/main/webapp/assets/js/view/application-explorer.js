@@ -47,14 +47,14 @@ define([
         },
         
         createApplication:function () {
-        	var that = this;
+            var that = this;
             if (this._modal) {
                 this._modal.close()
             }
             var wizard = new AppAddWizard({
-            	appRouter:that.options.appRouter,
-            	callback:function() { that.refreshApplicationsInPlace() }
-        	})
+                appRouter:that.options.appRouter,
+                callback:function() { that.refreshApplicationsInPlace() }
+            })
             this._modal = wizard
             this.$(".add-app #modal-container").html(wizard.render().el)
             this.$(".add-app #modal-container .modal")

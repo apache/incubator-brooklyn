@@ -20,7 +20,7 @@ define([
             apps.url = "fixtures/application-list.json"
             apps.fetch({async:false})
             locs.url = "fixtures/location-list.json"
-        	locs.fetch({async:false})
+            locs.fetch({async:false})
 
             beforeEach(function () {
                 view = new HomeView({

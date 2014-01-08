@@ -47,10 +47,10 @@ define([
                                  },
                                  {
                                      "mRender": function ( data, type, row ) {
-                                    	 if ( type === 'display' ) {
-                                    		 data = moment(data).calendar();
-                                    	 }
-                                    	 return Util.escape(data)
+                                         if ( type === 'display' ) {
+                                             data = moment(data).calendar();
+                                         }
+                                         return Util.escape(data)
                                      },
                                      "aTargets": [ 2 ]
                                  },

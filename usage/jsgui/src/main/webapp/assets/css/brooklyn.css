@@ -159,7 +159,7 @@ textarea {
 }
 
 .table-toolbar-icon:hover {
-	opacity: .7;
+    opacity: .7;
 }
 
 #details {
@@ -213,12 +213,12 @@ textarea {
 }
 .nav-tabs .dropdown-toggle .caret, .nav-pills .dropdown-toggle .caret {
     opacity: 0.5;
-	margin-top: 6px;
+    margin-top: 6px;
     border-top-color: #000;
     border-bottom-color: #000;
 }
 .nav-tabs .dropdown-toggle:hover .caret, .nav-pills .dropdown-toggle:hover .caret {
-	opacity: 0.8;
+    opacity: 0.8;
     border-top-color: #549e2b;
     border-bottom-color: #549e2b;
 }
@@ -227,12 +227,12 @@ textarea {
 /* END KROME STYLES */
 
 .view_not_available {
-	/*
+    /*
     // nothing yet; idea is to put CSS here which will show a 'Not Available' message.
     // but it is hard to position it without assuming or introducing position-absolute on the parent.
     // probably need to mess with the hierarchy, or make such an assumption.
     // also there is the issue the (currently) the parent view has had opacity set to 0.2.
     // used in viewutils.js fade/cancelFade methods (and should be only those!)
     content: 'Not Available';
-	*/
+    */
 }

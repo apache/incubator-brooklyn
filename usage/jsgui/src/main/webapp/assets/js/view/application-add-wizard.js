@@ -20,7 +20,7 @@ define([
              ModalHtml, CreateHtml, CreateStepTemplateEntryHtml, CreateEntityEntryHtml,
              RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml,
              DeployLocationRowHtml, DeployLocationOptionHtml, PreviewHtml
-		) {
+        ) {
 
     function setVisibility(obj, isVisible) {
         if (isVisible) obj.show();
@@ -103,13 +103,13 @@ define([
             // finish from config step, preview step, and from first step if yaml tab selected (and valid)
             var finishEnabled = (this.currentStep >= 1)
             if (!finishEnabled && this.currentStep==0) {
-            	if (this.model.mode == "yaml") {
-            		// should do better validation than non-empty
-            		var yaml_code = this.$("#yaml_code").val()
-            		if (yaml_code) {
-            			finishEnabled = true;
-            		}
-            	}
+                if (this.model.mode == "yaml") {
+                    // should do better validation than non-empty
+                    var yaml_code = this.$("#yaml_code").val()
+                    if (yaml_code) {
+                        finishEnabled = true;
+                    }
+                }
             }
             setVisibility(this.$("#finish_step"), finishEnabled)
         },
@@ -120,48 +120,48 @@ define([
             $modal.fadeTo(500,0.5);
             
             if (this.model.mode == "yaml") {
-            	$.ajax({
-            		url:'/v1/applications',
-            		type:'post',
-            		contentType:'application/yaml',
-            		processData:false,
-            		data:this.model.yaml,
-            		success:function (data) {
-            			that.onSubmissionComplete(true, data, $modal)
-            		},
-            		error:function (data) {
-            			that.onSubmissionComplete(false, data, $modal)
-            		}
-            	})
+                $.ajax({
+                    url:'/v1/applications',
+                    type:'post',
+                    contentType:'application/yaml',
+                    processData:false,
+                    data:this.model.yaml,
+                    success:function (data) {
+                        that.onSubmissionComplete(true, data, $modal)
+                    },
+                    error:function (data) {
+                        that.onSubmissionComplete(false, data, $modal)
+                    }
+                })
 
             } else {
-            	$.ajax({
-            		url:'/v1/applications',
-            		type:'post',
-            		contentType:'application/json',
-            		processData:false,
-            		data:JSON.stringify(this.model.spec.toJSON()),
-            		success:function (data) {
-            			that.onSubmissionComplete(true, data, $modal)
-            		},
-            		error:function (data) {
-            			that.onSubmissionComplete(false, data, $modal)
-            		}
-            	})
+                $.ajax({
+                    url:'/v1/applications',
+                    type:'post',
+                    contentType:'application/json',
+                    processData:false,
+                    data:JSON.stringify(this.model.spec.toJSON()),
+                    success:function (data) {
+                        that.onSubmissionComplete(true, data, $modal)
+                    },
+                    error:function (data) {
+                        that.onSubmissionComplete(false, data, $modal)
+                    }
+                })
             }
             
             return false
         },
         onSubmissionComplete: function(succeeded, data, $modal) {
-        	var that = this;
-        	if (succeeded) {
-    			$modal.modal('hide')
-    			$modal.fadeTo(500,1);
-    			if (that.options.callback) that.options.callback();        		
-        	} else {
-    			that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
-    			that.steps[that.currentStep].view.showFailure()
-        	}
+            var that = this;
+            if (succeeded) {
+                $modal.modal('hide')
+                $modal.fadeTo(500,1);
+                if (that.options.callback) that.options.callback();             
+            } else {
+                that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
+                that.steps[that.currentStep].view.showFailure()
+            }
         },
         
         prevStep:function () {
@@ -252,21 +252,21 @@ define([
             if (e.target.text=="Catalog") {
                 $("li.text-filter").show()
             } else {
-            	$("li.text-filter").hide()
+                $("li.text-filter").hide()
             }
-        	
-        	if (e.target.text=="YAML") {
-        		this.model.mode = "yaml";
-        	} else {
-        		this.model.mode = "spec";
-        	}
+            
+            if (e.target.text=="YAML") {
+                this.model.mode = "yaml";
+            } else {
+                this.model.mode = "spec";
+            }
 
-        	if (this.options.wizard)
-        		this.options.wizard.updateButtonVisibility();
+            if (this.options.wizard)
+                this.options.wizard.updateButtonVisibility();
         },
         onYamlCodeChange: function() {
-        	if (this.options.wizard)
-        		this.options.wizard.updateButtonVisibility();
+            if (this.options.wizard)
+                this.options.wizard.updateButtonVisibility();
         },
         applyFilter: function(e) {
             var filter = $(e.currentTarget).val().toLowerCase()
@@ -417,10 +417,10 @@ define([
                     return true
                 }
             } else if (tabName=='#yamlTab') {
-            	this.model.yaml = this.$("#yaml_code").val();
-        		if (this.model.yaml) {
-        			return true;
-        		}
+                this.model.yaml = this.$("#yaml_code").val();
+                if (this.model.yaml) {
+                    return true;
+                }
             } else {
                 console.info("NOT IMPLEMENTED YET")
                 // TODO - other tabs not implemented yet 
@@ -431,7 +431,7 @@ define([
         },
         
         showFailure: function() {
-        	this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
+            this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
         }
 
     })
@@ -464,28 +464,28 @@ define([
         },
         renderAddedLocations:function () {
             // renders the locations added to the model
-        	var that = this;
-        	var container = this.$("#selector-container")
-        	container.empty()
-        	for (var li = 0; li < this.model.spec.get("locations").length; li++) {
-        		var chosenLocation = this.model.spec.get("locations")[li];
-        		container.append(that.locationRowTemplate({
-        				initialValue: chosenLocation,
-        				rowId: li
-        			}))
-        	}
-    		var $selectLocations = container.find('#select-location')
-    		this.locations.each(function(aLocation) {
-        			var $option = that.locationOptionTemplate({
+            var that = this;
+            var container = this.$("#selector-container")
+            container.empty()
+            for (var li = 0; li < this.model.spec.get("locations").length; li++) {
+                var chosenLocation = this.model.spec.get("locations")[li];
+                container.append(that.locationRowTemplate({
+                        initialValue: chosenLocation,
+                        rowId: li
+                    }))
+            }
+            var $selectLocations = container.find('#select-location')
+            this.locations.each(function(aLocation) {
+                    var $option = that.locationOptionTemplate({
                         url:aLocation.getLinkByName("self"),
                         name:aLocation.getPrettyName()
                     })
                     $selectLocations.append($option)
-        		})
-    		$selectLocations.each(function(i) {
-    			var url = $($selectLocations[i]).parent().attr('initialValue');
-    			$($selectLocations[i]).val(url)
-    		})
+                })
+            $selectLocations.each(function(i) {
+                var url = $($selectLocations[i]).parent().attr('initialValue');
+                $($selectLocations[i]).val(url)
+            })
         },
         render:function () {
             this.delegateEvents()
@@ -515,12 +515,12 @@ define([
             }            
         },
         addLocation:function () {
-        	if (this.locations.models.length>0) {
-            	this.model.spec.addLocation(this.locations.models[0].getLinkByName("self"))
-            	this.renderAddedLocations()
-        	} else {
+            if (this.locations.models.length>0) {
+                this.model.spec.addLocation(this.locations.models[0].getLinkByName("self"))
+                this.renderAddedLocations()
+            } else {
                 this.$('div.info-nolocs-message').show('slow').delay(2000).hide('slow')
-        	}
+            }
         },
         removeLocation:function (event) {
             var toBeRemoved = $(event.currentTarget).parent().attr('rowId')
@@ -568,12 +568,12 @@ define([
             return map;
         },
         selection:function (event) {
-        	var url = $(event.currentTarget).val();
-        	var loc = this.locations.find(function (candidate) {
-        		return candidate.getLinkByName("self")==url
-    		})
-        	this.model.spec.setLocationAtIndex($(event.currentTarget).parent().attr('rowId'), 
-        			loc.getLinkByName("self"))
+            var url = $(event.currentTarget).val();
+            var loc = this.locations.find(function (candidate) {
+                return candidate.getLinkByName("self")==url
+            })
+            this.model.spec.setLocationAtIndex($(event.currentTarget).parent().attr('rowId'), 
+                    loc.getLinkByName("self"))
         },
         updateName:function () {
             var name = this.$('#application-name').val()
@@ -590,7 +590,7 @@ define([
             return false
         },
         showFailure: function() {
-        	this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
+            this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
         }
     })
 
@@ -622,14 +622,14 @@ define([
             // need locations, and type or entities
             if ((this.model.spec.get("locations").length > 0) && 
                 (this.model.spec.get("type")!=null || 
-            		this.model.spec.getEntities().length > 0)) {
+                    this.model.spec.getEntities().length > 0)) {
                 return true
             }
             this.showFailure()
             return false
         },
         showFailure:function () {
-        	this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
+            this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
         }
     })
 

@@ -11,8 +11,8 @@ define([
     // see discussion at https://github.com/brooklyncentral/brooklyn/pull/939
     
     // add close method to all views for clean-up
-	// (NB we have to update the prototype _here_ before any views are instantiated;
-	//  see "close" called below in "showView") 
+    // (NB we have to update the prototype _here_ before any views are instantiated;
+    //  see "close" called below in "showView") 
     Backbone.View.prototype.close = function () {
         // call user defined close method if exists
         this.viewIsClosed = true
