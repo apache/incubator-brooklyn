@@ -65,14 +65,17 @@ public abstract class AbstractSoftlayerLiveTest {
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
-    // FIXME need a jclouds-softlayer 1.6.1-cloudsoft.2; see https://github.com/jclouds/jclouds/pull/77
+    @Test(groups = {"Live"})
+    public void test_Default() throws Exception {
+        runTest(ImmutableMap.<String,Object>of());
+    }
+
     @Test(groups = {"Live"})
     public void test_Ubuntu_12_0_4() throws Exception {
         // Image: {id=17446, providerId=17446, os={family=ubuntu, version=12.04, description=Ubuntu Linux 12.04 LTS Precise Pangolin - Minimal Install (64 bit), is64Bit=true}, description=Ubuntu Linux 12.04 LTS Precise Pangolin - Minimal Install (64 bit), status=AVAILABLE, loginUser=root}
         runTest(ImmutableMap.<String,Object>of("imageId", "17446"/*, "minRam", SMALL_RAM*/));
     }
 
-    // FIXME need a jclouds-softlayer 1.6.1-cloudsoft.2; see https://github.com/jclouds/jclouds/pull/77
     @Test(groups = {"Live"})
     public void test_Centos_6_0() throws Exception {
         // Image: {id=13945, providerId=13945, os={family=centos, version=6.0, description=CentOS 6.0 - Minimal Install (64 bit), is64Bit=true}, description=CentOS 6.0 - Minimal Install (64 bit), status=AVAILABLE, loginUser=root}
