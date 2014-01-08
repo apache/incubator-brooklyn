@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
-import com.google.common.collect.Ranges;
 import com.google.common.io.Files;
 
 public class Monitor {
@@ -94,9 +93,9 @@ public class Monitor {
     private static Range<Integer> parseRange(String range) {
         if (range.contains("-")) {
             String[] parts = range.split("-");
-            return Ranges.closed(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+            return Range.closed(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
         } else {
-            return Ranges.singleton(Integer.parseInt(range));
+            return Range.singleton(Integer.parseInt(range));
         }
     }
     

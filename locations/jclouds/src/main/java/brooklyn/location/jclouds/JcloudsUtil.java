@@ -15,15 +15,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
-import org.jclouds.aws.ec2.AWSEC2ApiMetadata;
-import org.jclouds.aws.ec2.AWSEC2Client;
+import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.RunScriptOnNodesException;
@@ -36,7 +34,7 @@ import org.jclouds.domain.LoginCredentials;
 import org.jclouds.ec2.compute.domain.PasswordDataAndPrivateKey;
 import org.jclouds.ec2.compute.functions.WindowsLoginCredentialsFromEncryptedData;
 import org.jclouds.ec2.domain.PasswordData;
-import org.jclouds.ec2.services.WindowsClient;
+import org.jclouds.ec2.features.WindowsApi;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.scriptbuilder.domain.Statement;
@@ -302,8 +300,8 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     // Suggest at least 15 minutes for timeout
     public static String waitForPasswordOnAws(ComputeService computeService, final NodeMetadata node, long timeout, TimeUnit timeUnit) throws TimeoutException {
         ComputeServiceContext computeServiceContext = computeService.getContext();
-        AWSEC2Client ec2Client = computeServiceContext.unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi();
-        final WindowsClient client = ec2Client.getWindowsServices();
+        AWSEC2Api ec2Client = computeServiceContext.unwrapApi(AWSEC2Api.class);
+        final WindowsApi client = ec2Client.getWindowsApi().get();
         final String region = node.getLocation().getParent().getId();
       
         // The Administrator password will take some time before it is ready - Amazon says sometimes 15 minutes.
@@ -328,7 +326,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 node.getCredentials().getPrivateKey());
 
         // And apply it to the decryption function
-        WindowsLoginCredentialsFromEncryptedData f = computeServiceContext.getUtils().getInjector().getInstance(WindowsLoginCredentialsFromEncryptedData.class);
+        WindowsLoginCredentialsFromEncryptedData f = computeServiceContext.utils().injector().getInstance(WindowsLoginCredentialsFromEncryptedData.class);
         LoginCredentials credentials = f.apply(dataAndKey);
 
         return credentials.getPassword();

@@ -47,8 +47,8 @@ public class Jboss7ServerGoogleComputeLiveTest extends AbstractGoogleComputeLive
     
     @Test(groups = {"Live"})
     @Override
-    public void test_CentOS_6() throws Exception {
-        super.test_CentOS_6();
+    public void test_DefaultImage() throws Exception {
+        super.test_DefaultImage();
     }
 
     @Test(enabled=false)

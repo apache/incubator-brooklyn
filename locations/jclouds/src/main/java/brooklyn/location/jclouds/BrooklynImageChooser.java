@@ -89,12 +89,9 @@ public class BrooklynImageChooser {
             // NB: this should be less than deprecated punishment to catch deprecation of whitelisted items
             score += 20;
 
-        if (imageNameContainsWordCaseInsensitive(img, "deprecated")) score -= 30;
-        if (imageNameContainsWordCaseInsensitive(img, "alpha")) score -= 10;
-        if (imageNameContainsWordCaseInsensitive(img, "beta")) score -= 5;
-        if (imageNameContainsWordCaseInsensitive(img, "testing")) score -= 5;
-        if (imageNameContainsWordCaseInsensitive(img, "rc")) score -= 3;
+        score += punishmentForDeprecation(img);
 
+    
         // prefer these guys, in stock brooklyn provisioning
         score += punishmentForOldOsVersions(img, OsFamily.UBUNTU, 11);
         score += punishmentForOldOsVersions(img, OsFamily.CENTOS, 6);
@@ -128,6 +125,27 @@ public class BrooklynImageChooser {
             log.trace("initial score "+score+" for "+img);
 
         return score;
+    }
+
+    protected double punishmentForDeprecation(Image img) {
+        // google deprecation strategy
+        //        userMetadata={deprecatedState=DEPRECATED}}
+        String deprecated = img.getUserMetadata().get("deprecatedState");
+        if (deprecated!=null) {
+            if ("deprecated".equalsIgnoreCase(deprecated))
+                return -30;
+            log.warn("Unrecognised 'deprecatedState' value '"+deprecated+"' when scoring "+img+"; ignoring that metadata");
+        }
+        
+        // common strategies
+        if (imageNameContainsWordCaseInsensitive(img, "deprecated")) return -30;
+        if (imageNameContainsWordCaseInsensitive(img, "alpha")) return -10;
+        if (imageNameContainsWordCaseInsensitive(img, "beta")) return -5;
+        if (imageNameContainsWordCaseInsensitive(img, "testing")) return -5;
+        if (imageNameContainsWordCaseInsensitive(img, "rc")) return -3;
+
+        // no indication this is deprecated
+        return 0;
     }
 
     public Ordering<Image> orderingScoredWithoutDefaults() {
