@@ -9,11 +9,14 @@ import javax.ws.rs.ext.Provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.error.YAMLException;
 
 import com.google.common.base.Optional;
 
 import brooklyn.rest.domain.ApiError;
+import brooklyn.rest.domain.ApiError.Builder;
 import brooklyn.util.flags.ClassCoercionException;
+import brooklyn.util.text.Strings;
 
 @Provider
 public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
@@ -41,24 +44,27 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
         }
 
         // Assume ClassCoercionExceptions are caused by TypeCoercions from input paramters gone wrong.
-        if (throwable instanceof ClassCoercionException) {
-            return Response.status(Status.BAD_REQUEST)
-                .type(MediaType.APPLICATION_JSON)
-                .entity(ApiError.builder()
-                        .message(throwable.getMessage())
-                        .build())
-                .build();
-        }
+        if (throwable instanceof ClassCoercionException)
+            return responseBadRequestJson(ApiError.of(throwable));
 
+        if (throwable instanceof YAMLException)
+            return responseBadRequestJson(ApiError.builderFromThrowable(throwable).prefixMessage("Invalid YAML", ": ").build());
+        
         LOG.info("No exception mapping for " + throwable.getClass() + ", responding 500", throwable);
-        String message = Optional.fromNullable(throwable.getMessage())
-                .or("Internal error. Check server logs for details.");
+        Builder rb = ApiError.builderFromThrowable(throwable);
+        if (Strings.isBlank(rb.getMessage()))
+            rb.message("Internal error. Check server logs for details.");
         return Response.status(Status.INTERNAL_SERVER_ERROR)
                 .type(MediaType.APPLICATION_JSON)
-                .entity(ApiError.fromThrowable(throwable)
-                        .message(message)
-                        .build())
+                .entity(rb.build())
                 .build();
+    }
+
+    private Response responseBadRequestJson(ApiError build) {
+        return Response.status(Status.BAD_REQUEST)
+            .type(MediaType.APPLICATION_JSON)
+            .entity(build)
+            .build();
     }
 
 }

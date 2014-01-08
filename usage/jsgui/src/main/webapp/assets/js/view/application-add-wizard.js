@@ -187,8 +187,16 @@ define([
                 $modal.fadeTo(500,1);
                 if (that.options.callback) that.options.callback();             
             } else {
+                log("ERROR submitting application: "+data.responseText)
+                var response, summary;
+                if (data.responseText) {
+                    response = JSON.parse(data.responseText)
+                    if (response) {
+                        summary = response.message;
+                    } 
+                }
                 that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
-                that.steps[that.currentStep].view.showFailure()
+                that.steps[that.currentStep].view.showFailure(summary)
             }
         },
         
@@ -355,7 +363,7 @@ define([
             var name = $('#entity-name',$entityGroup).val()
             var type = $('#entity-type',$entityGroup).val()
             if (type=="" || !_.contains(that.catalogEntityIds, type)) {
-                that.showFailure()
+                that.showFailure("Missing or invalid type")
                 return false
             }
             var saveTarget = this.model.spec.get("entities")[$entityGroup.index()];
@@ -459,12 +467,14 @@ define([
                 // TODO - other tabs not implemented yet 
                 // do nothing, show error return false below
             }
-            this.$('div.app-add-wizard-create-info-message').slideDown(250).delay(2000).slideUp(500)
+            this.$('div.app-add-wizard-create-info-message').slideDown(250).delay(10000).slideUp(500)
             return false
         },
         
-        showFailure: function() {
-            this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
+        showFailure: function(text) {
+            if (!text) text = "Failure performing the specified action";
+            this.$('div.error-message .error-message-text').html(_.escape(text))
+            this.$('div.error-message').slideDown(250).delay(10000).slideUp(500)
         }
 
     })
@@ -622,8 +632,10 @@ define([
             }
             return false
         },
-        showFailure: function() {
-            this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
+        showFailure: function(text) {
+            if (!text) text = "Failure performing the specified action";
+            this.$('div.error-message .error-message-text').html(_.escape(text))
+            this.$('div.error-message').slideDown(250).delay(10000).slideUp(500)
         }
     })
 
@@ -658,11 +670,19 @@ define([
                     this.model.spec.getEntities().length > 0)) {
                 return true
             }
-            this.showFailure()
+            
+            if (this.model.spec.get("locations").length <= 0) {
+                this.showFailure("A location is required");
+                return false;
+            }
+
+            this.showFailure();
             return false
         },
-        showFailure:function () {
-            this.$('div.info-message').slideDown(250).delay(2000).slideUp(500)
+        showFailure: function(text) {
+            if (!text) text = "Failure performing the specified action";
+            this.$('div.error-message .error-message-text').html(_.escape(text))
+            this.$('div.error-message').slideDown(250).delay(10000).slideUp(500)
         }
     })
 
