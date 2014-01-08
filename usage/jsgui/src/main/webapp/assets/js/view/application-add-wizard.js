@@ -27,6 +27,10 @@ define([
         else obj.hide();
     }
 
+    function setEnablement(obj, isEnabled) {
+        obj.attr("disabled", !isEnabled)
+    }
+
     var ModalWizard = Backbone.View.extend({
         tagName:'div',
         className:'modal hide fade',
@@ -41,7 +45,7 @@ define([
             this.model = {}
             this.model.spec = new Application.Spec;
             this.model.yaml = "";
-            this.model.mode = "spec";  // "spec" or "yaml"
+            this.model.mode = "template";  // or "yaml" or "other"
             this.currentStep = 0;
             this.steps = [
                           {
@@ -81,10 +85,10 @@ define([
             this.title = this.$("h3#step_title")
             this.instructions = this.$("p#step_instructions")
 
-            var currentStep = this.steps[this.currentStep]
-            this.title.html(_.template(currentStep.title)({appName: name}));
-            this.instructions.html(currentStep.instructions)
-            this.currentView = currentStep.view
+            var currentStepObj = this.steps[this.currentStep]
+            this.title.html(_.template(currentStepObj.title)({appName: name}));
+            this.instructions.html(currentStepObj.instructions)
+            this.currentView = currentStepObj.view
             
             // delegate to sub-views !!
             this.currentView.render()
@@ -94,24 +98,48 @@ define([
             this.updateButtonVisibility();
         },
         updateButtonVisibility:function () {
+            var currentStepObj = this.steps[this.currentStep]
+            
             setVisibility(this.$("#prev_step"), (this.currentStep > 0))
 
-            // yaml gets finish only
-            setVisibility(this.$("#next_step"), (this.currentStep < 1) && (this.model.mode != "yaml"))
-            setVisibility(this.$("#preview_step"), (this.currentStep == 1) && (this.model.mode != "yaml"))
+            // next shown for first step, but not for yaml
+            var nextVisible = (this.currentStep < 1) && (this.model.mode != "yaml")
+            setVisibility(this.$("#next_step"), nextVisible)
+            
+            // previous shown for step 2 (but again, not yaml)
+            var previewVisible = (this.currentStep == 1) && (this.model.mode != "yaml")
+            setVisibility(this.$("#preview_step"), previewVisible)
+            
+            // now set next/preview enablement
+            if (nextVisible || previewVisible) {
+                var nextEnabled = true;
+                if (this.currentStep==0 && this.model.mode=="template" && currentStepObj && currentStepObj.view) {
+                    // disable if this is template selction (lozenge) view, and nothing is selected
+                    if (! currentStepObj.view.selectedTemplate)
+                        nextEnabled = false;
+                }
+                
+                if (nextVisible)
+                    setEnablement(this.$("#next_step"), nextEnabled)
+                if (previewVisible)
+                    setEnablement(this.$("#preview_step"), nextEnabled)
+            }
             
             // finish from config step, preview step, and from first step if yaml tab selected (and valid)
-            var finishEnabled = (this.currentStep >= 1)
+            var finishVisible = (this.currentStep >= 1)
+            var finishEnabled = finishVisible
             if (!finishEnabled && this.currentStep==0) {
                 if (this.model.mode == "yaml") {
                     // should do better validation than non-empty
+                    finishVisible = true;
                     var yaml_code = this.$("#yaml_code").val()
                     if (yaml_code) {
                         finishEnabled = true;
                     }
                 }
             }
-            setVisibility(this.$("#finish_step"), finishEnabled)
+            setVisibility(this.$("#finish_step"), finishVisible)
+            setEnablement(this.$("#finish_step"), finishEnabled)
         },
         
         submitApplication:function (event) {
@@ -257,8 +285,10 @@ define([
             
             if (e.target.text=="YAML") {
                 this.model.mode = "yaml";
+            } else if (e.target.text=="Template") {
+                this.model.mode = "template";
             } else {
-                this.model.mode = "spec";
+                this.model.mode = "other";
             }
 
             if (this.options.wizard)
@@ -310,6 +340,9 @@ define([
             } else {
                 this.selectedTemplate = null;
             }
+            
+            if (this.options.wizard)
+                this.options.wizard.updateButtonVisibility();
         },
         expandEntity:function (event) {
             $(event.currentTarget).next().show('fast').delay(1000).prev().hide('slow')
