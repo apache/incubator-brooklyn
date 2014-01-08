@@ -1,6 +1,7 @@
 package brooklyn.event.basic;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,12 +11,14 @@ import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
+import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
 import brooklyn.location.basic.Locations;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
 /**
@@ -46,7 +49,22 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
         if (value==null) return null;
         Collection<? extends Location> locations = entity.getLocations();
         if (!locations.isEmpty()) {
-            Optional<MachineLocation> lo = Locations.findUniqueMachineLocation(locations);
+            Optional<? extends Location> lo = Locations.findUniqueMachineLocation(locations);
+            if (!lo.isPresent()) {
+                // Try a unique location which isn't a machine provisioner
+                Iterator<? extends Location> li = Iterables.filter(locations,
+                        Predicates.not(Predicates.instanceOf(MachineProvisioningLocation.class))).iterator();
+                if (li.hasNext()) lo = Optional.of(li.next());
+                if (li.hasNext()) lo = Optional.absent();
+            }
+            // Fall back to selecting the single location
+            if (!lo.isPresent() && locations.size() == 1) {
+                lo = Optional.of(locations.iterator().next());
+            }
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Convert config to sensor for {} found locations: {}. Selected: {}",
+                        new Object[] {entity, locations, lo});
+            }
             if (lo.isPresent()) {
                 Location l = lo.get();
                 if (l instanceof PortSupplier) {
@@ -62,7 +80,7 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
                         Integer pp = value.iterator().next();
                         if (pp>1024)
                             LOG.warn(""+entity+" port "+pp+" not available for "+getName());
-                        else 
+                        else
                             LOG.warn(""+entity+" port "+pp+" not available for "+getName()+" (root may be required?)");
                     } else {
                         LOG.warn(""+entity+" no port available for "+getName()+" (tried range "+value+")");
@@ -75,7 +93,7 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
                 LOG.debug(""+entity+" choosing port "+v+" (unconfirmed) for "+getName());
                 return v;
             } else {
-                LOG.warn(""+entity+" ports not applicable, or not yet applicable, because has multiple locations "+locations+"; ignoring "+getName());       
+                LOG.warn(""+entity+" ports not applicable, or not yet applicable, because has multiple locations "+locations+"; ignoring "+getName());
             }
         } else {
             LOG.warn(""+entity+" ports not applicable, or not yet applicable, bacause has no locations, ignoring "+getName());
