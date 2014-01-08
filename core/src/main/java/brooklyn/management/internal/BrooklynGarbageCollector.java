@@ -25,6 +25,8 @@ import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.ExecutionListener;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 /**
@@ -178,13 +180,24 @@ public class BrooklynGarbageCollector {
         
         Set<Object> taskTags = executionManager.getTaskTags();
         for (Object tag : taskTags) {
-            if (tag == null || tag.equals(ManagementContextInternal.EFFECTOR_TAG)) {
+            if (tag == null || tag.equals(ManagementContextInternal.EFFECTOR_TAG) 
+                    || tag.equals(ManagementContextInternal.SUB_TASK_TAG)
+                    || tag.equals(ManagementContextInternal.NON_TRANSIENT_TASK_TAG)
+                    || tag.equals(ManagementContextInternal.TRANSIENT_TASK_TAG)) {
                 continue; // there'll be other tags
             }
+            
+            // For each tag, we find the tasks with that tag; we ignore sub-tasks
+            // as those will be automatically GC'ed by the parent task at the appropriate point.
             Set<Task<?>> tasksWithTag = executionManager.getTasksWithTag(tag);
-            int numTasksToDelete = (tasksWithTag.size() - maxTasksPerTag);
+            Iterable<Task<?>> topTasksWithTag = Iterables.filter(tasksWithTag, new Predicate<Task<?>>() {
+                    @Override public boolean apply(Task<?> input) {
+                        return input != null && !input.getTags().contains(ManagementContextInternal.SUB_TASK_TAG);
+                    }});
+            
+            int numTasksToDelete = (Iterables.size(topTasksWithTag) - maxTasksPerTag);
             if (numTasksToDelete > 0 || maxTaskAge > 0) {
-                List<Task<?>> sortedTasks = Lists.newArrayList(tasksWithTag);
+                List<Task<?>> sortedTasks = Lists.newArrayList(topTasksWithTag);
                 Collections.sort(sortedTasks, new Comparator<Task<?>>() {
                     @Override public int compare(Task<?> t1, Task<?> t2) {
                         long end1 = t1.isDone() ? t1.getEndTimeUtc() : Long.MAX_VALUE;

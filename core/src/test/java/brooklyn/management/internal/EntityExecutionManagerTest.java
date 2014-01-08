@@ -154,8 +154,13 @@ public class EntityExecutionManagerTest {
         }
     }
     
-    // FIXME DynamicSequentialTask creates a second task (DstJob) so we have these extra tasks interfering.
-    @Test(groups={"Integration", "WIP"}) 
+    // FIXME DynamicSequentialTask creates a secondaryJobMaster task (DstJob) so we have these extra tasks interfering.
+    // We can't just mark that task as transient, as all sub-tasks of the sequential-task have that as its
+    // context so are automatically deleted. We probably don't want to make that secondaryJobMaster a child of the 
+    // DynamicSequentialTask to have it deleted automatically because then it would be listed in the web-console's 
+    // task view.
+    // The "right" solution is probably to get rid of that task altogether, and rely on the newTaskEndCallback.
+    @Test(groups={"Integration", "WIP"})
     public void testEffectorTasksGcedForMaxPerTag() throws Exception {
         int maxNumTasks = 2;
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newEmpty();
@@ -179,7 +184,7 @@ public class EntityExecutionManagerTest {
         assertEquals(storedTasks, ImmutableSet.copyOf(tasks), "storedTasks="+storedTasks+"; expected="+tasks);
         
         // Then oldest should be GC'ed to leave only maxNumTasks
-        final List<Task<?>> recentTasks = tasks.subList(1, maxNumTasks+1);
+        final List<Task<?>> recentTasks = tasks.subList(tasks.size()-maxNumTasks, tasks.size());
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             @Override public void run() {
                 Set<Task<?>> storedTasks2 = app.getManagementContext().getExecutionManager().getTasksWithAllTags(

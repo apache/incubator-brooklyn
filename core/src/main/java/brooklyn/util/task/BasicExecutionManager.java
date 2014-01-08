@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionManager;
+import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.util.exceptions.Exceptions;
@@ -37,6 +38,7 @@ import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -153,12 +155,25 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     public void deleteTask(Task<?> task) {
+        boolean removed = deleteTaskNonRecursive(task);
+        if (!removed) return;
+        
+        if (task instanceof HasTaskChildren) {
+            List<Task<?>> children = ImmutableList.copyOf(((HasTaskChildren)task).getChildren());
+            for (Task<?> child : children) {
+                deleteTask(child);
+            }
+        }
+    }
+
+    protected boolean deleteTaskNonRecursive(Task<?> task) {
         Set<?> tags = checkNotNull(task, "task").getTags();
         for (Object tag : tags) {
             Set<Task<?>> tasks = getMutableTasksWithTagOrNull(tag);
             if (tasks != null) tasks.remove(task);
         }
-        tasksById.remove(task.getId());
+        Task<?> removed = tasksById.remove(task.getId());
+        return removed != null;
     }
 
     public boolean isShutdown() {
