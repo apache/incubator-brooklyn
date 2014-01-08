@@ -3,9 +3,8 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
-
-import java.math.BigInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +14,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynMgmtContextTestSupport;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.nosql.cassandra.TokenGenerators.PosNeg63TokenGenerator;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
@@ -56,16 +56,15 @@ public class CassandraClusterIntegrationTest extends BrooklynMgmtContextTestSupp
         assertEquals(cluster.getCurrentSize().intValue(), 0);
 
         app.start(ImmutableList.of(testLocation));
-
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraCluster.GROUP_SIZE, 1);
         Entities.dumpInfo(app);
-
         CassandraNode node = (CassandraNode) Iterables.get(cluster.getMembers(), 0);
+        String nodeAddr = checkNotNull(node.getAttribute(CassandraNode.HOSTNAME), "hostname") + ":" + checkNotNull(node.getAttribute(CassandraNode.THRIFT_PORT), "thriftPort");
+        
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraCluster.GROUP_SIZE, 1);
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraCluster.CASSANDRA_CLUSTER_NODES, ImmutableList.of(nodeAddr));
 
         EntityTestUtils.assertAttributeEqualsEventually(node, Startable.SERVICE_UP, true);
-        
-        // Default token-generator will assign 0 to first node
-        EntityTestUtils.assertAttributeEqualsEventually(node, CassandraNode.TOKEN, BigInteger.ZERO);
+        EntityTestUtils.assertAttributeEqualsEventually(node, CassandraNode.TOKEN, PosNeg63TokenGenerator.MIN_TOKEN);
 
         // may take some time to be consistent (with new thrift_latency checks on the node,
         // contactability should not be an issue, but consistency still might be)

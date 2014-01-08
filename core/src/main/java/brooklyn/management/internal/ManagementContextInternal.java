@@ -17,6 +17,7 @@ import brooklyn.management.Task;
 public interface ManagementContextInternal extends ManagementContext {
 
     public static final String EFFECTOR_TAG = "EFFECTOR";
+    public static final String SUB_TASK_TAG = "SUB-TASK";
     public static final String NON_TRANSIENT_TASK_TAG = "NON-TRANSIENT";
     public static final String TRANSIENT_TASK_TAG = "TRANSIENT";
 

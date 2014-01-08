@@ -13,9 +13,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
@@ -62,6 +64,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                 throw new IllegalStateException("Cannot add a task to "+this+" when it is already finished (trying to add "+t+")");
             secondaryJobsAll.add(t);
             secondaryJobsRemaining.add(t);
+            BrooklynTasks.addTagsDynamically(t, ManagementContextInternal.SUB_TASK_TAG);
             ((TaskInternal<?>)t).markQueued();
             jobTransitionLock.notifyAll();
         }
