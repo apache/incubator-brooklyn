@@ -62,7 +62,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
      * @deprecated since 0.6; use LocationSpec (which calls no-arg constructor)
      */
     @Deprecated
-    public JcloudsSshMachineLocation(Map flags, JcloudsLocation jcloudsParent, NodeMetadata node) {
+    public JcloudsSshMachineLocation(Map<?,?> flags, JcloudsLocation jcloudsParent, NodeMetadata node) {
         super(flags);
         this.jcloudsParent = jcloudsParent;
         this.node = node;
@@ -218,7 +218,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         if (os != null) {
             // TODO os family, os description (name is often null)
             return new BasicOsDetails(os.getName() != null ? os.getName() : "linux",
-                    os.getArch() != null ? os.getArch() : BasicOsDetails.OsArchs.I386,
+                    os.getArch() != null ? os.getArch() : os.is64Bit() ? BasicOsDetails.OsArchs.X_86_64 : BasicOsDetails.OsArchs.I386,
                     os.getVersion() != null ? os.getVersion() : "unknown",
                     os.is64Bit());
         }

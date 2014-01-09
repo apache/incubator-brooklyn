@@ -15,7 +15,17 @@
  */
 package brooklyn.entity.database.postgresql;
 
-import static brooklyn.util.ssh.BashCommands.*;
+import static brooklyn.util.ssh.BashCommands.alternativesGroup;
+import static brooklyn.util.ssh.BashCommands.chainGroup;
+import static brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
+import static brooklyn.util.ssh.BashCommands.executeCommandThenAsUserTeeOutputToFile;
+import static brooklyn.util.ssh.BashCommands.fail;
+import static brooklyn.util.ssh.BashCommands.ifExecutableElse0;
+import static brooklyn.util.ssh.BashCommands.ifExecutableElse1;
+import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.sudoAsUser;
+import static brooklyn.util.ssh.BashCommands.warn;
 import static java.lang.String.format;
 
 import java.io.File;
@@ -68,57 +78,111 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
     @Override
     public void install() {
         String version = getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION);
-        String shortVersion = version.replace(".", "");
+        String majorMinorVersion = version.substring(0, version.lastIndexOf("-"));
+        String shortVersion = majorMinorVersion.replace(".", "");
 
         Iterable<String> pgctlLocations = ImmutableList.of(
-                "/usr/lib/postgresql/"+version+"/bin/",
-                "/opt/local/lib/postgresql"+shortVersion+"/bin/",
-                "/usr/pgsql-"+version+"/bin",
-                "/usr/local/bin/",
-                "/usr/bin/",
-                "/bin/");
+            "/usr/lib/postgresql/"+majorMinorVersion+"/bin/",
+            "/opt/local/lib/postgresql"+shortVersion+"/bin/",
+            "/usr/pgsql-"+majorMinorVersion+"/bin",
+            "/usr/local/bin/",
+            "/usr/bin/",
+            "/bin/");
 
         DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(),
-                // sudo is absolutely required here, in customize we set user to postgres
-                true)).orSubmitAndBlock();
+            // sudo is absolutely required here, in customize we set user to postgres
+            true)).orSubmitAndBlock();
 
         // Check whether we can find a usable pg_ctl, and if not install one
         MutableList<String> findOrInstall = MutableList.<String>of()
-                .append("which pg_ctl")
-                .appendAll(Iterables.transform(pgctlLocations, StringFunctions.formatter("test -x %s/pg_ctl")))
-                .append(installPackage(ImmutableMap.of(
-                                "yum", "postgresql"+shortVersion+" postgresql"+shortVersion+"-server",
-                                "apt", "postgresql-"+version,
-                                "port", "postgresql"+shortVersion+" postgresql"+shortVersion+"-server"
-                        ), null))
+            .append("which pg_ctl")
+            .appendAll(Iterables.transform(pgctlLocations, StringFunctions.formatter("test -x %s/pg_ctl")))
+            .append(installPackage(ImmutableMap.of(
+                "yum", "postgresql"+shortVersion+" postgresql"+shortVersion+"-server",
+                "apt", "postgresql-"+majorMinorVersion,
+                "port", "postgresql"+shortVersion+" postgresql"+shortVersion+"-server"
+                ), null))
                 // due to impl of installPackage, it will not come to the line below I don't think
-                .append(warn(format("WARNING: failed to find or install postgresql %s binaries", version)));
+                .append(warn(format("WARNING: failed to find or install postgresql %s binaries", majorMinorVersion)));
 
         // Link to correct binaries folder (different versions of pg_ctl and psql don't always play well together)
         MutableList<String> linkFromHere = MutableList.<String>of()
-                .append(ifExecutableElse1("pg_ctl", chainGroup(
-                                "PG_EXECUTABLE=`which pg_ctl`",
-                                "PG_DIR=`dirname $PG_EXECUTABLE`",
-                                "echo 'found pg_ctl in '$PG_DIR' on path so linking PG bin/ to that dir'",
-                                "ln -s $PG_DIR bin")))
+            .append(ifExecutableElse1("pg_ctl", chainGroup(
+                "PG_EXECUTABLE=`which pg_ctl`",
+                "PG_DIR=`dirname $PG_EXECUTABLE`",
+                "echo 'found pg_ctl in '$PG_DIR' on path so linking PG bin/ to that dir'",
+                "ln -s $PG_DIR bin")))
                 .appendAll(Iterables.transform(pgctlLocations, givenDirIfFileExistsInItLinkToDir("pg_ctl", "bin")))
-                .append(fail(format("WARNING: failed to find postgresql %s binaries for pg_ctl; aborting", version), 9));
+                .append(fail(format("WARNING: failed to find postgresql %s binaries for pg_ctl; aborting", majorMinorVersion), 9));
 
         newScript(INSTALLING)
-                .body.append(
-                        dontRequireTtyForSudo(),
-                        "rm -f bin", // if left over from previous incomplete/failed install (not sure why that keeps happening!)
-                        alternativesGroup(findOrInstall),
-                        alternativesGroup(linkFromHere))
-                .failOnNonZeroResultCode()
-                .queue();
+        .body.append(
+            dontRequireTtyForSudo(),
+            ifExecutableElse0("yum", getYumRepository(version, majorMinorVersion, shortVersion)),
+            ifExecutableElse0("apt-get", getAptRepository()),
+            "rm -f bin", // if left over from previous incomplete/failed install (not sure why that keeps happening!)
+            alternativesGroup(findOrInstall),
+            alternativesGroup(linkFromHere))
+            .failOnNonZeroResultCode()
+            .queue();
+    }
+
+    private String getYumRepository(String version, String majorMinorVersion, String shortVersion) {
+        // postgres becomes available if you add the repos using an RPM such as
+        // http://yum.postgresql.org/9.3/redhat/rhel-6-i386/pgdg-centos93-9.3-1.noarch.rpm
+        // fedora, rhel, sl, and centos supported for RPM's
+
+        // TODO server-side version detection!
+
+        String arch = getMachine().getOsDetails().getArch();
+        String osMajorVersion = getMachine().getOsDetails().getVersion();
+        String osName = getMachine().getOsDetails().getName();
+
+        log.debug("postgres detecting yum information for "+getEntity()+" at "+getMachine()+": "+osName+", "+osMajorVersion+", "+arch);
+
+        if (osName==null) osName = ""; else osName = osName.toLowerCase();
+
+        if (osName.equals("ubuntu")) return "echo skipping yum repo setup as this is not an rpm environment";
+
+        if (osName.equals("rhel")) osName = "redhat";
+        else if (osName.equals("centos")) osName = "centos";
+        else if (osName.equals("sl") || osName.startsWith("scientific")) osName = "sl";
+        else if (osName.equals("fedora")) osName = "fedora";
+        else {
+            log.debug("insufficient OS family information '"+osName+"' for "+getMachine()+" when installing "+getEntity()+" (yum repos); treating as centos");
+            osName = "centos";
+        }
+
+        if (Strings.isBlank(arch)) {
+            log.warn("Insuffient architecture information '"+arch+"' for "+getMachine()+"when installing "+getEntity()+"; treating as x86_64");
+            arch = "x86_64";
+        }
+
+        if (osMajorVersion.indexOf(".")>0) osMajorVersion = osMajorVersion.substring(0, osMajorVersion.indexOf('.'));
+        if (Strings.isBlank(osMajorVersion)) {
+            if (osName.equals("fedora")) osMajorVersion = "20";
+            else osMajorVersion = "6";
+            log.warn("Insuffient OS version information '"+getMachine().getOsDetails().getVersion()+"' for "+getMachine()+"when installing "+getEntity()+" (yum repos); treating as "+osMajorVersion);
+        }
+
+        return chainGroup(
+            sudo(format("wget http://yum.postgresql.org/%s/redhat/rhel-%s-%s/pgdg-%s%s-%s.noarch.rpm", majorMinorVersion, osMajorVersion, arch, osName, shortVersion, version)),
+            sudo(format("rpm -Uvh pgdg-%s%s-%s.noarch.rpm", osName, shortVersion, version))
+            );
+    }
+
+    private String getAptRepository() {
+        return chainGroup(
+            "wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo tee -a apt-key add -",
+            "echo \"deb http://apt.postgresql.org/pub/repos/apt/   $(sudo lsb_release --codename --short)-pgdg main\" | sudo tee -a /etc/apt/sources.list.d/postgresql.list"
+            );
     }
 
     private static Function<String, String> givenDirIfFileExistsInItLinkToDir(final String filename, final String linkToMake) {
         return new Function<String, String>() {
             public String apply(@Nullable String dir) {
                 return ifExecutableElse1(Urls.mergePaths(dir, filename),
-                        chainGroup("echo 'found "+filename+" in "+dir+" so linking to it in "+linkToMake+"'", "ln -s "+dir+" "+linkToMake));
+                    chainGroup("echo 'found "+filename+" in "+dir+" so linking to it in "+linkToMake+"'", "ln -s "+dir+" "+linkToMake));
             }
         };
     }
@@ -129,51 +193,51 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         DynamicTasks.queue(SshEffectorTasks.ssh(sudoAsUser("postgres", "/etc/init.d/postgresql stop")).allowingNonZeroExitCode()).get();
 
         newScript(CUSTOMIZING)
-                .body.append(
-                        sudo("mkdir -p " + getDataDir()),
-                        sudo("chown postgres:postgres " + getDataDir()),
-                        sudo("chmod 700 " + getDataDir()),
-                        sudo("touch " + getLogFile()),
-                        sudo("chown postgres:postgres " + getLogFile()),
-                        sudo("touch " + getPidFile()),
-                        sudo("chown postgres:postgres " + getPidFile()),
-                        alternativesGroup(
-                                chainGroup(format("test -e %s", getInstallDir() + "/bin/initdb"),
-                                        sudoAsUser("postgres", getInstallDir() + "/bin/initdb -D " + getDataDir())),
-                                callPgctl("initdb", true)))
-                .failOnNonZeroResultCode()
-                .execute();
+        .body.append(
+            sudo("mkdir -p " + getDataDir()),
+            sudo("chown postgres:postgres " + getDataDir()),
+            sudo("chmod 700 " + getDataDir()),
+            sudo("touch " + getLogFile()),
+            sudo("chown postgres:postgres " + getLogFile()),
+            sudo("touch " + getPidFile()),
+            sudo("chown postgres:postgres " + getPidFile()),
+            alternativesGroup(
+                chainGroup(format("test -e %s", getInstallDir() + "/bin/initdb"),
+                    sudoAsUser("postgres", getInstallDir() + "/bin/initdb -D " + getDataDir())),
+                    callPgctl("initdb", true)))
+                    .failOnNonZeroResultCode()
+                    .execute();
 
         String configUrl = getEntity().getConfig(PostgreSqlNode.CONFIGURATION_FILE_URL);
         if (Strings.isBlank(configUrl)) {
             // http://wiki.postgresql.org/wiki/Tuning_Your_PostgreSQL_Server
             // If the same setting is listed multiple times, the last one wins.
             DynamicTasks.queue(SshEffectorTasks.ssh(
-                    executeCommandThenAsUserTeeOutputToFile(
-                            chainGroup(
-                                    "echo \"listen_addresses = '*'\"",
-                                    "echo \"port = " + getEntity().getPostgreSqlPort() +  "\"",
-                                    "echo \"max_connections = " + getEntity().getMaxConnections() +  "\"",
-                                    "echo \"shared_buffers = " + getEntity().getSharedMemory() +  "\"",
-                                    "echo \"external_pid_file = '" + getPidFile() +  "'\""),
-                            "postgres", getDataDir() + "/postgresql.conf")));
+                executeCommandThenAsUserTeeOutputToFile(
+                    chainGroup(
+                        "echo \"listen_addresses = '*'\"",
+                        "echo \"port = " + getEntity().getPostgreSqlPort() +  "\"",
+                        "echo \"max_connections = " + getEntity().getMaxConnections() +  "\"",
+                        "echo \"shared_buffers = " + getEntity().getSharedMemory() +  "\"",
+                        "echo \"external_pid_file = '" + getPidFile() +  "'\""),
+                        "postgres", getDataDir() + "/postgresql.conf")));
         } else {
             String contents = processTemplate(configUrl);
             DynamicTasks.queue(
-                    SshEffectorTasks.put("/tmp/postgresql.conf").contents(contents),
-                    SshEffectorTasks.ssh(sudoAsUser("postgres", "cp /tmp/postgresql.conf " + getDataDir() + "/postgresql.conf")));
+                SshEffectorTasks.put("/tmp/postgresql.conf").contents(contents),
+                SshEffectorTasks.ssh(sudoAsUser("postgres", "cp /tmp/postgresql.conf " + getDataDir() + "/postgresql.conf")));
         }
 
         String authConfigUrl = getEntity().getConfig(PostgreSqlNode.AUTHENTICATION_CONFIGURATION_FILE_URL);
         if (Strings.isBlank(authConfigUrl)) {
             DynamicTasks.queue(SshEffectorTasks.ssh(
-                    // TODO give users control which hosts can connect and the authentication mechanism
-                    executeCommandThenAsUserTeeOutputToFile("echo \"host all all 0.0.0.0/0 md5\"", "postgres", getDataDir() + "/pg_hba.conf")));
+                // TODO give users control which hosts can connect and the authentication mechanism
+                executeCommandThenAsUserTeeOutputToFile("echo \"host all all 0.0.0.0/0 md5\"", "postgres", getDataDir() + "/pg_hba.conf")));
         } else {
             String contents = processTemplate(authConfigUrl);
             DynamicTasks.queue(
-                    SshEffectorTasks.put("/tmp/pg_hba.conf").contents(contents),
-                    SshEffectorTasks.ssh(sudoAsUser("postgres", "cp /tmp/pg_hba.conf " + getDataDir() + "/pg_hba.conf")));
+                SshEffectorTasks.put("/tmp/pg_hba.conf").contents(contents),
+                SshEffectorTasks.ssh(sudoAsUser("postgres", "cp /tmp/pg_hba.conf " + getDataDir() + "/pg_hba.conf")));
         }
 
         // Wait for commands to complete before running the creation script
@@ -195,19 +259,19 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
     protected void executeDatabaseCreationScript() {
         if (copyDatabaseCreationScript()) {
             newScript("running postgres creation script")
-                    .body.append(
-                            "cd " + getInstallDir(),
-                            callPgctl("start", true),
-                            sudoAsUser("postgres", getInstallDir() + "/bin/psql -p " + entity.getAttribute(PostgreSqlNode.POSTGRESQL_PORT) + " --file " + getRunDir() + "/creation-script.sql"),
-                            callPgctl("stop", true))
-                    .failOnNonZeroResultCode()
-                    .execute();
+            .body.append(
+                "cd " + getInstallDir(),
+                callPgctl("start", true),
+                sudoAsUser("postgres", getInstallDir() + "/bin/psql -p " + entity.getAttribute(PostgreSqlNode.POSTGRESQL_PORT) + " --file " + getRunDir() + "/creation-script.sql"),
+                callPgctl("stop", true))
+                .failOnNonZeroResultCode()
+                .execute();
         }
     }
 
     private boolean copyDatabaseCreationScript() {
         InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
-        if (creationScript==null) 
+        if (creationScript==null)
             return false;
         getMachine().copyTo(creationScript, getRunDir() + "/creation-script.sql");
         return true;
@@ -239,30 +303,30 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     protected String callPgctl(String command, boolean waitForIt) {
         return sudoAsUser("postgres", getInstallDir() + "/bin/pg_ctl -D " + getDataDir() +
-                " -l " + getLogFile() + (waitForIt ? " -w " : " ") + command);
+            " -l " + getLogFile() + (waitForIt ? " -w " : " ") + command);
     }
 
     @Override
     public void launch() {
         log.info(String.format("Starting entity %s at %s", this, getLocation()));
         newScript(MutableMap.of("usePidFile", false), LAUNCHING)
-                .body.append(callPgctl("start", false))
-                .execute();
+        .body.append(callPgctl("start", false))
+        .execute();
     }
 
     @Override
     public boolean isRunning() {
         return newScript(MutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING)
-                .body.append(getStatusCmd())
-                .execute() == 0;
+            .body.append(getStatusCmd())
+            .execute() == 0;
     }
 
     @Override
     public void stop() {
         newScript(MutableMap.of("usePidFile", false), STOPPING)
-                .body.append(callPgctl((entity.getConfig(PostgreSqlNode.DISCONNECT_ON_STOP) ? "-m immediate " : "") + "stop", false))
-                .failOnNonZeroResultCode()
-                .execute();
+        .body.append(callPgctl((entity.getConfig(PostgreSqlNode.DISCONNECT_ON_STOP) ? "-m immediate " : "") + "stop", false))
+        .failOnNonZeroResultCode()
+        .execute();
         newScript(MutableMap.of("usePidFile", getPidFile(), "processOwner", "postgres"), STOPPING).execute();
     }
 
@@ -275,7 +339,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
     public String getStatusCmd() {
         return callPgctl("status", false);
     }
-    
+
     public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
         String filename = "postgresql-commands-"+Identifiers.makeRandomId(8);
         DynamicTasks.queue(SshEffectorTasks.put(Urls.mergePaths(getRunDir(), filename)).contents(commands).summary("copying datastore script to execute "+filename));
@@ -284,10 +348,10 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     public ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String filenameAlreadyInstalledAtServer) {
         return DynamicTasks.queue(
-                SshEffectorTasks.ssh(
-                                "cd "+getRunDir(),
-                                sudoAsUser("postgres", getInstallDir() + "/bin/psql -p " + entity.getAttribute(PostgreSqlNode.POSTGRESQL_PORT) + " --file " + filenameAlreadyInstalledAtServer))
-                        .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
+            SshEffectorTasks.ssh(
+                "cd "+getRunDir(),
+                sudoAsUser("postgres", getInstallDir() + "/bin/psql -p " + entity.getAttribute(PostgreSqlNode.POSTGRESQL_PORT) + " --file " + filenameAlreadyInstalledAtServer))
+                .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
     }
 
 }
