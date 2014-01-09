@@ -15,6 +15,28 @@
  */
 package brooklyn.entity.database.postgresql;
 
+import static brooklyn.util.ssh.BashCommands.alternativesGroup;
+import static brooklyn.util.ssh.BashCommands.chainGroup;
+import static brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
+import static brooklyn.util.ssh.BashCommands.executeCommandThenAsUserTeeOutputToFile;
+import static brooklyn.util.ssh.BashCommands.fail;
+import static brooklyn.util.ssh.BashCommands.ifExecutableElse0;
+import static brooklyn.util.ssh.BashCommands.ifExecutableElse1;
+import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.sudoAsUser;
+import static brooklyn.util.ssh.BashCommands.warn;
+import static java.lang.String.format;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -32,23 +54,13 @@ import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.text.Strings;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-
-import static brooklyn.util.ssh.BashCommands.*;
-import static brooklyn.util.ssh.BashCommands.chainGroup;
-import static java.lang.String.format;
 
 /**
  * The SSH implementation of the {@link PostgreSqlDriver}.
@@ -116,22 +128,54 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
    }
 
    private String getYumRepository(String version, String majorMinorVersion, String shortVersion) {
-      return
-              chainGroup(
-                      sudo(format("wget http://yum.postgresql.org/%s/redhat/rhel-%s-%s/pgdg-%s%s-%s.noarch.rpm", majorMinorVersion, getMachine().getOsDetails().getVersion(), getMachine().getOsDetails().getArch(), getOsNme(), shortVersion, version)),
-                      sudo(format("rpm -Uvh pgdg-%s%s-%s.noarch.rpm", getOsNme(), shortVersion, version))
-              );
+       // postgres becomes available if you add the repos using an RPM such as
+       // http://yum.postgresql.org/9.3/redhat/rhel-6-i386/pgdg-centos93-9.3-1.noarch.rpm
+       // fedora, rhel, sl, and centos supported for RPM's
+       
+       // TODO server-side version detection!
+       
+       String arch = getMachine().getOsDetails().getArch();
+       String osMajorVersion = getMachine().getOsDetails().getVersion();
+       String osName = getMachine().getOsDetails().getName();
+       
+       log.debug("postgres detecting yum information for "+getEntity()+" at "+getMachine()+": "+osName+", "+osMajorVersion+", "+arch);
+       
+       if (osName==null) osName = ""; else osName = osName.toLowerCase();
+       
+       if (osName.equals("ubuntu")) return "echo skipping yum repo setup as this is not an rpm environment";
+       
+       if (osName.equals("rhel")) osName = "redhat";
+       else if (osName.equals("centos")) osName = "centos";
+       else if (osName.equals("sl") || osName.startsWith("scientific")) osName = "sl";
+       else if (osName.equals("fedora")) osName = "fedora";
+       else {
+           log.debug("insufficient OS family information '"+osName+"' for "+getMachine()+" when installing "+getEntity()+" (yum repos); treating as centos");
+           osName = "centos";
+       }
+
+       if (Strings.isBlank(arch)) {
+           log.warn("Insuffient architecture information '"+arch+"' for "+getMachine()+"when installing "+getEntity()+"; treating as x86_64");
+           arch = "x86_64";
+       }
+       
+       if (osMajorVersion.indexOf(".")>0) osMajorVersion = osMajorVersion.substring(0, osMajorVersion.indexOf('.'));
+       if (Strings.isBlank(osMajorVersion)) {
+           if (osName.equals("fedora")) osMajorVersion = "20";
+           else osMajorVersion = "6";
+           log.warn("Insuffient OS version information '"+getMachine().getOsDetails().getVersion()+"' for "+getMachine()+"when installing "+getEntity()+" (yum repos); treating as "+osMajorVersion);
+       }
+       
+       return chainGroup(
+           sudo(format("wget http://yum.postgresql.org/%s/redhat/rhel-%s-%s/pgdg-%s%s-%s.noarch.rpm", majorMinorVersion, osMajorVersion, arch, osName, shortVersion, version)),
+           sudo(format("rpm -Uvh pgdg-%s%s-%s.noarch.rpm", osName, shortVersion, version))
+       );
    }
 
    private String getAptRepository() {
-      return "wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo tee -a apt-key add -;" +
-              "echo \"deb http://apt.postgresql.org/pub/repos/apt/   $(sudo lsb_release --codename --short)-pgdg main\" | sudo tee -a /etc/apt/sources.list.d/postgresql.list";
-   }
-
-   private String getOsNme() {
-      if(getMachine().getOsDetails().getName().equals("rhel"))
-         return "redhat";
-      return getMachine().getOsDetails().getName();
+      return chainGroup(
+          "wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo tee -a apt-key add -",
+          "echo \"deb http://apt.postgresql.org/pub/repos/apt/   $(sudo lsb_release --codename --short)-pgdg main\" | sudo tee -a /etc/apt/sources.list.d/postgresql.list"
+      );
    }
 
    private static Function<String, String> givenDirIfFileExistsInItLinkToDir(final String filename, final String linkToMake) {
