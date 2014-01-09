@@ -42,14 +42,12 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         return BrooklynNodeDriver.class;
     }
 
-    public Iterable<String> getClasspath() {
-        String classpath = getConfig(CLASSPATH);
-        if (Strings.isBlank(classpath)) {
+    public List<String> getClasspath() {
+        List<String> classpath = getConfig(CLASSPATH);
+        if (classpath == null || classpath.isEmpty()) {
             classpath = getManagementContext().getConfig().getConfig(CLASSPATH);
         }
-        return Strings.isNonBlank(classpath)
-                ? Splitter.on(';').trimResults().omitEmptyStrings().split(classpath)
-                : ImmutableList.<String>of();
+        return classpath;
     }
     
     protected List<String> getEnabledHttpProtocols() {

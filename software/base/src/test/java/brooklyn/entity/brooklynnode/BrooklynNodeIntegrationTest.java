@@ -7,6 +7,7 @@ import java.io.File;
 import java.net.URI;
 import java.util.List;
 
+import brooklyn.config.BrooklynProperties;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -171,6 +172,69 @@ public class BrooklynNodeIntegrationTest {
             expectedFile.delete();
             tempDir.delete();
             sourceFile.delete();
+        }
+    }
+
+    @Test(groups="Integration")
+    public void testCopiesClasspathEntriesInConfigKey() throws Exception {
+        String content = "abc=def";
+        File classpathEntry1 = File.createTempFile("first", ".properties");
+        File classpathEntry2 = File.createTempFile("second", ".properties");
+        Files.write(content, classpathEntry1, Charsets.UTF_8);
+        Files.write(content, classpathEntry2, Charsets.UTF_8);
+        File tempDir = Files.createTempDir();
+        File expectedFile1 = new File(new File(tempDir, "lib"), classpathEntry1.getName());
+        File expectedFile2 = new File(new File(tempDir, "lib"), classpathEntry2.getName());
+
+        try {
+            BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                    .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
+                    .configure(BrooklynNode.SUGGESTED_RUN_DIR, tempDir.getAbsolutePath())
+                    .configure(BrooklynNode.CLASSPATH, ImmutableList.of(classpathEntry1.getAbsolutePath(), classpathEntry2.getAbsolutePath()))
+                    );
+            app.start(locs);
+
+            assertEquals(Files.readLines(expectedFile1, Charsets.UTF_8), ImmutableList.of(content));
+            assertEquals(Files.readLines(expectedFile2, Charsets.UTF_8), ImmutableList.of(content));
+        } finally {
+            expectedFile1.delete();
+            expectedFile2.delete();
+            tempDir.delete();
+            classpathEntry1.delete();
+            classpathEntry2.delete();
+        }
+    }
+
+    @Test(groups="Integration")
+    public void testCopiesClasspathEntriesInBrooklynProperties() throws Exception {
+        String content = "abc=def";
+        File classpathEntry1 = File.createTempFile("first", ".properties");
+        File classpathEntry2 = File.createTempFile("second", ".properties");
+        Files.write(content, classpathEntry1, Charsets.UTF_8);
+        Files.write(content, classpathEntry2, Charsets.UTF_8);
+        File tempDir = Files.createTempDir();
+        File expectedFile1 = new File(new File(tempDir, "lib"), classpathEntry1.getName());
+        File expectedFile2 = new File(new File(tempDir, "lib"), classpathEntry2.getName());
+
+        try {
+            String propName = BrooklynNode.CLASSPATH.getName();
+            String propValue = classpathEntry1.toURI().toString() + "," + classpathEntry2.toURI().toString();
+            ((BrooklynProperties)app.getManagementContext().getConfig()).put(propName, propValue);
+    
+            BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                    .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
+                    .configure(BrooklynNode.SUGGESTED_RUN_DIR, tempDir.getAbsolutePath())
+                    );
+            app.start(locs);
+
+            assertEquals(Files.readLines(expectedFile1, Charsets.UTF_8), ImmutableList.of(content));
+            assertEquals(Files.readLines(expectedFile2, Charsets.UTF_8), ImmutableList.of(content));
+        } finally {
+            expectedFile1.delete();
+            expectedFile2.delete();
+            tempDir.delete();
+            classpathEntry1.delete();
+            classpathEntry2.delete();
         }
     }
 
