@@ -58,6 +58,10 @@ public class VanillaJavaAppTest {
     
     private static final long TIMEOUT_MS = 10*1000;
 
+    // Static attributes such as number of processors and start time are only polled every 60 seconds
+    // so if they are not immediately available, it will be 60 seconds before they are polled again
+    private static final Object LONG_TIMEOUT_MS = 61*1000;
+
     private static String BROOKLYN_THIS_CLASSPATH = null;
     private static Class MAIN_CLASS = ExampleVanillaMain.class;
     private static Class MAIN_CPU_HUNGRY_CLASS = ExampleVanillaMainCpuHungry.class;
@@ -149,21 +153,17 @@ public class VanillaJavaAppTest {
                 assertNotNull(current);
                 assertNotNull(peak);
                 assertTrue(current <= peak, String.format("current %d > peak %d thread count", current, peak));
-    
-                //
-                assertNotNull(javaProcess.getAttribute(VanillaJavaApp.START_TIME));
-                assertNotNull(javaProcess.getAttribute(VanillaJavaApp.SYSTEM_LOAD_AVERAGE));
             }});
 
         // Runtime MX Bean
-        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", LONG_TIMEOUT_MS), new Runnable() {
             public void run() {
                 assertNotNull(javaProcess.getAttribute(VanillaJavaApp.START_TIME));
                 assertNotNull(javaProcess.getAttribute(VanillaJavaApp.UP_TIME));
             }});
         
         // Operating System MX Bean
-        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", LONG_TIMEOUT_MS), new Runnable() {
             public void run() {
                 assertNotNull(javaProcess.getAttribute(VanillaJavaApp.PROCESS_CPU_TIME));
                 assertNotNull(javaProcess.getAttribute(VanillaJavaApp.SYSTEM_LOAD_AVERAGE));
@@ -171,7 +171,6 @@ public class VanillaJavaAppTest {
                 assertNotNull(javaProcess.getAttribute(VanillaJavaApp.TOTAL_PHYSICAL_MEMORY_SIZE));
                 assertNotNull(javaProcess.getAttribute(VanillaJavaApp.FREE_PHYSICAL_MEMORY_SIZE));
             }});
-        
         // TODO work on providing useful metrics from garbage collector MX Bean
         // assertNotNull(javaProcess.getAttribute(VanillaJavaApp.GARBAGE_COLLECTION_TIME)) TODO: work on providing this
     }
