@@ -31,9 +31,9 @@ define([
             
             this._appViews = {}
             this.summariesView = new HomeView.HomeSummariesView({
-            	applications:this.collection,
-            	locations:this.options.locations
-        	})
+                applications:this.collection,
+                locations:this.options.locations
+            })
             this.renderSummaries()
             
             this.collection.on('reset', this.render, this)
@@ -47,31 +47,31 @@ define([
 
             id = $(this.$el).find("#circles-map");
             if (this.options.offline) {
-            	id.find("#circles-map-message").html("(map off in offline mode)");
+                id.find("#circles-map-message").html("(map off in offline mode)");
             } else {
-            	requirejs(["googlemaps"], function (GoogleMaps) {
-            	    _.defer( function() {
-            	        log("loading google maps")
-            			var map = GoogleMaps.addMapToCanvas(id[0],
-            			        // brooklyn bridge
-//            			        40.7063, -73.9971, 14
-            			        // edinburgh + atlantic
-//            			        55.6, -2.5, 2
-            			        // center
-            			        0, 0, 1
-            			        )
-            			var locatedLocations = new Location.UsageLocated()
+                requirejs(["googlemaps"], function (GoogleMaps) {
+                    _.defer( function() {
+                        log("loading google maps")
+                        var map = GoogleMaps.addMapToCanvas(id[0],
+                                // brooklyn bridge
+//                              40.7063, -73.9971, 14
+                                // edinburgh + atlantic
+//                              55.6, -2.5, 2
+                                // center
+                                0, 0, 1
+                                )
+                        var locatedLocations = new Location.UsageLocated()
                         // googlemaps.js isn't re-loaded during tab-to-tab navigation so we need to reset it each time
                         // the maps is re-drawn to reset the cached set of location markers
                         GoogleMaps.resetCircles()
-            			that.updateCircles(that, locatedLocations, GoogleMaps, map)
-            			that.callPeriodically("circles", function() {
-            			    that.updateCircles(that, locatedLocations, GoogleMaps, map)
-            			}, 10000)
-            	    })
-            	}, function (error) {
-            			id.find("#circles-map-message").html("(map not available)"); 
-            	});
+                        that.updateCircles(that, locatedLocations, GoogleMaps, map)
+                        that.callPeriodically("circles", function() {
+                            that.updateCircles(that, locatedLocations, GoogleMaps, map)
+                        }, 10000)
+                    })
+                }, function (error) {
+                        id.find("#circles-map-message").html("(map not available)"); 
+                });
             }            
         },
         
@@ -98,16 +98,16 @@ define([
             return this
         },
 
-    	renderSummaries:function () {
-        	this.$('.home-summaries-row').html(this.summariesView.render().el )
+        renderSummaries:function () {
+            this.$('.home-summaries-row').html(this.summariesView.render().el )
         },
         
         renderCollection:function () {
             var $tableBody = this.$('#applications-table-body').empty()
             if (this.collection==null)
-            	$tableBody.append("<tr><td colspan='3'><i>No data available</i></td></tr>");
+                $tableBody.append("<tr><td colspan='3'><i>No data available</i></td></tr>");
             else if (this.collection.isEmpty())
-            	$tableBody.append("<tr><td colspan='3'><i>No applications deployed</i></td></tr>");
+                $tableBody.append("<tr><td colspan='3'><i>No applications deployed</i></td></tr>");
             else this.collection.each(function (app) {
                 var appView = new HomeView.AppEntryView({model:app})
                 if (this._appViews[app.cid]) {
@@ -138,7 +138,7 @@ define([
     })
 
     HomeView.HomeSummariesView = Backbone.View.extend({
-    	tagName:'div',
+        tagName:'div',
         template:_.template(HomeSummariesHtml),
 
         initialize:function () {

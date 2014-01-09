@@ -10,7 +10,7 @@ define([
     "text!tpl/apps/param.html",
     "text!tpl/apps/param-list.html"
 ], function (_, $, Backbone, Location, EffectorModalHtml, 
-		DeployLocationRowHtml, DeployLocationOptionHtml, ParamHtml, ParamListHtml) {
+        DeployLocationRowHtml, DeployLocationOptionHtml, ParamHtml, ParamListHtml) {
 
     var EffectorInvokeView = Backbone.View.extend({
         template:_.template(EffectorModalHtml),
@@ -23,8 +23,8 @@ define([
             "shown":"unfade"
         },
         initialize:function () {
-        	this.locations = this.options.locations /* for testing */
-        	  || new Location.Collection();
+            this.locations = this.options.locations /* for testing */
+              || new Location.Collection();
         },
         render:function () {
             var that = this, params = this.model.get("parameters")
@@ -46,26 +46,26 @@ define([
                     }))
                 })
                 this.locations.fetch({async:false})
-	        	var container = this.$("#selector-container")
-	        	container.empty()
-				var chosenLocation = this.locations[0];
-				container.append(that.locationRowTemplate({
-									initialValue : chosenLocation,
-									rowId : 0
-								}))
-	    		var $selectLocations = container.find('#select-location')
-	    		this.locations.each(function(aLocation) {
-	        			var $option = that.locationOptionTemplate({
-	                        url:aLocation.getLinkByName("self"),
-	                        name:aLocation.getPrettyName()
-	                    })
-	                    $selectLocations.append($option)
-	        		})
-	    		$selectLocations.each(function(i) {
-	    			var url = $($selectLocations[i]).parent().attr('initialValue');
-	    			$($selectLocations[i]).val(url)
-	    		})
-        	}
+                var container = this.$("#selector-container")
+                container.empty()
+                var chosenLocation = this.locations[0];
+                container.append(that.locationRowTemplate({
+                                    initialValue : chosenLocation,
+                                    rowId : 0
+                                }))
+                var $selectLocations = container.find('#select-location')
+                this.locations.each(function(aLocation) {
+                        var $option = that.locationOptionTemplate({
+                            url:aLocation.getLinkByName("self"),
+                            name:aLocation.getPrettyName()
+                        })
+                        $selectLocations.append($option)
+                    })
+                $selectLocations.each(function(i) {
+                    var url = $($selectLocations[i]).parent().attr('initialValue');
+                    $($selectLocations[i]).val(url)
+                })
+            }
             this.$(".modal-body").find('*[rel="tooltip"]').tooltip()
             return this
         },
@@ -80,8 +80,8 @@ define([
             this.$(".effector-param").each(function (index) {
                 var key = $(this).find(".param-name").text();
                 var value = $(this).find(".param-value").attr('id') == 'selector-container' ? 
-                		$(this).find(".param-value :selected").text().trim() : 
-                	    $(this).find(".param-value").val();
+                        $(this).find(".param-value :selected").text().trim() : 
+                        $(this).find(".param-value").val();
                 parameters[key] = value;
             })
             return parameters

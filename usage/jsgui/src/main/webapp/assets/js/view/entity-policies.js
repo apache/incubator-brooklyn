@@ -90,7 +90,7 @@ define([
             $("#policies-table tr").removeClass("selected");
             if (this.activePolicy == id) {
                 // deselected
-            	this.activePolicy = null;
+                this.activePolicy = null;
                 this._config = null;
                 $("#policy-config-table").dataTable().fnDestroy();
                 $("#policy-config").slideUp(100);

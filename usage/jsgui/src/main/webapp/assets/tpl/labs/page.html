@@ -147,26 +147,26 @@ var showHello = function() {
 <br/><br/>
 <div><b>Ajax Practice</b></div><br/>
 
-	    <script type="text/javascript">
-	    function fetchSummat() {
-	    	log("fetching")
+        <script type="text/javascript">
+        function fetchSummat() {
+            log("fetching")
             $.ajax({
                 type:"GET",
                 url:"/v1/applications/dI6fIDvw/entities/dI6fIDvw/sensors/service.state",
                 success:function (data) {
-                	log("fetch success - "+data)
-                	var a = data;
-                	log(typeof a)
-                	log(a)
+                    log("fetch success - "+data)
+                    var a = data;
+                    log(typeof a)
+                    log(a)
                 },
                 error: function(data) {
-                	log("fetch fail")
+                    log("fetch fail")
                 }})
-	    }
-	    </script>
+        }
+        </script>
 
 <div>
-	<span onclick="javascript:fetchSummat()">fetch</span>
+    <span onclick="javascript:fetchSummat()">fetch</span>
 </div>
 
 

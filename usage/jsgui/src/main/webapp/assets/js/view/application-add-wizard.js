@@ -20,11 +20,15 @@ define([
              ModalHtml, CreateHtml, CreateStepTemplateEntryHtml, CreateEntityEntryHtml,
              RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml,
              DeployLocationRowHtml, DeployLocationOptionHtml, PreviewHtml
-		) {
+        ) {
 
     function setVisibility(obj, isVisible) {
         if (isVisible) obj.show();
         else obj.hide();
+    }
+
+    function setEnablement(obj, isEnabled) {
+        obj.attr("disabled", !isEnabled)
     }
 
     var ModalWizard = Backbone.View.extend({
@@ -39,14 +43,16 @@ define([
         template:_.template(ModalHtml),
         initialize:function () {
             this.model = {}
-            this.model.spec = new Application.Spec
+            this.model.spec = new Application.Spec;
+            this.model.yaml = "";
+            this.model.mode = "template";  // or "yaml" or "other"
             this.currentStep = 0;
             this.steps = [
                           {
                               step_id:'what-app',
                               title:'Create Application',
                               instructions:'Choose or build the application to deploy',
-                              view:new ModalWizard.StepCreate({ model:this.model })
+                              view:new ModalWizard.StepCreate({ model:this.model, wizard: this })
                           },
                           {
                               step_id:'name-and-locations',
@@ -79,43 +85,121 @@ define([
             this.title = this.$("h3#step_title")
             this.instructions = this.$("p#step_instructions")
 
-            var currentStep = this.steps[this.currentStep]
-            this.title.html(_.template(currentStep.title)({appName: name}));
-            this.instructions.html(currentStep.instructions)
-            this.currentView = currentStep.view
+            var currentStepObj = this.steps[this.currentStep]
+            this.title.html(_.template(currentStepObj.title)({appName: name}));
+            this.instructions.html(currentStepObj.instructions)
+            this.currentView = currentStepObj.view
             
             // delegate to sub-views !!
             this.currentView.render()
             this.currentView.updateForState()
             this.$(".modal-body").replaceWith(this.currentView.el)
 
-            setVisibility(this.$("#prev_step"), (this.currentStep > 0))
-            setVisibility(this.$("#next_step"), (this.currentStep < 1))
-            setVisibility(this.$("#preview_step"), (this.currentStep == 1))
-            setVisibility(this.$("#finish_step"), (this.currentStep >= 1))
+            this.updateButtonVisibility();
         },
+        updateButtonVisibility:function () {
+            var currentStepObj = this.steps[this.currentStep]
+            
+            setVisibility(this.$("#prev_step"), (this.currentStep > 0))
+
+            // next shown for first step, but not for yaml
+            var nextVisible = (this.currentStep < 1) && (this.model.mode != "yaml")
+            setVisibility(this.$("#next_step"), nextVisible)
+            
+            // previous shown for step 2 (but again, not yaml)
+            var previewVisible = (this.currentStep == 1) && (this.model.mode != "yaml")
+            setVisibility(this.$("#preview_step"), previewVisible)
+            
+            // now set next/preview enablement
+            if (nextVisible || previewVisible) {
+                var nextEnabled = true;
+                if (this.currentStep==0 && this.model.mode=="template" && currentStepObj && currentStepObj.view) {
+                    // disable if this is template selction (lozenge) view, and nothing is selected
+                    if (! currentStepObj.view.selectedTemplate)
+                        nextEnabled = false;
+                }
+                
+                if (nextVisible)
+                    setEnablement(this.$("#next_step"), nextEnabled)
+                if (previewVisible)
+                    setEnablement(this.$("#preview_step"), nextEnabled)
+            }
+            
+            // finish from config step, preview step, and from first step if yaml tab selected (and valid)
+            var finishVisible = (this.currentStep >= 1)
+            var finishEnabled = finishVisible
+            if (!finishEnabled && this.currentStep==0) {
+                if (this.model.mode == "yaml") {
+                    // should do better validation than non-empty
+                    finishVisible = true;
+                    var yaml_code = this.$("#yaml_code").val()
+                    if (yaml_code) {
+                        finishEnabled = true;
+                    }
+                }
+            }
+            setVisibility(this.$("#finish_step"), finishVisible)
+            setEnablement(this.$("#finish_step"), finishEnabled)
+        },
+        
         submitApplication:function (event) {
             var that = this
             var $modal = $('.add-app #modal-container .modal')
             $modal.fadeTo(500,0.5);
-            $.ajax({
-                url:'/v1/applications',
-                type:'post',
-                contentType:'application/json',
-                processData:false,
-                data:JSON.stringify(this.model.spec.toJSON()),
-                success:function (data) {
-                    $modal.modal('hide')
-                    $modal.fadeTo(500,1);
-                    if (that.options.callback) that.options.callback();
-                },
-                error:function (data) {
-                    that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
-                	that.steps[that.currentStep].view.showFailure()
-                }
-            })
+            
+            if (this.model.mode == "yaml") {
+                $.ajax({
+                    url:'/v1/applications',
+                    type:'post',
+                    contentType:'application/yaml',
+                    processData:false,
+                    data:this.model.yaml,
+                    success:function (data) {
+                        that.onSubmissionComplete(true, data, $modal)
+                    },
+                    error:function (data) {
+                        that.onSubmissionComplete(false, data, $modal)
+                    }
+                })
+
+            } else {
+                $.ajax({
+                    url:'/v1/applications',
+                    type:'post',
+                    contentType:'application/json',
+                    processData:false,
+                    data:JSON.stringify(this.model.spec.toJSON()),
+                    success:function (data) {
+                        that.onSubmissionComplete(true, data, $modal)
+                    },
+                    error:function (data) {
+                        that.onSubmissionComplete(false, data, $modal)
+                    }
+                })
+            }
+            
             return false
         },
+        onSubmissionComplete: function(succeeded, data, $modal) {
+            var that = this;
+            if (succeeded) {
+                $modal.modal('hide')
+                $modal.fadeTo(500,1);
+                if (that.options.callback) that.options.callback();             
+            } else {
+                log("ERROR submitting application: "+data.responseText)
+                var response, summary;
+                if (data.responseText) {
+                    response = JSON.parse(data.responseText)
+                    if (response) {
+                        summary = response.message;
+                    } 
+                }
+                that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
+                that.steps[that.currentStep].view.showFailure(summary)
+            }
+        },
+        
         prevStep:function () {
             this.currentStep -= 1
             this.renderCurrentStep()
@@ -155,9 +239,12 @@ define([
             'click .template-lozenge':'templateClick',
             'change .text-filter input':'applyFilter',
             'keyup .text-filter input':'applyFilter',
+            'change #yaml_code':'onYamlCodeChange',
+            'keyup #yaml_code':'onYamlCodeChange',
             'shown a[data-toggle="tab"]':'onTabChange'
         },
         template:_.template(CreateHtml),
+        wizard: null,
         initialize:function () {
             var self = this
             self.catalogEntityIds = []
@@ -165,6 +252,7 @@ define([
             
             this.$el.html(this.template({}))
             
+            // for building from entities
             this.addEntityBox()
 
             // TODO: Make into models, allow options to override, then pass in in test
@@ -197,10 +285,26 @@ define([
             return this
         },
         onTabChange: function(e) {
-            if (e.target.text=="Template")
+            if (e.target.text=="Catalog") {
                 $("li.text-filter").show()
-            else
+            } else {
                 $("li.text-filter").hide()
+            }
+            
+            if (e.target.text=="YAML") {
+                this.model.mode = "yaml";
+            } else if (e.target.text=="Template") {
+                this.model.mode = "template";
+            } else {
+                this.model.mode = "other";
+            }
+
+            if (this.options.wizard)
+                this.options.wizard.updateButtonVisibility();
+        },
+        onYamlCodeChange: function() {
+            if (this.options.wizard)
+                this.options.wizard.updateButtonVisibility();
         },
         applyFilter: function(e) {
             var filter = $(e.currentTarget).val().toLowerCase()
@@ -244,6 +348,9 @@ define([
             } else {
                 this.selectedTemplate = null;
             }
+            
+            if (this.options.wizard)
+                this.options.wizard.updateButtonVisibility();
         },
         expandEntity:function (event) {
             $(event.currentTarget).next().show('fast').delay(1000).prev().hide('slow')
@@ -256,7 +363,7 @@ define([
             var name = $('#entity-name',$entityGroup).val()
             var type = $('#entity-type',$entityGroup).val()
             if (type=="" || !_.contains(that.catalogEntityIds, type)) {
-                $('.entity-info-message',$entityGroup).show('slow').delay(2000).hide('slow')
+                that.showFailure("Missing or invalid type")
                 return false
             }
             var saveTarget = this.model.spec.get("entities")[$entityGroup.index()];
@@ -350,13 +457,24 @@ define([
                     this.model.spec.set("entities", []);
                     return true
                 }
+            } else if (tabName=='#yamlTab') {
+                this.model.yaml = this.$("#yaml_code").val();
+                if (this.model.yaml) {
+                    return true;
+                }
             } else {
                 console.info("NOT IMPLEMENTED YET")
                 // TODO - other tabs not implemented yet 
                 // do nothing, show error return false below
             }
-            this.$('div.app-add-wizard-create-info-message').show('slow').delay(2000).hide('slow')
+            this.$('div.app-add-wizard-create-info-message').slideDown(250).delay(10000).slideUp(500)
             return false
+        },
+        
+        showFailure: function(text) {
+            if (!text) text = "Failure performing the specified action";
+            this.$('div.error-message .error-message-text').html(_.escape(text))
+            this.$('div.error-message').slideDown(250).delay(10000).slideUp(500)
         }
 
     })
@@ -389,28 +507,28 @@ define([
         },
         renderAddedLocations:function () {
             // renders the locations added to the model
-        	var that = this;
-        	var container = this.$("#selector-container")
-        	container.empty()
-        	for (var li = 0; li < this.model.spec.get("locations").length; li++) {
-        		var chosenLocation = this.model.spec.get("locations")[li];
-        		container.append(that.locationRowTemplate({
-        				initialValue: chosenLocation,
-        				rowId: li
-        			}))
-        	}
-    		var $selectLocations = container.find('#select-location')
-    		this.locations.each(function(aLocation) {
-        			var $option = that.locationOptionTemplate({
+            var that = this;
+            var container = this.$("#selector-container")
+            container.empty()
+            for (var li = 0; li < this.model.spec.get("locations").length; li++) {
+                var chosenLocation = this.model.spec.get("locations")[li];
+                container.append(that.locationRowTemplate({
+                        initialValue: chosenLocation,
+                        rowId: li
+                    }))
+            }
+            var $selectLocations = container.find('#select-location')
+            this.locations.each(function(aLocation) {
+                    var $option = that.locationOptionTemplate({
                         url:aLocation.getLinkByName("self"),
                         name:aLocation.getPrettyName()
                     })
                     $selectLocations.append($option)
-        		})
-    		$selectLocations.each(function(i) {
-    			var url = $($selectLocations[i]).parent().attr('initialValue');
-    			$($selectLocations[i]).val(url)
-    		})
+                })
+            $selectLocations.each(function(i) {
+                var url = $($selectLocations[i]).parent().attr('initialValue');
+                $($selectLocations[i]).val(url)
+            })
         },
         render:function () {
             this.delegateEvents()
@@ -440,12 +558,12 @@ define([
             }            
         },
         addLocation:function () {
-        	if (this.locations.models.length>0) {
-            	this.model.spec.addLocation(this.locations.models[0].getLinkByName("self"))
-            	this.renderAddedLocations()
-        	} else {
+            if (this.locations.models.length>0) {
+                this.model.spec.addLocation(this.locations.models[0].getLinkByName("self"))
+                this.renderAddedLocations()
+            } else {
                 this.$('div.info-nolocs-message').show('slow').delay(2000).hide('slow')
-        	}
+            }
         },
         removeLocation:function (event) {
             var toBeRemoved = $(event.currentTarget).parent().attr('rowId')
@@ -493,12 +611,12 @@ define([
             return map;
         },
         selection:function (event) {
-        	var url = $(event.currentTarget).val();
-        	var loc = this.locations.find(function (candidate) {
-        		return candidate.getLinkByName("self")==url
-    		})
-        	this.model.spec.setLocationAtIndex($(event.currentTarget).parent().attr('rowId'), 
-        			loc.getLinkByName("self"))
+            var url = $(event.currentTarget).val();
+            var loc = this.locations.find(function (candidate) {
+                return candidate.getLinkByName("self")==url
+            })
+            this.model.spec.setLocationAtIndex($(event.currentTarget).parent().attr('rowId'), 
+                    loc.getLinkByName("self"))
         },
         updateName:function () {
             var name = this.$('#application-name').val()
@@ -512,8 +630,12 @@ define([
             if (this.model.spec.get("locations").length !== 0) {
                 return true
             }
-            this.$('div.info-message').show('slow').delay(2000).hide('slow')
             return false
+        },
+        showFailure: function(text) {
+            if (!text) text = "Failure performing the specified action";
+            this.$('div.error-message .error-message-text').html(_.escape(text))
+            this.$('div.error-message').slideDown(250).delay(10000).slideUp(500)
         }
     })
 
@@ -545,14 +667,22 @@ define([
             // need locations, and type or entities
             if ((this.model.spec.get("locations").length > 0) && 
                 (this.model.spec.get("type")!=null || 
-            		this.model.spec.getEntities().length > 0)) {
+                    this.model.spec.getEntities().length > 0)) {
                 return true
             }
-            this.showFailure()
+            
+            if (this.model.spec.get("locations").length <= 0) {
+                this.showFailure("A location is required");
+                return false;
+            }
+
+            this.showFailure();
             return false
         },
-        showFailure:function () {
-        	this.$('div.info-message').show('slow').delay(2000).hide('slow')
+        showFailure: function(text) {
+            if (!text) text = "Failure performing the specified action";
+            this.$('div.error-message .error-message-text').html(_.escape(text))
+            this.$('div.error-message').slideDown(250).delay(10000).slideUp(500)
         }
     })
 

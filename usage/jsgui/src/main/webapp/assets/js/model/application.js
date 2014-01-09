@@ -20,11 +20,11 @@ define([
             if (location) return _.include(this.get('locations'), location)
         },
         addLocation:function (location) {
-        	var locations = this.get('locations')
-        	locations.push(location)
-        	this.set('locations', locations)
-        	this.trigger("change")
-        	this.trigger("change:locations")
+            var locations = this.get('locations')
+            locations.push(location)
+            this.set('locations', locations)
+            this.trigger("change")
+            this.trigger("change:locations")
         },
         removeLocation:function (location) {
             var newLocations = [],

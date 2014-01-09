@@ -35,19 +35,19 @@ define([
     };
 
     Util.toDisplayString = function(data) {
-    	var escaped = Util.roundIfNumberToNumDecimalPlaces(data, 4);
-    	if (escaped != null) {
-    		if (typeof escaped === 'string')
-    			escaped = Util.escape(escaped);
-    		else
-    			escaped = JSON.stringify(escaped);
-    	}
-    	return escaped;
+        var escaped = Util.roundIfNumberToNumDecimalPlaces(data, 4);
+        if (escaped != null) {
+            if (typeof escaped === 'string')
+                escaped = Util.escape(escaped);
+            else
+                escaped = JSON.stringify(escaped);
+        }
+        return escaped;
     };
 
     if (!String.prototype.trim) {
-    	// some older javascripts do not support 'trim' (including jasmine spec runner) so let's define it
-    	String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
+        // some older javascripts do not support 'trim' (including jasmine spec runner) so let's define it
+        String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
     }
 
     return Util;

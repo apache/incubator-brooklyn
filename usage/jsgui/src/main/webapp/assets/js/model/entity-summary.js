@@ -15,8 +15,8 @@ define(["underscore", "backbone"], function (_, Backbone) {
             if (name) return this.get("links")[name]
         },
         getDisplayName:function () {
-        	var name = this.get("name")
-        	if (name) return name;
+            var name = this.get("name")
+            if (name) return name;
             var type = this.get("type")
             var appId = this.getLinkByName('self')
             if (type && appId) {

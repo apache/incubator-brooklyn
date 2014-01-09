@@ -1532,18 +1532,18 @@ a {
 /** BROOKLYN added
 */
 div#message-bar {
-	text-align: left;
-	margin-top: 12px;
-	margin-bottom: 12px;
+    text-align: left;
+    margin-top: 12px;
+    margin-bottom: 12px;
 }
 div.apidoc-title {
-	font-weight: bold;
-	padding-left: 24px;
-	font-size: 1.8em;
-	color: #668866;
-	padding-top: 24px;
-	padding-bottom: 24px;
+    font-weight: bold;
+    padding-left: 24px;
+    font-size: 1.8em;
+    color: #668866;
+    padding-top: 24px;
+    padding-bottom: 24px;
 }
 form.sandbox > table {
-	margin-bottom: 30px;
+    margin-bottom: 30px;
 }
