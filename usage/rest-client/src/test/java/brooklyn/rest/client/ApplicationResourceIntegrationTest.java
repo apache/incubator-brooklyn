@@ -27,15 +27,12 @@ import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
-import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
-import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.SensorSummary;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 @Test(singleThreaded = true)
@@ -43,10 +40,7 @@ public class ApplicationResourceIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceIntegrationTest.class);
 
-    private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app").
-            entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore"))).
-            locations(ImmutableSet.of("localhost")).
-            build();
+    private final String redisSpec = "{\"name\": \"redis-app\", \"type\": \"brooklyn.entity.nosql.redis.RedisStore\", \"locations\": [ \"localhost\"]}";
 
     private ManagementContext manager;
 
@@ -89,13 +83,11 @@ public class ApplicationResourceIntegrationTest {
 
     @Test(groups = "Integration")
     public void testDeployRedisApplication() throws Exception {
-
-        Response response = api.getApplicationApi().create(redisSpec);
-
+        Response response = api.getApplicationApi().createPoly(redisSpec.getBytes());
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 1);
-
-        while (!api.getSensorApi().get("redis-app", "redis-ent", "service.state").equals(Lifecycle.RUNNING.toString())) {
+        String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
+        while (!api.getSensorApi().get("redis-app", entityId, "service.state").equals(Lifecycle.RUNNING.toString())) {
             Thread.sleep(100);
         }
     }
@@ -107,8 +99,9 @@ public class ApplicationResourceIntegrationTest {
     }
 
     @Test(groups = "Integration", dependsOnMethods = "testDeployRedisApplication")
-    public void testListSensorsRedis() {
-        Collection<SensorSummary> sensors = api.getSensorApi().list("redis-app", "redis-ent");
+    public void testListSensorsRedis() throws Exception {
+        String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
+        Collection<SensorSummary> sensors = api.getSensorApi().list("redis-app", entityId);
         assertTrue(sensors.size() > 0);
         SensorSummary uptime = Iterables.find(sensors, new Predicate<SensorSummary>() {
             @Override
@@ -121,11 +114,12 @@ public class ApplicationResourceIntegrationTest {
 
     @Test(groups = "Integration", dependsOnMethods = {"testListSensorsRedis", "testListEntities"})
     public void testTriggerRedisStopEffector() throws Exception {
-        Response response = api.getEffectorApi().invoke("redis-app", "redis-ent", "stop", "5000", ImmutableMap.<String, String>of());
+        String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
+        Response response = api.getEffectorApi().invoke("redis-app", entityId, "stop", "5000", ImmutableMap.<String, String>of());
 
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
-        while (!api.getSensorApi().get("redis-app", "redis-ent", "service.state").equals(Lifecycle.STOPPED.toString())) {
+        while (!api.getSensorApi().get("redis-app", entityId, "service.state").equals(Lifecycle.STOPPED.toString())) {
             Thread.sleep(5000);
         }
     }

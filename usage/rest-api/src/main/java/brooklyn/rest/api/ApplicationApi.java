@@ -127,11 +127,6 @@ public interface ApplicationApi {
           required = true)
       @Valid String contents);
 
-  /** @deprecated since 0.7.0 the {@link ApplicationSpec} is being retired in favour of CAMP YAML/ZIP
-   * (however in 0.7.0 you can still pass this object as JSON and it will be autodetected) */
-  @Deprecated
-  public Response create(ApplicationSpec applicationSpec);
-
   @DELETE
   @Path("/{application}")
   @ApiOperation(
