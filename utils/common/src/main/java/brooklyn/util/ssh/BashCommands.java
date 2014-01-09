@@ -15,6 +15,7 @@ import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class BashCommands {
 
@@ -375,6 +376,7 @@ public class BashCommands {
     public static final String INSTALL_WGET = installExecutable("wget");
     public static final String INSTALL_ZIP = installExecutable("zip");
     public static final String INSTALL_UNZIP = alternatives(installExecutable("unzip"), installExecutable("zip"));
+    public static final String INSTALL_SYSSTAT = installPackage(ImmutableMap.of("onlyifmissing", "iostat"), "sysstat");
 
     /** 
      * @see downloadUrlAs(Map, String, String, String)
