@@ -885,10 +885,20 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         TemplateBuilder templateBuilder = (TemplateBuilder) config.get(TEMPLATE_BUILDER);
         if (templateBuilder==null) {
             templateBuilder = new PortableTemplateBuilder<PortableTemplateBuilder<?>>();
-            templateBuilder.imageChooser(getConfig(JcloudsLocationConfig.IMAGE_CHOOSER));
         } else {
             LOG.debug("jclouds using templateBuilder {} as base for provisioning in {} for {}", new Object[] {
                     templateBuilder, this, config.getDescription()});
+        }
+        if (templateBuilder instanceof PortableTemplateBuilder<?>) {
+            if (((PortableTemplateBuilder<?>)templateBuilder).imageChooser()==null) {
+                templateBuilder.imageChooser(getConfig(JcloudsLocationConfig.IMAGE_CHOOSER));
+            } else {
+                // an image chooser is already set, so do nothing
+            }
+        } else {
+            // template builder supplied, and we cannot check image chooser status; warn, for now
+            LOG.warn("Cannot check imageChooser status for {} due to manually supplied black-box TemplateBuilder; "
+                + "it is recommended to use a PortableTemplateBuilder if you supply a TemplateBuilder", config.getDescription());
         }
 
         if (!Strings.isEmpty(config.get(CLOUD_REGION_ID))) {
