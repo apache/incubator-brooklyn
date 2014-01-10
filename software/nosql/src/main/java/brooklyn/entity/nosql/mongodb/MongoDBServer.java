@@ -122,8 +122,6 @@ public interface MongoDBServer extends SoftwareProcess {
     AttributeSensor<String> MONGO_SERVER_ENDPOINT = Sensors.newStringSensor(
         "mongodb.server.endpoint", "The host:port where this server is listening");
 
-    MongoDBClientSupport getClient();
-
     /**
      * @return The replica set the server belongs to, or null if the server is a standalone instance.
      */
@@ -133,4 +131,35 @@ public interface MongoDBServer extends SoftwareProcess {
      * @return True if the server is a child of {@link MongoDBReplicaSet}.
      */
     boolean isReplicaSetMember();
+
+    /**
+     * Initialises a replica set at the server the method is invoked on.
+     * @param replicaSetName The name for the replica set.
+     * @param id The id to be given to this server in the replica set configuration.
+     * @return True if initialisation is successful.
+     */
+    boolean initializeReplicaSet(String replicaSetName, Integer id);
+
+    /**
+     * Reconfigures the replica set that the server the method is invoked on is the primary member of
+     * to include a new member.
+     * <p/>
+     * Note that this can cause long downtime (typically 10-20s, even up to a minute).
+     *
+     * @param secondary New member of the set.
+     * @param id The id for the new set member. Must be unique within the set; its validity is not checked.
+     * @return True if addition is successful. False if the server this is called on is not the primary
+     *         member of the replica set.
+     */
+    boolean addMemberToReplicaSet(MongoDBServer secondary, Integer id);
+
+    /**
+     * Reconfigures the replica set that the server the method is invoked on is the primary member of
+     * to remove the given server.
+     * @param server The server to remove.
+     * @return True if removal is successful. False if the server this is called on is not the primary
+     *         member of the replica set.
+     */
+    boolean removeMemberFromReplicaSet(MongoDBServer server);
+
 }

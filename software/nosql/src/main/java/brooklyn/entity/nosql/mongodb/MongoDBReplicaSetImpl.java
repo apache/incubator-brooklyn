@@ -127,7 +127,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     }
 
     /**
-     * Sets {@link MongoDBServer#REPLICA_SET_ENABLED} and {@link MongoDBServer#REPLICA_SET}.
+     * Sets {@link MongoDBServer#REPLICA_SET}.
      */
     @Override
     protected Map<?,?> getCustomChildFlags() {
@@ -176,7 +176,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         if (mustInitialise.compareAndSet(true, false)) {
             if (LOG.isInfoEnabled())
                 LOG.info("First server up in {} is: {}", getName(), server);
-            boolean replicaSetInitialised = server.getClient().initializeReplicaSet(getName(), nextMemberId.getAndIncrement());
+            boolean replicaSetInitialised = server.initializeReplicaSet(getName(), nextMemberId.getAndIncrement());
             if (replicaSetInitialised) {
                 setAttribute(PRIMARY_ENTITY, server);
                 setAttribute(Startable.SERVICE_UP, true);
@@ -205,7 +205,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 Boolean isAvailable = secondary.getAttribute(MongoDBServer.SERVICE_UP);
                 MongoDBServer primary = getPrimary();
                 if (Boolean.TRUE.equals(isAvailable) && primary != null) {
-                    primary.getClient().addMemberToReplicaSet(secondary, nextMemberId.incrementAndGet());
+                    primary.addMemberToReplicaSet(secondary, nextMemberId.incrementAndGet());
                     if (LOG.isInfoEnabled()) {
                         LOG.info("{} added to replica set {}", secondary, getName());
                     }
@@ -245,7 +245,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 // Wait for the replica set to elect a new primary if the set is reconfiguring itself.
                 MongoDBServer primary = getPrimary();
                 if (primary != null && !isAvailable) {
-                    primary.getClient().removeMemberFromReplicaSet(member);
+                    primary.removeMemberFromReplicaSet(member);
                     if (LOG.isInfoEnabled()) {
                         LOG.info("Removed {} from replica set {}", member, getName());
                     }

@@ -151,11 +151,6 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
     }
 
     @Override
-    public MongoDBClientSupport getClient() {
-        return client;
-    }
-
-    @Override
     public MongoDBReplicaSet getReplicaSet() {
         return getConfig(MongoDBServer.REPLICA_SET);
     }
@@ -163,6 +158,29 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
     @Override
     public boolean isReplicaSetMember() {
         return getReplicaSet() != null;
+    }
+
+    @Override
+    public boolean initializeReplicaSet(String replicaSetName, Integer id) {
+        return client.initializeReplicaSet(replicaSetName, id);
+    }
+
+    @Override
+    public boolean addMemberToReplicaSet(MongoDBServer secondary, Integer id) {
+        if (!getAttribute(IS_PRIMARY_FOR_REPLICA_SET)) {
+            LOG.warn("Attempted to add {} to replica set at server that is not primary: {}", secondary, this);
+            return false;
+        }
+        return client.addMemberToReplicaSet(secondary, id);
+    }
+
+    @Override
+    public boolean removeMemberFromReplicaSet(MongoDBServer server) {
+        if (!getAttribute(IS_PRIMARY_FOR_REPLICA_SET)) {
+            LOG.warn("Attempted to remove {} from replica set at server that is not primary: {}", server, this);
+            return false;
+        }
+        return client.removeMemberFromReplicaSet(server);
     }
 
     @Override
