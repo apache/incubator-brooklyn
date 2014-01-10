@@ -1,5 +1,14 @@
 package brooklyn.entity.nosql.mongodb;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.net.UnknownHostException;
+
+import org.bson.BSONObject;
+import org.bson.BasicBSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.common.net.HostAndPort;
 import com.mongodb.BasicDBObject;
@@ -10,20 +19,13 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
-import org.bson.BSONObject;
-import org.bson.BasicBSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.net.UnknownHostException;
 
 /**
  * Manages connections to standalone MongoDB servers.
  *
  * @see <a href="http://docs.mongodb.org/manual/reference/command/">MongoDB database command documentation</a>
  */
-public class MongoDBClientSupport {
+public class MongoDBClientSupport implements Closeable {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBClientSupport.class);
 
@@ -82,7 +84,8 @@ public class MongoDBClientSupport {
         return Optional.of(status);
     }
 
-    void close() throws IOException {
+    @Override
+    public void close() throws IOException {
         client.close();
     }
 
