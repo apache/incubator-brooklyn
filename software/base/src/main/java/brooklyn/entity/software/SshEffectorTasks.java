@@ -202,7 +202,7 @@ public class SshEffectorTasks {
         return codePidRunning(pid).summary("PID "+pid+" is-running check (required)").requiringExitCodeZero("Process with PID "+pid+" is required to be running");
     }
 
-    /** as {@link #codePidRunning(String)} but returning boolean */
+    /** as {@link #codePidRunning(Integer)} but returning boolean */
     public static SshEffectorTaskFactory<Boolean> isPidRunning(Integer pid) {
         return codePidRunning(pid).summary("PID "+pid+" is-running check (boolean)").returning(new Function<ProcessTaskWrapper<?>, Boolean>() {
             public Boolean apply(@Nullable ProcessTaskWrapper<?> input) { return Integer.valueOf(0).equals(input.getExitCode()); }
