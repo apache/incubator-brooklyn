@@ -176,7 +176,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                         mutableDatacenterUsage.values().remove(member);
                         mutableDatacenterUsage.put(dcName, member);
                         setAttribute(DATACENTER_USAGE, mutableDatacenterUsage);
-                        setAttribute(DATACENTERS, mutableDatacenterUsage.keySet());
+                        setAttribute(DATACENTERS, Sets.newLinkedHashSet(mutableDatacenterUsage.keySet()));
                     }
                 }
             }
@@ -197,7 +197,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                     Multimap<String, Entity> mutableDatacenterUsage = LinkedHashMultimap.create(datacenterUsage);
                     mutableDatacenterUsage.values().remove(entity);
                     setAttribute(DATACENTER_USAGE, mutableDatacenterUsage);
-                    setAttribute(DATACENTERS, mutableDatacenterUsage.keySet());
+                    setAttribute(DATACENTERS, Sets.newLinkedHashSet(mutableDatacenterUsage.keySet()));
                 }
             }
         });

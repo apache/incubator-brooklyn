@@ -236,6 +236,7 @@ public class RebindManagerImpl implements RebindManager {
         		.put("id", locationId)
         		.putAll(memento.getLocationConfig())
         		.removeAll(memento.getLocationConfigReferenceKeys())
+                .removeAll(memento.getEntityConfigReferenceKeys())
         		.build();
 
         return (Location) invokeConstructor(reflections, locationClazz, new Object[] {flags});

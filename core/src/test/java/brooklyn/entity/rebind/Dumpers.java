@@ -79,7 +79,11 @@ public class Dumpers {
         
         LOG.warn("Not serializable ("+root+"):");
         for (Map.Entry<List<Object>, Class<?>> entry : unserializablePaths.entrySet()) {
-            LOG.warn("\t"+"type="+entry.getValue()+"; chain="+entry.getKey());
+            StringBuilder msg = new StringBuilder("\t"+"type="+entry.getValue()+"; chain="+"\n");
+            for (Object chainElement : entry.getKey()) {
+                msg.append("\t\t"+"type=").append(chainElement.getClass()).append("; val=").append(chainElement).append("\n");
+            }
+            LOG.warn(msg.toString());
         }
     }
     

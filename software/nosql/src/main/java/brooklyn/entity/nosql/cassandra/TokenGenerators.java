@@ -2,6 +2,7 @@ package brooklyn.entity.nosql.cassandra;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Iterator;
@@ -19,7 +20,7 @@ public class TokenGenerators {
     /**
      * Sub-classes are recommended to call {@link #checkRangeValid()} at construction time.
      */
-    public static abstract class AbstractTokenGenerator implements TokenGenerator {
+    public static abstract class AbstractTokenGenerator implements TokenGenerator, Serializable {
         
         public static final BigInteger TWO = BigInteger.valueOf(2);
         

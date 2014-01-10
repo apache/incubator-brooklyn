@@ -29,6 +29,7 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
         protected Set<String> locationConfigUnused = Sets.newLinkedHashSet();
         protected String locationConfigDescription;
         protected Set<String> locationConfigReferenceKeys = Sets.newLinkedHashSet();
+        protected Set<String> entityConfigReferenceKeys = Sets.newLinkedHashSet();
         
         public Builder from(LocationMemento other) {
             super.from((TreeNode)other);
@@ -37,6 +38,7 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
             locationConfigUnused.addAll(other.getLocationConfigUnused());
             locationConfigDescription = other.getLocationConfigDescription();
             locationConfigReferenceKeys.addAll(other.getLocationConfigReferenceKeys());
+            entityConfigReferenceKeys.addAll(other.getEntityConfigReferenceKeys());
             fields.putAll(other.getCustomFields());
             return self();
         }
@@ -54,6 +56,7 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
 	private Set<String> locationConfigUnused;
 	private String locationConfigDescription;
 	private Set<String> locationConfigReferenceKeys;
+    private Set<String> entityConfigReferenceKeys;
 
     // Trusts the builder to not mess around with mutability after calling build()
 	protected BasicLocationMemento(Builder builder) {
@@ -62,6 +65,7 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
 	    locationConfigUnused = toPersistedSet(builder.locationConfigUnused);
 	    locationConfigDescription = builder.locationConfigDescription;
 	    locationConfigReferenceKeys = toPersistedSet(builder.locationConfigReferenceKeys);
+        entityConfigReferenceKeys = toPersistedSet(builder.entityConfigReferenceKeys);
 	}
 	
     @Override
@@ -82,5 +86,10 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
     @Override
     public Set<String> getLocationConfigReferenceKeys() {
     	return fromPersistedSet(locationConfigReferenceKeys);
+    }
+    
+    @Override
+    public Set<String> getEntityConfigReferenceKeys() {
+        return fromPersistedSet(entityConfigReferenceKeys);
     }
 }

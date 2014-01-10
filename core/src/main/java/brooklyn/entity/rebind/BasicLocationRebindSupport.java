@@ -66,6 +66,15 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
             location.getConfigBag().putStringKey(flagName, restoredValue);
             FlagUtils.setFieldFromFlag(location, flagName, restoredValue);
         }
+        for (String flagName : memento.getEntityConfigReferenceKeys()) {
+            Field field = FlagUtils.findFieldForFlag(flagName, location);
+            Class<?> fieldType = field.getType();
+            Object transformedValue = memento.getLocationConfig().get(flagName);
+            Object restoredValue = MementoTransformer.transformIdsToEntities(rebindContext, transformedValue, fieldType, true);
+            
+            location.getConfigBag().putStringKey(flagName, restoredValue);
+            FlagUtils.setFieldFromFlag(location, flagName, restoredValue);
+        }
 
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);

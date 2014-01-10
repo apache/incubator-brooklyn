@@ -17,6 +17,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -83,6 +84,18 @@ public class MementosGenerators {
         for (Map.Entry<ConfigKey<?>, Object> entry : localConfig.entrySet()) {
             ConfigKey<?> key = checkNotNull(entry.getKey(), localConfig);
             Object value = entry.getValue();
+            
+            if (value instanceof Task) {
+                if (((Task)value).isDone()) {
+                    if (((Task)value).isError()) {
+                        // TODO What to do or log, such that we don't log this repeatedly every time the entity's is memento'ized?!
+                        value = null;
+                    } else {
+                        value = ((Task)value).getUnchecked();
+                    }
+                }
+            }
+            
             Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
             if (transformedValue != value) {
                 builder.entityReferenceConfigs.add(key);
@@ -92,6 +105,7 @@ public class MementosGenerators {
                     builder.locationReferenceConfigs.add(key);
                 }
             }
+            
             builder.config.put(key, transformedValue); 
         }
         
@@ -173,6 +187,12 @@ public class MementosGenerators {
             if (transformedValue != value) {
                 entry.setValue(transformedValue);
                 builder.locationConfigReferenceKeys.add(key);
+            } else {
+                transformedValue = MementoTransformer.transformEntitiesToIds(value);
+                if (transformedValue != value) {
+                    entry.setValue(transformedValue);
+                    builder.entityConfigReferenceKeys.add(key);
+                }
             }
         }
         
