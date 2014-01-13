@@ -62,9 +62,9 @@ public interface QpidBroker extends SoftwareProcess, MessageBroker, UsesJmx, Amq
 
     @SetFromFlag("jmxUser")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
-            Attributes.JMX_USER, "admin");
+            UsesJmx.JMX_USER, "admin");
     
     @SetFromFlag("jmxPassword")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(
-            Attributes.JMX_PASSWORD, "admin");
+            UsesJmx.JMX_PASSWORD, "admin");
 }

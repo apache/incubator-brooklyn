@@ -1,7 +1,5 @@
 package brooklyn.test
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
 import javax.management.MBeanNotificationInfo
 import javax.management.MBeanServer
 import javax.management.MBeanServerFactory
@@ -21,9 +19,12 @@ import mx4j.tools.naming.NamingServiceMBean
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import com.google.common.base.Preconditions;
-
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.Attributes
+import brooklyn.entity.java.UsesJmx
 import brooklyn.event.feed.jmx.JmxHelper
+
+import com.google.common.base.Preconditions
 
 /**
  * Set up a JMX service ready for clients to connect. This consists of an MBean server, a connector server and a naming
@@ -45,7 +46,7 @@ class JmxService {
     }
     /** @deprecated since 0.6.0; either needs abandoning, or updating to support JmxSupport (and JmxmpAgent, etc) */
     public JmxService(Entity e) {
-        this(e.getAttribute(Attributes.HOSTNAME)?:"localhost", e.getAttribute(Attributes.JMX_PORT)?:null);
+        this(e.getAttribute(Attributes.HOSTNAME)?:"localhost", e.getAttribute(UsesJmx.JMX_PORT)?:null);
     }
     
     public JmxService(String jmxHost, Integer jmxPort) {

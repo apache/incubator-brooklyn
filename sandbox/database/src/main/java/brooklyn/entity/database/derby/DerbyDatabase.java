@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessImpl;
@@ -50,10 +49,10 @@ public class DerbyDatabase extends SoftwareProcessImpl implements Database, Uses
             String.class, "derby.virtualHost", "Derby virtual host name", "localhost");
 
     public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
-            Attributes.JMX_USER, "admin");
+            UsesJmx.JMX_USER, "admin");
     
     public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(
-            Attributes.JMX_PASSWORD, "admin");
+            UsesJmx.JMX_PASSWORD, "admin");
 
     @SetFromFlag
     protected Collection<String> schemaNames;

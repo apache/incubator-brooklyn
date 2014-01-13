@@ -44,10 +44,10 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx,
     public static final PortAttributeSensorAndConfigKey AMQ_JETTY_PORT = new PortAttributeSensorAndConfigKey("activemq.jetty.port", "jetty port", "8161+");
 
     @SetFromFlag("jmxUser")
-    public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(Attributes.JMX_USER, "admin");
+    public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(UsesJmx.JMX_USER, "admin");
     
     @SetFromFlag("jmxPassword")
-    public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(Attributes.JMX_PASSWORD, "admin");
+    public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(UsesJmx.JMX_PASSWORD, "admin");
     
     @SetFromFlag("templateConfigurationUrl")
     public static final BasicAttributeSensorAndConfigKey<String> TEMPLATE_CONFIGURATION_URL = new BasicAttributeSensorAndConfigKey<String>(

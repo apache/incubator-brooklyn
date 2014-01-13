@@ -8,8 +8,8 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.entity.messaging.jms.JMSDestinationImpl;
 import brooklyn.event.feed.jmx.JmxFeed;
@@ -59,7 +59,7 @@ public abstract class QpidDestinationImpl extends JMSDestinationImpl implements 
 
     @Override
     public void create() {
-        jmxHelper.operation(virtualHostManager, "createNewQueue", getName(), getParent().getAttribute(Attributes.JMX_USER), true);
+        jmxHelper.operation(virtualHostManager, "createNewQueue", getName(), getParent().getAttribute(UsesJmx.JMX_USER), true);
         jmxHelper.operation(exchange, "createNewBinding", getName(), getName());
         connectSensors();
     }
