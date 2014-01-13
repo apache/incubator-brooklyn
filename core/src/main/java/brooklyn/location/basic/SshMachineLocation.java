@@ -254,44 +254,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return getConfig(SshTool.PROP_PORT);
     }
     
-    /** @deprecated in 0.6.0, @see execCommand and execScript */
-    public int run(String command) {
-        return run(MutableMap.of(), command, MutableMap.of());
-    }
-    /** @deprecated in 0.6.0, @see execCommand and execScript */
-    public int run(Map props, String command) {
-        return run(props, command, MutableMap.of());
-    }
-    /** @deprecated in 0.6.0, @see execCommand and execScript */
-    public int run(String command, Map env) {
-        return run(MutableMap.of(), command, env);
-    }
-    /** @deprecated in 0.6.0, @see execCommand and execScript */
-    public int run(Map props, String command, Map env) {
-        return run(props, ImmutableList.of(command), env);
-    }
-
-    /** @deprecated in 1.4.1 (? - 0.4.1 ?, definitely by 0.6.0), @see execCommand and execScript */
-    public int run(List<String> commands) {
-        return run(MutableMap.of(), commands, MutableMap.of());
-    }
-    /** @deprecated in 0.6.0, @see execCommand and execScript */
-    public int run(Map props, List<String> commands) {
-        return run(props, commands, MutableMap.of());
-    }
-    /** @deprecated in 0.6.0, @see execCommand and execScript */
-    public int run(List<String> commands, Map env) {
-        return run(MutableMap.of(), commands, env);
-    }
-    /** @deprecated in 0.6.0, @see execCommand and execScript */
-    public int run(final Map props, final List<String> commands, final Map env) {
-        if (commands == null || commands.isEmpty()) return 0;
-        return execSsh(props, new Function<ShellTool, Integer>() {
-            public Integer apply(ShellTool ssh) {
-                return ssh.execScript(props, commands, env);
-            }});
-    }
-
     protected <T> T execSsh(Map props, Function<ShellTool,T> task) {
         if (props.isEmpty() || Sets.difference(props.keySet(), REUSABLE_SSH_PROPS).isEmpty()) {
             return vanillaSshToolPool.exec(task);
@@ -373,28 +335,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
-    /**
-     * Convenience for running commands using ssh {@literal exec} mode.
-     * @deprecated in 1.4.1, @see execCommand and execScript
-     */
-    public int exec(List<String> commands) {
-        return exec(MutableMap.of(), commands, MutableMap.of());
-    }
-    public int exec(Map props, List<String> commands) {
-        return exec(props, commands, MutableMap.of());
-    }
-    public int exec(List<String> commands, Map env) {
-        return exec(MutableMap.of(), commands, env);
-    }
-    public int exec(final Map props, final List<String> commands, final Map env) {
-        Preconditions.checkNotNull(address, "host address must be specified for ssh");
-        if (commands == null || commands.isEmpty()) return 0;
-        return execSsh(props, new Function<ShellTool, Integer>() {
-            public Integer apply(ShellTool ssh) {
-                return ssh.execCommands(props, commands, env);
-            }});
-    }
-        
     // TODO submitCommands and submitScript which submit objects we can subsequently poll (cf JcloudsSshMachineLocation.submitRunScript)
     
     /** executes a set of commands, directly on the target machine (no wrapping in script).
@@ -567,7 +507,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             PipedInputStream insE = new PipedInputStream(); OutputStream outE = new PipedOutputStream(insE);
             new StreamGobbler(insO, null, LOG).setLogPrefix("[curl @ "+address+":stdout] ").start();
             new StreamGobbler(insE, null, LOG).setLogPrefix("[curl @ "+address+":stdout] ").start();
-            int result = exec(MutableMap.of("out", outO, "err", outE),
+            int result = execScript(MutableMap.of("out", outO, "err", outE), "install-to", 
                     ImmutableList.of("curl "+url+" -L --silent --insecure --show-error --fail --connect-timeout 60 --max-time 600 --retry 5 -o "+destination));
             
             if (result!=0 && loader!=null) {

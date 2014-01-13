@@ -45,10 +45,21 @@ public class SshMachineLocationTest {
     
     // Note: requires `ssh localhost` to be setup such that no password is required    
     @Test(groups = "Integration")
-    public void testSshRun() throws Exception {
+    public void testSshExecScript() throws Exception {
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         String expectedName = System.getProperty("user.name");
-        host.run(MutableMap.of("out", outStream), "whoami; exit");
+        host.execScript(MutableMap.of("out", outStream), "mysummary", ImmutableList.of("whoami; exit"));
+        String outString = new String(outStream.toByteArray());
+        
+        assertTrue(outString.contains(expectedName), outString);
+    }
+    
+    // Note: requires `ssh localhost` to be setup such that no password is required    
+    @Test(groups = "Integration")
+    public void testSshExecCommands() throws Exception {
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        String expectedName = System.getProperty("user.name");
+        host.execCommands(MutableMap.of("out", outStream), "mysummary", ImmutableList.of("whoami; exit"));
         String outString = new String(outStream.toByteArray());
         
         assertTrue(outString.contains(expectedName), outString);
@@ -70,7 +81,7 @@ public class SshMachineLocationTest {
     @Test(groups = "Integration", expectedExceptions={IllegalStateException.class, SshException.class})
     public void testSshRunWithInvalidUserFails() throws Exception {
         SshMachineLocation badHost = new SshMachineLocation(MutableMap.of("user", "doesnotexist", "address", InetAddress.getLocalHost()));
-        badHost.run("whoami; exit");
+        badHost.execScript("mysummary", ImmutableList.of("whoami; exit"));
     }
     
     // Note: requires `ssh localhost` to be setup such that no password is required    
