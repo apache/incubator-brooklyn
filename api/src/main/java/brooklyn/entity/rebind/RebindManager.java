@@ -1,11 +1,11 @@
 package brooklyn.entity.rebind;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import brooklyn.entity.Application;
-import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -27,9 +27,9 @@ public interface RebindManager {
 
     public BrooklynMementoPersister getPersister();
 
-    public List<Application> rebind(final BrooklynMemento memento);
+    public List<Application> rebind() throws IOException;
     
-    public List<Application> rebind(final BrooklynMemento memento, ClassLoader classLoader);
+    public List<Application> rebind(ClassLoader classLoader) throws IOException;
 
     public ChangeListener getChangeListener();
 

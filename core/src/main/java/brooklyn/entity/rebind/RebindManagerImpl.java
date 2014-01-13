@@ -2,6 +2,9 @@ package brooklyn.entity.rebind;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -16,13 +19,19 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
+import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoPersister.Delta;
+import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
@@ -105,13 +114,12 @@ public class RebindManagerImpl implements RebindManager {
     }
     
     @Override
-    public List<Application> rebind(final BrooklynMemento memento) {
-        return rebind(memento, getClass().getClassLoader());
+    public List<Application> rebind() throws IOException {
+        return rebind(getClass().getClassLoader());
     }
     
     @Override
-    public List<Application> rebind(final BrooklynMemento memento, ClassLoader classLoader) {
-        checkNotNull(memento, "memento");
+    public List<Application> rebind(final ClassLoader classLoader) throws IOException {
         checkNotNull(classLoader, "classLoader");
         
         Reflections reflections = new Reflections(classLoader);
@@ -121,9 +129,48 @@ public class RebindManagerImpl implements RebindManager {
         
         final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
 
+        LookupContext dummyLookupContext = new LookupContext() {
+            private final Entity dummyEntity = (Entity) java.lang.reflect.Proxy.newProxyInstance(
+                    classLoader,
+                    new Class[] {Entity.class, EntityInternal.class, EntityProxy.class},
+                    new InvocationHandler() {
+                        @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
+                            return m.invoke(this, args);
+                        }
+                    });
+            private final Location dummyLocation = (Location) java.lang.reflect.Proxy.newProxyInstance(
+                    classLoader,
+                    new Class[] {Location.class, LocationInternal.class},
+                    new InvocationHandler() {
+                        @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
+                            return m.invoke(this, args);
+                        }
+                    });
+            @Override public Entity lookupEntity(String id) {
+                return dummyEntity;
+            }
+            @Override public Location lookupLocation(String id) {
+                return dummyLocation;
+            }
+        };
+        
+        LookupContext realLookupContext = new LookupContext() {
+            @Override public Entity lookupEntity(String id) {
+                return rebindContext.getEntity(id);
+            }
+            @Override public Location lookupLocation(String id) {
+                return rebindContext.getLocation(id);
+            }
+        };
+        
+        // Two-phase deserialization. First we deserialize to find all instances (and their types).
+        // Then we deserialize so that inter-entity references can be set. During the first phase,
+        // any inter-entity reference will get the dummyEntity/dummyLocation.
+        BrooklynMemento mementoHeaders = persister.loadMemento(dummyLookupContext);
+
         // Instantiate locations
-        LOG.info("RebindManager instantiating locations: {}", memento.getLocationIds());
-        for (LocationMemento locMemento : memento.getLocationMementos().values()) {
+        LOG.info("RebindManager instantiating locations: {}", mementoHeaders.getLocationIds());
+        for (LocationMemento locMemento : mementoHeaders.getLocationMementos().values()) {
             if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating location {}", locMemento);
             
             Location location = newLocation(locMemento, reflections);
@@ -132,8 +179,8 @@ public class RebindManagerImpl implements RebindManager {
         }
         
         // Instantiate entities
-        LOG.info("RebindManager instantiating entities: {}", memento.getEntityIds());
-        for (EntityMemento entityMemento : memento.getEntityMementos().values()) {
+        LOG.info("RebindManager instantiating entities: {}", mementoHeaders.getEntityIds());
+        for (EntityMemento entityMemento : mementoHeaders.getEntityMementos().values()) {
             if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating entity {}", entityMemento);
             
             Entity entity = newEntity(entityMemento, reflections);
@@ -142,8 +189,8 @@ public class RebindManagerImpl implements RebindManager {
         }
         
         // Instantiate policies
-        LOG.info("RebindManager instantiating policies: {}", memento.getPolicyIds());
-        for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
+        LOG.info("RebindManager instantiating policies: {}", mementoHeaders.getPolicyIds());
+        for (PolicyMemento policyMemento : mementoHeaders.getPolicyMementos().values()) {
             if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
             
             Policy policy = newPolicy(policyMemento, reflections);
@@ -151,6 +198,8 @@ public class RebindManagerImpl implements RebindManager {
             rebindContext.registerPolicy(policyMemento.getId(), policy);
         }
         
+        BrooklynMemento memento = persister.loadMemento(realLookupContext);
+
         // Reconstruct locations
         LOG.info("RebindManager reconstructing locations");
         for (LocationMemento locMemento : memento.getLocationMementos().values()) {
@@ -208,10 +257,6 @@ public class RebindManagerImpl implements RebindManager {
         String entityType = checkNotNull(memento.getType(), "entityType of "+entityId);
         Class<?> entityClazz = reflections.loadClass(entityType);
         
-        Map<String,Object> flags = Maps.newLinkedHashMap();
-        flags.put("id", entityId);
-        if (AbstractApplication.class.isAssignableFrom(entityClazz)) flags.put("mgmt", managementContext);
-  
         if (InternalEntityFactory.isNewStyleEntity(managementContext, entityClazz)) {
             Class<?> entityInterface = managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)entityClazz);
             EntitySpec<?> entitySpec = EntitySpec.create((Class)entityInterface).impl((Class)entityClazz).configure("id", entityId);
@@ -220,6 +265,10 @@ public class RebindManagerImpl implements RebindManager {
             // There are several possibilities for the constructor; find one that works.
             // Prefer passing in the flags because required for Application to set the management context
             // TODO Feels very hacky!
+            Map<String,Object> flags = Maps.newLinkedHashMap();
+            flags.put("id", entityId);
+            if (AbstractApplication.class.isAssignableFrom(entityClazz)) flags.put("mgmt", managementContext);
+            
             return (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
         }
     }
@@ -232,15 +281,18 @@ public class RebindManagerImpl implements RebindManager {
         String locationType = checkNotNull(memento.getType(), "locationType of "+locationId);
         Class<?> locationClazz = reflections.loadClass(locationType);
 
-        Map<String, Object> flags = MutableMap.<String, Object>builder()
-        		.put("id", locationId)
-        		.putAll(memento.getLocationConfig())
-        		.removeAll(memento.getLocationConfigReferenceKeys())
-                .removeAll(memento.getEntityConfigReferenceKeys())
-        		.build();
+        if (InternalLocationFactory.isNewStyleLocation(managementContext, locationClazz)) {
+            LocationSpec<?> locationSpec = LocationSpec.create((Class)locationClazz).configure("id", locationId);
+            return managementContext.getLocationManager().createLocation(locationSpec);
+        } else {
+            // There are several possibilities for the constructor; find one that works.
+            // Prefer passing in the flags because required for Application to set the management context
+            // TODO Feels very hacky!
+            Map<String,?> flags = MutableMap.of("id", locationId, "deferConstructionChecks", true);
 
-        return (Location) invokeConstructor(reflections, locationClazz, new Object[] {flags});
-        // 'used' config keys get marked in BasicLocationRebindSupport
+            return (Location) invokeConstructor(reflections, locationClazz, new Object[] {flags});
+        }
+        // note 'used' config keys get marked in BasicLocationRebindSupport
     }
 
     /**

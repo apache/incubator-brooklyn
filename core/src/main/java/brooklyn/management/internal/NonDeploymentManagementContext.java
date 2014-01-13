@@ -33,7 +33,6 @@ import brooklyn.management.ExecutionManager;
 import brooklyn.management.LocationManager;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
-import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.util.task.AbstractExecutionContext;
 
@@ -334,12 +333,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         }
 
         @Override
-        public List<Application> rebind(BrooklynMemento memento) {
+        public List<Application> rebind() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
 
         @Override
-        public List<Application> rebind(BrooklynMemento memento, ClassLoader classLoader) {
+        public List<Application> rebind(ClassLoader classLoader) {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
 

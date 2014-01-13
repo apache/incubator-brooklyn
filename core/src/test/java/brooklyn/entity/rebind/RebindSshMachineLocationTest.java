@@ -35,7 +35,9 @@ public class RebindSshMachineLocationTest {
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), origManagementContext);
-        origLoc = new SshMachineLocation(MutableMap.of("address", "localhost"));
+        //FIXME Getting NPE with user being null (before rebind!)
+        //origLoc = new SshMachineLocation(MutableMap.of("address", "localhost"));
+        origLoc = new SshMachineLocation(MutableMap.of("address", "localhost", "user", System.getProperty("user.name")));
     }
 
     @AfterMethod(alwaysRun=true)
@@ -43,6 +45,11 @@ public class RebindSshMachineLocationTest {
         if (origManagementContext != null) Entities.destroyAll(origManagementContext);
         if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+    }
+
+    @Test(groups="Integration", invocationCount=100)
+    public void testMachineUsableAfterRebindManyTimes() throws Exception {
+        testMachineUsableAfterRebind();
     }
     
     @Test(groups="Integration")

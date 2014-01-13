@@ -15,13 +15,20 @@ import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.mapper.MapperWrapper;
 
 public class XmlSerializer<T> {
 
     protected final XStream xstream;
     
     public XmlSerializer() {
-        xstream = new XStream();
+        xstream = new XStream() {
+            @Override
+            protected MapperWrapper wrapMapper(MapperWrapper next) {
+                MapperWrapper result = super.wrapMapper(next);
+                return XmlSerializer.this.wrapMapper(result);
+            }
+        };
         
         // list as array list is default
         xstream.alias("map", Map.class, LinkedHashMap.class);
@@ -44,6 +51,10 @@ public class XmlSerializer<T> {
         xstream.registerConverter(new Inet4AddressConverter());
     }
     
+    protected MapperWrapper wrapMapper(MapperWrapper next) {
+        return next;
+    }
+
     public void serialize(Object object, Writer writer) {
         xstream.toXML(object, writer);
     }

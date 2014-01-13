@@ -5,6 +5,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+
 public class RetryingMementoSerializer<T> implements MementoSerializer<T> {
     
     private static final Logger LOG = LoggerFactory.getLogger(RetryingMementoSerializer.class);
@@ -18,6 +20,7 @@ public class RetryingMementoSerializer<T> implements MementoSerializer<T> {
         if (maxAttempts < 1) throw new IllegalArgumentException("Max attempts must be at least 1, but was "+maxAttempts);
     }
     
+    @Override
     public String toString(T memento) {
         RuntimeException lastException = null;
         int attempt = 0;
@@ -35,6 +38,7 @@ public class RetryingMementoSerializer<T> implements MementoSerializer<T> {
         throw lastException;
     }
     
+    @Override
     public T fromString(String string) {
         RuntimeException lastException = null;
         int attempt = 0;
@@ -49,5 +53,15 @@ public class RetryingMementoSerializer<T> implements MementoSerializer<T> {
         } while (attempt < maxAttempts);
         
         throw lastException;
+    }
+
+    @Override
+    public void setLookupContext(LookupContext lookupContext) {
+        delegate.setLookupContext(lookupContext);
+    }
+
+    @Override
+    public void unsetLookupContext() {
+        delegate.unsetLookupContext();
     }
 }

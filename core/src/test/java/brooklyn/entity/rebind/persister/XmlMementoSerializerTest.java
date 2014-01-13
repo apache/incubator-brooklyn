@@ -12,6 +12,13 @@ import java.util.Set;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Entities;
+import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
@@ -86,9 +93,35 @@ public class XmlMementoSerializerTest {
         assertSerializeAndDeserialize(obj);
     }
     
+    @Test
+    public void testEntity() throws Exception {
+        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        ManagementContext managementContext = app.getManagementContext();
+        try {
+            serializer = new XmlMementoSerializer<Object>(XmlMementoSerializerTest.class.getClassLoader(), managementContext);
+            assertSerializeAndDeserialize(app);
+        } finally {
+            Entities.destroyAll(managementContext);
+        }
+    }
+    
+    @Test
+    public void testLocation() throws Exception {
+        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        ManagementContext managementContext = app.getManagementContext();
+        try {
+            Location loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+            serializer = new XmlMementoSerializer<Object>(XmlMementoSerializerTest.class.getClassLoader(), managementContext);
+            assertSerializeAndDeserialize(loc);
+        } finally {
+            Entities.destroyAll(managementContext);
+        }
+    }
+    
     private void assertSerializeAndDeserialize(Object obj) throws Exception {
         String serializedForm = serializer.toString(obj);
+        System.out.println("serializedForm="+serializedForm);
         Object deserialized = serializer.fromString(serializedForm);
-        assertEquals(deserialized, obj);
+        assertEquals(deserialized, obj, "serializedForm="+serializedForm);
     }
 }

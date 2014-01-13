@@ -68,11 +68,11 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 ConfigKey key = entry.getKey();
                 Object value = entry.getValue();
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
-                if (memento.getEntityReferenceConfigs().contains(entry.getKey())) {
-                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type, true);
-                } else if (memento.getLocationReferenceConfigs().contains(entry.getKey())) {
-                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type, true);
-                }
+//                if (memento.getEntityReferenceConfigs().contains(entry.getKey())) {
+//                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type, true);
+//                } else if (memento.getLocationReferenceConfigs().contains(entry.getKey())) {
+//                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type, true);
+//                }
                 entity.setConfig(key, value);
             } catch (ClassNotFoundException e) {
                 throw Throwables.propagate(e);
@@ -83,11 +83,11 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 AttributeSensor key = entry.getKey();
                 Object value = entry.getValue();
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
-                if (memento.getEntityReferenceAttributes().contains(entry.getKey())) {
-                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type, true);
-                } else if (memento.getLocationReferenceAttributes().contains(entry.getKey())) {
-                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type, true);
-                }
+//                if (memento.getEntityReferenceAttributes().contains(entry.getKey())) {
+//                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type, true);
+//                } else if (memento.getLocationReferenceAttributes().contains(entry.getKey())) {
+//                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type, true);
+//                }
                 ((EntityInternal)entity).setAttributeWithoutPublishing(key, value);
             } catch (ClassNotFoundException e) {
                 throw Throwables.propagate(e);

@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import javax.annotation.Nullable;
 
@@ -19,7 +20,9 @@ import org.testng.collections.Maps;
 
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Serializers;
+import brooklyn.util.javalang.Serializers.ObjectReplacer;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
@@ -49,13 +52,35 @@ public class Dumpers {
         }
     };
 
+    public static class Pointer implements Serializable {
+        private static final Random random = new Random();
+        private final String id;
+        private final int rand;
+        
+        public Pointer(String id) {
+            this.id = id;
+            this.rand = random.nextInt();
+        }
+        @Override public int hashCode() {
+            return Objects.hashCode(id, rand);
+        }
+        @Override
+        public boolean equals(Object o) {
+            return (o instanceof Pointer) && Objects.equal(id, ((Pointer)o).id) && Objects.equal(rand, ((Pointer)o).rand);
+        }
+    }
+
     public static void logUnserializableChains(Object root) throws IllegalArgumentException, IllegalAccessException {
+        logUnserializableChains(root, ObjectReplacer.NOOP);
+    }
+    
+    public static void logUnserializableChains(Object root, final ObjectReplacer replacer) throws IllegalArgumentException, IllegalAccessException {
         final Map<List<Object>, Class<?>> unserializablePaths = Maps.newLinkedHashMap();
         
         Visitor visitor = new Visitor() {
             @Override public boolean visit(Object o, Iterable<Object> refChain) {
                 try {
-                    Serializers.reconstitute(o);
+                    Serializers.reconstitute(o, replacer);
                     return true;
                 } catch (Exception e) {
                     // not serializable in some way: report

@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -44,19 +46,26 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     }
 
     @Override
-    public BrooklynMemento loadMemento() {
+    public BrooklynMemento loadMemento(LookupContext lookupContext) {
         try {
-            Stopwatch stopwatch = new Stopwatch().start();
+            Stopwatch stopwatch = Stopwatch.createStarted();
             List<String> lines;
             synchronized (mutex) {
                 lines = Files.readLines(file, Charsets.UTF_8);
             }
             String xml = Joiner.on("\n").join(lines);
-            BrooklynMemento result = serializer.fromString(xml);
             
-            if (LOG.isDebugEnabled()) LOG.debug("Loaded memento; total={}ms", stopwatch.elapsed(TimeUnit.MILLISECONDS)); 
-
-            return result;
+            serializer.setLookupContext(lookupContext);
+            try {
+                BrooklynMemento result = serializer.fromString(xml);
+                
+                if (LOG.isDebugEnabled()) LOG.debug("Loaded memento; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+                return result;
+                
+            } finally {
+                serializer.unsetLookupContext();
+            }
+            
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
