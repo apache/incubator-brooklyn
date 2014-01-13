@@ -76,7 +76,7 @@ implements MachineProvisioningLocation<T>, Closeable {
             Location parent = machine.getParent();
             if (parent != null && !parent.equals(this))
                 throw new IllegalStateException("Machines must not have a parent location, but machine '"+machine.getDisplayName()+"' has its parent location set");
-            addChildLocation(machine);
+            addChild(machine);
         }
     }
     
@@ -123,7 +123,7 @@ implements MachineProvisioningLocation<T>, Closeable {
             Location existingParent = ((Location)machine).getParent();
             if (existingParent != null && !existingParent.equals(this))
                 throw new IllegalStateException("Machine "+machine+" must not have a parent location to be added to "+toString()+", but parent is already set to '"+existingParent+"'");
-            addChildLocation((Location)machine);
+            addChild((Location)machine);
             
             machines.add(machine);
         }
@@ -136,7 +136,7 @@ implements MachineProvisioningLocation<T>, Closeable {
             } else {
                 machines.remove(machine);
                 pendingRemoval.remove(machine);
-                removeChildLocation((Location)machine);
+                removeChild((Location)machine);
             }
         }
     }

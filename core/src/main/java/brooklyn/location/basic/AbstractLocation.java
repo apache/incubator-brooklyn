@@ -429,15 +429,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         return false;
     }
 
-    /**
-     * @deprecated since 0.6
-     * @see #addChild(Location)
-     */
-    @Deprecated
-    public void addChildLocation(Location child) {
-        addChild(child);
-    }
-
     protected <T extends Location> T addChild(LocationSpec<T> spec) {
         T child = managementContext.getLocationManager().createLocation(spec);
         addChild(child);
@@ -474,15 +465,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
 
         children.add(child);
         child.setParent(this);
-    }
-    
-    /**
-     * @deprecated since 0.6
-     * @see #removeChild(Location)
-     */
-    @Deprecated
-    protected boolean removeChildLocation(Location child) {
-        return removeChild(child);
     }
     
     protected boolean removeChild(Location child) {
