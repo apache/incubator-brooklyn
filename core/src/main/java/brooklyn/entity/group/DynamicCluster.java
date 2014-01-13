@@ -1,7 +1,5 @@
 package brooklyn.entity.group;
 
-import groovy.lang.Closure;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +26,6 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.location.Location;
-import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
@@ -138,11 +135,6 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
     
     public void setRemovalStrategy(Function<Collection<Entity>, Entity> val);
 
-    /**
-     * @deprecated since 0.6.0; use {@link #setRemovalStrategy(Function)}, along with {@link GroovyJavaMethods#functionFromClosure(Closure)}
-     */
-    public void setRemovalStrategy(Closure val);
-    
     void setZonePlacementStrategy(NodePlacementStrategy val);
     
     public void setZoneFailureDetector(ZoneFailureDetector val);
