@@ -12,7 +12,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.util.MutableList;
+import brooklyn.util.collections.MutableList;
 
 
 public class MockItemEntityImpl extends AbstractEntity implements MockItemEntity {

@@ -8,7 +8,7 @@ import java.util.Map;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
