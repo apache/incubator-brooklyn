@@ -255,15 +255,11 @@ implements MachineProvisioningLocation<T>, Closeable {
         String privateKeyFile;
         String privateKeyData;
         File localTempDir;
+        List machines = Lists.newArrayList();
 
         public Builder(LocationManager lm) {
             this.lm = lm;
         }
-        /** @deprecated since 0.6.0 use {@link #build(LocationManager)} */ @Deprecated
-        public Builder() {
-        }
-        
-        List machines = Lists.newArrayList();
         public Builder user(String user) {
             this.user = user;
             return this;

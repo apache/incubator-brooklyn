@@ -38,7 +38,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         
-    	origLoc = new FixedListMachineProvisioningLocation.Builder()
+    	origLoc = new FixedListMachineProvisioningLocation.Builder(origManagementContext.getLocationManager())
     			.addAddresses("localhost", "127.0.0.1")
     			.user("myuser")
     			.keyFile("/path/to/myPrivateKeyFile")

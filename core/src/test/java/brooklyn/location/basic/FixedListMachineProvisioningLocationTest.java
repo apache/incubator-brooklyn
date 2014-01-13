@@ -106,7 +106,7 @@ public class FixedListMachineProvisioningLocationTest {
     @Test
     public void theBuilderLegacy() throws NoMachinesAvailableException {
         provisioner2 =
-            new FixedListMachineProvisioningLocation.Builder().
+            new FixedListMachineProvisioningLocation.Builder(mgmt.getLocationManager()).
                 user("u1").
                 addAddress("192.168.0.1").
                 addAddress("u2@192.168.0.2").
