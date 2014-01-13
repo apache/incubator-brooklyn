@@ -82,24 +82,6 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     public static final ConfigKey<String> BROOKLYN_GLOBAL_PROPERTIES_CONTENTS = ConfigKeys.newStringConfigKey(
             "brooklynnode.brooklynproperties.global.contents", "Contents for the global brooklyn properties file (to upload to ~/.brooklyn/brooklyn.properties", null);
 
-    /**
-     * @deprecated since 0.6.0; use BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH
-     */
-    @SetFromFlag("brooklynPropertiesRemotePath")
-    public static final ConfigKey<String> BROOKLYN_PROPERTIES_REMOTE_PATH = BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH;
-    
-    /**
-     * @deprecated since 0.6.0; use BROOKLYN_GLOBAL_PROPERTIES_URI
-     */
-    @SetFromFlag("brooklynPropertiesUri")
-    public static final ConfigKey<String> BROOKLYN_PROPERTIES_URI = BROOKLYN_GLOBAL_PROPERTIES_URI;
-
-    /**
-     * @deprecated since 0.6.0; use BROOKLYN_GLOBAL_PROPERTIES_CONTENTS
-     */
-    @SetFromFlag("brooklynPropertiesContents")
-    public static final ConfigKey<String> BROOKLYN_PROPERTIES_CONTENTS = BROOKLYN_GLOBAL_PROPERTIES_CONTENTS;
-
     @SetFromFlag("brooklynLocalPropertiesRemotePath")
     public static final ConfigKey<String> BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH = ConfigKeys.newStringConfigKey(
             "brooklynnode.brooklynproperties.local.remotepath", "Remote path for the launch-specific brooklyn.properties file to be uploaded", "${driver.runDir}/brooklyn-local.properties");
