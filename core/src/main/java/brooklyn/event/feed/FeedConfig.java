@@ -56,11 +56,6 @@ public class FeedConfig<V, T, This extends FeedConfig<V,T,This>> {
         return onfailure;
     }
     
-    /** @deprecated since 0.6; use {@link #getOnException()}) */
-    public Function<? super Exception, T> getOnError() {
-        return getOnException();
-    }
-
     public Function<? super Exception, T> getOnException() {
         return onexception;
     }
@@ -100,11 +95,6 @@ public class FeedConfig<V, T, This extends FeedConfig<V,T,This>> {
 
     public This setOnResult(T val) {
         return onResult(Functions.constant(val));
-    }
-
-    /** @deprecated since 0.6; use {@link #onException(Function)} */
-    public This onError(Function<? super Exception,T> val) {
-        return onException(val);
     }
 
     /** an exception is when there is an error in the communication */

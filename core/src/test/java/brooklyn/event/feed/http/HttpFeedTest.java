@@ -225,7 +225,7 @@ public class HttpFeedTest {
                 .baseUri("http://thisdoesnotexistdefinitely")
                 .poll(new HttpPollConfig<String>(SENSOR_STRING)
                         .onSuccess(Functions.constant("success"))
-                        .onError(Functions.constant("error")))
+                        .onException(Functions.constant("error")))
                 .build();
         
         assertSensorEventually(SENSOR_STRING, "error", TIMEOUT_MS);
@@ -240,7 +240,7 @@ public class HttpFeedTest {
                 .baseUri("http://localhost:46069/path/should/not/exist")
                 .poll(new HttpPollConfig<String>(SENSOR_STRING)
                         .onSuccess(Functions.constant("success"))
-                        .onError(Functions.constant("error")))
+                        .onException(Functions.constant("error")))
                 .build();
         
         assertSensorEventually(SENSOR_STRING, "error", TIMEOUT_MS);

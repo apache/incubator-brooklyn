@@ -350,10 +350,6 @@ public class ZabbixFeed extends AbstractFeed {
                 }
             }
             @Override
-            public void onError(Exception error) {
-                log.warn("zabbix exception registering host", error);
-            }
-            @Override
             public boolean checkSuccess(HttpPollValue val) {
                 return (val.getResponseCode() == 200);
             }

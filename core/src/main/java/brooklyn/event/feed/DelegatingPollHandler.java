@@ -42,11 +42,6 @@ public class DelegatingPollHandler<V> implements PollHandler<V> {
     }
 
     @Override
-    public void onError(Exception error) {
-        onException(error);
-    }
-
-    @Override
     public void onException(Exception exception) {
         for (AttributePollHandler<? super V> delegate : delegates) {
             delegate.onException(exception);

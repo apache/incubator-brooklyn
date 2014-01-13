@@ -1,5 +1,17 @@
 package brooklyn.entity.chef;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
@@ -8,7 +20,6 @@ import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
 import brooklyn.event.feed.ssh.SshPollValue;
 import brooklyn.management.ExecutionContext;
-import brooklyn.util.collections.MutableList;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.time.Duration;
@@ -20,23 +31,10 @@ import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A sensor feed that retrieves attributes from Chef server and converts selected attributes to sensors.
@@ -315,11 +313,6 @@ public class ChefAttributeFeed extends AbstractFeed {
                     continue;
                 entity.setAttribute(attribute, null);
             }
-        }
-
-        @Override
-        public void onError(Exception exception) {
-            onException(exception);
         }
 
         @Override
