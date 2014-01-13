@@ -63,15 +63,6 @@ public class JcloudsByonLocationResolver implements LocationResolver {
         this.managementContext = checkNotNull(managementContext, "managementContext");
     }
     
-    public FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> newLocationFromString(String spec) {
-        return newLocationFromString(Maps.newLinkedHashMap(), spec);
-    }
-
-    @Override
-    public FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> newLocationFromString(Map properties, String spec) {
-        return newLocationFromString(spec, null, properties, new MutableMap());
-    }
-    
     @Override
     public FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);

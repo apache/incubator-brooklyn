@@ -43,11 +43,6 @@ public class NamedLocationResolver implements LocationResolver {
         this.managementContext = checkNotNull(managementContext, "managementContext");
     }
     
-    @SuppressWarnings("rawtypes")
-    @Override
-    public Location newLocationFromString(Map properties, String spec) {
-        throw new UnsupportedOperationException("Use RegistryLocationResolver.newLocationFromString (registry required as an argument)");
-    }
     @SuppressWarnings({ "rawtypes" })
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         String name = spec;

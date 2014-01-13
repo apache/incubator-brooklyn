@@ -29,12 +29,6 @@ public class DefinedLocationByIdResolver implements LocationResolver {
         this.managementContext = checkNotNull(managementContext, "managementContext");
     }
     
-    @SuppressWarnings("rawtypes")
-    @Override
-    public Location newLocationFromString(Map properties, String spec) {
-        throw new UnsupportedOperationException("This class must have the RegistryLocationResolver.newLocationFromString method invoked");
-    }
-    
     @SuppressWarnings({ "rawtypes" })
     @Override
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
