@@ -187,24 +187,6 @@ public class Reflections {
 		}
 	}
 
-	/**
-	 * Returns a constructor that accepts the given arguments, or null if no such constructor is
-	 * accessible.
-	 * <p>
-	 * This does not support varargs.
-	 * 
-	 * @deprecated since 0.6.0 use {@link #invokeConstructorWithArgs(Class, Object[])}
-	 */ @Deprecated
-    @SuppressWarnings("unchecked")
-    public static <T> Constructor<T> findCallabaleConstructor(Class<T> clazz, Object[] args) {
-        for (Constructor<?> constructor : clazz.getConstructors()) {
-            if (typesMatch(args, constructor.getParameterTypes())) {
-                return (Constructor<T>) constructor;
-            }
-        }
-        return null;
-    }
-
     /** Invokes a suitable constructor, supporting varargs and primitives */
     public static <T> Optional<T> invokeConstructorWithArgs(Class<T> clazz, Object[] argsArray) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
         return invokeConstructorWithArgs(clazz, argsArray, false);
@@ -462,19 +444,6 @@ public class Reflections {
 
 	public ClassLoader getClassLoader() {
 		return classLoader;
-	}
-	
-	/** @deprecated since 0.6.0; this is sloppy, and rarely does the right thing.
-	 * fortunately don't think it is used.
-	 * use methods in {@link StackTraceSimplifier} or {@link JavaClassNames} */
-	@Deprecated
-	public static StackTraceElement getCaller() {
-	    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-	    // 0 is Thread.getStackTrace()
-	    // 1 is Reflections.getCaller()
-	    // 2 is our caller in pure java -- or a groovy/interceptor in some cases
-	    // 3 is our caller in groovy sometimes
-	    return stackTrace[3];
 	}
 	
 	@SuppressWarnings("unchecked")

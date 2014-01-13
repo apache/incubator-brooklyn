@@ -64,12 +64,6 @@ public class ReflectionsTest {
         assertEquals(actual.size(), Sets.newLinkedHashSet(actual).size(), "actual="+actual);
     }
     
-    @SuppressWarnings("deprecation")
-    @Test(enabled=false)
-    public void testGetCaller() {
-        Assert.assertEquals(Reflections.getCaller().getClassName(), ReflectionsTest.class.getName());
-    }
-    
     public static class CI1 {
         public final List<Object> constructorArgs;
         
