@@ -58,7 +58,7 @@ public class OsTasks {
                     public OsDetails call() throws Exception {
                         // Read os-details script line by line
                         BufferedReader reader = new BufferedReader(Streams.reader(
-                                new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/entity/software/os-and-version.sh")));
+                                new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/entity/software/os-details.sh")));
                         List<String> script = CharStreams.readLines(reader);
                         reader.close();
 
