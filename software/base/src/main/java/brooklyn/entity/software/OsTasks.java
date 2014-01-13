@@ -56,19 +56,13 @@ public class OsTasks {
                 .body(new Callable<OsDetails>() {
                     @Override
                     public OsDetails call() throws Exception {
-                        // Survey of CentOS 6.5, Debian Jessie, Fedora 17, OSX and Ubuntu 12.04 suggests
-                        // uname -m is the most reliable flag for architecture
-                        String architecture = DynamicTasks.queue(SshEffectorTasks.ssh("uname -m")
-                                .machine(sshLocation)
-                                .requiringZeroAndReturningStdout()).get().trim();
-
                         // Read os-details script line by line
                         BufferedReader reader = new BufferedReader(Streams.reader(
                                 new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/entity/software/os-and-version.sh")));
                         List<String> script = CharStreams.readLines(reader);
                         reader.close();
 
-                        // Output expected to be <name>\n<version>
+                        // Output expected to be <name>\n<version>\n<architecture>
                         String[] nameAndVersion = DynamicTasks.queue(SshEffectorTasks.ssh(script)
                                 .machine(sshLocation)
                                 .requiringZeroAndReturningStdout())
@@ -77,6 +71,7 @@ public class OsTasks {
 
                         String name = nameAndVersion.length > 0 ? nameAndVersion[0] : "unknown";
                         String version = nameAndVersion.length > 1 ? nameAndVersion[1] : "unknown";
+                        String architecture = nameAndVersion.length > 2 ? nameAndVersion[2] : "unknown";
                         OsDetails details = new BasicOsDetails(name, architecture, version);
                         if (LOG.isDebugEnabled())
                             LOG.debug("OsDetails for {}: {}", sshLocation, details);

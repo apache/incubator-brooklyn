@@ -5,6 +5,10 @@
 # at http://linuxmafia.com/faq/Admin/release-files.html). We can support 
 # them as we need.
 
+# Survey of CentOS 6.5, Debian Jessie, Fedora 17, OSX and Ubuntu 12.04 suggests
+# uname -m is the most reliable flag for architecture
+ARCHITECTURE=$(uname -m)
+
 # Try the standard
 if [ -f /etc/os-release ]; then
     source /etc/os-release
@@ -27,3 +31,4 @@ fi
 
 echo $NAME
 echo $VERSION_ID
+echo $ARCHITECTURE
