@@ -27,9 +27,9 @@ import brooklyn.util.time.Duration;
 import com.google.common.base.Throwables;
 
 @Test
-public class ScriptHelperTest {
+public class NaiveScriptRunnerTest {
     
-    private static final Logger log = LoggerFactory.getLogger(ScriptHelperTest.class);
+    private static final Logger log = LoggerFactory.getLogger(NaiveScriptRunnerTest.class);
     
     List<String> commands = new ArrayList<String>();
     
