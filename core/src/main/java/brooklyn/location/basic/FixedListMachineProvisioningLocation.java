@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
@@ -99,7 +100,11 @@ implements MachineProvisioningLocation<T>, Closeable {
     }
     
     public FixedListMachineProvisioningLocation<T> newSubLocation(Map<?,?> newFlags) {
-        return LocationCreationUtils.newSubLocation(newFlags, this);
+        // TODO shouldn't have to copy config bag as it should be inherited (but currently it is not used inherited everywhere; just most places)
+        return getManagementContext().getLocationManager().createLocation(LocationSpec.create(getClass())
+                .configure(getRawLocalConfigBag().getAllConfig())
+                .configure(newFlags)
+                .parent(this));
     }
 
     @Override
