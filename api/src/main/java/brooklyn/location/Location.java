@@ -55,13 +55,6 @@ public interface Location extends Serializable, Identifiable, Rebindable {
 
     /**
      * @deprecated since 0.6
-     * @see #getDisplayName()
-     */
-    @Deprecated
-    String getName();
-
-    /**
-     * @deprecated since 0.6
      * @see #getParent()
      */
     @Deprecated

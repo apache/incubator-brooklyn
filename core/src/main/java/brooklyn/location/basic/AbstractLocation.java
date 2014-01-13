@@ -313,13 +313,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
     }
     
     @Override
-    @Deprecated
-    /** @since 0.6.0 (?) - use getDisplayName */
-    public String getName() {
-        return getDisplayName();
-    }
-    
-    @Override
     public Location getParent() {
         return parent.get();
     }
