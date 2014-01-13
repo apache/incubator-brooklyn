@@ -165,7 +165,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     private BasicPool<SshTool> buildVanillaPool() {
         return BasicPool.<SshTool>builder()
                 .name(getDisplayName()+"@"+address+
-                        (hasConfig(SSH_HOST) ? "("+getConfig(SSH_HOST)+":"+getConfig(SSH_PORT)+")" : "")+
+                        (hasConfig(SSH_HOST, true) ? "("+getConfig(SSH_HOST)+":"+getConfig(SSH_PORT)+")" : "")+
                         ":"+
                         System.identityHashCode(this))
                 .supplier(new Supplier<SshTool>() {

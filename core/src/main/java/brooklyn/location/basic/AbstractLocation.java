@@ -356,11 +356,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         if (getParent()!=null) return getParent().getConfig(key);
         return key.getDefaultValue();
     }
-    @Override
-    @Deprecated
-    public boolean hasConfig(ConfigKey<?> key) {
-        return hasConfig(key, false);
-    }
+
     @Override
     public boolean hasConfig(ConfigKey<?> key, boolean includeInherited) {
         boolean locally = getRawLocalConfigBag().containsKey(key);
@@ -370,11 +366,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         return false;
     }
     
-    @Override
-    @Deprecated
-    public Map<String,Object> getAllConfig() {
-        return getAllConfig(false);
-    }
     @Override
     public Map<String,Object> getAllConfig(boolean includeInherited) {
         Map<String,Object> result = null;

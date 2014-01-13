@@ -82,16 +82,6 @@ public interface Location extends Serializable, Identifiable, Rebindable {
     
     <T> T getConfig(HasConfigKey<T> key);
 
-    /** True iff the indication config key is set _at_ this location (not parents) 
-     * @deprecated since 0.6.0 use {@link #hasConfig(ConfigKey, boolean)} */
-    @Deprecated
-    boolean hasConfig(ConfigKey<?> key);
-
-    /** Returns all config set _at_ this location (not inherited)
-     * @deprecated since 0.6.0 use {@link #getAllConfig(boolean) */
-    @Deprecated
-    Map<String,Object> getAllConfig();
-
     /** True iff the indication config key is set, either inherited (second argument true) or locally-only (second argument false) */
     boolean hasConfig(ConfigKey<?> key, boolean includeInherited);
 
