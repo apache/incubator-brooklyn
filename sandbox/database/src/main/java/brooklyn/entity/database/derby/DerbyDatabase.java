@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.database.Database;
@@ -39,8 +40,8 @@ public class DerbyDatabase extends SoftwareProcessImpl implements Database, Uses
     private static final Logger log = LoggerFactory.getLogger(DerbyDatabase.class);
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "10.8.1.2");
+    public static final ConfigKey<String> SUGGESTED_VERSION =
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "10.8.1.2");
 
     public static final PortAttributeSensorAndConfigKey JDBC_PORT = new PortAttributeSensorAndConfigKey(
             "derby.jdbcPort", "Suggested JDBC port");

@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.Tasks;
@@ -104,17 +103,6 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.name = checkNotNull(name, "name");
         this.typeToken = checkNotNull(type, "type");
         this.type = typeToken.getRawType();
-        this.defaultValue = defaultValue;
-        this.reconfigurable = false;
-    }
-
-    /** @deprecated since 0.6.0; use {@link ConfigKeys#newConfigKeyWithDefault(ConfigKey, Object)} */
-    public BasicConfigKey(ConfigKey<T> key, T defaultValue) {
-        log.warn("deprecated use of BasicConfigKey(exendedKey) constructor, for "+key+" ("+defaultValue+")");
-        this.description = key.getDescription();
-        this.name = checkNotNull(key.getName(), "name");
-        this.typeToken = checkNotNull(key.getTypeToken(), "type");
-        this.type = checkNotNull(key.getType(), "type");
         this.defaultValue = defaultValue;
         this.reconfigurable = false;
     }
