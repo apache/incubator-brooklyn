@@ -15,7 +15,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.location.PortRange;
-import brooklyn.location.basic.PortRanges.BasicPortRange;
+import brooklyn.location.basic.PortRanges.LinearPortRange;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshException;
@@ -166,17 +166,17 @@ public class SshMachineLocationTest {
     @Test
     public void obtainPortInRangeGivesBackRequiredPortOnlyIfAvailable() {
         int port = 2345;
-        assertEquals(host.obtainPort(new BasicPortRange(port, port)), port);
-        assertEquals(host.obtainPort(new BasicPortRange(port, port)), -1);
+        assertEquals(host.obtainPort(new LinearPortRange(port, port)), port);
+        assertEquals(host.obtainPort(new LinearPortRange(port, port)), -1);
         host.releasePort(port);
-        assertEquals(host.obtainPort(new BasicPortRange(port, port)), port);
+        assertEquals(host.obtainPort(new LinearPortRange(port, port)), port);
     }
     
     @Test
     public void obtainPortInWideRange() {
         int lowerPort = 2345;
         int upperPort = 2350;
-        PortRange range = new BasicPortRange(lowerPort, upperPort);
+        PortRange range = new LinearPortRange(lowerPort, upperPort);
         for (int i = lowerPort; i <= upperPort; i++) {
             assertEquals(host.obtainPort(range), i);
         }
