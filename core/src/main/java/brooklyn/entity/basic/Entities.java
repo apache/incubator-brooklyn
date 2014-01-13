@@ -140,12 +140,6 @@ public class Entities {
         return invokeEffectorList(callingEntity, entitiesToCall, effector, Collections.<String,Object>emptyMap());
     }
 
-    /** @deprecated since 0.6.0 use invokeEffector */ @Deprecated
-    public static <T> Task<List<T>> invokeEffectorWithMap(EntityLocal callingEntity, Entity entityToCall,
-            final Effector<T> effector, final Map<String,?> parameters) {
-        return invokeEffectorList(callingEntity, ImmutableList.of(entityToCall), effector, parameters);
-    }
-    
     public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
         Task<T> t = Effectors.invocation(entityToCall, effector, parameters).asTask();
