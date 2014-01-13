@@ -56,7 +56,7 @@ public class WebClusterApp extends AbstractApplication {
                 .configure("memberSpec", jbossSpec));
 
 
-        web.getCluster().addEnricher(CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), sinusoidalLoad, averageLoad));
+        web.getCluster().addEnricher(CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), sinusoidalLoad, averageLoad, null, null));
         web.getCluster().addPolicy(AutoScalerPolicy.builder()
                 .metric(averageLoad)
                 .sizeRange(1, 3)
