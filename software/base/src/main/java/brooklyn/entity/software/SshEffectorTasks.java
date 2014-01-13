@@ -1,5 +1,6 @@
 package brooklyn.entity.software;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -182,6 +183,10 @@ public class SshEffectorTasks {
 
     public static SshEffectorTaskFactory<Integer> ssh(String ...commands) {
         return new SshEffectorTaskFactory<Integer>(commands);
+    }
+
+    public static SshEffectorTaskFactory<Integer> ssh(List<String> commands) {
+        return ssh(commands.toArray(new String[commands.size()]));
     }
 
     public static SshPutTaskFactory put(String remoteFile) {

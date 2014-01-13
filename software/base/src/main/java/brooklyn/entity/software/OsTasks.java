@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.io.CharStreams;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.OsDetails;
@@ -31,11 +32,7 @@ public class OsTasks {
     public static final Logger LOG = LoggerFactory.getLogger(OsTasks.class);
 
     /**
-     * Uses an entity's {@link SshMachineLocation} to gather details about the operating system.
-     * @param entity
-     * @return A {@link Task} returning an {@link OsDetails} instance that is guaranteed to have
-     *         non-null name, arch and version. If name and version can't be determined they will
-     *         be "unknown".
+     * Delegates to {@link #getOsDetails(SshMachineLocation)} using the given entity's location.
      * @throws IllegalStateException if given entity has no {@link SshMachineLocation}
      */
     public static Task<OsDetails> getOsDetails(final Entity entity) {
@@ -43,9 +40,19 @@ public class OsTasks {
         if (!location.isPresent()) {
             throw new IllegalStateException("Entity "+entity+" has no SSH location to gather OS details. Locations: "+entity.getLocations());
         }
-        final SshMachineLocation sshLocation = location.get();
+        return getOsDetails(location.get());
+    }
+
+    /**
+     * Gather {@link OsDetails operating system details} about the given SSH location.
+     * @param sshLocation Location in question.
+     * @return A {@link Task} returning an {@link OsDetails} instance that is guaranteed to have
+     *         non-null name, arch and version. If name and version can't be determined they will
+     *         be "unknown".
+     */
+    public static Task<OsDetails> getOsDetails(final SshMachineLocation sshLocation) {
         return Tasks.<OsDetails>builder()
-                .name("Get OsDetails for " + entity)
+                .name("Get OsDetails for " + sshLocation)
                 .body(new Callable<OsDetails>() {
                     @Override
                     public OsDetails call() throws Exception {
@@ -58,13 +65,11 @@ public class OsTasks {
                         // Read os-details script line by line
                         BufferedReader reader = new BufferedReader(Streams.reader(
                                 new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/entity/software/os-and-version.sh")));
-                        List<String> script = Lists.newArrayList();
-                        for (String line; (line = reader.readLine()) != null; ) {
-                            script.add(line);
-                        }
+                        List<String> script = CharStreams.readLines(reader);
+                        reader.close();
 
                         // Output expected to be <name>\n<version>
-                        String[] nameAndVersion = DynamicTasks.queue(SshEffectorTasks.ssh(script.toArray(new String[script.size()]))
+                        String[] nameAndVersion = DynamicTasks.queue(SshEffectorTasks.ssh(script)
                                 .machine(sshLocation)
                                 .requiringZeroAndReturningStdout())
                                 .get()
@@ -74,7 +79,7 @@ public class OsTasks {
                         String version = nameAndVersion.length > 1 ? nameAndVersion[1] : "unknown";
                         OsDetails details = new BasicOsDetails(name, architecture, version);
                         if (LOG.isDebugEnabled())
-                            LOG.debug("OsDetails for {}: {}", entity, details);
+                            LOG.debug("OsDetails for {}: {}", sshLocation, details);
                         return details;
                     }
                 })
