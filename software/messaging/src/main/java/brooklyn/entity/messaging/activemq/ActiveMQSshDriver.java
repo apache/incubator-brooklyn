@@ -52,7 +52,7 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-activemq-%s", getVersion()));
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv "+saveAs);
 

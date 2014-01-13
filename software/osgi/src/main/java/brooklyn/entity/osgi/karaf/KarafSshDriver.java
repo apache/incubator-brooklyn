@@ -51,7 +51,7 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-karaf-%s", getVersion()));
         
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .build();

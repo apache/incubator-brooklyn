@@ -55,7 +55,7 @@ public class Infinispan5SshDriver extends JavaSoftwareProcessSshDriver implement
         expandedInstallDir = getInstallDir(); // unpacks to current directory, rather than sub-directory
 
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.INSTALL_ZIP)
                 .add("unzip " + saveAs)
                 .build();

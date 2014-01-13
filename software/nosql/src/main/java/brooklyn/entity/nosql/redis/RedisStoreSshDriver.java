@@ -38,7 +38,7 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("redis-%s", getVersion()));
 
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .add(format("cd redis-%s", getVersion()))

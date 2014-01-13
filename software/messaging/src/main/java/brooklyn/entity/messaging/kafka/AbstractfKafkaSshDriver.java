@@ -73,7 +73,7 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("kafka-%s-src", getVersion()));
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv "+saveAs);
         commands.add("cd "+expandedInstallDir);

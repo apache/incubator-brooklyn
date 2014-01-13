@@ -39,7 +39,7 @@ public class DerbyDatabaseSshDriver extends JavaSoftwareProcessSshDriver impleme
         String saveAs = format("db-derby-%s-lib.tar.gz", getVersion());
 
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(BashCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs))
+                .add(BashCommands.commandToDownloadUrlAs(url, saveAs))
                 .add(BashCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .build();

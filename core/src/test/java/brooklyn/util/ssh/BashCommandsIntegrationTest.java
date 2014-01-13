@@ -109,7 +109,7 @@ public class BashCommandsIntegrationTest {
     }
     
     public void testDownloadUrl() throws Exception {
-        List<String> cmds = BashCommands.downloadUrlAs(
+        List<String> cmds = BashCommands.commandsToDownloadUrlsAs(
                 ImmutableList.of(sourceFileUrl1), 
                 destFile.getAbsolutePath());
         int exitcode = loc.execCommands("test", cmds);
@@ -120,92 +120,13 @@ public class BashCommandsIntegrationTest {
     
     @Test(groups="Integration")
     public void testDownloadFirstSuccessfulFile() throws Exception {
-        List<String> cmds = BashCommands.downloadUrlAs(
+        List<String> cmds = BashCommands.commandsToDownloadUrlsAs(
                 ImmutableList.of(sourceNonExistantFileUrl, sourceFileUrl1, sourceFileUrl2), 
                 destFile.getAbsolutePath());
         int exitcode = loc.execCommands("test", cmds);
         
         assertEquals(0, exitcode);
         assertEquals(Files.readLines(destFile, Charsets.UTF_8), ImmutableList.of("mysource1"));
-    }
-    
-    @Test(groups="Integration")
-    public void testDownloadEntityUrlUsesLocalRepo() throws Exception {
-        File destEntityFile = new File(destFile.getParentFile(), localRepoFilename);
-        try {
-            List<String> cmds = ImmutableList.<String>builder()
-                    .add("cd "+destEntityFile.getParentFile().getAbsolutePath())
-                    .addAll(BashCommands.downloadUrlAs(
-                            ImmutableMap.of(),
-                            sourceFileUrl1, 
-                            localRepoEntityVersionPath,
-                            localRepoFilename))
-                    .build();
-            int exitcode = loc.execCommands("test", cmds);
-            
-            assertEquals(0, exitcode);
-            assertEquals(Files.readLines(destEntityFile, Charsets.UTF_8), ImmutableList.of("mylocal1"));
-        } finally {
-            destEntityFile.delete();
-        }
-    }
-    
-    @Test(groups="Integration")
-    public void testDownloadEntityUrlSkipsLocalRepo() throws Exception {
-        File destEntityFile = new File(destFile.getParentFile(), localRepoFilename);
-        try {
-            List<String> cmds = ImmutableList.<String>builder()
-                    .add("cd "+destEntityFile.getParentFile().getAbsolutePath())
-                    .addAll(BashCommands.downloadUrlAs(
-                            ImmutableMap.of("skipLocalRepo", true),
-                            sourceFileUrl1, 
-                            localRepoEntityVersionPath,
-                            localRepoFilename))
-                    .build();
-            int exitcode = loc.execCommands("test", cmds);
-            
-            assertEquals(0, exitcode);
-            assertEquals(Files.readLines(destEntityFile, Charsets.UTF_8), ImmutableList.of("mysource1"));
-        } finally {
-            destEntityFile.delete();
-        }
-    }
-    
-    @Test(groups="Integration")
-    public void testDownloadEntityUrl() throws Exception {
-        File destEntityFile = new File(destFile.getParentFile(), localRepoFilename);
-        try {
-            List<String> cmds = ImmutableList.<String>builder()
-                    .add("cd "+destEntityFile.getParentFile().getAbsolutePath())
-                    .addAll(BashCommands.downloadUrlAs(
-                            ImmutableMap.of(),
-                            sourceFileUrl1, 
-                            "localnotthere",
-                            localRepoFilename))
-                    .build();
-            int exitcode = loc.execCommands("test", cmds);
-            
-            assertEquals(exitcode, 0);
-            assertEquals(Files.readLines(destEntityFile, Charsets.UTF_8), ImmutableList.of("mysource1"));
-        } finally {
-            destEntityFile.delete();
-        }
-    }
-    
-    @Test(groups="Integration")
-    public void testDownloadEntityUrlWhenNoneSupplied() throws Exception {
-        List<String> cmds = ImmutableList.<String>builder()
-                .add("cd "+destFile.getParentFile().getAbsolutePath())
-                .addAll(BashCommands.downloadUrlAs(
-                        ImmutableMap.of(),
-                        sourceNonExistantFileUrl,
-                        "localnotthere",
-                        destFile.getName()))
-                .build();
-        int exitcode = loc.execCommands("test", cmds);
-        
-        assertNotEquals(exitcode, 0, "Expected non-zero exit code, but got "+exitcode);
-        assertEquals(Files.readLines(destFile, Charsets.UTF_8), ImmutableList.of());
     }
     
     @Test(groups="Integration")
@@ -219,13 +140,25 @@ public class BashCommandsIntegrationTest {
         assertTrue(result.trim().equals("yoursource1"), "Wrong contents of stdout download: "+result);
     }
 
-    @SuppressWarnings("deprecation")
     @Test(groups="Integration")
-    public void testDeprecatedAlternatives() throws Exception {
+    public void testAlternativesWhereFirstSucceeds() throws Exception {
         ProcessTaskWrapper<Integer> t = SshTasks.newSshExecTaskFactory(loc)
-            .add(BashCommands.alternatives(
-                    Arrays.asList("asdfj_no_such_command_1",  "asdfj_no_such_command_2"), 
-                    BashCommands.fail("echo cannae-find-command", 88))).newTask();
+                .add(BashCommands.alternatives(Arrays.asList("echo first", "exit 88")))
+                .newTask();
+
+        Integer returnCode = exec.submit(t).get();
+        String stdout = t.getStdout();
+        String stderr = t.getStderr();
+        log.info("alternatives for good first command gave: "+returnCode+"; err="+stderr+"; out="+stdout);
+        assertTrue(stdout.contains("first"), "errcode="+returnCode+"; stdout="+stdout+"; stderr="+stderr);
+        assertEquals(returnCode, (Integer)0);
+    }
+
+    @Test(groups="Integration")
+    public void testAlternatives() throws Exception {
+        ProcessTaskWrapper<Integer> t = SshTasks.newSshExecTaskFactory(loc)
+                .add(BashCommands.alternatives(Arrays.asList("asdfj_no_such_command_1", "exit 88")))
+                .newTask();
 
         Integer returnCode = exec.submit(t).get();
         log.info("alternatives for bad commands gave: "+returnCode+"; err="+new String(t.getStderr())+"; out="+new String(t.getStdout()));
