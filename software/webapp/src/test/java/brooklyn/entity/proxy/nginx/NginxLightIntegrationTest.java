@@ -71,8 +71,8 @@ public class NginxLightIntegrationTest {
                             return input.getAttribute(Attributes.HOSTNAME)+":"+input.getAttribute(Attributes.HTTP_PORT);
                         }});
                 
-                assertEquals(nginx.getAttribute(NginxController.TARGETS).size(), 2);
-                assertEquals(ImmutableSet.copyOf(nginx.getAttribute(NginxController.TARGETS)), ImmutableSet.copyOf(expectedTargets));
+                assertEquals(nginx.getAttribute(NginxController.SERVER_POOL_TARGETS).size(), 2);
+                assertEquals(ImmutableSet.copyOf(nginx.getAttribute(NginxController.SERVER_POOL_TARGETS)), ImmutableSet.copyOf(expectedTargets));
             }});
     }
 }
