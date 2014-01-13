@@ -8,7 +8,6 @@ import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.LoadBalancer;
-import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Resizable;
@@ -36,45 +35,6 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(ControlledDynamicWebAppClusterImpl.class)
 public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resizable, ElasticJavaWebAppService {
 
-    /** @deprecated since v0.6.0; use {@link EntitySpec#create(Class)} as well */
-    @Deprecated
-    public static class Spec<T extends ControlledDynamicWebAppCluster, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
-
-        private static class ConcreteSpec extends Spec<ControlledDynamicWebAppCluster, ConcreteSpec> {
-            ConcreteSpec() {
-                super(ControlledDynamicWebAppCluster.class);
-            }
-        }
-        
-        public static Spec<ControlledDynamicWebAppCluster, ?> newInstance() {
-            return new ConcreteSpec();
-        }
-        
-        protected Spec(Class<T> type) {
-            super(type);
-        }
-        
-        public S initialSize(int val) {
-            configure(INITIAL_SIZE, 1);
-            return self();
-        }
-        
-        public S controller(LoadBalancer val) {
-            configure(CONTROLLER, val);
-            return self();
-        }
-        
-        public S memberSpec(EntitySpec<? extends WebAppService> val) {
-            configure(MEMBER_SPEC, val);
-            return self();
-        }
-        
-        public S factory(ConfigurableEntityFactory<? extends WebAppService> val) {
-            configure(FACTORY, val);
-            return self();
-        }
-    }
-    
     @SetFromFlag("initialSize")
     public static ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(Cluster.INITIAL_SIZE, 1);
 

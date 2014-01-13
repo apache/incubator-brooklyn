@@ -39,7 +39,7 @@ public class EntityProxyTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        entity = app.createAndManageChild(TestEntity.Spec.newInstance());
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         managementContext = app.getManagementContext();
     }
     
@@ -95,7 +95,7 @@ public class EntityProxyTest {
 
     @Test
     public void testCreateAndManageChild() {
-        TestEntity result = entity.createAndManageChild(TestEntity.Spec.newInstance());
+        TestEntity result = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
         assertIsProxy(result);
         assertIsProxy(Iterables.get(entity.getChildren(), 0));
         assertIsProxy(result.getParent());
@@ -104,35 +104,35 @@ public class EntityProxyTest {
 
     @Test
     public void testDisplayName() {
-        TestEntity result = entity.createAndManageChild(TestEntity.Spec.newInstance().displayName("Boo"));
+        TestEntity result = entity.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("Boo"));
         assertIsProxy(result);
         assertEquals(result.getDisplayName(), "Boo");
     }
 
     @Test
     public void testCreateRespectsFlags() {
-        TestEntity entity2 = app.createAndManageChild(TestEntity.Spec.newInstance().
+        TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class).
                 configure("confName", "boo"));
         assertEquals(entity2.getConfig(TestEntity.CONF_NAME), "boo");
     }
 
     @Test
     public void testCreateRespectsConfigKey() {
-        TestEntity entity2 = app.createAndManageChild(TestEntity.Spec.newInstance().
+        TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class).
                 configure(TestEntity.CONF_NAME, "foo"));
         assertEquals(entity2.getConfig(TestEntity.CONF_NAME), "foo");
     }
 
     @Test
     public void testCreateRespectsConfInMap() {
-        TestEntity entity2 = app.createAndManageChild(TestEntity.Spec.newInstance().
+        TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class).
                 configure(MutableMap.of(TestEntity.CONF_NAME, "bar")));
         assertEquals(entity2.getConfig(TestEntity.CONF_NAME), "bar");
     }
 
     @Test
     public void testCreateRespectsFlagInMap() {
-        TestEntity entity2 = app.createAndManageChild(TestEntity.Spec.newInstance().
+        TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class).
                 configure(MutableMap.of("confName", "baz")));
         assertEquals(entity2.getConfig(TestEntity.CONF_NAME), "baz");
     }

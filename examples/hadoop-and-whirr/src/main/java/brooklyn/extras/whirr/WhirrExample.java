@@ -9,7 +9,6 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.extras.whirr.core.WhirrCluster;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.util.CommandLineUtil;
@@ -39,7 +38,7 @@ public class WhirrExample extends AbstractApplication {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(WhirrExample.class))
+                .application(EntitySpec.create(StartableApplication.class, WhirrExample.class))
                 .webconsolePort(port)
                 .location(location)
                 .start();

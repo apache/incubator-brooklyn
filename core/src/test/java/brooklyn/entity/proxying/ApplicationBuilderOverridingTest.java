@@ -90,7 +90,7 @@ public class ApplicationBuilderOverridingTest {
         final AtomicReference<TestEntity> expectedChild = new AtomicReference<TestEntity>();
         app = new ApplicationBuilder() {
             @Override public void doBuild() {
-                expectedChild.set(addChild(TestEntity.Spec.newInstance()));
+                expectedChild.set(addChild(EntitySpec.create(TestEntity.class)));
             }
         }.manage();
         
@@ -103,7 +103,7 @@ public class ApplicationBuilderOverridingTest {
     public void testAppHierarchyIsManaged() {
         app = new ApplicationBuilder() {
             @Override public void doBuild() {
-                Entity entity = addChild(TestEntity.Spec.newInstance());
+                Entity entity = addChild(EntitySpec.create(TestEntity.class));
                 assertFalse(getManagementContext().getEntityManager().isManaged(entity));
             }
         }.manage();

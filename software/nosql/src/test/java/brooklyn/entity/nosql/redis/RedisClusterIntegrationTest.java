@@ -13,7 +13,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -45,7 +45,7 @@ public class RedisClusterIntegrationTest {
         final String key = "mykey";
         final String val = "1234567890";
         
-        cluster = app.createAndManageChild(EntitySpecs.spec(RedisCluster.class)
+        cluster = app.createAndManageChild(EntitySpec.create(RedisCluster.class)
                 .configure(DynamicCluster.INITIAL_SIZE, 3));
         app.start(ImmutableList.of(loc));
 

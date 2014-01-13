@@ -3,7 +3,6 @@ package brooklyn.cli;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
@@ -32,7 +31,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
@@ -40,9 +38,6 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.Strings;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.joran.JoranConfigurator;
-import ch.qos.logback.core.util.StatusPrinter;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -351,7 +346,7 @@ public class Main {
                 return (ApplicationBuilder) constructor.newInstance();
             } else if (StartableApplication.class.isAssignableFrom(clazz)) {
                 @SuppressWarnings("unchecked")
-                EntitySpec<StartableApplication> appSpec = EntitySpecs.appSpec((Class<? extends StartableApplication>)clazz);
+                EntitySpec<StartableApplication> appSpec = EntitySpec.create(StartableApplication.class, (Class<? extends StartableApplication>) clazz);
                 return new ApplicationBuilder(appSpec) {
                     @Override protected void doBuild() {
                     }};

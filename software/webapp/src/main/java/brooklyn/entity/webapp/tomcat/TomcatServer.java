@@ -5,7 +5,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.HasShortName;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
@@ -23,25 +22,6 @@ import brooklyn.util.time.Duration;
 @Catalog(name="Tomcat Server", description="Apache Tomcat is an open source software implementation of the Java Servlet and JavaServer Pages technologies", iconUrl="classpath:///tomcat-logo.png")
 @ImplementedBy(TomcatServerImpl.class)
 public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx, HasShortName {
-
-    /** @deprecated since v0.6.0 as does nothing beyond BasicEntitySpec */
-    @Deprecated
-    class Spec<T extends TomcatServer, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
-
-        private static class ConcreteSpec extends Spec<TomcatServer, ConcreteSpec> {
-            ConcreteSpec() {
-                super(TomcatServer.class);
-            }
-        }
-
-        public static Spec<TomcatServer, ?> newInstance() {
-            return new ConcreteSpec();
-        }
-
-        protected Spec(Class<T> type) {
-            super(type);
-        }
-    }
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "7.0.47");

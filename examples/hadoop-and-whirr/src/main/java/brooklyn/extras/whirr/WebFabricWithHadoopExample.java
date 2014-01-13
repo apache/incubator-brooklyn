@@ -27,7 +27,6 @@ import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -250,9 +249,8 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
         String location = CommandLineUtil.getCommandLineOption(args, "--location", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(StartableApplication.class)
-                        .displayName("Brooklyn Global Web Fabric with Hadoop Example")
-                        .impl(WebFabricWithHadoopExample.class))
+                .application(EntitySpec.create(StartableApplication.class, WebFabricWithHadoopExample.class)
+                        .displayName("Brooklyn Global Web Fabric with Hadoop Example"))
                 .webconsolePort(port)
                 .location(location)
                 .start();
