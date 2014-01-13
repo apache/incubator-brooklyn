@@ -172,7 +172,7 @@ public class LocalLocationManager implements LocationManager {
         if (!success) {
             return; // Don't manage children if action false/unnecessary for parent
         }
-        for (Location child : e.getChildLocations()) {
+        for (Location child : e.getChildren()) {
             recursively(child, action);
         }
     }
@@ -204,7 +204,7 @@ public class LocalLocationManager implements LocationManager {
      * Returns true if the location has been removed from management; if it was not previously managed (anything else throws exception) 
      */
     private synchronized boolean unmanageNonRecursive(AbstractLocation loc) {
-        loc.setParentLocation(null);
+        loc.setParent(null);
         Object old = locationsById.remove(loc.getId());
         locationTypes.remove(loc.getId());
         

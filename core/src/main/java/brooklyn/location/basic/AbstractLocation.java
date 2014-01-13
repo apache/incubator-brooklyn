@@ -346,24 +346,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
     }
 
     @Override
-    @Deprecated
-    public Location getParentLocation() {
-        return getParent();
-    }
-    
-    @Override
-    @Deprecated
-    public Collection<Location> getChildLocations() {
-        return getChildren();
-    }
-
-    @Override
-    @Deprecated
-    public void setParentLocation(Location parent) {
-        setParent(parent);
-    }
-
-    @Override
     public <T> T getConfig(HasConfigKey<T> key) {
         return getConfig(key.getConfigKey());
     }

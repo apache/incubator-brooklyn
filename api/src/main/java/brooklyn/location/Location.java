@@ -54,13 +54,6 @@ public interface Location extends Serializable, Identifiable, Rebindable {
     Collection<Location> getChildren();
 
     /**
-     * @deprecated since 0.6
-     * @see #getParent()
-     */
-    @Deprecated
-    Location getParentLocation();
-
-    /**
      * Set the 'parent' of this location. If this location was previously a child of a different location, it is removed from
      * the other location first. It is valid to pass in {@code null} to indicate that the location should be disconnected
      * from its parent.
@@ -71,21 +64,6 @@ public interface Location extends Serializable, Identifiable, Rebindable {
      * @since 0.6 (previously setParentLocation(Location))
      */
     void setParent(Location newParent);
-
-    /**
-     * @deprecated since 0.6
-     * @see #setParent(Location)
-     */
-    @Deprecated
-    void setParentLocation(Location newParent);
-
-
-    /**
-     * @deprecated since 0.6
-     * @see #getChildren()
-     */
-    @Deprecated
-    Collection<Location> getChildLocations();
 
     /**
      * @return meta-data about the location (usually a long line, or a small number of lines).
