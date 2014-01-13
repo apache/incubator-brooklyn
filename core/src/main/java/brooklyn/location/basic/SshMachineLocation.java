@@ -188,6 +188,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 .build();
     }
 
+    @Override
     public void configure(Map properties) {
         super.configure(properties);
 
@@ -200,11 +201,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         
         boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
         if (!deferConstructionChecks) {
-	        if (properties.containsKey("username")) {
-	            LOG.warn("Using deprecated ssh machine property 'username': use 'user' instead", new Throwable("source of deprecated ssh 'username' invocation"));
-	            user = ""+properties.get("username");
-	        }
-	        
 	        if (getDisplayName() == null) {
 	        	setDisplayName((truth(user) ? user+"@" : "") + address.getHostName());
 	        }
