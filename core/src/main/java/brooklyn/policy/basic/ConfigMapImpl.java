@@ -22,7 +22,6 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.DeferredSupplier;
 
-import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
@@ -56,12 +55,6 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
         this.adjunct = Preconditions.checkNotNull(adjunct, "AbstractEntityAdjunct must be specified");
     }
 
-    /** Expect this to be deleted when {@link PolicyConfigMap} is deleted */
-    @Beta
-    protected AbstractEntityAdjunct getAdjunct() {
-        return adjunct;
-    }
-    
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
         return getConfig(key, null);
