@@ -150,7 +150,7 @@ public class EntityProxyTest {
             app2 = appB.manage();
             assertEquals(Iterables.getOnlyElement(app2.getChildren()).getConfig(TestEntity.CONF_NAME), "faz");
         } finally {
-            if (app2 != null) Entities.destroyAll(app2);
+            if (app2 != null) Entities.destroyAll(app2.getManagementContext());
         }
     }
 

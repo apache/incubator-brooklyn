@@ -541,23 +541,6 @@ public class Entities {
         }
     }
 
-    /**
-     * stops, destroys, and unmanages the given application -- and terminates the mangaement context;
-     * does as many as are valid given the type and state
-     * @deprecated since 0.6.0 use destroy(Application) if you DONT want to destroy the mgmt context,
-     * or destroy(app.getManagementContext()) if you want to destory everything in the app's mgmt context
-     */
-    @Deprecated
-    public static void destroyAll(Application app) {
-        if (isManaged(app)) {
-            ManagementContext managementContext = app.getManagementContext();
-            if (app instanceof Startable) Entities.invokeEffector((EntityLocal)app, app, Startable.STOP).getUnchecked();
-            if (app instanceof AbstractEntity) ((AbstractEntity)app).destroy();
-            unmanage(app);
-            if (managementContext instanceof ManagementContextInternal) ((ManagementContextInternal)managementContext).terminate();
-        }
-    }
-
     public static boolean isManaged(Entity e) {
         return ((EntityInternal)e).getManagementSupport().isDeployed() && ((EntityInternal)e).getManagementContext().isRunning();
     }
