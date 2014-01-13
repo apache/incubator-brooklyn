@@ -30,10 +30,6 @@ public interface WebAppServiceConstants {
     public static final BasicAttributeSensorAndConfigKey<HttpsSslConfig> HTTPS_SSL_CONFIG = new BasicAttributeSensorAndConfigKey<HttpsSslConfig>(
             HttpsSslConfig.class, "webapp.https.ssl", "SSL Configuration for HTTPS", null);
     
-    /** @deprecated since 0.6.0, callers configure with
-     * easily configured with {@link WebAppServiceMethods#connectWebAppServerPolicies(brooklyn.entity.basic.EntityLocal, brooklyn.util.time.Duration)} */
-    public static final Integer REQUESTS_PER_SECOND_WINDOW_PERIOD = 10 * 1000;
-
     public static final AttributeSensor<Integer> REQUEST_COUNT =
             Sensors.newIntegerSensor("webapp.reqs.total", "Request count");
     public static final brooklyn.event.basic.BasicAttributeSensor<Integer> ERROR_COUNT =
