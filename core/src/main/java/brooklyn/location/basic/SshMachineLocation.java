@@ -96,10 +96,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @SetFromFlag
     String user;
 
-    @SetFromFlag
-    /** @deprecated since 0.6.0 not used */ @Deprecated
-    String privateKeyData;
-
     @SetFromFlag(nullable = false)
     InetAddress address;
 
