@@ -84,6 +84,8 @@ public class MementosGenerators {
             ConfigKey<?> key = checkNotNull(entry.getKey(), localConfig);
             Object value = entry.getValue();
             
+            // TODO Swapping an attributeWhenReady task for the actual value, if completed.
+            // Long-term, want to just handle task-persistence properly.
             if (value instanceof Task) {
                 if (((Task)value).isDone()) {
                     if (((Task)value).isError()) {
@@ -92,6 +94,8 @@ public class MementosGenerators {
                     } else {
                         value = ((Task)value).getUnchecked();
                     }
+                } else {
+                    value = null;
                 }
             }
 
@@ -113,7 +117,7 @@ public class MementosGenerators {
             builder.children.add(child.getId()); 
         }
         
-        // FIXME Not including policies, because lots of places regiser anonymous inner class policies
+        // FIXME Not including policies, because lots of places register anonymous inner class policies
         // (e.g. AbstractController registering a AbstractMembershipTrackingPolicy)
         // Also, the entity constructor often re-creates the policy
         // Also see RebindManagerImpl.CheckpointingChangeListener.onChanged(Entity)

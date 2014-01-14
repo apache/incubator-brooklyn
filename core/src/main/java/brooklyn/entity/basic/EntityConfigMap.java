@@ -16,6 +16,7 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigMap;
 import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
+import brooklyn.management.Task;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
@@ -72,13 +73,29 @@ public class EntityConfigMap implements ConfigMap {
         ConfigKey<T> ownKey = entity!=null ? (ConfigKey<T>)elvis(entity.getEntityType().getConfigKey(key.getName()), key) : key;
         
         ExecutionContext exec = entity.getExecutionContext();
-        
+
+        // TODO We're notifying of config-changed because currently persistence needs to know when the
+        // attributeWhenReady is complete (so it can persist the result).
+        // Long term, we'll just persist tasks properly so the call to onConfigChanged will go!
+
         // Don't use groovy truth: if the set value is e.g. 0, then would ignore set value and return default!
         if (ownKey instanceof ConfigKeySelfExtracting) {
+            Object rawval = ownConfig.get(key);
+            T result = null;
+            boolean complete = false;
             if (((ConfigKeySelfExtracting<T>)ownKey).isSet(ownConfig)) {
-                return ((ConfigKeySelfExtracting<T>)ownKey).extractValue(ownConfig, exec);
+                result = ((ConfigKeySelfExtracting<T>)ownKey).extractValue(ownConfig, exec);
+                complete = true;
             } else if (((ConfigKeySelfExtracting<T>)ownKey).isSet(inheritedConfig)) {
-                return ((ConfigKeySelfExtracting<T>)ownKey).extractValue(inheritedConfig, exec);
+               result = ((ConfigKeySelfExtracting<T>)ownKey).extractValue(inheritedConfig, exec);
+               complete = true;
+            }
+
+            if (rawval instanceof Task) {
+                entity.getManagementSupport().getEntityChangeListener().onConfigChanged(key);
+            }
+            if (complete) {
+                return result;
             }
         } else {
             LOG.warn("Config key {} of {} is not a ConfigKeySelfExtracting; cannot retrieve value; returning default", ownKey, this);

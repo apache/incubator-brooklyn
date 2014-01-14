@@ -156,6 +156,18 @@ public class RebindEntityTest {
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myval");
     }
     
+    @Test(enabled=false) // not yet supported
+    public void testRestoresEntityDependentConfigUncompleted() throws Exception {
+        MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class)
+                .configure("myconfig", DependentConfiguration.attributeWhenReady(origApp, TestApplication.MY_ATTRIBUTE)));
+        
+        newApp = rebind();
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
+        newApp.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
+        
+        assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myval");
+    }
+    
     @Test
     public void testRestoresEntitySensors() throws Exception {
         AttributeSensor<String> myCustomAttribute = Sensors.newStringSensor("my.custom.attribute");

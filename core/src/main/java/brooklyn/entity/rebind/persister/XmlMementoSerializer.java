@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.xstream.XmlSerializer;
@@ -26,6 +28,7 @@ import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.SingleValueConverter;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.core.util.HierarchicalStreams;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.mapper.Mapper;
@@ -40,7 +43,6 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
     private static final Logger LOG = LoggerFactory.getLogger(XmlMementoSerializer.class);
 
     public class CustomMapper extends MapperWrapper {
-
         private final Class<?> clazz;
         private final String alias;
 
@@ -99,6 +101,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
 
         xstream.registerConverter(new LocationConverter(managementContext));
         xstream.registerConverter(new EntityConverter(managementContext));
+        xstream.registerConverter(new TaskConverter(xstream.getMapper()));
         // TODO policies/enrichers serialization/deserialization?!
     }
     
@@ -207,6 +210,46 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
     }
 
+    public class TaskConverter implements Converter {
+        private final Mapper mapper;
+        
+        TaskConverter(Mapper mapper) {
+            this.mapper = mapper;
+        }
+        @Override
+        public boolean canConvert(Class type) {
+            return Task.class.isAssignableFrom(type);
+        }
+        @Override
+        public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
+            if (source == null) return;
+            if (((Task)source).isDone() && !((Task)source).isError()) {
+                try {
+                    context.convertAnother(((Task)source).get());
+                } catch (InterruptedException e) {
+                    throw Exceptions.propagate(e);
+                } catch (ExecutionException e) {
+                    LOG.warn("Unexpected exception getting done (and non-error) task result for "+source+"; continuing", e);
+                }
+            } else {
+                // TODO How to log sensibly, without it logging this every second?!
+                return;
+            }
+        }
+        @Override
+        public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
+            if (reader.hasMoreChildren()) {
+                Class type = HierarchicalStreams.readClassType(reader, mapper);
+                reader.moveDown();
+                Object result = context.convertAnother(null, type);
+                reader.moveUp();
+                return result;
+            } else {
+                return null;
+            }
+        }
+    }
+
     @Override
     public void setLookupContext(LookupContext lookupContext) {
         this.lookupContext = checkNotNull(lookupContext, "lookupContext");
@@ -216,150 +259,4 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
     public void unsetLookupContext() {
         this.lookupContext = null;
     }
-    
-//    public static abstract class FooIdentifiableConverter<T extends Identifiable> implements SingleValueConverter {
-//        protected final ManagementContext managementContext;
-//        private final Class<T> clazz;
-//        
-//        IdentifiableConverter(ManagementContext managementContext, Class<T> clazz) {
-//            this.managementContext = managementContext;
-//            this.clazz = clazz;
-//        }
-//        @Override
-//        public boolean canConvert(Class type) {
-//            return clazz.isAssignableFrom(type);
-//        }
-//
-//        @Override
-//        public String toString(Object obj) {
-//            return obj == null ? null : ((Identifiable)obj).getId();
-//        }
-//        @Override
-//        public Object fromString(String str) {
-//            T result = lookup(str);
-//            if (result == null) {
-//                LOG.warn("Cannot unmarshall from persisted xml {} {}; not found in management context!", clazz.getSimpleName(), str);
-//            }
-//            return result;
-//        }
-//        
-//        protected abstract T lookup(String id);
-//    }
-//
-//    public static class LocationConverter extends IdentifiableConverter<Location> {
-//        LocationConverter(ManagementContext managementContext) {
-//            super(managementContext, Location.class);
-//        }
-//        @Override
-//        protected Location lookup(String id) {
-//            return managementContext.getLocationManager().getLocation(id);
-//        }
-//    }
-//    
-//    public static class EntityConverter extends IdentifiableConverter<Entity> {
-//        EntityConverter(ManagementContext managementContext) {
-//            super(managementContext, Entity.class);
-//        }
-//        @Override
-//        protected Entity lookup(String id) {
-//            return managementContext.getEntityManager().getEntity(id);
-//        }
-//    }
-//
-//    public class EntityConverter2 implements Converter {
-//        private final ManagementContext managementContext;
-//        private final Mapper mapper;
-//
-//        public EntityConverter2(ManagementContext managementContext, Mapper mapper) {
-//            this.managementContext = checkNotNull(managementContext, "managementContext");
-//            this.mapper = checkNotNull(mapper, "mapper");
-//        }
-//
-//        @Override
-//        public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {
-//            return Entity.class.isAssignableFrom(type) || EntityPointer.class.isAssignableFrom(type);
-//        }
-//
-//        public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
-//            Entity entity = (Entity) source;
-//            
-//            String name = mapper.serializedClass(entity.getClass());
-//            mapper.
-//            ExtendedHierarchicalStreamWriterHelper.startNode(writer, name, item.getClass());
-//            context.convertAnother(item);
-//            writer.endNode();
-//            
-//            for (Iterator iterator = collection.iterator(); iterator.hasNext();) {
-//                Object item = iterator.next();
-//                writeItem(item, context, writer);
-//            }
-//        }
-//
-//        public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
-//            Object item = readItem(reader, context, collection);
-//        }
-//
-//        protected void populateCollection(HierarchicalStreamReader reader, UnmarshallingContext context, Collection collection, Collection target) {
-//            while (reader.hasMoreChildren()) {
-//                reader.moveDown();
-//                addCurrentElementToCollection(reader, context, collection, target);
-//                reader.moveUp();
-//            }
-//        }
-//
-//        protected void addCurrentElementToCollection(HierarchicalStreamReader reader, UnmarshallingContext context,
-//            Collection collection, Collection target) {
-//            Object item = readItem(reader, context, collection);
-//            target.add(item);
-//        }
-//
-//        // marshalling is the same
-//        // so is unmarshalling the entries
-//
-//        // only difference is creating the overarching collection, which we do after the fact
-//        // (optimizing format on disk as opposed to in-memory)
-//        public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
-//            Collection collection = new ArrayList();
-//            populateCollection(reader, context, collection);
-//            return ImmutableList.copyOf(collection);
-//        }
-//
-//        protected void writeItem(Object item, MarshallingContext context, HierarchicalStreamWriter writer) {
-//            // PUBLISHED API METHOD! If changing signature, ensure backwards compatibility.
-//            if (item == null) {
-//                // todo: this is duplicated in TreeMarshaller.start()
-//                String name = mapper().serializedClass(null);
-//                ExtendedHierarchicalStreamWriterHelper.startNode(writer, name, Mapper.Null.class);
-//                writer.endNode();
-//            } else {
-//                String name = mapper().serializedClass(item.getClass());
-//                ExtendedHierarchicalStreamWriterHelper.startNode(writer, name, item.getClass());
-//                context.convertAnother(item);
-//                writer.endNode();
-//            }
-//        }
-//
-//        protected Object readItem(HierarchicalStreamReader reader, UnmarshallingContext context, Object current) {
-//            Class type = HierarchicalStreams.readClassType(reader, mapper());
-//            return context.convertAnother(current, type);
-//        }
-//
-//        protected Object createCollection(Class type) {
-//            Class defaultType = mapper().defaultImplementationOf(type);
-//            try {
-//                return defaultType.newInstance();
-//            } catch (InstantiationException e) {
-//                throw new ConversionException("Cannot instantiate " + defaultType.getName(), e);
-//            } catch (IllegalAccessException e) {
-//                throw new ConversionException("Cannot instantiate " + defaultType.getName(), e);
-//            }
-//        }
-//        
-//        protected void addCurrentElementToCollection(HierarchicalStreamReader reader, UnmarshallingContext context,
-//            Collection collection, Collection target) {
-//            Object item = readItem(reader, context, collection);
-//            target.add(item);
-//        }
-//    }
-//
 }
