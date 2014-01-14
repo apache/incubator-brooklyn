@@ -31,6 +31,7 @@ import brooklyn.entity.messaging.activemq.ActiveMQBroker;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
@@ -52,8 +53,8 @@ public class KafkaIntegrationTest {
     @BeforeMethod(alwaysRun = true)
     public void setup() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        testLocation = new LocalhostMachineProvisioningLocation();
-//        app.getManagementContext().getLocationManager().manage(testLocation);
+        LocationSpec<LocalhostMachineProvisioningLocation> locationSpec = LocationSpec.create(LocalhostMachineProvisioningLocation.class);
+        testLocation = app.getManagementContext().getLocationManager().createLocation(locationSpec);
     }
 
     @AfterMethod(alwaysRun = true)

@@ -33,6 +33,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -73,7 +74,7 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("kafka-%s-src", getVersion()));
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv "+saveAs);
         commands.add("cd "+expandedInstallDir);
@@ -138,6 +139,7 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
     public Map<String, String> getShellEnvironment() {
         Map<String, String> orig = super.getShellEnvironment();
         String kafkaJmxOpts = orig.remove("JAVA_OPTS");
+        if (Strings.isBlank(kafkaJmxOpts)) kafkaJmxOpts = " "; // FIXME - this is required to prevent jmxremote being setup in bin/kafka-run-class.sh
         return MutableMap.<String, String>builder()
                 .putAll(orig)
                 .putIfNotNull("KAFKA_JMX_OPTS", kafkaJmxOpts)

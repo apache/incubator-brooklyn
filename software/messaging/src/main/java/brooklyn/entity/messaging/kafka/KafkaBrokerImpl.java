@@ -40,6 +40,7 @@ import com.google.common.base.Objects.ToStringHelper;
  */
 public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroker, KafkaBroker {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(KafkaBrokerImpl.class);
     private static final ObjectName SOCKET_SERVER_STATS_MBEAN = JmxHelper.createObjectName("kafka:type=kafka.SocketServerStats");
 
@@ -102,35 +103,35 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
                 .pollAttribute(new JmxAttributePollConfig<Long>(FETCH_REQUEST_COUNT)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("NumFetchRequests")
-                        .onError(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(TOTAL_FETCH_TIME)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalFetchRequestMs")
-                        .onError(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Double>(MAX_FETCH_TIME)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("MaxFetchRequestMs")
-                        .onError(Functions.constant(-1.0d)))
+                        .onException(Functions.constant(-1.0d)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(PRODUCE_REQUEST_COUNT)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("NumProduceRequests")
-                        .onError(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(TOTAL_PRODUCE_TIME)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalProduceRequestMs")
-                        .onError(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Double>(MAX_PRODUCE_TIME)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("MaxProduceRequestMs")
-                        .onError(Functions.constant(-1.0d)))
+                        .onException(Functions.constant(-1.0d)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(BYTES_RECEIVED)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalBytesRead")
-                        .onError(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(BYTES_SENT)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalBytesWritten")
-                        .onError(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l)))
                 .build();
         }
 
