@@ -50,11 +50,6 @@ public class Time {
         return new SimpleDateFormat(DATE_FORMAT_STAMP).format(new Date(date));
     }
 
-	/** @deprecated since 0.6.0 use {@link #makeTimeStringRounded(long, unit)} */
-	@Deprecated
-    public static String makeTimeString(long t, TimeUnit unit) {
-        return makeTimeStringRounded(t, unit);
-    }
     /** @see #makeTimeString(long, boolean) */
     public static String makeTimeStringExact(long t, TimeUnit unit) {
         long nanos = unit.toNanos(t);
@@ -67,11 +62,6 @@ public class Time {
     }
     public static String makeTimeStringRounded(Stopwatch timer) {
         return makeTimeStringRounded(timer.elapsed(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
-    }
-    /** @deprecated since 0.6.0 use {@link #makeTimeStringRounded(long)} */
-    @Deprecated
-    public static String makeTimeString(long t) {
-        return makeTimeStringRounded(t);
     }
     /** @see #makeTimeString(long, boolean) */
     public static String makeTimeStringExact(long t) {
@@ -96,11 +86,6 @@ public class Time {
     /** given an elapsed time, makes it readable, eg 44d 6h, or 8s 923ms, optionally rounding */
 	public static String makeTimeString(long t, boolean round) {
 	    return makeTimeStringNano(t*1000000L, round);
-	}
-	/** @deprecated since 0.6.0 use makeTimeStringNanoRounded */
-	@Deprecated
-	public static String makeTimeStringNano(long tn) {
-	    return makeTimeStringNanoRounded(tn);
 	}
     /** @see #makeTimeString(long, boolean) */
 	public static String makeTimeStringNanoExact(long tn) {
@@ -208,29 +193,6 @@ public class Time {
 			fpr = 0;
 		}
 		return intPart + "." + Strings.makePaddedString(""+fpr, decimalPrecision, "0", "");
-	}
-
-	/** @deprecated since 0.6.0 see other makeTimeString methods, they are more clearly defined than this */
-	// looks like this does a complicated '23.002000 ms' syntax?
-	@Deprecated
-	public static String makeTimeStringNanoLong(long tn) {
-		long tnm = tn % 1000000;
-		long t = tn/1000000;
-		String result = "";                          //@maydo, doesn't do rounding
-		if (t>=1000) {
-			long d = (t/1000/60/60/24);
-			long h = ( (t % (1000*60*60*24))/1000/60/60 );
-			long m = ( (t % (1000*60*60))/1000/60 );
-			long s = ( (t % (1000*60))/1000 );
-			if (d>0) result += d+"d ";
-			if (h>0) result += h+"h ";
-			if (m>0) result += m+"m ";
-			if (s>0) result += s+"s ";
-		}
-		result += (t%1000)+"."+Strings.makePaddedString(""+(tnm),6,"0","");
-		result += "ms ";
-		if (result.endsWith(" ")) result=result.substring(0, result.length()-1);
-		return result;
 	}
 
 	/** sleep which propagates Interrupted as unchecked */
