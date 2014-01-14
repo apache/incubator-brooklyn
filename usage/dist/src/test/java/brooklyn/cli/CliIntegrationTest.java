@@ -94,13 +94,14 @@ public class CliIntegrationTest extends BaseCliIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testLaunchCliAppLaunchError() throws Throwable {
-        final Process brooklyn = startBrooklyn("launch", "--app", "org.eample.DoesNotExist", "--location", "nowhere");
+        final String app = "org.eample.DoesNotExist";
+        final Process brooklyn = startBrooklyn("launch", "--app", app, "--location", "nowhere");
 
         BrooklynCliTest test = new BrooklynCliTest(brooklyn) {
             @Override
             public void checkConsole() {
                 assertConsoleOutput("ERROR Execution error: brooklyn.util.ResourceUtils.getResourceFromUrl");
-                assertConsoleError("Execution error: Error getting resource for LaunchCommand");
+                assertConsoleError("Execution error: Error getting resource '"+app+"' for LaunchCommand");
             }
         };
 

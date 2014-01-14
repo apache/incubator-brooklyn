@@ -36,6 +36,7 @@ import com.google.common.base.Objects.ToStringHelper;
  */
 public abstract class AbstractZooKeeperImpl extends SoftwareProcessImpl implements ZooKeeperNode {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(AbstractZooKeeperImpl.class);
     private static final ObjectName ZOOKEEPER_MBEAN = JmxHelper.createObjectName("org.apache.ZooKeeperService:name0=StandaloneServer_port-1");
 

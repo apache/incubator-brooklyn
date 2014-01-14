@@ -66,7 +66,7 @@ public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements Kaf
                 // seems odd to pass RMI port here, as it gets assigned to com.sun.mgmt.jmx.port in kafka-run-class.sh
                 // but RMI server/registry port works, whereas JMX port does not
                 // TODO tie in with the brooklyn UsesJmx configuration ? 
-                .put("JMX_PORT", String.valueOf(entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT)))
+                .put("JMX_PORT", String.valueOf(entity.getAttribute(UsesJmx.JMX_PORT)))
                 .build();
     }
 

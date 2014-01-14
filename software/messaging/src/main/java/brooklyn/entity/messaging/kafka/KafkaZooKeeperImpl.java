@@ -25,6 +25,7 @@ import brooklyn.entity.zookeeper.AbstractZooKeeperImpl;
  */
 public class KafkaZooKeeperImpl extends AbstractZooKeeperImpl implements KafkaZooKeeper {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(KafkaZooKeeperImpl.class);
 
     public KafkaZooKeeperImpl() {

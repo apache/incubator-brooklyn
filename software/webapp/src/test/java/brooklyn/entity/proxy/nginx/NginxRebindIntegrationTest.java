@@ -145,7 +145,7 @@ public class NginxRebindIntegrationTest {
     }
     
     /**
-     * Test can rebind to the simplest possible nginx configuration (i.e. no server pool).
+     * Test can rebind with an active server pool.
      */
     @Test(groups = "Integration")
     public void testRebindsWithoutLosingServerPool() throws Exception {
@@ -204,7 +204,8 @@ public class NginxRebindIntegrationTest {
     
     
     /**
-     * Test can rebind to the simplest possible nginx configuration (i.e. no server pool).
+     * Test can rebind to the with server pool and URL remappings.
+     * NOTE: This requires a redirection from localhost1 to 127.0.0.1 in your /etc/hosts file
      */
     @Test(groups = "Integration")
     public void testRebindsWithoutLosingUrlMappings() throws Exception {

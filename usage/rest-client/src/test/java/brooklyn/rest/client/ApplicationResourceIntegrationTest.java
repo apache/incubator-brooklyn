@@ -21,8 +21,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.Application;
-import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
@@ -43,7 +43,9 @@ public class ApplicationResourceIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceIntegrationTest.class);
 
-    private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app").
+    private final String redisSpec = "{\"name\": \"redis-app\", \"type\": \"brooklyn.entity.nosql.redis.RedisStore\", \"locations\": [ \"localhost\"]}";
+    
+    private final ApplicationSpec legacyRedisSpec = ApplicationSpec.builder().name("redis-legacy-app").
             entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore"))).
             locations(ImmutableSet.of("localhost")).
             build();
@@ -80,7 +82,7 @@ public class ApplicationResourceIntegrationTest {
     public void tearDown() throws Exception {
         for (Application app : getManagementContext().getApplications()) {
             try {
-                ((AbstractApplication) app).stop();
+                ((StartableApplication) app).stop();
             } catch (Exception e) {
                 log.warn("Error stopping app " + app + " during test teardown: " + e);
             }
@@ -89,15 +91,28 @@ public class ApplicationResourceIntegrationTest {
 
     @Test(groups = "Integration")
     public void testDeployRedisApplication() throws Exception {
-
-        Response response = api.getApplicationApi().create(redisSpec);
-
+        Response response = api.getApplicationApi().createPoly(redisSpec.getBytes());
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 1);
-
-        while (!api.getSensorApi().get("redis-app", "redis-ent", "service.state").equals(Lifecycle.RUNNING.toString())) {
+        String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
+        while (!api.getSensorApi().get("redis-app", entityId, "service.state").equals(Lifecycle.RUNNING.toString())) {
             Thread.sleep(100);
         }
+    }
+    
+    @Test(groups = "Integration", dependsOnMethods = "testDeployRedisApplication")
+    public void testDeployLegacyRedisApplication() throws Exception {
+        @SuppressWarnings("deprecation")
+        Response response = api.getApplicationApi().create(legacyRedisSpec);
+        assertEquals(response.getStatus(), 201);
+        assertEquals(getManagementContext().getApplications().size(), 2);
+        while (!api.getSensorApi().get("redis-legacy-app", "redis-ent", "service.state").equals(Lifecycle.RUNNING.toString())) {
+            Thread.sleep(100);
+        }
+        // Tear the app down so it doesn't interfere with other tests 
+        Response deleteResponse = api.getApplicationApi().delete("redis-legacy-app");
+        assertEquals(deleteResponse.getStatus(), 202);
+        assertEquals(getManagementContext().getApplications().size(), 1);
     }
 
     @Test(groups = "Integration", dependsOnMethods = "testDeployRedisApplication")
@@ -107,8 +122,9 @@ public class ApplicationResourceIntegrationTest {
     }
 
     @Test(groups = "Integration", dependsOnMethods = "testDeployRedisApplication")
-    public void testListSensorsRedis() {
-        Collection<SensorSummary> sensors = api.getSensorApi().list("redis-app", "redis-ent");
+    public void testListSensorsRedis() throws Exception {
+        String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
+        Collection<SensorSummary> sensors = api.getSensorApi().list("redis-app", entityId);
         assertTrue(sensors.size() > 0);
         SensorSummary uptime = Iterables.find(sensors, new Predicate<SensorSummary>() {
             @Override
@@ -121,11 +137,12 @@ public class ApplicationResourceIntegrationTest {
 
     @Test(groups = "Integration", dependsOnMethods = {"testListSensorsRedis", "testListEntities"})
     public void testTriggerRedisStopEffector() throws Exception {
-        Response response = api.getEffectorApi().invoke("redis-app", "redis-ent", "stop", "5000", ImmutableMap.<String, String>of());
+        String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
+        Response response = api.getEffectorApi().invoke("redis-app", entityId, "stop", "5000", ImmutableMap.<String, String>of());
 
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
-        while (!api.getSensorApi().get("redis-app", "redis-ent", "service.state").equals(Lifecycle.STOPPED.toString())) {
+        while (!api.getSensorApi().get("redis-app", entityId, "service.state").equals(Lifecycle.STOPPED.toString())) {
             Thread.sleep(5000);
         }
     }

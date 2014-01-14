@@ -127,11 +127,6 @@ public interface ApplicationApi {
           required = true)
       @Valid String contents);
 
-  /** @deprecated since 0.7.0 the {@link ApplicationSpec} is being retired in favour of CAMP YAML/ZIP
-   * (however in 0.7.0 you can still pass this object as JSON and it will be autodetected) */
-  @Deprecated
-  public Response create(ApplicationSpec applicationSpec);
-
   @DELETE
   @Path("/{application}")
   @ApiOperation(
@@ -149,4 +144,19 @@ public interface ApplicationApi {
           )
           @PathParam("application") String application) ;
 
+  /** @deprecated since 0.7.0 the {@link ApplicationSpec} is being retired in favour of CAMP YAML/ZIP
+   * (however in 0.7.0 you can still pass this object as JSON and it will be autodetected) */
+  @POST
+  @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM, MediaType.TEXT_PLAIN})
+  @ApiOperation(
+      value = "Create and start a new application from miscellaneous types, including JSON either new CAMP format or legacy AppSpec format",
+      responseClass = "brooklyn.rest.domain.TaskSummary"
+  )
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Undefined entity or location"),
+      @ApiError(code = 412, reason = "Application already registered")
+  })
+  @Path("/createLegacy")
+  @Deprecated
+  public Response create(ApplicationSpec applicationSpec);
 }
