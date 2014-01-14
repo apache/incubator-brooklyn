@@ -144,6 +144,8 @@ public interface ApplicationApi {
           )
           @PathParam("application") String application) ;
 
+  /** @deprecated since 0.7.0 the {@link ApplicationSpec} is being retired in favour of CAMP YAML/ZIP
+   * (however in 0.7.0 you can still pass this object as JSON and it will be autodetected) */
   @POST
   @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM, MediaType.TEXT_PLAIN})
   @ApiOperation(
