@@ -43,7 +43,7 @@ public interface MongoDBReplicaSet extends DynamicCluster {
     /**
      * The name of the replica set.
      */
-    String getReplicaSetName();
+    String getName();
 
     /**
      * @return The primary MongoDB server in the replica set.

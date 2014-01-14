@@ -15,7 +15,7 @@
     </parent>
 
     <properties>
-        <mongo-java-driver.version>2.11.1</mongo-java-driver.version>
+        <mongo-java-driver.version>2.11.3</mongo-java-driver.version>
     </properties>
 
     <dependencies>

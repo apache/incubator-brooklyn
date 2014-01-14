@@ -55,7 +55,7 @@ public class MongoDBReplicaSetIntegrationTest {
      * Creates and starts a replica set, asserts it reaches the given size
      * and that the primary and secondaries are non-null.
      */
-    private MongoDBReplicaSet makeAndStartReplicaSet(final Integer size, String testDescription) {
+    private MongoDBReplicaSet makeAndStartReplicaSet(final Integer size, final String testDescription) {
         // Sets secondaryPreferred so we can read from slaves.
         final MongoDBReplicaSet replicaSet = app.createAndManageChild(EntitySpec.create(MongoDBReplicaSet.class)
                 .configure(DynamicCluster.INITIAL_SIZE, size)
@@ -69,7 +69,8 @@ public class MongoDBReplicaSetIntegrationTest {
             @Override
             public void run() {
                 assertEquals(replicaSet.getCurrentSize(), size);
-                assertNotNull(replicaSet.getPrimary());
+                assertNotNull(replicaSet.getPrimary(), "replica set has no primary");
+                assertEquals(replicaSet.getPrimary().getReplicaSet().getName(), "test-rs-"+testDescription);
                 assertEquals(replicaSet.getSecondaries().size(), size-1);
             }
         });
@@ -83,7 +84,7 @@ public class MongoDBReplicaSetIntegrationTest {
         assertFalse(replicaSet.getAttribute(Startable.SERVICE_UP));
     }
 
-    @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStopAReplicaSet" })
+    @Test(groups = "Integration")
     public void testWriteToMasterAndReadFromSecondary() {
         final MongoDBReplicaSet replicaSet = makeAndStartReplicaSet(3, "master-write-secondary-read");
 
@@ -101,7 +102,7 @@ public class MongoDBReplicaSetIntegrationTest {
         });
     }
 
-    @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStopAReplicaSet" })
+    @Test(groups = "Integration")
     public void testCanResizeAndReadFromNewInstances() {
         final MongoDBReplicaSet replicaSet = makeAndStartReplicaSet(3, "resize-and-read-from-secondaries");
 
@@ -135,20 +136,15 @@ public class MongoDBReplicaSetIntegrationTest {
 
     }
 
-    @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStopAReplicaSet" })
-    public void testResizeToEvenNumberOfMembersIgnored() {
+    @Test(groups = "Integration")
+    public void testResizeToEvenNumberOfMembers() {
         final MongoDBReplicaSet replicaSet = makeAndStartReplicaSet(3, "resize-even-ignored");
-        try {
-            replicaSet.resize(4);
-        } catch (Exception e) {
-            log.info("Test "+JavaClassNames.niceClassAndMethod()+" resize threw error (not unexpected): "+e);
-            return ;
-        }
-        TimeDuration thirtySeconds = new TimeDuration(0, 0, 30, 0);
-        Asserts.succeedsContinually(ImmutableMap.of("timeout", thirtySeconds), new Runnable() {
+        assertEquals(replicaSet.getCurrentSize().intValue(), 3);
+        replicaSet.resize(4);
+        Asserts.succeedsEventually(new Runnable() {
             @Override
             public void run() {
-                assertEquals(replicaSet.getCurrentSize().intValue(), 3);
+                assertEquals(replicaSet.getCurrentSize().intValue(), 4);
             }
         });
     }
@@ -160,7 +156,7 @@ public class MongoDBReplicaSetIntegrationTest {
      *  - The remaining members of the set elect a new primary
      *  - We remove the original primary from the new primary.
      */
-    @Test(groups = "Integration"/*, dependsOnMethods = { "testCanStartAndStopAReplicaSet" }*/)
+    @Test(groups = "Integration")
     public void testReplacePrimary() {
         final MongoDBReplicaSet replicaSet = makeAndStartReplicaSet(3, "replace-primary");
         final MongoDBServer replaced = replicaSet.getPrimary();
@@ -173,11 +169,12 @@ public class MongoDBReplicaSetIntegrationTest {
                     assertNotEquals(member.getId(), replaced.getId());
                 }
                 assertNotNull(replicaSet.getPrimary());
+                assertNotEquals(replicaSet.getPrimary().getId(), replaced.getId(), "Expected a new primary to have been elected");
             }
         });
     }
 
-    @Test(groups = "Integration"/*, dependsOnMethods = { "testCanStartAndStopAReplicaSet" }*/)
+    @Test(groups = "Integration")
     public void testRemovePrimary() {
         final MongoDBReplicaSet replicaSet = makeAndStartReplicaSet(3, "remove-primary");
         final MongoDBServer removed = replicaSet.getPrimary();
@@ -192,6 +189,7 @@ public class MongoDBReplicaSetIntegrationTest {
                     assertNotEquals(member.getId(), removed.getId());
                 }
                 assertNotNull(replicaSet.getPrimary());
+                assertNotEquals(replicaSet.getPrimary().getId(), removed.getId(), "Expected a new primary to have been elected");
             }
         });
     }

@@ -10,6 +10,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
@@ -22,7 +23,7 @@ public interface MongoDBServer extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
-            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.2.4");
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.5.4");
 
     // e.g. http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.2.2.tgz,
     // http://fastdl.mongodb.org/osx/mongodb-osx-x86_64-2.2.2.tgz
@@ -90,13 +91,10 @@ public interface MongoDBServer extends SoftwareProcess {
     AttributeSensor<Long> NETWORK_NUM_REQUESTS = Sensors.newLongSensor(
             "mongodb.server.network.numRequests", "Server network requests");
 
-
     /** A single server's replica set configuration **/
-    ConfigKey<Boolean> REPLICA_SET_ENABLED = ConfigKeys.newBooleanConfigKey(
-            "mongodb.server.replicaSet.enabled", "True if this server was started to be part of a replica set", Boolean.FALSE);
-
-    AttributeSensorAndConfigKey<String, String> REPLICA_SET_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class,
-            "mongodb.server.replicaSet.name", "The name of the replica set that the server belongs to");
+    ConfigKey<MongoDBReplicaSet> REPLICA_SET = new BasicConfigKey<MongoDBReplicaSet>(MongoDBReplicaSet.class,
+            "mongodb.replicaset", "The replica set to which the server belongs. " +
+            "Users should not set this directly when creating a new replica set.");
 
     AttributeSensor<ReplicaSetMemberStatus> REPLICA_SET_MEMBER_STATUS = Sensors.newSensor(
             ReplicaSetMemberStatus.class, "mongodb.server.replicaSet.memberStatus", "The status of this server in the replica set");
@@ -113,5 +111,44 @@ public interface MongoDBServer extends SoftwareProcess {
     AttributeSensor<String> MONGO_SERVER_ENDPOINT = Sensors.newStringSensor(
         "mongodb.server.endpoint", "The host:port where this server is listening");
 
-    MongoClientSupport getClient();
+    /**
+     * @return The replica set the server belongs to, or null if the server is a standalone instance.
+     */
+    MongoDBReplicaSet getReplicaSet();
+
+    /**
+     * @return True if the server is a child of {@link MongoDBReplicaSet}.
+     */
+    boolean isReplicaSetMember();
+
+    /**
+     * Initialises a replica set at the server the method is invoked on.
+     * @param replicaSetName The name for the replica set.
+     * @param id The id to be given to this server in the replica set configuration.
+     * @return True if initialisation is successful.
+     */
+    boolean initializeReplicaSet(String replicaSetName, Integer id);
+
+    /**
+     * Reconfigures the replica set that the server the method is invoked on is the primary member of
+     * to include a new member.
+     * <p/>
+     * Note that this can cause long downtime (typically 10-20s, even up to a minute).
+     *
+     * @param secondary New member of the set.
+     * @param id The id for the new set member. Must be unique within the set; its validity is not checked.
+     * @return True if addition is successful. False if the server this is called on is not the primary
+     *         member of the replica set.
+     */
+    boolean addMemberToReplicaSet(MongoDBServer secondary, Integer id);
+
+    /**
+     * Reconfigures the replica set that the server the method is invoked on is the primary member of
+     * to remove the given server.
+     * @param server The server to remove.
+     * @return True if removal is successful. False if the server this is called on is not the primary
+     *         member of the replica set.
+     */
+    boolean removeMemberFromReplicaSet(MongoDBServer server);
+
 }

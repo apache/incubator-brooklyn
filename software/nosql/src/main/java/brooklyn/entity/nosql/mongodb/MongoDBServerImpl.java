@@ -29,7 +29,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
     private FunctionFeed serviceStats;
     private FunctionFeed replicaSetStats;
-    private MongoClientSupport client;
+    private MongoDBClientSupport client;
 
     public MongoDBServerImpl() {
     }
@@ -54,7 +54,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         setAttribute(MONGO_SERVER_ENDPOINT, String.format("http://%s:%d", getAttribute(HOSTNAME), getAttribute(MongoDBServer.PORT)));
 
         try {
-            client = MongoClientSupport.forServer(this);
+            client = MongoDBClientSupport.forServer(this);
         } catch (UnknownHostException e) {
             LOG.warn("Unable to create client connection to {}, not connecting sensors: {} ", this, e.getMessage());
             return;
@@ -75,15 +75,14 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                         .onException(Functions.<BasicBSONObject>constant(null)))
                 .build();
 
-        final boolean replicaSetEnabled = getConfig(REPLICA_SET_ENABLED);
-        if (replicaSetEnabled) {
+        if (isReplicaSetMember()) {
             replicaSetStats = FunctionFeed.builder()
                     .entity(this)
                     .poll(new FunctionPollConfig<Object, ReplicaSetMemberStatus>(REPLICA_SET_MEMBER_STATUS)
                             .period(2, TimeUnit.SECONDS)
                             .callable(new Callable<ReplicaSetMemberStatus>() {
                                 /**
-                                 * Calls {@link MongoClientSupport#getReplicaSetStatus} and
+                                 * Calls {@link MongoDBClientSupport#getReplicaSetStatus} and
                                  * extracts <code>myState</code> from the response.
                                  * @return
                                  *      The appropriate {@link brooklyn.entity.nosql.mongodb.ReplicaSetMemberStatus}
@@ -99,7 +98,6 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                             .onException(Functions.constant(ReplicaSetMemberStatus.UNKNOWN)))
                     .build();
         } else {
-            setAttribute(REPLICA_SET_NAME, null);
             setAttribute(IS_PRIMARY_FOR_REPLICA_SET, false);
             setAttribute(IS_SECONDARY_FOR_REPLICA_SET, false);
         }
@@ -128,8 +126,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
                         // Replica set stats
                         BasicBSONObject repl = (BasicBSONObject) map.get("repl");
-                        if (replicaSetEnabled && repl != null) {
-                            setAttribute(REPLICA_SET_NAME, repl.getString("setName"));
+                        if (isReplicaSetMember() && repl != null) {
                             setAttribute(IS_PRIMARY_FOR_REPLICA_SET, repl.getBoolean("ismaster"));
                             setAttribute(IS_SECONDARY_FOR_REPLICA_SET, repl.getBoolean("secondary"));
                             setAttribute(REPLICA_SET_PRIMARY_ENDPOINT, repl.getString("primary"));
@@ -152,8 +149,36 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
     }
 
     @Override
-    public MongoClientSupport getClient() {
-        return client;
+    public MongoDBReplicaSet getReplicaSet() {
+        return getConfig(MongoDBServer.REPLICA_SET);
+    }
+
+    @Override
+    public boolean isReplicaSetMember() {
+        return getReplicaSet() != null;
+    }
+
+    @Override
+    public boolean initializeReplicaSet(String replicaSetName, Integer id) {
+        return client.initializeReplicaSet(replicaSetName, id);
+    }
+
+    @Override
+    public boolean addMemberToReplicaSet(MongoDBServer secondary, Integer id) {
+        if (!getAttribute(IS_PRIMARY_FOR_REPLICA_SET)) {
+            LOG.warn("Attempted to add {} to replica set at server that is not primary: {}", secondary, this);
+            return false;
+        }
+        return client.addMemberToReplicaSet(secondary, id);
+    }
+
+    @Override
+    public boolean removeMemberFromReplicaSet(MongoDBServer server) {
+        if (!getAttribute(IS_PRIMARY_FOR_REPLICA_SET)) {
+            LOG.warn("Attempted to remove {} from replica set at server that is not primary: {}", server, this);
+            return false;
+        }
+        return client.removeMemberFromReplicaSet(server);
     }
 
     @Override
