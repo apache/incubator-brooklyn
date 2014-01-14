@@ -111,10 +111,8 @@ public class DynamicToyMySqlEntityBuilder {
                 return "submitted start";
             }
             protected void postStartCustom() {
-                // if it's still up after 30s assume we are good
-                // remember that the run script *backgrounded* the server start command, so this is the time taken
-                // to start the MySQL process, let it initialise, and give it a bit of time to make sure it stays up.
-                Time.sleep(Duration.THIRTY_SECONDS);
+                // if it's still up after 5s assume we are good
+                Time.sleep(Duration.FIVE_SECONDS);
                 if (!DynamicTasks.queue(SshEffectorTasks.isPidFromFileRunning(dir(entity)+"/*/data/*.pid")).get()) {
                     // but if it's not up add a bunch of other info
                     log.warn("MySQL did not start: "+dir(entity));
