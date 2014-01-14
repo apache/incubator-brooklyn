@@ -16,18 +16,21 @@ import brooklyn.util.collections.MutableMap;
 import com.google.common.collect.Maps;
 
 /** A config key which represents a map, where contents can be accessed directly via subkeys.
- * Items added directly to the map must be of type map, and are put (as individual subkeys). 
- * <p>
- * You can also pass an appropriate {@link MapModification} from {@link MapModifications}
- * to clear (and clear-and-set). */
+ * Items added directly to the map must be of type map, and can be updated by:
+ * <li>putting individual subkeys ({@link SubElementConfigKey})
+ * <li>passing an an appropriate {@link MapModification} from {@link MapModifications}
+ *      to clear, clear-and-set, or update
+ * <li>setting a value against a dot-extension of the key 
+ *     (e.g. setting <code>a.map.subkey=1</code> will cause getConfig(a.map[type=MapConfigKey])
+ *     to return {subkey=1}; but note the above are preferred where possible)  
+ * <li>setting a map directly against the MapConfigKey (but note that the above are preferred where possible) 
+ **/
 //TODO Create interface
-public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements StructuredConfigKey {
+public class MapConfigKey<V> extends AbstractStructuredConfigKey<Map<String,V>,Map<String,Object>,V> {
     
     private static final long serialVersionUID = -6126481503795562602L;
     private static final Logger log = LoggerFactory.getLogger(MapConfigKey.class);
     
-    public final Class<V> subType;
-
     public MapConfigKey(Class<V> subType, String name) {
         this(subType, name, name, null);
     }
@@ -38,72 +41,36 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
 
     // TODO it isn't clear whether defaultValue is an initialValue, or a value to use when map is empty
     // probably the latter, currently ... but maybe better to say that map configs are never null, 
-    // and defaultValue is really an initial value
+    // and defaultValue is really an initial value?
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public MapConfigKey(Class<V> subType, String name, String description, Map<String, V> defaultValue) {
-        super((Class)Map.class, name, description, defaultValue);
-        this.subType = subType;
+        super((Class)Map.class, subType, name, description, defaultValue);
     }
 
     public ConfigKey<V> subKey(String subName) {
-        return subKey(subName, "sub-element of " + getName() + ", named " + subName);
+        return super.subKey(subName);
     }
-    // it is not possible to supply default values
     public ConfigKey<V> subKey(String subName, String description) {
-        return new SubElementConfigKey<V>(this, subType, getName() + "." + subName, description, null);
-    }
+        return super.subKey(subName, description);
+    }   
 
-    public boolean isSubKey(Object contender) {
-        return contender instanceof ConfigKey && isSubKey((ConfigKey<?>)contender);
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map<String, Object> extractValueMatchingThisKey(Object potentialBase, ExecutionContext exec, boolean coerce) {
+        if (potentialBase instanceof Map<?,?>) {
+            return Maps.<String,Object>newLinkedHashMap( (Map<String,Object>) potentialBase);
+        } else if (coerce) {
+            // TODO if it's a future could attempt type coercion
+            // (e.g. if we have a MapConfigKey we use to set dependent configuration
+        }
+        return null;
     }
     
-    public boolean isSubKey(ConfigKey<?> contender) {
-        return (contender instanceof SubElementConfigKey && this.equals(((SubElementConfigKey<?>) contender).parent));
-    }
-
-    public String extractSubKeyName(ConfigKey<?> subKey) {
-        return subKey.getName().substring(getName().length() + 1);
-    }
-
     @Override
-    public Map<String,V> extractValue(Map<?,?> vals, ExecutionContext exec) {
-        Map<String,V> result = Maps.newLinkedHashMap();
-        for (Map.Entry<?,?> entry : vals.entrySet()) {
-            Object k = entry.getKey();
-            if (isSubKey(k)) {
-                @SuppressWarnings("unchecked")
-                SubElementConfigKey<V> subk = (SubElementConfigKey<V>) k;
-                result.put(extractSubKeyName(subk), (V) subk.extractValue(vals, exec));
-            }
-        }
-        return Collections.unmodifiableMap(result);
-    }
-    /** returns the entries in the map against this config key and any sub-config-keys, without resolving
-     * (like {@link #extractValue(Map, ExecutionContext)} but without resolving/coercing;
-     * useful because values in this "map" are actually stored against {@link SubElementConfigKey}s */
-    public Map<String,Object> rawValue(Map<?,?> vals) {
-        Map<String,Object> result = Maps.newLinkedHashMap();
-        for (Map.Entry<?,?> entry : vals.entrySet()) {
-            Object k = entry.getKey();
-            if (isSubKey(k)) {
-                @SuppressWarnings("unchecked")
-                SubElementConfigKey<V> subk = (SubElementConfigKey<V>) k;
-                result.put(extractSubKeyName(subk), vals.get(subk));
-            }
-        }
+    protected Map<String, Object> merge(Map<String, Object> base, Map<String, Object> subkeys, boolean unmodifiable) {
+        Map<String, Object> result = MutableMap.copyOf(base).add(subkeys);
+        if (unmodifiable) result = Collections.unmodifiableMap(result);
         return result;
-    }
-
-    @Override
-    public boolean isSet(Map<?, ?> vals) {
-        if (vals.containsKey(this))
-            return true;
-        for (Object contender : vals.keySet()) {
-            if (isSubKey(contender)) {
-                return true;
-            }
-        }
-        return false;
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -129,8 +96,10 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected Object applyEntryValueToMap(Entry value, Map target) {
         Object k = value.getKey();
-        if (isSubKey(k)) {
+        if (acceptsSubkeyStronglyTyped(k)) {
             // do nothing
+        } else if (k instanceof ConfigKey<?>) {
+            k = subKey( ((ConfigKey<?>)k).getName() );
         } else if (k instanceof String) {
             k = subKey((String)k);
         } else {

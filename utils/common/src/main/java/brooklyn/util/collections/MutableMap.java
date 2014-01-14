@@ -97,9 +97,9 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         return this;
     }
 
-    /** as {@link #putAll(Map)} but fluent style */
-    public MutableMap<K,V> add(Map<K,V> m) {
-        putAll(m);
+    /** as {@link #putAll(Map)} but fluent style (and accepting null, ignoring it) */
+    public MutableMap<K,V> add(@Nullable Map<K,V> m) {
+        if (m!=null) putAll(m);
         return this;
     }
 

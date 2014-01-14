@@ -10,14 +10,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.internal.storage.impl.ConcurrentMapAcceptingNullVals;
 import brooklyn.management.ExecutionContext;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.text.Identifiers;
-
-import com.google.common.collect.Lists;
 
 /** A config key representing a list of values. 
  * If a value is set on this key, it is _added_ to the list.
- * (But a warning is issued if a collection is passed in.)
+ * (With a warning is issued if a collection is passed in.)
+ * If a value is set against an equivalent *untyped* key which *is* a collection,
+ * it will be treated as a list upon discovery and used as a base to which subkey values are appended.
+ * If a value is discovered against this key which is not a map or collection,
+ * it is ignored.
  * <p>
  * To add all items in a collection, to add a collection as a single element, 
  * to clear the list, or to set a collection (clearing first), 
@@ -25,17 +29,20 @@ import com.google.common.collect.Lists;
  * <p>  
  * Specific values can be added in a replaceable way by referring to a subkey.
  * 
- * @deprecated since 0.6; use SetConfigKey. The ListConfigKey no longer guarantees order
+ * @deprecated since 0.6; use SetConfigKey. 
+ * The ListConfigKey does not guarantee order when subkeys are used,
+ * due to distribution and the use of the {@link ConcurrentMapAcceptingNullVals} 
+ * as a backing store.
+ * However the class will likely be kept around with tests for the time being
+ * as we would like to repair this.
  */
 //TODO Create interface
 @Deprecated
-public class ListConfigKey<V> extends BasicConfigKey<List<V>> implements StructuredConfigKey {
+public class ListConfigKey<V> extends AbstractStructuredConfigKey<List<V>,List<Object>,V> {
 
     private static final long serialVersionUID = 751024268729803210L;
     private static final Logger log = LoggerFactory.getLogger(ListConfigKey.class);
     
-    public final Class<V> subType;
-
     public ListConfigKey(Class<V> subType, String name) {
         this(subType, name, name, null);
     }
@@ -46,8 +53,7 @@ public class ListConfigKey<V> extends BasicConfigKey<List<V>> implements Structu
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public ListConfigKey(Class<V> subType, String name, String description, List<? extends V> defaultValue) {
-        super((Class)List.class, name, description, (List<V>)defaultValue);
-        this.subType = subType;
+        super((Class)List.class, subType, name, description, (List<V>)defaultValue);
     }
 
     public ConfigKey<V> subKey() {
@@ -56,34 +62,23 @@ public class ListConfigKey<V> extends BasicConfigKey<List<V>> implements Structu
     }
 
     @Override
-    public boolean isSubKey(Object contender) {
-        return contender instanceof ConfigKey && isSubKey((ConfigKey<?>)contender);
-    }
-    
-    public boolean isSubKey(ConfigKey<?> contender) {
-        return (contender instanceof SubElementConfigKey && this.equals(((SubElementConfigKey<?>) contender).parent));
+    protected List<Object> extractValueMatchingThisKey(Object potentialBase, ExecutionContext exec, boolean coerce) {
+        if (potentialBase instanceof Map<?,?>) {
+            return MutableList.copyOf( ((Map<?,?>) potentialBase).values() );
+        } else if (potentialBase instanceof Collection<?>) {
+            return MutableList.copyOf( (Collection<?>) potentialBase );
+        } else if (coerce) {
+            // TODO if it's a future could attempt type coercion
+            // (e.g. if we have a MapConfigKey we use to set dependent configuration
+        }
+        return null;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public List<V> extractValue(Map<?,?> vals, ExecutionContext exec) {
-        List<V> result = Lists.newArrayList();
-        for (Object k : vals.keySet()) {
-            if (isSubKey(k))
-                result.add( ((SubElementConfigKey<V>) k).extractValue(vals, exec) );
-        }
-        return Collections.unmodifiableList(result);
-    }
-
-    @Override
-    public boolean isSet(Map<?, ?> vals) {
-        if (vals.containsKey(this)) return true;
-        for (Object contender : vals.keySet()) {
-            if (isSubKey(contender)) {
-                return true;
-            }
-        }
-        return false;
+    protected List<Object> merge(List<Object> base, Map<String, Object> subkeys, boolean unmodifiable) {
+        List<Object> result = MutableList.copyOf(base).appendAll(subkeys.values());
+        if (unmodifiable) result = Collections.unmodifiableList(result);
+        return result;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

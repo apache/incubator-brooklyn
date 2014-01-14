@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.ImmutableList;
 
 public class MutableList<V> extends ArrayList<V> {
@@ -28,10 +30,10 @@ public class MutableList<V> extends ArrayList<V> {
         return result;
     }
 
-    public static <V> MutableList<V> copyOf(Iterable<? extends V> orig) {
+    public static <V> MutableList<V> copyOf(@Nullable Iterable<? extends V> orig) {
         return (orig instanceof Collection)
                 ? new MutableList<V>((Collection<? extends V>)orig)
-                : new MutableList<V>(orig);
+                : orig!=null ? new MutableList<V>(orig) : new MutableList<V>();
     }
 
     public static <E> MutableList<E> copyOf(Iterator<? extends E> elements) {
