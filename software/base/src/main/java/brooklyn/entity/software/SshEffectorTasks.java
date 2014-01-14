@@ -1,5 +1,6 @@
 package brooklyn.entity.software;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -184,6 +185,10 @@ public class SshEffectorTasks {
         return new SshEffectorTaskFactory<Integer>(commands);
     }
 
+    public static SshEffectorTaskFactory<Integer> ssh(List<String> commands) {
+        return ssh(commands.toArray(new String[commands.size()]));
+    }
+
     public static SshPutTaskFactory put(String remoteFile) {
         return new SshPutEffectorTaskFactory(remoteFile);
     }
@@ -202,7 +207,7 @@ public class SshEffectorTasks {
         return codePidRunning(pid).summary("PID "+pid+" is-running check (required)").requiringExitCodeZero("Process with PID "+pid+" is required to be running");
     }
 
-    /** as {@link #codePidRunning(String)} but returning boolean */
+    /** as {@link #codePidRunning(Integer)} but returning boolean */
     public static SshEffectorTaskFactory<Boolean> isPidRunning(Integer pid) {
         return codePidRunning(pid).summary("PID "+pid+" is-running check (boolean)").returning(new Function<ProcessTaskWrapper<?>, Boolean>() {
             public Boolean apply(@Nullable ProcessTaskWrapper<?> input) { return Integer.valueOf(0).equals(input.getExitCode()); }
