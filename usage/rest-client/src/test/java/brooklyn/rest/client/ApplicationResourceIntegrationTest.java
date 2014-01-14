@@ -21,18 +21,21 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.Application;
-import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
+import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.SensorSummary;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 @Test(singleThreaded = true)
@@ -41,6 +44,11 @@ public class ApplicationResourceIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceIntegrationTest.class);
 
     private final String redisSpec = "{\"name\": \"redis-app\", \"type\": \"brooklyn.entity.nosql.redis.RedisStore\", \"locations\": [ \"localhost\"]}";
+    
+    private final ApplicationSpec legacyRedisSpec = ApplicationSpec.builder().name("redis-legacy-app").
+            entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore"))).
+            locations(ImmutableSet.of("localhost")).
+            build();
 
     private ManagementContext manager;
 
@@ -74,7 +82,7 @@ public class ApplicationResourceIntegrationTest {
     public void tearDown() throws Exception {
         for (Application app : getManagementContext().getApplications()) {
             try {
-                ((AbstractApplication) app).stop();
+                ((StartableApplication) app).stop();
             } catch (Exception e) {
                 log.warn("Error stopping app " + app + " during test teardown: " + e);
             }
@@ -90,6 +98,21 @@ public class ApplicationResourceIntegrationTest {
         while (!api.getSensorApi().get("redis-app", entityId, "service.state").equals(Lifecycle.RUNNING.toString())) {
             Thread.sleep(100);
         }
+    }
+    
+    @Test(groups = "Integration", dependsOnMethods = "testDeployRedisApplication")
+    public void testDeployLegacyRedisApplication() throws Exception {
+        @SuppressWarnings("deprecation")
+        Response response = api.getApplicationApi().create(legacyRedisSpec);
+        assertEquals(response.getStatus(), 201);
+        assertEquals(getManagementContext().getApplications().size(), 2);
+        while (!api.getSensorApi().get("redis-legacy-app", "redis-ent", "service.state").equals(Lifecycle.RUNNING.toString())) {
+            Thread.sleep(100);
+        }
+        // Tear the app down so it doesn't interfere with other tests 
+        Response deleteResponse = api.getApplicationApi().delete("redis-legacy-app");
+        assertEquals(deleteResponse.getStatus(), 202);
+        assertEquals(getManagementContext().getApplications().size(), 1);
     }
 
     @Test(groups = "Integration", dependsOnMethods = "testDeployRedisApplication")

@@ -144,4 +144,17 @@ public interface ApplicationApi {
           )
           @PathParam("application") String application) ;
 
+  @POST
+  @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM, MediaType.TEXT_PLAIN})
+  @ApiOperation(
+      value = "Create and start a new application from miscellaneous types, including JSON either new CAMP format or legacy AppSpec format",
+      responseClass = "brooklyn.rest.domain.TaskSummary"
+  )
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Undefined entity or location"),
+      @ApiError(code = 412, reason = "Application already registered")
+  })
+  @Path("/createLegacy")
+  @Deprecated
+  public Response create(ApplicationSpec applicationSpec);
 }

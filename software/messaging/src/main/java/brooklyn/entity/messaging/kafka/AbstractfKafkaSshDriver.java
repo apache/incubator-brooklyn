@@ -139,7 +139,6 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
     public Map<String, String> getShellEnvironment() {
         Map<String, String> orig = super.getShellEnvironment();
         String kafkaJmxOpts = orig.remove("JAVA_OPTS");
-        if (Strings.isBlank(kafkaJmxOpts)) kafkaJmxOpts = " "; // FIXME - this is required to prevent jmxremote being setup in bin/kafka-run-class.sh
         return MutableMap.<String, String>builder()
                 .putAll(orig)
                 .putIfNotNull("KAFKA_JMX_OPTS", kafkaJmxOpts)
