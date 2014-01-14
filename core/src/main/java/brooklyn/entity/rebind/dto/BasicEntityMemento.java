@@ -20,7 +20,6 @@ import brooklyn.mementos.TreeNode;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
  * Represents the state of an entity, so that it can be reconstructed (e.g. after restarting brooklyn).
@@ -44,10 +43,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         protected boolean isTopLevelApp;
         protected Map<ConfigKey, Object> config = Maps.newLinkedHashMap();
         protected Map<AttributeSensor, Object> attributes = Maps.newLinkedHashMap();
-        protected Set<ConfigKey> entityReferenceConfigs = Sets.newLinkedHashSet();
-        protected Set<AttributeSensor> entityReferenceAttributes = Sets.newLinkedHashSet();
-        protected Set<ConfigKey> locationReferenceConfigs = Sets.newLinkedHashSet();
-        protected Set<AttributeSensor> locationReferenceAttributes = Sets.newLinkedHashSet();
         protected List<String> locations = Lists.newArrayList();
         protected List<String> policies = Lists.newArrayList();
         protected List<String> members = Lists.newArrayList();
@@ -58,10 +53,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             displayName = other.getDisplayName();
             config.putAll(other.getConfig());
             attributes.putAll(other.getAttributes());
-            entityReferenceConfigs.addAll(other.getEntityReferenceConfigs());
-            entityReferenceAttributes.addAll(other.getEntityReferenceAttributes());
-            locationReferenceConfigs.addAll(other.getLocationReferenceConfigs());
-            locationReferenceAttributes.addAll(other.getLocationReferenceAttributes());
             locations.addAll(other.getLocations());
             policies.addAll(other.getPolicies());
             members.addAll(other.getMembers());
@@ -94,10 +85,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     
     private transient Map<ConfigKey, Object> configByKey;
     private transient Map<AttributeSensor, Object> attributesByKey;
-    private transient Set<ConfigKey> entityReferenceConfigsByKey;
-    private transient Set<AttributeSensor> entityReferenceAttributesByKey;
-    private transient Set<ConfigKey> locationReferenceConfigsByKey;
-    private transient Set<AttributeSensor> locationReferenceAttributesByKey;
 
     // for de-serialization
     @SuppressWarnings("unused")
@@ -115,10 +102,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         
         configByKey = builder.config;
         attributesByKey = builder.attributes;
-        entityReferenceConfigsByKey = builder.entityReferenceConfigs;
-        entityReferenceAttributesByKey = builder.entityReferenceAttributes;
-        locationReferenceConfigsByKey = builder.locationReferenceConfigs;
-        locationReferenceAttributesByKey = builder.locationReferenceAttributes;
         
         if (configByKey!=null) {
             configKeys = Maps.newLinkedHashMap();
@@ -144,38 +127,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             }
             attributeKeys = toPersistedMap(attributeKeys);
             attributes = toPersistedMap(attributes);
-        }
-        
-        if (entityReferenceConfigsByKey!=null) {
-            entityReferenceConfigs = Sets.newLinkedHashSet();
-            for (ConfigKey key : entityReferenceConfigsByKey) {
-                entityReferenceConfigs.add(key.getName());
-            }
-            entityReferenceConfigs = toPersistedSet(entityReferenceConfigs);
-        }
-        
-        if (entityReferenceAttributesByKey!=null) {
-            entityReferenceAttributes = Sets.newLinkedHashSet();
-            for (AttributeSensor key : entityReferenceAttributesByKey) {
-                entityReferenceAttributes.add(key.getName());
-            }
-            entityReferenceAttributes = toPersistedSet(entityReferenceAttributes);
-        }
-
-        if (locationReferenceConfigsByKey!=null) {
-            locationReferenceConfigs = Sets.newLinkedHashSet();
-            for (ConfigKey key : locationReferenceConfigsByKey) {
-                locationReferenceConfigs.add(key.getName());
-            }
-            locationReferenceConfigs = toPersistedSet(locationReferenceConfigs);
-        }
-        
-        if (locationReferenceAttributesByKey!=null) {
-            locationReferenceAttributes = Sets.newLinkedHashSet();
-            for (AttributeSensor key : locationReferenceAttributesByKey) {
-                locationReferenceAttributes.add(key.getName());
-            }
-            locationReferenceAttributes = toPersistedSet(locationReferenceAttributes);
         }
     }
 
@@ -217,40 +168,16 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
      */
     private void postDeserialize() {
         configByKey = Maps.newLinkedHashMap();
-        entityReferenceConfigsByKey = Sets.newLinkedHashSet();
-        locationReferenceConfigsByKey = Sets.newLinkedHashSet();
         if (config!=null) {
             for (Map.Entry<String, Object> entry : config.entrySet()) {
                 configByKey.put(getConfigKey(entry.getKey()), entry.getValue());
             }
         }
-        if (entityReferenceConfigs!=null) {
-            for (String key : entityReferenceConfigs) {
-                entityReferenceConfigsByKey.add(getConfigKey(key));
-            }
-        }
-        if (locationReferenceConfigs!=null) {
-            for (String key : locationReferenceConfigs) {
-                locationReferenceConfigsByKey.add(getConfigKey(key));
-            }
-        }
 
         attributesByKey = Maps.newLinkedHashMap();
-        entityReferenceAttributesByKey = Sets.newLinkedHashSet();
-        locationReferenceAttributesByKey = Sets.newLinkedHashSet();
         if (attributes!=null) {
             for (Map.Entry<String, Object> entry : attributes.entrySet()) {
                 attributesByKey.put(getAttributeKey(entry.getKey()), entry.getValue());
-            }
-        }
-        if (entityReferenceAttributes!=null) {
-            for (String key : entityReferenceAttributes) {
-                entityReferenceAttributesByKey.add(getAttributeKey(key));
-            }
-        }
-        if (locationReferenceAttributes!=null) {
-            for (String key : locationReferenceAttributes) {
-                locationReferenceAttributesByKey.add(getAttributeKey(key));
             }
         }
     }
@@ -270,30 +197,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     public Map<AttributeSensor, Object> getAttributes() {
         if (attributesByKey == null) postDeserialize();
         return Collections.unmodifiableMap(attributesByKey);
-    }
-    
-    @Override
-    public Set<AttributeSensor> getEntityReferenceAttributes() {
-        if (entityReferenceAttributesByKey == null) postDeserialize();
-        return Collections.unmodifiableSet(entityReferenceAttributesByKey);
-    }
-    
-    @Override
-    public Set<ConfigKey> getEntityReferenceConfigs() {
-        if (entityReferenceConfigsByKey == null) postDeserialize();
-        return Collections.unmodifiableSet(entityReferenceConfigsByKey);
-    }
-    
-    @Override
-    public Set<AttributeSensor> getLocationReferenceAttributes() {
-        if (locationReferenceAttributesByKey == null) postDeserialize();
-        return Collections.unmodifiableSet(locationReferenceAttributesByKey);
-    }
-    
-    @Override
-    public Set<ConfigKey> getLocationReferenceConfigs() {
-        if (locationReferenceConfigsByKey == null) postDeserialize();
-        return Collections.unmodifiableSet(fromPersistedSet(locationReferenceConfigsByKey));
     }
     
     @Override

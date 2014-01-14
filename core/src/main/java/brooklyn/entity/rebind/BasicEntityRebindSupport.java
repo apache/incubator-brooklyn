@@ -41,24 +41,20 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     protected EntityMemento getMementoWithProperties(Map<String,?> props) {
         EntityMemento memento = MementosGenerators.newEntityMementoBuilder(entity).customFields(props).build();
     	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity {}({}): parent={}; children={}; locations={}; "+
-    	        "policies={}; members={}; config={}; attributes={}; entityReferenceConfigs={}; " +
-    	        "entityReferenceAttributes={}; customProperties={}", 
+    	        "policies={}; members={}; config={}; attributes={}; customProperties={}", 
     			new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
                 memento.getLocations(), memento.getPolicies(), memento.getMembers(), sanitize(memento.getConfig()), 
-                sanitize(memento.getAttributes()), memento.getEntityReferenceConfigs(), 
-                memento.getEntityReferenceAttributes(), sanitize(memento.getCustomFields())});
+                sanitize(memento.getAttributes()), sanitize(memento.getCustomFields())});
     	return memento;
     }
 
     @Override
     public void reconstruct(RebindContext rebindContext, EntityMemento memento) {
     	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity {}({}): parent={}; children={}; locations={}; " +
-    	        "policies={}; members={}; config={}; attributes={}; entityReferenceConfigs={}; " +
-    	        "entityReferenceAttributes={}; customProperties={}", 
+    	        "policies={}; members={}; config={}; attributes={}; customProperties={}", 
     	        new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
     	        memento.getLocations(), memento.getPolicies(), memento.getMembers(), sanitize(memento.getConfig()), 
-    	        sanitize(memento.getAttributes()), memento.getEntityReferenceConfigs(), 
-    	        memento.getEntityReferenceAttributes(), sanitize(memento.getCustomFields())});
+    	        sanitize(memento.getAttributes()), sanitize(memento.getCustomFields())});
 
         // Note that the id should have been set in the constructor; it is immutable
         entity.setDisplayName(memento.getDisplayName());
@@ -68,11 +64,6 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 ConfigKey key = entry.getKey();
                 Object value = entry.getValue();
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
-//                if (memento.getEntityReferenceConfigs().contains(entry.getKey())) {
-//                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type, true);
-//                } else if (memento.getLocationReferenceConfigs().contains(entry.getKey())) {
-//                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type, true);
-//                }
                 entity.setConfig(key, value);
             } catch (ClassNotFoundException e) {
                 throw Throwables.propagate(e);
@@ -83,11 +74,6 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 AttributeSensor key = entry.getKey();
                 Object value = entry.getValue();
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
-//                if (memento.getEntityReferenceAttributes().contains(entry.getKey())) {
-//                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type, true);
-//                } else if (memento.getLocationReferenceAttributes().contains(entry.getKey())) {
-//                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type, true);
-//                }
                 ((EntityInternal)entity).setAttributeWithoutPublishing(key, value);
             } catch (ClassNotFoundException e) {
                 throw Throwables.propagate(e);

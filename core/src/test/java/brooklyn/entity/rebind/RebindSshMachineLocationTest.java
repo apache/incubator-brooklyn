@@ -47,7 +47,7 @@ public class RebindSshMachineLocationTest {
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
 
-    @Test(groups="Integration", invocationCount=100)
+    @Test(enabled=false, groups="Integration", invocationCount=100)
     public void testMachineUsableAfterRebindManyTimes() throws Exception {
         testMachineUsableAfterRebind();
     }

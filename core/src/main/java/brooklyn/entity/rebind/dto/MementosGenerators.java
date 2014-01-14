@@ -95,17 +95,6 @@ public class MementosGenerators {
                 }
             }
 
-            // FIXME
-//            Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
-//            if (transformedValue != value) {
-//                builder.entityReferenceConfigs.add(key);
-//            } else {
-//                transformedValue = MementoTransformer.transformLocationsToIds(value);
-//                if (transformedValue != value) {
-//                    builder.locationReferenceConfigs.add(key);
-//                }
-//            }
-            
             builder.config.put(key, value); 
         }
         
@@ -113,16 +102,6 @@ public class MementosGenerators {
         for (Map.Entry<AttributeSensor, Object> entry : allAttributes.entrySet()) {
             AttributeSensor<?> key = checkNotNull(entry.getKey(), allAttributes);
             Object value = entry.getValue();
-            // FIXME
-//            Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
-//            if (transformedValue != value) {
-//                builder.entityReferenceAttributes.add((AttributeSensor<?>)key);
-//            } else {
-//                transformedValue = MementoTransformer.transformLocationsToIds(value);
-//                if (transformedValue != value) {
-//                    builder.locationReferenceAttributes.add((AttributeSensor) key);
-//                }
-//            }
             builder.attributes.put((AttributeSensor<?>)key, value);
         }
         
@@ -181,23 +160,6 @@ public class MementosGenerators {
         builder.copyConfig(persistableConfig);
         builder.locationConfig.putAll(persistableFlags);
 
-        for (Map.Entry<String, Object> entry : builder.locationConfig.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            // FIXME
-//            Object transformedValue = MementoTransformer.transformLocationsToIds(value);
-//            if (transformedValue != value) {
-//                entry.setValue(transformedValue);
-//                builder.locationConfigReferenceKeys.add(key);
-//            } else {
-//                transformedValue = MementoTransformer.transformEntitiesToIds(value);
-//                if (transformedValue != value) {
-//                    entry.setValue(transformedValue);
-//                    builder.entityConfigReferenceKeys.add(key);
-//                }
-//            }
-        }
-        
         Location parentLocation = location.getParent();
         builder.parent = (parentLocation != null) ? parentLocation.getId() : null;
         

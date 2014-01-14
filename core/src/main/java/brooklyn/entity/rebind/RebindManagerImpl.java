@@ -155,11 +155,28 @@ public class RebindManagerImpl implements RebindManager {
         };
         
         LookupContext realLookupContext = new LookupContext() {
+            private final boolean removeDanglingRefs = true;
             @Override public Entity lookupEntity(String id) {
-                return rebindContext.getEntity(id);
+                Entity result = rebindContext.getEntity(id);
+                if (result == null) {
+                    if (removeDanglingRefs) {
+                        LOG.warn("No entity found with id "+id+"; returning null");
+                    } else {
+                        throw new IllegalStateException("No entity found with id "+id);
+                    }
+                }
+                return result;
             }
             @Override public Location lookupLocation(String id) {
-                return rebindContext.getLocation(id);
+                Location result = rebindContext.getLocation(id);
+                if (result == null) {
+                    if (removeDanglingRefs) {
+                        LOG.warn("No location found with id "+id+"; returning null");
+                    } else {
+                        throw new IllegalStateException("No location found with id "+id);
+                    }
+                }
+                return result;
             }
         };
         

@@ -38,6 +38,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicSensorEvent;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
@@ -137,6 +138,18 @@ public class RebindEntityTest {
     @Test
     public void testRestoresEntityConfig() throws Exception {
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).configure("myconfig", "myval"));
+        
+        newApp = rebind();
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
+        assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myval");
+    }
+    
+    @Test
+    public void testRestoresEntityDependentConfigCompleted() throws Exception {
+        MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class)
+                .configure("myconfig", DependentConfiguration.attributeWhenReady(origApp, TestApplication.MY_ATTRIBUTE)));
+        origApp.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
+        origE.getConfig(MyEntity.MY_CONFIG); // wait for it to be done
         
         newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
