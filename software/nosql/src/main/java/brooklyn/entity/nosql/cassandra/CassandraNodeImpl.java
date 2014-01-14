@@ -283,12 +283,16 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @Override
     public void init() {
         super.init();
+        
         getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
             @Override
             public String call(ConfigBag parameters) {
                 return executeScript((String)parameters.getStringKey("commands"));
             }
         });
+        
+        Entities.getRequiredUrlConfig(this, CASSANDRA_CONFIG_TEMPLATE_URL);
+        Entities.getRequiredUrlConfig(this, CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL);
     }
     
     private volatile JmxFeed jmxFeed;
