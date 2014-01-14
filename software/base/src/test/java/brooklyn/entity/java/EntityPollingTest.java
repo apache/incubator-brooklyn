@@ -122,14 +122,14 @@ public class EntityPollingTest {
     }
 
     @AfterMethod(alwaysRun=true)
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
         if (jmxService != null) jmxService.shutdown();
     }
 
 	// Tests that the happy path works
     @Test(groups="Integration")
-    public void testSimpleConnection() {
+    public void testSimpleConnection() throws Exception {
         jmxService = new JmxService("localhost", 40123);
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(ImmutableMap.of(attributeName, "myval"), objectName);
 

@@ -98,11 +98,12 @@ public class JmxHelperTest {
     }
 
     @Test
-    public void testInvokeOperationWithNoArgs() {
+    public void testInvokeOperationWithNoArgs() throws Exception {
         final String opReturnVal = "my result";
         MBeanOperationInfo opInfo = new MBeanOperationInfo(opName, "my descr", new MBeanParameterInfo[0], String.class.getName(), MBeanOperationInfo.ACTION);
-        Callable<String> opImpl = new Callable<String>() {
-            public String call() {
+        Function<Object[], String> opImpl = new Function<Object[], String>() {
+            @Override public String apply(Object[] args) {
+                assertEquals(args.length, 0, "args="+args);
                 return opReturnVal;
             }
         };
@@ -112,11 +113,12 @@ public class JmxHelperTest {
     }
 
     @Test
-    public void testInvokeOperationUsingObjectNameWildcard() {
+    public void testInvokeOperationUsingObjectNameWildcard() throws Exception {
         final String opReturnVal = "my result";
         MBeanOperationInfo opInfo = new MBeanOperationInfo(opName, "my descr", new MBeanParameterInfo[0], String.class.getName(), MBeanOperationInfo.ACTION);
-        Callable<String> opImpl = new Callable<String>() {
-            public String call() {
+        Function<Object[], String> opImpl = new Function<Object[], String>() {
+            @Override public String apply(Object[] args) {
+                assertEquals(args.length, 0, "args="+args);
                 return opReturnVal;
             }
         };
@@ -126,7 +128,7 @@ public class JmxHelperTest {
     }
 
     @Test
-    public void testInvokeOperationWithArgs() {
+    public void testInvokeOperationWithArgs() throws Exception {
         final String opReturnPrefix = "my result prefix/";
         String opParam1 = "my param 1";
         MBeanOperationInfo opInfo = new MBeanOperationInfo(
@@ -197,6 +199,8 @@ public class JmxHelperTest {
                         GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName);
                     } catch (InterruptedException e) {
                         return; // graceful return
+                    } catch (Exception e) {
+                        throw Exceptions.propagate(e);
                     }
                 }});
         try {

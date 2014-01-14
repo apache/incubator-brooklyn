@@ -123,7 +123,7 @@ public class JmxFeedTest {
     }
     
     @AfterMethod(alwaysRun=true)
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (feed != null) feed.stop();
         if (jmxHelper != null) jmxHelper.disconnect();
         if (jmxService != null) jmxService.shutdown();
