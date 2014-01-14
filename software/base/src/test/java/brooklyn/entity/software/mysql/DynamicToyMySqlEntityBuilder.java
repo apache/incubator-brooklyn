@@ -106,7 +106,7 @@ public class DynamicToyMySqlEntityBuilder {
                         SshEffectorTasks.ssh(
                             "cd "+dir(entity)+"/*",
                             "./scripts/mysql_install_db",
-                            "nohup ./support-files/mysql.server start > out.log 2> err.log < /dev/null &"
+                            "./support-files/mysql.server start > out.log 2> err.log < /dev/null"
                         ).summary("setup and run mysql").returning(SshTasks.returningStdoutLoggingInfo(log, true)));
                 return "submitted start";
             }
