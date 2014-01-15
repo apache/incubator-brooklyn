@@ -13,7 +13,7 @@ import brooklyn.util.time.Duration;
  * 
  * @author aled
  */
-public class PollConfig<V, T, This extends PollConfig<V,T,This>> extends FeedConfig<V,T,This> {
+public class PollConfig<V, T, F extends PollConfig<V, T, F>> extends FeedConfig<V, T, F> {
 
     private long period = -1;
     private String description;
@@ -22,7 +22,7 @@ public class PollConfig<V, T, This extends PollConfig<V,T,This>> extends FeedCon
         super(sensor);
     }
 
-    public PollConfig(PollConfig<V,T,This> other) {
+    public PollConfig(PollConfig<V,T,F> other) {
         super(other);
         this.period = other.period;
     }
@@ -31,23 +31,23 @@ public class PollConfig<V, T, This extends PollConfig<V,T,This>> extends FeedCon
         return period;
     }
     
-    public This period(Duration val) {
+    public F period(Duration val) {
         checkArgument(val.toMilliseconds() >= 0, "period must be greater than or equal to zero");
         this.period = val.toMilliseconds();
         return self();
     }
     
-    public This period(long val) {
+    public F period(long val) {
         checkArgument(val >= 0, "period must be greater than or equal to zero");
         this.period = val; return self();
     }
     
-    public This period(long val, TimeUnit units) {
+    public F period(long val, TimeUnit units) {
         checkArgument(val >= 0, "period must be greater than or equal to zero");
         return period(units.toMillis(val));
     }
     
-    public This description(String description) {
+    public F description(String description) {
         this.description = description;
         return self();
     }
