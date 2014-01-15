@@ -102,8 +102,7 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
     
     @Override
     public Object getRawConfig(ConfigKey<?> key) {
-        if (ownConfig.containsKey(key)) return ownConfig.get(key);
-        return null;
+        return getConfigRaw(key, true).or(null).get();
     }
     
     @Override

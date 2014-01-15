@@ -19,7 +19,7 @@ public abstract class Maybe<T> {
     public abstract boolean isPresent();
     public abstract T get();
     
-    public Object or(Object nextValue) {
+    public Maybe<T> or(T nextValue) {
         if (isPresent()) return this;
         return of(nextValue);
     }
