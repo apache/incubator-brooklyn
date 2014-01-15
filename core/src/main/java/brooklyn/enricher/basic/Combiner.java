@@ -31,9 +31,9 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
-public class Combinor<T,U> extends AbstractEnricher implements SensorEventListener<T> {
+public class Combiner<T,U> extends AbstractEnricher implements SensorEventListener<T> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Combinor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Combiner.class);
 
     public static ConfigKey<Function<?, ?>> TRANSFORMATION = ConfigKeys.newConfigKey(new TypeToken<Function<?, ?>>() {}, "enricher.transformation");
 
@@ -58,7 +58,7 @@ public class Combinor<T,U> extends AbstractEnricher implements SensorEventListen
     // We use a synchronizedMap over a ConcurrentHashMap for entities that store null values.
     protected final Map<Sensor<T>, T> values = Collections.synchronizedMap(new LinkedHashMap<Sensor<T>, T>());
 
-    public Combinor() {
+    public Combiner() {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

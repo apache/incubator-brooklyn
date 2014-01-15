@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.enricher.basic.Aggregator;
-import brooklyn.enricher.basic.Combinor;
+import brooklyn.enricher.basic.Combiner;
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.enricher.basic.Transformer;
 import brooklyn.entity.Entity;
@@ -66,11 +66,11 @@ public class Enrichers {
         public <S> TransformerBuilder<S, Object, ?> transforming(AttributeSensor<S> val) {
             return new ConcreteTransformerBuilder<S, Object>(val);
         }
-        public <S> CombinorBuilder<S, Object, ?> combining(AttributeSensor<? extends S>... vals) {
-            return new ConcreteCombinorBuilder<S, Object>(vals);
+        public <S> CombinerBuilder<S, Object, ?> combining(AttributeSensor<? extends S>... vals) {
+            return new ConcreteCombinerBuilder<S, Object>(vals);
         }
-        public <S> CombinorBuilder<S, Object, ?> combining(Collection<AttributeSensor<? extends S>> vals) {
-            return new ConcreteCombinorBuilder<S, Object>(vals);
+        public <S> CombinerBuilder<S, Object, ?> combining(Collection<AttributeSensor<? extends S>> vals) {
+            return new ConcreteCombinerBuilder<S, Object>(vals);
         }
         public <S> AggregatorBuilder<S, Object, ?> aggregating(AttributeSensor<S> val) {
             return new ConcreteAggregatorBuilder<S,Object>(val);
@@ -201,7 +201,7 @@ public class Enrichers {
         }
     }
     
-    public abstract static class CombinorBuilder<S, T, B extends CombinorBuilder<S, T, B>> extends Builder<B> {
+    public abstract static class CombinerBuilder<S, T, B extends CombinerBuilder<S, T, B>> extends Builder<B> {
         protected final List<AttributeSensor<? extends S>> combining;
         protected AttributeSensor<T> publishing;
         protected Entity fromEntity;
@@ -213,16 +213,16 @@ public class Enrichers {
         // For summing/averaging
         protected Object defaultValueForUnreportedSensors;
         
-        public CombinorBuilder(AttributeSensor<? extends S>... vals) {
+        public CombinerBuilder(AttributeSensor<? extends S>... vals) {
             this(ImmutableList.copyOf(vals));
         }
-        public CombinorBuilder(Collection<AttributeSensor<? extends S>> vals) {
+        public CombinerBuilder(Collection<AttributeSensor<? extends S>> vals) {
             checkArgument(checkNotNull(vals).size() > 0, "combining-sensors must be non-empty");
             this.combining = ImmutableList.<AttributeSensor<? extends S>>copyOf(vals);
         }
-        public <T2 extends T, B2 extends CombinorBuilder<S, T2, B2>> CombinorBuilder<S, T2, B2> publishing(AttributeSensor<T2> val) {
+        public <T2 extends T, B2 extends CombinerBuilder<S, T2, B2>> CombinerBuilder<S, T2, B2> publishing(AttributeSensor<T2> val) {
             this.publishing = (AttributeSensor) checkNotNull(val);
-            return (CombinorBuilder<S, T2, B2>) self();
+            return (CombinerBuilder<S, T2, B2>) self();
         }
         public B from(Entity val) {
             this.fromEntity = checkNotNull(val);
@@ -261,13 +261,13 @@ public class Enrichers {
             return self();
         }
         public EnricherSpec<?> build() {
-            return EnricherSpec.create(Combinor.class)
+            return EnricherSpec.create(Combiner.class)
                     .configure(MutableMap.builder()
-                            .putIfNotNull(Combinor.PRODUCER, fromEntity)
-                            .put(Combinor.TARGET_SENSOR, publishing)
-                            .put(Combinor.SOURCE_SENSORS, combining)
-                            .putIfNotNull(Combinor.TRANSFORMATION, computing)
-                            .putIfNotNull(Combinor.VALUE_FILTER, valueFilter)
+                            .putIfNotNull(Combiner.PRODUCER, fromEntity)
+                            .put(Combiner.TARGET_SENSOR, publishing)
+                            .put(Combiner.SOURCE_SENSORS, combining)
+                            .putIfNotNull(Combiner.TRANSFORMATION, computing)
+                            .putIfNotNull(Combiner.VALUE_FILTER, valueFilter)
                             .build());
         }
         
@@ -405,11 +405,11 @@ public class Enrichers {
         }
     }
 
-    private static class ConcreteCombinorBuilder<S, T> extends CombinorBuilder<S, T, ConcreteCombinorBuilder<S, T>> {
-        public ConcreteCombinorBuilder(AttributeSensor<? extends S>... vals) {
+    private static class ConcreteCombinerBuilder<S, T> extends CombinerBuilder<S, T, ConcreteCombinerBuilder<S, T>> {
+        public ConcreteCombinerBuilder(AttributeSensor<? extends S>... vals) {
             super(vals);
         }
-        public ConcreteCombinorBuilder(Collection<AttributeSensor<? extends S>> vals) {
+        public ConcreteCombinerBuilder(Collection<AttributeSensor<? extends S>> vals) {
             super(vals);
         }
     }

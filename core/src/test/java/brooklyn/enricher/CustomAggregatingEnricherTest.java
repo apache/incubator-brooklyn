@@ -142,7 +142,7 @@ public class CustomAggregatingEnricherTest {
     }
     
     @Test
-    public void testSummingEnricherWhenNoAndNullSensorValueExplicitValue() {
+    public void testSummingEnricherWhenDefaultValueForUnreportedSensors() {
         entity.addEnricher(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
@@ -205,7 +205,7 @@ public class CustomAggregatingEnricherTest {
     }
 
     @Test
-    public void testAveragingEnricherWhenNoAndNullSensorValuesExplicit() {
+    public void testAveragingEnricherWhenDefaultValueForUnreportedSensors() {
         TestEntity producer1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         entity.addEnricher(Enrichers.builder()

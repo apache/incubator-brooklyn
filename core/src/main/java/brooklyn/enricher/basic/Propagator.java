@@ -100,11 +100,11 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
     }
 
     public void emitAllAttributes(boolean includeNullValues) {
-        Iterable<? extends Sensor<?>> sensorsToPupulate = propagatingAll 
+        Iterable<? extends Sensor<?>> sensorsToPopulate = propagatingAll 
                 ? Iterables.filter(producer.getEntityType().getSensors(), sensorFilter)
                 : sensorMapping.keySet();
 
-        for (Sensor<?> s : sensorsToPupulate) {
+        for (Sensor<?> s : sensorsToPopulate) {
             if (s instanceof AttributeSensor) {
                 AttributeSensor destinationSensor = (AttributeSensor<?>) getDestinationSensor(s);
                 Object v = producer.getAttribute((AttributeSensor<?>)s);

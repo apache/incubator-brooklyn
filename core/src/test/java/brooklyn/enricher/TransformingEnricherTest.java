@@ -24,9 +24,6 @@ public class TransformingEnricherTest {
 
     public static final Logger log = LoggerFactory.getLogger(TransformingEnricherTest.class);
             
-    private static final long TIMEOUT_MS = 10*1000;
-//    private static final long SHORT_WAIT_MS = 250;
-    
     TestApplication app;
     TestEntity producer;
     AttributeSensor<Integer> intSensorA;
