@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.launcher.BrooklynLauncher;
@@ -39,7 +39,7 @@ public class SingleWebServerExample extends AbstractApplication {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(SingleWebServerExample.class).displayName("Brooklyn WebApp example"))
+                .application(EntitySpec.create(StartableApplication.class, SingleWebServerExample.class).displayName("Brooklyn WebApp example"))
                 .webconsolePort(port)
                 .location(location)
                 .start();

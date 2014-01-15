@@ -28,6 +28,7 @@ import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.entity.TestEntityImpl
+import brooklyn.util.GroovyJavaMethods
 import brooklyn.util.exceptions.Exceptions
 
 import com.google.common.base.Predicates
@@ -500,7 +501,7 @@ class DynamicClusterTest {
         cluster.start([loc])
         Set origMembers = cluster.members as Set
 
-        cluster.setRemovalStrategy(removalStrategy)
+        cluster.setRemovalStrategy(GroovyJavaMethods.functionFromClosure(removalStrategy));
 
         for (int i = 10; i >= 0; i--) {
             cluster.resize(i)

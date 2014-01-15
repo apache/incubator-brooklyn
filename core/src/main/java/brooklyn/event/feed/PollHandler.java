@@ -13,12 +13,6 @@ public interface PollHandler<V> {
 
     public void onFailure(V val);
 
-    /**
-     * @deprecated since 0.6; use {@link #onException(Exception)}
-     */
-    @Deprecated
-    public void onError(Exception error);
-
     public void onException(Exception exception);
 
     public String getDescription();

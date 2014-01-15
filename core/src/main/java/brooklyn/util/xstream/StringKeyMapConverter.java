@@ -29,7 +29,7 @@ public class StringKeyMapConverter extends MapConverter {
     
     // full stop is technically allowed ... goes against "best practice" ... 
     // but simplifies property maps, and is used elsewhere in xstream's repn
-    final static String VALID_XML_NODE_NAME_CHARS = Identifiers.JAVA_VALID_NONSTART_CHARS + ".";
+    final static String VALID_XML_NODE_NAME_CHARS = Identifiers.JAVA_GOOD_NONSTART_CHARS + ".";
     
     public StringKeyMapConverter(Mapper mapper) {
         super(mapper);

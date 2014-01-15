@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.database.Database;
@@ -21,7 +21,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Objects.ToStringHelper;
@@ -39,8 +39,8 @@ public class DerbyDatabase extends SoftwareProcessImpl implements Database, Uses
     private static final Logger log = LoggerFactory.getLogger(DerbyDatabase.class);
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "10.8.1.2");
+    public static final ConfigKey<String> SUGGESTED_VERSION =
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "10.8.1.2");
 
     public static final PortAttributeSensorAndConfigKey JDBC_PORT = new PortAttributeSensorAndConfigKey(
             "derby.jdbcPort", "Suggested JDBC port");
@@ -49,10 +49,10 @@ public class DerbyDatabase extends SoftwareProcessImpl implements Database, Uses
             String.class, "derby.virtualHost", "Derby virtual host name", "localhost");
 
     public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
-            Attributes.JMX_USER, "admin");
+            UsesJmx.JMX_USER, "admin");
     
     public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(
-            Attributes.JMX_PASSWORD, "admin");
+            UsesJmx.JMX_PASSWORD, "admin");
 
     @SetFromFlag
     protected Collection<String> schemaNames;

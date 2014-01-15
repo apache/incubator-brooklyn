@@ -58,7 +58,7 @@ public class JBoss6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                 .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
                         .objectName(serverMbeanName)
                         .attributeName("Started")
-                        .onError(Functions.constant(false)))
+                        .onException(Functions.constant(false)))
                 .build();
     }
 

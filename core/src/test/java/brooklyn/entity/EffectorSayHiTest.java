@@ -29,7 +29,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicTask;
 
 import com.google.common.collect.ImmutableList;

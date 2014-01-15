@@ -28,12 +28,6 @@ public class HostLocationResolver implements LocationResolver {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public Location newLocationFromString(Map properties, String spec) {
-        return newLocationFromString(spec, null, properties, new MutableMap());
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
     public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
         return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
     }

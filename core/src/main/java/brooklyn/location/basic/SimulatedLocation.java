@@ -6,13 +6,13 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
@@ -47,7 +47,11 @@ public class SimulatedLocation extends AbstractLocation implements MachineProvis
     
     @Override
     public SimulatedLocation newSubLocation(Map<?,?> newFlags) {
-        return LocationCreationUtils.newSubLocation(newFlags, this);
+        // TODO shouldn't have to copy config bag as it should be inherited (but currently it is not used inherited everywhere; just most places)
+        return getManagementContext().getLocationManager().createLocation(LocationSpec.create(getClass())
+                .configure(getRawLocalConfigBag().getAllConfig())
+                .configure(newFlags)
+                .parent(this));
     }
 
     public MachineLocation obtain(Map<?,?> flags) {

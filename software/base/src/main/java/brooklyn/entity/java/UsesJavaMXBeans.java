@@ -43,16 +43,6 @@ public interface UsesJavaMXBeans {
     public static final AttributeSensor<Double> PROCESS_CPU_TIME_FRACTION_IN_WINDOW = Sensors.newDoubleSensor( 
             "java.metrics.processCpuTime.fraction.windowed", "Fraction of CPU time used, reported by JVM (percentage, over time window)");
     
-    /** @deprecated since 0.6.0, use {@link #PROCESS_CPU_TIME_FRACTION_LAST} */
-    public static final AttributeSensor<Double> PROCESS_CPU_TIME_FRACTION = PROCESS_CPU_TIME_FRACTION_LAST;
-    
-    /** @deprecated since 0.6.0 callers configure with
-     *  {@link JavaAppUtils#connectJavaAppServerPolicies(brooklyn.entity.basic.EntityLocal)} */
-    public static final Integer AVG_PROCESS_CPU_TIME_FRACTION_PERIOD = 10 * 1000;
-    
-    /** @deprecated since 0.6.0 use {@link #PROCESS_CPU_TIME_FRACTION_IN_WINDOW} */
-    public static final AttributeSensor<Double> AVG_PROCESS_CPU_TIME_FRACTION = PROCESS_CPU_TIME_FRACTION_IN_WINDOW; 
-
     public static final AttributeSensor<Integer> AVAILABLE_PROCESSORS =
             Sensors.newIntegerSensor("java.metrics.processors.available", "number of processors available to the Java virtual machine");
     public static final AttributeSensor<Double> SYSTEM_LOAD_AVERAGE

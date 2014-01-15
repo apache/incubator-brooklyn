@@ -5,14 +5,15 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -29,8 +30,8 @@ public class Infinispan5Server extends SoftwareProcessImpl implements UsesJmx {
             "infinispan.server.port", "TCP port number to listen on");
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "5.0.0.CR8");
+    public static final ConfigKey<String> SUGGESTED_VERSION =
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.0.0.CR8");
 
     // Default filename is "infinispan-${version}-all.zip"
     @SetFromFlag("downloadUrl")

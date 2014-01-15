@@ -108,7 +108,7 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
                         .objectName(karafAdminObjectName)
                         .attributeName("Instances")
                         .onSuccess((Function)JmxValueFunctions.tabularDataToMap())
-                        .onError(new Function<Exception,Map>() {
+                        .onException(new Function<Exception,Map>() {
                                 @Override public Map apply(Exception input) {
                                     // If MBean is unreachable, then mark as service-down
                                     if (Boolean.TRUE.equals(getAttribute(SERVICE_UP))) {

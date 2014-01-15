@@ -11,8 +11,8 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.MutableMap;
-import brooklyn.util.NetworkUtils;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
@@ -55,7 +55,7 @@ public class Infinispan5SshDriver extends JavaSoftwareProcessSshDriver implement
         expandedInstallDir = getInstallDir(); // unpacks to current directory, rather than sub-directory
 
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.INSTALL_ZIP)
                 .add("unzip " + saveAs)
                 .build();
@@ -69,7 +69,7 @@ public class Infinispan5SshDriver extends JavaSoftwareProcessSshDriver implement
     public void customize() {
         // TODO create and reference a conf.xml? And start with --cache_config <path>
         Map ports = MutableMap.of("port", getPort(), "jmxPort", getJmxPort());
-        NetworkUtils.checkPortsValid(ports);
+        Networking.checkPortsValid(ports);
 
         newScript(CUSTOMIZING)
                 .body.append()

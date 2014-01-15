@@ -83,7 +83,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         // overwrite interrupts the installer.
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_UNZIP);
         commands.add(format("unzip -o %s",saveAs));
 

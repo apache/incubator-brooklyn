@@ -159,32 +159,11 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         };
         return new CustomAggregatingEnricher<N,T>(flags, source, target, aggregator, defaultValueForUnreportedSensors);
     }
-    /** @see {@link #newSummingEnricher(Map, AttributeSensor, AttributeSensor, Number, Number)}  
-     * @deprecated since 0.6.0 to prevent sprawl, use one of the fuller methods */ @Deprecated
-    public static <N extends Number, T extends Number> CustomAggregatingEnricher<N,T> newSummingEnricher(
-            Map<String,?> flags, AttributeSensor<N> source, final AttributeSensor<T> target) {
-        return newSummingEnricher(flags, source, target, null, null);
-    }
-    /** @see {@link #newSummingEnricher(Map, AttributeSensor, AttributeSensor, Number, Number)}  
-     * @deprecated since 0.6.0 to prevent sprawl, use one of the fuller methods */ @Deprecated
-    public static <N extends Number> CustomAggregatingEnricher<N,N> newSummingEnricher(
-            Map<String,?> flags, AttributeSensor<N> source, final AttributeSensor<N> target, N defaultValue) {
-        return newSummingEnricher(flags, source, target,  
-                cast(defaultValue, source.getTypeToken()),
-                cast(defaultValue, target.getTypeToken()));
-    }
+    
     /** @see {@link #newSummingEnricher(Map, AttributeSensor, AttributeSensor, Number, Number)} */
     public static <N extends Number> CustomAggregatingEnricher<N,N> newSummingEnricher(
             AttributeSensor<N> source, AttributeSensor<N> target) {
-        return newSummingEnricher(Collections.<String,Object>emptyMap(), source, target);
-    }
-    /** @see {@link #newSummingEnricher(Map, AttributeSensor, AttributeSensor, Number, Number)}  
-     * @deprecated since 0.6.0 to prevent sprawl, use one of the fuller methods */ @Deprecated
-    public static <N extends Number> CustomAggregatingEnricher<N,N> newSummingEnricher(
-            AttributeSensor<N> source, AttributeSensor<N> target, N defaultValue) {
-        return newSummingEnricher(Collections.<String,Object>emptyMap(), source, target, 
-                cast(defaultValue, source.getTypeToken()),
-                cast(defaultValue, target.getTypeToken()));
+        return newSummingEnricher(Collections.<String,Object>emptyMap(), source, target, null, null);
     }
 
     /** creates an enricher which averages over all children/members, 
@@ -204,28 +183,11 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         };
         return new CustomAggregatingEnricher<N,Double>(flags, source, target, aggregator, defaultValueForUnreportedSensors);
     }
-    
-    /** @see #newAveragingEnricher(Map, AttributeSensor, AttributeSensor, Number, Double) 
-     * @deprecated since 0.6.0 to prevent sprawl, use one of the fuller methods */ @Deprecated
-    public static <N extends Number> CustomAggregatingEnricher<N,Double> newAveragingEnricher(
-            Map<String,?> flags, AttributeSensor<? extends N> source, AttributeSensor<Double> target) {
-        return newAveragingEnricher(flags, source, target, null, null);
-    }
-
-    /** @see #newAveragingEnricher(Map, AttributeSensor, AttributeSensor, Number, Double) 
-     * @deprecated since 0.6.0 to prevent sprawl, use one of the fuller methods */ @Deprecated
-    public static <N extends Number> CustomAggregatingEnricher<N,Double> newAveragingEnricher(
-            Map<String,?> flags, AttributeSensor<? extends N> source, AttributeSensor<Double> target,
-            Number defaultValue) {
-        return newAveragingEnricher(flags, source, target, 
-                cast(defaultValue, source.getTypeToken()),
-                cast(defaultValue, target.getTypeToken()));
-    }
 
     /** @see #newAveragingEnricher(Map, AttributeSensor, AttributeSensor, Number, Double) */
     public static <N extends Number> CustomAggregatingEnricher<N,Double> newAveragingEnricher(
             AttributeSensor<N> source, AttributeSensor<Double> target) {
-        return newAveragingEnricher(Collections.<String,Object>emptyMap(), source, target);
+        return newAveragingEnricher(Collections.<String,Object>emptyMap(), source, target, null, null);
     }
 
     @SuppressWarnings("unchecked")

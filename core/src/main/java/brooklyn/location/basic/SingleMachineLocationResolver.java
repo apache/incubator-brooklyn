@@ -28,11 +28,6 @@ public class SingleMachineLocationResolver implements LocationResolver {
     }
 
     @Override
-    public Location newLocationFromString(Map properties, String spec) {
-        return newLocationFromString(spec, null, properties, new MutableMap());
-    }
-    
-    @Override
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
     }

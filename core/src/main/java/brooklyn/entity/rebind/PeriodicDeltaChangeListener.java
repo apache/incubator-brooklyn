@@ -116,7 +116,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
             }
             
             if (System.currentTimeMillis() > maxEndtime) {
-                throw new TimeoutException("Timeout waiting for pending complete of rebind-periodic-delta, after "+Time.makeTimeString(timeout, unit));
+                throw new TimeoutException("Timeout waiting for pending complete of rebind-periodic-delta, after "+Time.makeTimeStringRounded(timeout, unit));
             }
             Thread.sleep(1);
         }

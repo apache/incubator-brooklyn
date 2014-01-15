@@ -19,40 +19,16 @@ public class BasicJcloudsLocationCustomizer implements JcloudsLocationCustomizer
 
     @Override
     public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
-        customize(computeService, templateBuilder);
+        // no-op
     }
 
     @Override
     public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
-        customize(computeService, templateOptions);
+        // no-op
     }
 
     @Override
     public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
-        customize(computeService, machine);
-    }
-    
-    /**
-     * @deprecated since 0.6; use {@link #customize(JcloudsLocation, ComputeService, TemplateBuilder)
-     */
-    @Deprecated
-    protected void customize(ComputeService computeService, TemplateBuilder templateBuilder) {
-        // no-op
-    }
-
-    /**
-     * @deprecated since 0.6; use {@link #customize(JcloudsLocation, ComputeService, TemplateOptions)
-     */
-    @Deprecated
-    public void customize(ComputeService computeService, TemplateOptions templateOptions) {
-        // no-op
-    }
-
-    /**
-     * @deprecated since 0.6; use {@link #customize(JcloudsLocation, ComputeService, JcloudsSshMachineLocation)
-     */
-    @Deprecated
-    public void customize(ComputeService computeService, JcloudsSshMachineLocation machine) {
         // no-op
     }
 }

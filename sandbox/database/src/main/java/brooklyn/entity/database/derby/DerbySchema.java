@@ -9,15 +9,15 @@ import javax.management.ObjectName;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.database.Schema;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -107,7 +107,7 @@ public class DerbySchema extends AbstractEntity implements Schema {
     }
 
     public void create() {
-        jmxHelper.operation(virtualHostManager, "createNewSchema", name, getParent().getAttribute(Attributes.JMX_USER), true);
+        jmxHelper.operation(virtualHostManager, "createNewSchema", name, getParent().getAttribute(UsesJmx.JMX_USER), true);
         jmxHelper.operation(exchange, "createNewBinding", name, name);
     }
 

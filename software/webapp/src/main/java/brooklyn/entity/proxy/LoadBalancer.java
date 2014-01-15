@@ -70,11 +70,6 @@ public interface LoadBalancer extends Entity, Startable {
     public static final BasicAttributeSensor<Set<String>> SERVER_POOL_TARGETS = new BasicAttributeSensor(
             Set.class, "proxy.serverpool.targets", "The downstream targets in the server pool");
     
-    /**
-     * @deprecated since 0.6; Use SERVER_POOL_TARGETS
-     */
-    public static final BasicAttributeSensor<Set<String>> TARGETS = SERVER_POOL_TARGETS;
-    
     public static final MethodEffector<Void> RELOAD = new MethodEffector<Void>(LoadBalancer.class, "reload");
     
     public static final MethodEffector<Void> UPDATE = new MethodEffector<Void>(LoadBalancer.class, "update");

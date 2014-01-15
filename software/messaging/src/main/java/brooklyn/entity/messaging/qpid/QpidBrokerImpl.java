@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JmxSupport;
-import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.jms.JMSBrokerImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
@@ -112,7 +111,7 @@ public class QpidBrokerImpl extends JMSBrokerImpl<QpidQueue, QpidTopic> implemen
                                     }
                                     return true;
                                 }})
-                        .onError(Functions.constant(false)))
+                        .onException(Functions.constant(false)))
                 .build();
     }
 

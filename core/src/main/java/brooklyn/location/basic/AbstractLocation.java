@@ -313,13 +313,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
     }
     
     @Override
-    @Deprecated
-    /** @since 0.6.0 (?) - use getDisplayName */
-    public String getName() {
-        return getDisplayName();
-    }
-    
-    @Override
     public Location getParent() {
         return parent.get();
     }
@@ -353,24 +346,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
     }
 
     @Override
-    @Deprecated
-    public Location getParentLocation() {
-        return getParent();
-    }
-    
-    @Override
-    @Deprecated
-    public Collection<Location> getChildLocations() {
-        return getChildren();
-    }
-
-    @Override
-    @Deprecated
-    public void setParentLocation(Location parent) {
-        setParent(parent);
-    }
-
-    @Override
     public <T> T getConfig(HasConfigKey<T> key) {
         return getConfig(key.getConfigKey());
     }
@@ -381,11 +356,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         if (getParent()!=null) return getParent().getConfig(key);
         return key.getDefaultValue();
     }
-    @Override
-    @Deprecated
-    public boolean hasConfig(ConfigKey<?> key) {
-        return hasConfig(key, false);
-    }
+
     @Override
     public boolean hasConfig(ConfigKey<?> key, boolean includeInherited) {
         boolean locally = getRawLocalConfigBag().containsKey(key);
@@ -395,11 +366,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         return false;
     }
     
-    @Override
-    @Deprecated
-    public Map<String,Object> getAllConfig() {
-        return getAllConfig(false);
-    }
     @Override
     public Map<String,Object> getAllConfig(boolean includeInherited) {
         Map<String,Object> result = null;
@@ -463,15 +429,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         return false;
     }
 
-    /**
-     * @deprecated since 0.6
-     * @see #addChild(Location)
-     */
-    @Deprecated
-    public void addChildLocation(Location child) {
-        addChild(child);
-    }
-
     protected <T extends Location> T addChild(LocationSpec<T> spec) {
         T child = managementContext.getLocationManager().createLocation(spec);
         addChild(child);
@@ -508,15 +465,6 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
 
         children.add(child);
         child.setParent(this);
-    }
-    
-    /**
-     * @deprecated since 0.6
-     * @see #removeChild(Location)
-     */
-    @Deprecated
-    protected boolean removeChildLocation(Location child) {
-        return removeChild(child);
     }
     
     protected boolean removeChild(Location child) {

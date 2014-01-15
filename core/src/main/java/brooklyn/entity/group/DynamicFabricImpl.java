@@ -53,7 +53,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     public void init() {
         super.init();
         
-        fabricSizeEnricher = CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), Changeable.GROUP_SIZE, FABRIC_SIZE);
+        fabricSizeEnricher = CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), Changeable.GROUP_SIZE, FABRIC_SIZE, null, null);
         addEnricher(fabricSizeEnricher);
         
         setAttribute(SERVICE_UP, false);

@@ -10,8 +10,7 @@ import brooklyn.util.task.ssh.SshTasks;
  * <p> 
  * Not gone so far as deprecating (yet, in 0.6.0) although we might.  Feedback welcome. 
  * @since 0.6.0 */
-@SuppressWarnings("deprecation")
-public interface NaiveScriptRunner extends ScriptRunner {
+public interface NaiveScriptRunner {
 
     /** Runs a script and returns the result code */
     int execute(List<String> script, String summaryForLogging);

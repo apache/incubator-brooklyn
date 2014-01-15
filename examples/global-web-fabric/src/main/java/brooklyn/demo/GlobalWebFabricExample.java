@@ -11,11 +11,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
@@ -67,7 +67,7 @@ public class GlobalWebFabricExample extends AbstractApplication {
         String locations = CommandLineUtil.getCommandLineOption(args, "--locations", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(GlobalWebFabricExample.class).displayName("Brooklyn Global Web Fabric Example"))
+                .application(EntitySpec.create(StartableApplication.class, GlobalWebFabricExample.class).displayName("Brooklyn Global Web Fabric Example"))
                 .webconsolePort(port)
                 .locations(Arrays.asList(locations))
                 .start();

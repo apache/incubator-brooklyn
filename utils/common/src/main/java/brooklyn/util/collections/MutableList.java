@@ -71,16 +71,6 @@ public class MutableList<V> extends ArrayList<V> {
             return this;
         }
         
-        /** @deprecated since 0.6.0 ambiguous with {@link #addAll(Iterable)}; 
-         * use {@link #add(Object, Object, Object...)} */ 
-        @Deprecated
-        public Builder<V> addAll(V... values) {
-            for (V v : values) {
-                result.add(v);
-            }
-            return this;
-        }
-
         public Builder<V> addAll(Iterable<? extends V> iterable) {
             if (iterable instanceof Collection) {
                 result.addAll((Collection<? extends V>) iterable);
@@ -99,16 +89,6 @@ public class MutableList<V> extends ArrayList<V> {
                 for (V v : iterable) {
                     result.remove(v);
                 }
-            }
-            return this;
-        }
-
-        /** @deprecated since 0.6.0 ambiguous with {@link #removeAll(Iterable)}; 
-         * use <code>removeAll(Arrays.asList(Object, Object, Object...))</code> */ 
-        @Deprecated
-        public Builder<V> removeAll(V... values) {
-            for (V v : values) {
-                result.remove(v);
             }
             return this;
         }

@@ -16,13 +16,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.basic.BrooklynTasks;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
@@ -230,46 +226,11 @@ public class EffectorUtils {
         }
     }
     
-    /**
-     * Invokes the effector so that its progress is tracked.
-     * @deprecated since 0.6.0 this method name is misleading; it only works for MethodEffectors tightly tied to a method;
-     * most callers should use
-     * {@link Entities#invokeEffector(brooklyn.entity.basic.EntityLocal, Entity, Effector, Map)} to invoke or 
-     * {@link Effectors#invocation(Entity, Effector, Map)} to just create (an uninvoked) task; 
-     * or for low level usage possibly {@link ManagementContextInternal#invokeEffector(Entity, Effector, Map)}
-     */
-    public static <T> T invokeEffector(Entity entity, Effector<T> eff, Object[] args) {
-        return invokeMethodEffector(entity, eff, args);
-    }
-    
     public static void handleEffectorException(Entity entity, Effector<?> effector, Throwable throwable) {
         log.warn("Error invoking "+effector.getName()+" at "+entity+": "+Exceptions.collapseText(throwable));
         throw new PropagatedRuntimeException("Error invoking "+effector.getName()+" at "+entity, throwable);
     }
 
-    /**
-     * Invokes the effector so that its progress is tracked.
-     * 
-     * If the given method is not defined as an effector, then a warning will be logged and the
-     * method will be invoked directly.
-     * 
-     * @deprecated since 0.6.0; not used, prefer passing an effector and a map of arguments
-     */
-    public static Object invokeEffector(AbstractEntity entity, Method method, Object[] args) {
-        Effector<?> effector = findEffectorMatching(entity, method);
-        if (effector == null) {
-            log.warn("No matching effector found for method {} on entity {}; invoking directly", method, entity);
-            try {
-                return method.invoke(entity, args);
-            } catch (Exception e) {
-                log.info("Execution of method {} on entity {} failed with {} (rethrowing)", new Object[] {method, entity.getId(), e});
-                throw Exceptions.propagate(e);
-            }
-        } else {
-            return invokeMethodEffector(entity, effector, args);
-        }
-    }
- 
     public static <T> Task<T> invokeEffectorAsync(Entity entity, Effector<T> eff, Map<String,?> parameters) {
         String id = entity.getId();
         String name = eff.getName();

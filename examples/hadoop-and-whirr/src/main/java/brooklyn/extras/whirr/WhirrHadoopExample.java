@@ -9,7 +9,6 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.util.CommandLineUtil;
@@ -36,7 +35,7 @@ public class WhirrHadoopExample extends AbstractApplication {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(WhirrHadoopExample.class))
+                .application(EntitySpec.create(StartableApplication.class, WhirrHadoopExample.class))
                 .webconsolePort(port)
                 .location(location)
                 .start();

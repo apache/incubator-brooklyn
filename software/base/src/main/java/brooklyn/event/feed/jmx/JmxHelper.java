@@ -44,7 +44,6 @@ import javax.net.ssl.TrustManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.java.JmxSupport;
 import brooklyn.entity.java.UsesJmx;
@@ -131,35 +130,6 @@ public class JmxHelper {
         return "service:jmx:jmxmp://"+host+(jmxmpPort!=null ? ":"+jmxmpPort : "");
     }
     
-    /** @deprecated since 0.6.0 use {@link #toRmiJmxUrl(String, Integer, Integer, String)},
-     * unless you might want a JMX MP URL in which case use "smart" method {@link #toJmxUrl(EntityLocal)} */
-    public static String toConnectorUrl(String host, Integer jmxRmiServerPort, Integer rmiRegistryPort, String context) {
-        return toRmiJmxUrl(host, jmxRmiServerPort, rmiRegistryPort, context);
-    }
-
-    /** @deprecated since 0.6.0 use {@link #toJmxUrl(EntityLocal)} */
-    public static String toConnectorUrl(EntityLocal entity) {
-        LOG.warn("Using legacy method toConnectorUrl("+entity+") which will only return JMX URLs");
-        
-        String url = entity.getAttribute(Attributes.JMX_SERVICE_URL);
-        if (url != null) {
-            return url;
-        } else {
-            String host = checkNotNull(entity.getAttribute(Attributes.HOSTNAME));
-            Integer jmxEntryPort = entity.getAttribute(Attributes.JMX_PORT);
-            if (GroovyJavaMethods.truth(entity.getConfig(UsesJmx.JMX_SSL_ENABLED))) {
-                url = String.format(JMXMP_URL_FORMAT, host, jmxEntryPort);
-            } else {
-                Integer rmiServerPort = entity.getAttribute(Attributes.RMI_REGISTRY_PORT);
-                String context = entity.getAttribute(Attributes.JMX_CONTEXT);
-                url = toConnectorUrl(host, jmxEntryPort, rmiServerPort, context);
-            }
-            if (entity.getEntityType().getSensors().contains(Attributes.JMX_SERVICE_URL))
-                entity.setAttribute(Attributes.JMX_SERVICE_URL, url);
-            return url;
-        }
-    }
-
     final EntityLocal entity;
     final String url;
     final String user;
@@ -176,7 +146,7 @@ public class JmxHelper {
     private final Set<ObjectName> notFoundMBeans;
 
     public JmxHelper(EntityLocal entity) {
-        this(toJmxUrl(entity), entity, entity.getAttribute(Attributes.JMX_USER), entity.getAttribute(Attributes.JMX_PASSWORD));
+        this(toJmxUrl(entity), entity, entity.getAttribute(UsesJmx.JMX_USER), entity.getAttribute(UsesJmx.JMX_PASSWORD));
         
         if (entity.getAttribute(UsesJmx.JMX_URL) == null) {
             entity.setAttribute(UsesJmx.JMX_URL, url);

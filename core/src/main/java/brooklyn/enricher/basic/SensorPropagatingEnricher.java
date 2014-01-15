@@ -50,10 +50,6 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
         return new SensorPropagatingEnricher(source, includes);
     }
 
-    /** @deprecated since 0.6.0 use {@link #newInstanceRenaming(Entity, Map)} which does the same thing */
-    public static SensorPropagatingEnricher newInstanceListeningTo(Entity source, Map<? extends Sensor<?>, ? extends Sensor<?>> sensors) {
-        return new SensorPropagatingEnricher(source, sensors);
-    }
     /** listens to sensors from source, propagates them here renamed according to the map */
     public static SensorPropagatingEnricher newInstanceRenaming(Entity source, Map<? extends Sensor<?>, ? extends Sensor<?>> sensors) {
         return new SensorPropagatingEnricher(source, sensors);

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
@@ -75,7 +76,7 @@ implements MachineProvisioningLocation<T>, Closeable {
             Location parent = machine.getParent();
             if (parent != null && !parent.equals(this))
                 throw new IllegalStateException("Machines must not have a parent location, but machine '"+machine.getDisplayName()+"' has its parent location set");
-            addChildLocation(machine);
+            addChild(machine);
         }
     }
     
@@ -99,7 +100,11 @@ implements MachineProvisioningLocation<T>, Closeable {
     }
     
     public FixedListMachineProvisioningLocation<T> newSubLocation(Map<?,?> newFlags) {
-        return LocationCreationUtils.newSubLocation(newFlags, this);
+        // TODO shouldn't have to copy config bag as it should be inherited (but currently it is not used inherited everywhere; just most places)
+        return getManagementContext().getLocationManager().createLocation(LocationSpec.create(getClass())
+                .configure(getRawLocalConfigBag().getAllConfig())
+                .configure(newFlags)
+                .parent(this));
     }
 
     @Override
@@ -118,7 +123,7 @@ implements MachineProvisioningLocation<T>, Closeable {
             Location existingParent = ((Location)machine).getParent();
             if (existingParent != null && !existingParent.equals(this))
                 throw new IllegalStateException("Machine "+machine+" must not have a parent location to be added to "+toString()+", but parent is already set to '"+existingParent+"'");
-            addChildLocation((Location)machine);
+            addChild((Location)machine);
             
             machines.add(machine);
         }
@@ -131,7 +136,7 @@ implements MachineProvisioningLocation<T>, Closeable {
             } else {
                 machines.remove(machine);
                 pendingRemoval.remove(machine);
-                removeChildLocation((Location)machine);
+                removeChild((Location)machine);
             }
         }
     }
@@ -255,15 +260,11 @@ implements MachineProvisioningLocation<T>, Closeable {
         String privateKeyFile;
         String privateKeyData;
         File localTempDir;
+        List machines = Lists.newArrayList();
 
         public Builder(LocationManager lm) {
             this.lm = lm;
         }
-        /** @deprecated since 0.6.0 use {@link #build(LocationManager)} */ @Deprecated
-        public Builder() {
-        }
-        
-        List machines = Lists.newArrayList();
         public Builder user(String user) {
             this.user = user;
             return this;

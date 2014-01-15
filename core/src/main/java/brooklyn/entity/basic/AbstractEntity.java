@@ -101,11 +101,7 @@ import com.google.common.collect.Sets;
  */
 public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     
-    /**
-     * @deprecated since 0.6; will be made private in subsequent release; instead declare more appropriate logger 
-     */
-    @Deprecated
-    protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class);
     
     static { BrooklynLanguageExtensions.init(); }
     

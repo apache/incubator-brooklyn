@@ -14,13 +14,14 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.JavaWebAppService;
+import brooklyn.event.feed.shell.ShellFeed;
 import brooklyn.extras.openshift.OpenshiftExpressAccess.AppInfoFields;
 import brooklyn.extras.openshift.OpenshiftExpressAccess.UserInfoFields;
 import brooklyn.extras.openshift.OpenshiftExpressAccess.UserInfoResult;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.internal.duplicates.ExecUtils;
+import brooklyn.util.stream.StreamGobbler;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -88,12 +89,27 @@ class OpenshiftExpressJavaWebAppCluster extends AbstractEntity implements Starta
         log.info("exec system process: {}", command);
         //this seems the best way to get paths set properly (login shell invocation)
         try {
-            return ExecUtils.execBlocking("/bin/bash", "-cl", command);
+            return execBlocking("/bin/bash", "-cl", command);
         } catch (IOException e) {
             throw Exceptions.propagate(e);
         }
     }
     
+    /**
+     * @deprecated since 0.6; use {@link brooklyn.util.stream.StreamGobbler}, and see {@link ShellFeed} 
+     */
+    private static int execBlocking(String... cmd) throws IOException {
+        Process p = Runtime.getRuntime().exec(cmd);
+        new StreamGobbler(p.getInputStream(), System.out, log).start();
+        new StreamGobbler(p.getErrorStream(), System.err, log).start();
+        try {
+            p.waitFor();
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
+        return p.exitValue();
+    }
+
     boolean shouldDestroy = false;
 
     @Override

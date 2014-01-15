@@ -16,7 +16,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
@@ -37,26 +36,6 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(TestEntityImpl.class)
 public interface TestEntity extends Entity, Startable, EntityLocal, EntityInternal {
 
-    /**
-     * @deprecated since 0.6; use {@link EntitySpec.create(Class)} directly
-     */
-    public static class Spec<T extends TestEntity, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
-
-        private static class ConcreteSpec extends Spec<TestEntity, ConcreteSpec> {
-            ConcreteSpec() {
-                super(TestEntity.class);
-            }
-        }
-        
-        public static Spec<TestEntity, ?> newInstance() {
-            return new ConcreteSpec();
-        }
-        
-        protected Spec(Class<T> type) {
-            super(type);
-        }
-    }
-    
     @SetFromFlag("confName")
     public static final ConfigKey<String> CONF_NAME = ConfigKeys.newStringConfigKey("test.confName", "Configuration key, my name", "defaultval");
     public static final BasicConfigKey<Map> CONF_MAP_PLAIN = new BasicConfigKey<Map>(Map.class, "test.confMapPlain", "Configuration key that's a plain map", MutableMap.of());

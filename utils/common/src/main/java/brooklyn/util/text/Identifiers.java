@@ -9,11 +9,6 @@ public class Identifiers {
     public static final String JAVA_GOOD_START_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
     public static final String JAVA_GOOD_NONSTART_CHARS = JAVA_GOOD_START_CHARS+"1234567890";
     
-    /** @deprecated since 0.6.0 use {@link Character#isJavaIdentifierStart(char)} for valid chars; these are just good chars to use */ @Deprecated
-    public static final String JAVA_VALID_START_CHARS = JAVA_GOOD_START_CHARS;
-    /** @deprecated since 0.6.0 use {@link Character#isJavaIdentifierPart(char)} for valid chars; these are just good chars to use */ @Deprecated
-    public static final String JAVA_VALID_NONSTART_CHARS = JAVA_GOOD_NONSTART_CHARS;
-
     public static final String JAVA_GENERATED_IDENTIFIER_START_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     public static final String JAVA_GENERATED_IDENTIFIERNONSTART_CHARS = JAVA_GENERATED_IDENTIFIER_START_CHARS+"1234567890";
 
@@ -163,11 +158,6 @@ public class Identifiers {
         }
     }
     
-    /** @deprecated since 0.6.0 incomplete logic, and not needed */
-    public static boolean isValidJavaToken(String s) {
-        return isValidToken(s, JAVA_VALID_START_CHARS, JAVA_VALID_NONSTART_CHARS);
-    }
-    
     public static boolean isValidToken(String token, String validStartChars, String validSubsequentChars) {
         if (token==null || token.length()==0) return false;
         if (validStartChars.indexOf(token.charAt(0))==-1) return false;
@@ -175,11 +165,4 @@ public class Identifiers {
             if (validSubsequentChars.indexOf(token.charAt(i))==-1) return false;
         return true;
     }
-
-    /** changes 'token' to a string which is valid in java, but resembles the original 
-     * @deprecated since 0.6.0 use {@link Strings#makeValidJavaName(String)} which has correct logic */
-    public static String makeValidJavaToken(String token) {
-        return Strings.makeValidJavaName(token);
-    }
-    
 }

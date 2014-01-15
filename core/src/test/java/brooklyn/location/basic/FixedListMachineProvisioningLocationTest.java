@@ -13,7 +13,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.TestUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 
@@ -107,7 +106,7 @@ public class FixedListMachineProvisioningLocationTest {
     @Test
     public void theBuilderLegacy() throws NoMachinesAvailableException {
         provisioner2 =
-            new FixedListMachineProvisioningLocation.Builder().
+            new FixedListMachineProvisioningLocation.Builder(mgmt.getLocationManager()).
                 user("u1").
                 addAddress("192.168.0.1").
                 addAddress("u2@192.168.0.2").
@@ -188,7 +187,7 @@ public class FixedListMachineProvisioningLocationTest {
         // When released, the machine is then removed entirely
         provisioner.release(obtained);
 
-        Assert.assertTrue(provisioner.getChildLocations().isEmpty());
+        Assert.assertTrue(provisioner.getChildren().isEmpty());
         Assert.assertTrue(provisioner.getAvailable().isEmpty());
 
         // So no machines left; cannot re-obtain

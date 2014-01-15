@@ -4,12 +4,14 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.location.PortRange;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 public interface UsesJmx extends UsesJava {
@@ -19,25 +21,31 @@ public interface UsesJmx extends UsesJava {
     @SetFromFlag("useJmx")
     public static final ConfigKey<Boolean> USE_JMX = ConfigKeys.newConfigKey("jmx.enabled", "JMX enabled", Boolean.TRUE);
 
-    @SuppressWarnings("deprecation")
+    /** chosen by java itself by default; setting this will only have any effect if using an agent */ 
     @SetFromFlag("jmxPort")
-    public static final PortAttributeSensorAndConfigKey JMX_PORT = Attributes.JMX_PORT;
-
-    @SuppressWarnings("deprecation")
-    @SetFromFlag("rmiRegistryPort")
-    public static final PortAttributeSensorAndConfigKey RMI_REGISTRY_PORT = Attributes.RMI_REGISTRY_PORT;
+    public static final PortAttributeSensorAndConfigKey JMX_PORT = new PortAttributeSensorAndConfigKey(
+            "jmx.direct.port", "JMX direct/private port (e.g. JMX RMI server port, but not RMI registry port)", PortRanges.fromString("31001+")) {
+        @Override protected Integer convertConfigToSensor(PortRange value, Entity entity) {
+            // TODO when using JmxAgentModes.NONE we should *not* convert, but leave it null
+            // (e.g. to prevent a warning in e.g. ActiveMQIntegrationTest)
+            // however supporting that means moving these keys to UsesJmx (which would be a good thing in any case)
+            return super.convertConfigToSensor(value, entity);
+        }
+    };
     
-    /** @deprecated since 0.6.0 use RMI_REGISTRY_PORT */
-    @Deprecated
-    @SetFromFlag("rmiServerPort")
-    public static final PortAttributeSensorAndConfigKey RMI_SERVER_PORT = Attributes.RMI_SERVER_PORT;
+    /** well-known port used by Java itself to start the RMI registry where JMX private port can be discovered;
+     * ignored if using JMXMP agent
+     */ 
+    @SetFromFlag("rmiRegistryPort")
+    public static final PortAttributeSensorAndConfigKey RMI_REGISTRY_PORT = new PortAttributeSensorAndConfigKey(
+            "rmi.registry.port", "RMI registry port, used for discovering JMX (private) port", PortRanges.fromString("1099, 19099+"));
 
-    @SuppressWarnings("deprecation")
     @SetFromFlag("jmxContext")
-    public static final BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = Attributes.JMX_CONTEXT;
+    public static final BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "jmx.context", "JMX context path", "jmxrmi");
 
-    @SuppressWarnings("deprecation")
-    public static final AttributeSensor<String> JMX_URL = Attributes.JMX_SERVICE_URL;
+    public static final AttributeSensor<String> JMX_URL = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "jmx.service.url", "The URL for connecting to the MBean Server");
 
     /** forces JMX to be secured, using JMXMP so it gets through firewalls _and_ SSL/TLS
      * (NB: there is not currently any corresponding JMXMP without SSL/TLS) */
@@ -64,10 +72,15 @@ public interface UsesJmx extends UsesJava {
     		"JMX_RMI_CUSTOM_AGENT on localhost (for easier access at a specified port, supporting jconsole)", 
     		JmxAgentModes.AUTODETECT);
 
-    @SuppressWarnings("deprecation")
-    public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = Attributes.JMX_USER;
-    @SuppressWarnings("deprecation")
-    public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = Attributes.JMX_PASSWORD;
+    /** Currently only used to connect; not used to set up JMX (so only applies where systems set this up themselves)
+     */
+    public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "jmx.user", "JMX username");
+    
+    /** Currently only used to connect; not used to set up JMX (so only applies where systems set this up themselves)
+     */
+    public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "jmx.password", "JMX password");
     
     /*
      * Synopsis of how the keys work for JMX_SSL:

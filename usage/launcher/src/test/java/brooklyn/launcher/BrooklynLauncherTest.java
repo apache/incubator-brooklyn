@@ -15,7 +15,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
@@ -75,7 +74,7 @@ public class BrooklynLauncherTest {
     public void testStartsAppFromSpec() throws Exception {
         launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
-                .application(EntitySpecs.appSpec(TestApplication.class))
+                .application(EntitySpec.create(TestApplication.class))
                 .start();
         
         assertOnlyApp(launcher, TestApplication.class);

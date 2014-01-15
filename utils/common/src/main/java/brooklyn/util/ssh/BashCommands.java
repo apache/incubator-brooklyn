@@ -14,7 +14,6 @@ import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class BashCommands {
@@ -97,22 +96,6 @@ public class BashCommands {
         return ifFileExistsElse0("/etc/sudoers", sudo("sed -i.brooklyn.bak 's/.*requiretty.*/#brooklyn-removed-require-tty/' /etc/sudoers"));
     }
 
-    /**
-     * Returns a command that runs only if the operating system is as specified; Checks {@code /etc/issue} for the specified name
-     * @deprecated since 0.6.0 very non-portable
-     */
-    public static String on(String osName, String command) {
-        return format("( grep \"%s\" /etc/issue && %s )", osName, command);
-    }
-
-    /**
-     * Returns a command that runs only if the specified file exists
-     * @deprecated since 0.6.0 use {@link #ifFileExistsElse0(String, String)} or {@link #ifFileExistsElse1(String, String)}   
-     */
-    public static String file(String path, String command) {
-        return format("( test -f %s && %s )", path, command);
-    }
-
     // TODO a builder would be better than these ifBlahExistsElseBlah methods!
     // (ideally formatting better also; though maybe SshTasks would be better?)
     
@@ -134,17 +117,6 @@ public class BashCommands {
     }
 
     /**
-     * Returns a command that runs only if the specified executable is in the path.
-     * If command is null, no command runs (and the script component this creates will return true if the executable).
-     * @deprecated since 0.6.0 use {@link #ifExecutableElse0(String, String)}
-     */
-    public static String exists(String executable, String ...commands) {
-        String extraCommandsAnded = "";
-        for (String c: commands) if (c!=null) extraCommandsAnded += " && "+c;
-        return format("( which %s%s )", executable, extraCommandsAnded);
-    }
-
-    /**
      * Returns a command that runs only if the specified executable exists on the path (using `which`).
      * if the command runs and fails that exit is preserved (but if the executable is not on the path exit code is zero).
      * @see #ifFileExistsElse0(String, String) for implementation discussion, using <code>{ { test -z `which executable` && true ; } || command ; } 
@@ -158,14 +130,6 @@ public class BashCommands {
     /** as {@link #ifExecutableElse0(String, String)} but returns 1 if the test fails (also returns non-zero if the command fails) */
     public static String ifExecutableElse1(String executable, String command) {
         return chainGroup(format("which %s", executable), command);
-    }
-
-    /**
-     * Returns a command that runs only if the specified executable is NOT in the path
-     * @deprecated since 0.6.0 use {@link #onlyIfExecutableMissing(String, String)}
-     */
-    public static String missing(String executable, String command) {
-        return format("( which %s || %s )", executable, command);
     }
 
     /**
@@ -216,16 +180,6 @@ public class BashCommands {
         return "( " + Strings.join(commands, " && ") + "  )";
     }
 
-    /**
-     * Returns a sequence of alternative commands that runs until one of the commands succeeds;
-     * or if none succeed, it will run the failure command.
-     * @deprecated since 0.6.0; this method just treats the failure command as another alternative so hardly seems worth it; 
-     * prefer {@link #alternatives(Collection)}
-     */ @Deprecated
-    public static String alternatives(Collection<String> commands, String failureCommand) {
-        return format("(%s || %s)", Strings.join(commands, " || "), failureCommand);
-    }
-    
     /**
      * Returns a sequence of chained commands that runs until one of them succeeds (i.e. joined by '||').
      * This currently runs as a subshell (so exits are swallowed) but behaviour may be changed imminently. 
@@ -378,48 +332,6 @@ public class BashCommands {
     public static final String INSTALL_UNZIP = alternatives(installExecutable("unzip"), installExecutable("zip"));
     public static final String INSTALL_SYSSTAT = installPackage(ImmutableMap.of("onlyifmissing", "iostat"), "sysstat");
 
-    /** 
-     * @see downloadUrlAs(Map, String, String, String)
-     * @deprecated since 0.5.0 - Use {@link #downloadUrlAs(List, String)}, and rely on {@link DownloadResolverManager} to include the local-repo
-     */
-    @Deprecated
-    public static List<String> downloadUrlAs(String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
-        return downloadUrlAs(MutableMap.of(), url, entityVersionPath, pathlessFilenameToSaveAs);
-    }
-
-    /**
-    /**
-     * Returns command for downloading from a url and saving to a file;
-     * currently using {@code curl}.
-     * <p/>
-     * Will read from a local repository, if files have been copied there
-     * ({@code cp -r /tmp/brooklyn/installs/ ~/.brooklyn/repository/<entityVersionPath>/<pathlessFilenameToSaveAs>})
-     * unless <em>skipLocalRepo</em> is {@literal true}.
-     * <p/>
-     * Ideally use a blobstore staging area.
-     * 
-     * @deprecated since 0.5.0 - Use {@link downloadUrlAs(List, String)}, and rely on {@link DownloadResolverManager} to include the local-repo
-     */
-    @Deprecated
-    public static List<String> downloadUrlAs(Map<?,?> flags, String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
-        Boolean skipLocalRepo = (Boolean) flags.get("skipLocalRepo");
-        boolean useLocalRepo =  skipLocalRepo!=null?!skipLocalRepo:true;
-        List<String> urls;
-        if (useLocalRepo) {
-            String localRepoFileUrl = format("file://$HOME/.brooklyn/repository/%s/%s", entityVersionPath, pathlessFilenameToSaveAs);
-            urls = ImmutableList.of(localRepoFileUrl, url);
-        } else {
-            urls = ImmutableList.of(url);
-        }
-        return downloadUrlAs(urls, "./"+pathlessFilenameToSaveAs);
-    }
-
-    /** @deprecated since 0.6.0 use {@link #commandsToDownloadUrlsAs(List, String)} (because method uses a list),
-     * or {@link #commandToDownloadUrlsAs(List, String)} for the single-string variant */ @Deprecated
-    public static List<String> downloadUrlAs(List<String> urls, String saveAs) {
-        return Arrays.asList(INSTALL_CURL, 
-                require(simpleDownloadUrlAs(urls, saveAs), "Could not retrieve "+saveAs+" (from "+urls.size()+" sites)", 9));
-    }
     /**
      * Returns commands to download the URL, saving as the given file. Will try each URL in turn until one is successful
      * (see `curl -f` documentation).
@@ -481,12 +393,7 @@ public class BashCommands {
      * See also: JavaSoftwareProcessSshDriver.installJava, which does a much more thorough job.
      *
      * @return the command that install Java 1.6.
-     * @deprecated since 0.6.0 prefer {@link #installJava6IfPossible()} or {@link #installJava6OrFail()}
      */
-    @Deprecated
-    public static String installJava6() {
-        return installJava6IfPossible();
-    }
     public static String installJava6IfPossible() {
         return installPackage(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null);
     }

@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
 
@@ -54,7 +53,11 @@ public abstract class ApplicationBuilder {
     @SuppressWarnings("unchecked")
     @Beta
     public static <T extends StartableApplication> T newManagedApp(Class<T> type) {
-        return (T) newManagedApp(EntitySpecs.appSpec(type));
+        if (type.isInterface()) {
+            return (T) newManagedApp(EntitySpec.create(type));
+        } else {
+            return (T) newManagedApp(EntitySpec.create(StartableApplication.class, type));
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -69,7 +72,11 @@ public abstract class ApplicationBuilder {
     @SuppressWarnings("unchecked")
     @Beta
     public static <T extends StartableApplication> T newManagedApp(Class<T> type, ManagementContext managementContext) {
-        return (T) newManagedApp(EntitySpecs.appSpec(type), managementContext);
+        if (type.isInterface()) {
+            return (T) newManagedApp(EntitySpec.create(type), managementContext);
+        } else {
+            return (T) newManagedApp(EntitySpec.create(StartableApplication.class, type), managementContext);
+        }
     }
 
     @SuppressWarnings("unchecked")

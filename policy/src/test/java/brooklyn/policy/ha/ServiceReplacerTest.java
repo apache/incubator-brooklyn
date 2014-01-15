@@ -56,7 +56,7 @@ public class ServiceReplacerTest {
     public void setUp() throws Exception {
         managementContext = Entities.newManagementContext();
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
-        loc = managementContext.getLocationManager().createLocation(LocationSpec.spec(SimulatedLocation.class));
+        loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         events = Lists.newCopyOnWriteArrayList();
         eventListener = new SensorEventListener<Object>() {
             @Override public void onEvent(SensorEvent<Object> event) {

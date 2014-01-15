@@ -1,5 +1,23 @@
 package brooklyn.event.feed.windows;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.math.BigInteger;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.EffectorTasks;
@@ -15,6 +33,7 @@ import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.task.system.ProcessTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.time.Duration;
+
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -24,22 +43,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.math.BigInteger;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A sensor feed that retrieves performance counters from a Windows host and posts the values to sensors.
@@ -264,11 +267,6 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
             for (AttributeSensor attribute : sensorMap.values()) {
                 entity.setAttribute(attribute, null);
             }
-        }
-
-        @Override
-        public void onError(Exception exception) {
-            onException(exception);
         }
 
         @Override

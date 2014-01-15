@@ -187,7 +187,7 @@ public class VanillaJavaAppTest {
         JavaAppUtils.connectJavaAppServerPolicies((EntityLocal)javaProcess);
         
         final List<Double> fractions = new CopyOnWriteArrayList<Double>();
-        app.getManagementContext().getSubscriptionManager().subscribe(javaProcess, VanillaJavaApp.PROCESS_CPU_TIME_FRACTION, new SensorEventListener<Double>() {
+        app.getManagementContext().getSubscriptionManager().subscribe(javaProcess, VanillaJavaApp.PROCESS_CPU_TIME_FRACTION_LAST, new SensorEventListener<Double>() {
                 public void onEvent(SensorEvent<Double> event) {
                     fractions.add(event.getValue());
                 }});

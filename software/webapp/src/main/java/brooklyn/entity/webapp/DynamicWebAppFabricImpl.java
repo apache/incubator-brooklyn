@@ -38,7 +38,7 @@ public class DynamicWebAppFabricImpl extends DynamicFabricImpl implements Dynami
         for (List<? extends AttributeSensor<? extends Number>> es : summingEnricherSetup) {
         	AttributeSensor<? extends Number> t = es.get(0);
         	AttributeSensor<? extends Number> total = es.get(1);
-        	CustomAggregatingEnricher<?,?> totaller = CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), t, total);
+        	CustomAggregatingEnricher<?,?> totaller = CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), t, total, null, null);
             addEnricher(totaller);
         }
         

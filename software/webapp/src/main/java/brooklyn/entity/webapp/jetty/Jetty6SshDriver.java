@@ -46,7 +46,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName("jetty-"+getVersion());
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(BashCommands.downloadUrlAs(urls, saveAs));
+        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_ZIP);
         commands.add("unzip "+saveAs);
 

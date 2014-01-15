@@ -36,23 +36,6 @@ public class LocationSpec<T extends Location> implements Serializable {
 
     private final static long serialVersionUID = 1L;
 
-
-    /**
-     * @deprecated since 0.6 (added 0.6.0-M1); use {@link #create(Class)}
-     */
-    @Deprecated
-    public static <T extends Location> LocationSpec<T> spec(Class<T> type) {
-        return create(type);
-    }
-
-    /**
-     * @deprecated since 0.6 (added 0.6.0-M1); use {@link #create(Map, Class)}
-     */
-    @Deprecated
-    public static <T extends Location> LocationSpec<T> spec(Map<?,?> config, Class<T> type) {
-        return create(config, type);
-    }
-
     /**
      * Creates a new {@link LocationSpec} instance for a location of the given type. The returned 
      * {@link LocationSpec} can then be customized.

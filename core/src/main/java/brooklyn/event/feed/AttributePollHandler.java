@@ -108,14 +108,6 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         }
     }
 
-    /**
-     * @deprecated since 0.6; use {@link #onException(Exception)}
-     */
-    @Override
-    public void onError(Exception error) {
-        onException(error);
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public void onException(Exception exception) {

@@ -209,7 +209,6 @@ import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.location.basic.PortRanges;
 {% endhighlight %}
@@ -256,7 +255,7 @@ import com.google.common.collect.Lists;
         String locations = CommandLineUtil.getCommandLineOption(args, "--locations", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(GlobalWebFabricExample.class).displayName("Brooklyn Global Web Fabric Example"))
+                .application(EntitySpec.create(StartableApplication.class, GlobalWebFabricExample.class).displayName("Brooklyn Global Web Fabric Example"))
                 .webconsolePort(port)
                 .locations(Arrays.asList(locations))
                 .start();

@@ -90,7 +90,7 @@ public class SensorPropagatingEnricherTest {
     @Test
     public void testPropagatingAsDifferentSensor() {
         final AttributeSensor<String> ANOTHER_ATTRIBUTE = Sensors.newStringSensor("another.attribute", "");
-        app.addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(entity, ImmutableMap.of(TestEntity.NAME, ANOTHER_ATTRIBUTE)));
+        app.addEnricher(SensorPropagatingEnricher.newInstanceRenaming(entity, ImmutableMap.of(TestEntity.NAME, ANOTHER_ATTRIBUTE)));
 
         // name propagated as different attribute
         entity.setAttribute(TestEntity.NAME, "foo");

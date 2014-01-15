@@ -54,20 +54,6 @@ public interface Location extends Serializable, Identifiable, Rebindable {
     Collection<Location> getChildren();
 
     /**
-     * @deprecated since 0.6
-     * @see #getDisplayName()
-     */
-    @Deprecated
-    String getName();
-
-    /**
-     * @deprecated since 0.6
-     * @see #getParent()
-     */
-    @Deprecated
-    Location getParentLocation();
-
-    /**
      * Set the 'parent' of this location. If this location was previously a child of a different location, it is removed from
      * the other location first. It is valid to pass in {@code null} to indicate that the location should be disconnected
      * from its parent.
@@ -78,21 +64,6 @@ public interface Location extends Serializable, Identifiable, Rebindable {
      * @since 0.6 (previously setParentLocation(Location))
      */
     void setParent(Location newParent);
-
-    /**
-     * @deprecated since 0.6
-     * @see #setParent(Location)
-     */
-    @Deprecated
-    void setParentLocation(Location newParent);
-
-
-    /**
-     * @deprecated since 0.6
-     * @see #getChildren()
-     */
-    @Deprecated
-    Collection<Location> getChildLocations();
 
     /**
      * @return meta-data about the location (usually a long line, or a small number of lines).
@@ -110,16 +81,6 @@ public interface Location extends Serializable, Identifiable, Rebindable {
     <T> T getConfig(ConfigKey<T> key);
     
     <T> T getConfig(HasConfigKey<T> key);
-
-    /** True iff the indication config key is set _at_ this location (not parents) 
-     * @deprecated since 0.6.0 use {@link #hasConfig(ConfigKey, boolean)} */
-    @Deprecated
-    boolean hasConfig(ConfigKey<?> key);
-
-    /** Returns all config set _at_ this location (not inherited)
-     * @deprecated since 0.6.0 use {@link #getAllConfig(boolean) */
-    @Deprecated
-    Map<String,Object> getAllConfig();
 
     /** True iff the indication config key is set, either inherited (second argument true) or locally-only (second argument false) */
     boolean hasConfig(ConfigKey<?> key, boolean includeInherited);

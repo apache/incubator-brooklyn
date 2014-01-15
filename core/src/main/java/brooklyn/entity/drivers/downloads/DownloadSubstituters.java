@@ -64,11 +64,6 @@ public class DownloadSubstituters {
         return substitute(basevalue, getBasicSubstitutions(req));
     }
 
-    /** @deprecated since 0.6.0 use getBasicSubstitutions (method was misnamed) */
-    @Deprecated
-    public static Map<String,Object> getBasicSubscriptions(DownloadRequirement req) {
-        return getBasicSubstitutions(req);
-    }
     public static Map<String,Object> getBasicSubstitutions(DownloadRequirement req) {
         EntityDriver driver = req.getEntityDriver();
         String addon = req.getAddonName();

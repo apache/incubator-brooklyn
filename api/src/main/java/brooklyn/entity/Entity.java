@@ -26,7 +26,7 @@ import brooklyn.policy.Policy;
  * To instantiate an entity, see {@code managementContext.getEntityManager().createEntity(entitySpec)}.
  * Also see {@link brooklyn.entity.basic.ApplicationBuilder}, 
  * {@link brooklyn.entity.basic.AbstractEntity#addChild(EntitySpec)}, and
- * {@link brooklyn.entity.proxying.EntitySpecs}.
+ * {@link brooklyn.entity.proxying.EntitySpec}.
  * <p>
  * 
  * @see brooklyn.entity.basic.AbstractEntity

@@ -4,10 +4,10 @@ import java.util.List;
 
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.entity.messaging.qpid.QpidBroker;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.util.CommandLineUtil;
 
@@ -45,7 +45,7 @@ public class StandaloneQpidBrokerExample extends AbstractApplication {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(StandaloneQpidBrokerExample.class).displayName("Qpid app"))
+                .application(EntitySpec.create(StartableApplication.class, StandaloneQpidBrokerExample.class).displayName("Qpid app"))
                 .webconsolePort(port)
                 .location(location)
                 .start();

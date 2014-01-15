@@ -124,7 +124,7 @@ public class SshMachineLocationPerformanceTest {
             long postCpuTime = (Long) mbeanServer.getAttribute(osMBeanName, "ProcessCpuTime");
             long elapsedTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             double fractionCpu = (elapsedTime > 0) ? ((double)postCpuTime-preCpuTime) / TimeUnit.MILLISECONDS.toNanos(elapsedTime) : -1;
-            LOG.info("Executing {}; completed {}; took {}; fraction cpu {}", new Object[] {context, (i+1), Time.makeTimeString(elapsedTime), fractionCpu});
+            LOG.info("Executing {}; completed {}; took {}; fraction cpu {}", new Object[] {context, (i+1), Time.makeTimeStringRounded(elapsedTime), fractionCpu});
         }
     }
 

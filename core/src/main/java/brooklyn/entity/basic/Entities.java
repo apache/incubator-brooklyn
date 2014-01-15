@@ -140,12 +140,6 @@ public class Entities {
         return invokeEffectorList(callingEntity, entitiesToCall, effector, Collections.<String,Object>emptyMap());
     }
 
-    /** @deprecated since 0.6.0 use invokeEffector */ @Deprecated
-    public static <T> Task<List<T>> invokeEffectorWithMap(EntityLocal callingEntity, Entity entityToCall,
-            final Effector<T> effector, final Map<String,?> parameters) {
-        return invokeEffectorList(callingEntity, ImmutableList.of(entityToCall), effector, parameters);
-    }
-    
     public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
         Task<T> t = Effectors.invocation(entityToCall, effector, parameters).asTask();
@@ -544,23 +538,6 @@ public class Entities {
         } catch (Exception e) {
             log.warn("ERROR destroying "+mgmt+" (ignoring): "+e, e);
             Exceptions.propagateIfFatal(e);
-        }
-    }
-
-    /**
-     * stops, destroys, and unmanages the given application -- and terminates the mangaement context;
-     * does as many as are valid given the type and state
-     * @deprecated since 0.6.0 use destroy(Application) if you DONT want to destroy the mgmt context,
-     * or destroy(app.getManagementContext()) if you want to destory everything in the app's mgmt context
-     */
-    @Deprecated
-    public static void destroyAll(Application app) {
-        if (isManaged(app)) {
-            ManagementContext managementContext = app.getManagementContext();
-            if (app instanceof Startable) Entities.invokeEffector((EntityLocal)app, app, Startable.STOP).getUnchecked();
-            if (app instanceof AbstractEntity) ((AbstractEntity)app).destroy();
-            unmanage(app);
-            if (managementContext instanceof ManagementContextInternal) ((ManagementContextInternal)managementContext).terminate();
         }
     }
 

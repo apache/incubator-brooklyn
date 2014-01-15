@@ -310,7 +310,7 @@ public class Repeater {
                 if (log.isDebugEnabled()) {
                     String msg = String.format("%s: unsatisfied during iteration %s %s", description, iterations,
                             (iterationLimit > 0 ? "(max "+iterationLimit+" attempts)" : "") + 
-                            (endTime > 0 ? "("+Time.makeTimeString(endTime - System.currentTimeMillis())+" remaining)" : ""));
+                            (endTime > 0 ? "("+Time.makeTimeStringRounded(endTime - System.currentTimeMillis())+" remaining)" : ""));
                     if (iterations == 1) {
                         log.debug(msg);
                     } else {
@@ -333,7 +333,7 @@ public class Repeater {
             if (endTime > 0) {
 				if (System.currentTimeMillis() > endTime) {
                     if (log.isDebugEnabled()) log.debug("{}: condition not satisfied and deadline {} passed", 
-                            description, Time.makeTimeString(endTime - System.currentTimeMillis()));
+                            description, Time.makeTimeStringRounded(endTime - System.currentTimeMillis()));
 	                if (rethrowException && lastError != null) {
 	                    log.error("{}: error caught checking condition: {}", description, lastError.getMessage());
 	                    throw Exceptions.propagate(lastError);

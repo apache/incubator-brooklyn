@@ -51,7 +51,7 @@ public class HttpPollValue {
             response.getEntity().getContentLength();
             durationMillisOfFullContent = System.currentTimeMillis() - startTime;
             if (log.isTraceEnabled())
-                log.trace("HttpPollValue latency "+Time.makeTimeString(durationMillisOfFirstResponse)+" / "+Time.makeTimeString(durationMillisOfFullContent)+", content size "+content.length);
+                log.trace("HttpPollValue latency "+Time.makeTimeStringRounded(durationMillisOfFirstResponse)+" / "+Time.makeTimeStringRounded(durationMillisOfFullContent)+", content size "+content.length);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }        

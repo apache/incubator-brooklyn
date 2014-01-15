@@ -29,8 +29,9 @@ import com.google.common.collect.ImmutableMap;
 public abstract class AbstractEffector<T> extends EffectorBase<T> implements EffectorWithBody<T> {
 
     private static final long serialVersionUID = 1832435915652457843L;
-    /** @deprecated since 0.6.0 shouldn't be public */
-    public static final Logger LOG = LoggerFactory.getLogger(AbstractEffector.class);
+    
+    @SuppressWarnings("unused")
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractEffector.class);
 
     public AbstractEffector(String name, Class<T> returnType, List<ParameterType<?>> parameters, String description) {
         super(name, returnType, parameters, description);

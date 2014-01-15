@@ -96,7 +96,7 @@ class CarrenzaLocationLiveTest {
         assertNotNull(password);
         
         LOG.info("Checking can ssh to windows machine {} using password {}", machine, password);
-        assertEquals(machine.exec(MutableMap.of("password", password), ImmutableList.of("hostname")), 0);
+        assertEquals(machine.execCommands(MutableMap.of("password", password), "check-reachable", ImmutableList.of("hostname")), 0);
     }
     
     // Use this utility method to ensure machines are released on tearDown

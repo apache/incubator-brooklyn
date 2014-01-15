@@ -6,9 +6,9 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.enricher.CustomAggregatingEnricher;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.AttributeSensor;
@@ -56,7 +56,7 @@ public class WebClusterApp extends AbstractApplication {
                 .configure("memberSpec", jbossSpec));
 
 
-        web.getCluster().addEnricher(CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), sinusoidalLoad, averageLoad));
+        web.getCluster().addEnricher(CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), sinusoidalLoad, averageLoad, null, null));
         web.getCluster().addPolicy(AutoScalerPolicy.builder()
                 .metric(averageLoad)
                 .sizeRange(1, 3)
@@ -70,7 +70,7 @@ public class WebClusterApp extends AbstractApplication {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(WebClusterApp.class).displayName("Brooklyn WebApp Cluster example"))
+                .application(EntitySpec.create(StartableApplication.class, WebClusterApp.class).displayName("Brooklyn WebApp Cluster example"))
                 .webconsolePort(port)
                 .location(location)
                 .start();

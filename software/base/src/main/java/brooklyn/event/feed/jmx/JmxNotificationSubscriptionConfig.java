@@ -57,15 +57,6 @@ public class JmxNotificationSubscriptionConfig<T> extends FeedConfig<javax.manag
         this.notificationFilter = val; return this;
     }
 
-    /**
-     * @deprecated since 0.6.0; use {@code notificationFilter(JmxNotificationFilters.matchesType(val))}
-     * @see JmxNotificationFilters
-     */
-    public JmxNotificationSubscriptionConfig<T> notificationFilterByTypeRegex(String val) {
-        this.notificationFilter = JmxNotificationFilters.matchesTypeRegex(val);
-        return this;
-    }
-    
     public JmxNotificationSubscriptionConfig<T> onNotification(Function<Notification,T> val) {
         this.onNotification = val; return this;
     }

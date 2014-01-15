@@ -6,14 +6,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.KeyPair;
 
-import brooklyn.entity.Entity;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.crypto.SecureKeys;
-import brooklyn.util.text.Strings;
 
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 
@@ -50,38 +45,6 @@ public class ChefServerTasks {
                 .knifeAddParameters("node list")
                 .notThrowingOnCommonKnifeErrors()
                 .returningIsExitCodeZero();
-    }
-
-    /** @deprecated since 0.6.0 (soon after introduced) use {@link #knifeConvergeRunList(String)} or {@link #knifeConvergeTask()} with fluent API */ @Deprecated
-    public static KnifeTaskFactory<String> knifeConverge(final String runList, boolean sudo) {
-        return knifeConverge(Functions.constant(runList), sudo);
-    }
-    /** @deprecated since 0.6.0 (soon after introduced) use {@link #knifeConvergeRunList(String)} or {@link #knifeConvergeTask()} with fluent API */ @Deprecated
-    public static KnifeTaskFactory<String> knifeConverge() {
-        return knifeConverge(new Function<Entity,String>() {
-            public String apply(Entity input) {
-                return Strings.join(Preconditions.checkNotNull(input.getConfig(ChefConfig.CHEF_RUN_LIST), 
-                        "%s must be supplied for %s", ChefConfig.CHEF_RUN_LIST, input),
-                        ",");
-            }
-        }, true); 
-    }
-    /** @deprecated since 0.6.0 (soon after introduced) use {@link #knifeConvergeRunList(String)} or {@link #knifeConvergeTask()} with fluent API */ @Deprecated
-    public static KnifeTaskFactory<String> knifeConverge(final Function<? super Entity,String> runList, final boolean sudo) {
-        return knifeConverge(runList, sudo, null);
-    }
-    /** @deprecated since 0.6.0 (soon after introduced) use {@link #knifeConvergeRunList(String)} or {@link #knifeConvergeTask()} with fluent API */ @Deprecated
-    public static KnifeTaskFactory<String> knifeConverge(final Function<? super Entity,String> runList, final boolean sudo, final String otherParameters) {
-        return knifeConverge(runList, sudo, otherParameters, false);
-    }
-    /** @deprecated since 0.6.0 (soon after introduced) use {@link #knifeConvergeRunList(String)} or {@link #knifeConvergeTask()} with fluent API */ @Deprecated
-    public static KnifeTaskFactory<String> knifeConverge(final Function<? super Entity,String> runList, final boolean sudo, final String otherParameters, final boolean runTwice) {
-        return new KnifeConvergeTaskFactory<String>("knife converge")
-                .knifeRunList(runList)
-                .knifeSudo(sudo)
-                .knifeRunTwice(runTwice)
-                .knifeAddParameters(otherParameters)
-                .requiringZeroAndReturningStdout();
     }
 
     /** plain knife converge task - run list must be set, other arguments are optional */

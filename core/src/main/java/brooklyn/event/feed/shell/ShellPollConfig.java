@@ -13,7 +13,6 @@ import brooklyn.event.feed.PollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Maps;
 
 public class ShellPollConfig<T> extends PollConfig<SshPollValue, T, ShellPollConfig<T>> {
@@ -52,12 +51,6 @@ public class ShellPollConfig<T> extends PollConfig<SshPollValue, T, ShellPollCon
         return env;
     }
 
-    /** @deprecated since 0.6; default is true, see {@link #checkSuccess} */
-    @Deprecated
-    public boolean isFailOnNonZeroResultCode() {
-        return super.getCheckSuccess().equals(DEFAULT_SUCCESS);
-    }
-
     public File getDir() {
         return dir;
     }
@@ -85,34 +78,6 @@ public class ShellPollConfig<T> extends PollConfig<SshPollValue, T, ShellPollCon
             env(entry.getKey(), entry.getValue());
         }
         return this;
-    }
-    
-    /**
-     * Overrides any Function given to {@link #checkSuccess}. If argument
-     * is true feed treats any non-zero response code as a failure. Otherwise
-     * sets {@link #checkSuccess} to {@link Predicates#alwaysTrue()}.
-     *
-     * @deprecated since 0.6; default is true, see {@link #checkSuccess}
-     */
-    @Deprecated
-    public ShellPollConfig<T> failOnNonZeroResultCode(boolean val) {
-        if (val) {
-            super.checkSuccess(DEFAULT_SUCCESS);
-        } else {
-            super.checkSuccess(Predicates.alwaysTrue());
-        }
-        return this;
-    }
-    
-    /**
-     * Overrides any Function given to {@link #checkSuccess} to treat any
-     * non-zero response code as a failure.
-     *
-     * @deprecated since 0.6; default is true, see {@link #checkSuccess}
-     */
-    @Deprecated
-    public ShellPollConfig<T> failOnNonZeroResultCode() {
-        return failOnNonZeroResultCode(true);
     }
     
     public ShellPollConfig<T> dir(File val) {

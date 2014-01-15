@@ -83,7 +83,7 @@ public class WebAppLiveIntegrationTest {
 
     @AfterMethod(alwaysRun = true)
     public void shutdown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        if (application != null) Entities.destroyAll(application.getManagementContext());
     }
 
     @Test(groups = "Live", dataProvider="basicEntities")

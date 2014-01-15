@@ -29,7 +29,7 @@ import brooklyn.policy.loadbalancing.MockItemEntityImpl;
 import brooklyn.policy.loadbalancing.Movable;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;

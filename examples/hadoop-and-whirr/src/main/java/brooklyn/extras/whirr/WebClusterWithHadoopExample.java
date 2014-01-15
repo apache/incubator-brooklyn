@@ -20,7 +20,6 @@ import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
@@ -180,9 +179,8 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
         String location = CommandLineUtil.getCommandLineOption(args, "--location", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(StartableApplication.class)
-                        .displayName("Brooklyn Global Web Fabric with Hadoop Example")
-                        .impl(WebClusterWithHadoopExample.class))
+                .application(EntitySpec.create(StartableApplication.class, WebClusterWithHadoopExample.class)
+                        .displayName("Brooklyn Global Web Fabric with Hadoop Example"))
                 .webconsolePort(port)
                 .location(location)
                 .start();

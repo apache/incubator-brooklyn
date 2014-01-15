@@ -2,7 +2,6 @@ package brooklyn.entity.webapp.jetty;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
@@ -10,7 +9,6 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.HasShortName;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
@@ -31,8 +29,6 @@ public interface Jetty6Server extends JavaWebAppSoftwareProcess, UsesJmx, HasSho
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "http://dist.codehaus.org/jetty/jetty-${version}/jetty-${version}.zip");
-
-    BasicAttributeSensor<String> JMX_SERVICE_URL = Attributes.JMX_SERVICE_URL;
 
     public static final AttributeSensor<Integer> RESPONSES_4XX_COUNT =
             Sensors.newIntegerSensor("webapp.responses.4xx", "Responses in the 400's");

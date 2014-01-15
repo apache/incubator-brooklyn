@@ -82,7 +82,7 @@ public class BrooklynMachinePool extends MachinePool {
     protected SshMachineLocation toSshMachineLocation(NodeMetadata m) {
         try {
             JcloudsSshMachineLocation sshM = location.rebindMachine(m);
-            if (sshM.exec(Arrays.asList("whoami")) != 0) {
+            if (sshM.execCommands("check-reachable", Arrays.asList("whoami")) != 0) {
                 log.warn("cannot bind to machine "+m);
                 return null;
             }

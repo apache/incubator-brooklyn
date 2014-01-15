@@ -19,7 +19,6 @@ import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
@@ -61,11 +60,6 @@ public class JcloudsResolver implements LocationResolver {
     @Override
     public void init(ManagementContext managementContext) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
-    }
-    
-    @Override
-    public JcloudsLocation newLocationFromString(Map properties, String spec) {
-        return newLocationFromString(spec, null, properties, new MutableMap());
     }
     
     @Override

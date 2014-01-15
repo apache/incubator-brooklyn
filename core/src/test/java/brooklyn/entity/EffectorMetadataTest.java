@@ -16,11 +16,8 @@ import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicParameterType;
-import brooklyn.entity.basic.DefaultValue;
-import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -54,20 +51,7 @@ public class EffectorMetadataTest {
     }
 
     @Test
-    public void testEffectorMetaDataFromDeprecatedAnnotations() {
-        Effector<?> effector = findEffector(e1, "effWithOldAnnotation");
-        assertEquals(effector, MyAnnotatedEntity.EFF_WITH_OLD_ANNOTATION);
-        assertEquals(effector.getName(), "effWithOldAnnotation");
-        assertEquals(effector.getDescription(), "my effector description");
-        assertEquals(effector.getReturnType(), String.class);
-        assertParametersEqual(
-                effector.getParameters(), 
-                ImmutableList.<ParameterType<?>>of(
-                        new BasicParameterType<String>("param1", String.class, "my param description", "my default val")));
-    }
-
-    @Test
-    public void testEffectorMetaDataFromNewAnnotationsWithConstant() {
+    public void testEffectorMetaDataFromAnnotationsWithConstant() {
         Effector<?> effector = findEffector(e1, "effWithNewAnnotation");
         Assert.assertTrue(Effectors.sameSignature(effector, MyAnnotatedEntity.EFF_WITH_NEW_ANNOTATION));
         assertEquals(effector.getName(), "effWithNewAnnotation");
@@ -80,7 +64,7 @@ public class EffectorMetadataTest {
     }
 
     @Test
-    public void testEffectorMetaDataFromNewAnnotationsWithoutConstant() {
+    public void testEffectorMetaDataFromAnnotationsWithoutConstant() {
         Effector<?> effector = findEffector(e1, "effWithAnnotationButNoConstant");
         assertEquals(effector.getName(), "effWithAnnotationButNoConstant");
         assertEquals(effector.getDescription(), "my effector description");
@@ -132,13 +116,8 @@ public class EffectorMetadataTest {
 
     @ImplementedBy(MyAnnotatedEntityImpl.class)
     public interface MyAnnotatedEntity extends Entity {
-    	static MethodEffector<String> EFF_WITH_OLD_ANNOTATION = new MethodEffector<String>(MyAnnotatedEntity.class, "effWithOldAnnotation");
         static MethodEffector<String> EFF_WITH_NEW_ANNOTATION = new MethodEffector<String>(MyAnnotatedEntity.class, "effWithNewAnnotation");
 
-        @Description("my effector description")
-        public String effWithOldAnnotation(
-                @NamedParameter("param1") @DefaultValue("my default val") @Description("my param description") String param1);
-        
         @brooklyn.entity.annotation.Effector(description="my effector description")
         public String effWithNewAnnotation(
                 @EffectorParam(name="param1", defaultValue="my default val", description="my param description") String param1);
@@ -149,11 +128,6 @@ public class EffectorMetadataTest {
     }
     
     public static class MyAnnotatedEntityImpl extends AbstractEntity implements MyAnnotatedEntity {
-        @Override
-        public String effWithOldAnnotation(String param1) {
-            return param1;
-        }
-
         @Override
         public String effWithNewAnnotation(String param1) {
             return param1;

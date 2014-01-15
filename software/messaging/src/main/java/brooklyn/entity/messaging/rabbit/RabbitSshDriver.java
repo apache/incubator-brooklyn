@@ -65,7 +65,7 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
                                 "apt", "erlang-nox erlang-dev",
                                 "port", "erlang@"+getErlangVersion()+"+ssl"),
                         "erlang"))
-                .addAll(BashCommands.downloadUrlAs(urls, saveAs))
+                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.installExecutable("tar"))
                 .add(format("tar xvzf %s",saveAs))
                 .build();

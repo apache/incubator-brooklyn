@@ -21,7 +21,6 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.LocationConfigKeys;
-import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
@@ -130,7 +129,7 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
         if (log.isDebugEnabled())
             log.debug("While starting {}, obtained new location instance {}", this, 
                     (machine instanceof SshMachineLocation ? 
-                            machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getAllConfig()) 
+                            machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getAllConfig(false)) 
                             : machine));
         if (!(location instanceof LocalhostMachineProvisioningLocation))
             log.info("While starting {}, obtained a new location instance {}, now preparing process there", this, machine);
@@ -162,11 +161,6 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
             ports.addAll(getRequiredOpenPorts(child));
         }
         return ports;
-    }
-
-    /** @deprecated since 0.6.0 use {@link Machines#findSubnetHostname(this)} */ @Deprecated
-    public String getLocalHostname() {
-        return Machines.findSubnetHostname(this).get();
     }
 
     protected void startInLocation(MachineLocation machine) {

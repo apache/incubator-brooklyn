@@ -53,28 +53,6 @@ public class PortRanges {
         }
     }
 
-    /** @deprecated since 0.6.0; use LinearPortRange */
-    @Deprecated
-    public static class BasicPortRange extends LinearPortRange {
-		private static final long serialVersionUID = 2604690520893353582L;
-		public static final int MAX_PORT = PortRanges.MAX_PORT;
-        public static final PortRange ANY_HIGH_PORT = PortRanges.ANY_HIGH_PORT;
-        public BasicPortRange(int start, int end) { super(start, end); }
-        @Override
-        public String toString() {
-            return //getClass().getName()+"["+
-                    start+"-"+end; //+"]";
-        }
-        @Override
-        public boolean equals(Object obj) {
-            return (obj instanceof BasicPortRange) && toString().equals(obj.toString());
-        }
-        @Override
-        public int hashCode() {
-            return toString().hashCode();
-        }
-    }
-    
     public static class LinearPortRange implements PortRange, Serializable {
 		private static final long serialVersionUID = -9165280509363743508L;
 		

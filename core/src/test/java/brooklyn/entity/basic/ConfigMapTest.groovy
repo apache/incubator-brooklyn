@@ -225,8 +225,8 @@ public class ConfigMapTest {
        MySubEntity(Entity parent) {
             super(parent)
         }
-        public static final BasicConfigKey SUPER_KEY_1 = [ MyBaseEntity.SUPER_KEY_1, "overridden superKey1 default"]
-        public static final BasicConfigKey SUB_KEY_2 = [ String, "subKey2", "subKey2 key", "subKey2 default"]
+        public static final BasicConfigKey SUPER_KEY_1 = ConfigKeys.newConfigKeyWithDefault(MyBaseEntity.SUPER_KEY_1, "overridden superKey1 default");
+        public static final BasicConfigKey SUB_KEY_2 = ConfigKeys.newStringConfigKey("subKey2", "subKey2 key", "subKey2 default");
     }
 
     public interface MyInterface {
