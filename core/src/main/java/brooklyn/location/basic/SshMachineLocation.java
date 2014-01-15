@@ -366,7 +366,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     protected SshTool connectSsh(Map props) {
         try {
             if (!truth(user)) {
-                user = getUser();
+                String newUser = getUser();
+                if (LOG.isTraceEnabled()) LOG.trace("For "+this+", setting user in connectSsh: oldUser="+user+"; newUser="+newUser);
+                user = newUser;
             }
             
             ConfigBag args = new ConfigBag()
