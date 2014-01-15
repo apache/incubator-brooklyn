@@ -11,6 +11,7 @@ import io.brooklyn.camp.spi.collection.ResolvableLink;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,8 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -222,6 +225,35 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         if (!Strings.isBlank(name))
             appSpec.displayName(name);
         
+        // TODO: Should we create a Policy object in the brooklyn-camp project that works similarly to io.brooklyn.camp.spi.pdp.Service (e.g.)?
+        Object policies = template.getCustomAttributes().get("policies");
+        List<PolicySpec<?>> policySpecs = new ArrayList<PolicySpec<? extends Policy>>(); 
+        if (policies instanceof Iterable) {
+            for (Object policy : (Iterable<Object>)policies) {
+                if (policy instanceof Map) {
+                    String policyTypeName = ((Map) policy).get("policyType").toString();
+                    Class<? extends Policy> policyType = null;
+                    try {
+                        // TODO: Is there a better way of getting this than Class.forName()?
+                        policyType = (Class<? extends Policy>) Class.forName(policyTypeName);
+                    } catch (ClassNotFoundException e) {
+                        throw Exceptions.propagate(e);
+                    }
+                    PolicySpec<? extends Policy> policySpec = PolicySpec.create(policyType);
+                    policySpec.configure((Map<?, ?>) ((Map) policy).get("brooklyn.config"));
+                    policySpecs.add(policySpec);
+                } else {
+                    throw new IllegalArgumentException("policy should be map, not " + policy.getClass());
+                }
+            }
+        } else if (policies != null) {
+            // TODO "map" short form
+            throw new IllegalArgumentException("policies body should be iterable, not " + policies.getClass());
+        }
+        if (policySpecs.size() > 0) {
+            appSpec.policySpecs(policySpecs);
+        }
+
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             final PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             final String bTypeName = Strings.removeFromStart(appChildComponentTemplate.getType(), "brooklyn:");
@@ -244,7 +276,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                         childSpec.configure(BrooklynCampConstants.PLAN_ID, planId);
                      
                     addEntityConfig(childSpec, (Map<?,?>)appChildAttrs.remove("brooklyn.config"));
-                   
+
                     Entity appChild = entity.addChild(childSpec);
                     
                     List<Location> appChildLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(appChildAttrs, true);

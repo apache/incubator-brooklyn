@@ -1,0 +1,14 @@
+name: test-app-with-policy
+description: TestEntity with Policy using Brooklyn
+origin: http://brooklyn.io
+services:
+- serviceType: brooklyn.entity.basic.BasicEntity
+  name: testentity
+  brooklyn.config:
+    serviceLiteralValue1: Foo
+    serviceLiteralValue2: Bar
+policies:
+- policyType: brooklyn.test.policy.TestPolicy
+  brooklyn.config:
+    policyLiteralValue1: Hello
+    policyLiteralValue2: World

@@ -50,6 +50,13 @@
         <!-- demo and tests -->
         <dependency>
             <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+            <version>${brooklyn.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-software-webapp</artifactId>
             <version>${brooklyn.version}</version>
             <scope>test</scope>
