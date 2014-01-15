@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +17,6 @@ import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.util.exceptions.Exceptions;
@@ -42,6 +40,60 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
 
     private static final Logger LOG = LoggerFactory.getLogger(XmlMementoSerializer.class);
 
+    @SuppressWarnings("unused")
+    private final ClassLoader classLoader;
+    private LookupContext lookupContext;
+
+    public XmlMementoSerializer(ClassLoader classLoader) {
+        this.classLoader = checkNotNull(classLoader, "classLoader");
+        xstream.alias("brooklyn", MutableBrooklynMemento.class);
+        xstream.alias("entity", BasicEntityMemento.class);
+        xstream.alias("location", BasicLocationMemento.class);
+        xstream.alias("configKey", BasicConfigKey.class);
+        xstream.alias("attributeSensor", BasicAttributeSensor.class);
+        
+        xstream.alias("entityRef", Entity.class);
+        xstream.alias("locationRef", Location.class);
+
+        xstream.registerConverter(new LocationConverter());
+        xstream.registerConverter(new EntityConverter());
+        xstream.registerConverter(new TaskConverter(xstream.getMapper()));
+        // TODO policies/enrichers serialization/deserialization?!
+    }
+    
+    // Warning: this is called in the super-class constuctor, so before this constructor!
+    @Override
+    protected MapperWrapper wrapMapper(MapperWrapper next) {
+        MapperWrapper result = new CustomMapper(next, Entity.class, "entityProxy");
+        return new CustomMapper(result, Location.class, "locationProxy");
+    }
+
+    @Override
+    public void serialize(Object object, Writer writer) {
+        super.serialize(object, writer);
+        try {
+            writer.append("\n");
+        } catch (IOException e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    @Override
+    public void setLookupContext(LookupContext lookupContext) {
+        this.lookupContext = checkNotNull(lookupContext, "lookupContext");
+    }
+
+    @Override
+    public void unsetLookupContext() {
+        this.lookupContext = null;
+    }
+    
+    /**
+     * For changing the tag used for anything that implements/extends the given type.
+     * Necessary for using EntityRef rather than the default "dynamic-proxy" tag.
+     * 
+     * @author aled
+     */
     public class CustomMapper extends MapperWrapper {
         private final Class<?> clazz;
         private final String alias;
@@ -75,98 +127,10 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
     }
 
-    @SuppressWarnings("unused")
-    private final ClassLoader classLoader;
-    private LookupContext lookupContext;
-
-    /**
-     * serializer that can only serialize, and not deserialize 
-     * (because needs management context to deserialize location/entity references).
-     */
-    public XmlMementoSerializer(ClassLoader classLoader) {
-        this(classLoader, null);
-    }
-    
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public XmlMementoSerializer(ClassLoader classLoader, ManagementContext managementContext) {
-        this.classLoader = checkNotNull(classLoader, "classLoader");
-        xstream.alias("brooklyn", MutableBrooklynMemento.class);
-        xstream.alias("entity", BasicEntityMemento.class);
-        xstream.alias("location", BasicLocationMemento.class);
-        xstream.alias("configKey", BasicConfigKey.class);
-        xstream.alias("attributeSensor", BasicAttributeSensor.class);
-        
-        xstream.alias("entityRef", Entity.class);
-        xstream.alias("locationRef", Location.class);
-
-        xstream.registerConverter(new LocationConverter(managementContext));
-        xstream.registerConverter(new EntityConverter(managementContext));
-        xstream.registerConverter(new TaskConverter(xstream.getMapper()));
-        // TODO policies/enrichers serialization/deserialization?!
-    }
-    
-    // Warning: this is called in the super-class constuctor, so before this constructor!
-    protected MapperWrapper wrapMapper(MapperWrapper next) {
-        MapperWrapper result = new CustomMapper(next, Entity.class, "entityProxy");
-        return new CustomMapper(result, Location.class, "locationProxy");
-    }
-
-    @Override
-    public void serialize(Object object, Writer writer) {
-        super.serialize(object, writer);
-        try {
-            writer.append("\n");
-        } catch (IOException e) {
-            throw Exceptions.propagate(e);
-        }
-    }
-
-    public static class ConverterImpl<T extends Identifiable> implements Converter {
-        private final AtomicBoolean hasWarned = new AtomicBoolean(false);
-        private final Class<?> converatable;
-        
-        ConverterImpl(Class<T> converatable) {
-            this.converatable = checkNotNull(converatable, "converatable");
-        }
-        
-        @SuppressWarnings({ "rawtypes" })
-        @Override
-        public boolean canConvert(Class type) {
-            return converatable.isAssignableFrom(type);
-        }
-        
-        @SuppressWarnings("unchecked")
-        @Override
-        public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
-            if (source != null) {
-                if (hasWarned.compareAndSet(false, true)) {
-                    LOG.warn("Cannot marshall to xml (for persistence) {} {}; should have been intercepted; unmarshalling will give null!", converatable.getSimpleName(), source);
-                } else {
-                    LOG.debug("Cannot marshall to xml (for persistence) {} {}; should have been intercepted; unmarshalling will give null!", converatable.getSimpleName(), source);
-                }
-            }
-            // no-op; can't marshall this; deserializing will give null!
-            writer.startNode("unserializableLocation");
-            writer.setValue(((T)source).getId());
-            writer.endNode();
-        }
-
-        @Override
-        public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
-            reader.moveDown();
-            String id = reader.getValue();
-            reader.moveUp();
-            LOG.warn("Cannot unmarshall from persisted xml {} {}; should have been intercepted; returning null!", converatable.getSimpleName(), id);
-            return null;
-        }
-    }
-
     public static abstract class IdentifiableConverter<T extends Identifiable> implements SingleValueConverter {
-        protected final ManagementContext managementContext;
         private final Class<T> clazz;
         
-        IdentifiableConverter(ManagementContext managementContext, Class<T> clazz) {
-            this.managementContext = managementContext;
+        IdentifiableConverter(Class<T> clazz) {
             this.clazz = clazz;
         }
         @Override
@@ -191,8 +155,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
     }
 
     public class LocationConverter extends IdentifiableConverter<Location> {
-        LocationConverter(ManagementContext managementContext) {
-            super(managementContext, Location.class);
+        LocationConverter() {
+            super(Location.class);
         }
         @Override
         protected Location lookup(String id) {
@@ -201,8 +165,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
     }
     
     public class EntityConverter extends IdentifiableConverter<Entity> {
-        EntityConverter(ManagementContext managementContext) {
-            super(managementContext, Entity.class);
+        EntityConverter() {
+            super(Entity.class);
         }
         @Override
         protected Entity lookup(String id) {
@@ -248,15 +212,5 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
                 return null;
             }
         }
-    }
-
-    @Override
-    public void setLookupContext(LookupContext lookupContext) {
-        this.lookupContext = checkNotNull(lookupContext, "lookupContext");
-    }
-
-    @Override
-    public void unsetLookupContext() {
-        this.lookupContext = null;
     }
 }

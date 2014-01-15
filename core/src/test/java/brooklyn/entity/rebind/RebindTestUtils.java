@@ -23,7 +23,6 @@ import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.util.javalang.Serializers;
 import brooklyn.util.javalang.Serializers.ObjectReplacer;
 
@@ -87,7 +86,7 @@ public class RebindTestUtils {
     public static LocalManagementContext newPersistingManagementContext(File mementoDir, ClassLoader classLoader, long persistPeriodMillis) {
         checkArgument(persistPeriodMillis > 0, "persistPeriodMillis must be greater than 0; was "+persistPeriodMillis);
         LocalManagementContext result = new LocalManagementContext();
-        BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader, result);
+        BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
         ((RebindManagerImpl)result.getRebindManager()).setPeriodicPersistPeriod(persistPeriodMillis);
         result.getRebindManager().setPersister(newPersister);
         return result;
@@ -104,7 +103,7 @@ public class RebindTestUtils {
     public static Application rebind(ManagementContext newManagementContext, File mementoDir, ClassLoader classLoader) throws Exception {
         LOG.info("Rebinding app, using directory "+mementoDir);
         
-        BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader, newManagementContext);
+        BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
         newManagementContext.getRebindManager().setPersister(newPersister);
         List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
         return newApps.get(0);

@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
-import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.EntityMemento;
@@ -56,17 +55,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     
     private volatile boolean running = true;
 
-    /**
-     * Persister that can only serialize, and not deserialize 
-     * (because needs management context to deserialize location/entity references).
-     */
     public BrooklynMementoPersisterToMultiFile(File dir, ClassLoader classLoader) {
-        this(dir, classLoader, null);
-    }
-    
-    public BrooklynMementoPersisterToMultiFile(File dir, ClassLoader classLoader, ManagementContext managementContext) {
         this.dir = checkNotNull(dir, "dir");
-        MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(classLoader, managementContext);
+        MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(classLoader);
 //        this.serializer = new JsonMementoSerializer(classLoader);
         this.serializer = new RetryingMementoSerializer<Object>(rawSerializer, MAX_SERIALIZATION_ATTEMPTS);
         
