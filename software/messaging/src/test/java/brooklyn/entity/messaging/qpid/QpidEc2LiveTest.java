@@ -17,7 +17,7 @@ public class QpidEc2LiveTest extends AbstractEc2LiveTest {
     protected void doTest(Location loc) throws Exception {
         QpidBroker qpid = app.createAndManageChild(EntitySpec.create(QpidBroker.class)
                 .configure("jmxPort", "9909+")
-                .configure("rmiServerPort", "9910+"));
+                .configure("rmiRegistryPort", "9910+"));
         
         qpid.start(ImmutableList.of(loc));
         EntityTestUtils.assertAttributeEqualsEventually(qpid, QpidBroker.SERVICE_UP, true);

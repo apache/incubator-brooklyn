@@ -43,7 +43,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
     public void canStartupAndShutdownWithCustomJmx() {
         cassandra = app.createAndManageChild(EntitySpec.create(CassandraNode.class)
                 .configure("jmxPort", "11099+")
-                .configure("rmiServerPort", "19001+"));
+                .configure("rmiRegistryPort", "19001+"));
         app.start(ImmutableList.of(testLocation));
 
         EntityTestUtils.assertAttributeEqualsEventually(cassandra, Startable.SERVICE_UP, true);

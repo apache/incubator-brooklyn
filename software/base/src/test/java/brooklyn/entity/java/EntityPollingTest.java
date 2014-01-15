@@ -116,7 +116,7 @@ public class EntityPollingTest {
          * for a JmxService that we can control in the test.        
          */
         entity = app.createAndManageChild(EntitySpec.create(SoftwareProcess.class).impl(SubVanillaJavaApp.class)
-                .configure("rmiServerPort", 40123)
+                .configure("rmiRegistryPort", 40123)
                 .configure("mxbeanStatsEnabled", false)
                 .configure(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.JMX_RMI_CUSTOM_AGENT));
     }
