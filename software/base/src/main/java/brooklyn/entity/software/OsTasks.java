@@ -29,7 +29,7 @@ import brooklyn.util.task.Tasks;
 @Beta
 public class OsTasks {
 
-    public static final Logger LOG = LoggerFactory.getLogger(OsTasks.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OsTasks.class);
 
     /**
      * Delegates to {@link #getOsDetails(SshMachineLocation)} using the given entity's location.
@@ -47,8 +47,7 @@ public class OsTasks {
      * Gather {@link OsDetails operating system details} about the given SSH location.
      * @param sshLocation Location in question.
      * @return A {@link Task} returning an {@link OsDetails} instance that is guaranteed to have
-     *         non-null name, arch and version. If name and version can't be determined they will
-     *         be "unknown".
+     *         non-null name, arch and version. If a field can't be determined it will be "unknown".
      */
     public static Task<OsDetails> getOsDetails(final SshMachineLocation sshLocation) {
         return Tasks.<OsDetails>builder()
@@ -63,23 +62,36 @@ public class OsTasks {
                         reader.close();
 
                         // Output expected to be <name>\n<version>\n<architecture>
-                        String[] nameAndVersion = DynamicTasks.queue(SshEffectorTasks.ssh(script)
+                        String output = DynamicTasks.queue(SshEffectorTasks.ssh(script)
                                 .machine(sshLocation)
                                 .requiringZeroAndReturningStdout())
-                                .get()
-                                .split("\\r?\\n");
+                                .get();
+                        String[] details = output.split("\\r?\\n");
 
-                        String name = nameAndVersion.length > 0 ? nameAndVersion[0] : "unknown";
-                        String version = nameAndVersion.length > 1 ? nameAndVersion[1] : "unknown";
-                        String architecture = nameAndVersion.length > 2 ? nameAndVersion[2] : "unknown";
-                        OsDetails details = new BasicOsDetails(name, architecture, version);
+                        if (details.length != 3)
+                            LOG.warn("Unexpected length ({}) of os details for {}: {}",
+                                    new Object[]{details.length, sshLocation, output});
+
+                        String name = find(details, "name:").or("unknown");
+                        String version = find(details, "version:").or("unknown");
+                        String architecture = find(details, "architecture:").or("unknown");
+
+                        OsDetails osDetails = new BasicOsDetails(name, architecture, version);
                         if (LOG.isDebugEnabled())
-                            LOG.debug("OsDetails for {}: {}", sshLocation, details);
-                        return details;
+                            LOG.debug("OsDetails for {}: {}", sshLocation, osDetails);
+                        return osDetails;
+                    }
+
+                    private Optional<String> find(String[] inputs, String field) {
+                        for (String input : inputs) {
+                            if (input.startsWith(field)) {
+                                return Optional.of(input.substring(field.length()));
+                            }
+                        }
+                        return Optional.absent();
                     }
                 })
                 .build();
-
     }
 
 }

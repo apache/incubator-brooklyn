@@ -15,8 +15,11 @@ if [ -f /etc/os-release ]; then
 
 # Try RedHat-based systems
 elif [ -f /etc/redhat-release ]; then
-    NAME=$(cat /etc/redhat-release | cut -d " " -f 1)
-    VERSION_ID=$(cat /etc/redhat-release  | cut -d " " -f 3)
+    # Example: Red Hat Enterprise Linux Server release 6.3 (Santiago)
+    # Match everything up to ' release'
+    NAME=$(cat /etc/redhat-release | sed 's/ release.*//')
+    # Match everything between 'release ' and the next space
+    VERSION_ID=$(cat /etc/redhat-release | sed 's/.*release \([^ ]*\).*/\1/')
 
 # Try OSX
 elif command -v sw_vers >/dev/null 2>&1; then
@@ -24,11 +27,13 @@ elif command -v sw_vers >/dev/null 2>&1; then
     VERSION_ID=$(sw_vers -productVersion)
 fi
 
-# Debian os-release doesn't set versions
+# Debian os-release doesn't set versions, and Debian 6 doesn't have os-release or lsb_release
 if [ -z $VERSION_ID ] && [ -f /etc/debian_version ]; then
+    NAME=Debian
     VERSION_ID=$(cat /etc/debian_version)
 fi
 
-echo $NAME
-echo $VERSION_ID
-echo $ARCHITECTURE
+echo "name:$NAME"
+echo "version:$VERSION_ID"
+echo "architecture:$ARCHITECTURE"
+
