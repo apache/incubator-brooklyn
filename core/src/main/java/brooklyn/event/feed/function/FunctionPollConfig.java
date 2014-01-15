@@ -9,6 +9,8 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.util.GroovyJavaMethods;
 
+import com.google.common.base.Supplier;
+
 public class FunctionPollConfig<S, T> extends PollConfig<S, T, FunctionPollConfig<S, T>> {
 
     private Callable<?> callable;
@@ -31,6 +33,17 @@ public class FunctionPollConfig<S, T> extends PollConfig<S, T, FunctionPollConfi
         return this;
     }
     
+    public FunctionPollConfig<S, T> supplier(final Supplier<? extends S> val) {
+        checkNotNull(val, "supplier");
+        this.callable = new Callable<S>() {
+            @Override
+            public S call() throws Exception {
+                return (S) val.get();
+            }
+        };
+        return this;
+    }
+
     public FunctionPollConfig<S, T> closure(Closure<?> val) {
         this.callable = GroovyJavaMethods.callableFromClosure(checkNotNull(val, "closure"));
         return this;
