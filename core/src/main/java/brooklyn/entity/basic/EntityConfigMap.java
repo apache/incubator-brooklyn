@@ -17,6 +17,7 @@ import brooklyn.config.ConfigMap;
 import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.DeferredSupplier;
 
@@ -87,9 +88,14 @@ public class EntityConfigMap implements ConfigMap {
     
     @Override
     public Object getRawConfig(ConfigKey<?> key) {
-        if (ownConfig.containsKey(key)) return ownConfig.get(key);
-        if (inheritedConfig.containsKey(key)) return inheritedConfig.get(key);
-        return null;
+        return getConfigRaw(key, true).or(null);
+    }
+    
+    @Override
+    public Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited) {
+        if (ownConfig.containsKey(key)) return Maybe.of(ownConfig.get(key));
+        if (includeInherited && inheritedConfig.containsKey(key)) return Maybe.of(inheritedConfig.get(key));
+        return Maybe.absent();
     }
     
     /** returns the config visible at this entity, local and inherited (preferring local) */

@@ -4,22 +4,48 @@ import static brooklyn.entity.basic.ConfigKeys.newBooleanConfigKey;
 import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
 import static brooklyn.entity.basic.ConfigKeys.newConfigKeyWithPrefix;
 import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
+
+import java.io.File;
+
 import brooklyn.config.ConfigKey;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.os.Os;
 
 import com.google.common.base.Preconditions;
 
 public class BrooklynConfigKeys {
 
     public static final ConfigKey<String> BROOKLYN_DATA_DIR = newStringConfigKey(
-            "brooklyn.datadir", "Directory for writing all brooklyn data", "/tmp/brooklyn-"+System.getProperty("user.name"));
+            "brooklyn.datadir", "Directory for writing all brooklyn data", 
+            Os.mergePaths(Os.tmp(), "brooklyn-"+System.getProperty("user.name"))
+            // TODO remove trailing separator and confirm all calls to this work
+            // (also confirm all calls do a ResourceUtils.tidyPath to replace ~ with home dir!)
+            +File.separator);
 
-    // FIXME Rename to VERSION, instead of SUGGESTED_VERSION? And declare as BasicAttributeSensorAndConfigKey?
+    // TODO Rename to VERSION, instead of SUGGESTED_VERSION? And declare as BasicAttributeSensorAndConfigKey?
     public static final ConfigKey<String> SUGGESTED_VERSION = newStringConfigKey("install.version", "Suggested version");
-    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = newStringConfigKey("install.dir", "Suggested installation directory");
-    public static final ConfigKey<String> SUGGESTED_RUN_DIR = newStringConfigKey("run.dir", "Suggested working directory for the running app");
     
+    public static final BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = new TemplatedStringAttributeSensorAndConfigKey("install.dir", "Directory for this software to be installed in",
+        "${config['brooklyn.datadir']!'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'}/"
+            + "installs/${entity.entityType.simpleName}"
+            + "${(config['install.version']??)?string('_'+(config['install.version']!'0'),'')}" // '0' not used but required by freemarker
+            );
+//    + "${(config['install.version']??)?string(config['install.version']+'_','')}");
+    
+    public static final BasicAttributeSensorAndConfigKey<String> RUN_DIR = new TemplatedStringAttributeSensorAndConfigKey("run.dir", "Directory for this software to be run from",
+        "${config['brooklyn.datadir']!'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'}/"
+            + "apps/${entity.applicationId}/"
+            + "entities/${entity.entityType.simpleName}_"
+            + "${entity.id}");
+    
+    /** @deprecated since 0.7.0; use {@link #INSTALL_DIR} */
+    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = INSTALL_DIR.getConfigKey();
+    /** @deprecated since 0.7.0; use {@link #RUN_DIR} */
+    public static final ConfigKey<String> SUGGESTED_RUN_DIR = RUN_DIR.getConfigKey();
+
     /**
      * Intention is to use this with DependentConfiguration.attributeWhenReady, to allow an entity's start
      * to block until dependents are ready. This is particularly useful when we want to block until a dependent

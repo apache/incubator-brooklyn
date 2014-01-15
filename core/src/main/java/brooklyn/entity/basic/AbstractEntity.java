@@ -55,6 +55,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.DeferredSupplier;
 import brooklyn.util.text.Identifiers;
 
@@ -813,6 +814,16 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     @Override
     public <T> T getConfig(ConfigKey<T> key, T defaultValue) {
         return configsInternal.getConfig(key, defaultValue);
+    }
+    
+    @Override
+    public Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited) {
+        return configsInternal.getConfigRaw(key, includeInherited);
+    }
+    
+    @Override
+    public Maybe<Object> getConfigRaw(HasConfigKey<?> key, boolean includeInherited) {
+        return getConfigRaw(key.getConfigKey(), includeInherited);
     }
 
     @SuppressWarnings("unchecked")

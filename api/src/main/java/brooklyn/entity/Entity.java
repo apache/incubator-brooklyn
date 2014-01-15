@@ -17,6 +17,7 @@ import brooklyn.management.Task;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
+import brooklyn.util.guava.Maybe;
 
 /**
  * The basic interface for a Brooklyn entity.
@@ -165,6 +166,14 @@ public interface Entity extends Identifiable, Rebindable {
     <T> T getConfig(ConfigKey<T> key);
     <T> T getConfig(HasConfigKey<T> key);
     
+    
+    /**
+     * Returns the uncoerced value for this config key as set on this entity, if available,
+     * not following any inheritance chains and not taking any default.
+     */
+    Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited);
+    Maybe<Object> getConfigRaw(HasConfigKey<?> key, boolean includeInherited);
+
     /**
      * Invokes the given effector, with the given parameters to that effector.
      */

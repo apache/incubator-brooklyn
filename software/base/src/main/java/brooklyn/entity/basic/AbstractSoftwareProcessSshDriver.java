@@ -18,8 +18,11 @@ import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.software.SshEffectorTasks;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Strings;
@@ -45,25 +48,27 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessSshDriver.class);
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
 
-    public static final String BROOKLYN_HOME_DIR = "/tmp/brooklyn-"+System.getProperty("user.name");
-    public static final String DEFAULT_INSTALL_BASEDIR = BROOKLYN_HOME_DIR+File.separator+"installs";
-    public static final String DEFAULT_RUN_BASEDIR = BROOKLYN_HOME_DIR+File.separator+"apps";
-
+    // we cache these in case the entity becomes unmanaged
+    private volatile String installDir;
+    private volatile String runDir;
+    
     /** include this flag in newScript creation to prevent entity-level flags from being included;
      * any SSH-specific flags passed to newScript override flags from the entity,
      * and flags from the entity override flags on the location
      * (where there aren't conflicts, flags from all three are used however) */
     public static final String IGNORE_ENTITY_SSH_FLAGS = SshEffectorTasks.IGNORE_ENTITY_SSH_FLAGS.getName(); 
 
-    private volatile String runDir;
-    private volatile String installDir;
-    
     public AbstractSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
+        
         // FIXME this assumes we own the location, and causes warnings about configuring location after deployment;
         // better would be to wrap the ssh-execution-provider to supply these flags
         if (getSshFlags()!=null && !getSshFlags().isEmpty())
             machine.configure(getSshFlags());
+        
+        // ensure these are set using the routines below, not a global ConfigToAttributes.apply() 
+        getInstallDir();
+        getRunDir();
     }
 
     /** returns location (tighten type, since we know it is an ssh machine location here) */	
@@ -114,29 +119,44 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
     
     public String getInstallDir() {
-        // Cache it; evaluate lazily (and late) to ensure managementContext.config is accessible and completed its setup
-        // Caching has the benefit that the driver is usable, even if the entity is unmanaged (useful in some tests!)
-        if (installDir == null) {
+        if (installDir != null) return installDir;
+        
+        // deprecated in 0.7.0
+        Maybe<Object> minstallDir = getEntity().getConfigRaw(SoftwareProcess.INSTALL_DIR, true);
+        if (!minstallDir.isPresent() || minstallDir.get()==null) {
             String installBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
-            if (installBasedir == null) installBasedir = DEFAULT_INSTALL_BASEDIR;
-            if (installBasedir.endsWith(File.separator)) installBasedir.substring(0, installBasedir.length()-1);
-            
-            installDir = elvis(entity.getConfig(SoftwareProcess.SUGGESTED_INSTALL_DIR),
-                    installBasedir+"/"+getEntityVersionLabel("/"));
+            if (installBasedir != null) {
+                log.warn("Using legacy 'brooklyn.dirs.install' setting for "+entity+"; may be removed in future versions.");
+                installDir = installBasedir+"/"+getEntityVersionLabel()+"_"+entity.getId();
+                installDir = ResourceUtils.tidyFilePath(installDir);
+                getEntity().setAttribute(SoftwareProcess.INSTALL_DIR, installDir);
+                return installDir;
+            }
         }
+
+        installDir = ResourceUtils.tidyFilePath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.INSTALL_DIR));
+        entity.setAttribute(SoftwareProcess.INSTALL_DIR, installDir);
         return installDir;
     }
     
     public String getRunDir() {
-        if (runDir == null) {
+        if (runDir != null) return runDir;
+        
+        // deprecated in 0.7.0
+        Maybe<Object> mRunDir = getEntity().getConfigRaw(SoftwareProcess.RUN_DIR, true);
+        if (!mRunDir.isPresent() || mRunDir.get()==null) {
             String runBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.run");
-            if (runBasedir == null) runBasedir = DEFAULT_RUN_BASEDIR;
-            if (runBasedir.endsWith(File.separator)) runBasedir.substring(0, runBasedir.length()-1);
-            
-            runDir = elvis(entity.getConfig(SoftwareProcess.SUGGESTED_RUN_DIR), 
-                    runBasedir+"/"+entity.getApplication().getId()+"/"+"entities"+"/"+
-                    getEntityVersionLabel()+"_"+entity.getId());
+            if (runBasedir != null) {
+                log.warn("Using legacy 'brooklyn.dirs.run' setting for "+entity+"; may be removed in future versions.");
+                runDir = runBasedir+"/"+entity.getApplication().getId()+"/"+"entities"+"/"+getEntityVersionLabel()+"_"+entity.getId();
+                runDir = ResourceUtils.tidyFilePath(runDir);
+                getEntity().setAttribute(SoftwareProcess.RUN_DIR, runDir);
+                return runDir;
+            }
         }
+
+        runDir = ResourceUtils.tidyFilePath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.RUN_DIR));
+        entity.setAttribute(SoftwareProcess.RUN_DIR, runDir);
         return runDir;
     }
 

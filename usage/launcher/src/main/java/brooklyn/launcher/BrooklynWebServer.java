@@ -147,7 +147,7 @@ public class BrooklynWebServer {
         if (!leftovers.isEmpty())
             log.warn("Ignoring unknown flags " + leftovers);
         
-        String brooklynDataDir = checkNotNull(managementContext.getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR));
+        String brooklynDataDir = ResourceUtils.tidyFilePath(checkNotNull(managementContext.getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR)));
         this.webappTempDir = new File(brooklynDataDir, "jetty");
     }
 

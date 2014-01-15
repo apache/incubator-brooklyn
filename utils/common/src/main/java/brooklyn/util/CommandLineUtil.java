@@ -2,6 +2,7 @@ package brooklyn.util;
 
 import java.util.List;
 
+// FIXME move to brooklyn.util.cli.CommandLineArgs, and change get to "remove"
 public class CommandLineUtil {
 
     public static String getCommandLineOption (List<String> args, String param){

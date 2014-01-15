@@ -21,6 +21,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
+// FIXME move to brooklyn.util.groovy
 public class JavaGroovyEquivalents {
 
     private static final Logger log = LoggerFactory.getLogger(JavaGroovyEquivalents.class);

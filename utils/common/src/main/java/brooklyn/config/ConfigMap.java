@@ -3,6 +3,7 @@ package brooklyn.config;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Predicate;
 
@@ -20,13 +21,18 @@ public interface ConfigMap {
      * unless the default value is null in which case it returns the default*/ 
     public <T> T getConfig(ConfigKey<T> key, T defaultValue);
 
+    /** as {@link #getConfigRaw(ConfigKey)} but returning null if not present 
+     * @deprecated since 0.7.0 use {@link #getConfigRaw(ConfigKey)} */
+    @Deprecated
+    public Object getRawConfig(ConfigKey<?> key);
+    
     /** returns the value stored against the given key, 
      * <b>not</b> any default,
      * <b>not</b> resolved (and guaranteed non-blocking)
      * and <b>not</b> type-coerced
      * @return raw, unresolved, uncoerced value of key in map, locally or inherited, but <b>not</b> any default on the key
      */
-    public Object getRawConfig(ConfigKey<?> key);
+    public Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited);
 
     /** returns a map of all config keys to their raw (unresolved+uncoerced) contents */
     public Map<ConfigKey<?>,Object> getAllConfig();
