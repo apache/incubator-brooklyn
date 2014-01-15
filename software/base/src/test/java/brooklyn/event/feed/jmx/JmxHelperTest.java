@@ -6,7 +6,6 @@ import static org.testng.Assert.fail;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import javax.management.DynamicMBean;
 import javax.management.MBeanOperationInfo;
@@ -38,9 +37,11 @@ public class JmxHelperTest {
 
     private static final Logger log = LoggerFactory.getLogger(JmxHelperTest.class);
     
+    private static final String LOCALHOST_NAME = "localhost";
+    
     private static final int TIMEOUT_MS = 5000;
     private static final int SHORT_WAIT_MS = 250;
-    
+
     private JmxService jmxService;
     private JmxHelper jmxHelper;
     
@@ -55,7 +56,7 @@ public class JmxHelperTest {
     public void setUp() throws Exception {
         jmxObjectName = new ObjectName(objectName);
         jmxObjectNameWithWildcard = new ObjectName(objectNameWithWildcard);
-        jmxService = newJmxServiceRetrying("localhost", 5);
+        jmxService = newJmxServiceRetrying(LOCALHOST_NAME, 5);
         jmxHelper = new JmxHelper(jmxService.getUrl());
         jmxHelper.setMinTimeBetweenReconnectAttempts(0);
         jmxHelper.connect(TIMEOUT_MS);
@@ -65,6 +66,8 @@ public class JmxHelperTest {
     public void tearDown() throws Exception {
         if (jmxHelper != null) jmxHelper.disconnect();
         if (jmxService != null) jmxService.shutdown();
+        jmxHelper = null;
+        jmxService = null;
     }
 
     @Test
@@ -167,7 +170,7 @@ public class JmxHelperTest {
         }
 
         // Simulate the network restarting
-        jmxService = new JmxService("localhost", port);
+        jmxService = new JmxService(LOCALHOST_NAME, port);
         
         GeneralisedDynamicMBean mbean2 = jmxService.registerMBean(MutableMap.of("myattr", "myval2"), objectName);
         assertEquals(jmxHelper.getAttribute(jmxObjectName, "myattr"), "myval2");
@@ -249,25 +252,28 @@ public class JmxHelperTest {
         jmxService.shutdown();
         jmxHelper.disconnect();
         
-        jmxService = newJmxServiceRetrying("127.0.0.1", 5);
+        jmxService = newJmxServiceRetrying(LOCALHOST_NAME, 5);
         jmxHelper = new JmxHelper(jmxService.getUrl());
         jmxHelper.connect();
         
         // Expect just one log message about:
-        //     JMX object DoesNotExist:type=DoesNotExist not found at service:jmx:rmi://127.0.0.1:1099/jndi/rmi://localhost:9001/jmxrmi"
+        //     JMX object DoesNotExist:type=DoesNotExist not found at service:jmx:rmi://localhost:1099/jndi/rmi://localhost:9001/jmxrmi"
         for (int i = 0; i < 10; i++) {
             jmxHelper.findMBean(wrongObjectName);
         }
     }
 
-    private JmxService newJmxServiceRetrying(String host, int retries) {
-        try {
-            return new JmxService(host, (int)(11000+(500*Math.random())));
-        } catch (Exception e) {
-            log.debug("Unable to create JMX service during test - "+retries+" retries remaining");
-            if (retries==0) throw Exceptions.propagate(e);
-            return newJmxServiceRetrying(host, retries-1);
+    private JmxService newJmxServiceRetrying(String host, int retries) throws Exception {
+        Exception lastexception = null;
+        for (int i = 0; i < retries; i++) {
+            try {
+                return new JmxService(host, (int)(11000+(500*Math.random())));
+            } catch (Exception e) {
+                log.debug("Unable to create JMX service during test - "+retries+" retries remaining");
+                lastexception = e;
+            }
         }
+        throw lastexception;
     }
 
     private Notification sendNotification(StandardEmitterMBean mbean, String type, long seq, Object userData) {
