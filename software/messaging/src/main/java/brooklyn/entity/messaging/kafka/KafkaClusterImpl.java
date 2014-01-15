@@ -21,7 +21,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.basic.SensorPropagatingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
@@ -87,6 +87,8 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
                 .configure("memberSpec", EntitySpec.create(brokerSpec).configure(KafkaBroker.ZOOKEEPER, zookeeper)));
         if (Entities.isManaged(this)) Entities.manage(cluster);
         setAttribute(CLUSTER, cluster);
+        
+        connectSensors();
     }
 
     @Override
@@ -116,8 +118,6 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
         } // And only start zookeeper if we are parent
         if (Objects.equal(this, getZooKeeper().getParent())) childrenToStart.add(getZooKeeper());
         Entities.invokeEffector(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations)).getUnchecked();
-
-        connectSensors();
     }
 
     @Override
@@ -156,10 +156,14 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
     }
 
     void connectSensors() {
-        SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(getCluster(), SERVICE_UP)
-                .addToEntityAndEmitAll(this);
-        SensorPropagatingEnricher.newInstanceListeningTo(getZooKeeper(), SERVICE_UP)
-                .addToEntityAndEmitAll(this);
+        addEnricher(Enrichers.builder()
+                .propagatingAllBut(SERVICE_UP)
+                .from(getCluster())
+                .build());
+        addEnricher(Enrichers.builder()
+                .propagating(SERVICE_UP)
+                .from(getZooKeeper())
+                .build());
     }
 
     /*

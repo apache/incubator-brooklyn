@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.config.ConfigKey;
-import brooklyn.enricher.basic.SensorPropagatingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
@@ -231,7 +231,10 @@ public class BrooklynRestResourceUtils {
                 final Class<? extends Entity> eclazz = getCatalog().loadClassByType(spec.getType(), Entity.class);
                 Entity soleChild = mgmt.getEntityManager().createEntity(toCoreEntitySpec(eclazz, name, configO));
                 instance.addChild(soleChild);
-                instance.addEnricher(SensorPropagatingEnricher.newInstanceListeningToAllSensors(soleChild));
+                instance.addEnricher(Enrichers.builder()
+                        .propagatingAll()
+                        .from(soleChild)
+                        .build());
                 
                 log.info("REST placing '{}' under management", spec.getName());
                 Entities.startManagement(instance, mgmt);

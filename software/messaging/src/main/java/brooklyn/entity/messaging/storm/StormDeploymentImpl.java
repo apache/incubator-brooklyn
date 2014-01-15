@@ -8,7 +8,7 @@ import static brooklyn.entity.messaging.storm.Storm.Role.UI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.basic.SensorPropagatingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicStartableImpl;
 import brooklyn.entity.group.DynamicCluster;
@@ -46,8 +46,13 @@ public class StormDeploymentImpl extends BasicStartableImpl implements StormDepl
         
         Storm ui = addChild(EntitySpec.create(Storm.class).configure(ROLE, UI));
         
-        addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(ui, Storm.STORM_UI_URL));
-        addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(nimbus, Attributes.HOSTNAME));
+        addEnricher(Enrichers.builder()
+                .propagating(Storm.STORM_UI_URL)
+                .from(ui)
+                .build());
+        addEnricher(Enrichers.builder()
+                .propagating(Attributes.HOSTNAME)
+                .from(nimbus)
+                .build());
     }
-
 }

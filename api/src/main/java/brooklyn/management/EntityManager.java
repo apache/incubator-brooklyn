@@ -9,6 +9,10 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
+import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 
 /**
  * For managing and querying entities.
@@ -38,6 +42,20 @@ public interface EntityManager {
      * @see createEntity(EntitySpec)
      */
     <T extends Entity> T createEntity(Map<?,?> config, Class<T> type);
+
+    /**
+     * Creates a new policy (not managed; not associated with any entity).
+     * 
+     * @param spec
+     */
+    <T extends Policy> T createPolicy(PolicySpec<T> spec);
+
+    /**
+     * Creates a new enricher (not managed; not associated with any entity).
+     * 
+     * @param spec
+     */
+    <T extends Enricher> T createEnricher(EnricherSpec<T> spec);
 
     /**
      * All entities under control of this management plane

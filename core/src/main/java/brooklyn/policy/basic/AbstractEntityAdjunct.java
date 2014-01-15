@@ -1,6 +1,8 @@
 package brooklyn.policy.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -19,6 +21,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.trait.Configurable;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.ExecutionContext;
@@ -189,6 +192,10 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
         return configsInternal.getAllConfig();
     }
     
+    protected <K> K getRequiredConfig(ConfigKey<K> key) {
+        return checkNotNull(getConfig(key), key.getName());
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
@@ -231,6 +238,15 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
         this.entity = entity;
     }
     
+    protected <T> void emit(Sensor<T> sensor, T val) {
+        checkState(entity != null, "entity must first be set");
+        if (sensor instanceof AttributeSensor) {
+            entity.setAttribute((AttributeSensor<T>)sensor, val);
+        } else { 
+            entity.emit(sensor, val);
+        }
+    }
+
     protected synchronized SubscriptionTracker getSubscriptionTracker() {
         if (_subscriptionTracker!=null) return _subscriptionTracker;
         if (entity==null) return null;

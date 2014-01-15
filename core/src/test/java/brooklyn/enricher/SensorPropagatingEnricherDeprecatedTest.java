@@ -6,13 +6,13 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
@@ -24,7 +24,7 @@ import brooklyn.util.javalang.AtomicReferences;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 
-public class SensorPropagatingEnricherTest {
+public class SensorPropagatingEnricherDeprecatedTest {
 
     private TestApplication app;
     private TestEntity entity;
@@ -42,10 +42,7 @@ public class SensorPropagatingEnricherTest {
     
     @Test
     public void testPropagatesSpecificSensor() {
-        app.addEnricher(Enrichers.builder()
-                .propagating(TestEntity.NAME)
-                .from(entity)
-                .build());
+        app.addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(entity, TestEntity.NAME));
 
         // name propagated
         entity.setAttribute(TestEntity.NAME, "foo");
@@ -57,24 +54,8 @@ public class SensorPropagatingEnricherTest {
     }
     
     @Test
-    public void testPropagatesCurrentValue() {
-        entity.setAttribute(TestEntity.NAME, "foo");
-        
-        app.addEnricher(Enrichers.builder()
-                .propagating(TestEntity.NAME)
-                .from(entity)
-                .build());
-
-        // name propagated
-        EntityTestUtils.assertAttributeEqualsEventually(app, TestEntity.NAME, "foo");
-    }
-    
-    @Test
-    public void testPropagatesAllStaticSensors() {
-        app.addEnricher(Enrichers.builder()
-                .propagatingAll()
-                .from(entity)
-                .build());
+    public void testPropagatesAllSensors() {
+        app.addEnricher(SensorPropagatingEnricher.newInstanceListeningToAllSensors(entity));
 
         // all attributes propagated
         entity.setAttribute(TestEntity.NAME, "foo");
@@ -94,35 +75,8 @@ public class SensorPropagatingEnricherTest {
     }
     
     @Test
-    public void testPropagatesAllSensorsIncludesDynamicallyAdded() {
-        AttributeSensor<String> dynamicAttribute = Sensors.newStringSensor("test.dynamicsensor.strattrib");
-        BasicNotificationSensor<String> dynamicNotificationSensor = new BasicNotificationSensor(String.class, "test.dynamicsensor.strnotif");
-        
-        app.addEnricher(Enrichers.builder()
-                .propagatingAll()
-                .from(entity)
-                .build());
-
-        entity.setAttribute(dynamicAttribute, "foo");
-        
-        EntityTestUtils.assertAttributeEqualsEventually(app, dynamicAttribute, "foo");
-        
-        // notification-sensor propagated
-        final AtomicReference<String> notif = new AtomicReference<String>();
-        app.subscribe(app, dynamicNotificationSensor, new SensorEventListener<String>() {
-                @Override public void onEvent(SensorEvent<String> event) {
-                    notif.set(event.getValue());
-                }});
-        entity.emit(dynamicNotificationSensor, "mynotifval");
-        Asserts.eventually(AtomicReferences.supplier(notif), Predicates.equalTo("mynotifval"));
-    }
-    
-    @Test
     public void testPropagatesAllBut() {
-        app.addEnricher(Enrichers.builder()
-                .propagatingAllBut(TestEntity.SEQUENCE)
-                .from(entity)
-                .build());
+        app.addEnricher(SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(entity, TestEntity.SEQUENCE)) ;
 
         // name propagated
         entity.setAttribute(TestEntity.NAME, "foo");
@@ -136,11 +90,7 @@ public class SensorPropagatingEnricherTest {
     @Test
     public void testPropagatingAsDifferentSensor() {
         final AttributeSensor<String> ANOTHER_ATTRIBUTE = Sensors.newStringSensor("another.attribute", "");
-        
-        app.addEnricher(Enrichers.builder()
-                .propagating(ImmutableMap.of(TestEntity.NAME, ANOTHER_ATTRIBUTE))
-                .from(entity)
-                .build());
+        app.addEnricher(SensorPropagatingEnricher.newInstanceRenaming(entity, ImmutableMap.of(TestEntity.NAME, ANOTHER_ATTRIBUTE)));
 
         // name propagated as different attribute
         entity.setAttribute(TestEntity.NAME, "foo");

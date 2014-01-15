@@ -21,9 +21,9 @@ import brooklyn.test.entity.TestEntity
 
 import com.google.common.base.Function
 
-class CustomAggregatingEnricherTest {
+class CustomAggregatingEnricherDeprecatedTest {
 
-    public static final Logger log = LoggerFactory.getLogger(CustomAggregatingEnricherTest.class);
+    public static final Logger log = LoggerFactory.getLogger(CustomAggregatingEnricherDeprecatedTest.class);
             
     private static final long TIMEOUT_MS = 10*1000
     private static final long SHORT_WAIT_MS = 250

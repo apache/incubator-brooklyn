@@ -7,7 +7,24 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicSensorEvent;
 
-/** enricher which adds multiple sensors on an entity to produce a new sensor */
+/** 
+ * enricher which adds multiple sensors on an entity to produce a new sensor
+ * 
+ * Instead, consider calling:
+ * <pre>
+ * {@code
+ * addEnricher(Enrichers.builder()
+ *         .combining(sources)
+ *         .publishing(target)
+ *         .computeSum()
+ *         .build());
+ * }
+ * </pre>
+ * <p>
+ * 
+ * @deprecated since 0.7.0; use {@link Enrichers.builder()}
+ * @see Combiner if need to sub-class
+ */
 public class AddingEnricher extends AbstractEnricher implements SensorEventListener {
 
     private Sensor[] sources;

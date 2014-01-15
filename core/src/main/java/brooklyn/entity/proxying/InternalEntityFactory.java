@@ -96,10 +96,10 @@ public class InternalEntityFactory {
         }
     }
     
-    public InternalEntityFactory(ManagementContextInternal managementContext, EntityTypeRegistry entityTypeRegistry) {
+    public InternalEntityFactory(ManagementContextInternal managementContext, EntityTypeRegistry entityTypeRegistry, InternalPolicyFactory policyFactory) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
         this.entityTypeRegistry = checkNotNull(entityTypeRegistry, "entityTypeRegistry");
-        this.policyFactory = new InternalPolicyFactory(managementContext);
+        this.policyFactory = checkNotNull(policyFactory, "policyFactory");
     }
 
     @SuppressWarnings("unchecked")

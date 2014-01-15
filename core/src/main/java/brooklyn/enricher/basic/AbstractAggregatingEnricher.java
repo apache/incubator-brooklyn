@@ -26,6 +26,9 @@ import com.google.common.collect.ImmutableMap;
 /**
  * AggregatingEnrichers implicitly subscribes to the same sensor<S> on all entities inside an
  * {@link Group} and should emit an aggregate<T> on the target sensor
+ * 
+ * @deprecated since 0.7.0; use {@link Enrichers.builder()}
+ * @see Aggregator if need to sub-class
  */
 public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher implements SensorEventListener<S> {
     

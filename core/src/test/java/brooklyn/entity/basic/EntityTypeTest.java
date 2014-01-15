@@ -1,5 +1,7 @@
 package brooklyn.entity.basic;
 
+import static brooklyn.entity.basic.AbstractEntity.CHILD_ADDED;
+import static brooklyn.entity.basic.AbstractEntity.CHILD_REMOVED;
 import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_ADDED;
 import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_CHANGED;
 import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_REMOVED;
@@ -51,7 +53,8 @@ public class EntityTypeTest {
     public final static Set<Sensor<?>> DEFAULT_SENSORS = ImmutableSet.<Sensor<?>>of(
             SENSOR_ADDED, SENSOR_REMOVED,
             EFFECTOR_ADDED, EFFECTOR_REMOVED, EFFECTOR_CHANGED,
-            POLICY_ADDED, POLICY_REMOVED); 
+            POLICY_ADDED, POLICY_REMOVED,
+            CHILD_ADDED, CHILD_REMOVED); 
 
     public static class EmptyEntityForTesting extends AbstractEntity {}
     

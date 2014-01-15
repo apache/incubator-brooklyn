@@ -12,6 +12,18 @@ import com.google.common.base.Predicates;
 
 public class StringPredicates {
 
+    /**
+     * @since 0.7.0
+     */
+    public static Predicate<CharSequence> isBlank() {
+        return new Predicate<CharSequence>() {
+            @Override
+            public boolean apply(@Nullable CharSequence input) {
+                return Strings.isBlank(input);
+            }
+        };
+    }
+
     public static Predicate<CharSequence> containsLiteralCaseInsensitive(final String fragment) {
         return new Predicate<CharSequence>() {
             @Override

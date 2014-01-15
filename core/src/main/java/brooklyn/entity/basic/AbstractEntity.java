@@ -47,7 +47,9 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.SubscriptionTracker;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.collections.MutableList;
@@ -121,6 +123,11 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
             "entity.policy.added", "Policy dynamically added to entity");
     public static final BasicNotificationSensor<PolicyDescriptor> POLICY_REMOVED = new BasicNotificationSensor<PolicyDescriptor>(PolicyDescriptor.class,
             "entity.policy.removed", "Policy dynamically removed from entity");
+
+    public static final BasicNotificationSensor<Entity> CHILD_ADDED = new BasicNotificationSensor<Entity>(Entity.class,
+            "entity.children.added", "Child dynamically added to entity");
+    public static final BasicNotificationSensor<Entity> CHILD_REMOVED = new BasicNotificationSensor<Entity>(Entity.class,
+            "entity.children.removed", "Child dynamically removed from entity");
 
     @SetFromFlag(value="id")
     private String id = Identifiers.makeRandomId(8);
@@ -561,12 +568,19 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     @Override
     public <T extends Entity> T addChild(T child) {
         checkNotNull(child, "child must not be null (for entity %s)", this);
+        boolean changed;
         synchronized (children) {
             if (Entities.isAncestor(this, child)) throw new IllegalStateException("loop detected trying to add child "+child+" to "+this+"; it is already an ancestor");
             child.setParent(getProxyIfAvailable());
-            children.add(child);
+            changed = children.add(child);
             
             getManagementSupport().getEntityChangeListener().onChildrenChanged();
+        }
+        
+        // TODO not holding synchronization lock while notifying risks out-of-order if addChild+removeChild called in rapid succession.
+        // But doing notification in synchronization block may risk deadlock?
+        if (changed) {
+            emit(AbstractEntity.CHILD_ADDED, child);
         }
         return child;
     }
@@ -590,15 +604,20 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     
     @Override
     public boolean removeChild(Entity child) {
+        boolean changed;
         synchronized (children) {
-            boolean changed = children.remove(child);
+            changed = children.remove(child);
             child.clearParent();
             
             if (changed) {
                 getManagementSupport().getEntityChangeListener().onChildrenChanged();
             }
-            return changed;
         }
+        
+        if (changed) {
+            emit(AbstractEntity.CHILD_REMOVED, child);
+        }
+        return changed;
     }
 
     /**
@@ -1001,6 +1020,20 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         
         getManagementSupport().getEntityChangeListener().onPoliciesChanged();
         emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
+    }
+
+    @Override
+    public <T extends Policy> T addPolicy(PolicySpec<T> spec) {
+        T policy = getManagementContext().getEntityManager().createPolicy(spec);
+        addPolicy(policy);
+        return policy;
+    }
+
+    @Override
+    public <T extends Enricher> T addEnricher(EnricherSpec<T> spec) {
+        T enricher = getManagementContext().getEntityManager().createEnricher(spec);
+        addEnricher(enricher);
+        return enricher;
     }
 
     @Override

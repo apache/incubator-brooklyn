@@ -68,27 +68,36 @@ public class JmxService {
         this.jmxPort = jmxPort;
         url = JmxHelper.toRmiJmxUrl(jmxHost, jmxPort, jmxPort, "jmxrmi");
 
-        JMXServiceURL address = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + jmxHost + ":" + jmxPort + "/jmxrmi");
-        connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(address, null, null);
-        server = MBeanServerFactory.createMBeanServer();
-        ObjectName cntorServerName = ObjectName.getInstance("connectors:protocol=rmi");
-        server.registerMBean(connectorServer, cntorServerName);
-
-        ObjectName naming = new ObjectName("Naming:type=registry");
-        server.registerMBean(new NamingService(jmxPort), naming);
-        Object proxy = MBeanServerInvocationHandler.newProxyInstance(server, naming, NamingServiceMBean.class, false);
-        namingServiceMBean = (NamingServiceMBean) proxy;
         try {
-            namingServiceMBean.start();
+            JMXServiceURL address = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + jmxHost + ":" + jmxPort + "/jmxrmi");
+            connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(address, null, null);
+            server = MBeanServerFactory.createMBeanServer();
+            ObjectName cntorServerName = ObjectName.getInstance("connectors:protocol=rmi");
+            server.registerMBean(connectorServer, cntorServerName);
+    
+            ObjectName naming = new ObjectName("Naming:type=registry");
+            server.registerMBean(new NamingService(jmxPort), naming);
+            Object proxy = MBeanServerInvocationHandler.newProxyInstance(server, naming, NamingServiceMBean.class, false);
+            namingServiceMBean = (NamingServiceMBean) proxy;
+            try {
+                namingServiceMBean.start();
+            } catch (Exception e) {
+                // may take a bit of time for port to be available, if it had just been used
+                logger.warn("JmxService couldn't start test mbean ("+e+"); will delay then retry once");
+                Thread.sleep(1000);
+                namingServiceMBean.start();
+            }
+    
+            connectorServer.start();
+            logger.info("JMX tester service started at URL {}", address);
         } catch (Exception e) {
-            // may take a bit of time for port to be available, if it had just been used
-            logger.warn("JmxService couldn't start test mbean ("+e+"); will delay then retry once");
-            Thread.sleep(1000);
-            namingServiceMBean.start();
+            try {
+                shutdown();
+            } catch (Exception e2) {
+                logger.warn("Error shutting down JmxService, after error during startup; rethrowing original error", e2);
+            }
+            throw e;
         }
-
-        connectorServer.start();
-        logger.info("JMX tester service started at URL {}", address);
     }
 
     public int getJmxPort() {
@@ -96,8 +105,12 @@ public class JmxService {
     }
     
     public void shutdown() throws IOException {
-        connectorServer.stop();
-        namingServiceMBean.stop();
+        if (connectorServer != null) connectorServer.stop();
+        if (namingServiceMBean != null) namingServiceMBean.stop();
+        if (server != null) MBeanServerFactory.releaseMBeanServer(server);
+        connectorServer = null;
+        namingServiceMBean = null;
+        server = null;
         logger.info("JMX tester service stopped ({}:{})", jmxHost, jmxPort);
     }
 

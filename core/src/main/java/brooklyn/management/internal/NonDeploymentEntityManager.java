@@ -10,6 +10,10 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
+import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 
 public class NonDeploymentEntityManager implements EntityManager {
 
@@ -42,6 +46,24 @@ public class NonDeploymentEntityManager implements EntityManager {
         return createEntity(EntitySpec.create(type).configure(config));
     }
 
+    @Override
+    public <T extends Policy> T createPolicy(PolicySpec<T> spec) {
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getEntityManager().createPolicy(spec);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" (with no initial management context supplied) is not valid for this operation.");
+        }
+    }
+    
+    @Override
+    public <T extends Enricher> T createEnricher(EnricherSpec<T> spec) {
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getEntityManager().createEnricher(spec);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" (with no initial management context supplied) is not valid for this operation.");
+        }
+    }
+    
     @Override
     public Collection<Entity> getEntities() {
         if (isInitialManagementContextReal()) {

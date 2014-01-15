@@ -6,11 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.Catalog;
-import brooklyn.enricher.basic.SensorPropagatingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.group.DynamicCluster;
@@ -45,7 +44,10 @@ public class ResilientMongoDbApp extends AbstractApplication implements Startabl
         
         initResilience(rs);
         
-        addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(rs, MongoDBReplicaSet.REPLICA_SET_ENDPOINTS, MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT));
+        addEnricher(Enrichers.builder()
+                .propagating(MongoDBReplicaSet.REPLICA_SET_ENDPOINTS, MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT)
+                .from(rs)
+                .build());
     }
     
     /** this attaches a policy at each MongoDB node listening for ENTITY_FAILED,

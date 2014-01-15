@@ -3,7 +3,7 @@ package brooklyn.qa.longevity.webcluster;
 import java.util.List;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.enricher.CustomAggregatingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
@@ -17,7 +17,6 @@ import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.Lists;
 
@@ -55,8 +54,12 @@ public class WebClusterApp extends AbstractApplication {
                 .configure("initialSize", 1)
                 .configure("memberSpec", jbossSpec));
 
-
-        web.getCluster().addEnricher(CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), sinusoidalLoad, averageLoad, null, null));
+        web.getCluster().addEnricher(Enrichers.builder()
+                .aggregating(sinusoidalLoad)
+                .publishing(averageLoad)
+                .fromMembers()
+                .computingAverage()
+                .build());
         web.getCluster().addPolicy(AutoScalerPolicy.builder()
                 .metric(averageLoad)
                 .sizeRange(1, 3)
