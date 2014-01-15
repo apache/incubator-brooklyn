@@ -61,7 +61,7 @@ public class QpidIntegrationTest {
     public void canStartupAndShutdown() {
         qpid = app.createAndManageChild(EntitySpec.create(QpidBroker.class)
                 .configure("jmxPort", "9909+")
-                .configure("rmiServerPort", "9910+"));
+                .configure("rmiRegistryPort", "9910+"));
         qpid.start([ testLocation ])
         executeUntilSucceedsWithShutdown(qpid) {
             assertTrue qpid.getAttribute(Startable.SERVICE_UP)

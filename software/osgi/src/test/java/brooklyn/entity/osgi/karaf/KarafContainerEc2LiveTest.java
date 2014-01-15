@@ -23,7 +23,7 @@ public class KarafContainerEc2LiveTest extends AbstractEc2LiveTest {
                 .configure("name", Identifiers.makeRandomId(8))
                 .configure("displayName", "Karaf Test")
                 .configure("jmxPort", "8099+")
-                .configure("rmiServerPort", "9099+"));
+                .configure("rmiRegistryPort", "9099+"));
         
         app.start(ImmutableList.of(loc));
 

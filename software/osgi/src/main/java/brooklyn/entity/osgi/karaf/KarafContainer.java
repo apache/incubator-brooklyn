@@ -69,9 +69,6 @@ public interface KarafContainer extends SoftwareProcess, UsesJava, UsesJmx {
 
     @SetFromFlag("rmiRegistryPort")
     public static final PortAttributeSensorAndConfigKey RMI_REGISTRY_PORT = UsesJmx.RMI_REGISTRY_PORT;
-    @SetFromFlag("rmiServerPort")
-    /* @deprecated since 0.6 use RMI_REGISTRY_PORT */ @Deprecated
-    public static final PortAttributeSensorAndConfigKey RMI_SERVER_PORT = RMI_REGISTRY_PORT;
     
     @SetFromFlag("jmxContext")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = new BasicAttributeSensorAndConfigKey<String>(
