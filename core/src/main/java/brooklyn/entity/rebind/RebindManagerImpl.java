@@ -41,6 +41,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -74,6 +75,10 @@ public class RebindManagerImpl implements RebindManager {
     /**
      * Must be called before setPerister()
      */
+    public void setPeriodicPersistPeriod(Duration period) {
+        this.periodicPersistPeriod = period.toMilliseconds();
+    }
+
     public void setPeriodicPersistPeriod(long periodMillis) {
         this.periodicPersistPeriod = periodMillis;
     }
@@ -302,7 +307,6 @@ public class RebindManagerImpl implements RebindManager {
             //      a proxy for if another entity needs to reference it during the init phase.
             InternalEntityFactory entityFactory = managementContext.getEntityFactory();
             Entity entity = entityFactory.constructEntity(entityClazz);
-            
             FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", entityId), entity);
             if (entity instanceof AbstractApplication) {
                 FlagUtils.setFieldsFromFlags(ImmutableMap.of("mgmt", managementContext), entity);

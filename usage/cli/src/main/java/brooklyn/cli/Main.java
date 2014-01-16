@@ -2,7 +2,15 @@ package brooklyn.cli;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
+import io.airlift.command.Cli;
+import io.airlift.command.Cli.CliBuilder;
+import io.airlift.command.Command;
+import io.airlift.command.Help;
+import io.airlift.command.Option;
+import io.airlift.command.OptionType;
+import io.airlift.command.ParseException;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
@@ -12,13 +20,6 @@ import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
-import io.airlift.command.Cli;
-import io.airlift.command.Cli.CliBuilder;
-import io.airlift.command.Command;
-import io.airlift.command.Help;
-import io.airlift.command.Option;
-import io.airlift.command.OptionType;
-import io.airlift.command.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
+import brooklyn.launcher.PersistMode;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.net.Networking;
@@ -203,6 +205,16 @@ public class Main {
                 description = "After the application gets started, brooklyn will wait for a key press to stop it.")
         public boolean stopOnKeyPress = false;
 
+        // TODO currently defaults to disabled; want it to default to on, when we're ready
+        @Option(name = { "--persist" }, allowedValues = { "disabled", "auto", "rebind", "clean" },
+                title = "persistance mode",
+                description = "the persistence mode")
+        public String persist = "disabled";
+
+        @Option(name = { "--persistenceDir" }, title = "persistence dir",
+                description = "the directory to read/write persisted state")
+        public String persistenceDir;
+
         @Override
         public Void call() throws Exception {
             if (log.isDebugEnabled()) log.debug("Invoked launch command {}", this);
@@ -226,7 +238,32 @@ public class Main {
                     System.err.println("Locations specified without any applications; ignoring locations");
                 }
             }
+            
+            PersistMode persistMode;
+            if (Strings.isBlank(persist)) {
+                throw new IllegalStateException("Persist mode must not be blank");
+            } else if (persist.equalsIgnoreCase("disabled")) {
+                persistMode = PersistMode.DISABLED;
+            } else if (persist.equalsIgnoreCase("auto")) {
+                persistMode = PersistMode.AUTO;
+            } else if (persist.equalsIgnoreCase("rebind")) {
+                persistMode = PersistMode.REBIND;
+            } else if (persist.equalsIgnoreCase("clean")) {
+                persistMode = PersistMode.CLEAN;
+            } else {
+                throw new IllegalStateException("Illegal persist setting: "+persist);
+            }
 
+            if (persistMode == PersistMode.DISABLED) {
+                if (Strings.isNonBlank(persistenceDir)) {
+                    throw new IllegalStateException("Cannot specify peristanceDir when persist is disabled");
+                }
+            } else {
+                if (Strings.isBlank(persistenceDir)) {
+                    persistenceDir = "brooklyn-persisted-state"+File.separator+"data"+File.separator; 
+                }
+            }
+            
             ResourceUtils utils = ResourceUtils.create(this);
             ClassLoader parent = utils.getLoader();
             GroovyClassLoader loader = new GroovyClassLoader(parent);
@@ -261,7 +298,13 @@ public class Main {
                     throw new IllegalStateException("Unexpected application type "+(loadedApp==null ? null : loadedApp.getClass())+", for app "+loadedApp);
                 }
             }
-
+            launcher.persistMode(persistMode);
+            if (persistMode != PersistMode.DISABLED) {
+                if (Strings.isBlank(persistenceDir)) {
+                    persistenceDir = "/some/default/somewhere?"; 
+                }
+                launcher.persistenceDir(persistenceDir);
+            }
             
             // Launch server
             try {
@@ -394,11 +437,14 @@ public class Main {
                     .add("script", script)
                     .add("location", locations)
                     .add("port", port)
+                    .add("bindAddress", bindAddress)
                     .add("noConsole", noConsole)
                     .add("noConsoleSecurity", noConsoleSecurity)
                     .add("noShutdownOnExit", noShutdownOnExit)
                     .add("stopOnKeyPress", stopOnKeyPress)
-                    .add("localBrooklynProperties", localBrooklynProperties);
+                    .add("localBrooklynProperties", localBrooklynProperties)
+                    .add("persist", persist)
+                    .add("persistenceDir", persistenceDir);
         }
     }
 
