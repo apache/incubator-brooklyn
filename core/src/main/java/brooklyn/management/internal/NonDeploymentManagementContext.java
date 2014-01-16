@@ -75,6 +75,16 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         accessManager = new NonDeploymentAccessManager(null);
         usageManager = new NonDeploymentUsageManager(null);
     }
+
+    @Override
+    public String getManagementPlaneId() {
+        return null;
+    }
+    
+    @Override
+    public String getManagementNodeId() {
+        return null;
+    }
     
     public void setManagementContext(ManagementContextInternal val) {
         this.initialManagementContext = checkNotNull(val, "initialManagementContext");

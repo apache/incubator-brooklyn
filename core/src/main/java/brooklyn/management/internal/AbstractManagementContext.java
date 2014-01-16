@@ -292,7 +292,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             }
         } catch (Exception e) {
             if (Throwables.getRootCause(e) instanceof FileNotFoundException) {
-                Object nonDefaultUrl = getConfig().getRawConfig(BROOKLYN_CATALOG_URL);
+                Object nonDefaultUrl = getConfig().getConfigRaw(BROOKLYN_CATALOG_URL, true);
                 if (nonDefaultUrl!=null && !"".equals(nonDefaultUrl)) {
                     log.warn("Could not find catalog XML specified at "+nonDefaultUrl+"; using default (local classpath) catalog. Error was: "+e);
                 } else {
