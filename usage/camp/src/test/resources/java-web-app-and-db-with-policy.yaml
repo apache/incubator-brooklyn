@@ -1,0 +1,26 @@
+name: java-cluster-db-policy-example
+services:
+- serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+  name: My Web with Policy
+  location: localhost
+  brooklyn.config:
+    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0-M2/brooklyn-example-hello-world-sql-webapp-0.6.0-M2.war
+    http.port: 9280+
+    proxy.http.port: 9210+
+    java.sysprops: 
+      brooklyn.example.db.url: $brooklyn:formatString("jdbc:%s%s?user=%s\\&password=%s",
+         component("db").attributeWhenReady("database.url"), "visitors", "brooklyn", "br00k11n")
+  brooklyn.policies:
+  - policyType: brooklyn.policy.autoscaling.AutoScalerPolicy
+    brooklyn.config:
+      metric: $brooklyn:getStaticField("brooklyn.entity.webapp.DynamicWebAppCluster", "REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE")
+      metricLowerBound: 10
+      metricUpperBound: 100
+      minPoolSize: 1
+      maxPoolSize: 5
+- serviceType: brooklyn.entity.database.mysql.MySqlNode
+  id: db
+  name: My DB
+  location: localhost
+  brooklyn.config:
+    creationScriptUrl: classpath://visitors-creation-script.sql
