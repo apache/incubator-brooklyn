@@ -179,7 +179,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
     // TODO exact copy of BrooklynRestResoureUtils
     private static Map<?,?> convertFlagsToKeys(Class<? extends Entity> javaType, Map<?, ?> config) {
         if (config==null || config.isEmpty() || javaType==null) return config;
-        
+
         Map<String, ConfigKey<?>> configKeys = EntityTypes.getDefinedConfigKeys(javaType);
         Map<Object,Object> result = new LinkedHashMap<Object,Object>();
         for (Map.Entry<?,?> entry: config.entrySet()) {
@@ -271,6 +271,16 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         return app;
     }
     
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private <T extends Policy> PolicySpec<?> toCorePolicySpec(Class<T> clazz, Map<?, ?> config) {
+        Map<?, ?> policyConfig = (config == null) ? Maps.<Object, Object>newLinkedHashMap() : Maps.newLinkedHashMap(config);
+        PolicySpec result;
+        result = PolicySpec.create(clazz)
+                .configure(policyConfig);
+        return result;
+    }
+    
     private void addPolicies(EntitySpec<?> entitySpec, Object policies) {
         List<PolicySpec<?>> policySpecs = new ArrayList<PolicySpec<? extends Policy>>(); 
         if (policies instanceof Iterable) {
@@ -284,8 +294,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                     } catch (ClassNotFoundException e) {
                         throw Exceptions.propagate(e);
                     }
-                    policySpecs.add(PolicySpec.create(policyType)
-                            .configure((Map<?, ?>) ((Map<?, ?>) policy).get("brooklyn.config")));
+                    policySpecs.add(toCorePolicySpec(policyType, (Map<?, ?>) ((Map<?, ?>) policy).get("brooklyn.config")));
                 } else {
                     throw new IllegalArgumentException("policy should be map, not " + policy.getClass());
                 }
