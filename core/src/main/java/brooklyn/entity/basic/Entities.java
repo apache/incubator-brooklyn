@@ -52,6 +52,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.Tasks;
@@ -186,6 +187,12 @@ public class Entities {
     }
 
     public static boolean isTrivial(Object v) {
+        if (v instanceof Maybe) {
+            if (!((Maybe<?>)v).isPresent())
+                return true;
+            v = ((Maybe<?>) v).get();
+        }
+        
         return v==null || (v instanceof Map && ((Map<?,?>)v).isEmpty()) ||
                 (v instanceof Collection && ((Collection<?>)v).isEmpty()) ||
                 (v instanceof CharSequence&& ((CharSequence)v).length() == 0);
@@ -226,8 +233,10 @@ public class Entities {
         out.append(currentIndentation+tab+tab+"locations = "+e.getLocations()+"\n");
 
         for (ConfigKey<?> it : sortConfigKeys(e.getEntityType().getConfigKeys())) {
-            Object v = ((EntityInternal)e).getConfigMap().getRawConfig(it);
-            if (!isTrivial(v)) {
+            Maybe<Object> mv = e.getConfigRaw(it, false);
+            if (!isTrivial(mv)) {
+                Object v = mv.get();
+                
                 out.append(currentIndentation+tab+tab+it.getName());
                 out.append(" = ");
                 if (isSecret(it.getName())) out.append("xxxxxxxx");
@@ -356,12 +365,12 @@ public class Entities {
         out.append(currentIndentation+pol.toString()+"\n");
 
         for (ConfigKey<?> key : sortConfigKeys(pol.getPolicyType().getConfigKeys())) {
-            Object val = ((AbstractPolicy)pol).getConfigMap().getRawConfig(key);
+            Maybe<Object> val = ((AbstractPolicy)pol).getConfigMap().getConfigRaw(key, true);
             if (!isTrivial(val)) {
                 out.append(currentIndentation+tab+tab+key);
                 out.append(" = ");
                 if (isSecret(key.getName())) out.append("xxxxxxxx");
-                else out.append(""+val);
+                else out.append(""+val.get());
                 out.append("\n");
             }
         }
@@ -744,7 +753,7 @@ public class Entities {
     
     /** logs a warning if an entity has a value for a config key */
     public static void warnOnIgnoringConfig(Entity entity, ConfigKey<?> key) {
-        if (((EntityInternal)entity).getConfigMap().getRawConfig(key)!=null)
+        if (entity.getConfigRaw(key, true).isPresentAndNonNull())
             log.warn("Ignoring "+key+" set on "+entity+" ("+entity.getConfig(key)+")");
     }
 

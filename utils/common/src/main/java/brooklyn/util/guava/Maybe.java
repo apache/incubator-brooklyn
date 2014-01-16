@@ -4,6 +4,8 @@ import java.util.NoSuchElementException;
 
 import javax.annotation.Nullable;
 
+import brooklyn.util.javalang.JavaClassNames;
+
 /** Like Guava Optional but permitting null and permitting errors to be thrown. */
 public abstract class Maybe<T> {
 
@@ -19,10 +21,15 @@ public abstract class Maybe<T> {
     public abstract boolean isPresent();
     public abstract T get();
     
+    public boolean isPresentAndNonNull() {
+        return isPresent() && get()!=null;
+    }
+    
     public Maybe<T> or(T nextValue) {
         if (isPresent()) return this;
         return of(nextValue);
     }
+    
     public static class Absent<T> extends Maybe<T> {
         @Override
         public boolean isPresent() {
@@ -47,6 +54,11 @@ public abstract class Maybe<T> {
         public T get() {
             return value;
         }
+    }
+
+    @Override
+    public String toString() {
+        return JavaClassNames.simpleClassName(this)+"["+(isPresent()?"value="+get():"")+"]";
     }
 
 }

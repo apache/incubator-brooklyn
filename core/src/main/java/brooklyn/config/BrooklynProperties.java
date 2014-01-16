@@ -131,12 +131,10 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     protected BrooklynProperties() {
     }
 
-    @SuppressWarnings("unchecked")
     public BrooklynProperties addEnvironmentVars() {
         putAll(System.getenv());
         return this;
     }
-    @SuppressWarnings("unchecked")
     public BrooklynProperties addSystemProperties() {
         putAll(System.getProperties());
         return this;
@@ -206,7 +204,6 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     /**
     * adds the indicated properties
     */
-    @SuppressWarnings("unchecked")
     public BrooklynProperties addFromMap(Map properties) {
         putAll(properties);
         return this;

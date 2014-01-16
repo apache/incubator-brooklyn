@@ -30,7 +30,11 @@ public interface ConfigMap {
      * <b>not</b> any default,
      * <b>not</b> resolved (and guaranteed non-blocking)
      * and <b>not</b> type-coerced
-     * @return raw, unresolved, uncoerced value of key in map, locally or inherited, but <b>not</b> any default on the key
+     * @param key  key to look up
+     * @param includeInherited  for {@link ConfigMap} instances which have an inheritance hierarchy, 
+     * whether to traverse it or not; has no effects where there is no inheritance 
+     * @return raw, unresolved, uncoerced value of key in map,  
+     * but <b>not</b> any default on the key
      */
     public Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited);
 

@@ -100,7 +100,7 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
         return TypeCoercions.coerce((defaultValue != null) ? defaultValue : ownKey.getDefaultValue(), key.getTypeToken());
     }
     
-    @Override
+    @Override @Deprecated
     public Object getRawConfig(ConfigKey<?> key) {
         return getConfigRaw(key, true).or(null).get();
     }

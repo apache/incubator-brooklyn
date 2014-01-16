@@ -62,7 +62,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     ConfigKey<?> ck = entity.getEntityType().getConfigKey(configKeyName);
     if (ck==null) ck = new BasicConfigKey<Object>(Object.class, configKeyName);
     
-    return getValueForDisplay(((EntityInternal)entity).getConfigMap().getRawConfig(ck), preferJson, true);
+    return getValueForDisplay(entity.getConfigRaw(ck, true).or(null).get(), preferJson, true);
   }
 
 }
