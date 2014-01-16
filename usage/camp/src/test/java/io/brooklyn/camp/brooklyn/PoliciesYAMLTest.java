@@ -49,7 +49,7 @@ public class PoliciesYAMLTest {
     }
     
     @Test
-    public void testWithPolicyDeploy() {
+    public void testWithAppPolicy() {
         Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl("test-app-with-policy.yaml"));
         AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
 
@@ -73,6 +73,48 @@ public class PoliciesYAMLTest {
             Assert.assertEquals(app.getPolicies().size(), 1);
             Policy policy = app.getPolicies().iterator().next();
             Assert.assertTrue(policy instanceof TestPolicy);
+            Assert.assertEquals(policy.getConfig(TestPolicy.CONF_NAME), "Name from YAML");
+            Assert.assertEquals(policy.getConfig(TestPolicy.CONF_FROM_FUNCTION), "$brooklyn: is a fun place");
+            Map<?, ?> leftoverProperties = ((TestPolicy)policy).getLeftoverProperties();
+            Assert.assertEquals(leftoverProperties.get("policyLiteralValue1"), "Hello");
+            Assert.assertEquals(leftoverProperties.get("policyLiteralValue2"), "World");
+            Assert.assertEquals(leftoverProperties.size(), 2);
+        } catch (Exception e) {
+            log.warn("Unable to instantiate " + at + " (rethrowing): " + e);
+            throw Exceptions.propagate(e);
+        }
+    }
+    
+    @Test
+    public void testWithEntityPolicy() {
+        Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl("test-entity-with-policy.yaml"));
+        AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
+
+        try {
+            Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
+            log.info("Test - created " + assembly);
+
+            final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
+            log.info("App - " + app);
+            Assert.assertEquals(app.getDisplayName(), "test-entity-with-policy");
+
+            Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
+            log.info("Waiting on " + tasks.size() + " task(s)");
+            for (Task<?> t : tasks) {
+                t.blockUntilEnded();
+            }
+
+            log.info("App started:");
+            Entities.dumpInfo(app);
+
+            Assert.assertEquals(app.getPolicies().size(), 0);
+            Assert.assertEquals(app.getChildren().size(), 1);
+            Entity child = app.getChildren().iterator().next();
+            Assert.assertEquals(child.getPolicies().size(), 1);
+            Policy policy = child.getPolicies().iterator().next();
+            Assert.assertTrue(policy instanceof TestPolicy);
+            Assert.assertEquals(policy.getConfig(TestPolicy.CONF_NAME), "Name from YAML");
+            Assert.assertEquals(policy.getConfig(TestPolicy.CONF_FROM_FUNCTION), "$brooklyn: is a fun place");
             Map<?, ?> leftoverProperties = ((TestPolicy)policy).getLeftoverProperties();
             Assert.assertEquals(leftoverProperties.get("policyLiteralValue1"), "Hello");
             Assert.assertEquals(leftoverProperties.get("policyLiteralValue2"), "World");
