@@ -7,6 +7,7 @@ import brooklyn.event.AttributeSensor;
 public interface EntityChangeListener {
 
     public static final EntityChangeListener NOOP = new EntityChangeListener() {
+        @Override public void onChanged() {}
         @Override public void onAttributeChanged(AttributeSensor<?> attribute) {}
         @Override public void onConfigChanged(ConfigKey<?> key) {}
         @Override public void onLocationsChanged() {}
@@ -17,6 +18,8 @@ public interface EntityChangeListener {
         @Override public void onEffectorCompleted(Effector<?> effector) {}
     };
     
+    void onChanged();
+
     void onAttributeChanged(AttributeSensor<?> attribute);
 
     void onConfigChanged(ConfigKey<?> key);
