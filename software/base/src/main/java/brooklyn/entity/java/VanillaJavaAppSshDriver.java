@@ -96,7 +96,7 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
         }
     }
 
-    private int install(String urlToInstall, String target, int numAttempts) {
+    protected int install(String urlToInstall, String target, int numAttempts) {
         Exception lastError = null;
         int retriesRemaining = numAttempts;
         int attemptNum = 0;
