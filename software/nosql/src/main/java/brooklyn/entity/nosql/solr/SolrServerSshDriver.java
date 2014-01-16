@@ -40,13 +40,12 @@ import com.google.common.collect.Sets;
 public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implements SolrServerDriver {
 
     private static final Logger log = LoggerFactory.getLogger(SolrServerSshDriver.class);
+
     private String expandedInstallDir;
 
     public SolrServerSshDriver(SolrServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
-
-    protected String getLogFileLocation() { return String.format("%s/logs/solr.log", getRunDir()); }
 
     @Override
     public Integer getSolrPort() { return entity.getAttribute(SolrServer.SOLR_PORT); }
@@ -55,12 +54,14 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
     public String getSolrConfigTemplateUrl() { return entity.getConfig(SolrServer.SOLR_CONFIG_TEMPLATE_URL); }
 
     public String getMirrorUrl() { return entity.getConfig(SolrServer.MIRROR_URL); }
-    
+
+    public String getPidFile() { return String.format("%s/solr.pid", getRunDir()); }
+
     private String getExpandedInstallDir() {
         if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
         return expandedInstallDir;
     }
-    
+
     @Override
     public void install() {
         log.debug("Installing {}", entity);
@@ -68,7 +69,7 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("solr-%s", getVersion()));
-        
+
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.INSTALL_TAR)
@@ -174,8 +175,6 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
                 .body.append("nohup java -jar start.jar > ./logs/console.log 2>&1 &")
                 .execute();
     }
-
-    public String getPidFile() { return String.format("%s/solr.pid", getRunDir()); }
 
     @Override
     public boolean isRunning() {

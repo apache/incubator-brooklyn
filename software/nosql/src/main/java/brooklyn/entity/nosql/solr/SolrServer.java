@@ -12,7 +12,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
@@ -40,9 +39,6 @@ public interface SolrServer extends SoftwareProcess {
     ConfigKey<String> MIRROR_URL = ConfigKeys.newStringConfigKey("solr.install.mirror.url", "URL of mirror",
             "http://mirrors.ukfast.co.uk/sites/ftp.apache.org/lucene/solr/");
 
-    @SetFromFlag("tgzUrl")
-    ConfigKey<String> TGZ_URL = new BasicConfigKey<String>(String.class, "solr.install.tgzUrl", "URL of TGZ download file");
-
     @SetFromFlag("solrPort")
     PortAttributeSensorAndConfigKey SOLR_PORT = new PortAttributeSensorAndConfigKey("solr.http.port", "Solr HTTP communications port",
             PortRanges.fromString("8983+"));
@@ -58,9 +54,9 @@ public interface SolrServer extends SoftwareProcess {
             Maps.<String, String>newHashMap());
 
     ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.START_TIMEOUT, 3*60);
-    
+
     /* Accessors used from template */
-    
+
     Integer getSolrPort();
 
 }

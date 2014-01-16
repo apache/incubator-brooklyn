@@ -17,10 +17,10 @@ import com.google.common.base.Functions;
  */
 public class SolrServerImpl extends SoftwareProcessImpl implements SolrServer {
 
-    public SolrServerImpl() {
+    @Override
+    public Integer getSolrPort() {
+        return getAttribute(SolrServer.SOLR_PORT);
     }
-    
-    @Override public Integer getSolrPort() { return getAttribute(SolrServer.SOLR_PORT); }
 
     @Override
     public Class<SolrServerDriver> getDriverInterface() {
