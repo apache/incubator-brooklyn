@@ -11,6 +11,7 @@ import io.brooklyn.camp.spi.collection.ResolvableLink;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,8 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -176,7 +179,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
     // TODO exact copy of BrooklynRestResoureUtils
     private static Map<?,?> convertFlagsToKeys(Class<? extends Entity> javaType, Map<?, ?> config) {
         if (config==null || config.isEmpty() || javaType==null) return config;
-        
+
         Map<String, ConfigKey<?>> configKeys = EntityTypes.getDefinedConfigKeys(javaType);
         Map<Object,Object> result = new LinkedHashMap<Object,Object>();
         for (Map.Entry<?,?> entry: config.entrySet()) {
@@ -222,6 +225,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         if (!Strings.isBlank(name))
             appSpec.displayName(name);
         
+        addPolicies(appSpec, template.getCustomAttributes().get("brooklyn.policies"));
+        
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             final PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             final String bTypeName = Strings.removeFromStart(appChildComponentTemplate.getType(), "brooklyn:");
@@ -244,9 +249,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                         childSpec.configure(BrooklynCampConstants.PLAN_ID, planId);
                      
                     addEntityConfig(childSpec, (Map<?,?>)appChildAttrs.remove("brooklyn.config"));
-                   
+                    addPolicies(childSpec, appChildAttrs.remove("brooklyn.policies"));
+
                     Entity appChild = entity.addChild(childSpec);
-                    
+
                     List<Location> appChildLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(appChildAttrs, true);
                     if (appChildLocations!=null)
                         ((EntityInternal)appChild).addLocations(appChildLocations);
@@ -263,6 +269,43 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             ((EntityInternal)app).addLocations(locations);
 
         return app;
+    }
+    
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private <T extends Policy> PolicySpec<?> toCorePolicySpec(Class<T> clazz, Map<?, ?> config) {
+        Map<?, ?> policyConfig = (config == null) ? Maps.<Object, Object>newLinkedHashMap() : Maps.newLinkedHashMap(config);
+        PolicySpec result;
+        result = PolicySpec.create(clazz)
+                .configure(policyConfig);
+        return result;
+    }
+    
+    private void addPolicies(EntitySpec<?> entitySpec, Object policies) {
+        List<PolicySpec<?>> policySpecs = new ArrayList<PolicySpec<? extends Policy>>(); 
+        if (policies instanceof Iterable) {
+            for (Object policy : (Iterable<Object>)policies) {
+                if (policy instanceof Map) {
+                    String policyTypeName = ((Map<?, ?>) policy).get("policyType").toString();
+                    Class<? extends Policy> policyType = null;
+                    try {
+                        // TODO: Is there a better way of getting this than Class.forName()?
+                        policyType = (Class<? extends Policy>) Class.forName(policyTypeName);
+                    } catch (ClassNotFoundException e) {
+                        throw Exceptions.propagate(e);
+                    }
+                    policySpecs.add(toCorePolicySpec(policyType, (Map<?, ?>) ((Map<?, ?>) policy).get("brooklyn.config")));
+                } else {
+                    throw new IllegalArgumentException("policy should be map, not " + policy.getClass());
+                }
+            }
+        } else if (policies != null) {
+            // TODO "map" short form
+            throw new IllegalArgumentException("policies body should be iterable, not " + policies.getClass());
+        }
+        if (policySpecs.size() > 0) {
+            entitySpec.policySpecs(policySpecs);
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

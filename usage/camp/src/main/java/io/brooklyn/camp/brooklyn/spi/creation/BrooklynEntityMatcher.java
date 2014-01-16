@@ -6,10 +6,13 @@ import io.brooklyn.camp.spi.pdp.AssemblyTemplateConstructor;
 import io.brooklyn.camp.spi.pdp.Service;
 import io.brooklyn.camp.spi.resolve.PdpMatcher;
 
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogItemType;
@@ -125,6 +128,17 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         // (any other brooklyn config goes here)
         if (!brooklynConfig.isEmpty())
             builder.customAttribute("brooklyn.config", brooklynConfig);
+        
+        List<Object> brooklynPolicies = Lists.newArrayList();
+        Object origBrooklynPolicies = attrs.remove("brooklyn.policies");
+        if (origBrooklynPolicies != null) {
+            if (!(origBrooklynPolicies instanceof List))
+                throw new IllegalArgumentException("brooklyn.policies must be a list of brooklyn policy definitions");
+            brooklynPolicies.addAll((List<?>)origBrooklynPolicies);
+        }
+        
+        if (!brooklynPolicies.isEmpty())
+            builder.customAttribute("brooklyn.policies", brooklynPolicies);
         
         if (!attrs.isEmpty()) {
             log.warn("Ignoring PDP attributes on "+deploymentPlanItem+": "+attrs);

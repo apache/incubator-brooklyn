@@ -1,0 +1,17 @@
+name: test-entity-with-policy
+description: TestEntity with Policy at entity-level using Brooklyn
+origin: http://brooklyn.io
+services:
+- serviceType: brooklyn.entity.basic.BasicEntity
+  name: testentity
+  foo: bar
+  brooklyn.config:
+    serviceLiteralValue1: Foo
+    serviceLiteralValue2: Bar
+  brooklyn.policies:
+  - policyType: brooklyn.test.policy.TestPolicy
+    brooklyn.config:
+      policyLiteralValue1: Hello
+      policyLiteralValue2: World
+      test.confName: Name from YAML
+      test.confFromFunction:  "$brooklyn:formatString(\"%s: is a fun place\", \"$brooklyn\")" 
