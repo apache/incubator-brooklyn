@@ -95,7 +95,10 @@ public class EntitySpec<T extends Entity> implements Serializable {
                 .configure(spec.getConfig())
                 .configure(spec.getFlags())
                 .policySpecs(spec.getPolicySpecs())
-                .policies(spec.getPolicies());
+                .policies(spec.getPolicies())
+                .enricherSpecs(spec.getEnricherSpecs())
+                .enrichers(spec.getEnrichers())
+                .addInitializers(spec.getInitializers());
         
         if (spec.getParent() != null) result.parent(spec.getParent());
         if (spec.getImplementation() != null) result.impl(spec.getImplementation());
