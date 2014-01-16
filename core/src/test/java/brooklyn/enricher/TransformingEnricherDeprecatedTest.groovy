@@ -21,9 +21,9 @@ import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.collections.MutableMap
 
-public class TransformingEnricherTest {
+public class TransformingEnricherDeprecatedTest {
 
-    public static final Logger log = LoggerFactory.getLogger(TransformingEnricherTest.class);
+    public static final Logger log = LoggerFactory.getLogger(TransformingEnricherDeprecatedTest.class);
             
     private static final long TIMEOUT_MS = 10*1000;
 //    private static final long SHORT_WAIT_MS = 250;

@@ -6,7 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.basic.SensorTransformingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
@@ -15,6 +15,7 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
+import brooklyn.policy.Enricher;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
@@ -25,7 +26,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
 	public static final Logger log = LoggerFactory.getLogger(JBoss7ServerImpl.class);
 
     private volatile HttpFeed httpFeed;
-    private SensorTransformingEnricher<Boolean, Boolean> serviceUpEnricher;
+    private Enricher serviceUpEnricher;
     
     public JBoss7ServerImpl(){
         super();
@@ -95,9 +96,10 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     }
     
     protected void connectServiceUp() {
-        serviceUpEnricher = SensorTransformingEnricher.newInstanceTransforming(this,
-            MANAGEMENT_URL_UP, Functions.<Boolean>identity(), SERVICE_UP);
-        addEnricher(serviceUpEnricher);
+        serviceUpEnricher = addEnricher(Enrichers.builder()
+                .propagating(ImmutableMap.of(MANAGEMENT_URL_UP, SERVICE_UP))
+                .from(this)
+                .build());
     }
     
     protected void disconnectServiceUp() {

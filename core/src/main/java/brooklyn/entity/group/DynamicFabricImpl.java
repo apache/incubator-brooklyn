@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.CustomAggregatingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.Entities;
@@ -26,7 +26,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;
@@ -44,8 +43,6 @@ import com.google.common.collect.Maps;
 public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabric {
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabricImpl.class);
 
-    private CustomAggregatingEnricher fabricSizeEnricher;
-
     public DynamicFabricImpl() {
     }
 
@@ -53,8 +50,13 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     public void init() {
         super.init();
         
-        fabricSizeEnricher = CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), Changeable.GROUP_SIZE, FABRIC_SIZE, null, null);
-        addEnricher(fabricSizeEnricher);
+        addEnricher(Enrichers.builder()
+                .aggregating(Changeable.GROUP_SIZE)
+                .publishing(FABRIC_SIZE)
+                .fromMembers()
+                .computingSum()
+                .valueToReportIfNoSensors(0)
+                .build());
         
         setAttribute(SERVICE_UP, false);
     }
@@ -195,8 +197,6 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
         Entities.manage(entity);
         addMember(entity);
         
-        fabricSizeEnricher.addProducer(entity);
-
         return entity;
     }
     

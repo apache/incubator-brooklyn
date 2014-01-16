@@ -93,7 +93,7 @@ public class KarafContainerTest {
                 .configure("name", Identifiers.makeRandomId(8))
                 .configure("displayName", "Karaf Test")
                 .configure("jmxPort", "8099+")
-                .configure("rmiServerPort", "9099+"));
+                .configure("rmiRegistryPort", "9099+"));
             // NB: now the above parameters have the opposite semantics to before
         
         app.start([ localhost ]);
@@ -116,7 +116,7 @@ public class KarafContainerTest {
             .configure("name", Identifiers.makeRandomId(8))
             .configure("displayName", "Karaf Test")
             .configure("jmxPort", "8099+")
-            .configure("rmiServerPort", "9099+"));
+            .configure("rmiRegistryPort", "9099+"));
         
         app.start([ localhost ]);
         

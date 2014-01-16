@@ -66,7 +66,7 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
     public void customize() {
         Map<String, Object> ports = new HashMap<String, Object>();
         ports.put("jmxPort", getJmxPort());
-        ports.put("rmiServerPort", getRmiRegistryPort());
+        ports.put("rmiRegistryPort", getRmiRegistryPort());
 
         Networking.checkPortsValid(ports);
         newScript(CUSTOMIZING).

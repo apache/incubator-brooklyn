@@ -2,14 +2,13 @@ package brooklyn.entity.webapp;
 
 import java.util.List;
 
-import brooklyn.enricher.CustomAggregatingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 
@@ -56,15 +55,23 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         for (List<? extends AttributeSensor<? extends Number>> es : summingEnricherSetup) {
             AttributeSensor<? extends Number> t = es.get(0);
             AttributeSensor<? extends Number> total = es.get(1);
-            CustomAggregatingEnricher<?,?> totaller = CustomAggregatingEnricher.newSummingEnricher(MutableMap.of("allMembers", true), t, total, null, null);
-            addEnricher(totaller);
+            addEnricher(Enrichers.builder()
+                    .aggregating(t)
+                    .publishing(total)
+                    .fromMembers()
+                    .computingSum()
+                    .build());
         }
         
         for (List<? extends AttributeSensor<? extends Number>> es : averagingEnricherSetup) {
             AttributeSensor<Number> t = (AttributeSensor<Number>) es.get(0);
             AttributeSensor<Double> average = (AttributeSensor<Double>) es.get(1);
-            CustomAggregatingEnricher<?,?> averager = CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), t, average, null, null);
-            addEnricher(averager);
+            addEnricher(Enrichers.builder()
+                    .aggregating(t)
+                    .publishing(average)
+                    .fromMembers()
+                    .computingAverage()
+                    .build());
         }
 
         subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {

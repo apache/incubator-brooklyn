@@ -2,6 +2,7 @@ package brooklyn.util.collections;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -28,14 +29,29 @@ public class MutableList<V> extends ArrayList<V> {
     }
 
     public static <V> MutableList<V> copyOf(Iterable<? extends V> orig) {
-        return new MutableList<V>(orig);
+        return (orig instanceof Collection)
+                ? new MutableList<V>((Collection<? extends V>)orig)
+                : new MutableList<V>(orig);
     }
-    
+
+    public static <E> MutableList<E> copyOf(Iterator<? extends E> elements) {
+        if (!elements.hasNext()) {
+            return of();
+        }
+        return new MutableList.Builder<E>().addAll(elements).build();
+    }
+
     public MutableList() {
     }
-    
+
+    public MutableList(Collection<? extends V> source) {
+        super(source);
+    }
+
     public MutableList(Iterable<? extends V> source) {
-        super((source instanceof Collection) ? (Collection<? extends V>)source : ImmutableList.copyOf(source));
+        for (V s : source) {
+            add(s);
+        }
     }
     
     public ImmutableList<V> toImmutable() {
@@ -78,6 +94,13 @@ public class MutableList<V> extends ArrayList<V> {
                 for (V v : iterable) {
                     result.add(v);
                 }
+            }
+            return this;
+        }
+
+        public Builder<V> addAll(Iterator<? extends V> iter) {
+            while (iter.hasNext()) {
+                add(iter.next());
             }
             return this;
         }

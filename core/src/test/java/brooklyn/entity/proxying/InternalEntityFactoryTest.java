@@ -27,7 +27,8 @@ public class InternalEntityFactoryTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         managementContext = (ManagementContextInternal) Entities.newManagementContext();
-        factory = new InternalEntityFactory(managementContext, managementContext.getEntityManager().getEntityTypeRegistry());
+        InternalPolicyFactory policyFactory = new InternalPolicyFactory(managementContext);
+        factory = new InternalEntityFactory(managementContext, managementContext.getEntityManager().getEntityTypeRegistry(), policyFactory);
     }
     
     @AfterMethod(alwaysRun=true)

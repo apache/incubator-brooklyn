@@ -23,6 +23,8 @@ import com.google.common.reflect.TypeToken;
  * Subscribes to events from producers with a sensor of type T, aggregates them with the 
  * provided closure and emits the result on the target sensor V.
  * @param <T>
+ * 
+ * @deprecated since 0.7.0; use {@link Enrichers#builder()}
  */
 public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<S,T> implements SensorEventListener<S> {
     
@@ -108,7 +110,26 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         }
     }
 
-    // FIXME Clean up explosion of overloading, caused by groovy-equivalent default vals...
+    /**
+     * Instead, consider calling:
+     * <pre>
+     * {@code
+     * Enrichers.Builder builder = Enrichers.builder()
+     *         .aggregating(source)
+     *         .publishing(target)
+     *         .computing(GroovyJavaMethods.<Collection<S>, T>functionFromClosure((Closure<T>)aggregator))
+     *         .defaultValueForUnreportedSensors(defaultValueForUnreportedSensors);
+     * 
+     * if (Boolean.TRUE.equals(allMembers)) builder.fromMembers();
+     * if (filter != null) builder.entityFilter(filter);
+     * if (hardCodedProducers != null) builder.fromHardcodedProducers(hardCodedProducers);
+     * 
+     * addEnricher(builder.build());
+     * }
+     * </pre>
+     *
+     * @deprecated since 0.7.0; use {@link Enrichers#builder()}
+     */
     public static <S,T> CustomAggregatingEnricher<S,T> newEnricher(
             Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator, S defaultVal) {
         return new CustomAggregatingEnricher<S,T>(flags, source, target, aggregator, defaultVal);
@@ -126,8 +147,26 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         return newEnricher(Collections.<String,Object>emptyMap(), source, target, aggregator, null);
     }
     
-    
-    // FIXME Clean up explosion of overloading, caused by groovy-equivalent default vals...
+    /**
+     * Instead, consider calling:
+     * <pre>
+     * {@code
+     * Enrichers.Builder builder = Enrichers.builder()
+     *         .aggregating(source)
+     *         .publishing(target)
+     *         .computing(aggregator)
+     *         .defaultValueForUnreportedSensors(defaultVal);
+     * 
+     * if (Boolean.TRUE.equals(allMembers)) builder.fromMembers();
+     * if (filter != null) builder.entityFilter(filter);
+     * if (hardCodedProducers != null) builder.fromHardcodedProducers(hardCodedProducers);
+     * 
+     * addEnricher(builder.build());
+     * }
+     * </pre>
+     *
+     * @deprecated since 0.7.0; use {@link Enrichers#builder()}
+     */
     public static <S,T> CustomAggregatingEnricher<S,T> newEnricher(
             Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target, Function<Collection<S>, T> aggregator, S defaultVal) {
         return new CustomAggregatingEnricher<S,T>(flags, source, target, aggregator, defaultVal);
@@ -145,17 +184,39 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         return newEnricher(Collections.<String,Object>emptyMap(), source, target, aggregator, null);
     }
     
-    /** creates an enricher which sums over all children/members, 
+    /** 
+     * creates an enricher which sums over all children/members, 
      * defaulting to excluding sensors which have not published anything (or published null), and null if there are no sensors; 
      * this behaviour can be customised, both default value for sensors, and what to report if no sensors
+     * 
+     * Instead, consider calling:
+     * <pre>
+     * {@code
+     * Enrichers.Builder builder = Enrichers.builder()
+     *         .aggregating(source)
+     *         .publishing(target)
+     *         .computingSum()
+     *         .defaultValueForUnreportedSensors(defaultValueForUnreportedSensors)
+     *         .valueToReportIfNoSensors(valueToReportIfNoSensors);
+     * 
+     * if (Boolean.TRUE.equals(allMembers)) builder.fromMembers();
+     * if (filter != null) builder.entityFilter(filter);
+     * if (hardCodedProducers != null) builder.fromHardcodedProducers(hardCodedProducers);
+     * 
+     * addEnricher(builder.build());
+     * }
+     * </pre>
+     *
+     * @deprecated since 0.7.0; use {@link Enrichers#builder()}
      */
     public static <N extends Number, T extends Number> CustomAggregatingEnricher<N,T> newSummingEnricher(
             Map<String,?> flags, AttributeSensor<N> source, final AttributeSensor<T> target, 
             final N defaultValueForUnreportedSensors, final T valueToReportIfNoSensors) {
+        
         Function<Collection<N>, T> aggregator = new Function<Collection<N>, T>() {
-            @Override public T apply(Collection<N> vals) {
-                return sum(vals, defaultValueForUnreportedSensors, valueToReportIfNoSensors, target.getTypeToken());
-            }
+                @Override public T apply(Collection<N> vals) {
+                    return sum(vals, defaultValueForUnreportedSensors, valueToReportIfNoSensors, target.getTypeToken());
+                }
         };
         return new CustomAggregatingEnricher<N,T>(flags, source, target, aggregator, defaultValueForUnreportedSensors);
     }
@@ -169,11 +230,30 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
     /** creates an enricher which averages over all children/members, 
      * defaulting to excluding sensors which have not published anything (or published null), and null if there are no sensors; 
      * this behaviour can be customised, both default value for sensors, and what to report if no sensors
+     * 
+     * Instead, consider calling:
+     * <pre>
+     * {@code
+     * Enrichers.Builder builder = Enrichers.builder()
+     *         .aggregating(source)
+     *         .publishing(target)
+     *         .computingAverage()
+     *         .defaultValueForUnreportedSensors(defaultValueForUnreportedSensors)
+     *         .valueToReportIfNoSensors(valueToReportIfNoSensors);
+     * 
+     * if (Boolean.TRUE.equals(allMembers)) builder.fromMembers();
+     * if (filter != null) builder.entityFilter(filter);
+     * if (hardCodedProducers != null) builder.fromHardcodedProducers(hardCodedProducers);
+     * 
+     * addEnricher(builder.build());
+     * }
+     * </pre>
+     *
+     * @deprecated since 0.7.0; use {@link Enrichers#builder()}
      */
     public static <N extends Number> CustomAggregatingEnricher<N,Double> newAveragingEnricher(
             Map<String,?> flags, AttributeSensor<? extends N> source, final AttributeSensor<Double> target,
             final N defaultValueForUnreportedSensors, final Double valueToReportIfNoSensors) {
-        
         Function<Collection<N>, Double> aggregator = new Function<Collection<N>, Double>() {
             @Override public Double apply(Collection<N> vals) {
                 int count = count(vals, defaultValueForUnreportedSensors!=null);
