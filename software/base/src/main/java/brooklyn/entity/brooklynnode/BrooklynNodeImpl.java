@@ -41,7 +41,11 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     }
 
     public List<String> getClasspath() {
-        return getConfig(CLASSPATH);
+        List<String> classpath = getConfig(CLASSPATH);
+        if (classpath == null || classpath.isEmpty()) {
+            classpath = getManagementContext().getConfig().getConfig(CLASSPATH);
+        }
+        return classpath;
     }
     
     protected List<String> getEnabledHttpProtocols() {
