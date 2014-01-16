@@ -35,6 +35,9 @@ import java.util.Comparator;
  * class is thread-safe  
  */
 public class NaturalOrderComparator implements Comparator<String> {
+    
+    public static final NaturalOrderComparator INSTANCE = new NaturalOrderComparator();
+    
 	int compareRight(String a, String b)
 	{
 		int bias = 0;
