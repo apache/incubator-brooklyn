@@ -64,13 +64,25 @@ public class TemplateProcessor {
     }
 
     public static String processTemplateContents(String templateContents, EntityDriver driver, Map<String,? extends Object> extraSubstitutions) {
-        Map<String, Object> config = driver.getEntity().getApplication().getManagementContext().getConfig().asMapWithStringKeys();
         ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder()
-                .putAll(config)
+                .put("javaSysProps", System.getProperties())
+                .putAll(driver.getEntity().getApplication().getManagementContext().getConfig().asMapWithStringKeys())
                 .put("driver", driver)
                 .put("entity", driver.getEntity())
                 .put("config", ((EntityInternal) driver.getEntity()).getConfigMap().asMapWithStringKeys());
         if (driver.getLocation() != null) builder.put("location", driver.getLocation());
+        builder.putAll(extraSubstitutions);
+
+        return processTemplateContents(templateContents, builder.build());
+    }
+
+    public static String processTemplateContents(String templateContents, EntityInternal entity, Map<String,? extends Object> extraSubstitutions) {
+        ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder()
+                .put("javaSysProps", System.getProperties())
+                .putAll(entity.getApplication().getManagementContext().getConfig().asMapWithStringKeys())
+                .put("entity", entity)
+                .put("config", entity.getConfigMap().asMapWithStringKeys());
+        // TODO might want to look up locations, driver, if available
         builder.putAll(extraSubstitutions);
 
         return processTemplateContents(templateContents, builder.build());

@@ -163,7 +163,7 @@ public class BrooklynNodeIntegrationTest {
         try {
             BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
                     .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
-                    .configure(BrooklynNode.SUGGESTED_RUN_DIR, tempDir.getAbsolutePath())
+                    .configure(BrooklynNode.RUN_DIR, tempDir.getAbsolutePath())
                     .configure(BrooklynNode.COPY_TO_RUNDIR, ImmutableMap.of(sourceFile.getAbsolutePath(), "${RUN}/myfile.txt")));
             app.start(locs);
 

@@ -22,6 +22,30 @@ import brooklyn.location.LocationRegistry;
  */
 public interface ManagementContext {
 
+    /** 
+     * UID for the Brooklyn management plane which this {@link ManagementContext} node is a part of.
+     * <p>
+     * Each Brooklyn entity is actively managed by a unique management plane 
+     * whose ID which should not normally change for the duration of that entity, 
+     * even though the nodes in that plane might, and the plane may go down and come back up. 
+     * In other words the value of {@link Application#getManagementContext()#getManagementPlaneId()} 
+     * will generally be constant (in contrast to {@link #getManagementNodeId()}).
+     * <p>
+     * This value should not be null unless the management context is a non-functional
+     * (non-deployment) instance. */
+    String getManagementPlaneId();
+    
+    /** 
+     * UID for this {@link ManagementContext} node (as part of a single management plane).
+     * <p>
+     * No two instances of {@link ManagementContext} should ever have the same node UID. 
+     * The value of {@link Application#getManagementContext()#getManagementNodeId()} may
+     * change many times (in contrast to {@link #getManagementPlaneId()}). 
+     * <p>
+     * This value should not be null unless the management context is a non-functional
+     * (non-deployment) instance. */
+    String getManagementNodeId();
+    
     /**
      * All applications under control of this management plane
      */

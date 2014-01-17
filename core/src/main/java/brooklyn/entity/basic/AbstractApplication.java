@@ -16,6 +16,8 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 
 /**
  * Users can extend this to define the entities in their application, and the relationships between
@@ -58,7 +60,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 
     @Override
     public void init() {
-        log.warn("Deprecated: AbstractApplication.init() will be declared abstract in a future release; please override for code instantiating child entities");
+        log.warn("Deprecated: AbstractApplication.init() will be declared abstract in a future release; please override (without calling super) for code instantiating child entities");
     }
 
     @Override
@@ -95,6 +97,20 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public AbstractApplication setParent(Entity parent) {
         super.setParent(parent);
         return this;
+    }
+    
+    @Override
+    public void onManagementStarted() {
+        super.onManagementStarted();
+        
+        // ensure the data dir is transferred and available on this application hierarchy
+        // TODO not sure this is the best way/place - most apps will typically do this in init for the properties they need,
+        // but here the plan is for init() to become abstract or no-op
+        // (alternatively we could *always* look at the mgmt context when looking up config, 
+        // but that seems a slightly radical and relatively expensive change)
+        Maybe<Object> dataDir = getManagementContext().getConfig().getConfigRaw(BrooklynConfigKeys.BROOKLYN_DATA_DIR, true);
+        if (dataDir.isPresent())
+            setConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR, TypeCoercions.coerce(dataDir.get(), String.class));
     }
     
     /**

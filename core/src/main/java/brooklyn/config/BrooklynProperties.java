@@ -1,7 +1,6 @@
 package brooklyn.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import groovy.lang.Closure;
 
 import java.io.File;
@@ -24,6 +23,7 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -131,12 +131,10 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     protected BrooklynProperties() {
     }
 
-    @SuppressWarnings("unchecked")
     public BrooklynProperties addEnvironmentVars() {
         putAll(System.getenv());
         return this;
     }
-    @SuppressWarnings("unchecked")
     public BrooklynProperties addSystemProperties() {
         putAll(System.getProperties());
         return this;
@@ -206,7 +204,6 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     /**
     * adds the indicated properties
     */
-    @SuppressWarnings("unchecked")
     public BrooklynProperties addFromMap(Map properties) {
         putAll(properties);
         return this;
@@ -327,6 +324,12 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     @Override
     public Object getRawConfig(ConfigKey<?> key) {
         return get(key.getName());
+    }
+    
+    @Override
+    public Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited) {
+        if (containsKey(key.getName())) return Maybe.of(get(key.getName()));
+        return Maybe.absent();
     }
 
     @Override

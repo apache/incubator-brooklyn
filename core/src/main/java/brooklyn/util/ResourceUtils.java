@@ -21,6 +21,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.DataUriSchemeParser;
 import brooklyn.util.text.Strings;
@@ -261,14 +263,7 @@ public class ResourceUtils {
     }
 
     public static String mergeFilePaths(String... items) {
-        char separatorChar = File.separatorChar;
-        StringBuilder result = new StringBuilder();
-        for (String item: items) {
-            if (item.isEmpty()) continue;
-            if (result.length() > 0 && result.charAt(result.length()-1) != separatorChar) result.append(separatorChar);
-            result.append(item);
-        }
-        return result.toString();
+        return Os.mergePaths(items);
     }
     
     public static String tidyFilePath(String path) {
@@ -529,7 +524,7 @@ public class ResourceUtils {
 
     /** returns the items with exactly one "/" between items (whether or not the individual items start or end with /),
      * except where character before the / is a : (url syntax) in which case it will permit multiple (will not remove any) 
-     * @deprecated since 0.7.0 use {@link Urls#mergePaths(String...) */ @Deprecated
+     * @deprecated since 0.7.0 use either {@link Os#mergePathsUnix(String...)} {@link Urls#mergePaths(String...) */ @Deprecated
     public static String mergePaths(String ...items) {
         return Urls.mergePaths(items);
     }

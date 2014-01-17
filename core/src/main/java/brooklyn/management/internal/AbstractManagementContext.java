@@ -43,6 +43,7 @@ import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
@@ -292,8 +293,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             }
         } catch (Exception e) {
             if (Throwables.getRootCause(e) instanceof FileNotFoundException) {
-                Object nonDefaultUrl = getConfig().getRawConfig(BROOKLYN_CATALOG_URL);
-                if (nonDefaultUrl!=null && !"".equals(nonDefaultUrl)) {
+                Maybe<Object> nonDefaultUrl = getConfig().getConfigRaw(BROOKLYN_CATALOG_URL, true);
+                if (nonDefaultUrl.isPresentAndNonNull() && !"".equals(nonDefaultUrl.get())) {
                     log.warn("Could not find catalog XML specified at "+nonDefaultUrl+"; using default (local classpath) catalog. Error was: "+e);
                 } else {
                     if (log.isDebugEnabled())

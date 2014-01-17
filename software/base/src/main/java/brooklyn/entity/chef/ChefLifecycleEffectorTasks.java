@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -94,9 +94,9 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
 
     protected void startWithChefSoloAsync() {
         // TODO make directories more configurable (both for ssh-drivers and for this)
-        String installDir = Urls.mergePaths(AbstractSoftwareProcessSshDriver.BROOKLYN_HOME_DIR, "chef-install");
-        String runDir = Urls.mergePaths(AbstractSoftwareProcessSshDriver.BROOKLYN_HOME_DIR, 
-                "apps/"+entity().getApplicationId()+"/chef-entities/"+entity().getId());
+        String installDir = Urls.mergePaths(entity().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR), "installs/chef");
+        String runDir = Urls.mergePaths(entity().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR),  
+                "apps/"+entity().getApplicationId()+"/chef/entities/"+entity().getEntityType().getSimpleName()+"_"+entity().getId());
         
         DynamicTasks.queue(
                 ChefSoloTasks.installChef(installDir, false), 

@@ -29,14 +29,14 @@ import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicExecutionManager;
-import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * A local implementation of the {@link ManagementContext} API.
+ * A local (single node) implementation of the {@link ManagementContext} API.
  */
 public class LocalManagementContext extends AbstractManagementContext {
     
@@ -70,6 +70,8 @@ public class LocalManagementContext extends AbstractManagementContext {
         }
     }
 
+    private String managementPlaneId;
+    private String managementNodeId;
     private BasicExecutionManager execution;
     private SubscriptionManager subscriptions;
     private LocalEntityManager entityManager;
@@ -77,9 +79,6 @@ public class LocalManagementContext extends AbstractManagementContext {
     private final LocalAccessManager accessManager;
     private final LocalUsageManager usageManager;
     
-    private final String shortid = Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5);
-    private final String tostring = "LocalManagementContext("+shortid+")";
-
     private final Throwable constructionStackTrace = new Throwable("for construction stacktrace").fillInStackTrace();
     
     /**
@@ -104,13 +103,29 @@ public class LocalManagementContext extends AbstractManagementContext {
     @VisibleForTesting
     public LocalManagementContext(BrooklynProperties brooklynProperties, DataGridFactory datagridFactory) {
         super(brooklynProperties, datagridFactory);
+        
+        // TODO in a persisted world the planeId may be injected
+        this.managementPlaneId = Strings.makeRandomId(8);
+        
+        this.managementNodeId = Strings.makeRandomId(8);
         configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
         this.locationManager = new LocalLocationManager(this);
         this.accessManager = new LocalAccessManager();
         this.usageManager = new LocalUsageManager(this);
         INSTANCES.add(this);
+        log.debug("Created management context "+this);
     }
 
+    @Override
+    public String getManagementPlaneId() {
+        return managementPlaneId;
+    }
+    
+    @Override
+    public String getManagementNodeId() {
+        return managementNodeId;
+    }
+    
     @Override
     public void prePreManage(Entity entity) {
         getEntityManager().prePreManage(entity);
@@ -189,7 +204,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
 
         if (execution == null) {
-            execution = new BasicExecutionManager(shortid);
+            execution = new BasicExecutionManager(getManagementNodeId());
             gc = new BrooklynGarbageCollector(configMap, execution);
         }
         return execution;
@@ -234,6 +249,6 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     @Override
     public String toString() {
-        return tostring;
+        return LocalManagementContext.class.getSimpleName()+"["+getManagementPlaneId()+"-"+getManagementNodeId()+"]";
     }
 }

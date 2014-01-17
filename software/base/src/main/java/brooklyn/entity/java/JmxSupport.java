@@ -27,6 +27,7 @@ import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 import brooklyn.util.maven.MavenArtifact;
@@ -343,11 +344,11 @@ public class JmxSupport implements UsesJmx {
      */
     public void recommendJmxRmiCustomAgent() {
         // set JMX_RMI because the registry is needed (i think)
-        Object jmx = ((EntityInternal)entity).getConfigMap().getRawConfig(UsesJmx.JMX_AGENT_MODE);
-        if (jmx==null) {
+        Maybe<Object> jmx = entity.getConfigRaw(UsesJmx.JMX_AGENT_MODE, true);
+        if (!jmx.isPresentAndNonNull()) {
             setConfig(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
-        } else if (jmx!=JmxAgentModes.JMX_RMI_CUSTOM_AGENT) {
-            log.warn("Entity "+entity+" may not function unless running JMX_RMI_CUSTOM_AGENT mode (asked to use "+jmx+")");
+        } else if (jmx.get()!=JmxAgentModes.JMX_RMI_CUSTOM_AGENT) {
+            log.warn("Entity "+entity+" may not function unless running JMX_RMI_CUSTOM_AGENT mode (asked to use "+jmx.get()+")");
         }
     }
     

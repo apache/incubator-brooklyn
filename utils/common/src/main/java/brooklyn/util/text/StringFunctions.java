@@ -60,6 +60,17 @@ public class StringFunctions {
         return Functions.toStringFunction();
     }
 
+    /** returns function which gives length of input, with -1 for nulls */
+    public static Function<String,Integer> length() {
+        return new Function<String,Integer>() {
+            @Override
+            public Integer apply(String input) {
+                if (input==null) return -1;
+                return input.length();
+            }
+        };
+    }
+
     /** Surrounds an input string with the given prefix and suffix */
     public static Function<String,String> surround(final String prefix, final String suffix) {
         Preconditions.checkNotNull(prefix);

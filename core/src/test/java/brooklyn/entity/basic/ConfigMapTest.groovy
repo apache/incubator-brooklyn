@@ -83,8 +83,8 @@ public class ConfigMapTest {
         entity.configure(MyBaseEntity.SUPER_KEY_1, "s1");
         entity.configure(MySubEntity.SUB_KEY_2, "s2");
         ConfigMap sub = entity.getConfigMap().submap(ConfigPredicates.matchingGlob("sup*"));
-        Assert.assertEquals(sub.getRawConfig(MyBaseEntity.SUPER_KEY_1), "s1");
-        Assert.assertNull(sub.getRawConfig(MySubEntity.SUB_KEY_2));
+        Assert.assertEquals(sub.getConfigRaw(MyBaseEntity.SUPER_KEY_1, true).get(), "s1");
+        Assert.assertFalse(sub.getConfigRaw(MySubEntity.SUB_KEY_2, true).isPresent());
     }
 
     @Test(expectedExceptions=IllegalArgumentException.class)

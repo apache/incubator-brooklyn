@@ -9,7 +9,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.MapConfigKey;
-import brooklyn.event.basic.Sensors;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
@@ -46,9 +45,13 @@ public interface SoftwareProcess extends Entity, Startable {
     BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = Attributes.DOWNLOAD_ADDON_URLS;
 
     @SetFromFlag("installDir")
+    BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = BrooklynConfigKeys.INSTALL_DIR;
+    @Deprecated
     public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = BrooklynConfigKeys.SUGGESTED_INSTALL_DIR;
     
     @SetFromFlag("runDir")
+    BasicAttributeSensorAndConfigKey<String> RUN_DIR = BrooklynConfigKeys.RUN_DIR;
+    @Deprecated
     public static final ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
 
     @SetFromFlag("env")

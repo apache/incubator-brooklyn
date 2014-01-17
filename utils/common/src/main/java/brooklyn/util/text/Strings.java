@@ -5,6 +5,7 @@ package brooklyn.util.text;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Comparator;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -18,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.Ordering;
 
 public class Strings {
 
@@ -659,6 +661,12 @@ public class Strings {
         for (int i=0; i<count; i++)
             result.append(base);
         return result.toString();
+    }
+
+    /** returns comparator which compares based on length, with shorter ones first (and null before that);
+     * in event of a tie, it uses the toString order */
+    public static Ordering<String> lengthComparator() {
+        return Ordering.<Integer>natural().onResultOf(StringFunctions.length()).compound(Ordering.<String>natural()).nullsFirst();
     }
     
 }

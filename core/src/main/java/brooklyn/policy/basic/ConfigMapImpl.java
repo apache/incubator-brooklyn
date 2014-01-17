@@ -19,6 +19,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.DeferredSupplier;
 
@@ -44,6 +45,7 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
      * 
      * (Alex) i lean toward the config key getting to make the decision
      */
+    
     /**
      * Map of configuration information that is defined at start-up time for the entity. These
      * configuration parameters are shared and made accessible to the "children" of this
@@ -98,10 +100,15 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
         return TypeCoercions.coerce((defaultValue != null) ? defaultValue : ownKey.getDefaultValue(), key.getTypeToken());
     }
     
-    @Override
+    @Override @Deprecated
     public Object getRawConfig(ConfigKey<?> key) {
-        if (ownConfig.containsKey(key)) return ownConfig.get(key);
-        return null;
+        return getConfigRaw(key, true).orNull();
+    }
+    
+    @Override
+    public Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited) {
+        if (ownConfig.containsKey(key)) return Maybe.of(ownConfig.get(key));
+        return Maybe.absent();
     }
     
     /** returns the config of this policy */

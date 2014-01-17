@@ -17,6 +17,7 @@ import java.util.Map;
 
 import javax.servlet.DispatcherType;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
@@ -49,6 +50,7 @@ import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.logging.LoggingSetup;
+import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
@@ -147,8 +149,16 @@ public class BrooklynWebServer {
         if (!leftovers.isEmpty())
             log.warn("Ignoring unknown flags " + leftovers);
         
-        String brooklynDataDir = checkNotNull(managementContext.getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR));
-        this.webappTempDir = new File(brooklynDataDir, "jetty");
+        String brooklynDataDir = ResourceUtils.tidyFilePath(checkNotNull(managementContext.getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR)));
+        this.webappTempDir = new File(Os.mergePaths(brooklynDataDir, "planes", managementContext.getManagementPlaneId(), managementContext.getManagementNodeId(), "jetty"));
+        try {
+            FileUtils.forceMkdir(webappTempDir);
+            Os.deleteOnExitRecursivelyAndEmptyParentsUpTo(webappTempDir, new File(brooklynDataDir)); 
+        } catch (Exception e) {
+            IllegalStateException e2 = new IllegalStateException("Cannot create working directory "+webappTempDir+" for embedded jetty server: "+e, e);
+            log.warn(e2.getMessage()+" (rethrowing)");
+            throw e2;
+        }
     }
 
     public BrooklynWebServer(ManagementContext managementContext, int port) {

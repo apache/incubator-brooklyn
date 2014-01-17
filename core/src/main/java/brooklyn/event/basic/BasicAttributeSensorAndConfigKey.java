@@ -12,6 +12,8 @@ import brooklyn.event.Sensor;
  */
 public class BasicAttributeSensorAndConfigKey<T> extends AttributeSensorAndConfigKey<T,T> {
     
+    private static final long serialVersionUID = -2204916730008559688L;
+
     public BasicAttributeSensorAndConfigKey(Class<T> type, String name) {
         this(type, name, name, null);
     }
@@ -30,6 +32,8 @@ public class BasicAttributeSensorAndConfigKey<T> extends AttributeSensorAndConfi
     protected T convertConfigToSensor(T value, Entity entity) { return value; }
     
     public static class StringAttributeSensorAndConfigKey extends BasicAttributeSensorAndConfigKey<String> {
+
+        private static final long serialVersionUID = 810512615528081865L;
 
         public StringAttributeSensorAndConfigKey(AttributeSensorAndConfigKey<String,String> orig, String defaultValue) {
             super(orig, defaultValue);
@@ -50,6 +54,8 @@ public class BasicAttributeSensorAndConfigKey<T> extends AttributeSensorAndConfi
     }
     
     public static class IntegerAttributeSensorAndConfigKey extends BasicAttributeSensorAndConfigKey<Integer> {
+
+        private static final long serialVersionUID = 7159564523829723929L;
 
         public IntegerAttributeSensorAndConfigKey(AttributeSensorAndConfigKey<Integer,Integer> orig, Integer defaultValue) {
             super(orig, defaultValue);
