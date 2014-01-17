@@ -112,7 +112,7 @@ public class SampleMain {
         System.out.println();
         System.out.println("where <command> is any of:");
         System.out.println("        server       start the Brooklyn server (no applications)");
-        System.out.println("        application  start the applicaton specified by the --class option");
+        System.out.println("        application  start the application specified by the --class option");
         System.out.println("        help         display this help list");
         System.out.println("        single       start the sample single-entity web app");
         System.out.println("        cluster      start the sample three-tier elastic cluster web app");

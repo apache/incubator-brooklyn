@@ -3,6 +3,8 @@ package brooklyn.entity.nosql.mongodb;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -63,10 +65,11 @@ public class MongoDBIntegrationTest {
         app.start(ImmutableList.of(localhostProvisioningLocation));
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
 
-        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDBServer.OPCOUNTERS_INSERTS, 0L);
+        EntityTestUtils.assertAttributeEventuallyNonNull(entity, MongoDBServer.OPCOUNTERS_INSERTS);
+        Long initialInserts = entity.getAttribute(MongoDBServer.OPCOUNTERS_INSERTS);
         MongoDBTestHelper.insert(entity, "a", Boolean.TRUE);
         MongoDBTestHelper.insert(entity, "b", Boolean.FALSE);
-        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDBServer.OPCOUNTERS_INSERTS, 2L);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDBServer.OPCOUNTERS_INSERTS, initialInserts + 2);
     }
 
 }
