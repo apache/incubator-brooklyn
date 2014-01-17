@@ -58,9 +58,9 @@ public class DataEntityImpl extends AbstractEntity implements DataEntity {
     protected void connectSensors() {
         FunctionFeed.Builder builder = FunctionFeed.builder()
                 .entity(this)
-                .period(5000);
+                .period(getConfig(POLL_PERIOD));
 
-        Map<AttributeSensor<?>, Supplier<?>> map = getConfig(SENSOR_DATA_MAP);
+        Map<AttributeSensor<?>, Supplier<?>> map = getConfig(SENSOR_SUPPLIER_MAP);
         if (map != null && map.size() > 0) {
             for (Map.Entry<AttributeSensor<?>, Supplier<?>> entry : map.entrySet()) {
                 final AttributeSensor sensor = entry.getKey();

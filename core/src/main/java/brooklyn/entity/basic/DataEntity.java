@@ -22,6 +22,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
+import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Supplier;
 import com.google.common.reflect.TypeToken;
@@ -41,8 +42,13 @@ import com.google.common.reflect.TypeToken;
 @ImplementedBy(DataEntityImpl.class)
 public interface DataEntity extends Entity, Startable {
 
-    ConfigKey<Map<AttributeSensor<?>, Supplier<?>>> SENSOR_DATA_MAP = ConfigKeys.newConfigKey(
+    @SetFromFlag("pollPeriod")
+    ConfigKey<Long> POLL_PERIOD = ConfigKeys.newLongConfigKey(
+            "data.sensorpoll", "Poll period (in milliseconds)", 1000L);
+
+    @SetFromFlag("sensorSuppliers")
+    ConfigKey<Map<AttributeSensor<?>, Supplier<?>>> SENSOR_SUPPLIER_MAP = ConfigKeys.newConfigKey(
             new TypeToken<Map<AttributeSensor<?>, Supplier<?>>>() { },
-            "data.sensorSupplierMap", "Map linking Sensors and data Suppliers");
+            "data.sensorSupplierMap", "Map linking sensors and data suppliers");
 
 }
