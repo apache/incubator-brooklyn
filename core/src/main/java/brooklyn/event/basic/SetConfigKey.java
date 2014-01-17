@@ -10,31 +10,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.event.basic.ListConfigKey.ListModification;
-import brooklyn.event.basic.ListConfigKey.ListModifications;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.TaskAdaptable;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.text.Identifiers;
 
-import com.google.common.collect.Sets;
-
-/** A config key representing a list of values. 
- * If a value is set on this key, it is _added_ to the list.
- * (But a warning is issued if a collection is passed in.)
+/** A config key representing a set of values. 
+ * If a value is set using this *typed* key, it is _added_ to the set
+ * (with a warning issued if a collection is passed in).
+ * If a value is set against an equivalent *untyped* key which *is* a collection,
+ * it will be treated as a set upon discovery and used as a base to which subkey values are added.
+ * If a value is discovered against this key which is not a map or collection,
+ * it is ignored.
  * <p>
  * To add all items in a collection, to add a collection as a single element, 
  * to clear the list, or to set a collection (clearing first), 
- * use the relevant {@link ListModification} in {@link ListModifications}.
+ * use the relevant {@link SetModification} in {@link SetModifications}.
  * <p>  
  * Specific values can be added in a replaceable way by referring to a subkey.
  */
 //TODO Create interface
-public class SetConfigKey<V> extends BasicConfigKey<Set<? extends V>> implements StructuredConfigKey {
+public class SetConfigKey<V> extends AbstractStructuredConfigKey<Set<? extends V>, Set<Object>, V> {
 
     private static final long serialVersionUID = 751024268729803210L;
     private static final Logger log = LoggerFactory.getLogger(SetConfigKey.class);
-    
-    public final Class<V> subType;
 
     public SetConfigKey(Class<V> subType, String name) {
         this(subType, name, name, null);
@@ -46,8 +45,7 @@ public class SetConfigKey<V> extends BasicConfigKey<Set<? extends V>> implements
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public SetConfigKey(Class<V> subType, String name, String description, Set<? extends V> defaultValue) {
-        super((Class)Set.class, name, description, defaultValue);
-        this.subType = subType;
+        super((Class)Set.class, subType, name, description, defaultValue);
     }
 
     public ConfigKey<V> subKey() {
@@ -56,34 +54,23 @@ public class SetConfigKey<V> extends BasicConfigKey<Set<? extends V>> implements
     }
 
     @Override
-    public boolean isSubKey(Object contender) {
-        return contender instanceof ConfigKey && isSubKey((ConfigKey<?>)contender);
-    }
-    
-    public boolean isSubKey(ConfigKey<?> contender) {
-        return (contender instanceof SubElementConfigKey && this.equals(((SubElementConfigKey<?>) contender).parent));
+    protected Set<Object> extractValueMatchingThisKey(Object potentialBase, ExecutionContext exec, boolean coerce) {
+        if (potentialBase instanceof Map<?,?>) {
+            return MutableSet.copyOf( ((Map<?,?>) potentialBase).values() );
+        } else if (potentialBase instanceof Collection<?>) {
+            return MutableSet.copyOf( (Collection<?>) potentialBase );
+        } else if (coerce) {
+            // TODO if it's a future could attempt type coercion
+            // (e.g. if we have a MapConfigKey we use to set dependent configuration
+        }
+        return null;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public Set<V> extractValue(Map<?,?> vals, ExecutionContext exec) {
-        Set<V> result = Sets.newLinkedHashSet();
-        for (Object k : vals.keySet()) {
-            if (isSubKey(k))
-                result.add( ((SubElementConfigKey<V>) k).extractValue(vals, exec) );
-        }
-        return Collections.unmodifiableSet(result);
-    }
-
-    @Override
-    public boolean isSet(Map<?, ?> vals) {
-        if (vals.containsKey(this)) return true;
-        for (Object contender : vals.keySet()) {
-            if (isSubKey(contender)) {
-                return true;
-            }
-        }
-        return false;
+    protected Set<Object> merge(Set<Object> base, Map<String, Object> subkeys, boolean unmodifiable) {
+        Set<Object> result = MutableSet.copyOf(base).putAll(subkeys.values());
+        if (unmodifiable) result = Collections.unmodifiableSet(result);
+        return result;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

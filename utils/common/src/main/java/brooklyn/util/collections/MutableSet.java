@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Sets;
 
 public class MutableSet<V> extends LinkedHashSet<V> {
@@ -36,8 +38,8 @@ public class MutableSet<V> extends LinkedHashSet<V> {
         return result;
     }
 
-    public static <V> MutableSet<V> copyOf(Iterable<? extends V> orig) {
-        return new MutableSet<V>(orig);
+    public static <V> MutableSet<V> copyOf(@Nullable Iterable<? extends V> orig) {
+        return orig==null ? new MutableSet<V>() : new MutableSet<V>(orig);
     }
     
     public MutableSet() {
@@ -111,6 +113,12 @@ public class MutableSet<V> extends LinkedHashSet<V> {
     public boolean addIfNotNull(V e) {
         if (e!=null) return add(e);
         return false;
+    }
+
+    /** as {@link #addAll(Collection)} but fluent style and permitting null */
+    public MutableSet<V> putAll(Collection<? extends V> setToAdd) {
+        if (setToAdd!=null) addAll(setToAdd);
+        return this;
     }
     
 }

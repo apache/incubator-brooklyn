@@ -1,0 +1,11 @@
+name: cassandra-cluster-app
+services:
+- type: brooklyn.entity.nosql.cassandra.CassandraCluster
+  name: Cassandra Cluster
+  brooklyn.config:
+    cluster.initial.size: 5
+    cluster.initial.quorumSize: 3
+    provisioning.properties:
+      minCores: 4
+      minRam: 8192
+location: aws-ec2:eu-west-1

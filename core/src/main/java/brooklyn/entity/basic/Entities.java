@@ -232,11 +232,16 @@ public class Entities {
 
         out.append(currentIndentation+tab+tab+"locations = "+e.getLocations()+"\n");
 
-        for (ConfigKey<?> it : sortConfigKeys(e.getEntityType().getConfigKeys())) {
-            Maybe<Object> mv = e.getConfigRaw(it, false);
+        Set<ConfigKey<?>> keys = Sets.newLinkedHashSet( ((EntityInternal)e).getConfigMap().getLocalConfig().keySet() );
+        for (ConfigKey<?> it : sortConfigKeys(keys)) {
+            // use the official config key declared on the type if available
+            // (since the map sometimes contains <object> keys
+            ConfigKey<?> realKey = e.getEntityType().getConfigKey(it.getName());
+            if (realKey!=null) it = realKey;
+            
+            Maybe<Object> mv = ((EntityInternal)e).getConfigMap().getConfigRaw(it, false);
             if (!isTrivial(mv)) {
                 Object v = mv.get();
-                
                 out.append(currentIndentation+tab+tab+it.getName());
                 out.append(" = ");
                 if (isSecret(it.getName())) out.append("xxxxxxxx");
