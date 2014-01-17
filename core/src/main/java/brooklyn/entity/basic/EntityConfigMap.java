@@ -88,7 +88,7 @@ public class EntityConfigMap implements ConfigMap {
     
     @Override
     public Object getRawConfig(ConfigKey<?> key) {
-        return getConfigRaw(key, true).or(null).get();
+        return getConfigRaw(key, true).orNull();
     }
     
     @Override

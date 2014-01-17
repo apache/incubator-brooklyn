@@ -65,16 +65,13 @@ public class SoftwareProcessEntityTest {
 
     @Test
     public void testInstallDirAndRunDir() throws Exception {
-        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
-        ((EntityLocal)entity).setConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR, "/tmp/brooklyn-foo");
-        Entities.manage(entity);
-        String installDir = ConfigToAttributes.apply((EntityLocal)entity, SoftwareProcess.INSTALL_DIR);
-        LOG.info("install dir = "+installDir);
-        String runDir = ConfigToAttributes.apply((EntityLocal)entity, SoftwareProcess.RUN_DIR);
-        LOG.info("run dir = "+runDir);
-        
-        Assert.assertEquals(installDir, "/tmp/brooklyn-foo/installs/MyService");
-        Assert.assertEquals(runDir, "/tmp/brooklyn-foo/apps/"+entity.getApplicationId()+"/entities/MyService_"+entity.getId());
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class)
+            .configure(BrooklynConfigKeys.BROOKLYN_DATA_DIR, "/tmp/brooklyn-foo"));
+
+        entity.start(ImmutableList.of(loc));
+
+        Assert.assertEquals(entity.getAttribute(SoftwareProcess.INSTALL_DIR), "/tmp/brooklyn-foo/installs/MyService");
+        Assert.assertEquals(entity.getAttribute(SoftwareProcess.RUN_DIR), "/tmp/brooklyn-foo/apps/"+entity.getApplicationId()+"/entities/MyService_"+entity.getId());
     }
 
     @Test

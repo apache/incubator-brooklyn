@@ -102,7 +102,7 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
     
     @Override @Deprecated
     public Object getRawConfig(ConfigKey<?> key) {
-        return getConfigRaw(key, true).or(null).get();
+        return getConfigRaw(key, true).orNull();
     }
     
     @Override

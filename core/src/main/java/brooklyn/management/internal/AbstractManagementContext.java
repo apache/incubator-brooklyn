@@ -294,7 +294,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         } catch (Exception e) {
             if (Throwables.getRootCause(e) instanceof FileNotFoundException) {
                 Maybe<Object> nonDefaultUrl = getConfig().getConfigRaw(BROOKLYN_CATALOG_URL, true);
-                if (nonDefaultUrl.isPresent() && nonDefaultUrl.get()!=null && !"".equals(nonDefaultUrl)) {
+                if (nonDefaultUrl.isPresentAndNonNull() && !"".equals(nonDefaultUrl.get())) {
                     log.warn("Could not find catalog XML specified at "+nonDefaultUrl+"; using default (local classpath) catalog. Error was: "+e);
                 } else {
                     if (log.isDebugEnabled())

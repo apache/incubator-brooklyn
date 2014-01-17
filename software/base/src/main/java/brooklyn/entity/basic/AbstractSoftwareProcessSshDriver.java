@@ -24,6 +24,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -127,7 +128,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             String installBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
             if (installBasedir != null) {
                 log.warn("Using legacy 'brooklyn.dirs.install' setting for "+entity+"; may be removed in future versions.");
-                installDir = installBasedir+"/"+getEntityVersionLabel()+"_"+entity.getId();
+                installDir = Os.mergePathsUnix(installBasedir, getEntityVersionLabel()+"_"+entity.getId());
                 installDir = ResourceUtils.tidyFilePath(installDir);
                 getEntity().setAttribute(SoftwareProcess.INSTALL_DIR, installDir);
                 return installDir;
@@ -148,7 +149,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             String runBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.run");
             if (runBasedir != null) {
                 log.warn("Using legacy 'brooklyn.dirs.run' setting for "+entity+"; may be removed in future versions.");
-                runDir = runBasedir+"/"+entity.getApplication().getId()+"/"+"entities"+"/"+getEntityVersionLabel()+"_"+entity.getId();
+                runDir = Os.mergePathsUnix(runBasedir, entity.getApplication().getId()+"/"+"entities"+"/"+getEntityVersionLabel()+"_"+entity.getId());
                 runDir = ResourceUtils.tidyFilePath(runDir);
                 getEntity().setAttribute(SoftwareProcess.RUN_DIR, runDir);
                 return runDir;

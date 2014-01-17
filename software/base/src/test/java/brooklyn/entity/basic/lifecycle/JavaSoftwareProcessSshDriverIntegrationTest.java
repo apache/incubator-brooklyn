@@ -10,7 +10,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
@@ -34,11 +33,12 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(JavaSoftwareProcessSshDriverIntegrationTest.class);
     
-    private MachineProvisioningLocation localhost = new LocalhostMachineProvisioningLocation(MutableMap.of("name", "localhost"));
+    private MachineProvisioningLocation localhost;
     private TestApplication app;
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
+        localhost = new LocalhostMachineProvisioningLocation(MutableMap.of("name", "localhost"));
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
 
@@ -65,7 +65,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         String dir = Os.mergePathsUnix(Os.tmp(), "/brooklyn-test-"+Strings.makeRandomId(4));
         shutdown();
         LocalManagementContext mgmt = new LocalManagementContext();
-        ((BrooklynProperties)mgmt.getConfig()).put(BrooklynConfigKeys.BROOKLYN_DATA_DIR, dir);
+        mgmt.getBrooklynProperties().put(BrooklynConfigKeys.BROOKLYN_DATA_DIR, dir);
         app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
         
         doTestSpecifiedDirectory(dir, dir);
@@ -75,9 +75,12 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
     @Test(groups = "Integration")
     public void testStartsInAppSpecifiedDirectoryUnderHome() {
         String dir = Os.mergePathsUnix("~/.brooklyn-test-"+Strings.makeRandomId(4));
-        app.setConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR, dir);
-        doTestSpecifiedDirectory(dir, dir);
-        Os.tryDeleteDirectory(dir);
+        try {
+            app.setConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR, dir);
+            doTestSpecifiedDirectory(dir, dir);
+        } finally {
+            Os.tryDeleteDirectory(dir);
+        }
     }
     
     @Test(groups = "Integration")
@@ -97,8 +100,8 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         String dir2 = Os.mergePathsUnix(Os.tmp(), "/brooklyn-test-"+Strings.makeRandomId(4));
         shutdown();
         LocalManagementContext mgmt = new LocalManagementContext();
-        ((BrooklynProperties)mgmt.getConfig()).put("brooklyn.dirs.install", dir1);
-        ((BrooklynProperties)mgmt.getConfig()).put("brooklyn.dirs.run", dir2);
+        mgmt.getBrooklynProperties().put("brooklyn.dirs.install", dir1);
+        mgmt.getBrooklynProperties().put("brooklyn.dirs.run", dir2);
         app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
         
         app.setConfig(BrooklynConfigKeys.RUN_DIR, dir2);

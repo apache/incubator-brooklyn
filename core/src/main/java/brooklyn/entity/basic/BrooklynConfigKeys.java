@@ -20,7 +20,7 @@ public class BrooklynConfigKeys {
 
     public static final ConfigKey<String> BROOKLYN_DATA_DIR = newStringConfigKey(
             "brooklyn.datadir", "Directory for writing all brooklyn data", 
-            Os.mergePaths(Os.tmp(), "brooklyn-"+System.getProperty("user.name"))
+            Os.mergePaths(Os.tmp(), "brooklyn-"+Os.user())
             // TODO remove trailing separator and confirm all calls to this work
             // (also confirm all calls do a ResourceUtils.tidyPath to replace ~ with home dir!)
             +File.separator);
@@ -33,7 +33,6 @@ public class BrooklynConfigKeys {
             + "installs/${entity.entityType.simpleName}"
             + "${(config['install.version']??)?string('_'+(config['install.version']!'0'),'')}" // '0' not used but required by freemarker
             );
-//    + "${(config['install.version']??)?string(config['install.version']+'_','')}");
     
     public static final BasicAttributeSensorAndConfigKey<String> RUN_DIR = new TemplatedStringAttributeSensorAndConfigKey("run.dir", "Directory for this software to be run from",
         "${config['brooklyn.datadir']!'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'}/"

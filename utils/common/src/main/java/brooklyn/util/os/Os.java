@@ -12,6 +12,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.Beta;
+
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;
 
@@ -49,6 +51,15 @@ public class Os {
         return result.toString();
     }
 
+    /** tries to delete a directory recursively;
+     * use with care - see http://stackoverflow.com/questions/8320376/why-is-files-deletedirectorycontents-deprecated-in-guava.
+     * @return true if there are no errors (but the directory may still exist if a file is created there in parallel),
+     * false if there are errors (without reporting the errors)
+     * <p>
+     * NB: this method might change, based on Guava choosing to deprecate it;
+     * also the return type might be modified in future to supply more information;
+     * thus it is marked beta */
+    @Beta
     public static boolean tryDeleteDirectory(String dir) {
         try {
             FileUtils.deleteDirectory(new File(dir));

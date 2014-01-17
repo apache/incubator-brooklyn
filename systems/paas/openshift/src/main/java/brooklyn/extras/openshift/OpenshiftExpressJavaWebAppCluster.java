@@ -21,7 +21,7 @@ import brooklyn.extras.openshift.OpenshiftExpressAccess.UserInfoResult;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.stream.StreamGobbler;
 
 import com.google.common.base.Preconditions;
@@ -171,8 +171,8 @@ class OpenshiftExpressJavaWebAppCluster extends AbstractEntity implements Starta
         //checkout app
         String server = getAppName()+"-"+userInfo.namespace+"."+userInfo.rhc_domain;
         String gitUrl = "ssh://"+appInfo.uuid+"@"+server+"/~/git/"+getAppName()+".git/";
-        String openshiftDir = Urls.mergePaths(getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR),  
-                "apps/"+getApplicationId()+"/openshift/cluster_"+getId());
+        String openshiftDir = Os.mergePaths(getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR),  
+                "apps", getApplicationId(), "openshift", "cluster_"+getId());
 
         String openshiftGitDir = openshiftDir + "/git";
         

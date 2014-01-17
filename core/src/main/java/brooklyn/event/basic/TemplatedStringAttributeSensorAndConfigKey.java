@@ -6,17 +6,14 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.Sensor;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.collect.ImmutableMap;
 
 /**
- * A {@link Sensor} describing a port on a system,
- * with a {@link ConfigKey} which can be configured with a port range
- * (either a number e.g. 80, or a string e.g. "80" or "8080-8089" or even "80, 8080-8089, 8800+", or a list of these).
- * <p>
- * To convert at runtime a single port is chosen, respecting the entity.
+ * A {@link ConfigKey} which takes a freemarker-templated string,
+ * and whose value is converted to a sensor by processing the template 
+ * with access to config and methods on the entity where it is set.
  */
 public class TemplatedStringAttributeSensorAndConfigKey extends BasicAttributeSensorAndConfigKey<String> {
     private static final long serialVersionUID = 4680651022807491321L;

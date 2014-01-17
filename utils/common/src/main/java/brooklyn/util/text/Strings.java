@@ -666,7 +666,7 @@ public class Strings {
     /** returns comparator which compares based on length, with shorter ones first (and null before that);
      * in event of a tie, it uses the toString order */
     public static Ordering<String> lengthComparator() {
-        return Ordering.<Integer>natural().onResultOf(StringFunctions.lengthFunction()).compound(Ordering.<String>natural()).nullsFirst();
+        return Ordering.<Integer>natural().onResultOf(StringFunctions.length()).compound(Ordering.<String>natural()).nullsFirst();
     }
     
 }

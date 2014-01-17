@@ -61,7 +61,7 @@ public class StringFunctions {
     }
 
     /** returns function which gives length of input, with -1 for nulls */
-    public static Function<String,Integer> lengthFunction() {
+    public static Function<String,Integer> length() {
         return new Function<String,Integer>() {
             @Override
             public Integer apply(String input) {
