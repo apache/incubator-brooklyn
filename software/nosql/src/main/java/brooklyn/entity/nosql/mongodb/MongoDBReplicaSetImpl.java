@@ -284,6 +284,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                     .aggregating(sensor)
                     .publishing(sensor)
                     .fromMembers()
+                    .computingSum()
                     .valueToReportIfNoSensors(null)
                     .defaultValueForUnreportedSensors(null)
                     .build());
