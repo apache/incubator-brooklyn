@@ -1,10 +1,10 @@
 package io.brooklyn.camp.brooklyn.spi.dsl.methods;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-
 import io.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
 import io.brooklyn.camp.brooklyn.spi.dsl.DslUtils;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityDynamicType;
+import brooklyn.event.Sensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.management.Task;
 import brooklyn.util.exceptions.Exceptions;
@@ -34,16 +34,22 @@ public class BrooklynDslCommon {
         };
     }
 
-    /** returns any public static fields such as config keys or attribute sensors */
-    public static Object getStaticField(String clazzName, String fieldName) {
+    // TODO: Would be nice to have sensor(String sensorName), which would take the sensor from the entity in question, 
+    //       but that would require refactoring of Brooklyn DSL
+    /** returns a Sensor from the given class */
+    @SuppressWarnings("unchecked")
+    public static Object sensor(String clazzName, String sensorName) {
         try {
             Class<?> clazz = Class.forName(clazzName);
-            Field field = clazz.getField(fieldName);
-            if (!Modifier.isStatic(field.getModifiers()))
-                throw new IllegalArgumentException("Cannot get static field: field " + fieldName + " in class " + clazzName + " is not static");
-            return field.get(null);
-        } catch (Exception e) {
+            if (!Entity.class.isAssignableFrom(clazz))
+                throw new IllegalArgumentException("Class " + clazzName + " is not an Entity");
+            Sensor<?> sensor = new EntityDynamicType((Class<? extends Entity>) clazz).getSensor(sensorName);
+            if (sensor == null)
+                throw new IllegalArgumentException("Sensor " + sensorName + " not found on class " + clazzName);
+            return sensor;
+        } catch (ClassNotFoundException e) {
             throw Exceptions.propagate(e);
         }
     }
+    
 }

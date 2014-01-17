@@ -202,14 +202,14 @@ public class JavaWebAppsIntegrationTest {
                 if (component.getName().equals("My Web with Policy"))
                     clusterComponent = component;
             }
-            Assert.assertNotEquals(clusterComponent, "Database PlatformComponent not found");
+            Assert.assertNotNull(clusterComponent, "Database PlatformComponent not found");
             Entity cluster = brooklynMgmt.getEntityManager().getEntity(clusterComponent.getId());
             log.info("pc1 - "+clusterComponent+" - "+cluster);
             
             Assert.assertEquals(cluster.getPolicies().size(), 1);
             Policy policy = cluster.getPolicies().iterator().next();
             Assert.assertNotNull(policy);
-            Assert.assertTrue(policy instanceof AutoScalerPolicy);
+            Assert.assertTrue(policy instanceof AutoScalerPolicy, "policy="+policy);
             Assert.assertEquals(policy.getConfig(AutoScalerPolicy.MAX_POOL_SIZE), (Integer)5);
             Assert.assertEquals(policy.getConfig(AutoScalerPolicy.MIN_POOL_SIZE), (Integer)1);
             Assert.assertEquals(policy.getConfig(AutoScalerPolicy.METRIC), DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE);
