@@ -297,9 +297,10 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                         "cd $INSTALL_DIR",
                         "test -f BROOKLYN && exit 0"
                         );
-                s.footer.append(
-                        "date > $INSTALL_DIR/BROOKLYN"
-                        );
+
+                if (!truth(flags.get("installIncomplete"))) {
+                    s.footer.append("date > $INSTALL_DIR/BROOKLYN");
+                }
             }
             if (ImmutableSet.of(CUSTOMIZING, LAUNCHING, CHECK_RUNNING, STOPPING, KILLING, RESTARTING).contains(phase)) {
                 s.header.append(
