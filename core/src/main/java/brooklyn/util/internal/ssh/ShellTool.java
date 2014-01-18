@@ -9,6 +9,7 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.util.os.Os;
 
 /** Methods for executing things in an environment (localhost process, or ssh) */
 public interface ShellTool {
@@ -16,7 +17,7 @@ public interface ShellTool {
     // config which applies to sessions
     
     public static final ConfigKey<File> PROP_LOCAL_TEMP_DIR = newConfigKey("localTempDir", "The directory on the local machine (i.e. running brooklyn) for writing temp files", 
-            new File(System.getProperty("java.io.tmpdir"), "tmpssh"));
+            new File(Os.tmp(), "tmpssh"));
     
     // config which applies to calls:
     

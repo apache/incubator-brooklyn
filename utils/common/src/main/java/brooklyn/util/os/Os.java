@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
 
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;
 
@@ -21,17 +23,136 @@ public class Os {
 
     private static final Logger log = LoggerFactory.getLogger(Os.class);
     
-    /** returns the /tmp dir, based on java.io.tmpdir but ignoring it if it's weird
-     * (e.g. /var/folders/q2/363yynwx5lb_qpch1km2xvr80000gn/T/) and /tmp exists */
+    /** returns the best tmp dir to use; see {@link TmpDirFinder} for the logic
+     * (and the explanation why this is needed!) */
     public static String tmp() {
-        String tmpdir = System.getProperty("java.io.tmpdir");
-        if (tmpdir.contains("/var/") && new File("/tmp").exists())
-            return "/tmp";
-        return tmpdir;
+        Maybe<String> tmp = tmpdir.get();
+        if (tmp.isPresent()) return tmp.get();
+
+        tmpdir.useWithWarning(System.getProperty("java.io.tmpdir"));
+        return tmp.get();
+    }
+    
+    private static TmpDirFinder tmpdir = new TmpDirFinder();
+    
+    /** utility for finding a usable (writable) tmp dir, preferring java.io.tmpdir
+     * (unless it's weird, e.g. /private/tmp/xxx or /var/tmp/... as under OS X, and /tmp is valid),
+     * falling back to ~/.tmp/ (and creating that) if the others are not usable
+     * <p>
+     * it is weird if /tmp is not writable, but it does happen, hence this check
+     * <p>
+     * note you can also set java system property {@value #BROOKLYN_OS_TMPDIR_PROPERTY} 
+     * to force the use of a specific tmp space */
+    public static class TmpDirFinder {
+        /** can be set as a jvm system property to force a particular tmp dir */
+        public static String BROOKLYN_OS_TMPDIR_PROPERTY = "brooklyn.os.tmpdir";
+        
+        private String tmpdir = null;
+        private boolean isFallback = false;
+        
+        public Maybe<String> get() {
+            if (isFallback())
+                log.debug("TmpDirFinder: using fallback tmp directory "+tmpdir, new Throwable("Caller using fallback tmp dir"));
+            if (isFound()) return Maybe.of(tmpdir);
+            if (find()) return Maybe.of(tmpdir);
+            return new Maybe.Absent<String>() {
+                private static final long serialVersionUID = -757170462010887057L;
+                public String get() {
+                    throw fail("TmpDirFinder: No valid tmp dir can be found");
+                }
+            };
+        }
+
+        public boolean isFallback() {
+            return isFallback;
+        }
+        
+        public boolean useWithWarning(String dir) {
+            if (tmpdir==null) {
+                tmpdir = dir;
+                isFallback = true;
+                log.warn("Unable to find a valid tmp dir; will use "+dir+" but with caution! See (debug) messages marked TmpDirFinder for more information.");
+                return true;
+            }
+            return false;
+        }
+
+        public boolean isFound() {
+            return tmpdir!=null;
+        }
+        protected synchronized boolean find() {
+            if (isFound()) return true;
+
+            String customtmp = System.getProperty(BROOKLYN_OS_TMPDIR_PROPERTY);
+            if (customtmp!=null) {
+                if (check(customtmp)) return true;
+                log.warn("TmpDirFinder: Custom tmp directory '"+customtmp+"' in "+BROOKLYN_OS_TMPDIR_PROPERTY+" is not a valid tmp dir; ignoring");
+            }
+            
+            String systmp = System.getProperty("java.io.tmpdir");
+            boolean systmpWeird = (systmp.contains("/var/") || systmp.startsWith("/private"));
+            if (!systmpWeird) if (check(systmp)) return true;
+
+            if (check(File.separator+"tmp")) return true;
+            if (systmpWeird) if (check(systmp)) return true;
+            
+            try {
+                String hometmp = mergePaths(home(), ".tmp");
+                File hometmpF = new File(hometmp);
+                hometmpF.mkdirs();
+                if (check(hometmp)) return true;
+            } catch (Exception e) {
+                log.debug("TmpDirFinder: Cannot create tmp dir in user's home dir: "+e);
+            }
+            
+            return false;
+        }
+        
+        protected boolean check(String candidate) {
+            try {
+                File f = new File(candidate);
+                if (!f.exists()) {
+                    log.debug("TmpDirFinder: Candidate tmp dir '"+candidate+"' does not exist");
+                    return false;
+                }
+                if (!f.isDirectory()) {
+                    log.debug("TmpDirFinder: Candidate tmp dir '"+candidate+"' is not a directory");
+                    return false;
+                }
+                File f2 = new File(f, "brooklyn-tmp-check-"+Strings.makeRandomId(4));
+                if (!f2.createNewFile()) {
+                    log.debug("TmpDirFinder: Candidate tmp dir '"+candidate+"' cannot have files created inside it ("+f2+")");
+                    return false;
+                }
+                if (!f2.delete()) {
+                    log.debug("TmpDirFinder: Candidate tmp dir '"+candidate+"' cannot have files deleted inside it ("+f2+")");
+                    return false;
+                }
+                
+                // seems okay
+                tmpdir = candidate;
+                log.debug("TmpDirFinder: Selected tmp dir '"+candidate+"' as the best tmp working space");
+                
+                return true;
+            } catch (Exception e) {
+                log.debug("TmpDirFinder: Candidate tmp dir '"+candidate+"' is not valid: "+e);
+                return false;
+            }
+        }
+        
+        protected IllegalStateException fail(String message) {
+            throw new IllegalStateException(message);
+        }
     }
 
+    /** user name */
     public static String user() {
         return System.getProperty("user.name");
+    }
+
+    /** user's home directory */
+    public static String home() {
+        return System.getProperty("user.home");
     }
 
     /** merges paths using forward slash (unix way); see {@link Urls#mergePaths(String...)} */
