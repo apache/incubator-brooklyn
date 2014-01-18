@@ -8,7 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 
-import com.google.common.io.Closeables;
+import brooklyn.util.stream.Streams;
 
 public class Serializers {
 
@@ -31,7 +31,7 @@ public class Serializers {
         try {
             return (T) ois.readObject();
         } finally {
-            Closeables.closeQuietly(ois);
+            Streams.closeQuietly(ois);
         }
     }
     

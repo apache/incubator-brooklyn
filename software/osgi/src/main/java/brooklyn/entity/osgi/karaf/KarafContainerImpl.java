@@ -30,10 +30,10 @@ import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.event.feed.jmx.JmxValueFunctions;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.Repeater;
+import brooklyn.util.os.Os;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -262,7 +262,7 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
                 props.setProperty(prop.getKey(), prop.getValue());
             }
             
-            File local = ResourceUtils.writeToTempFile(props, "karaf-"+getId(), ".cfg");
+            File local = Os.writePropertiesToTempFile(props, "karaf-"+getId(), ".cfg");
             local.setReadable(true);
             try {
                 String remote = getDriver().getRunDir() + "/" + file;

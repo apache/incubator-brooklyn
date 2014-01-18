@@ -5,19 +5,17 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.security.KeyStore;
 
-import com.google.common.base.Optional;
-import org.eclipse.jetty.security.HashLoginService;
-import org.eclipse.jetty.security.authentication.BasicAuthenticator;
-import org.eclipse.jetty.security.authentication.DigestAuthenticator;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.security.SecurityHandler;
+import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.util.security.Credential;
 import org.eclipse.jetty.util.security.Constraint;
+import org.eclipse.jetty.util.security.Credential;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +24,10 @@ import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.crypto.SecureKeys;
+import brooklyn.util.javalang.Threads;
+import brooklyn.util.os.Os;
+
+import com.google.common.base.Optional;
 
 /**
  * Starts an in-memory web-server, which for example can be used for testing HttpFeed.
@@ -117,7 +119,7 @@ public class HttpService {
     
             addShutdownHook();
     
-            File tmpWarFile = ResourceUtils.writeToTempFile(
+            File tmpWarFile = Os.writeToTempFile(
                     ResourceUtils.create(this).getResourceFromUrl(ROOT_WAR_URL), 
                     "TestHttpService", 
                     ".war");
@@ -150,7 +152,7 @@ public class HttpService {
     
     public void shutdown() throws Exception {
         if (server==null) return;
-        if (shutdownHook != null) ResourceUtils.removeShutdownHook(shutdownHook);
+        if (shutdownHook != null) Threads.removeShutdownHook(shutdownHook);
         String url = getUrl();
         if (log.isDebugEnabled())
             log.debug("Stopping Test HttpService at {}", url);
@@ -176,7 +178,7 @@ public class HttpService {
 
     private void addShutdownHook() {
         // some webapps can generate a lot of output if we don't shut down the browser first
-        shutdownHook = ResourceUtils.addShutdownHook(new Runnable() {
+        shutdownHook = Threads.addShutdownHook(new Runnable() {
             @Override
             public void run() {
                 log.info("Test HttpService detected shut-down: stopping");

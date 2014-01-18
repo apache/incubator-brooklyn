@@ -20,7 +20,6 @@ import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;
@@ -129,13 +128,13 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             if (installBasedir != null) {
                 log.warn("Using legacy 'brooklyn.dirs.install' setting for "+entity+"; may be removed in future versions.");
                 installDir = Os.mergePathsUnix(installBasedir, getEntityVersionLabel()+"_"+entity.getId());
-                installDir = ResourceUtils.tidyFilePath(installDir);
+                installDir = Os.tidyPath(installDir);
                 getEntity().setAttribute(SoftwareProcess.INSTALL_DIR, installDir);
                 return installDir;
             }
         }
 
-        installDir = ResourceUtils.tidyFilePath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.INSTALL_DIR));
+        installDir = Os.tidyPath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.INSTALL_DIR));
         entity.setAttribute(SoftwareProcess.INSTALL_DIR, installDir);
         return installDir;
     }
@@ -150,13 +149,13 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             if (runBasedir != null) {
                 log.warn("Using legacy 'brooklyn.dirs.run' setting for "+entity+"; may be removed in future versions.");
                 runDir = Os.mergePathsUnix(runBasedir, entity.getApplication().getId()+"/"+"entities"+"/"+getEntityVersionLabel()+"_"+entity.getId());
-                runDir = ResourceUtils.tidyFilePath(runDir);
+                runDir = Os.tidyPath(runDir);
                 getEntity().setAttribute(SoftwareProcess.RUN_DIR, runDir);
                 return runDir;
             }
         }
 
-        runDir = ResourceUtils.tidyFilePath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.RUN_DIR));
+        runDir = Os.tidyPath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.RUN_DIR));
         entity.setAttribute(SoftwareProcess.RUN_DIR, runDir);
         return runDir;
     }

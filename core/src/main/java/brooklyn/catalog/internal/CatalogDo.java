@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
+import brooklyn.util.net.Urls;
 
 import com.google.common.base.Preconditions;
 
@@ -187,7 +187,7 @@ public class CatalogDo {
     /** is "local" if it and all ancestors are not based on any remote urls */ 
     public boolean isLocal() {
         if (dto.url!=null) {
-            String proto = ResourceUtils.getProtocol(dto.url);
+            String proto = Urls.getProtocol(dto.url);
             if (proto!=null) {
                 // 'file' is the only protocol accepted as "local"
                 if (!"file".equals(proto)) return false;

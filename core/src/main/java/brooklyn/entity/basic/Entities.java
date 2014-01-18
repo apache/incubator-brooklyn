@@ -53,6 +53,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.Threads;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.Tasks;
@@ -453,7 +454,7 @@ public class Entities {
 
     public static void invokeStopOnShutdown(Entity entity) {
         if (isShutdownHookRegistered.compareAndSet(false, true)) {
-            ResourceUtils.addShutdownHook(new Runnable() {
+            Threads.addShutdownHook(new Runnable() {
                 @SuppressWarnings({ "unchecked", "rawtypes" })
                 public void run() {
                     synchronized (entitiesToStopOnShutdown) {

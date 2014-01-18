@@ -18,9 +18,11 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import brooklyn.util.os.Os;
+import brooklyn.util.stream.Streams;
+
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
 public class ResourceUtilsTest {
@@ -34,7 +36,7 @@ public class ResourceUtilsTest {
     @BeforeClass(alwaysRun=true)
     public void setUp() throws Exception {
         utils = ResourceUtils.create(this, "mycontext");
-        tempFile = ResourceUtils.writeToTempFile(new ByteArrayInputStream(tempFileContents.getBytes()), "resourceutils-test", ".txt");
+        tempFile = Os.writeToTempFile(new ByteArrayInputStream(tempFileContents.getBytes()), "resourceutils-test", ".txt");
     }
     
     @AfterClass(alwaysRun=true)
@@ -44,7 +46,7 @@ public class ResourceUtilsTest {
 
     @Test
     public void testWriteStreamToTempFile() throws Exception {
-        File tempFileLocal = ResourceUtils.writeToTempFile(new ByteArrayInputStream("mycontents".getBytes()), "resourceutils-test", ".txt");
+        File tempFileLocal = Os.writeToTempFile(new ByteArrayInputStream("mycontents".getBytes()), "resourceutils-test", ".txt");
         try {
             List<String> lines = Files.readLines(tempFileLocal, Charsets.UTF_8);
             assertEquals(lines, ImmutableList.of("mycontents"));
@@ -57,7 +59,7 @@ public class ResourceUtilsTest {
     public void testPropertiesStreamToTempFile() throws Exception {
         Properties props = new Properties();
         props.setProperty("mykey", "myval");
-        File tempFileLocal = ResourceUtils.writeToTempFile(props, "resourceutils-test", ".txt");
+        File tempFileLocal = Os.writePropertiesToTempFile(props, "resourceutils-test", ".txt");
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(tempFileLocal);
@@ -65,7 +67,7 @@ public class ResourceUtilsTest {
             props2.load(fis);
             assertEquals(props2.getProperty("mykey"), "myval");
         } finally {
-            Closeables.closeQuietly(fis);
+            Streams.closeQuietly(fis);
             tempFileLocal.delete();
         }
     }
@@ -87,13 +89,13 @@ public class ResourceUtilsTest {
         // on windows the correct syntax is  file:///c:/path  (note the extra /);
         // however our routines also accept file://c:/path so the following is portable
         InputStream stream = utils.getResourceFromUrl("file://"+tempFile.getAbsolutePath());
-        assertEquals(ResourceUtils.readFullyString(stream), tempFileContents);
+        assertEquals(Streams.readFullyString(stream), tempFileContents);
     }
     
     @Test
     public void testGetResourceViaFileWithoutPrefix() throws Exception {
         InputStream stream = utils.getResourceFromUrl(tempFile.getAbsolutePath());
-        assertEquals(ResourceUtils.readFullyString(stream), tempFileContents);
+        assertEquals(Streams.readFullyString(stream), tempFileContents);
     }
 
     @Test
@@ -127,14 +129,14 @@ public class ResourceUtilsTest {
     @Test(groups="Integration")
     public void testGetResourceViaSftp() throws Exception {
         InputStream stream = utils.getResourceFromUrl("sftp://localhost:"+tempFile.getAbsolutePath());
-        assertEquals(ResourceUtils.readFullyString(stream), tempFileContents);
+        assertEquals(Streams.readFullyString(stream), tempFileContents);
     }
     
     @Test(groups="Integration")
     public void testGetResourceViaSftpWithUsername() throws Exception {
         String user = System.getProperty("user.name");
         InputStream stream = utils.getResourceFromUrl("sftp://"+user+"@localhost:"+tempFile.getAbsolutePath());
-        assertEquals(ResourceUtils.readFullyString(stream), tempFileContents);
+        assertEquals(Streams.readFullyString(stream), tempFileContents);
     }
 
     @Test
@@ -146,20 +148,5 @@ public class ResourceUtilsTest {
         assertEquals(utils.getResourceAsString("data://hello"), "hello");
         assertEquals(utils.getResourceAsString("data:hello world"), "hello world");
     }
-
-    @Test
-    public void testTidyFilePath() throws Exception {
-        String userhome = System.getProperty("user.home");
-        assertEquals(ResourceUtils.tidyFilePath("/a/b"), "/a/b");
-        assertEquals(ResourceUtils.tidyFilePath("~/a/b"), userhome+"/a/b");
-    }
     
-    @Test
-    public void testMergeFilePaths() throws Exception {
-        assertEquals(ResourceUtils.mergeFilePaths("a"), "a"); 
-        assertEquals(ResourceUtils.mergeFilePaths("a", "b"), "a/b"); 
-        assertEquals(ResourceUtils.mergeFilePaths("a/", "b"), "a/b");
-        assertEquals(ResourceUtils.mergeFilePaths("a", "b/"), "a/b/");
-        assertEquals(ResourceUtils.mergeFilePaths("/a", "b"), "/a/b");
-    }
 }

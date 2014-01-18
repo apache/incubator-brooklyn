@@ -2,7 +2,6 @@ package brooklyn.util;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -17,17 +16,13 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.Threads;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
@@ -38,7 +33,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
 
 public class ResourceUtils {
     
@@ -151,7 +145,7 @@ public class ResourceUtils {
             if (url==null) throw new NullPointerException("Cannot read from null");
             if (url=="") throw new NullPointerException("Cannot read from empty string");
             String orig = url;
-            String protocol = getProtocol(url);
+            String protocol = Urls.getProtocol(url);
             if (protocol!=null) {
                 if ("classpath".equals(protocol)) {
                     try {
@@ -196,9 +190,9 @@ public class ResourceUtils {
                 File f;
                 // but first, if it starts with tilde, treat specially
                 if (url.startsWith("~/")) {
-                    f = new File(System.getProperty("user.home"), url.substring(2));
+                    f = new File(Os.home(), url.substring(2));
                 } else if (url.startsWith("~\\")) {
-                    f = new File(System.getProperty("user.home"), url.substring(2));
+                    f = new File(Os.home(), url.substring(2));
                 } else {
                     f = new File(url);
                 }
@@ -230,7 +224,7 @@ public class ResourceUtils {
         Matcher matcher = pattern.matcher(in.toString());
         if (matcher.matches()) {
             // home-relative
-            File home = new File(System.getProperty("user.home"));
+            File home = new File(Os.home());
             File file = new File(home, matcher.group(1));
             out = file.toURI();
         } else if (in.getScheme().equals("file:")) {
@@ -262,40 +256,19 @@ public class ResourceUtils {
         }
     }
 
+    /** @deprecated since 0.7.0; use method {@link Os#mergePaths(String...)} */ @Deprecated
     public static String mergeFilePaths(String... items) {
         return Os.mergePaths(items);
     }
     
+    /** @deprecated since 0.7.0; use method {@link Os#tidyPath(String)} */ @Deprecated
     public static String tidyFilePath(String path) {
-        Iterable<String> pathParts = Splitter.on(File.separator).split(path);
-        if (!Iterables.isEmpty(pathParts) && Iterables.get(pathParts, 0).equals("~")) {
-            pathParts = Iterables.concat(ImmutableSet.of(System.getProperty("user.home")), Iterables.skip(pathParts, 1));
-            String result = Joiner.on(File.separator).join(pathParts);
-            if (log.isDebugEnabled()) log.debug("quietly changing to "+path+" to "+result);
-            return result;
-        } else {
-            return path;
-        }
+        return Os.tidyPath(path);
     }
     
-    /** returns the protocol (e.g. http) if one appears to be specified, or else null;
-     * 'protocol' here should consist of 2 or more _letters_ only followed by a colon
-     * (2 required to prevent  c``:\xxx being treated as a url)
-     */
+    /** @deprecated since 0.7.0; use method {@link Urls#getProtocol(String)} */ @Deprecated
     public static String getProtocol(String url) {
-        if (url==null) return null;
-        int i=0;
-        StringBuilder result = new StringBuilder();
-        while (true) {
-            if (url.length()<=i) return null;
-            char c = url.charAt(i);
-            if (Character.isLetter(c)) result.append(c);
-            else if (c==':') {
-                if (i>=2) return result.toString();
-                return null;
-            } else return null;
-            i++;
-        }
+        return Urls.getProtocol(url);
     }
     
     private InputStream getResourceViaClasspath(String url) throws IOException {
@@ -437,89 +410,38 @@ public class ResourceUtils {
         Streams.copy(input, output);
     }
 
+    /** @deprecated since 0.7.0; use same method in {@link Os} */ @Deprecated
     public static File mkdirs(File dir) {
-        if (dir.isDirectory()) return dir;
-        boolean success = dir.mkdirs();
-        if (!success) throw Exceptions.propagate(new IOException("Failed to create directory " + dir + 
-                (dir.isFile() ? "(is file)" : "")));
-        return dir;
+        return Os.mkdirs(dir);
     }
 
+    /** @deprecated since 0.7.0; use same method in {@link Os} */ @Deprecated
     public static File writeToTempFile(InputStream is, String prefix, String suffix) {
-        return writeToTempFile(is, new File(System.getProperty("java.io.tmpdir")), prefix, suffix);
+        return Os.writeToTempFile(is, prefix, suffix);
     }
     
+    /** @deprecated since 0.7.0; use same method in {@link Os} */ @Deprecated
     public static File writeToTempFile(InputStream is, File tempDir, String prefix, String suffix) {
-        if (is == null) throw new NullPointerException("Input stream required to create temp file for "+prefix+"*"+suffix);
-        mkdirs(tempDir);
-        File tempFile;
-        try {
-            tempFile = File.createTempFile(prefix, suffix, tempDir);
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
-        tempFile.deleteOnExit();
-
-        OutputStream out = null;
-        try {
-            out = new FileOutputStream(tempFile);
-            ByteStreams.copy(is, out);
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        } finally {
-            Streams.closeQuietly(is);
-            Streams.closeQuietly(out);
-        }
-        return tempFile;
+        return Os.writeToTempFile(is, tempDir, prefix, suffix);
     }
 
+    /** @deprecated since 0.7.0; use method {@link Os#writePropertiesToTempFile(Properties, String, String)} */ @Deprecated
     public static File writeToTempFile(Properties props, String prefix, String suffix) {
-        return writeToTempFile(props, new File(System.getProperty("java.io.tmpdir")), prefix, suffix);
+        return Os.writePropertiesToTempFile(props, prefix, suffix);
     }
     
+    /** @deprecated since 0.7.0; use method {@link Os#writePropertiesToTempFile(Properties, File, String, String)} */ @Deprecated
     public static File writeToTempFile(Properties props, File tempDir, String prefix, String suffix) {
-        if (props == null) throw new NullPointerException("Properties required to create temp file for "+prefix+"*"+suffix);
-        File tempFile;
-        try {
-            tempFile = File.createTempFile(prefix, suffix, tempDir);
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
-        tempFile.deleteOnExit();
-
-        OutputStream out = null;
-        try {
-            out = new FileOutputStream(tempFile);
-            props.store(out, "Auto-generated by Brooklyn");
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        } finally {
-            Streams.closeQuietly(out);
-        }
-        return tempFile;
+        return Os.writePropertiesToTempFile(props, tempDir, prefix, suffix);
     }
 
+    /** @deprecated since 0.7.0; use method {@link Threads#addShutdownHook(Runnable)} */ @Deprecated
     public static Thread addShutdownHook(final Runnable task) {
-        Thread t = new Thread("shutdownHookThread") {
-            public void run() {
-                try {
-                    task.run();
-                } catch (Exception e) {
-                    log.error("Failed to execute shutdownhook", e);
-                }
-            }
-        };
-        Runtime.getRuntime().addShutdownHook(t);
-        return t;
+        return Threads.addShutdownHook(task);
     }
+    /** @deprecated since 0.7.0; use method {@link Threads#removeShutdownHook(Thread)} */ @Deprecated
     public static boolean removeShutdownHook(Thread hook) {
-        try {
-            return Runtime.getRuntime().removeShutdownHook(hook);
-        } catch (IllegalStateException e) {
-            // probably shutdown in progress
-            log.debug("cannot remove shutdown hook "+hook+": "+e);
-            return false;
-        }
+        return Threads.removeShutdownHook(hook);
     }
 
     /** returns the items with exactly one "/" between items (whether or not the individual items start or end with /),

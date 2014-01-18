@@ -49,6 +49,7 @@ import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.javalang.Threads;
 import brooklyn.util.logging.LoggingSetup;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
@@ -149,7 +150,7 @@ public class BrooklynWebServer {
         if (!leftovers.isEmpty())
             log.warn("Ignoring unknown flags " + leftovers);
         
-        String brooklynDataDir = ResourceUtils.tidyFilePath(checkNotNull(managementContext.getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR)));
+        String brooklynDataDir = Os.tidyPath(checkNotNull(managementContext.getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR)));
         this.webappTempDir = new File(Os.mergePaths(brooklynDataDir, "planes", managementContext.getManagementPlaneId(), managementContext.getManagementNodeId(), "jetty"));
         try {
             FileUtils.forceMkdir(webappTempDir);
@@ -339,11 +340,11 @@ public class BrooklynWebServer {
             String pathSpec = entry.getKey();
             String warUrl = entry.getValue();
             WebAppContext webapp = deploy(pathSpec, warUrl);
-            webapp.setTempDirectory(ResourceUtils.mkdirs(new File(webappTempDir, newTimestampedDirName("war", 8))));
+            webapp.setTempDirectory(Os.mkdirs(new File(webappTempDir, newTimestampedDirName("war", 8))));
         }
 
         rootContext = deploy("/", war);
-        rootContext.setTempDirectory(ResourceUtils.mkdirs(new File(webappTempDir, "war-root")));
+        rootContext.setTempDirectory(Os.mkdirs(new File(webappTempDir, "war-root")));
 
         if (securityFilterClazz != null) {
             rootContext.addFilter(securityFilterClazz, "/*", EnumSet.allOf(DispatcherType.class));
@@ -375,7 +376,7 @@ public class BrooklynWebServer {
     public synchronized void stop() throws Exception {
         if (server==null) return;
         String root = getRootUrl();
-        ResourceUtils.removeShutdownHook(shutdownHook);
+        Threads.removeShutdownHook(shutdownHook);
         if (log.isDebugEnabled())
             log.debug("Stopping Brooklyn web console at "+root+ " (" + war + (wars != null ? " and " + wars.values() : "") + ")");
 
@@ -410,7 +411,7 @@ public class BrooklynWebServer {
         }
 
         try {
-            File tmpWarFile = ResourceUtils.writeToTempFile(new CustomResourceLocator(managementContext.getConfig(), ResourceUtils.create(this)).getResourceFromUrl(warUrl), 
+            File tmpWarFile = Os.writeToTempFile(new CustomResourceLocator(managementContext.getConfig(), ResourceUtils.create(this)).getResourceFromUrl(warUrl), 
                     isRoot ? "ROOT" : ("embedded-" + cleanPathSpec), ".war");
             context.setWar(tmpWarFile.getAbsolutePath());
         } catch (Exception e) {
@@ -431,7 +432,7 @@ public class BrooklynWebServer {
     protected synchronized void addShutdownHook() {
         if (shutdownHook!=null) return;
         // some webapps can generate a lot of output if we don't shut down the browser first
-        shutdownHook = ResourceUtils.addShutdownHook(new Runnable() {
+        shutdownHook = Threads.addShutdownHook(new Runnable() {
             @Override
             public void run() {
                 log.info("BrooklynWebServer detected shut-down: stopping web-console");
