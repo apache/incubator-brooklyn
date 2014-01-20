@@ -85,7 +85,10 @@ public class OsTasks {
                     private Optional<String> find(String[] inputs, String field) {
                         for (String input : inputs) {
                             if (input.startsWith(field)) {
-                                return Optional.of(input.substring(field.length()));
+                                String value = input.substring(field.length()).trim();
+                                return (!value.isEmpty())
+                                    ? Optional.of(input.substring(field.length()))
+                                    : Optional.<String>absent();
                             }
                         }
                         return Optional.absent();

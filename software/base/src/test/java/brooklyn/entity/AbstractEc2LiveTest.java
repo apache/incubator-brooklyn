@@ -62,11 +62,10 @@ public abstract class AbstractEc2LiveTest extends BrooklynMgmtContextTestSupport
         runTest(ImmutableMap.of("imageId", "us-east-1/ami-7ce17315", "loginUser", "admin", "hardwareId", SMALL_HARDWARE_ID));
     }
 
-    // FIXME: AMI no longer exists
-    @Test(groups = {"Live"}, enabled = false)
+    @Test(groups = {"Live"})
     public void test_Debian_7_2() throws Exception {
         // release codename "wheezy"
-        runTest(ImmutableMap.of("imageId", "us-east-1/ami-db2278b2", "loginUser", "admin", "hardwareId", SMALL_HARDWARE_ID));
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-5586a43c", "loginUser", "admin", "hardwareId", SMALL_HARDWARE_ID));
     }
 
     @Test(groups = {"Live"})
