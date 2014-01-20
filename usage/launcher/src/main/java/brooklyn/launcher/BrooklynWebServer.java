@@ -24,6 +24,7 @@ import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -294,6 +295,11 @@ public class BrooklynWebServer {
             actualAddress = BrooklynNetworkUtils.getLocalhostInetAddress();
             server = new Server(actualPort);
         }
+        
+        // use a nice name in the thread pool (otherwise this is exactly the same as Server defaults)
+        QueuedThreadPool threadPool = new QueuedThreadPool();
+        threadPool.setName("brooklyn-jetty-server-"+actualPort+"-"+threadPool.getName());
+        server.setThreadPool(threadPool);
 
         if (log.isDebugEnabled())
             log.debug("Starting Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));

@@ -331,8 +331,14 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             }
         }
 
-        if (ImmutableSet.of(LAUNCHING, STOPPING, KILLING, RESTARTING).contains(phase)) {
+        if (ImmutableSet.of(LAUNCHING, RESTARTING).contains(phase)) {
+            // stopping and killing allowed to have empty body if pid file set
             s.failIfBodyEmpty();
+        }
+        if (ImmutableSet.of(STOPPING, KILLING).contains(phase)) {
+            // stopping and killing allowed to have empty body if pid file set
+            if (!truth(flags.get(USE_PID_FILE)))
+                s.failIfBodyEmpty();
         }
         if (ImmutableSet.of(INSTALLING, LAUNCHING).contains(phase)) {
             s.updateTaskAndFailOnNonZeroResultCode();

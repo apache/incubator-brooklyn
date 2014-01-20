@@ -5,9 +5,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.SoftwareProcess.ChildStartableMode;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
+import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.text.Strings;
 
@@ -24,6 +27,8 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
     
     @Override
     public void restart() {
+        // children are ignored during restart currently - see ChildStartableMode
+        
         if (((SoftwareProcessImpl)entity()).getDriver() == null) { 
             log.debug("restart of "+entity()+" has no driver - doing machine-level restart");
             super.restart();
@@ -66,10 +71,44 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
         ((SoftwareProcessImpl)entity()).preStart(); 
     }
 
+    /** returns how children startables should be handled (reporting none for efficiency if there are no children) */
+    protected ChildStartableMode getChildrenStartableModeEffective() {
+        if (entity().getChildren().isEmpty()) return ChildStartableMode.NONE;
+        ChildStartableMode result = entity().getConfig(SoftwareProcess.CHILDREN_STARTABLE_MODE);
+        if (result!=null) return result;
+        return ChildStartableMode.NONE;
+    }
+
     @Override
     protected String startProcessesAtMachine(final Supplier<MachineLocation> machineS) {
+        ChildStartableMode mode = getChildrenStartableModeEffective();
+        TaskAdaptable<?> children = null;
+        if (!mode.isDisabled) {
+            children = StartableMethods.startingChildren(entity(), machineS.get());
+            // submit rather than queue so it runs in parallel
+            // (could also wrap as parallel task with driver.start() -
+            // but only benefit is that child starts show as child task,
+            // rather than bg task, so not worth the code complexity)
+            if (!mode.isLate) Entities.submit(entity(), children);
+        }
+        
         entity().getDriver().start();
-        return "Started with driver "+entity().getDriver();
+        String result = "Started with driver "+entity().getDriver();
+        
+        if (!mode.isDisabled) {
+            if (mode.isLate) {
+                DynamicTasks.waitForLast();
+                if (mode.isBackground) {
+                    Entities.submit(entity(), children);
+                } else {
+                    // when running foreground late, there is no harm here in queueing
+                    DynamicTasks.queue(children);
+                }
+            }
+            if (!mode.isBackground) children.asTask().getUnchecked();
+            result += "; children started "+mode;
+        }
+        return result;
     }
 
     @Override
@@ -95,11 +134,45 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
 
     @Override
     protected String stopProcessesAtMachine() {
+        String result;
+        
+        ChildStartableMode mode = getChildrenStartableModeEffective();
+        TaskAdaptable<?> children = null;
+        Exception childException = null;
+        
+        if (!mode.isDisabled) {
+            children = StartableMethods.stoppingChildren(entity());
+            
+            if (mode.isBackground || !mode.isLate) Entities.submit(entity(), children);
+            else {
+                DynamicTasks.queue(children);
+                try {
+                    DynamicTasks.waitForLast();
+                } catch (Exception e) {
+                    childException = e;
+                }
+            }
+        }
+        
         if (entity().getDriver() != null) { 
             entity().getDriver().stop();
-            return "Driver stop completed";
+            result = "Driver stop completed";
+        } else {
+            result = "No driver (nothing to do here)";
         }
-        return "No driver (nothing to do)";
+
+        if (!mode.isDisabled && !mode.isBackground) {
+            try {
+                children.asTask().get();
+            } catch (Exception e) {
+                childException = e;
+            }            
+        }
+        
+        if (childException!=null)
+            throw new IllegalStateException(result+"; but error stopping child: "+childException, childException);
+        
+        return result;
     }
 
 }

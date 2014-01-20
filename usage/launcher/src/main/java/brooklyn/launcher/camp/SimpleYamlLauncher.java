@@ -13,5 +13,5 @@ public class SimpleYamlLauncher extends YamlLauncherAbstract {
     protected BrooklynCampPlatformLauncherAbstract newPlatformLauncher() {
         return new BrooklynCampPlatformLauncher();
     }
-    
+
 }

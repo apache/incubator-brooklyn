@@ -750,7 +750,8 @@ public class Entities {
         return result.get();
     }
 
-    /** submits a task to run at the entity */
+    /** submits a task to run at the entity 
+     * @return the task passed in, for fluency */
     public static <T extends TaskAdaptable<?>> T submit(final Entity entity, final T task) {
         final ExecutionContext executionContext = ((EntityInternal)entity).getManagementSupport().getExecutionContext();
         executionContext.submit(task.asTask());
@@ -762,5 +763,5 @@ public class Entities {
         if (entity.getConfigRaw(key, true).isPresentAndNonNull())
             log.warn("Ignoring "+key+" set on "+entity+" ("+entity.getConfig(key)+")");
     }
-
+    
 }

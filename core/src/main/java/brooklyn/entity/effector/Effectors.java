@@ -1,8 +1,11 @@
 package brooklyn.entity.effector;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +21,10 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.EffectorTasks.EffectorBodyTaskFactory;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.management.TaskAdaptable;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -98,7 +104,7 @@ public class Effectors {
     }
 
     /** returns an unsubmitted task which invokes the given effector; use {@link Entities#invokeEffector(EntityLocal, Entity, Effector, Map)} for a submitted variant */
-    public static <T> TaskAdaptable<T> invocation(Entity entity, Effector<T> eff, @SuppressWarnings("rawtypes") Map parameters) {
+    public static <T> TaskAdaptable<T> invocation(Entity entity, Effector<T> eff, @Nullable Map<?,?> parameters) {
         @SuppressWarnings("unchecked")
         Effector<T> eff2 = (Effector<T>) ((EntityInternal)entity).getEffector(eff.getName());
         if (log.isTraceEnabled())
@@ -127,6 +133,20 @@ public class Effectors {
         throw new UnsupportedOperationException("No implementation registered for effector "+eff+" on "+entity);
     }    
 
+    /** returns an unsubmitted task which will invoke the given effector on the given entities;
+     * return type is Task<List<T>> (but haven't put in the blood sweat toil and tears to make the generics work) */
+    public static TaskAdaptable<List<?>> invocation(Effector<?> eff, Map<?,?> params, Iterable<? extends Entity> entities) {
+        List<TaskAdaptable<?>> tasks = new ArrayList<TaskAdaptable<?>>();
+        for (Entity e: entities) tasks.add(invocation(e, eff, params));
+        return Tasks.parallel("invoking "+eff+" on "+tasks.size()+" node"+(Strings.s(tasks.size())), tasks.toArray(new TaskAdaptable[tasks.size()]));
+    }
+
+    /** returns an unsubmitted task which will invoke the given effector on the given entities
+     * (this form of method is a convenience for {@link #invocation(Effector, Map, Iterable)}) */
+    public static TaskAdaptable<List<?>> invocation(Effector<?> eff, MutableMap<?, ?> params, Entity ...entities) {
+        return invocation(eff, params, Arrays.asList(entities));
+    }
+    
     public static boolean sameSignature(Effector<?> e1, Effector<?> e2) {
         return Objects.equal(e1.getName(), e2.getName()) &&
                 Objects.equal(e1.getParameters(), e2.getParameters()) &&
