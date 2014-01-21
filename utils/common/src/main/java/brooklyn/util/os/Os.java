@@ -24,6 +24,7 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
@@ -318,7 +319,7 @@ public class Os {
     
     /** writes given contents to a temporary file which will be deleted on exit, located under the given directory */
     public static File writeToTempFile(InputStream is, File tempDir, String prefix, String suffix) {
-        if (is == null) throw new NullPointerException("Input stream required to create temp file for "+prefix+"*"+suffix);
+        Preconditions.checkNotNull(is, "Input stream required to create temp file for %s*%s", prefix, suffix);
         mkdirs(tempDir);
         File tempFile;
         try {
@@ -346,7 +347,7 @@ public class Os {
     }
     
     public static File writePropertiesToTempFile(Properties props, File tempDir, String prefix, String suffix) {
-        if (props == null) throw new NullPointerException("Properties required to create temp file for "+prefix+"*"+suffix);
+        Preconditions.checkNotNull(props, "Properties required to create temp file for %s*%s", prefix, suffix);
         File tempFile;
         try {
             tempFile = File.createTempFile(prefix, suffix, tempDir);
