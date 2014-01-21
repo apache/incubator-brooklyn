@@ -136,7 +136,8 @@ public class FlagUtils {
         for (Field f: getAllFields(o.getClass())) {
             ConfigKey<?> key = getFieldAsConfigKey(o, f);
             if (key!=null && bag.containsKey(key)) {
-                setField(o, f, bag.get(key), null);
+                Object uncoercedValue = bag.get(key);
+                setConfig(o, key, uncoercedValue, null);
             }
         }
     }
@@ -252,7 +253,8 @@ public class FlagUtils {
         // first check whether it is a key
         ConfigKey<?> key = getFieldAsConfigKey(o, f);
         if (key!=null && bag.containsKey(key)) {
-            setField(o, f, bag.get(key), optionalAnnotation);
+            Object uncoercedValue = bag.get(key);
+            setConfig(o, key, uncoercedValue, null);
             return;
         }
         if (setDefaultVals && optionalAnnotation!=null && truth(optionalAnnotation.defaultVal())) {
@@ -284,34 +286,34 @@ public class FlagUtils {
         return null;
     }
 
+    public static void setConfig(Object objectOfField, ConfigKey<?> key, Object value, SetFromFlag optionalAnnotation) {
+        if (objectOfField instanceof Configurable) {
+            ((Configurable)objectOfField).setConfig((ConfigKey)key, value);
+            return;
+        } else {
+            if (optionalAnnotation==null) {
+                log.warn("Cannot set key "+key.getName()+" on "+objectOfField+": containing class is not Configurable");
+            } else if (!key.getName().equals(optionalAnnotation.value())) {
+                log.warn("Cannot set key "+key.getName()+" on "+objectOfField+" from flag "+optionalAnnotation.value()+": containing class is not Configurable");
+            } else {
+                // if key and flag are the same, then it will probably happen automatically
+                if (log.isDebugEnabled())
+                    log.debug("Cannot set key "+key.getName()+" on "+objectOfField+" from flag "+optionalAnnotation.value()+": containing class is not Configurable");
+            }
+            return;
+        }
+    }
+    
     /** sets the field to the value, after checking whether the given value can be set 
      * respecting the constraints of the annotation 
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void setField(Object objectOfField, Field f, Object value, SetFromFlag optionalAnnotation) {
         try {
-            ConfigKey<?> key = null;
-            if (ConfigKey.class.isAssignableFrom(f.getType())) {
-                key = (ConfigKey<?>) f.get(objectOfField);
-            } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
-                key = ((HasConfigKey<?>) f.get(objectOfField)).getConfigKey();
-            }
+            ConfigKey<?> key = getFieldAsConfigKey(objectOfField, f);
             if (key!=null) {
-                if (objectOfField instanceof Configurable) {
-                    ((Configurable)objectOfField).setConfig((ConfigKey)key, value);
-                    return;
-                } else {
-                    if (optionalAnnotation==null) {
-                        log.warn("Cannot set key "+key.getName()+" on "+objectOfField+": containing class is not Configurable");
-                    } else if (!key.getName().equals(optionalAnnotation.value())) {
-                        log.warn("Cannot set key "+key.getName()+" on "+objectOfField+" from flag "+optionalAnnotation.value()+": containing class is not Configurable");
-                    } else {
-                        // if key and flag are the same, then it will probably happen automatically
-                        if (log.isDebugEnabled())
-                            log.debug("Cannot set key "+key.getName()+" on "+objectOfField+" from flag "+optionalAnnotation.value()+": containing class is not Configurable");
-                    }
-                    return;
-                }
+                setConfig(objectOfField, key, value, optionalAnnotation);
+                return;
             }
             
             if (!f.isAccessible()) f.setAccessible(true);
@@ -340,7 +342,7 @@ public class FlagUtils {
             throw Throwables.propagate(e);
         }
     }
-    
+
     /** gets the value of the field. 
      */
     public static Object getField(Object objectOfField, Field f) {
