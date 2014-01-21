@@ -43,12 +43,12 @@ public class FlagUtils {
     private FlagUtils() {}
     
     /** see {@link #setFieldsFromFlags(Object o, ConfigBag)} */
-    public static Map<?, ? extends Object> setPublicFieldsFromFlags(Map<?, ? extends Object> flags, Object o) {
+    public static Map<?, ?> setPublicFieldsFromFlags(Map<?, ?> flags, Object o) {
         return setFieldsFromFlagsInternal(o, Arrays.asList(o.getClass().getFields()), flags, null, true);
     }
 
     /** see {@link #setFieldsFromFlags(Object o, ConfigBag)} */
-    public static Map<?, ? extends Object> setFieldsFromFlags(Map<?, ? extends Object> flags, Object o) {
+    public static Map<?, ?> setFieldsFromFlags(Map<?, ?> flags, Object o) {
         return setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), flags, null, true);
     }
 	
@@ -86,7 +86,7 @@ public class FlagUtils {
     /** get all fields (including private and static) on the given object and all supertypes, 
      * that are annotated with SetFromFlags. 
      */
-    public static Map<String, ? extends Object> getFieldsWithFlags(Object o) {
+    public static Map<String, ?> getFieldsWithFlags(Object o) {
         return getFieldsWithFlagsInternal(o, getAllFields(o.getClass()));
     }
 	
@@ -125,7 +125,7 @@ public class FlagUtils {
     
     /** sets _all_ accessible _{@link ConfigKey}_ and {@link HasConfigKey} fields on the given object, 
      * using the indicated flags/config-bag */
-    public static Map<String, ? extends Object> setAllConfigKeys(Map<String, ? extends Object> flagsOrConfig, Configurable instance) {
+    public static Map<String, ?> setAllConfigKeys(Map<String, ?> flagsOrConfig, Configurable instance) {
         ConfigBag bag = new ConfigBag().putAll(flagsOrConfig);
         setAllConfigKeys(instance, bag);
         return bag.getUnusedConfigRaw();
@@ -233,7 +233,7 @@ public class FlagUtils {
         return false;
     }
 
-    private static Map<String, ? extends Object> setFieldsFromFlagsInternal(Object o, Collection<Field> fields, Map<?,? extends Object> flagsOrConfig, ConfigBag bag, boolean setDefaultVals) {
+    private static Map<String, ?> setFieldsFromFlagsInternal(Object o, Collection<Field> fields, Map<?,?> flagsOrConfig, ConfigBag bag, boolean setDefaultVals) {
         if (bag==null) bag = new ConfigBag().putAll(flagsOrConfig);
         for (Field f: fields) {
             SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
