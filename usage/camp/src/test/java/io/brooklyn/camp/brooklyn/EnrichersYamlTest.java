@@ -80,7 +80,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
                 return child.getEnrichers().size();
             }
         }, Predicates.<Integer> equalTo(1));        
-        Enricher enricher = child.getEnrichers().iterator().next();
+        final Enricher enricher = child.getEnrichers().iterator().next();
         Assert.assertNotNull(enricher);
         Assert.assertTrue(enricher instanceof TestEnricher, "enricher=" + enricher + "; type=" + enricher.getClass());
         Assert.assertEquals(enricher.getConfig(TestEnricher.CONF_NAME), "Name from YAML");
@@ -90,7 +90,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
                 ImmutableMap.of("enricherLiteralValue1", "Hello", "enricherLiteralValue2", "World"));
     }
     
-    @Test
+    @Test(groups={"WIP"})
     public void testPropagatingEnricher() throws Exception {
         Entity app = createAndStartApplication("test-propagating-enricher.yaml");
         waitForApplicationTasks(app);
@@ -101,6 +101,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
         TestEntity entity = (TestEntity)app.getChildren().iterator().next();
         entity.setAttribute(TestEntity.NAME, "New Name");
         Asserts.eventually(Entities.attributeSupplier(app, TestEntity.NAME), Predicates.<String>equalTo("New Name"));
+        Assert.assertEquals(app.getConfig(TestEntity.CONF_NAME), "Name from YAML");
     }
     
     @Override

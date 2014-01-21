@@ -254,6 +254,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                         childSpec.configure(BrooklynCampConstants.PLAN_ID, planId);
                      
                     addEntityConfig(childSpec, (Map<?,?>)appChildAttrs.remove("brooklyn.config"));
+                    addEnrichers(childSpec, appChildAttrs.remove("brooklyn.enrichers"));
 
                     Entity appChild = entity.addChild(childSpec);
                     
@@ -376,6 +377,31 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             throw new IllegalArgumentException("enrichers body should be iterable, not " + enrichers.getClass());
         }
         return enricherSpecs;
+    }
+    
+    private void addEnrichers(EntitySpec<?> entitySpec, Object enrichers) {
+        List<EnricherSpec<?>> enricherSpecs = new ArrayList<EnricherSpec<? extends Enricher>>();
+        if (enrichers instanceof Iterable) {
+            for (Object enricher : (Iterable<Object>)enrichers) {
+                if (enricher instanceof Map) {
+                String enricherTypeName = ((Map<?, ?>) enricher).get("enricherType").toString();
+                Class<? extends Enricher> enricherType = null;
+                try {
+                    enricherType = ((Class<? extends Enricher>) Class.forName(enricherTypeName));
+                } catch (ClassNotFoundException e) {
+                    throw Exceptions.propagate(e);
+                }
+                enricherSpecs.add(toCoreEnricherSpec(enricherType, (Map<?, ?>) ((Map<?, ?>) enricher).get("brooklyn.config")));
+                } else {
+                    throw new IllegalArgumentException("enricher should be map, not " + enricher.getClass());
+                }
+            }
+        } else if (enrichers != null) {
+            throw new IllegalArgumentException("enrichers body should be iterable, not " + enrichers.getClass());
+        }
+        if (enricherSpecs.size() > 0) {
+            entitySpec.enricherSpecs(enricherSpecs);
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

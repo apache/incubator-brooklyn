@@ -12,7 +12,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.policy.Policy;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestPolicy;
-
 import com.google.common.collect.ImmutableMap;
 
 @Test
