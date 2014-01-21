@@ -18,9 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
@@ -36,7 +36,7 @@ public abstract class ShellAbstractTool implements ShellTool {
     protected final File localTempDir;
 
     public ShellAbstractTool(File localTempDir) {
-        this.localTempDir = localTempDir != null ? localTempDir : new File(System.getProperty("java.io.tmpdir"), "tmpssh");
+        this.localTempDir = localTempDir != null ? localTempDir : new File(Os.tmp(), "tmpssh");
     }
     
     public ShellAbstractTool() {
@@ -117,8 +117,7 @@ public abstract class ShellAbstractTool implements ShellTool {
     }
 
     protected File writeTempFile(InputStream contents) {
-        // TODO Use ConfigKeys.BROOKLYN_DATA_DIR, but how to get access to that here?
-        File tempFile = ResourceUtils.writeToTempFile(contents, localTempDir, "sshcopy", "data");
+        File tempFile = Os.writeToTempFile(contents, localTempDir, "sshcopy", "data");
         tempFile.setReadable(false, false);
         tempFile.setReadable(true, true);
         tempFile.setWritable(false);

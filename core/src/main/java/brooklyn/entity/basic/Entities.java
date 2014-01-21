@@ -53,6 +53,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.Threads;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.Tasks;
@@ -453,7 +454,7 @@ public class Entities {
 
     public static void invokeStopOnShutdown(Entity entity) {
         if (isShutdownHookRegistered.compareAndSet(false, true)) {
-            ResourceUtils.addShutdownHook(new Runnable() {
+            Threads.addShutdownHook(new Runnable() {
                 @SuppressWarnings({ "unchecked", "rawtypes" })
                 public void run() {
                     synchronized (entitiesToStopOnShutdown) {
@@ -749,7 +750,8 @@ public class Entities {
         return result.get();
     }
 
-    /** submits a task to run at the entity */
+    /** submits a task to run at the entity 
+     * @return the task passed in, for fluency */
     public static <T extends TaskAdaptable<?>> T submit(final Entity entity, final T task) {
         final ExecutionContext executionContext = ((EntityInternal)entity).getManagementSupport().getExecutionContext();
         executionContext.submit(task.asTask());
@@ -761,5 +763,5 @@ public class Entities {
         if (entity.getConfigRaw(key, true).isPresentAndNonNull())
             log.warn("Ignoring "+key+" set on "+entity+" ("+entity.getConfig(key)+")");
     }
-
+    
 }

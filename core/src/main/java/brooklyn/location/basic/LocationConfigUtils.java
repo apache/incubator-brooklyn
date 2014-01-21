@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.os.Os;
 import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Charsets;
@@ -111,7 +111,7 @@ public class LocationConfigUtils {
     private static List<String> tidyFilePaths(Iterable<String> files) {
         List<String> result = Lists.newArrayList();
         for (String file : files) {
-            result.add(ResourceUtils.tidyFilePath(file));
+            result.add(Os.tidyPath(file));
         }
         return result;
     }

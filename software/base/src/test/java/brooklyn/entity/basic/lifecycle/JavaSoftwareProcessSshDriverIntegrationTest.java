@@ -127,8 +127,8 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         String installDir = entity.getAttribute(SoftwareProcess.INSTALL_DIR);
         String runDir = entity.getAttribute(SoftwareProcess.RUN_DIR);
         log.info("dirs for "+app+" are: install="+installDir+", run="+runDir);
-        assertTrue(installDir.startsWith(ResourceUtils.tidyFilePath(installDirPrefix)), "INSTALL_DIR is "+installDir+", does not start with expected prefix "+installDirPrefix);
-        assertTrue(runDir.startsWith(ResourceUtils.tidyFilePath(runDirPrefix)), "RUN_DIR is "+runDir+", does not start with expected prefix "+runDirPrefix);
+        assertTrue(installDir.startsWith(Os.tidyPath(installDirPrefix)), "INSTALL_DIR is "+installDir+", does not start with expected prefix "+installDirPrefix);
+        assertTrue(runDir.startsWith(Os.tidyPath(runDirPrefix)), "RUN_DIR is "+runDir+", does not start with expected prefix "+runDirPrefix);
         
         entity.stop();
         assertFalse(entity.getAttribute(SoftwareProcess.SERVICE_UP));

@@ -17,8 +17,8 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.os.Os;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -61,12 +61,12 @@ public class JcloudsLoginLiveTest {
     protected JcloudsLocation jcloudsLocation;
     protected JcloudsSshMachineLocation machine;
     
-    private File privateRsaFile = new File(ResourceUtils.tidyFilePath("~/.ssh/id_rsa"));
-    private File privateDsaFile = new File(ResourceUtils.tidyFilePath("~/.ssh/id_dsa"));
+    private File privateRsaFile = new File(Os.tidyPath("~/.ssh/id_rsa"));
+    private File privateDsaFile = new File(Os.tidyPath("~/.ssh/id_dsa"));
     private File privateRsaFileTmp = new File(privateRsaFile.getAbsoluteFile()+".tmp");
     private File privateDsaFileTmp = new File(privateDsaFile.getAbsoluteFile()+".tmp");
-    private File publicRsaFile = new File(ResourceUtils.tidyFilePath("~/.ssh/id_rsa.pub"));
-    private File publicDsaFile = new File(ResourceUtils.tidyFilePath("~/.ssh/id_dsa.pub"));
+    private File publicRsaFile = new File(Os.tidyPath("~/.ssh/id_rsa.pub"));
+    private File publicDsaFile = new File(Os.tidyPath("~/.ssh/id_dsa.pub"));
     private File publicRsaFileTmp = new File(publicRsaFile.getAbsoluteFile()+".tmp");
     private File publicDsaFileTmp = new File(publicDsaFile.getAbsoluteFile()+".tmp");
     private boolean privateRsaFileMoved;
@@ -114,7 +114,7 @@ public class JcloudsLoginLiveTest {
         assertSshable(ImmutableMap.builder()
                 .put("address", machine.getAddress())
                 .put("user", "myname")
-                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, Os.tidyPath("~/.ssh/id_rsa"))
                 .build());
     }
     
@@ -131,7 +131,7 @@ public class JcloudsLoginLiveTest {
         assertSshable(ImmutableMap.builder()
                 .put("address", machine.getAddress())
                 .put("user", "myname")
-                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, Os.tidyPath("~/.ssh/id_rsa"))
                 .build());
     }
 
@@ -147,7 +147,7 @@ public class JcloudsLoginLiveTest {
         assertSshable(ImmutableMap.builder()
                 .put("address", machine.getAddress())
                 .put("user", "myname")
-                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, Os.tidyPath("~/.ssh/id_rsa"))
                 .build());
     }
     
@@ -204,7 +204,7 @@ public class JcloudsLoginLiveTest {
         assertSshable(ImmutableMap.builder()
                 .put("address", machine.getAddress())
                 .put("user", "myname")
-                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, Os.tidyPath("~/.ssh/id_rsa"))
                 .build());
         
         assertSshable(ImmutableMap.builder()
@@ -226,7 +226,7 @@ public class JcloudsLoginLiveTest {
         assertSshable(ImmutableMap.builder()
                 .put("address", machine.getAddress())
                 .put("user", "myname")
-                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, Os.tidyPath("~/.ssh/id_rsa"))
                 .build());
         
         assertSshable(ImmutableMap.builder()
@@ -276,7 +276,7 @@ public class JcloudsLoginLiveTest {
         assertSshable(ImmutableMap.builder()
                 .put("address", machine.getAddress())
                 .put("user", "root")
-                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, Os.tidyPath("~/.ssh/id_rsa"))
                 .build());
     }
     
@@ -297,7 +297,7 @@ public class JcloudsLoginLiveTest {
         assertSshable(ImmutableMap.builder()
                 .put("address", machine.getAddress())
                 .put("user", "root")
-                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, Os.tidyPath("~/.ssh/id_rsa"))
                 .build());
     }
     
@@ -320,7 +320,7 @@ public class JcloudsLoginLiveTest {
         assertSshable(ImmutableMap.builder()
                 .put("address", machine.getAddress())
                 .put("user", "ec2-user")
-                .put(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa"))
+                .put(SshMachineLocation.PRIVATE_KEY_FILE, Os.tidyPath("~/.ssh/id_rsa"))
                 .build());
     }
     

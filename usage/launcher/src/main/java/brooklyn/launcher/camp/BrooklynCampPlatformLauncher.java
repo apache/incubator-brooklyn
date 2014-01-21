@@ -13,17 +13,20 @@ import com.google.common.annotations.Beta;
 @Beta
 public class BrooklynCampPlatformLauncher extends BrooklynCampPlatformLauncherAbstract {
 
+    protected BrooklynLauncher brooklynLauncher;
+    protected CampServer campServer;
+
     @Override
     public BrooklynCampPlatformLauncher launch() {
         assert platform == null;
 
         mgmt = new LocalManagementContext();        
-        BrooklynLauncher.newInstance().managementContext(mgmt).start();
+        brooklynLauncher = BrooklynLauncher.newInstance().managementContext(mgmt).start();
         platform = new BrooklynCampPlatform(
                 PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(),
                 mgmt).setConfigKeyAtManagmentContext();
         
-        new CampServer(getCampPlatform(), "").start();
+        campServer = new CampServer(getCampPlatform(), "").start();
         
         return this;
     }
@@ -32,4 +35,9 @@ public class BrooklynCampPlatformLauncher extends BrooklynCampPlatformLauncherAb
         new BrooklynCampPlatformLauncher().launch();
     }
 
+    public void stopServers() throws Exception {
+        brooklynLauncher.getServerDetails().getWebServer().stop();
+        campServer.stop();
+    }
+    
 }

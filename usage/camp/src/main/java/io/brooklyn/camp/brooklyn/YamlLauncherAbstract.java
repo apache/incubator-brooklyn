@@ -9,6 +9,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.Entities;
@@ -39,6 +40,10 @@ public abstract class YamlLauncherAbstract {
         this.brooklynMgmt = platformLauncher.getBrooklynMgmt();
     }
 
+    public ManagementContext getManagementContext() {
+        return brooklynMgmt;
+    }
+
     public boolean getShutdownAppsOnExit() {
         return shutdownAppsOnExit;
     }
@@ -49,7 +54,7 @@ public abstract class YamlLauncherAbstract {
     
     protected abstract BrooklynCampPlatformLauncherAbstract newPlatformLauncher();
 
-    public void launchAppYaml(String url) {
+    public Application launchAppYaml(String url) {
         try {
             Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl(url));
             AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
@@ -66,9 +71,22 @@ public abstract class YamlLauncherAbstract {
 
             log.info("Application started from YAML file "+url+": "+app);
             Entities.dumpInfo(app);
+            return (Application)app;
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
     }
-    
+
+    /** kills all apps, web servers, and mgmt context
+     * <p>
+     * this launcher does not support being used again subsequently */
+    public void destroyAll() {
+        Entities.destroyAll(getManagementContext());
+        try {
+            platformLauncher.stopServers();
+        } catch (Exception e) {
+            log.warn("Unable to stop servers (ignoring): "+e);
+        }
+    }
+
 }

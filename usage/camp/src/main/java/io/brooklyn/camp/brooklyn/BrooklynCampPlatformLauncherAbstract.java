@@ -49,4 +49,7 @@ public abstract class BrooklynCampPlatformLauncherAbstract {
         return platform;
     }
 
+    /** stops any servers (camp and brooklyn) launched by this launcher */
+    public abstract void stopServers() throws Exception;
+
 }

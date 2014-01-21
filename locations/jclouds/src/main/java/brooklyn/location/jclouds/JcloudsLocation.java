@@ -93,6 +93,7 @@ import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.net.Protocol;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.IptablesCommands;
 import brooklyn.util.ssh.IptablesCommands.Chain;
 import brooklyn.util.ssh.IptablesCommands.Policy;
@@ -816,7 +817,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             String privateKeyFileName = ((CharSequence)v).toString();
                             String privateKey;
                             try {
-                                privateKey = Files.toString(new File(ResourceUtils.tidyFilePath(privateKeyFileName)), Charsets.UTF_8);
+                                privateKey = Files.toString(new File(Os.tidyPath(privateKeyFileName)), Charsets.UTF_8);
                             } catch (IOException e) {
                                 LOG.error(privateKeyFileName + "not found", e);
                                 throw Exceptions.propagate(e);

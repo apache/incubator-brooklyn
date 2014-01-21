@@ -333,7 +333,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     }
 
     protected <T, C extends SshAction<T>> T acquire(C action) {
-        Stopwatch stopwatch = new Stopwatch().start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         
         for (int i = 0; i < sshTries; i++) {
             try {

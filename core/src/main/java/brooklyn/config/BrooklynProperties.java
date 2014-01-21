@@ -24,6 +24,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.os.Os;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -52,8 +53,8 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
 
         public static class Builder {
             private String defaultLocationMetadataUrl = "classpath://brooklyn/location-metadata.properties";
-            private String globalLocationMetadataFile = ResourceUtils.mergeFilePaths("~", ".brooklyn", "location-metadata.properties");
-            private String globalPropertiesFile = ResourceUtils.mergeFilePaths("~", ".brooklyn", "brooklyn.properties");
+            private String globalLocationMetadataFile = Os.mergePaths("~", ".brooklyn", "location-metadata.properties");
+            private String globalPropertiesFile = Os.mergePaths("~", ".brooklyn", "brooklyn.properties");
             private String localPropertiesFile = null;
             
             /**
@@ -119,7 +120,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         }
         
         private static void addPropertiesFromFile(BrooklynProperties p, String file) {
-            String fileTidied = ResourceUtils.tidyFilePath(file);
+            String fileTidied = Os.tidyPath(file);
             File f = new File(fileTidied);
 
             if (f.exists()) {

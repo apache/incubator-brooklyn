@@ -21,6 +21,7 @@ public interface Attributes {
     BasicNotificationSensor<Void> LOCATION_CHANGED = new BasicNotificationSensor<Void>(
             Void.class, "entity.locationChanged", "Indicates that an entity's location has been changed");
 
+    // TODO these should switch to being TemplatedStringAttributeSensorAndConfigKey
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "download.url", "URL pattern for downloading the installer (will substitute things like ${version} automatically)");
 

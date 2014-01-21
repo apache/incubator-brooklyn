@@ -61,7 +61,53 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("provisioningProperties")
     public static final MapConfigKey<Object> PROVISIONING_PROPERTIES = new MapConfigKey<Object>(Object.class,
             "provisioning.properties", "Custom properties to be passed in when provisioning a new machine", MutableMap.<String,Object>of());
+
+    /** controls the behavior when starting (stop, restart) {@link Startable} children as part of the start (stop, restart) effector on this entity
+     * <p>
+     * (NB: restarts are currently not propagated to children in the default {@link SoftwareProcess}
+     * due to the various semantics which may be desired; this may change, but if entities have specific requirements for restart,
+     * developers should either subclass the {@link SoftwareProcessDriverLifecycleEffectorTasks} and/or lean on sensors from the parent */
+    public enum ChildStartableMode {
+        /** do nothing with {@link Startable} children */
+        NONE(true, false, false), 
+        /** start (stop) {@link Startable} children concurrent with *driver* start (stop), 
+         * in foreground, so invoking entity will wait for children to complete.
+         * <p>
+         * if the child requires the parent to reach a particular state before acting,
+         * when running in foreground the parent should communicate its state using sensors
+         * which the child listens for.
+         * note that often sensors at the parent are not activated until it is started,
+         * so the usual sensors connected at an entity may not be available when running in this mode */
+        FOREGROUND(false, false, false), 
+        /** as {@link #FOREGROUND} but {@link ChildStartableMode#isLate} */
+        FOREGROUND_LATE(false, false, true), 
+        /** start {@link Startable} children concurrent with *driver* start (stop, restart), 
+         * but in background, ie disassociated from the effector task at this entity
+         * (so that this entity can complete start/stop independent of children) */
+        BACKGROUND(false, true, false),
+        /** as {@link #BACKGROUND} but {@link ChildStartableMode#isLate} */
+        BACKGROUND_LATE(false, true, true);
+        
+        /** whether starting (stopping, restarting) children is disabled */
+        public final boolean isDisabled;
+        /** whether starting (stopping, restarting) children is backgrounded, so parent should not wait on them */
+        public final boolean isBackground;
+        /** whether starting (stopping, restarting) children should be nested, so start occurs after the driver is started,
+         * and stop before the driver is stopped (if false the children operations are concurrent with the parent),
+         * (with restart always being done in parallel though this behaviour may change) */
+        public final boolean isLate;
+        
+        private ChildStartableMode(boolean isDisabled, boolean isBackground, boolean isLate) {
+            this.isDisabled = isDisabled;
+            this.isBackground = isBackground;
+            this.isLate = isLate;
+        }
+
+    }
     
+    @SetFromFlag("childStartMode")
+    public static final ConfigKey<ChildStartableMode> CHILDREN_STARTABLE_MODE = ConfigKeys.newConfigKey(ChildStartableMode.class, "children.startable.mode");
+
     @SuppressWarnings("rawtypes")
     public static final AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = new BasicAttributeSensor<MachineProvisioningLocation>(
             MachineProvisioningLocation.class, "softwareservice.provisioningLocation", "Location used to provision a machine where this is running");

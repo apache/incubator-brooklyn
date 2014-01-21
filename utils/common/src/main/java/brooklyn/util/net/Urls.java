@@ -122,4 +122,24 @@ public class Urls {
         return URLEncoder.encode(text);
     }
 
+    /** returns the protocol (e.g. http) if one appears to be specified, or else null;
+     * 'protocol' here should consist of 2 or more _letters_ only followed by a colon
+     * (2 required to prevent  c``:\xxx being treated as a url)
+     */
+    public static String getProtocol(String url) {
+        if (url==null) return null;
+        int i=0;
+        StringBuilder result = new StringBuilder();
+        while (true) {
+            if (url.length()<=i) return null;
+            char c = url.charAt(i);
+            if (Character.isLetter(c)) result.append(c);
+            else if (c==':') {
+                if (i>=2) return result.toString();
+                return null;
+            } else return null;
+            i++;
+        }
+    }
+
 }

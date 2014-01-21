@@ -410,7 +410,6 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             
             // Choose the first available cluster member to set host and port (and compute one-up)
             Optional<Entity> upNode = Iterables.tryFind(getMembers(), EntityPredicates.attributeEqualTo(SERVICE_UP, Boolean.TRUE));
-            setAttribute(SERVICE_UP, upNode.isPresent());
 
             if (upNode.isPresent()) {
                 setAttribute(HOSTNAME, upNode.get().getAttribute(Attributes.HOSTNAME));
@@ -436,7 +435,17 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
                 setAttribute(THRIFT_PORT, null);
                 setAttribute(CASSANDRA_CLUSTER_NODES, Collections.<String>emptyList());
             }
+            
+            setAttribute(SERVICE_UP, upNode.isPresent() && calculateServiceUp());
         }
+    }
+    
+    @Override
+    protected boolean calculateServiceUp() {
+        if (!super.calculateServiceUp()) return false;
+        List<String> nodes = getAttribute(CASSANDRA_CLUSTER_NODES);
+        if (nodes==null || nodes.isEmpty()) return false;
+        return true;
     }
     
     /**
