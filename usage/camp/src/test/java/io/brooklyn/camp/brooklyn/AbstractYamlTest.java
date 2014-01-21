@@ -72,7 +72,6 @@ public abstract class AbstractYamlTest {
             throw e;
         }
         getLogger().info("Test - created " + assembly);
-        
         final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
         getLogger().info("App - " + app);
         return app;

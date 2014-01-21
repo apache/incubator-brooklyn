@@ -1,55 +1,24 @@
 package io.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.PlatformRootSummary;
-
-import java.io.Reader;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestPolicy;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.stream.Streams;
 
 import com.google.common.collect.ImmutableMap;
 
 @Test
-public class PoliciesYAMLTest {
-    private static final Logger log = LoggerFactory.getLogger(PoliciesYAMLTest.class);
+public class PoliciesYamlTest extends AbstractYamlTest {
+    static final Logger log = LoggerFactory.getLogger(PoliciesYamlTest.class);
 
-    private ManagementContext brooklynMgmt;
-    private BrooklynCampPlatform platform;
-
-    @BeforeMethod(alwaysRun = true)
-    public void setup() {
-        BrooklynCampPlatformLauncherNoServer launcher = new BrooklynCampPlatformLauncherNoServer();
-        launcher.launch();
-        brooklynMgmt = launcher.getBrooklynMgmt();
-
-        platform = new BrooklynCampPlatform(PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(), brooklynMgmt);
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void teardown(){
-        if (brooklynMgmt != null)
-            Entities.destroyAll(brooklynMgmt);
-    }
-    
     @Test
     public void testWithAppPolicy() throws Exception {
         Entity app = createAndStartApplication("test-app-with-policy.yaml");
@@ -93,29 +62,9 @@ public class PoliciesYAMLTest {
         Assert.assertEquals(policy.getConfig(TestPolicy.TEST_ATTRIBUTE_SENSOR), TestEntity.NAME);
     }
 
-    private void waitForApplicationTasks(Entity app) {
-        Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
-        log.info("Waiting on " + tasks.size() + " task(s)");
-        for (Task<?> t : tasks) {
-            t.blockUntilEnded();
-        }
-    }
-
-    private Entity createAndStartApplication(String yamlFileName) throws Exception {
-        Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl(yamlFileName));
-        AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
-        Assembly assembly;
-        try {
-            assembly = at.getInstantiator().newInstance().instantiate(at, platform);
-        } catch (Exception e) {
-            log.warn("Unable to instantiate " + at + " (rethrowing): " + e);
-            throw e;
-        }
-        log.info("Test - created " + assembly);
-
-        final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
-        log.info("App - " + app);
-        return app;
+    @Override
+    protected Logger getLogger() {
+        return log;
     }
     
 }

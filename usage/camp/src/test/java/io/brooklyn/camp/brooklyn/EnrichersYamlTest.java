@@ -14,10 +14,13 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.policy.Enricher;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestEnricher;
 import brooklyn.util.collections.MutableMap;
 
+import com.google.common.base.Predicates;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -61,7 +64,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
     
     @Test
     public void testWithEntityEnricher() throws Exception {
-        Entity app = createAndStartApplication("test-entity-with-enricher.yaml");
+        final Entity app = createAndStartApplication("test-entity-with-enricher.yaml");
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getDisplayName(), "test-entity-with-enricher");
 
@@ -70,9 +73,14 @@ public class EnrichersYamlTest extends AbstractYamlTest {
 
         Assert.assertEquals(app.getEnrichers().size(), 0);
         Assert.assertEquals(app.getChildren().size(), 1);
-        Entity child = app.getChildren().iterator().next();
-        Assert.assertEquals(child.getEnrichers().size(), 1);
-        final Enricher enricher = child.getEnrichers().iterator().next();
+        final Entity child = app.getChildren().iterator().next();
+        Asserts.eventually(new Supplier<Integer>() {
+            @Override
+            public Integer get() {
+                return child.getEnrichers().size();
+            }
+        }, Predicates.<Integer> equalTo(1));        
+        Enricher enricher = child.getEnrichers().iterator().next();
         Assert.assertNotNull(enricher);
         Assert.assertTrue(enricher instanceof TestEnricher, "enricher=" + enricher + "; type=" + enricher.getClass());
         Assert.assertEquals(enricher.getConfig(TestEnricher.CONF_NAME), "Name from YAML");
