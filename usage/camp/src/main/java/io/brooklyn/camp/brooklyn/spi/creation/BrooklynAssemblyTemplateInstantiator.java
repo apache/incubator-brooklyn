@@ -41,6 +41,8 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableList;
@@ -226,6 +228,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             appSpec.displayName(name);
         
         addPolicies(appSpec, template.getCustomAttributes().get("brooklyn.policies"));
+        addEnrichers(appSpec, template.getCustomAttributes().get("brooklyn.enrichers"));
         
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             final PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
@@ -250,6 +253,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                      
                     addEntityConfig(childSpec, (Map<?,?>)appChildAttrs.remove("brooklyn.config"));
                     addPolicies(childSpec, appChildAttrs.remove("brooklyn.policies"));
+                    addEnrichers(childSpec, appChildAttrs.remove("brooklyn.enrichers"));
 
                     Entity appChild = entity.addChild(childSpec);
 
@@ -271,13 +275,19 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         return app;
     }
     
-    
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     private <T extends Policy> PolicySpec<?> toCorePolicySpec(Class<T> clazz, Map<?, ?> config) {
         Map<?, ?> policyConfig = (config == null) ? Maps.<Object, Object>newLinkedHashMap() : Maps.newLinkedHashMap(config);
-        PolicySpec result;
+        PolicySpec<?> result;
         result = PolicySpec.create(clazz)
                 .configure(policyConfig);
+        return result;
+    }
+
+    private <T extends Enricher> EnricherSpec<?> toCoreEnricherSpec(Class<T> clazz, Map<?, ?> config) {
+        Map<?, ?> enricherConfig = (config == null) ? Maps.<Object, Object>newLinkedHashMap() : Maps.newLinkedHashMap(config);
+        EnricherSpec<?> result;
+        result = EnricherSpec.create(clazz)
+                .configure(enricherConfig);
         return result;
     }
     
@@ -305,6 +315,31 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         }
         if (policySpecs.size() > 0) {
             entitySpec.policySpecs(policySpecs);
+        }
+    }
+    
+    private void addEnrichers(EntitySpec<?> entitySpec, Object enrichers) {
+        List<EnricherSpec<?>> enricherSpecs = new ArrayList<EnricherSpec<? extends Enricher>>();
+        if (enrichers instanceof Iterable) {
+            for (Object enricher : (Iterable<Object>)enrichers) {
+                if (enricher instanceof Map) {
+                String enricherTypeName = ((Map<?, ?>) enricher).get("enricherType").toString();
+                Class<? extends Enricher> enricherType = null;
+                try {
+                    enricherType = ((Class<? extends Enricher>) Class.forName(enricherTypeName));
+                } catch (ClassNotFoundException e) {
+                    throw Exceptions.propagate(e);
+                }
+                enricherSpecs.add(toCoreEnricherSpec(enricherType, (Map<?, ?>) ((Map<?, ?>) enricher).get("brooklyn.config")));
+                } else {
+                    throw new IllegalArgumentException("enricher should be map, not " + enricher.getClass());
+                }
+            }
+        } else if (enrichers != null) {
+            throw new IllegalArgumentException("enrichers body should be iterable, not " + enrichers.getClass());
+        }
+        if (enricherSpecs.size() > 0) {
+            entitySpec.enricherSpecs(enricherSpecs);
         }
     }
 
