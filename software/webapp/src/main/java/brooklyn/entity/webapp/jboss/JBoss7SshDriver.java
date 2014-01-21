@@ -63,10 +63,12 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         return entity.getConfig(JBoss7Server.TEMPLATE_CONFIGURATION_URL);
     }
 
+    @Override
     protected String getLogFileLocation() {
         return String.format("%s/%s/log/server.log", getRunDir(), SERVER_TYPE);
     }
 
+    @Override
     protected String getDeploySubdir() {
         return String.format("%s/deployments", SERVER_TYPE);
     }
@@ -110,7 +112,8 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
         return expandedInstallDir;
     }
-    
+
+    @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
@@ -205,9 +208,9 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     public void launch() {
         Map flags = MutableMap.of("usePidFile", false);
 
-        // We wait for evidence of tomcat running because, using
+        // We wait for evidence of JBoss running because, using
         // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
-        // we saw the ssh session return before the tomcat process was fully running 
+        // we saw the ssh session return before the JBoss process was fully running
         // so the process failed to start.
         newScript(flags, LAUNCHING).
                 body.append(
