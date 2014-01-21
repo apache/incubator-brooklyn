@@ -56,7 +56,7 @@ public class Os {
      * note you can also set java system property {@value #BROOKLYN_OS_TMPDIR_PROPERTY} 
      * to force the use of a specific tmp space */
     public static class TmpDirFinder {
-        /** can be set as a jvm system property to force a particular tmp dir */
+        /** can be set as a jvm system property to force a particular tmp dir; directory must exist with the right permissions */
         public static String BROOKLYN_OS_TMPDIR_PROPERTY = "brooklyn.os.tmpdir";
         
         private String tmpdir = null;
@@ -97,27 +97,35 @@ public class Os {
 
             String customtmp = System.getProperty(BROOKLYN_OS_TMPDIR_PROPERTY);
             if (customtmp!=null) {
-                if (check(customtmp)) return true;
+                if (checkAndSet(customtmp)) return true;
                 log.warn("TmpDirFinder: Custom tmp directory '"+customtmp+"' in "+BROOKLYN_OS_TMPDIR_PROPERTY+" is not a valid tmp dir; ignoring");
             }
             
             String systmp = System.getProperty("java.io.tmpdir");
             boolean systmpWeird = (systmp.contains("/var/") || systmp.startsWith("/private"));
-            if (!systmpWeird) if (check(systmp)) return true;
+            if (!systmpWeird) if (checkAndSet(systmp)) return true;
 
-            if (check(File.separator+"tmp")) return true;
-            if (systmpWeird) if (check(systmp)) return true;
+            if (checkAndSet(File.separator+"tmp")) return true;
+            if (systmpWeird) if (checkAndSet(systmp)) return true;
             
             try {
                 String hometmp = mergePaths(home(), ".tmp");
                 File hometmpF = new File(hometmp);
                 hometmpF.mkdirs();
-                if (check(hometmp)) return true;
+                if (checkAndSet(hometmp)) return true;
             } catch (Exception e) {
                 log.debug("TmpDirFinder: Cannot create tmp dir in user's home dir: "+e);
             }
             
             return false;
+        }
+        
+        protected boolean checkAndSet(String candidate) {
+            if (!check(candidate)) return false;
+            // seems okay
+            tmpdir = candidate;
+            log.debug("TmpDirFinder: Selected tmp dir '"+candidate+"' as the best tmp working space");
+            return true;
         }
         
         protected boolean check(String candidate) {
@@ -140,10 +148,6 @@ public class Os {
                     log.debug("TmpDirFinder: Candidate tmp dir '"+candidate+"' cannot have files deleted inside it ("+f2+")");
                     return false;
                 }
-                
-                // seems okay
-                tmpdir = candidate;
-                log.debug("TmpDirFinder: Selected tmp dir '"+candidate+"' as the best tmp working space");
                 
                 return true;
             } catch (Exception e) {

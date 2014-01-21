@@ -24,13 +24,16 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
  * <p>
  * TODO:
  * by default the PID is used to stop the process (kill followed by kill -9 if needed) and restart (process stop followed by process start),
- * but you can instead supply a custom CHECK_RUNNING_COMMAND and a custom STOP_COMMAND, or specify a PID_FILE to use, all through config keys.
+ * but we could instead supply (through config keys)
+ * <li> a custom CHECK_RUNNING_COMMAND 
+ * <li> a custom STOP_COMMAND
+ * <li> or specify a PID_FILE to use (done)
  */
 @ImplementedBy(VanillaSoftwareProcessImpl.class)
 public interface VanillaSoftwareProcess extends SoftwareProcess {
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = SoftwareProcess.DOWNLOAD_URL;
     ConfigKey<String> LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("launch.command", "command to run to launch the process", "./start.sh");
-    // TODO CHECK_RUNNING_COMMAND STOP_COMMAND PID_FILE
+    // TODO CHECK_RUNNING_COMMAND STOP_COMMAND PID_FILE(templated config key and attribute?)
     
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "0.0.0");
 }

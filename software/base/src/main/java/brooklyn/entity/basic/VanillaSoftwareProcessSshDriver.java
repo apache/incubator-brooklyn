@@ -98,7 +98,8 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
         }
         
         public String getPidFile() {
-//            if (getEntity().getConfigRaw(PID_FILE, includeInherited))
+            // TODO see note in VanillaSoftwareProcess about PID_FILE as a config key
+//            if (getEntity().getConfigRaw(PID_FILE, includeInherited)) ...
             return Os.mergePathsUnix(getRunDir(), PID_FILENAME);
         }
 

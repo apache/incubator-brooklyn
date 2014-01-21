@@ -166,6 +166,7 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
                 children.asTask().get();
             } catch (Exception e) {
                 childException = e;
+                log.debug("Error stopping children; continuing and will rethrow if no other errors", e);
             }            
         }
         
