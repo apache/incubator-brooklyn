@@ -51,11 +51,11 @@ public class EntityTestUtils {
         });
     }
 
-    public static <T extends Entity> void assertPredicateEventuallyTrue(final T entity, final Predicate<T> predicate) {
+    public static <T extends Entity> void assertPredicateEventuallyTrue(final T entity, final Predicate<? super T> predicate) {
         assertPredicateEventuallyTrue(Maps.newLinkedHashMap(), entity, predicate);
     }
 
-    public static <T extends Entity> void assertPredicateEventuallyTrue(Map<?,?> flags, final T entity, final Predicate<T> predicate) {
+    public static <T extends Entity> void assertPredicateEventuallyTrue(Map<?,?> flags, final T entity, final Predicate<? super T> predicate) {
         TestUtils.executeUntilSucceeds(flags, new Runnable() {
                 public void run() {
                     assertTrue(predicate.apply(entity));

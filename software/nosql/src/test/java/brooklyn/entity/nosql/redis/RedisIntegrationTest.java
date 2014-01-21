@@ -84,7 +84,14 @@ public class RedisIntegrationTest {
 
         EntityTestUtils.assertPredicateEventuallyTrue(redis, new Predicate<RedisStore>() {
             @Override public boolean apply(@Nullable RedisStore input) {
-                return input != null && input.getAttribute(RedisStore.UPTIME) > 0;
+                return input != null &&
+                        input.getAttribute(RedisStore.UPTIME) > 0 &&
+                        input.getAttribute(RedisStore.TOTAL_COMMANDS_PROCESSED) >= 0 &&
+                        input.getAttribute(RedisStore.TOTAL_CONNECTIONS_RECEIVED) >= 0 &&
+                        input.getAttribute(RedisStore.EXPIRED_KEYS) >= 0 &&
+                        input.getAttribute(RedisStore.EVICTED_KEYS) >= 0 &&
+                        input.getAttribute(RedisStore.KEYSPACE_HITS) >= 0 &&
+                        input.getAttribute(RedisStore.KEYSPACE_MISSES) >= 0;
             }
         });
     }
