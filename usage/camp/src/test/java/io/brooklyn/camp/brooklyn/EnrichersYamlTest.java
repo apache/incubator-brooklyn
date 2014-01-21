@@ -78,18 +78,8 @@ public class EnrichersYamlTest extends AbstractYamlTest {
         Assert.assertEquals(enricher.getConfig(TestEnricher.CONF_NAME), "Name from YAML");
         Assert.assertEquals(enricher.getConfig(TestEnricher.CONF_FROM_FUNCTION), "$brooklyn: is a fun place");
         
-        Entity target = ((EntityInternal)app).getExecutionContext().submit(MutableMap.of(), new Callable<Entity>() {
-            @Override
-            public Entity call() throws Exception {
-                return enricher.getConfig(TestEnricher.TARGET_ENTITY);
-            }}).get();
-        Assert.assertNotNull(target);
-        Assert.assertEquals(target.getDisplayName(), "test-app-with-enricher");
-        Assert.assertEquals(target, app);
-        
         Assert.assertEquals(((TestEnricher) enricher).getLeftoverProperties(),
                 ImmutableMap.of("enricherLiteralValue1", "Hello", "enricherLiteralValue2", "World"));
-        Assert.assertEquals(enricher.getConfig(TestEnricher.TEST_ATTRIBUTE_SENSOR), TestEntity.NAME);
     }
     
     @Test(groups={"WIP"})
