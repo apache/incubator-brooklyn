@@ -101,7 +101,6 @@ public class EnrichersYamlTest extends AbstractYamlTest {
         TestEntity entity = (TestEntity)app.getChildren().iterator().next();
         entity.setAttribute(TestEntity.NAME, "New Name");
         Asserts.eventually(Entities.attributeSupplier(app, TestEntity.NAME), Predicates.<String>equalTo("New Name"));
-        Assert.assertEquals(app.getConfig(TestEntity.CONF_NAME), "Name from YAML");
     }
     
     @Override
