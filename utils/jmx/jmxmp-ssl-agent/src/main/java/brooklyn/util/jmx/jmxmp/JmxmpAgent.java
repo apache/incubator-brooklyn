@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.rmi.registry.LocateRegistry;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.LinkedHashMap;
@@ -14,6 +15,7 @@ import javax.management.MBeanServer;
 import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
+import javax.management.remote.rmi.RMIConnectorServer;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -36,6 +38,9 @@ import javax.net.ssl.X509TrustManager;
  * <p>
  * Service comes up on:  service:jmx:jmxmp://${HOSTNAME}:${PORT}
  * <p>
+ * If {@link #RMI_REGISTRY_PORT_PROPERTY} is also set, this agent will start a normal JMX/RMI server bound to
+ * all interfaces, which is contactable on:  service:jmx:rmi:///jndi/rmi://${HOSTNAME}:${RMI_REGISTRY_PORT}/jmxrmi 
+ * <p>
  * NB: To use JConsole with this endpoing, you need the jmxremote_optional JAR, and the
  * following command (even more complicated if using SSL):
  * java -classpath $JAVA_HOME/lib/jconsole.jar:$HOME/.m2/repository/javax/management/jmxremote_optional/1.0.1_04/jmxremote_optional-1.0.1_04.jar sun.tools.jconsole.JConsole
@@ -48,6 +53,11 @@ public class JmxmpAgent {
     public static final String RMI_HOSTNAME_PROPERTY = "java.rmi.server.hostname";
     /** whether JMX should bind to all interfaces */
     public static final String JMX_SERVER_ADDRESS_WILDCARD_PROPERTY = "jmx.remote.server.address.wildcard";
+
+    /** optional port for RMI registry to listen on; if not supplied, RMI is disabled. 1099 is a common choice. 
+     * it will *always* use an anonymous high-numbered port as the rmi server it redirects to
+     * (ie it behaves like the default JMX agent, not the custom JmxRmiAgent). */
+    public static final String RMI_REGISTRY_PORT_PROPERTY = "brooklyn.jmxmp.rmi-port";
 
     /** whether to use SSL (TLS) encryption; requires a keystore to be set */
     public static final String USE_SSL_PROPERTY = "com.sun.management.jmxremote.ssl";
@@ -79,7 +89,12 @@ public class JmxmpAgent {
     public static final int JMXMP_DEFAULT_PORT = 11099;
     
     public static void premain(String agentArgs) {
-        new JmxmpAgent().startJmxmpConnector(System.getProperties());
+        new JmxmpAgent().startConnectors(System.getProperties());
+    }
+    
+    public void startConnectors(Properties properties) { 
+        startJmxmpConnector(properties);
+        startNormalJmxRmiConnectorIfRequested(properties);
     }
     
     public JMXConnectorServer startJmxmpConnector(Properties properties) {
@@ -116,6 +131,28 @@ public class JmxmpAgent {
         }
     }
 
+    /** optionally starts a normal JMXRMI connector in addition */
+    public JMXConnectorServer startNormalJmxRmiConnectorIfRequested(Properties properties) {
+        try {
+            String rmiPortS = properties.getProperty(RMI_REGISTRY_PORT_PROPERTY);
+            if (rmiPortS==null || rmiPortS.length()==0)
+                return null;
+
+            int rmiPort = Integer.parseInt(rmiPortS);
+            LocateRegistry.createRegistry(rmiPort);
+            MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+            String svc =
+                "service:jmx:rmi:///jndi/rmi://localhost:"+rmiPort+"/jmxrmi";
+
+            JMXServiceURL url = new JMXServiceURL(svc);
+            RMIConnectorServer rmiServer = new RMIConnectorServer(url, null, mbeanServer);
+            rmiServer.start();
+            return rmiServer;
+        } catch (Exception e) {
+            System.err.println("Unable to start JmxmpAgent: "+e);
+            throw new RuntimeException(e);
+        }
+    }
 
     public static String getLocalhostHostname(Properties properties) throws UnknownHostException {
         String hostname = properties==null ? null : properties.getProperty(RMI_HOSTNAME_PROPERTY);

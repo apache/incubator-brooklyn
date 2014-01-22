@@ -172,7 +172,7 @@ public class JmxSupport implements UsesJmx {
             host = machine.getAddress().getHostName();
         }
         
-        if (getJmxAgentMode()==JmxAgentModes.JMXMP) {
+        if (getJmxAgentMode()==JmxAgentModes.JMXMP || getJmxAgentMode()==JmxAgentModes.JMXMP_AND_RMI) {
             // only JMXMP is valid for going through firewalls (it is the default)
             HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(JMX_PORT));
             return JmxHelper.toJmxmpUrl(hp.getHostText(), hp.getPort());
@@ -228,6 +228,7 @@ public class JmxSupport implements UsesJmx {
     @Nullable public MavenArtifact getJmxAgentJarMavenArtifact() {
         switch (getJmxAgentMode()) {
         case JMXMP: 
+        case JMXMP_AND_RMI: 
             MavenArtifact result = BrooklynMavenArtifacts.artifact(null, "brooklyn-jmxmp-agent", "jar", "with-dependencies");
             // the "with-dependencies" variant is needed; however the filename then has the classifier segment _replaced_ by "shaded" when this filename is created
             result.setCustomFileNameAfterArtifactMarker("shaded");
@@ -282,6 +283,8 @@ public class JmxSupport implements UsesJmx {
         result.put("com.sun.management.jmxremote", null);
 
         switch (getJmxAgentMode()) {
+        case JMXMP_AND_RMI:
+            result.put(JmxmpAgent.RMI_REGISTRY_PORT_PROPERTY, Preconditions.checkNotNull(entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT), "registry port"));
         case JMXMP:
             jmxRemotePort = getEntity().getAttribute(JMX_PORT);
             if (jmxRemotePort==null || jmxRemotePort<=0)
