@@ -7,12 +7,15 @@ import java.util.List;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 /**
  * Start a {@link RedisStore} in a {@link Location} accessible over ssh.
@@ -37,9 +40,23 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("redis-%s", getVersion()));
 
+        MutableMap<String, String> installGccPackageFlags = MutableMap.of(
+                "onlyifmissing", "gcc",
+                "yum", "gcc",
+                "apt", "gcc",
+                "port", null);
+        MutableMap<String, String> installMakePackageFlags = MutableMap.of(
+                "onlyifmissing", "make",
+                "yum", "make",
+                "apt", "make",
+                "port", null);
+
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.INSTALL_TAR)
+                .add(BashCommands.INSTALL_CURL)
+                .add(BashCommands.installPackage(installGccPackageFlags, "redis-prerequisites-gcc"))
+                .add(BashCommands.installPackage(installMakePackageFlags, "redis-prerequisites-make"))
                 .add("tar xzfv " + saveAs)
                 .add(format("cd redis-%s", getVersion()))
                 .add("make clean && make")

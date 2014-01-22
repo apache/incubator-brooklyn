@@ -22,11 +22,11 @@ public interface RedisStore extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
-            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.6.7");
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.8.4");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
-            SoftwareProcess.DOWNLOAD_URL, "http://redis.googlecode.com/files/redis-${version}.tar.gz");
+            SoftwareProcess.DOWNLOAD_URL, "http://download.redis.io/releases/redis-${version}.tar.gz");
 
     @SetFromFlag("redisPort")
     PortAttributeSensorAndConfigKey REDIS_PORT = new PortAttributeSensorAndConfigKey("redis.port", "Redis port number", "6379+");

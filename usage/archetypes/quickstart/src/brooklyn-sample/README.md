@@ -9,11 +9,11 @@ To build an assembly, simply run:
     mvn clean assembly:assembly
 
 This creates a tarball with a full standalone application which can be installed in any *nix machine at:
-    target/brooklyn-datastax-healthcare-0.1.0-SNAPSHOT-dist.tar.gz
+    target/brooklyn-sample-0.1.0-SNAPSHOT-dist.tar.gz
 
 It also installs an unpacked version which you can run locally:
  
-     cd target/brooklyn-datastax-healthcare-0.1.0-SNAPSHOT-dist/brooklyn-datastax-healthcare-0.1.0-SNAPSHOT
+     cd target/brooklyn-sample-0.1.0-SNAPSHOT-dist/brooklyn-sample-0.1.0-SNAPSHOT
      ./start.sh server
  
 For more information see the README (or `./start.sh help`) in that directory.
