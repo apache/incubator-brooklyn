@@ -1,0 +1,10 @@
+#ftl
+name: test-entity-basic-template
+description: TestEntity with templated brooklyn.config and additional config (such as services)
+origin: http://brooklyn.io
+services:
+- serviceType: brooklyn.test.entity.TestEntity
+  name: testentity
+  brooklyn.config:
+    ${brooklynConfig}
+${additionalConfig?if_exists}

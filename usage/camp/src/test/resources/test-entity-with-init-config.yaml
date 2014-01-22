@@ -1,0 +1,13 @@
+name: test-entity-with-init-config
+description: Creates a TestEntityWithInitConfig entity that references a 2nd test entity during its init()
+origin: http://brooklyn.io
+services:
+- serviceType: brooklyn.test.entity.TestEntity
+  id: te1
+  name: testentity
+  brooklyn.config:
+    test.name: Name of the test entity
+- serviceType: io.brooklyn.camp.brooklyn.TestEntityWithInitConfig 
+  name: testentity with init config
+  brooklyn.config:
+    test.entity: $brooklyn:component("te1") # This entity will be accessed in TestEntityWithInitConfig.init()
