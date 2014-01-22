@@ -227,8 +227,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         if (!Strings.isBlank(name))
             appSpec.displayName(name);
         
-        addPolicies(appSpec, template.getCustomAttributes().get("brooklyn.policies"));
-        addEnrichers(appSpec, template.getCustomAttributes().get("brooklyn.enrichers"));
+        List<PolicySpec<?>> appPolicies = getPolicies(appSpec, template.getCustomAttributes().get("brooklyn.policies"));
+        List<EnricherSpec<?>> appEnrichers = getEnrichers(appSpec, template.getCustomAttributes().get("brooklyn.enrichers"));
+        final Map<Entity, List<PolicySpec<?>>> childPolicies = Maps.newHashMap();
+        final Map<Entity, List<EnricherSpec<?>>> childEnrichers = Maps.newHashMap();
         
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             final PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
@@ -252,8 +254,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                         childSpec.configure(BrooklynCampConstants.PLAN_ID, planId);
                      
                     addEntityConfig(childSpec, (Map<?,?>)appChildAttrs.remove("brooklyn.config"));
-                    addPolicies(childSpec, appChildAttrs.remove("brooklyn.policies"));
-                    addEnrichers(childSpec, appChildAttrs.remove("brooklyn.enrichers"));
+                    childPolicies.put(entity, getPolicies(childSpec, appChildAttrs.remove("brooklyn.policies")));
+                    childEnrichers.put(entity, getEnrichers(childSpec, appChildAttrs.remove("brooklyn.enrichers")));
 
                     Entity appChild = entity.addChild(childSpec);
 
@@ -265,13 +267,49 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         }
         
         log.info("REST placing '{}' under management", appSpec);
-        StartableApplication app = mgmt.getEntityManager().createEntity(appSpec);
+        final StartableApplication app = mgmt.getEntityManager().createEntity(appSpec);
         Entities.startManagement(app, mgmt);
-        
         List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(template.getCustomAttributes(), false);
         if (locations!=null)
             ((EntityInternal)app).addLocations(locations);
-
+        
+        // Add policies and enrichers now the entities have been created and manage
+        for (final PolicySpec<?> policySpec : appPolicies) {
+            ((EntityInternal) app).getExecutionContext().submit(MutableMap.of(), new Runnable() {
+                @Override
+                public void run() {
+                    app.addPolicy(policySpec);
+                }
+            });
+        }
+        for (final EnricherSpec<?> enricherSpec : appEnrichers) {
+            ((EntityInternal) app).getExecutionContext().submit(MutableMap.of(), new Runnable() {
+                @Override
+                public void run() {
+                    app.addEnricher(enricherSpec);
+                }
+            });
+        }
+        for (final Entity entity : childPolicies.keySet()) {
+            for (final PolicySpec<?> policySpec : childPolicies.get(entity)) {
+                ((EntityInternal) app).getExecutionContext().submit(MutableMap.of(), new Runnable() {
+                    @Override
+                    public void run() {
+                        entity.addPolicy(policySpec);
+                    }
+                });
+            }
+        }
+        for (final Entity entity : childEnrichers.keySet()) {
+            for (final EnricherSpec<?> enricherSpec : childEnrichers.get(entity)) {
+                ((EntityInternal) app).getExecutionContext().submit(MutableMap.of(), new Runnable() {
+                    @Override
+                    public void run() {
+                        entity.addEnricher(enricherSpec);
+                    }
+                });
+            }
+        }
         return app;
     }
     
@@ -291,7 +329,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         return result;
     }
     
-    private void addPolicies(EntitySpec<?> entitySpec, Object policies) {
+    private List<PolicySpec<?>> getPolicies(EntitySpec<?> entitySpec, Object policies) {
         List<PolicySpec<?>> policySpecs = new ArrayList<PolicySpec<? extends Policy>>(); 
         if (policies instanceof Iterable) {
             for (Object policy : (Iterable<Object>)policies) {
@@ -313,12 +351,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             // TODO "map" short form
             throw new IllegalArgumentException("policies body should be iterable, not " + policies.getClass());
         }
-        if (policySpecs.size() > 0) {
-            entitySpec.policySpecs(policySpecs);
-        }
+        return policySpecs;
     }
     
-    private void addEnrichers(EntitySpec<?> entitySpec, Object enrichers) {
+    private List<EnricherSpec<?>> getEnrichers(EntitySpec<?> entitySpec, Object enrichers) {
         List<EnricherSpec<?>> enricherSpecs = new ArrayList<EnricherSpec<? extends Enricher>>();
         if (enrichers instanceof Iterable) {
             for (Object enricher : (Iterable<Object>)enrichers) {
@@ -338,9 +374,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         } else if (enrichers != null) {
             throw new IllegalArgumentException("enrichers body should be iterable, not " + enrichers.getClass());
         }
-        if (enricherSpecs.size() > 0) {
-            entitySpec.enricherSpecs(enricherSpecs);
-        }
+        return enricherSpecs;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
