@@ -90,7 +90,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
                 ImmutableMap.of("enricherLiteralValue1", "Hello", "enricherLiteralValue2", "World"));
     }
     
-    @Test(groups={"WIP"})
+    @Test
     public void testPropagatingEnricher() throws Exception {
         Entity app = createAndStartApplication("test-propagating-enricher.yaml");
         waitForApplicationTasks(app);
