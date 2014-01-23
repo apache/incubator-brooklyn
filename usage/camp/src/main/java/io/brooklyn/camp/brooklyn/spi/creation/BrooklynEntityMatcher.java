@@ -151,6 +151,17 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         if (!brooklynEnrichers.isEmpty())
             builder.customAttribute("brooklyn.enrichers", brooklynEnrichers);
         
+        List<Object> brooklynChildren = Lists.newArrayList();
+        Object origBrooklynChildren = attrs.remove("brooklyn.children");
+        if (origBrooklynChildren != null) {
+            if (!(origBrooklynChildren instanceof List))
+                throw new IllegalArgumentException("brooklyn.children must be a list of brooklyn entity definitions");
+            brooklynChildren.addAll((List<?>)origBrooklynChildren);
+        }
+        
+        if (!brooklynChildren.isEmpty())
+            builder.customAttribute("brooklyn.children",  brooklynChildren);
+        
         if (!attrs.isEmpty()) {
             log.warn("Ignoring PDP attributes on "+deploymentPlanItem+": "+attrs);
         }

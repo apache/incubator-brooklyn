@@ -155,6 +155,50 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertNotNull(object);
         Assert.assertEquals(object, firstEntity, "Expected second entity's test.confObject to contain first entity");
     }
+    
+    @Test
+    public void testGrandchildEntities() throws Exception {
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig",
+                new StringBuilder()
+                    .append("test.confName: first entity\n")
+                    .toString(),
+                "additionalConfig", 
+                new StringBuilder()
+                    .append("  brooklyn.children:\n")
+                    .append("  - serviceType: brooklyn.test.entity.TestEntity\n")
+                    .append("    name: Child Entity\n")
+                    .append("    brooklyn.config:\n")
+                    .append("      test.confName: Name of the first Child\n")
+                    .append("    brooklyn.children:\n")
+                    .append("    - serviceType: brooklyn.test.entity.TestEntity\n")
+                    .append("      name: Grandchild Entity\n")
+                    .append("      brooklyn.config:\n")
+                    .append("        test.confName: Name of the Grandchild\n")
+                    .append("  - serviceType: brooklyn.test.entity.TestEntity\n")
+                    .append("    name: Second Child\n")
+                    .append("    brooklyn.config:\n")
+                    .append("      test.confName: Name of the second Child")
+                    .toString()));
+        waitForApplicationTasks(app);
+        Assert.assertEquals(app.getChildren().size(), 1);
+        Entity firstEntity = app.getChildren().iterator().next();
+        Assert.assertEquals(firstEntity.getConfig(TestEntity.CONF_NAME), "first entity");
+        Assert.assertEquals(firstEntity.getChildren().size(), 2);
+        Entity firstChild = null;
+        Entity secondChild = null;
+        for (Entity entity : firstEntity.getChildren()) {
+            if (entity.getConfig(TestEntity.CONF_NAME).equals("Name of the first Child"))
+                firstChild = entity;
+            if (entity.getConfig(TestEntity.CONF_NAME).equals("Name of the second Child"))
+                secondChild = entity;
+        }
+        Assert.assertNotNull(firstChild, "Expected a child of 'first entity' with the name 'Name of the first Child'");
+        Assert.assertNotNull(secondChild, "Expected a child of 'first entity' with the name 'Name of the second Child'");
+        Assert.assertEquals(firstChild.getChildren().size(), 1);
+        Entity grandchild = firstChild.getChildren().iterator().next();
+        Assert.assertEquals(grandchild.getConfig(TestEntity.CONF_NAME), "Name of the Grandchild");
+        Assert.assertEquals(secondChild.getChildren().size(), 0);
+    }
 
     @Test(groups="WIP")
     public void testWithInitConfig() throws Exception {
