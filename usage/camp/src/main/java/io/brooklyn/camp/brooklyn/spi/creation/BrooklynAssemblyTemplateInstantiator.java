@@ -254,10 +254,11 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                         childSpec.configure(BrooklynCampConstants.PLAN_ID, planId);
                      
                     addEntityConfig(childSpec, (Map<?,?>)appChildAttrs.remove("brooklyn.config"));
-                    childPolicies.put(entity, getPolicies(childSpec, appChildAttrs.remove("brooklyn.policies")));
-                    childEnrichers.put(entity, getEnrichers(childSpec, appChildAttrs.remove("brooklyn.enrichers")));
 
                     Entity appChild = entity.addChild(childSpec);
+                    
+                    childPolicies.put(appChild, getPolicies(childSpec, appChildAttrs.remove("brooklyn.policies")));
+                    childEnrichers.put(appChild, getEnrichers(childSpec, appChildAttrs.remove("brooklyn.enrichers")));
 
                     List<Location> appChildLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(appChildAttrs, true);
                     if (appChildLocations!=null)
@@ -292,7 +293,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         }
         for (final Entity entity : childPolicies.keySet()) {
             for (final PolicySpec<?> policySpec : childPolicies.get(entity)) {
-                ((EntityInternal) app).getExecutionContext().submit(MutableMap.of(), new Runnable() {
+                ((EntityInternal) entity).getExecutionContext().submit(MutableMap.of(), new Runnable() {
                     @Override
                     public void run() {
                         entity.addPolicy(policySpec);
@@ -302,7 +303,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         }
         for (final Entity entity : childEnrichers.keySet()) {
             for (final EnricherSpec<?> enricherSpec : childEnrichers.get(entity)) {
-                ((EntityInternal) app).getExecutionContext().submit(MutableMap.of(), new Runnable() {
+                ((EntityInternal) entity).getExecutionContext().submit(MutableMap.of(), new Runnable() {
                     @Override
                     public void run() {
                         entity.addEnricher(enricherSpec);
