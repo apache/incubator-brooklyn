@@ -71,7 +71,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     /**
      * Sets all JVM options (-X.. -D..) in an environment var JAVA_OPTS.
      * <p>
-     * That variable is constructed from getJavaOpts(), then wrapped _unescaped_ in double quotes. An
+     * That variable is constructed from {@link #getJavaOpts()}, then wrapped _unescaped_ in double quotes. An
      * error is thrown if there is an unescaped double quote in the string. All other unescaped
      * characters are permitted, but unless $var expansion or `command` execution is desired (although
      * this is not confirmed as supported) the generally caller should escape any such characters, for
@@ -153,7 +153,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                     }
                 }
             }
-            if (customOpt.indexOf("=") != -1) {
+            if (customOpt.contains("=")) {
                 String customOptPrefix = customOpt.substring(0, customOpt.indexOf("="));
 
                 for (Iterator<String> iter = result.iterator(); iter.hasNext();) {
