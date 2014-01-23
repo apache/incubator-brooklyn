@@ -50,6 +50,7 @@ public interface Pool<T> extends Closeable {
     Lease<T> leaseObject();
     
     <R> R exec(Function<? super T,R> receiver);
-    
+
+    @Override
     void close() throws IOException;
 }

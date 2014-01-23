@@ -59,6 +59,7 @@ import com.google.common.io.Closeables;
  */
 public abstract class AbstractLocation implements LocationInternal, HasHostGeoInfo, Configurable {
     
+    /** @deprecated since 0.7.0 shouldn't be public */
     public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class);
 
     public static final ConfigKey<Location> PARENT_LOCATION = new BasicConfigKey<Location>(Location.class, "parentLocation");

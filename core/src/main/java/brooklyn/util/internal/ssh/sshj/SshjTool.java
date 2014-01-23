@@ -422,7 +422,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         public String toString() {
             return "Payload(path=[" + path + "])";
         }
-    };
+    }
 
     private class PutFileAction implements SshAction<Void> {
         // TODO support backup as a property?
@@ -496,7 +496,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         public String toString() {
             return "Put(path=[" + path + " "+length+"])";
         }
-    };
+    }
 
     // TODO simpler not to use predicates
     @VisibleForTesting
@@ -507,8 +507,8 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 return any(getCausalChain(from), new Predicate<Throwable>() {
                     @Override
                     public boolean apply(Throwable throwable) {
-                        return (throwable.toString().indexOf(input) != -1)
-                                || (throwable.getMessage() != null && throwable.getMessage().indexOf(input) != -1);
+                        return (throwable.toString().contains(input))
+                                || (throwable.getMessage() != null && throwable.getMessage().contains(input));
                     }
                 });
             }

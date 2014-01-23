@@ -31,6 +31,7 @@ import com.google.common.io.Files;
  * Test the {@link SshMachineLocation} implementation of the {@link brooklyn.location.Location} interface.
  */
 public class SshMachineLocationTest {
+
     private SshMachineLocation host;
     
     @BeforeMethod(alwaysRun=true)

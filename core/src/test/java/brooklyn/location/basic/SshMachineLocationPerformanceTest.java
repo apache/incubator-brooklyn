@@ -104,8 +104,8 @@ public class SshMachineLocationPerformanceTest {
         MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
         ObjectName osMBeanName = ObjectName.getInstance(ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME);
         long preCpuTime = (Long) mbeanServer.getAttribute(osMBeanName, "ProcessCpuTime");
-        Stopwatch stopwatch = new Stopwatch().start();
-        
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
         for (int i = 0; i < iterations; i++) {
             List<ListenableFuture<?>> futures = Lists.newArrayList();
             for (int j = 0; j < concurrentRuns; j++) {
