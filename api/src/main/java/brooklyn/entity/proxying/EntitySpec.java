@@ -107,6 +107,7 @@ public class EntitySpec<T extends Entity> implements Serializable {
     }
 
     private final Class<T> type;
+    private String id;
     private String displayName;
     private Class<? extends T> impl;
     private Entity parent;
@@ -129,6 +130,13 @@ public class EntitySpec<T extends Entity> implements Serializable {
      */
     public Class<T> getType() {
         return type;
+    }
+    
+    /**
+     * @return The id to use when creating the entity, or null if allow brooklyn to generate a unique id.
+     */
+    public String getId() {
+        return id;
     }
     
     /**
@@ -199,7 +207,13 @@ public class EntitySpec<T extends Entity> implements Serializable {
     public List<Enricher> getEnrichers() {
         return enrichers;
     }
-    
+
+    public EntitySpec<T> id(String val) {
+        checkMutable();
+        id = val;
+        return this;
+    }
+
     public EntitySpec<T> displayName(String val) {
         checkMutable();
         displayName = val;

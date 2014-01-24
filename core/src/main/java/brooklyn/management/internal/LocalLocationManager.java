@@ -89,6 +89,10 @@ public class LocalLocationManager implements LocationManager {
         return preRegisteredLocationsById.containsKey(loc.getId());
     }
     
+    public boolean isKnownLocationId(String id) {
+        return preRegisteredLocationsById.containsKey(id) || locationsById.containsKey(id);
+    }
+    
     synchronized void prePreManage(Location loc) {
         if (isPreRegistered(loc)) {
             log.warn(""+this+" redundant call to pre-pre-manage location "+loc+"; skipping", 

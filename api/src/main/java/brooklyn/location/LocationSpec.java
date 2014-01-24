@@ -59,6 +59,7 @@ public class LocationSpec<T extends Location> implements Serializable {
     }
     
     private final Class<T> type;
+    private String id;
     private String displayName;
     private Location parent;
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
@@ -70,7 +71,12 @@ public class LocationSpec<T extends Location> implements Serializable {
         checkIsNewStyleImplementation(type);
         this.type = type;
     }
-    
+
+    public LocationSpec<T> id(String val) {
+        id = val;
+        return this;
+    }
+
     public LocationSpec<T> displayName(String val) {
         displayName = val;
         return this;
@@ -136,6 +142,13 @@ public class LocationSpec<T extends Location> implements Serializable {
      */
     public Class<T> getType() {
         return type;
+    }
+    
+    /**
+     * @return The id of the location to be created, or null if brooklyn can auto-generate an id
+     */
+    public String getId() {
+        return id;
     }
     
     /**

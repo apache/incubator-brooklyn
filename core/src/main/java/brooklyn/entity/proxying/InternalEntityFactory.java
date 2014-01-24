@@ -15,6 +15,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalEntityManager;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
@@ -24,9 +25,11 @@ import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Creates entities (and proxies) of required types, given the 
@@ -128,6 +131,12 @@ public class InternalEntityFactory {
         if (spec.getFlags().containsKey("parent") || spec.getFlags().containsKey("owner")) {
             throw new IllegalArgumentException("Spec's flags must not contain parent or owner; use spec.parent() instead for "+spec);
         }
+        if (spec.getFlags().containsKey("id")) {
+            throw new IllegalArgumentException("Spec's flags must not contain id; use spec.id() instead for "+spec);
+        }
+        if (spec.getId() != null && ((LocalEntityManager)managementContext.getEntityManager()).isKnownEntityId(spec.getId())) {
+            throw new IllegalArgumentException("Entity with id "+spec.getId()+" already exists; cannot create new entity with this explicit id from spec "+spec);
+        }
         
         try {
             Class<? extends T> clazz = getImplementedBy(spec);
@@ -140,6 +149,11 @@ public class InternalEntityFactory {
                 FactoryConstructionTracker.reset();
             }
             
+            if (spec.getId() != null) {
+                FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", spec.getId()), entity);
+            }
+            managementContext.prePreManage(entity);
+
             if (spec.getDisplayName()!=null)
                 ((AbstractEntity)entity).setDisplayName(spec.getDisplayName());
             

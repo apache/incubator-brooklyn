@@ -96,7 +96,6 @@ public class LocalEntityManager implements EntityManager {
         try {
             T entity = entityFactory.createEntity(spec);
             Entity proxy = ((AbstractEntity)entity).getProxy();
-            managementContext.prePreManage(entity);
             return (T) checkNotNull(proxy, "proxy for entity %s, spec %s", entity, spec);
         } catch (Throwable e) {
             log.warn("Failed to create entity using spec "+spec+" (rethrowing)", e);
@@ -424,6 +423,10 @@ public class LocalEntityManager implements EntityManager {
         }
     }
 
+    public boolean isKnownEntityId(String id) {
+        return entitiesById.containsKey(id) || preManagedEntitiesById.containsKey(id) || preRegisteredEntitiesById.containsKey(id);
+    }
+    
     private Entity toRealEntityOrNull(String id) {
         Entity result = entitiesById.get(id);
         if (result == null) {

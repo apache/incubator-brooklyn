@@ -281,8 +281,9 @@ public class RebindManagerImpl implements RebindManager {
         
         if (InternalEntityFactory.isNewStyleEntity(managementContext, entityClazz)) {
             Class<?> entityInterface = managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)entityClazz);
-            EntitySpec<?> entitySpec = EntitySpec.create((Class)entityInterface).impl((Class)entityClazz).configure("id", entityId);
+            EntitySpec<?> entitySpec = EntitySpec.create((Class)entityInterface).impl((Class)entityClazz).id(entityId);
             return managementContext.getEntityManager().createEntity(entitySpec);
+            
         } else {
             // There are several possibilities for the constructor; find one that works.
             // Prefer passing in the flags because required for Application to set the management context
@@ -290,7 +291,6 @@ public class RebindManagerImpl implements RebindManager {
             Map<String,Object> flags = Maps.newLinkedHashMap();
             flags.put("id", entityId);
             if (AbstractApplication.class.isAssignableFrom(entityClazz)) flags.put("mgmt", managementContext);
-            
             return (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
         }
     }
