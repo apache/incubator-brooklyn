@@ -42,15 +42,15 @@ class OpenshiftLocation extends AbstractLocation implements AddressableLocation,
 
 
     public String getHostname() {
-        return (String) elvis(getRawLocalConfigBag().getStringKey("hostname"), "openshift.redhat.com");
+        return (String) elvis(getAllConfigBag().getStringKey("hostname"), "openshift.redhat.com");
     }
     
     public String getUrl() {
-        return (String) elvis(getRawLocalConfigBag().getStringKey("url"), "https://"+getHostname()+"/broker");
+        return (String) elvis(getAllConfigBag().getStringKey("url"), "https://"+getHostname()+"/broker");
     }
     
     public String getUser() {
-        String result = elvis(getRawLocalConfigBag().getStringKey("user"), getRawLocalConfigBag().getStringKey("username"), null);
+        String result = elvis(getAllConfigBag().getStringKey("user"), getAllConfigBag().getStringKey("username"), null);
         return Preconditions.checkNotNull(result);
     }
 
@@ -59,7 +59,7 @@ class OpenshiftLocation extends AbstractLocation implements AddressableLocation,
     }
         
     public String getPassword() {
-        String result = (String) elvis(getRawLocalConfigBag().getStringKey("password"), null);
+        String result = (String) elvis(getAllConfigBag().getStringKey("password"), null);
         return Preconditions.checkNotNull(result);
     }
     

@@ -154,7 +154,7 @@ public class MementosGenerators {
                 FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.TRANSIENT).keySet(),
                 FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.STATIC).keySet());
         Map<String, Object> persistableFlags = FlagUtils.getFieldsWithFlagsExcludingModifiers(location, Modifier.STATIC ^ Modifier.TRANSIENT);
-        ConfigBag persistableConfig = new ConfigBag().copy( ((AbstractLocation)location).getRawLocalConfigBag() ).removeAll(nonPersistableFlagNames);
+        ConfigBag persistableConfig = new ConfigBag().copy( ((AbstractLocation)location).getLocalConfigBag() ).removeAll(nonPersistableFlagNames);
 
         builder.type = location.getClass().getName();
         builder.id = location.getId();

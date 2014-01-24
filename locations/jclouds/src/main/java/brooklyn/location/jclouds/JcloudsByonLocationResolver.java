@@ -123,7 +123,7 @@ public class JcloudsByonLocationResolver implements LocationResolver {
                     .put(JcloudsLocation.PUBLIC_KEY_FILE.getName(), "/Users/aled/.ssh/id_rsa")
                     .build();
             try {
-                JcloudsSshMachineLocation machine = jcloudsLocation.rebindMachine(jcloudsLocation.getRawLocalConfigBag().putAll(machineFlags));
+                JcloudsSshMachineLocation machine = jcloudsLocation.rebindMachine(jcloudsLocation.getAllConfigBag().putAll(machineFlags));
                 machine.setParent(null);
                 machines.add(machine);
             } catch (NoMachinesAvailableException e) {

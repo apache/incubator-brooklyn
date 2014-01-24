@@ -351,14 +351,14 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
 
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
-        if (hasConfig(key, false)) return getRawLocalConfigBag().get(key);
+        if (hasConfig(key, false)) return getLocalConfigBag().get(key);
         if (getParent()!=null) return getParent().getConfig(key);
         return key.getDefaultValue();
     }
 
     @Override
     public boolean hasConfig(ConfigKey<?> key, boolean includeInherited) {
-        boolean locally = getRawLocalConfigBag().containsKey(key);
+        boolean locally = getLocalConfigBag().containsKey(key);
         if (locally) return true;
         if (!includeInherited) return false;
         if (getParent()!=null) return getParent().hasConfig(key, true);

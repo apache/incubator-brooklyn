@@ -46,7 +46,7 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
         // FIXME Relies on location.getLocalConfigBag being mutable (to modify the location's own config)
         location.setName(memento.getDisplayName());
         
-        location.getRawLocalConfigBag().putAll(memento.getLocationConfig()).markAll(
+        location.getLocalConfigBag().putAll(memento.getLocationConfig()).markAll(
                 Sets.difference(memento.getLocationConfig().keySet(), memento.getLocationConfigUnused())).
                 setDescription(memento.getLocationConfigDescription());
 
@@ -57,7 +57,7 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
                 Class<?> fieldType = field.getType();
                 Object value = TypeCoercions.coerce(entry.getValue(), fieldType);
                 if (value != null) {
-                    location.getRawLocalConfigBag().putStringKey(flagName, value);
+                    location.getLocalConfigBag().putStringKey(flagName, value);
                     FlagUtils.setFieldFromFlag(location, flagName, value);
                 }
             } catch (NoSuchElementException e) {
