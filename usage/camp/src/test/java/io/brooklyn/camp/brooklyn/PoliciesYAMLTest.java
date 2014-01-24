@@ -21,6 +21,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.policy.Policy;
+import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestPolicy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.stream.Streams;
@@ -89,6 +90,7 @@ public class PoliciesYAMLTest {
         Assert.assertEquals(policy.getConfig(TestPolicy.CONF_FROM_FUNCTION), "$brooklyn: is a fun place");
         Assert.assertEquals(((TestPolicy) policy).getLeftoverProperties(),
                 ImmutableMap.of("policyLiteralValue1", "Hello", "policyLiteralValue2", "World"));
+        Assert.assertEquals(policy.getConfig(TestPolicy.TEST_ATTRIBUTE_SENSOR), TestEntity.NAME);
     }
 
     private void waitForApplicationTasks(Entity app) {
@@ -115,4 +117,5 @@ public class PoliciesYAMLTest {
         log.info("App - " + app);
         return app;
     }
+    
 }

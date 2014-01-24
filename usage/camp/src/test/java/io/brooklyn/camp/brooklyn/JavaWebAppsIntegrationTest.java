@@ -27,10 +27,13 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.policy.Policy;
+import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -169,5 +172,74 @@ public class JavaWebAppsIntegrationTest {
         }
     }
 
+    public void testWithPolicyDeploy() {
+        Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl("java-web-app-and-db-with-policy.yaml"));
+        AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
+
+        try {
+            Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
+            log.info("Test - created "+assembly);
+            
+            final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
+            log.info("App - "+app);
+            
+            // locations set on individual services here
+            Assert.assertEquals(app.getLocations().size(), 0);
+            
+            Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
+            log.info("Waiting on "+tasks.size()+" task(s)");
+            for (Task<?> t: tasks) {
+                t.blockUntilEnded();
+            }
+            
+            log.info("App started:");
+            Entities.dumpInfo(app);
+            
+            Iterator<ResolvableLink<PlatformComponent>> pcs = assembly.getPlatformComponents().links().iterator();
+            PlatformComponent clusterComponent = null;
+            while (pcs.hasNext() && clusterComponent == null) {
+                PlatformComponent component = pcs.next().resolve();
+                if (component.getName().equals("My Web with Policy"))
+                    clusterComponent = component;
+            }
+            Assert.assertNotNull(clusterComponent, "Database PlatformComponent not found");
+            Entity cluster = brooklynMgmt.getEntityManager().getEntity(clusterComponent.getId());
+            log.info("pc1 - "+clusterComponent+" - "+cluster);
+            
+            Assert.assertEquals(cluster.getPolicies().size(), 1);
+            Policy policy = cluster.getPolicies().iterator().next();
+            Assert.assertNotNull(policy);
+            Assert.assertTrue(policy instanceof AutoScalerPolicy, "policy="+policy);
+            Assert.assertEquals(policy.getConfig(AutoScalerPolicy.MAX_POOL_SIZE), (Integer)5);
+            Assert.assertEquals(policy.getConfig(AutoScalerPolicy.MIN_POOL_SIZE), (Integer)1);
+            Assert.assertEquals(policy.getConfig(AutoScalerPolicy.METRIC), DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE);
+            Assert.assertEquals(policy.getConfig(AutoScalerPolicy.METRIC_LOWER_BOUND), (Integer)10);
+            Assert.assertEquals(policy.getConfig(AutoScalerPolicy.METRIC_UPPER_BOUND), (Integer)100);
+            Assert.assertTrue(policy.isRunning());
+
+            Assert.assertEquals(Lifecycle.RUNNING, app.getAttribute(Attributes.SERVICE_STATE));
+            Assert.assertEquals(Boolean.TRUE, app.getAttribute(Attributes.SERVICE_UP));
+            
+            final String url = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
+                    @Override public String call() throws Exception {
+                        Entity cluster = Iterables.getOnlyElement( Iterables.filter(app.getChildren(), WebAppService.class) );
+                        String url = cluster.getAttribute(JavaWebAppService.ROOT_URL);
+                        return checkNotNull(url, "url of %s", cluster);
+                    }});
+            
+            String site = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
+                    @Override public String call() throws Exception {
+                        return new ResourceUtils(this).getResourceAsString(url);
+                    }});
+            
+            log.info("App URL for "+app+": "+url);
+            Assert.assertTrue(url.contains("921"), "URL should be on port 9280+ based on config set in yaml, url "+url+", app "+app);
+            Assert.assertTrue(site.toLowerCase().contains("hello"), site);
+            Assert.assertTrue(!platform.assemblies().isEmpty());
+        } catch (Exception e) {
+            log.warn("Unable to instantiate "+at+" (rethrowing): "+e);
+            throw Exceptions.propagate(e);
+        }
+    }
     
 }

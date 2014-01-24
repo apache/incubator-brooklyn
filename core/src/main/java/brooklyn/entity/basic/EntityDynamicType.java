@@ -79,7 +79,7 @@ public class EntityDynamicType {
     public EntityDynamicType(AbstractEntity entity) {
         this(entity.getClass(), entity);
     }
-    protected EntityDynamicType(Class<? extends Entity> clazz) {
+    public EntityDynamicType(Class<? extends Entity> clazz) {
         this(clazz, null);
     }
     private EntityDynamicType(Class<? extends Entity> clazz, AbstractEntity entity) {
