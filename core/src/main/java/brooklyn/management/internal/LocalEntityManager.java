@@ -84,6 +84,11 @@ public class LocalEntityManager implements EntityManager {
         applicationIds = SetFromLiveMap.create(storage.<String,Boolean>getMap("applications"));
     }
 
+    public InternalEntityFactory getEntityFactory() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        return entityFactory;
+    }
+
     @Override
     public EntityTypeRegistry getEntityTypeRegistry() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");

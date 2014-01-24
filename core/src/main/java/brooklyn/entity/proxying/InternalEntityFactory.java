@@ -141,13 +141,7 @@ public class InternalEntityFactory {
         try {
             Class<? extends T> clazz = getImplementedBy(spec);
             
-            FactoryConstructionTracker.setConstructing();
-            T entity;
-            try {
-                entity = construct(clazz, spec);
-            } finally {
-                FactoryConstructionTracker.reset();
-            }
+            T entity = constructEntity(clazz, spec);
             
             if (spec.getId() != null) {
                 FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", spec.getId()), entity);
@@ -198,19 +192,43 @@ public class InternalEntityFactory {
         }
     }
     
-    private <T extends Entity> Class<? extends T> getImplementedBy(EntitySpec<T> spec) {
-        if (spec.getImplementation() != null) {
-            return spec.getImplementation();
-        } else {
-            return entityTypeRegistry.getImplementedBy(spec.getType());
-        }
-    }
-    
-    private <T extends Entity> T construct(Class<? extends T> clazz, EntitySpec<T> spec) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        if (isNewStyleEntity(clazz)) {
-            return clazz.newInstance();
-        } else {
-            return constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
+    /**
+     * Constructs an entity (if new-style, calls no-arg constructor; if old-style, uses spec to pass in config).
+     */
+    public <T extends Entity> T constructEntity(Class<? extends T> clazz, EntitySpec<T> spec) {
+        try {
+            FactoryConstructionTracker.setConstructing();
+            try {
+                if (isNewStyleEntity(clazz)) {
+                    return clazz.newInstance();
+                } else {
+                    return constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
+                }
+            } finally {
+                FactoryConstructionTracker.reset();
+            }
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+         }
+     }
+
+    /**
+     * Constructs a new-style entity (fails if no no-arg constructor).
+     */
+    public <T extends Entity> T constructEntity(Class<T> clazz) {
+        try {
+            FactoryConstructionTracker.setConstructing();
+            try {
+                if (isNewStyleEntity(clazz)) {
+                    return clazz.newInstance();
+                } else {
+                    throw new IllegalStateException("Entity class "+clazz+" must have a no-arg constructor");
+                }
+            } finally {
+                FactoryConstructionTracker.reset();
+            }
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
     }
     
@@ -223,6 +241,14 @@ public class InternalEntityFactory {
             return v.get();
         } else {
             throw new IllegalStateException("No valid constructor defined for "+clazz+" (expected no-arg or single java.util.Map argument)");
+        }
+    }
+    
+    private <T extends Entity> Class<? extends T> getImplementedBy(EntitySpec<T> spec) {
+        if (spec.getImplementation() != null) {
+            return spec.getImplementation();
+        } else {
+            return entityTypeRegistry.getImplementedBy(spec.getType());
         }
     }
 }
