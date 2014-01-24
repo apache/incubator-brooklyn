@@ -30,6 +30,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
 
 public class Os {
 
@@ -372,18 +373,25 @@ public class Os {
         return tempFile;
     }
 
-    /** removes duplicate separator chars (forward/backward slash) and replaces initial '~' with {@link #home()} */
+    /**
+     * Tidy up a file path.
+     * <p>
+     * Removes duplicate or trailing path separators (Unix style forward
+     * slashes only), replaces initial {@literal ~} with the
+     * value of {@link #home()} and folds out use of {@literal ..} and
+     * {@literal .} path segments.
+     *
+     * @see com.google.common.io.Files#simplifyPath(String)
+     */
     public static String tidyPath(String path) {
-        Iterable<String> pathParts = Splitter.on(File.separator).split(path);
-        if (!Iterables.isEmpty(pathParts) && Iterables.get(pathParts, 0).equals("~")) {
-            pathParts = Iterables.concat(ImmutableSet.of(Os.home()), Iterables.skip(pathParts, 1));
-            String result = Joiner.on(File.separator).join(pathParts);
-            if (log.isDebugEnabled()) log.debug("quietly changing to "+path+" to "+result);
-            return result;
-        } else {
-            return path;
+        Preconditions.checkNotNull(path, "path");
+        Iterable<String> segments = Splitter.on("/").split( Files.simplifyPath(path));
+        if (Iterables.get(segments, 0).equals("~")) { // Always at least one segment after simplifyPath
+            segments = Iterables.concat(ImmutableSet.of(Os.home()), Iterables.skip(segments, 1));
         }
+        String result = Joiner.on("/").join(segments);
+        if (log.isDebugEnabled()) log.debug("Quietly changing '{}' to '{}'", path, result);
+        return result;
     }
-    
 
 }

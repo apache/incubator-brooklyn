@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableSet;
+
 @Test
 public class OsTest {
 
@@ -27,10 +29,32 @@ public class OsTest {
         Assert.assertNotNull(Os.user());        
     }
 
-    public void testTidyFilePath() throws Exception {
+    public void testTidyPathCanonicalize() throws Exception {
+        for (String path : ImmutableSet.of("/a/b", "//a///b", "/a/b/", "/a/b/.", "/q/../a/b")) {
+            assertEquals(Os.tidyPath(path), "/a/b");
+        }
+    }
+
+    public void testTidyPathSimplify() throws Exception {
+        assertEquals(Os.tidyPath("x/y/z"), "x/y/z");
+        assertEquals(Os.tidyPath(""), ".");
+        assertEquals(Os.tidyPath("."), ".");
+        assertEquals(Os.tidyPath(".."), "..");
+        assertEquals(Os.tidyPath("./x"), "x");
+        assertEquals(Os.tidyPath("../x"), "../x");
+        assertEquals(Os.tidyPath("/.."), "/");
+        assertEquals(Os.tidyPath("x"), "x");
+        assertEquals(Os.tidyPath("/"), "/");
+        assertEquals(Os.tidyPath("///"), "/");
+        assertEquals(Os.tidyPath("/x\\"), "/x\\");
+        assertEquals(Os.tidyPath("/x\\y/.."), "/");
+    }
+
+    public void testTidyPathHome() throws Exception {
         String userhome = System.getProperty("user.home");
-        assertEquals(Os.tidyPath("/a/b"), "/a/b");
         assertEquals(Os.tidyPath("~/a/b"), userhome+"/a/b");
+        assertEquals(Os.tidyPath("~"), userhome);
+        assertEquals(Os.tidyPath("/a/~/b"), "/a/~/b");
     }
     
     public void testMergePaths() throws Exception {
