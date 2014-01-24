@@ -110,7 +110,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                 
                 if (!Strings.isEmpty(name)) appBuilder.appDisplayName(name);
         
-                // TODO use addEntityConfig instaed
+                // TODO use addEntityConfig instead
                 final Map<?,?> configO = (Map<?,?>) template.getCustomAttributes().get("brooklyn.config");
 
                 log.info("REST placing '{}' under management", appBuilder);
@@ -122,7 +122,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                     ((EntityInternal)instance).addLocations(locations);
                 
             } else if (Application.class.isAssignableFrom(clazz)) {
-                // TODO use addEntityConfig instaed
+                // TODO use addEntityConfig instead
                 final Map<?,?> configO = (Map<?,?>) template.getCustomAttributes().get("brooklyn.config");
                 
                 brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
@@ -240,65 +240,52 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             appSpec.addInitializer(new EntityInitializer() {
                 @Override
                 public void apply(EntityLocal entity) {
-                    EntitySpec<? extends Entity> childSpec = EntitySpec.create(bType);
                     Map<String, Object> appChildAttrs = MutableMap.copyOf(appChildComponentTemplate.getCustomAttributes());
-
                     String name = appChildComponentTemplate.getName();
-                    if (!Strings.isBlank(name))
-                        childSpec.displayName(name);
-                    
-                    childSpec.configure(BrooklynCampConstants.TEMPLATE_ID, appChildComponentTemplate.getId());
-                    
+                    String id = appChildComponentTemplate.getId();
                     String planId = (String) appChildAttrs.remove("planId");
-                    if (planId!=null)
-                        childSpec.configure(BrooklynCampConstants.PLAN_ID, planId);
-                     
-                    addEntityConfig(childSpec, (Map<?,?>)appChildAttrs.remove("brooklyn.config"));
-
-                    Entity appChild = entity.addChild(childSpec);
-                    
-                    List<Map<?, ?>> childrenAttrs = (List<Map<?, ?>>)appChildAttrs.remove("brooklyn.children");
-                    if (childrenAttrs != null)
-                        createChildEntities(appChild, childrenAttrs);
-                    
-                    childPolicies.put(appChild, getPolicies(childSpec, appChildAttrs.remove("brooklyn.policies")));
-                    childEnrichers.put(appChild, getEnrichers(childSpec, appChildAttrs.remove("brooklyn.enrichers")));
-
-                    List<Location> appChildLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(appChildAttrs, true);
-                    if (appChildLocations!=null)
-                        ((EntityInternal)appChild).addLocations(appChildLocations);
+                    createEntity(entity, bType, appChildAttrs, name, id, planId);
                 }
-
-                // FIXME: Much of this is copied from apply() and should be moved into a common method
-                // FIXME: Should be Map<String, Object>
-                private void createChildEntities(Entity parent, List<Map<?, ?>> entityAttrs) {
-                    for (Map<?, ?> childAttrs : entityAttrs) {
-                        Map<?, ?> attrs = MutableMap.copyOf(childAttrs);
+                
+                private void createEntity(Entity parent, Class<? extends Entity> type, Map<String, Object> attributes, String name, String id, String planId) {
+                    EntitySpec<? extends Entity> spec = EntitySpec.create(type);
+                    if (!Strings.isBlank(name))
+                        spec.displayName(name);
+                    if (id != null)
+                        spec.configure(BrooklynCampConstants.TEMPLATE_ID, id);
+                    if (planId != null)
+                        spec.configure(BrooklynCampConstants.PLAN_ID, planId);
+                    addEntityConfig(spec, (Map<?, ?>)attributes.remove("brooklyn.config"));
+                    
+                    Entity entity = parent.addChild(spec);
+                    
+                    List<Map<String, Object>> childrenAttrs = (List<Map<String, Object>>)attributes.remove("brooklyn.children");
+                    
+                    if (childrenAttrs != null)
+                        createChildEntities(entity, childrenAttrs);
+                    
+                    List<PolicySpec<?>> policies = getPolicies(spec, attributes.remove("brooklyn.policies"));
+                    if (policies.size() > 0)
+                        childPolicies.put(entity, policies);
+                    List<EnricherSpec<?>> enrichers = getEnrichers(spec, attributes.remove("brooklyn.enrichers"));
+                    if (enrichers.size() > 0)
+                        childEnrichers.put(entity, enrichers);
+                    
+                    List<Location> childLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations((Map<String, Object>)attributes, true);
+                    if (childLocations != null)
+                        ((EntityInternal)entity).addLocations(childLocations);
+                }
+                
+                private void createChildEntities(Entity parent, List<Map<String, Object>> entityAttrs) {
+                    for (Map<String, Object> childAttrs : entityAttrs) {
+                        Map<String, Object> attrs = MutableMap.copyOf(childAttrs);
                         String childTypeName = Strings.removeFromStart((String)attrs.remove("serviceType"), "brooklyn:");
                         Class<? extends Entity> childType = loadEntityType(catalog, childTypeName);
-                        EntitySpec<? extends Entity> childSpec = EntitySpec.create(bType);
                         String name = (String)attrs.remove("name");
-                        if (!Strings.isBlank(name))
-                            childSpec.displayName(name);
                         String id = (String)attrs.remove("id");
-                        if (id != null)
-                            childSpec.configure(BrooklynCampConstants.TEMPLATE_ID, id);
                         String planId = (String)attrs.remove("planId");
-                        if (planId != null)
-                            childSpec.configure(BrooklynCampConstants.PLAN_ID, planId);
-                        addEntityConfig(childSpec, (Map<?, ?>)attrs.remove("brooklyn.config"));
                         
-                        Entity child = parent.addChild(childSpec);
-                        List<Map<?, ?>> childrenAttrs = (List<Map<?, ?>>)attrs.remove("brooklyn.children");
-                        if (childrenAttrs != null)
-                            createChildEntities(child, childrenAttrs);
-                        
-                        childPolicies.put(child, getPolicies(childSpec, attrs.remove("brooklyn.properties")));
-                        childEnrichers.put(child, getEnrichers(childSpec, attrs.remove("brooklyn.enrichers")));
-                        
-                        List<Location> childLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations((Map<String, Object>)attrs, true);
-                        if (childLocations != null)
-                            ((EntityInternal)child).addLocations(childLocations);
+                        createEntity(parent, childType, attrs, name, id, planId);
                     }
                 }
             });

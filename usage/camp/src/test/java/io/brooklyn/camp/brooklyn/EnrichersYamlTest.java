@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -101,6 +102,55 @@ public class EnrichersYamlTest extends AbstractYamlTest {
         TestEntity entity = (TestEntity)app.getChildren().iterator().next();
         entity.setAttribute(TestEntity.NAME, "New Name");
         Asserts.eventually(Entities.attributeSupplier(app, TestEntity.NAME), Predicates.<String>equalTo("New Name"));
+    }
+    
+    @Test(groups="WIP")
+    public void testPropogateChildSensor() throws Exception {
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig",
+                new StringBuilder()
+                    .append("test.confName: parent entity\n")
+                    .toString(),
+                "additionalConfig",
+                new StringBuilder()
+                    .append("  id: parentId\n")
+                    .append("  brooklyn.enrichers:\n")
+                    .append("  - enricherType: brooklyn.enricher.basic.Propagator\n")
+                    .append("    brooklyn.config:\n")
+                    .append("      enricher.producer: $brooklyn:component(\"childId\")\n")
+                    .append("      enricher.propagating.propagatingAll: true\n")
+                    .append("  brooklyn.children:\n")
+                    .append("  - serviceType: brooklyn.test.entity.TestEntity\n")
+                    .append("    id: childId\n")
+                    .append("    brooklyn.config:\n")
+                    .append("      test.confName: Child Name")
+                    .toString()));
+        waitForApplicationTasks(app);
+        
+        log.info("App started:");
+        Entities.dumpInfo(app);
+        Assert.assertEquals(app.getChildren().size(), 1);
+        final Entity parentEntity = app.getChildren().iterator().next();
+        Assert.assertTrue(parentEntity instanceof TestEntity, "Expected parent entity to be TestEntity, found:" + parentEntity);
+        Assert.assertEquals(parentEntity.getChildren().size(), 1);
+        Entity childEntity = parentEntity.getChildren().iterator().next();
+        Assert.assertTrue(childEntity instanceof TestEntity, "Expected child entity to be TestEntity, found:" + childEntity);
+        Asserts.eventually(new Supplier<Integer>() {
+            @Override
+            public Integer get() {
+                return parentEntity.getEnrichers().size();
+            }
+        }, Predicates.<Integer>equalTo(1));
+        Enricher enricher = parentEntity.getEnrichers().iterator().next();
+        Asserts.assertTrue(enricher instanceof Propagator, "Expected enricher to be Propagator, found:" + enricher);
+        final Propagator propagator = (Propagator)enricher;
+        Entity producer = ((EntityInternal)parentEntity).getExecutionContext().submit(MutableMap.of(), new Callable<Entity>() {
+            public Entity call() {
+                return propagator.getConfig(Propagator.PRODUCER);
+            }}).get();
+        Assert.assertEquals(producer, childEntity);
+        Asserts.assertTrue(Boolean.valueOf(propagator.getConfig(Propagator.PROPAGATING_ALL)), "Expected Propagator.PROPAGATING_ALL to be true");
+        ((TestEntity)childEntity).setAttribute(TestEntity.NAME, "New Name");
+        Asserts.eventually(Entities.attributeSupplier(parentEntity, TestEntity.NAME), Predicates.<String>equalTo("New Name"));
     }
     
     @Override
