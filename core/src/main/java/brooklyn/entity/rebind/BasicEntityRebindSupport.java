@@ -60,6 +60,9 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 throw Throwables.propagate(e);
             }
         }
+        ((EntityInternal)entity).getConfigMap().addToLocalBag(memento.getConfigUnmatched());
+        ((EntityInternal)entity).refreshInheritedConfig();
+        
         for (Map.Entry<AttributeSensor, Object> entry : memento.getAttributes().entrySet()) {
             try {
                 AttributeSensor key = entry.getKey();

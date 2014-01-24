@@ -20,7 +20,9 @@ public interface EntityMemento extends Memento, TreeNode {
     public boolean isTopLevelApp();
     
     public Map<ConfigKey, Object> getConfig();
-
+    
+    public Map<String, Object> getConfigUnmatched();
+    
     public Map<AttributeSensor, Object> getAttributes();
 
     /**

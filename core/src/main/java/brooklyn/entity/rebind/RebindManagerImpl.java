@@ -315,9 +315,11 @@ public class RebindManagerImpl implements RebindManager {
             // There are several possibilities for the constructor; find one that works.
             // Prefer passing in the flags because required for Application to set the management context
             // TODO Feels very hacky!
-            Map<String,Object> flags = Maps.newLinkedHashMap();
+            Map<Object,Object> flags = Maps.newLinkedHashMap();
             flags.put("id", entityId);
             if (AbstractApplication.class.isAssignableFrom(entityClazz)) flags.put("mgmt", managementContext);
+            flags.putAll(memento.getConfig());
+            flags.putAll(memento.getConfigUnmatched());
             return (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
         }
     }

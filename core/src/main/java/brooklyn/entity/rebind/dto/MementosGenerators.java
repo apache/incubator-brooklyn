@@ -23,6 +23,7 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Policy;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 
@@ -98,6 +99,17 @@ public class MementosGenerators {
             }
 
             builder.config.put(key, value); 
+        }
+        
+        Map<String, Object> localConfigUnmatched = MutableMap.copyOf(((EntityInternal)entity).getConfigMap().getLocalConfigBag().getAllConfig());
+        for (ConfigKey<?> key : localConfig.keySet()) {
+            localConfigUnmatched.remove(key.getName());
+        }
+        for (Map.Entry<String, Object> entry : localConfigUnmatched.entrySet()) {
+            String key = checkNotNull(entry.getKey(), localConfig);
+            Object value = entry.getValue();
+            // TODO Not transforming; that code is deleted in another pending PR anyway!
+            builder.configUnmatched.put(key, value); 
         }
         
         Map<AttributeSensor, Object> allAttributes = ((EntityInternal)entity).getAllAttributes();
