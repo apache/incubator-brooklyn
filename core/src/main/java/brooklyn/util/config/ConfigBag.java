@@ -146,6 +146,10 @@ public class ConfigBag {
         return this;
     }
     
+    public ConfigBag putAll(ConfigBag addlConfig) {
+        return putAll(addlConfig.getAllConfig());
+    }
+    
     public ConfigBag putIfAbsent(Map<?, ?> propertiesToSet) {
         for (Map.Entry<?, ?> entry: propertiesToSet.entrySet()) {
             Object key = entry.getKey();

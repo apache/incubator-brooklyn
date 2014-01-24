@@ -223,7 +223,6 @@ public class ByonLocationResolverTest {
         Assert.assertFalse(l.hasConfig(LocationConfigKeys.PRIVATE_KEY_FILE, false));
 
         Assert.assertEquals("/tmp/x", l.getAllConfig(true).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
-
         Assert.assertEquals("/tmp/x", l.getAllConfig(true).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
 
         Assert.assertEquals("/tmp/x", l.getAllConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));

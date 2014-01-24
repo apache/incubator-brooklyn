@@ -129,7 +129,7 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
         if (log.isDebugEnabled())
             log.debug("While starting {}, obtained new location instance {}", this, 
                     (machine instanceof SshMachineLocation ? 
-                            machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getAllConfig(false)) 
+                            machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getLocalConfigBag()) 
                             : machine));
         if (!(location instanceof LocalhostMachineProvisioningLocation))
             log.info("While starting {}, obtained a new location instance {}, now preparing process there", this, machine);

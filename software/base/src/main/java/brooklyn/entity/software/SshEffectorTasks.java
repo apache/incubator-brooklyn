@@ -21,6 +21,7 @@ import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.location.Location;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
@@ -271,7 +272,7 @@ public class SshEffectorTasks {
         allConfig.putAll(globalConfig.getAllConfig());
         
         if (optionalLocation!=null)
-            allConfig.putAll(optionalLocation.getAllConfig(true));
+            allConfig.putAll(((LocationInternal)optionalLocation).getAllConfigBag());
         
         allConfig.putAll(((EntityInternal)entity).getAllConfig());
         
