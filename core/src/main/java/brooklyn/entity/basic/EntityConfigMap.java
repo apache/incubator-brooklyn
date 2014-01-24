@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
@@ -17,6 +18,10 @@ import brooklyn.config.ConfigMap;
 import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
@@ -24,6 +29,7 @@ import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class EntityConfigMap implements ConfigMap {
 
@@ -41,10 +47,16 @@ public class EntityConfigMap implements ConfigMap {
      */
     private final Map<ConfigKey<?>,Object> ownConfig;
     private final Map<ConfigKey<?>,Object> inheritedConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
+    private final ConfigBag localConfigBag;
+    private final ConfigBag inheritedConfigBag;
 
     public EntityConfigMap(AbstractEntity entity, Map<ConfigKey<?>, Object> storage) {
         this.entity = checkNotNull(entity, "entity must be specified");
         this.ownConfig = checkNotNull(storage, "storage map must be specified");
+        
+        // TODO store ownUnused in backing-storage
+        this.localConfigBag = ConfigBag.newInstance();
+        this.inheritedConfigBag = ConfigBag.newInstance();
     }
 
     public <T> T getConfig(ConfigKey<T> key) {
@@ -89,6 +101,13 @@ public class EntityConfigMap implements ConfigMap {
             } else if (((ConfigKeySelfExtracting<T>)ownKey).isSet(inheritedConfig)) {
                result = ((ConfigKeySelfExtracting<T>)ownKey).extractValue(inheritedConfig, exec);
                complete = true;
+            } else if (localConfigBag.containsKey(ownKey)) {
+                // TODO configBag.get doesn't handle tasks/attributeWhenReady - it only uses TypeCoercions
+                result = localConfigBag.get(ownKey);
+                complete = true;
+            } else if (inheritedConfigBag.containsKey(ownKey)) {
+                result = inheritedConfigBag.get(ownKey);
+                complete = true;
             }
 
             if (rawval instanceof Task) {
@@ -104,6 +123,7 @@ public class EntityConfigMap implements ConfigMap {
     }
     
     @Override
+    @Deprecated
     public Object getRawConfig(ConfigKey<?> key) {
         return getConfigRaw(key, true).orNull();
     }
@@ -130,6 +150,22 @@ public class EntityConfigMap implements ConfigMap {
         return Collections.unmodifiableMap(result);
     }
     
+    /** returns the config visible at this entity, local and inherited (preferring local), including those that did not match config keys */
+    public ConfigBag getAllConfigBag() {
+        return ConfigBag.newInstanceCopying(localConfigBag)
+                .putAll(ownConfig)
+                .putIfAbsent(inheritedConfig)
+                .putIfAbsent(inheritedConfigBag)
+                .seal();
+    }
+
+    /** returns the config defined at this entity, ie not inherited, including those that did not match config keys */
+    public ConfigBag getLocalConfigBag() {
+        return ConfigBag.newInstanceCopying(localConfigBag)
+                .putAll(ownConfig)
+                .seal();
+    }
+
     public Object setConfig(ConfigKey<?> key, Object v) {
         Object val;
         if ((v instanceof Future) || (v instanceof DeferredSupplier)) {
@@ -160,13 +196,55 @@ public class EntityConfigMap implements ConfigMap {
         ownConfig.putAll(vals);
     }
     
-    public void setInheritedConfig(Map<ConfigKey<?>, ? extends Object> vals) {
+    public void setInheritedConfig(Map<ConfigKey<?>, ? extends Object> vals, ConfigBag configBagVals) {
         inheritedConfig.clear();
         inheritedConfig.putAll(vals);
+
+        // The configBagVals contains all inherited, including strings that did not match a config key on the parent.
+        // They might match a config-key on this entity though, so need to check that:
+        //   - if it matches one of our keys, set it in inheritedConfig
+        //   - otherwise add it to our inheritedConfigBag
+        Set<String> valKeyNames = Sets.newLinkedHashSet();
+        for (ConfigKey<?> key : vals.keySet()) {
+            valKeyNames.add(key.getName());
+        }
+        Map<String,Object> valsUnmatched = MutableMap.<String,Object>builder()
+                .putAll(configBagVals.getAllConfig())
+                .removeAll(valKeyNames)
+                .build();
+        inheritedConfigBag.clear();
+        Map<ConfigKey<?>, SetFromFlag> annotatedConfigKeys = FlagUtils.getAnnotatedConfigKeys(entity.getClass());
+        Map<String, ConfigKey<?>> renamedConfigKeys = Maps.newLinkedHashMap();
+        for (Map.Entry<ConfigKey<?>, SetFromFlag> entry: annotatedConfigKeys.entrySet()) {
+            String rename = entry.getValue().value();
+            if (rename != null) {
+                renamedConfigKeys.put(rename, entry.getKey());
+            }
+        }
+        for (Map.Entry<String,Object> entry : valsUnmatched.entrySet()) {
+            String name = entry.getKey();
+            Object value = entry.getValue();
+            ConfigKey<?> key = renamedConfigKeys.get(name);
+            if (key == null) key = entity.getEntityType().getConfigKey(name);
+            if (key != null) {
+                if (inheritedConfig.containsKey(key)) {
+                    LOG.warn("Entity "+entity+" inherited duplicate config for key "+key+", via explicit config and string name "+name+"; using value of key");
+                } else {
+                    inheritedConfig.put(key, value);
+                }
+            } else {
+                inheritedConfigBag.putStringKey(name, value);
+            }
+        }
     }
     
+    public void addToLocalBag(Map<String,?> vals) {
+        localConfigBag.putAll(vals);
+    }
+
     public void clearInheritedConfig() {
         inheritedConfig.clear();
+        inheritedConfigBag.clear();
     }
 
     @Override

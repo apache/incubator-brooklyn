@@ -6,6 +6,7 @@ import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.location.Location;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.util.config.ConfigBag;
 
 /**
  * Information about locations private to Brooklyn.
@@ -31,7 +32,11 @@ public interface LocationInternal extends Location, Rebindable {
      * @return
      */
     public Map<String, String> toMetadataRecord();
-    
+
+    ConfigBag getLocalConfigBag();
+
+    ConfigBag getAllConfigBag();
+
     @Override
     RebindSupport<LocationMemento> getRebindSupport();
 }

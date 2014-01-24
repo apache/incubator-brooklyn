@@ -386,6 +386,25 @@ public class FlagUtils {
         return result;
     }
 
+    /** returns a map of all {@link ConfigKey} fields which are annotated 'SetFromFlag', along with the annotation */
+    public static Map<ConfigKey<?>,SetFromFlag> getAnnotatedConfigKeys(Class<?> type) {
+        Map<ConfigKey<?>, SetFromFlag> result = Maps.newLinkedHashMap();
+        List<Field> fields = getAllFields(type, new Predicate<Field>() {
+            @Override public boolean apply(Field f) {
+                return (f != null) && ConfigKey.class.isAssignableFrom(f.getType()) && ((f.getModifiers() & Modifier.STATIC)!=0);
+            }});
+        for (Field f: fields) {
+            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+            if (cf != null) {
+                ConfigKey<?> key = getFieldAsConfigKey(null, f);
+                if (key != null) {
+                    result.put(key, cf);
+                }
+            }
+        }
+        return result;
+    }
+
 	/** returns a map of all fields which are annotated 'SetFromFlag' with their current values;
 	 * useful if you want to clone settings from one object
 	 */

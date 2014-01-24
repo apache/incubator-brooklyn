@@ -14,6 +14,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.mementos.EntityMemento;
+import brooklyn.util.config.ConfigBag;
 
 import com.google.common.annotations.Beta;
 
@@ -43,6 +44,20 @@ public interface EntityInternal extends EntityLocal, Rebindable {
      */
     @Beta
     Map<ConfigKey<?>,Object> getAllConfig();
+
+    /**
+     * Returns a read-only view of all the config key/value pairs on this entity, backed by a string-based map, 
+     * including config names that did not match anything on this entity.
+     */
+    @Beta
+    ConfigBag getAllConfigBag();
+
+    /**
+     * Returns a read-only view of the local (i.e. not inherited) config key/value pairs on this entity, 
+     * backed by a string-based map, including config names that did not match anything on this entity.
+     */
+    @Beta
+    ConfigBag getLocalConfigBag();
 
     @Beta
     public Map<AttributeSensor, Object> getAllAttributes();

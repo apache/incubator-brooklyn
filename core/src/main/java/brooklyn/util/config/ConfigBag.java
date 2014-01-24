@@ -164,6 +164,10 @@ public class ConfigBag {
         return this;
     }
 
+    public ConfigBag putIfAbsent(ConfigBag addlConfig) {
+        return putIfAbsent(addlConfig.getAllConfig());
+    }
+
 
     @SuppressWarnings("unchecked")
     public <T> T put(ConfigKey<T> key, T value) {
@@ -344,6 +348,13 @@ public class ConfigBag {
         unusedConfig.remove(key);
     }
 
+    public void clear() {
+        if (sealed) 
+            throw new IllegalStateException("Cannot clear this config bag has been sealed and is now immutable.");
+        config.clear();
+        unusedConfig.clear();
+    }
+    
     public ConfigBag removeAll(ConfigKey<?> ...keys) {
         for (ConfigKey<?> key: keys) remove(key);
         return this;

@@ -6,7 +6,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Closeable;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -225,6 +224,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
 
         // NB: flag-setting done here must also be done in BasicLocationRebindSupport 
         FlagUtils.setFieldsFromFlagsWithBag(this, properties, configBag, firstTime);
+        FlagUtils.setAllConfigKeys(this, configBag);
 
         if (properties.containsKey("displayName")) {
             name.set((String) removeIfPossible(properties, "displayName"));
@@ -364,23 +364,32 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         if (getParent()!=null) return getParent().hasConfig(key, true);
         return false;
     }
-    
+
     @Override
     public Map<String,Object> getAllConfig(boolean includeInherited) {
-        Map<String,Object> result = null;
-        if (includeInherited) {
-            Location p = getParent();
-            if (p!=null) result = getParent().getAllConfig(true);
-        }
-        if (result==null) {
-            result = new LinkedHashMap<String, Object>();
-        }
-        result.putAll(getRawLocalConfigBag().getAllConfig());
+        ConfigBag bag = (includeInherited ? getAllConfigBag() : getLocalConfigBag());
+        return bag.getAllConfig();
+    }
+    
+    @Override
+    public ConfigBag getAllConfigBag() {
+        ConfigBag result = ConfigBag.newInstanceExtending(configBag, ImmutableMap.of());
+        Location p = getParent();
+        if (p!=null) result.putIfAbsent(((LocationInternal)p).getAllConfigBag().getAllConfig());
         return result;
     }
     
-    public ConfigBag getRawLocalConfigBag() {
+    @Override
+    public ConfigBag getLocalConfigBag() {
         return configBag;
+    }
+
+    /** 
+     * @deprecated since 0.7; use {@link #getLocalConfigBag()}
+     * @since 0.6
+     */
+    public ConfigBag getRawLocalConfigBag() {
+        return getLocalConfigBag();
     }
     
     @Override
