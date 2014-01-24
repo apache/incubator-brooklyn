@@ -114,7 +114,7 @@ public class ConfigBag {
 
     /** internal map containing the current values for all entries;
      * for use where the caller wants to modify this directly and knows it is safe to do so */ 
-    public Map<String,Object> getAllConfigRaw() {
+    public Map<String,Object> getAllConfigMutable() {
         if (live) {
             // TODO sealed no longer works as before, because `config` is the backing storage map.
             // Therefore returning it is dangerous! Even if we were to replace our field with an immutable copy,
@@ -134,7 +134,7 @@ public class ConfigBag {
 
     /** internal map containing the current values for all entries which have not yet been used;
      * for use where the caller wants to modify this directly and knows it is safe to do so */
-    public Map<String,Object> getUnusedConfigRaw() {
+    public Map<String,Object> getUnusedConfigMutable() {
         return unusedConfig;
     }
 

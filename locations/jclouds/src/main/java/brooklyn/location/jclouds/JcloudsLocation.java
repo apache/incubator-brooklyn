@@ -1411,7 +1411,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             nodeConfig.putIfNotNull(PASSWORD, node.getCredentials().getPassword());
             nodeConfig.putIfNotNull(PRIVATE_KEY_DATA, node.getCredentials().getPrivateKey());
         }
-        return extractSshConfig(setup, nodeConfig).getAllConfigRaw();
+        return extractSshConfig(setup, nodeConfig).getAllConfig();
     }
 
     protected String extractAvailabilityZone(ConfigBag setup, NodeMetadata node) {

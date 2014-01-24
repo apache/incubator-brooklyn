@@ -85,7 +85,7 @@ public class ServiceReplacer extends AbstractPolicy {
     
     public ServiceReplacer(ConfigBag configBag) {
         // TODO hierarchy should use ConfigBag, and not change flags
-        super(configBag.getAllConfigRaw());
+        super(configBag.getAllConfigMutable());
     }
     
     public ServiceReplacer(Sensor<?> failureSensorToMonitor) {

@@ -277,7 +277,7 @@ public class SshEffectorTasks {
         allConfig.putAll(((EntityInternal)entity).getAllConfig());
         
         Map<String, Object> result = Maps.newLinkedHashMap();
-        for (String keyS : allConfig.getAllConfigRaw().keySet()) {
+        for (String keyS : allConfig.getAllConfig().keySet()) {
             if (keyS.startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                 ConfigKey<?> key = ConfigKeys.newConfigKey(Object.class, keyS);
                 

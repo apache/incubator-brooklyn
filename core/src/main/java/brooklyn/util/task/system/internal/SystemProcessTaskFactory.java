@@ -72,9 +72,9 @@ public class SystemProcessTaskFactory<T extends SystemProcessTaskFactory<T,RET>,
         @Override
         protected void run(ConfigBag config) {
             if (Boolean.FALSE.equals(this.runAsScript)) {
-                this.exitCode = newExecWithLoggingHelpers().execCommands(config.getAllConfigRaw(), getSummary(), getCommands(), getShellEnvironment());
+                this.exitCode = newExecWithLoggingHelpers().execCommands(config.getAllConfig(), getSummary(), getCommands(), getShellEnvironment());
             } else { // runScript = null or TRUE
-                this.exitCode = newExecWithLoggingHelpers().execScript(config.getAllConfigRaw(), getSummary(), getCommands(), getShellEnvironment());
+                this.exitCode = newExecWithLoggingHelpers().execScript(config.getAllConfig(), getSummary(), getCommands(), getShellEnvironment());
             }
         }
         @Override

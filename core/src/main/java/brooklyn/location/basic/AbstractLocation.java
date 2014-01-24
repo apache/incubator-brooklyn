@@ -155,7 +155,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
 
         Location oldParent = parent.get();
         Set<Location> oldChildren = children;
-        Map<String, Object> oldConfig = configBag.getAllConfigRaw();
+        Map<String, Object> oldConfig = configBag.getAllConfig();
         long oldCreationTimeUtc = creationTimeUtc.get();
         String oldDisplayName = name.get();
         HostGeoInfo oldHostGeoInfo = hostGeoInfo.get();

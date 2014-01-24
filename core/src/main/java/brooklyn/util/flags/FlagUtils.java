@@ -128,7 +128,7 @@ public class FlagUtils {
     public static Map<String, ?> setAllConfigKeys(Map<String, ?> flagsOrConfig, Configurable instance) {
         ConfigBag bag = new ConfigBag().putAll(flagsOrConfig);
         setAllConfigKeys(instance, bag);
-        return bag.getUnusedConfigRaw();
+        return bag.getUnusedConfigMutable();
     }
     /** sets _all_ accessible _{@link ConfigKey}_ and {@link HasConfigKey} fields on the given object, 
      * using the indicated flags/config-bag */
@@ -240,7 +240,7 @@ public class FlagUtils {
             SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
             if (cf!=null) setFieldFromConfig(o, f, bag, cf, setDefaultVals);
         }
-        return bag.getUnusedConfigRaw();
+        return bag.getUnusedConfigMutable();
     }
 
     private static void setFieldFromConfig(Object o, Field f, ConfigBag bag, SetFromFlag optionalAnnotation, boolean setDefaultVals) {

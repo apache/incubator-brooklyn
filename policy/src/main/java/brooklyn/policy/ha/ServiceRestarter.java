@@ -61,7 +61,7 @@ public class ServiceRestarter extends AbstractPolicy {
     
     public ServiceRestarter(ConfigBag configBag) {
         // TODO hierarchy should use ConfigBag, and not change flags
-        super(configBag.getAllConfigRaw());
+        super(configBag.getAllConfigMutable());
     }
     
     public ServiceRestarter(Sensor<?> failureSensorToMonitor) {

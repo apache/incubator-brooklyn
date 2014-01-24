@@ -98,7 +98,7 @@ public class SshTasks {
         allConfig.putAll(((LocationInternal)location).getAllConfigBag());
         
         Map<String, Object> result = Maps.newLinkedHashMap();
-        for (String keyS : allConfig.getAllConfigRaw().keySet()) {
+        for (String keyS : allConfig.getAllConfig().keySet()) {
             ConfigKey<?> key = ConfigKeys.newConfigKey(Object.class, keyS);
             if (key.getName().startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                 result.put(ConfigUtils.unprefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, key).getName(), allConfig.get(key));
