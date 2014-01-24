@@ -351,7 +351,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
 
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
-        if (hasConfig(key, false)) return getConfigBag().get(key);
+        if (hasConfig(key, false)) return getRawLocalConfigBag().get(key);
         if (getParent()!=null) return getParent().getConfig(key);
         return key.getDefaultValue();
     }
@@ -375,14 +375,10 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         if (result==null) {
             result = new LinkedHashMap<String, Object>();
         }
-        result.putAll(getConfigBag().getAllConfig());
+        result.putAll(getRawLocalConfigBag().getAllConfig());
         return result;
     }
     
-    /** @deprecated since 0.6.0 use {@link #getRawLocalConfigBag()} */
-    public ConfigBag getConfigBag() {
-        return configBag;
-    }
     public ConfigBag getRawLocalConfigBag() {
         return configBag;
     }

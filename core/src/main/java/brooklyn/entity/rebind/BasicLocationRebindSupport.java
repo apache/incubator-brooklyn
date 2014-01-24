@@ -43,9 +43,10 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location: {}", memento.toVerboseString());
 
     	// Note that the flags have been set in the constructor
+        // FIXME Relies on location.getLocalConfigBag being mutable (to modify the location's own config)
         location.setName(memento.getDisplayName());
         
-        location.getConfigBag().putAll(memento.getLocationConfig()).markAll(
+        location.getRawLocalConfigBag().putAll(memento.getLocationConfig()).markAll(
                 Sets.difference(memento.getLocationConfig().keySet(), memento.getLocationConfigUnused())).
                 setDescription(memento.getLocationConfigDescription());
 
@@ -56,7 +57,7 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
                 Class<?> fieldType = field.getType();
                 Object value = TypeCoercions.coerce(entry.getValue(), fieldType);
                 if (value != null) {
-                    location.getConfigBag().putStringKey(flagName, value);
+                    location.getRawLocalConfigBag().putStringKey(flagName, value);
                     FlagUtils.setFieldFromFlag(location, flagName, value);
                 }
             } catch (NoSuchElementException e) {
