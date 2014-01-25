@@ -39,9 +39,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.iq80.cli</groupId>
-            <artifactId>git-like-cli</artifactId>
-            <version>${git-like-cli.version}</version>
+            <groupId>io.airlift</groupId>
+            <artifactId>airline</artifactId>
+            <version>${airline.version}</version>
             <exclusions>
               <exclusion>
                 <groupId>com.google.guava</groupId>

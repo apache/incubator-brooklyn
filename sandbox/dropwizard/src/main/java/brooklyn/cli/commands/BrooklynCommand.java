@@ -5,9 +5,9 @@ import java.io.PrintStream;
 import java.util.concurrent.Callable;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.iq80.cli.Option;
-import org.iq80.cli.OptionType;
-import org.iq80.cli.ParseException;
+import io.airlift.command.Option;
+import io.airlift.command.OptionType;
+import io.airlift.command.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

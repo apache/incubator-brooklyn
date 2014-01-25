@@ -12,13 +12,13 @@ import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
-import org.iq80.cli.Cli;
-import org.iq80.cli.Cli.CliBuilder;
-import org.iq80.cli.Command;
-import org.iq80.cli.Help;
-import org.iq80.cli.Option;
-import org.iq80.cli.OptionType;
-import org.iq80.cli.ParseException;
+import io.airlift.command.Cli;
+import io.airlift.command.Cli.CliBuilder;
+import io.airlift.command.Command;
+import io.airlift.command.Help;
+import io.airlift.command.Option;
+import io.airlift.command.OptionType;
+import io.airlift.command.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

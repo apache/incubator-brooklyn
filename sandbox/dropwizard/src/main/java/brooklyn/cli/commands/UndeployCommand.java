@@ -2,9 +2,9 @@ package brooklyn.cli.commands;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-import org.iq80.cli.Arguments;
-import org.iq80.cli.Command;
-import org.iq80.cli.Option;
+import io.airlift.command.Arguments;
+import io.airlift.command.Command;
+import io.airlift.command.Option;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;

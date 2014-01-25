@@ -10,9 +10,9 @@ import brooklyn.cli.commands.CatalogPoliciesCommand;
 import brooklyn.cli.commands.ListApplicationsCommand;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import org.iq80.cli.Cli;
-import org.iq80.cli.Help;
-import org.iq80.cli.ParseException;
+import io.airlift.command.Cli;
+import io.airlift.command.Help;
+import io.airlift.command.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
