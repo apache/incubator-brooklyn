@@ -1,3 +1,8 @@
+// NOTE FROM sjcorbett: There have been several new releases of handlebars.js, but 
+// Brooklyn's current version of swagger.js (md5sum 117c05807c33c73132a93edd715086d7)
+// will not work with anything greater than 1.0.rc.2.
+
+
 // lib/handlebars/base.js
 
 /*jshint eqnull:true*/

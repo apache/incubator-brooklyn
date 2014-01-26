@@ -1,5 +1,6 @@
 package brooklyn.entity.software;
 
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 
 import java.util.Arrays;
@@ -55,6 +56,9 @@ public class OsTasksTest {
         assertNotNull(details.getArch());
         assertNotNull(details.getName());
         assertNotNull(details.getVersion());
+        assertFalse(details.getArch().startsWith("architecture:"), "architecture prefix not removed from details");
+        assertFalse(details.getName().startsWith("name:"), "name prefix not removed from details");
+        assertFalse(details.getVersion().startsWith("version:"), "version prefix not removed from details");
     }
 
 }

@@ -94,6 +94,7 @@ import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.net.Protocol;
 import brooklyn.util.os.Os;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.ssh.IptablesCommands;
 import brooklyn.util.ssh.IptablesCommands.Chain;
 import brooklyn.util.ssh.IptablesCommands.Policy;
@@ -1725,7 +1726,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             int exitcode = sshLocByIp.execCommands(
                     MutableMap.of("out", outStream, "err", errStream),
                     "get public AWS hostname",
-                    ImmutableList.of("echo `curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`; exit"));
+                    ImmutableList.of(
+                            BashCommands.INSTALL_CURL,
+                            "echo `curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`; exit"));
             String outString = new String(outStream.toByteArray());
             String[] outLines = outString.split("\n");
             for (String line : outLines) {

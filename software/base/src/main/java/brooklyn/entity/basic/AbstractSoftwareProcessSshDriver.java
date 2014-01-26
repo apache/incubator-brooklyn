@@ -186,19 +186,41 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
     /**
      * The environment variables to be set when executing the commands (for install, run, check running, etc).
+     * @see SoftwareProcess#SHELL_ENVIRONMENT
      */
     public Map<String, String> getShellEnvironment() {
         return Strings.toStringMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT));
     }
 
+    /**
+     * @param template File to template and copy.
+     * @param target Destination on server. Will be prefixed with the entity's
+     *               {@link #getRunDir() run directory} if relative.
+     * @return The exit code the SSH command run.
+     */
     public int copyTemplate(File template, String target) {
         return copyTemplate(template.toURI().toASCIIString(), target);
     }
+
+    /**
+     * @param template URI of file to template and copy, e.g. file://.., http://.., classpath://..
+     * @param target Destination on server. Will be prefixed with the entity's
+     *               {@link #getRunDir() run directory} if relative.
+     * @return The exit code of the SSH command run.
+     */
     public int copyTemplate(String template, String target) {
         return copyTemplate(template, target, ImmutableMap.<String, String>of());
     }
-    
-    public int copyTemplate(String template, String target, Map<String,? extends Object> extraSubstitutions) {
+
+    /**
+     * @param template URI of file to template and copy, e.g. file://.., http://.., classpath://..
+     * @param target Destination on server. Will be prefixed with the entity's
+     *               {@link #getRunDir() run directory} if relative.
+     * @param extraSubstitutions Extra substitutions for the templater to use, for example
+     *               "foo" -> "bar", and in a template ${foo}.
+     * @return The exit code of the SSH command run.
+     */
+    public int copyTemplate(String template, String target, Map<String, ?> extraSubstitutions) {
         // prefix with runDir if relative target
         String dest = target;
         if (!new File(target).isAbsolute()) {
@@ -212,6 +234,11 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return result;
     }
 
+    /**
+     * Templates all resources in the given map, then copies them to the driver's {@link #getMachine() machine}.
+     * @param templates A mapping of resource URI to server destination.
+     * @see #copyTemplate(String, String)
+     */
     public void copyTemplates(Map<String, String> templates) {
         if (templates != null && templates.size() > 0) {
             log.info("Customising {} with templates: {}", entity, templates);
@@ -224,6 +251,11 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
     }
 
+    /**
+     * Copies all resources in the given map to the driver's {@link #getMachine() machine}.
+     * @param resources A mapping of resource URI to server destination.
+     * @see #copyResource(String, String)
+     */
     public void copyResources(Map<String, String> resources) {
         if (resources != null && resources.size() > 0) {
             log.info("Customising {} with resources: {}", entity, resources);
@@ -236,18 +268,43 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
     }
 
+    /**
+     * @param file File to copy.
+     * @param target Destination on server. Will be prefixed with the entity's
+     *               {@link #getRunDir() run directory} if relative.
+     * @return The exit code the SSH command run.
+     */
     public int copyResource(File file, String target) {
         return copyResource(file.toURI().toASCIIString(), target);
     }
+
+    /**
+     * @param resource URI of file to copy, e.g. file://.., http://.., classpath://..
+     * @param target Destination on server. Will be prefixed with the entity's
+     *               {@link #getRunDir() run directory} if relative.
+     * @return The exit code of the SSH command run
+     */
     public int copyResource(String resource, String target) {
         return copyResource(MutableMap.of(), resource, target);
     }
+
+
+    /**
+     * @param sshFlags Extra flags to be used when making an SSH connection to the entity's machine.
+     *                 If the map contains the key {@link #IGNORE_ENTITY_SSH_FLAGS} then only the
+     *                 given flags are used. Otherwise, the given flags are combined with (and take
+     *                 precendence over) the flags returned by {@link #getSshFlags()}.
+     * @param resource URI of file to copy, e.g. file://.., http://.., classpath://..
+     * @param target Destination on server. Will be prefixed with the entity's
+     *               {@link #getRunDir() run directory} if relative.
+     * @return The exit code of the SSH command run
+     */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public int copyResource(Map flags2, String resource, String target) {
+    public int copyResource(Map sshFlags, String resource, String target) {
         Map flags = Maps.newLinkedHashMap();
-        if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
+        if (!sshFlags.containsKey(IGNORE_ENTITY_SSH_FLAGS))
             flags.putAll(getSshFlags());
-        flags.putAll(flags2);
+        flags.putAll(sshFlags);
 
         // prefix with runDir if relative target
         String dest = target;
