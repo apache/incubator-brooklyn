@@ -5,14 +5,11 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Maps;
 
 public class EntityTestUtils {

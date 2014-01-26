@@ -53,6 +53,13 @@ public class PortRangesTest {
         assertContents(r, 80);
     }
 
+    @Test
+    public void testCoercionInt() {
+        PortRanges.init();
+        PortRange r = TypeCoercions.coerce(80, PortRange.class);
+        assertContents(r, 80);
+    }
+
     private static <T> void assertContents(Iterable<T> actual, T ...expected) {
         Iterator<T> i = actual.iterator();
         int c = 0;

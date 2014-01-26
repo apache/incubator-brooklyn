@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import brooklyn.location.PortRange;
 import brooklyn.util.flags.TypeCoercions;
@@ -206,18 +207,24 @@ public class PortRanges {
         }
     }
 
+    private static AtomicBoolean initialized = new AtomicBoolean(false); 
     /** performs the language extensions required for this project */
     @SuppressWarnings("rawtypes")
     public static void init() {
-        TypeCoercions.registerAdapter(Integer.class, PortRange.class, new Function<Integer,PortRange>() {
-            public PortRange apply(Integer x) { return fromInteger(x); }
-        });
-        TypeCoercions.registerAdapter(String.class, PortRange.class, new Function<String,PortRange>() {
-            public PortRange apply(String x) { return fromString(x); }
-        });
-        TypeCoercions.registerAdapter(Collection.class, PortRange.class, new Function<Collection,PortRange>() {
-            public PortRange apply(Collection x) { return fromCollection(x); }
-        });
+        if (initialized.get()) return;
+        synchronized (initialized) {
+            if (initialized.get()) return;
+            TypeCoercions.registerAdapter(Integer.class, PortRange.class, new Function<Integer,PortRange>() {
+                public PortRange apply(Integer x) { return fromInteger(x); }
+            });
+            TypeCoercions.registerAdapter(String.class, PortRange.class, new Function<String,PortRange>() {
+                public PortRange apply(String x) { return fromString(x); }
+            });
+            TypeCoercions.registerAdapter(Collection.class, PortRange.class, new Function<Collection,PortRange>() {
+                public PortRange apply(Collection x) { return fromCollection(x); }
+            });
+            initialized.set(true);
+        }
     }
     
     static {

@@ -195,7 +195,9 @@ public class BasicLocationRegistry implements LocationRegistry {
                 return resolver.newLocationFromString(locationFlags, spec, this);
             }
 
-            throw new NoSuchElementException("No resolver found for '"+spec+"'");
+            // problem: but let's ensure that classpath is sane to give better errors in common IDE bogus case
+            throw new NoSuchElementException("No resolver found for '"+spec+"': "
+                + "known resolvers are "+resolvers.keySet()+"; if you do not see an expected resolver, ensure your classpath is correct include META-INF/services");
         } finally {
             specsSeen.remove();
         }
