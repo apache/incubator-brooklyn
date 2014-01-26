@@ -21,7 +21,7 @@
 	
 	
 <!-- Clipboard support -->
-<script src="{{ site.url }}/style/js/zeroclipboard/ZeroClipboard.js"></script>
+<script src="{{ site.url }}/style/js/zeroclipboard/ZeroClipboard.min.js"></script>
 <style type="text/css">
 .clipboard_container { float: right; padding: 8px; }
 .clipboard_button {
@@ -29,11 +29,11 @@
     background-size: 18px 21px;
     width: 18px; height: 21px;
 }
-.clipboard_button.hover  { background-image: url("{{ site.url }}/style/icons/clipboard-green-hover.png"); }
-.clipboard_button.active  { background-image: url("{{ site.url }}/style/icons/clipboard-green-click.png"); }'
+.clipboard_button:hover, .clipboard_button.zeroclipboard-is-hover { background-image: url("{{ site.url }}/style/icons/clipboard-green-hover.png"); }
+.clipboard_button:active, .clipboard_button.zeroclipboard-is-active { background-image: url("{{ site.url }}/style/icons/clipboard-green-click.png"); }'
 </style>
 <script type="text/javascript"> <!-- clipboard -->
-ZeroClipboard.setMoviePath( '{{ site.url }}/style/js/zeroclipboard/ZeroClipboard.swf' );
+  ZeroClipboard.config({ moviePath: '{{ site.url }}/style/js/zeroclipboard/ZeroClipboard.swf' });
 </script>
 <script type="text/javascript"> <!-- clipboard positioning -->
 $(document).ready(function() {
@@ -41,8 +41,8 @@ $(document).ready(function() {
     '<div class="clipboard_button"/>'+
   '</div>').insertBefore($('div.highlight'))
   $('div.clipboard_container').each(function(index) {
-    var clipboard = new ZeroClipboard.Client();
-    clipboard.glue( $(this).find(":first")[0], $(this)[0] );
+    var clipboard = new ZeroClipboard();
+    clipboard.clip( $(this).find(":first")[0], $(this)[0] );
     var target = $(this).next();
     var txt = target.text().trim();
     if (target.find('code.bash')) {
@@ -51,7 +51,10 @@ $(document).ready(function() {
       // lines, where a leading '$' or '%' is *not* a prompt character.
       txt = txt.replace(/(^|[^\\]\n)[$%] /g, "$1");
     }
-    clipboard.setText(txt);
+console.log("setting text to "+txt);
+    clipboard.on( 'dataRequested', function (client, args) {
+      client.setText( txt );
+    });
   });
 });
 </script>
