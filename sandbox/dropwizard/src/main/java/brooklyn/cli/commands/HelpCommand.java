@@ -1,8 +1,8 @@
 package brooklyn.cli.commands;
 
 import brooklyn.cli.Client;
-import org.iq80.cli.Command;
-import org.iq80.cli.Help;
+import io.airlift.command.Command;
+import io.airlift.command.Help;
 
 import javax.inject.Inject;
 

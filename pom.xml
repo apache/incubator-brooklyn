@@ -100,7 +100,7 @@
         <sshj.version>0.8.1</sshj.version>
         <reflections.version>0.9.9-RC1</reflections.version>
         <jetty.version>8.1.4.v20120524</jetty.version>
-        <git-like-cli.version>0.3</git-like-cli.version>
+        <airline.version>0.6</airline.version>
         <mockwebserver.version>20121111</mockwebserver.version>
         <httpclient.version>4.2.5</httpclient.version>
         <freemarker.version>2.3.19</freemarker.version>
