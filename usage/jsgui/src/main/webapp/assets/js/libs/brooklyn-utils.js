@@ -50,6 +50,11 @@ define([
         String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
     }
 
+    // poor-man's copy
+    Util.promptCopyToClipboard = function(text) {
+        window.prompt("To copy to the clipboard, press Ctrl+C then Enter.", text);
+    };
+
     return Util;
 
 });

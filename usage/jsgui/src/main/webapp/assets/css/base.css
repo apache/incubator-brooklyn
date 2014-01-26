@@ -634,6 +634,7 @@ line-height: 18px;
     color: #CDC;
     font-weight: 300;
     font-size: 85%;
+    line-height: 14px;
     border: 1px dotted #CDC;
     -webkit-border-radius: 2px 2px 2px 2px !important;
     -moz-border-radius: 2px 2px 2px 2px !important;
@@ -646,9 +647,13 @@ line-height: 18px;
     color: #E0E4E0;
 }
 .light-popup-menu-item {
-    padding: 1px 6px;
+    padding: 1px 8px 1px 6px;
 }
 .light-popup-menu-item:hover {
+    background-color: #58AA33;
+    color: #000;
+}
+.light-popup-menu-item.zeroclipboard-is-hover {
     background-color: #58AA33;
     color: #000;
 }
@@ -743,9 +748,15 @@ table.dataTable tr.even.selected td.sorting_1 {
 table.nonDatatables tr:hover,
 table.nonDatatables tr.odd:hover,
 table.nonDatatables tr.even:hover,
+table.nonDatatables tr.zeroclipboard-is-hover,
+table.nonDatatables tr.even.zeroclipboard-is-hover,
+table.nonDatatables tr.odd.zeroclipboard-is-hover,
 table.dataTable tr:hover:not(.selected),
 table.dataTable tr.odd:hover:not(.selected),
 table.dataTable tr.even:hover:not(.selected),
+table.dataTable tr.zeroclipboard-is-hover:not(.selected),
+table.dataTable tr.odd.zeroclipboard-is-hover:not(.selected),
+table.dataTable tr.even.zeroclipboard-is-hover:not(.selected),
 table.nonDatatables tr:hover td,
 table.nonDatatables tr.odd:hover td,
 table.nonDatatables tr.even:hover td,
@@ -1289,4 +1300,26 @@ input[type="file"] {
     border-radius: 3px 3px 3px 3px !important;
     display: inline-block;
     white-space: nowrap;
+}
+
+/* hover menu at left, as used in sensors view */
+.floatGroup .floatLeft {
+	display:none;
+	width: 18px;
+	margin-left: -18px;
+	margin-top: -16px;
+	position: absolute;
+	overflow: visible;
+}
+.floatGroup .floatDown {
+	display:none;
+ 	position: absolute;
+ 	margin-top: -2px;
+	overflow: visible;
+}
+.floatGroup .floatDown .light-popup {
+	display: block;
+    position: absolute;
+    top: auto;
+    z-index: 1;
 }

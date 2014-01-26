@@ -4,11 +4,11 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils",
+    "underscore", "jquery", "backbone", "URI", "brooklyn-utils",
     "view/viewutils", "model/sensor-summary",
     "text!tpl/apps/sensors.html", "text!tpl/apps/sensor-name.html",
     "jquery-datatables", "datatables-extensions"
-], function (_, $, Backbone, Util, ViewUtils, SensorSummary, SensorsHtml, SensorNameHtml) {
+], function (_, $, Backbone, _URI, Util, ViewUtils, SensorSummary, SensorsHtml, SensorNameHtml) {
 
     var sensorHtml = _.template(SensorsHtml),
         sensorNameHtml = _.template(SensorNameHtml);
@@ -17,11 +17,20 @@ define([
         template: sensorHtml,
         sensorMetadata:{},
         refreshActive:true,
+        zeroClipboard: null,
 
         events:{
             'click .refresh': 'updateSensorsNow',
             'click .filterEmpty':'toggleFilterEmpty',
-            'click .toggleAutoRefresh':'toggleAutoRefresh'
+            'click .toggleAutoRefresh':'toggleAutoRefresh',
+            'click .valueOpen':'valueOpen',
+            'mouseover .floatGroup':'noteFloatMenuActive',
+            'mouseout .floatGroup':'noteFloatMenuSeemsInactive',
+            'mouseover .clipboard-item':'noteFloatMenuActiveCI',
+            'mouseout .clipboard-item':'noteFloatMenuSeemsInactiveCI',
+            'mouseover .hasFloatLeft':'showFloatLeft',
+            'mouseover .hasFloatDown':'showFloatDown',
+            'click .light-popup-menu-item':'closeFloatMenuNow'
         },
 
         initialize:function () {
@@ -45,7 +54,7 @@ define([
                                          var actions = that.getSensorActions(data.name);
                                          // if data.description or .type is absent we get an error in html rendering (js)
                                          // unless we set it explicitly (there is probably a nicer way to do this however?)
-                                         var context = _.extend(data, {href: actions.json, 
+                                         var context = _.extend(data, { 
                                              description: data['description'], type: data['type']});
                                          return sensorNameHtml(context);
                                      },
@@ -53,14 +62,73 @@ define([
                                  },
                                  { // value
                                      "mRender": function ( data, type, row ) {
-                                         var escaped = Util.toDisplayString(data),
-                                             sensorName = row[0],
-                                             openHint = that.getSensorActions(sensorName).open;
+                                         var escapedValue = Util.toDisplayString(data);
+                                         if (type!='display')
+                                             return escapedValue;
                                          
-                                         if (openHint) {
-                                             escaped = "<a href='"+openHint+"'>" + escaped + "</a>";
+                                         var hasEscapedValue = (escapedValue!=null && (""+escapedValue).length > 0);
+                                             sensorName = row[0],
+                                             actions = that.getSensorActions(sensorName);
+                                         
+                                         // datatables doesn't seem to expose any way to modify the html in place for a cell,
+                                         // so we rebuild
+                                         
+                                         var result = "<span class='value'>"+(hasEscapedValue ? escapedValue : '')+"</span>";
+                                         if (actions.open)
+                                             result = "<a href='"+actions.open+"'>" + result + "</a>";
+                                         if (escapedValue==null || escapedValue.length < 3)
+                                             // include whitespace so we can click on it, if it's really small
+                                             result += "&nbsp;&nbsp;&nbsp;&nbsp;";
+
+                                         var $row = $('tr[id="'+sensorName+'"]');
+                                         var existing = $row.find('.dynamic-contents');
+                                         // for the json url, use the full url (relative ro window.location.href)
+                                         var jsonUrl = actions.json ? new URI(actions.json).resolve(new URI(window.location.href)).toString() : null;
+                                         // prefer to update in place, so menus don't disappear, also more efficient
+                                         // (but if menu is changed, we do recreate it)
+                                         if (existing.length>0) {
+                                             if (that.checkFloatMenuUpToDate($row, actions.open, '.actions-open', 'open-target') &&
+                                                 that.checkFloatMenuUpToDate($row, escapedValue, '.actions-copy') &&
+                                                 that.checkFloatMenuUpToDate($row, actions.json, '.actions-json-open', 'open-target') &&
+                                                 that.checkFloatMenuUpToDate($row, jsonUrl, '.actions-json-copy', 'copy-value')) {
+//                                                 log("updating in place "+sensorName)
+                                                 existing.html(result);
+                                                 return $row.find('td.sensor-value').html();
+                                             }
                                          }
-                                         return escaped;
+                                         
+                                         // build the menu - either because it is the first time, or the actions are stale
+//                                         log("creating "+sensorName);
+                                         
+                                         var downMenu = "";
+                                         if (actions.open)
+                                             downMenu += "<div class='light-popup-menu-item valueOpen actions-open' open-target='"+actions.open+"'>" +
+                                             		"Open</div>";
+                                         if (hasEscapedValue) downMenu +=
+                                             "<div class='light-popup-menu-item handy valueCopy actions-copy clipboard-item'>Copy Value</div>";
+                                         if (actions.json) downMenu +=
+                                             "<div class='light-popup-menu-item handy valueOpen actions-json-open' open-target='"+actions.json+"'>" +
+                                                 "Open REST Link</div>";
+                                         if (actions.json && hasEscapedValue) downMenu +=
+                                             "<div class='light-popup-menu-item handy valueCopy actions-json-copy clipboard-item' copy-value='"+
+                                                 jsonUrl+"'>Copy REST Link</div>";
+                                         if (downMenu=="") {
+                                             log("no actions for "+sensorName);
+                                             downMenu += 
+                                                 "<div class='light-popup-menu-item'>(no actions)</div>";
+                                         }
+                                         downMenu = "<div class='floatDown'><div class='light-popup'><div class='light-popup-body'>"
+                                             + downMenu +
+                                             "</div></div></div>";
+                                         result = "<span class='hasFloatLeft handy dynamic-contents'>" + result +
+                                         		"</span>" +
+                                         		"<div class='floatLeft'><span class='icon-chevron-down hasFloatDown'></span>" +
+                                         		downMenu +
+                                         		"</div>";
+                                         result = "<div class='floatGroup'>" + result + "</div>";
+                                         // also see updateFloatMenus which wires up the JS for these classes
+                                         
+                                         return result;
                                      },
                                      "aTargets": [ 2 ]
                                  },
@@ -68,6 +136,24 @@ define([
                                  { "bVisible": false,  "aTargets": [ 0 ] }
                              ]            
             });
+            
+            this.zeroClipboard = new ZeroClipboard();
+            this.zeroClipboard.on( "dataRequested" , function(client) {
+                var text = $(this).attr('copy-value');
+                if (!text) text = $(this).closest('.floatGroup').find('.value').html();
+                try {
+                    client.setText(text);
+                } catch (e) {
+                    log("Zeroclipboard failure; falling back to prompt mechanism");
+                    log(e);
+                    Util.promptCopyToClipboard(text);
+                }
+                that.closeFloatMenuNow();
+            });
+            // these seem to arrive delayed sometimes, so we also work with the clipboard-item class events
+            this.zeroClipboard.on( "mouseover", function() { that.noteFloatMenuZeroClipboardItem(true, this); } );
+            this.zeroClipboard.on( "mouseout", function() { that.noteFloatMenuZeroClipboardItem(false, this); } );
+            
             ViewUtils.addFilterEmptyButton(this.table);
             ViewUtils.addAutoRefreshButton(this.table);
             ViewUtils.addRefreshButton(this.table);
@@ -77,8 +163,166 @@ define([
             return this;
         },
         
+        /* getting the float menu to pop-up and go away with all the right highlighting
+         * is ridiculous. this is pretty good, but still not perfect. it seems some events
+         * just don't fire, others occur out of order, and the root cause is that when
+         * the SWF object (which has to accept the click, for copy to work) gets focus,
+         * its ancestors *lose* focus - we have to suppress the event which makes the
+         * float group disappear.  i have left logging in, commented out, for more debugging.
+         * there are notes that ZeroClipboard 2.0 will support hover properly.
+         */
+        floatMenuActive: false,
+        lastFloatMenu: null,
+        lastFloatFocusIn: null,
+        updateFloatMenus: function() { this.zeroClipboard.clip( $('.valueCopy') ); },
+        showFloatLeft: function(event) {
+            this.noteFloatMenuFocusChange(true, event, "show-left");
+            $(event.currentTarget).next('.floatLeft').show(); },
+        showFloatDown: function(event) {
+            this.noteFloatMenuFocusChange(true, event, "show-down");
+            var down = $(event.currentTarget).next('.floatDown');
+            down.show();
+            $('.light-popup', down).show(); 
+        },
+        noteFloatMenuActive: function(focus) { 
+            this.noteFloatMenuFocusChange(true, focus, "menu");
+            // remove dangling zc events (these don't always get removed, apparent bug in zc event framework)
+            // this causes it to flash sometimes but that's better than leaving the old item highlighted
+            if (focus.toElement && $(focus.toElement).hasClass('clipboard-item')) {
+                // don't remove it
+            } else {
+                var zc = $(focus.target).closest('.floatGroup').find('div.zeroclipboard-is-hover');
+                zc.removeClass('zeroclipboard-is-hover');
+            }
+        },
+        noteFloatMenuSeemsInactive: function(focus) { this.noteFloatMenuFocusChange(false, focus, "menu"); },
+        noteFloatMenuActiveCI: function(focus) { this.noteFloatMenuFocusChange(true, focus, "menu-clip-item"); },
+        noteFloatMenuSeemsInactiveCI: function(focus) { this.noteFloatMenuFocusChange(false, focus, "menu-clip-item"); },
+        noteFloatMenuZeroClipboardItem: function(seemsActive,focus) { 
+            this.noteFloatMenuFocusChange(seemsActive, focus, "clipboard");
+            if (seemsActive) {
+                // make the table row highlighted (as the default hover event is lost)
+                // we remove it when the float group goes away
+                $(focus).closest('tr').addClass('zeroclipboard-is-hover');
+            } else {
+                // sometimes does not get removed by framework - though this doesn't seem to help
+                // as you can see by logging this before and after:
+//                log(""+$(focus).attr('class'))
+                // the problem is that the framework seems sometime to trigger this event before adding the class
+                // see in noteFloatMenuActive where we do a different check
+                $(focus).removeClass('zeroclipboard-is-hover');
+            }
+        },
+        noteFloatMenuFocusChange: function(seemsActive, focus, caller) {
+//            log(""+new Date().getTime()+" note active "+caller+" "+seemsActive);
+            var delayCheckFloat = true;
+            var fg = null;
+            if (focus) {
+                var focusElement = focus.target ? focus.target : focus;
+                if (seemsActive) {
+                    this.lastFloatFocusIn = $(focusElement).text();
+                    fg = focus.target ? $(focus.target).closest('tr').attr('id') : $(focus).closest('tr').attr('id');
+                    if (this.floatMenuActive && fg==this.lastFloatMenu) {
+                        // lastFloatMenu has not changed, when moving within a floatgroup
+                        // (but we still get mouseout events when the submenu changes)
+//                        log("redundant mousein from "+ fg );
+                        return;
+                    }
+                } else {
+                    // on mouseout, skip events which are bogus
+                    // first, if the toElement is in the same floatGroup
+                    fg = focus.toElement ? $(focus.toElement).closest('tr').attr('id') : null;
+                    if (fg==this.lastFloatMenu) {
+                        // lastFloatMenu has not changed, when moving within a floatgroup
+                        // (but we still get mouseout events when the submenu changes)
+//                        log("skipping, internal mouseout from "+ fg );
+                        return;
+                    }
+                    // check (a) it is the 'out' event corresponding to the most recent 'in'
+                    // (because there is a race where it can say  in1, in2, out1 rather than in1, out2, in2
+                    if ($(focusElement).text() != this.lastFloatFocusIn) {
+//                        log("skipping, not most recent mouseout from "+ fg );
+                        return;
+                    }
+                    if (focus.toElement) {
+                        if ($(focus.toElement).hasClass('global-zeroclipboard-container')) {
+//                            log("skipping out, as we are moving to clipboard container");
+                            return;
+                        }
+                        if (focus.toElement.name && focus.toElement.name=="global-zeroclipboard-flash-bridge") {
+//                            log("skipping out, as we are moving to clipboard movie");
+                            return;                            
+                        }
+                    }
+                } 
+            }           
+//            log( "moving to "+fg );
+            if (seemsActive && fg) {
+//                log("setting lastFloat when "+this.floatMenuActive + ", from "+this.lastFloatMenu );
+                if (this.lastFloatMenu && this.lastFloatMenu != fg) {
+                    // the floating menu has changed, hide them, then we will reshow
+//                    log("hiding old menu on float-focus change");
+                    this.closeFloatMenuNow();
+                }
+                this.lastFloatMenu = fg;
+            }
+            this.floatMenuActive = seemsActive;
+            if (!seemsActive)
+                this.scheduleCheckFloatMenuNeedsHiding(delayCheckFloat);
+        },
+        scheduleCheckFloatMenuNeedsHiding: function(delayCheckFloat) {
+            if (delayCheckFloat) {
+                this.checkTime = new Date().getTime()+299;
+                setTimeout(this.checkFloatMenuNeedsHiding, 300);
+            } else {
+                this.checkTime = new Date().getTime()-1;
+                this.checkFloatMenuNeedsHiding();
+            }
+        },
+        closeFloatMenuNow: function() {
+//            log("closing float menu due do direct call (eg click)");
+            this.checkTime = new Date().getTime()-1;
+            this.floatMenuActive = false;
+            this.checkFloatMenuNeedsHiding();
+        },
+        checkFloatMenuNeedsHiding: function() {
+//            log(""+new Date().getTime()+" checking float menu - "+this.floatMenuActive);
+            if (new Date().getTime() <= this.checkTime) {
+//                log("aborting check as another one scheduled");
+                return;
+            }
+            
+            // we use a flag to determine whether to hide the float menu
+            // because the embedded zero-clipboard flash objects cause floatGroup 
+            // to get a mouseout event when the "Copy" menu item is hovered
+            if (!this.floatMenuActive) {
+//                log("HIDING FLOAT MENU")
+                $('.floatLeft').hide(); 
+                $('.floatDown').hide();
+                $('.zeroclipboard-is-hover').removeClass('zeroclipboard-is-hover');
+                lastFloatMenu = null;
+            } else {
+//                log("we're still in")
+            }
+        },
+        valueOpen: function(event) {
+            window.open($(event.target).attr('open-target'),'_blank');
+        },
+
         render: function() {
             return this;
+        },
+        checkFloatMenuUpToDate: function($row, actionValue, actionSelector, actionAttribute) {
+            if (typeof actionValue === 'undefined' || actionValue==null || actionValue=="") {
+                if ($row.find(actionSelector).length==0) return true;
+            } else {
+                if (actionAttribute) {
+                    if ($row.find(actionSelector).attr(actionAttribute)==actionValue) return true;
+                } else {
+                    if ($row.find(actionSelector).length>0) return true;
+                }
+            }
+            return false;
         },
 
         /**
@@ -138,6 +382,8 @@ define([
                 } 
                 return [name, metadata, value];
             }, options);
+            
+            that.updateFloatMenus();
         },
 
         /**

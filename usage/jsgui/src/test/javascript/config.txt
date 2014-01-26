@@ -19,7 +19,9 @@
         "brooklyn-utils":"js/libs/brooklyn-utils",
         "datatables-extensions":"js/libs/dataTables.extensions",
         "googlemaps":"view/googlemaps",
+        // async deliberately excluded
         "text":"js/libs/text",
+        "URI":"js/libs/URI",
 
         "model":"js/model",
         "view":"js/view",
