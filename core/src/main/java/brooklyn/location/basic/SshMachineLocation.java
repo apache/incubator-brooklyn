@@ -206,12 +206,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                             }
                         } else {
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("Pool evicted from SshTool cache. Eviction cause: {}", notification.getCause().name());
+                                LOG.debug("{} evicted from SshTool cache. Eviction cause: {}",
+                                        removed, notification.getCause().name());
                             }
                             try {
                                 removed.close();
                             } catch (IOException e) {
-                                // LoadingCache will catch, log and disregard the exception itself
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("Exception closing "+removed, e);
+                                }
                             }
                         }
                     }
