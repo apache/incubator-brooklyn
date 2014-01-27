@@ -200,16 +200,16 @@ public class JcloudsUtil implements JcloudsLocationConfig {
             }
         }
 
-        String endpoint = conf.get(CLOUD_ENDPOINT);
-        if (!truth(endpoint)) endpoint = getDeprecatedProperty(conf, Constants.PROPERTY_ENDPOINT);
-        if (truth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
-
         // FIXME Deprecated mechanism, should have a ConfigKey for overrides
         Map<String, Object> extra = Maps.filterKeys(conf.getAllConfig(), Predicates.containsPattern("^jclouds\\."));
         if (extra.size() > 0) {
             LOG.warn("Jclouds using deprecated property overrides: "+Entities.sanitize(extra));
         }
         properties.putAll(extra);
+
+        String endpoint = conf.get(CLOUD_ENDPOINT);
+        if (!truth(endpoint)) endpoint = getDeprecatedProperty(conf, Constants.PROPERTY_ENDPOINT);
+        if (truth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
 
         Map<?,?> cacheKey = MutableMap.builder()
                 .putAll(properties)
