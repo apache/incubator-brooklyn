@@ -2,7 +2,10 @@ package brooklyn.location.basic;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +19,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Time;
 
@@ -88,6 +92,26 @@ public class SshMachineLocationPerformanceTest {
         runExecManyCommands(ImmutableList.of("echo "+bigstr+" | wc -c"), "big-stdin", 10);
     }
 
+    @Test(groups = {"Integration"})
+    public void testConsecutiveSmallCommandsWithDifferentProperties() throws Exception {
+        final Map<String, ?> emptyProperties = Collections.emptyMap();
+        final Map<String, ?> customProperties = MutableMap.of(
+                "address", InetAddress.getLocalHost(),
+                SshTool.PROP_SESSION_TIMEOUT.getName(), 20000,
+                SshTool.PROP_CONNECT_TIMEOUT.getName(), 50000,
+                SshTool.PROP_SCRIPT_HEADER.getName(), "#!/bin/bash");
+
+        Runnable task = new Runnable() {
+            @Override public void run() {
+                if (Math.random() < 0.5) {
+                    machine.execScript(emptyProperties, "test", ImmutableList.of("true"));
+                } else {
+                    machine.execScript(customProperties, "test", ImmutableList.of("true"));
+                }
+            }};
+        runMany(task, "small-cmd-custom-ssh-properties", 1, 10);
+    }
+
     private void runExecManyCommands(final List<String> cmds, String context, int iterations) throws Exception {
         runExecManyCommands(cmds, context, 1, iterations);
     }
@@ -124,7 +148,8 @@ public class SshMachineLocationPerformanceTest {
             long postCpuTime = (Long) mbeanServer.getAttribute(osMBeanName, "ProcessCpuTime");
             long elapsedTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             double fractionCpu = (elapsedTime > 0) ? ((double)postCpuTime-preCpuTime) / TimeUnit.MILLISECONDS.toNanos(elapsedTime) : -1;
-            LOG.info("Executing {}; completed {}; took {}; fraction cpu {}", new Object[] {context, (i+1), Time.makeTimeStringRounded(elapsedTime), fractionCpu});
+            LOG.info("Executing {}; completed {}; took {}; fraction cpu {}",
+                    new Object[] {context, (i+1), Time.makeTimeStringRounded(elapsedTime), fractionCpu});
         }
     }
 
