@@ -25,7 +25,7 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a Cassandra node in a {@link CassandraCluster}.
+ * An {@link brooklyn.entity.Entity} that represents a Cassandra node in a {@link CassandraDatacenter}.
  */
 @ImplementedBy(CassandraNodeImpl.class)
 public interface CassandraNode extends DatastoreMixins.DatastoreCommon, SoftwareProcess, UsesJmx, UsesJavaMXBeans, DatastoreMixins.HasDatastoreUrl, DatastoreMixins.CanExecuteScript {
@@ -45,10 +45,10 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     ConfigKey<String> TGZ_URL = new BasicConfigKey<String>(String.class, "cassandra.install.tgzUrl", "URL of TGZ download file");
 
     @SetFromFlag("clusterName")
-    BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = CassandraCluster.CLUSTER_NAME;
+    BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = CassandraDatacenter.CLUSTER_NAME;
 
     @SetFromFlag("snitchName")
-    ConfigKey<String> ENDPOINT_SNITCH_NAME = CassandraCluster.ENDPOINT_SNITCH_NAME;
+    ConfigKey<String> ENDPOINT_SNITCH_NAME = CassandraDatacenter.ENDPOINT_SNITCH_NAME;
 
     @SetFromFlag("gossipPort")
     PortAttributeSensorAndConfigKey GOSSIP_PORT = new PortAttributeSensorAndConfigKey("cassandra.gossip.port", "Cassandra Gossip communications port", PortRanges.fromString("7000+"));
@@ -83,16 +83,16 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
 
     @SetFromFlag("cassandraRackdcConfigFileName")
     ConfigKey<String> CASSANDRA_RACKDC_CONFIG_FILE_NAME = ConfigKeys.newStringConfigKey(
-            "cassandra.config.rackdc.fileName", "Name for the copied rackdc config file", "cassandra-rackdc.properties");
+            "cassandra.config.rackdc.fileName", "Name for the copied rackdc config file (used for configuring replication, when a suitable snitch is used)", "cassandra-rackdc.properties");
     
     @SetFromFlag("datacenterName")
     BasicAttributeSensorAndConfigKey<String> DATACENTER_NAME = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "cassandra.replication.datacenterName", "Datacenter name (used for configuring replication)", 
+            String.class, "cassandra.replication.datacenterName", "Datacenter name (used for configuring replication, when a suitable snitch is used)", 
             null);
 
     @SetFromFlag("rackName")
     BasicAttributeSensorAndConfigKey<String> RACK_NAME = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "cassandra.replication.rackName", "Rack name (used for configuring replication)", 
+            String.class, "cassandra.replication.rackName", "Rack name (used for configuring replication, when a suitable snitch is used)", 
             null);
 
     @SetFromFlag("token")
@@ -132,7 +132,7 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     ConfigKey<String> BROADCAST_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.broadcastAddressSensor", "sensor name from which to take the broadcast address; default (null) is a smart lookup");
     ConfigKey<String> RPC_ADDRESS_SENSOR = ConfigKeys.newStringConfigKey("cassandra.rpcAddressSensor", "sensor name from which to take the RPC address; default (null) is 0.0.0.0");
 
-    Effector<String> EXECUTE_SCRIPT = CassandraCluster.EXECUTE_SCRIPT;
+    Effector<String> EXECUTE_SCRIPT = CassandraDatacenter.EXECUTE_SCRIPT;
 
     /* Accessors used from template */
     

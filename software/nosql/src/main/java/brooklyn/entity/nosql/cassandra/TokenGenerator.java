@@ -5,6 +5,12 @@ import java.util.Set;
 
 public interface TokenGenerator {
 
+    BigInteger max();
+    BigInteger min();
+    BigInteger range();
+
+    void setOrigin(BigInteger shift);
+    
     BigInteger newToken();
     
     BigInteger getTokenForReplacementNode(BigInteger oldToken);

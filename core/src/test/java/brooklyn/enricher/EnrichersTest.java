@@ -46,8 +46,7 @@ public class EnrichersTest {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-        group = app.createAndManageChild(EntitySpec.create(BasicGroup.class)
-                .configure(BasicGroup.CHILDREN_AS_MEMBERS, false));
+        group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
     }
     
     @AfterMethod(alwaysRun=true)

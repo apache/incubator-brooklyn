@@ -20,7 +20,7 @@ import java.util.List;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.nosql.cassandra.CassandraCluster;
+import brooklyn.entity.nosql.cassandra.CassandraDatacenter;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.util.CommandLineUtil;
@@ -33,9 +33,9 @@ public class SimpleCassandraCluster extends AbstractApplication {
 
     @Override
     public void init() {
-        addChild(EntitySpec.create(CassandraCluster.class)
-                .configure(CassandraCluster.INITIAL_SIZE, 1)
-                .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn"));
+        addChild(EntitySpec.create(CassandraDatacenter.class)
+                .configure(CassandraDatacenter.INITIAL_SIZE, 1)
+                .configure(CassandraDatacenter.CLUSTER_NAME, "Brooklyn"));
     }
     
     public static void main(String[] argv) {

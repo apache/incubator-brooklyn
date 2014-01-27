@@ -24,7 +24,7 @@ public interface UsesJmx extends UsesJava {
     /** chosen by java itself by default; setting this will only have any effect if using an agent */ 
     @SetFromFlag("jmxPort")
     public static final PortAttributeSensorAndConfigKey JMX_PORT = new PortAttributeSensorAndConfigKey(
-            "jmx.direct.port", "JMX direct/private port (e.g. JMX RMI server port, but not RMI registry port)", PortRanges.fromString("31001+")) {
+            "jmx.direct.port", "JMX direct/private port (e.g. JMX RMI server port, or JMXMP port, but not RMI registry port)", PortRanges.fromString("31001+")) {
         @Override protected Integer convertConfigToSensor(PortRange value, Entity entity) {
             // TODO when using JmxAgentModes.NONE we should *not* convert, but leave it null
             // (e.g. to prevent a warning in e.g. ActiveMQIntegrationTest)
@@ -55,8 +55,11 @@ public interface UsesJmx extends UsesJava {
     public enum JmxAgentModes {
         /** auto-detect the agent to use based on location, preferring JMXMP except at localhost where JMX_RMI_CUSTOM_AGENT is preferred */
         AUTODETECT,
-        /** JMXMP which permits firewall access through a single port */
+        /** JMXMP which permits firewall access through a single port {@link UsesJmx#JMX_PORT} */
         JMXMP,
+        /** Start {@link #JMXMP} along with an RMI Registry on {@link UsesJmx#RMI_REGISTRY_PORT}
+         * (redirecting to an anonymous high-numbered port as the RMI server) */
+        JMXMP_AND_RMI,
         /** JMX over RMI custom agent which permits access through a known RMI registry port, redirected to a known JMX-RMI port;
          * two ports must be opened on the firewall, and the same hostname resolvable on the target machine and by the client */
         JMX_RMI_CUSTOM_AGENT,

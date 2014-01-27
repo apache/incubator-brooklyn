@@ -39,7 +39,7 @@ import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.entity.nosql.cassandra.CassandraCluster;
+import brooklyn.entity.nosql.cassandra.CassandraDatacenter;
 import brooklyn.entity.nosql.cassandra.CassandraFabric;
 import brooklyn.entity.nosql.cassandra.CassandraNode;
 import brooklyn.entity.proxying.EntitySpec;
@@ -106,15 +106,16 @@ public class CumulusRDFApplication extends AbstractApplication {
     /**
      * Create the application entities:
      * <ul>
-     * <li>A {@link CassandraFabric} of {@link CassandraCluster}s containing {@link CassandraNode}s
+     * <li>A {@link CassandraFabric} of {@link CassandraDatacenter}s containing {@link CassandraNode}s
      * <li>A {@link TomcatServer}
      * </ul>
      */
     @Override
     public void init() {
         // Cassandra cluster
-        EntitySpec<CassandraCluster> clusterSpec = EntitySpec.create(CassandraCluster.class)
-                .configure(CassandraCluster.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
+        EntitySpec<CassandraDatacenter> clusterSpec = EntitySpec.create(CassandraDatacenter.class)
+                .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
+                        //FIXME can probably use JMXMP_AND_RMI now, to deploy to GCE and elsewhere
                         .configure(UsesJmx.JMX_AGENT_MODE, UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
                         .configure(UsesJmx.JMX_PORT, PortRanges.fromString("11099+"))
                         .configure(UsesJmx.RMI_REGISTRY_PORT, PortRanges.fromString("9001+"))
@@ -127,15 +128,15 @@ public class CumulusRDFApplication extends AbstractApplication {
 
         if (getConfig(MULTI_REGION_FABRIC)) {
             cassandra = addChild(EntitySpec.create(CassandraFabric.class)
-                    .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
-                    .configure(CassandraCluster.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE)) // per location
-                    .configure(CassandraCluster.ENDPOINT_SNITCH_NAME, "brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch")
+                    .configure(CassandraDatacenter.CLUSTER_NAME, "Brooklyn")
+                    .configure(CassandraDatacenter.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE)) // per location
+                    .configure(CassandraDatacenter.ENDPOINT_SNITCH_NAME, "brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch")
                     .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar")
                     .configure(CassandraFabric.MEMBER_SPEC, clusterSpec));
         } else {
             cassandra = addChild(EntitySpec.create(clusterSpec)
-                    .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
-                    .configure(CassandraCluster.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE)));
+                    .configure(CassandraDatacenter.CLUSTER_NAME, "Brooklyn")
+                    .configure(CassandraDatacenter.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE)));
         }
 
         // Tomcat web-app server
@@ -161,13 +162,13 @@ public class CumulusRDFApplication extends AbstractApplication {
         });
 
         // Listen for HOSTNAME changes from the Cassandra fabric to show at least one node is available
-        subscribe(cassandra, CassandraCluster.HOSTNAME, new SensorEventListener<String>() {
+        subscribe(cassandra, CassandraDatacenter.HOSTNAME, new SensorEventListener<String>() {
             @Override
             public void onEvent(SensorEvent<String> event) {
                 if (Strings.isNonBlank(event.getValue())) {
                     synchronized (endpoint) {
-                        String hostname = Entities.submit(CumulusRDFApplication.this, DependentConfiguration.attributeWhenReady(cassandra, CassandraCluster.HOSTNAME)).getUnchecked();
-                        Integer thriftPort = Entities.submit(CumulusRDFApplication.this, DependentConfiguration.attributeWhenReady(cassandra, CassandraCluster.THRIFT_PORT)).getUnchecked();
+                        String hostname = Entities.submit(CumulusRDFApplication.this, DependentConfiguration.attributeWhenReady(cassandra, CassandraDatacenter.HOSTNAME)).getUnchecked();
+                        Integer thriftPort = Entities.submit(CumulusRDFApplication.this, DependentConfiguration.attributeWhenReady(cassandra, CassandraDatacenter.THRIFT_PORT)).getUnchecked();
                         HostAndPort current = HostAndPort.fromParts(hostname, thriftPort);
 
                         // Check if the cluster access point has changed

@@ -30,7 +30,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Networking;
-import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
@@ -151,6 +151,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         ImmutableList.Builder<String> commands = new ImmutableList.Builder<String>()
                 .add(String.format("cp -R %s/{bin,conf,lib,interface,pylib,tools} .", getExpandedInstallDir()))
                 .add("mkdir -p data")
+                .add("mkdir -p brooklyn_commands")
                 .add(String.format("sed -i.bk 's/log4j.appender.R.File=.*/log4j.appender.R.File=%s/g' %s/conf/log4j-server.properties", logFileEscaped, getRunDir()))
                 .add(String.format("sed -i.bk '/JMX_PORT/d' %s/conf/cassandra-env.sh", getRunDir()))
                 // Script sets 180k on Linux which gives Java error:  The stack size specified is too small, Specify at least 228k 
@@ -193,7 +194,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         if (entity.getConfig(CassandraNode.INITIAL_SEEDS)==null) {
             if (isClustered()) {
                 entity.setConfig(CassandraNode.INITIAL_SEEDS, 
-                    DependentConfiguration.attributeWhenReady(entity.getParent(), CassandraCluster.CURRENT_SEEDS));
+                    DependentConfiguration.attributeWhenReady(entity.getParent(), CassandraDatacenter.CURRENT_SEEDS));
             } else {
                 entity.setConfig(CassandraNode.INITIAL_SEEDS, MutableSet.<Entity>of(entity));
             }
@@ -202,7 +203,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public boolean isClustered() {
-        return entity.getParent() instanceof CassandraCluster;
+        return entity.getParent() instanceof CassandraDatacenter;
     }
 
     @Override
@@ -215,11 +216,11 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         		"hostname (subnet) " + subnetHostname + ", " +
         		"seeds "+((CassandraNode)entity).getSeeds()+" (from "+seeds+")");
         boolean isFirst = seeds.iterator().next().equals(entity);
-        if (isClustered() && !isFirst && CassandraCluster.WAIT_FOR_FIRST) {
+        if (isClustered() && !isFirst && CassandraDatacenter.WAIT_FOR_FIRST) {
             // wait for the first node
-            long firstStartTime = Entities.submit(entity, DependentConfiguration.attributeWhenReady(getEntity().getParent(), CassandraCluster.FIRST_NODE_STARTED_TIME_UTC)).getUnchecked();
+            long firstStartTime = Entities.submit(entity, DependentConfiguration.attributeWhenReady(getEntity().getParent(), CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC)).getUnchecked();
             // optionally force a delay before starting subsequent nodes; see comment at CassandraCluster.DELAY_AFTER_FIRST
-            Duration toWait = Duration.millis(firstStartTime + CassandraCluster.DELAY_AFTER_FIRST.toMilliseconds() -  System.currentTimeMillis());
+            Duration toWait = Duration.millis(firstStartTime + CassandraDatacenter.DELAY_AFTER_FIRST.toMilliseconds() -  System.currentTimeMillis());
             if (toWait.toMilliseconds()>0) {
                 log.info("Launching " + entity + ": delaying launch of non-first node by "+toWait+" to prevent schema disagreements");
                 Tasks.setBlockingDetails("Pausing to ensure first node has time to start");
@@ -244,7 +245,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
             }
         }
         if (isClustered() && isFirst) {
-            ((EntityLocal)getEntity().getParent()).setAttribute(CassandraCluster.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
+            ((EntityLocal)getEntity().getParent()).setAttribute(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
         }
     }
 
@@ -283,16 +284,28 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     }
 
     public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
-        String filename = "cassandra-commands-"+Identifiers.makeRandomId(8);
-        DynamicTasks.queue(SshEffectorTasks.put(Urls.mergePaths(getRunDir(), filename)).contents(commands).summary("copying cassandra-cli script to execute "+filename));
+        String filename = Os.mergePathsUnix("brooklyn_commands", "cassandra-commands-"+Identifiers.makeRandomId(8));
+        DynamicTasks.queueIfPossible(SshEffectorTasks.put(Os.mergePaths(getRunDir(), filename))
+            .machine(getMachine())
+            .contents(commands)
+            .summary("copying cassandra script to execute "+filename)).orSubmitAndBlock(getEntity());
         return executeScriptFromInstalledFileAsync(filename);
     }
 
     public ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String filenameAlreadyInstalledAtServer) {
-        return DynamicTasks.queue(SshEffectorTasks.ssh(
-                "cd "+getRunDir(),
-                String.format("./bin/cassandra-cli --port %s --file %s", ""+getEntity().getAttribute(CassandraNode.THRIFT_PORT), filenameAlreadyInstalledAtServer))
-                .summary("executing cassandra-cli script "+filenameAlreadyInstalledAtServer));
+        ProcessTaskWrapper<Integer> task = SshEffectorTasks.ssh(
+            "cd "+getRunDir(),
+            scriptInvocationCommand(getEntity().getAttribute(CassandraNode.THRIFT_PORT), filenameAlreadyInstalledAtServer))
+            .machine(getMachine())
+            .summary("executing cassandra script "+filenameAlreadyInstalledAtServer).newTask();
+        DynamicTasks.queueIfPossible(task).orSubmitAndBlock(getEntity());
+        return task;
     }
-    
+
+    protected String scriptInvocationCommand(Integer optionalThriftPort, String fileToRun) {
+        return "bin/cassandra-cli "
+            + (optionalThriftPort!=null ? "--port "+optionalThriftPort : "")
+            + " --file "+fileToRun;
+    }
+
 }

@@ -37,14 +37,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-public class CassandraClusterTest {
+public class CassandraDatacenterTest {
 
-    private static final Logger log = LoggerFactory.getLogger(CassandraClusterTest.class);
+    private static final Logger log = LoggerFactory.getLogger(CassandraDatacenterTest.class);
     
     private ManagementContext managementContext;
     private TestApplication app;
     private LocalhostMachineProvisioningLocation loc;
-    private CassandraCluster cluster;
+    private CassandraDatacenter cluster;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
@@ -60,16 +60,17 @@ public class CassandraClusterTest {
     
     @Test
     public void testPopulatesInitialSeeds() throws Exception {
-        cluster = app.createAndManageChild(EntitySpec.create(CassandraCluster.class)
-                .configure(CassandraCluster.INITIAL_SIZE, 2)
-                .configure(CassandraCluster.DELAY_BEFORE_ADVERTISING_CLUSTER, Duration.ZERO)
-                .configure(CassandraCluster.MEMBER_SPEC, EntitySpec.create(EmptySoftwareProcess.class)));
+        cluster = app.createAndManageChild(EntitySpec.create(CassandraDatacenter.class)
+                .configure(CassandraDatacenter.INITIAL_SIZE, 2)
+                .configure(CassandraDatacenter.TOKEN_SHIFT, BigInteger.ZERO)
+                .configure(CassandraDatacenter.DELAY_BEFORE_ADVERTISING_CLUSTER, Duration.ZERO)
+                .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(EmptySoftwareProcess.class)));
 
         app.start(ImmutableList.of(loc));
         EmptySoftwareProcess e1 = (EmptySoftwareProcess) Iterables.get(cluster.getMembers(), 0);
         EmptySoftwareProcess e2 = (EmptySoftwareProcess) Iterables.get(cluster.getMembers(), 1);
         
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraCluster.CURRENT_SEEDS, ImmutableSet.<Entity>of(e1, e2));
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraDatacenter.CURRENT_SEEDS, ImmutableSet.<Entity>of(e1, e2));
     }
     
     @Test
@@ -78,15 +79,16 @@ public class CassandraClusterTest {
     }
     
     protected void doTestUpdatesSeedsOnFailuresAndAdditions(boolean fast, boolean checkSeedsConstantOnRejoining) throws Exception {
-        cluster = app.createAndManageChild(EntitySpec.create(CassandraCluster.class)
-                .configure(CassandraCluster.INITIAL_SIZE, 2)
-                .configure(CassandraCluster.DELAY_BEFORE_ADVERTISING_CLUSTER, Duration.ZERO)
-                .configure(CassandraCluster.MEMBER_SPEC, EntitySpec.create(EmptySoftwareProcess.class)));
+        cluster = app.createAndManageChild(EntitySpec.create(CassandraDatacenter.class)
+                .configure(CassandraDatacenter.INITIAL_SIZE, 2)
+                .configure(CassandraDatacenter.TOKEN_SHIFT, BigInteger.ZERO)
+                .configure(CassandraDatacenter.DELAY_BEFORE_ADVERTISING_CLUSTER, Duration.ZERO)
+                .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(EmptySoftwareProcess.class)));
 
         app.start(ImmutableList.of(loc));
         EmptySoftwareProcess e1 = (EmptySoftwareProcess) Iterables.get(cluster.getMembers(), 0);
         EmptySoftwareProcess e2 = (EmptySoftwareProcess) Iterables.get(cluster.getMembers(), 1);
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraCluster.CURRENT_SEEDS, ImmutableSet.<Entity>of(e1, e2));
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraDatacenter.CURRENT_SEEDS, ImmutableSet.<Entity>of(e1, e2));
         log.debug("Test "+JavaClassNames.niceClassAndMethod()+", cluster "+cluster+" has "+cluster.getMembers()+"; e1="+e1+" e2="+e2);
         
         // calling the driver stop for this entity will cause SERVICE_UP to become false, and stay false
@@ -96,15 +98,15 @@ public class CassandraClusterTest {
         if (fast)
             ((EntityInternal)e1).setAttribute(Attributes.SERVICE_UP, false);
         
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraCluster.CURRENT_SEEDS, ImmutableSet.<Entity>of(e2));
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraDatacenter.CURRENT_SEEDS, ImmutableSet.<Entity>of(e2));
 
         cluster.resize(3);
         EmptySoftwareProcess e3 = (EmptySoftwareProcess) Iterables.getOnlyElement(Sets.difference(ImmutableSet.copyOf(cluster.getMembers()), ImmutableSet.of(e1,e2)));
         log.debug("Test "+JavaClassNames.niceClassAndMethod()+", cluster "+cluster+" has "+cluster.getMembers()+"; e3="+e3);
         try {
-            EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraCluster.CURRENT_SEEDS, ImmutableSet.<Entity>of(e2, e3));
+            EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraDatacenter.CURRENT_SEEDS, ImmutableSet.<Entity>of(e2, e3));
         } finally {
-            log.debug("Test "+JavaClassNames.niceClassAndMethod()+", cluster "+cluster+" has "+cluster.getMembers()+"; seeds "+cluster.getAttribute(CassandraCluster.CURRENT_SEEDS));
+            log.debug("Test "+JavaClassNames.niceClassAndMethod()+", cluster "+cluster+" has "+cluster.getMembers()+"; seeds "+cluster.getAttribute(CassandraDatacenter.CURRENT_SEEDS));
         }
         
         if (!checkSeedsConstantOnRejoining) {
@@ -114,16 +116,17 @@ public class CassandraClusterTest {
             if (fast)
                 ((EntityInternal)e1).setAttribute(Attributes.SERVICE_UP, true);
             EntityTestUtils.assertAttributeEqualsEventually(e1, CassandraNode.SERVICE_UP, true);
-            EntityTestUtils.assertAttributeEqualsContinually(cluster, CassandraCluster.CURRENT_SEEDS, ImmutableSet.<Entity>of(e2, e3));
+            EntityTestUtils.assertAttributeEqualsContinually(cluster, CassandraDatacenter.CURRENT_SEEDS, ImmutableSet.<Entity>of(e2, e3));
         }
     }
     
     @Test
     public void testPopulatesInitialTokens() throws Exception {
-        cluster = app.createAndManageChild(EntitySpec.create(CassandraCluster.class)
-                .configure(CassandraCluster.INITIAL_SIZE, 2)
-                .configure(CassandraCluster.DELAY_BEFORE_ADVERTISING_CLUSTER, Duration.ZERO)
-                .configure(CassandraCluster.MEMBER_SPEC, EntitySpec.create(EmptySoftwareProcess.class)));
+        cluster = app.createAndManageChild(EntitySpec.create(CassandraDatacenter.class)
+                .configure(CassandraDatacenter.INITIAL_SIZE, 2)
+                .configure(CassandraDatacenter.TOKEN_SHIFT, BigInteger.ZERO)
+                .configure(CassandraDatacenter.DELAY_BEFORE_ADVERTISING_CLUSTER, Duration.ZERO)
+                .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(EmptySoftwareProcess.class)));
 
         app.start(ImmutableList.of(loc));
 

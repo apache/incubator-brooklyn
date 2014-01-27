@@ -25,13 +25,13 @@ import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.http.BetterMockWebServer;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.mockwebserver.MockResponse;
-import com.google.mockwebserver.MockWebServer;
 
 public class HttpFeedTest {
 
@@ -42,7 +42,7 @@ public class HttpFeedTest {
 
     private static final long TIMEOUT_MS = 10*1000;
     
-    private MockWebServer server;
+    private BetterMockWebServer server;
     private URL baseUrl;
     
     private Location loc;
@@ -52,7 +52,7 @@ public class HttpFeedTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        server = new MockWebServer();
+        server = BetterMockWebServer.newInstanceLocalhost();
         for (int i = 0; i < 100; i++) {
             server.enqueue(new MockResponse().setResponseCode(200).addHeader("content-type: application/json").setBody("{\"foo\":\"myfoo\"}"));
         }
@@ -111,7 +111,7 @@ public class HttpFeedTest {
 
     @Test
     public void testUsesFailureHandlerOn4xx() throws Exception {
-        server = new MockWebServer();
+        server = BetterMockWebServer.newInstanceLocalhost();
         for (int i = 0; i < 100; i++) {
             server.enqueue(new MockResponse()
                     .setResponseCode(401)
@@ -139,7 +139,7 @@ public class HttpFeedTest {
 
     @Test
     public void testUsesExceptionHandlerOn4xxAndNoFailureHandler() throws Exception {
-        server = new MockWebServer();
+        server = BetterMockWebServer.newInstanceLocalhost();
         for (int i = 0; i < 100; i++) {
             server.enqueue(new MockResponse()
                     .setResponseCode(401)

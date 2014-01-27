@@ -20,12 +20,14 @@ import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;
@@ -93,20 +95,48 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
         Preconditions.checkArgument(locations.size() >= 1, "One or more location must be supplied");
         addLocations(locations);
         
+        MutableList<Location> newLocations = MutableList.copyOf(locations);
+        if (newLocations.isEmpty()) newLocations.addAll(getLocations());
+        int locIndex = 0;
+        
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         try {
             Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
-            for (Location it : locations) {
+            
+            // first look at existing Startable children - start them with the locations passed in here,
+            // if they have no locations yet
+            for (Entity child: getChildren()) {
+                if (child instanceof Startable) {
+                    Location it = null;
+                    if (child.getLocations().isEmpty())
+                        // give him any of these locations if he has none, allowing round robin here
+                        if (!newLocations.isEmpty()) {
+                            it = newLocations.get(locIndex++ % newLocations.size());
+                            ((EntityInternal)child).addLocations(Arrays.asList(it));
+                        }
+                    
+                    tasks.put(child, Entities.submit(this,
+                        Effectors.invocation(child, START, ImmutableMap.of("locations", 
+                            it==null ? ImmutableList.of() : ImmutableList.of(it))).asTask()));
+                }
+            }
+            // remove all the locations we applied to existing nodes
+            while (locIndex-->0 && !newLocations.isEmpty())
+                newLocations.remove(0);
+
+            // finally (and usually) we create new entities for locations passed in
+            // (unless they were consumed by pre-existing children which didn't have locations)
+            for (Location it : newLocations) {
                 Entity e = addCluster(it);
-                // FIXME: this is a quick workaround to ensure that the location is available to any membership change
-                //        listeners (notably AbstractDeoDnsService). A more robust mechanism is required; see ENGR-????
-                //        for ideas and discussion.
+                
                 ((EntityInternal)e).addLocations(Arrays.asList(it));
                 if (e instanceof Startable) {
-                    Task task = e.invoke(Startable.START, ImmutableMap.of("locations", ImmutableList.of(it)));
+                    Task<?> task = Entities.submit(this,
+                        Effectors.invocation(e, START, ImmutableMap.of("locations", ImmutableList.of(it))).asTask());
                     tasks.put(e, task);
                 }
             }
+            
             waitForTasksOnStart(tasks);
             setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
             setAttribute(SERVICE_UP, true);

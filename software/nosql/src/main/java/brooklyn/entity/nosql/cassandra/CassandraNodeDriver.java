@@ -25,4 +25,5 @@ public interface CassandraNodeDriver extends JavaSoftwareProcessDriver {
     boolean isClustered();
 
     ProcessTaskWrapper<Integer> executeScriptAsync(String commands);
+
 }
