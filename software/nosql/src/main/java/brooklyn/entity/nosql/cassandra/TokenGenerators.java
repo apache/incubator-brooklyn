@@ -16,6 +16,9 @@ import com.google.common.collect.Sets;
 
 public class TokenGenerators {
 
+    /**
+     * Sub-classes are recommended to call {@link #checkRangeValid()} at construction time.
+     */
     public static abstract class AbstractTokenGenerator implements TokenGenerator {
         
         public static final BigInteger TWO = BigInteger.valueOf(2);
@@ -28,8 +31,9 @@ public class TokenGenerators {
         private final List<BigInteger> nextTokens = Lists.newArrayList();
         private BigInteger origin = BigInteger.ZERO;
         
-        public AbstractTokenGenerator() { 
-            assert range().equals(max().subtract(min()).add(BigInteger.ONE)); 
+        protected void checkRangeValid() {
+            Preconditions.checkState(range().equals(max().subtract(min()).add(BigInteger.ONE)), 
+                    "min=%s; max=%s; range=%s", min(), max(), range());
         }
         
         @Override
@@ -126,6 +130,10 @@ public class TokenGenerators {
         public static final BigInteger MAX_TOKEN = TWO.pow(63).subtract(BigInteger.ONE);
         public static final BigInteger RANGE = TWO.pow(64);
 
+        public PosNeg63TokenGenerator() {
+            checkRangeValid();
+        }
+
         @Override public BigInteger max() { return MAX_TOKEN; }
         @Override public BigInteger min() { return MIN_TOKEN; }
         @Override public BigInteger range() { return RANGE; }
@@ -137,6 +145,10 @@ public class TokenGenerators {
         public static final BigInteger MAX_TOKEN = TWO.pow(127).subtract(BigInteger.ONE);
         public static final BigInteger RANGE = TWO.pow(127);
 
+        public NonNeg127TokenGenerator() {
+            checkRangeValid();
+        }
+        
         @Override public BigInteger max() { return MAX_TOKEN; }
         @Override public BigInteger min() { return MIN_TOKEN; }
         @Override public BigInteger range() { return RANGE; }

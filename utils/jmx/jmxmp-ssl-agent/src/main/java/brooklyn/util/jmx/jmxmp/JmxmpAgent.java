@@ -7,7 +7,9 @@ import java.net.UnknownHostException;
 import java.rmi.registry.LocateRegistry;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -87,16 +89,42 @@ public class JmxmpAgent {
     
     public static final String TLS_JMX_REMOTE_PROFILES = "TLS";
     public static final int JMXMP_DEFAULT_PORT = 11099;
-    
+
     public static void premain(String agentArgs) {
-        new JmxmpAgent().startConnectors(System.getProperties());
+        doMain(agentArgs);
     }
     
-    public void startConnectors(Properties properties) { 
-        startJmxmpConnector(properties);
-        startNormalJmxRmiConnectorIfRequested(properties);
+    public static void agentmain(String agentArgs) {
+        doMain(agentArgs);
     }
     
+    public static void doMain(String agentArgs) {
+        final List<JMXConnectorServer> connectors = new JmxmpAgent().startConnectors(System.getProperties());
+        if (!connectors.isEmpty()) {
+            Runtime.getRuntime().addShutdownHook(new Thread("jmxmp-agent-shutdownHookThread") {
+                @Override public void run() {
+                    for (JMXConnectorServer connector: connectors) {
+                        try {
+                            connector.stop();
+                        } catch (Exception e) {
+                            System.err.println("Error closing jmxmp connector "+connector+" in shutdown hook (continuing): "+e);
+                        }
+                    }
+                }});
+        }
+    }
+    
+    public List<JMXConnectorServer> startConnectors(Properties properties) {
+        List<JMXConnectorServer> connectors = new ArrayList<JMXConnectorServer>();
+        addIfNotNull(startJmxmpConnector(properties), connectors);
+        addIfNotNull(startNormalJmxRmiConnectorIfRequested(properties), connectors);
+        return connectors;
+    }
+    
+    private static <T> void addIfNotNull(T item, List<T> list) {
+        if (item!=null) list.add(item);
+    }
+
     public JMXConnectorServer startJmxmpConnector(Properties properties) {
         try {
             final int port = Integer.parseInt(properties.getProperty(JMXMP_PORT_PROPERTY, ""+JMXMP_DEFAULT_PORT));

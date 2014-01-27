@@ -34,6 +34,7 @@
                 <configuration>
                     <instructions>
                         <Premain-Class>brooklyn.util.jmx.jmxrmi.JmxRmiAgent</Premain-Class>
+                        <Agent-Class>brooklyn.util.jmx.jmxrmi.JmxRmiAgent</Agent-Class>
                     </instructions>
                 </configuration>
             </plugin>
