@@ -77,9 +77,19 @@ public class JmxmpAgent {
     
     public static final String TLS_JMX_REMOTE_PROFILES = "TLS";
     public static final int JMXMP_DEFAULT_PORT = 11099;
-    
+
     public static void premain(String agentArgs) {
-        new JmxmpAgent().startJmxmpConnector(System.getProperties());
+        final JMXConnectorServer connector = new JmxmpAgent().startJmxmpConnector(System.getProperties());
+        if (connector != null) {
+            Runtime.getRuntime().addShutdownHook(new Thread("jmxmp-agent-shutdownHookThread") {
+                @Override public void run() {
+                    try {
+                        connector.stop();
+                    } catch (Exception e) {
+                        System.err.println("Error closing jmxmp connector in shutdown hook (continuing): "+e);
+                    }
+                }});
+        }
     }
     
     public JMXConnectorServer startJmxmpConnector(Properties properties) {

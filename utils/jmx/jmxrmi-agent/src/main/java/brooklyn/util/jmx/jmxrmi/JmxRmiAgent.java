@@ -58,7 +58,17 @@ public class JmxRmiAgent {
      * The entry point, uses the JDK dynamic agent loading feature.
      */
     public static void premain(String agentArgs) throws IOException {
-        new JmxRmiAgent().startServer(System.getProperties());
+        final JMXConnectorServer connector = new JmxRmiAgent().startServer(System.getProperties());
+        if (connector != null) {
+            Runtime.getRuntime().addShutdownHook(new Thread("jmxmp-agent-shutdownHookThread") {
+                @Override public void run() {
+                    try {
+                        connector.stop();
+                    } catch (Exception e) {
+                        System.err.println("Error closing jmxmp connector in shutdown hook (continuing): "+e);
+                    }
+                }});
+        }
     }
 
     public JMXConnectorServer startServer(Properties properties) {
