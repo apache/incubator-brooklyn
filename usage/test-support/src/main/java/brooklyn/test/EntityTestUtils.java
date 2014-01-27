@@ -7,9 +7,12 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.event.AttributeSensor;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 public class EntityTestUtils {
@@ -29,11 +32,8 @@ public class EntityTestUtils {
         assertAttributeEqualsEventually(Maps.newLinkedHashMap(), entity, attribute, expected);
     }
 
-    public static <T> void assertAttributeEqualsEventually(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute, final T expected) {
-        TestUtils.executeUntilSucceeds(flags, new Runnable() {
-                public void run() {
-                    assertAttributeEquals(entity, attribute, expected);
-                }});
+    public static <T> void assertAttributeEqualsEventually(Map<?,?> flags, Entity entity, AttributeSensor<T> attribute, T expected) {
+        assertAttributeEventually(flags, entity, attribute, Predicates.equalTo(expected));
     }
 
     public static <T> void assertAttributeEventuallyNonNull(final Entity entity, final AttributeSensor<T> attribute) {
@@ -41,9 +41,17 @@ public class EntityTestUtils {
     }
 
     public static <T> void assertAttributeEventuallyNonNull(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute) {
+        assertAttributeEventually(flags, entity, attribute, Predicates.notNull());
+    }
+
+    public static <T> void assertAttributeEventually(final Entity entity, final AttributeSensor<T> attribute, Predicate<? super T> predicate) {
+        assertAttributeEventually(ImmutableMap.of(), entity, attribute, predicate);
+    }
+    
+    public static <T> void assertAttributeEventually(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute, final Predicate<? super T> predicate) {
         assertPredicateEventuallyTrue(flags, entity, new Predicate<Entity>() {
             @Override public boolean apply(Entity input) {
-                return entity.getAttribute(attribute) != null;
+                return predicate.apply(entity.getAttribute(attribute));
             }
         });
     }
@@ -53,8 +61,8 @@ public class EntityTestUtils {
     }
 
     public static <T extends Entity> void assertPredicateEventuallyTrue(Map<?,?> flags, final T entity, final Predicate<? super T> predicate) {
-        TestUtils.executeUntilSucceeds(flags, new Runnable() {
-                public void run() {
+        Asserts.succeedsEventually((Map)flags, new Runnable() {
+                @Override public void run() {
                     assertTrue(predicate.apply(entity));
                 }});
     }
@@ -64,9 +72,21 @@ public class EntityTestUtils {
     }
     
     public static <T> void assertAttributeEqualsContinually(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute, final T expected) {
-        TestUtils.assertSucceedsContinually(new Runnable() {
-                public void run() {
+        Asserts.succeedsContinually(new Runnable() {
+                @Override public void run() {
                     assertAttributeEquals(entity, attribute, expected);
                 }});
+    }
+
+    public static void assertGroupSizeEqualsEventually(final Group group, int expected) {
+        assertGroupSizeEqualsEventually(ImmutableMap.of(), group, expected);
+    }
+    
+    public static void assertGroupSizeEqualsEventually(Map<?,?> flags, final Group group, final int expected) {
+        assertPredicateEventuallyTrue(flags, group, new Predicate<Group>() {
+            @Override public boolean apply(Group input) {
+                return group.getMembers().size() == expected;
+            }
+        });
     }
 }

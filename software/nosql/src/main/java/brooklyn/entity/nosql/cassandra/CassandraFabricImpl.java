@@ -28,6 +28,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
@@ -75,40 +76,51 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
                     Set<Entity> currentSeeds = getAttribute(CURRENT_SEEDS);
                     if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) {
                         if (Sets.intersection(currentSeeds, ImmutableSet.copyOf(Iterables.concat(potentialSeeds.values()))).isEmpty()) {
-                            log.warn("Cluster {} lost all its seeds while starting! Subsequent failure likely, but changing seeds during startup would risk split-brain: seeds={}", new Object[] {this, currentSeeds});
+                            log.warn("Cluster {} lost all its seeds while starting! Subsequent failure likely, but changing seeds during startup would risk split-brain: seeds={}", new Object[] {CassandraFabricImpl.this, currentSeeds});
                         }
                         newseeds = currentSeeds;
                     } else if (potentialSeeds.isEmpty()) {
                         // TODO Could be race where nodes have only just returned from start() and are about to 
                         // transition to serviceUp; so don't just abandon all our seeds!
-                        log.warn("Cluster {} has no seeds (after startup); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {this});
+                        log.warn("Cluster {} has no seeds (after startup); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {CassandraFabricImpl.this});
                         newseeds = currentSeeds;
                     } else if (!allNonEmpty(potentialSeeds.values())) {
-                        log.warn("Cluster {} has datacenter with no seeds (after startup); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {this});
+                        log.warn("Cluster {} has datacenter with no seeds (after startup); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {CassandraFabricImpl.this});
                         newseeds = currentSeeds;
                     } else {
                         Set<Entity> result = selectSeeds(quorumSize, potentialSeeds);
-                        log.debug("Cluster {} updating seeds: chosen={}; potential={}", new Object[] {this, result, potentialSeeds});
+                        log.debug("Cluster {} updating seeds: chosen={}; potential={}", new Object[] {CassandraFabricImpl.this, result, potentialSeeds});
                         newseeds = result;
                     }
                 } else if (potentialSeeds.size() < quorumSize) {
-                    if (log.isDebugEnabled()) log.debug("Not setting seeds of fabric {} yet, because still waiting for quorum (need {}; have {} potentials from {} members)", new Object[] {CassandraFabricImpl.class, quorumSize, potentialSeeds.size(), getMembers()});
+                    if (log.isDebugEnabled()) log.debug("Not setting seeds of fabric {} yet, because still waiting for quorum (need {}; have {} potentials from {} members)", new Object[] {CassandraFabricImpl.this, quorumSize, potentialSeeds.size(), getMembers()});
                     newseeds = ImmutableSet.of();
                 } else if (!allNonEmpty(potentialSeeds.values())) {
                     if (log.isDebugEnabled()) {
                         Map<CassandraDatacenter, Integer> datacenterCounts = Maps.transformValues(potentialSeeds, CollectionFunctionals.sizeFunction());
-                        log.debug("Not setting seeds of fabric {} yet, because not all datacenters have seeds (sizes are {})", new Object[] {CassandraFabricImpl.class, datacenterCounts});
+                        log.debug("Not setting seeds of fabric {} yet, because not all datacenters have seeds (sizes are {})", new Object[] {CassandraFabricImpl.this, datacenterCounts});
                     }
                     newseeds = ImmutableSet.of();
                 } else {
                     // yay, we're quorate
                     Set<Entity> result = selectSeeds(quorumSize, potentialSeeds);
-                    if (log.isDebugEnabled()) log.debug("Cluster {} has reached seed quorum: seeds={}", new Object[] {this, result});
+                    if (log.isDebugEnabled()) log.debug("Cluster {} has reached seed quorum: seeds={}", new Object[] {CassandraFabricImpl.this, result});
                     newseeds = result;
                 }
                 
-                setAttribute(CURRENT_SEEDS, newseeds);
-                return newseeds;
+                if (!Objects.equal(seeds, newseeds)) {
+                    setAttribute(CURRENT_SEEDS, newseeds);
+                    
+                    // Need to tell every datacenter that seeds are ready.
+                    // Otherwise a datacenter might get no more changes (e.g. to nodes' hostnames etc), 
+                    // and not call seedSupplier.get() again.
+                    for (CassandraDatacenter member : Iterables.filter(getMembers(), CassandraDatacenter.class)) {
+                        member.update();
+                    }
+                    return newseeds;
+                } else {
+                    return seeds;
+                }
             } else {
                 if (log.isDebugEnabled()) log.debug("Not refresheed seeds of fabric {}, because have quorum {} (of {} members), and none are down: seeds={}", new Object[] {
                     CassandraFabricImpl.class, quorumSize, getMembers().size(), seeds});
