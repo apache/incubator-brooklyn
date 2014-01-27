@@ -74,22 +74,28 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
                 
                 if (hasPublishedSeeds) {
                     Set<Entity> currentSeeds = getAttribute(CURRENT_SEEDS);
-                    if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) {
+                    Lifecycle serviceState = getAttribute(SERVICE_STATE);
+                    if (serviceState == Lifecycle.STARTING) {
                         if (Sets.intersection(currentSeeds, ImmutableSet.copyOf(Iterables.concat(potentialSeeds.values()))).isEmpty()) {
-                            log.warn("Cluster {} lost all its seeds while starting! Subsequent failure likely, but changing seeds during startup would risk split-brain: seeds={}", new Object[] {CassandraFabricImpl.this, currentSeeds});
+                            log.warn("Fabric {} lost all its seeds while starting! Subsequent failure likely, but changing seeds during startup would risk split-brain: seeds={}", new Object[] {CassandraFabricImpl.this, currentSeeds});
                         }
+                        newseeds = currentSeeds;
+                    } else if (serviceState == Lifecycle.STOPPING || serviceState == Lifecycle.STOPPED) {
+                        if (log.isTraceEnabled()) log.trace("Fabric {} ignoring any potential seed-changes, because {}: seeds={}", new Object[] {CassandraFabricImpl.this, serviceState, currentSeeds});
                         newseeds = currentSeeds;
                     } else if (potentialSeeds.isEmpty()) {
                         // TODO Could be race where nodes have only just returned from start() and are about to 
                         // transition to serviceUp; so don't just abandon all our seeds!
-                        log.warn("Cluster {} has no seeds (after startup); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {CassandraFabricImpl.this});
+                        log.warn("Fabric {} has no seeds (after startup); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {CassandraFabricImpl.this});
                         newseeds = currentSeeds;
                     } else if (!allNonEmpty(potentialSeeds.values())) {
-                        log.warn("Cluster {} has datacenter with no seeds (after startup); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {CassandraFabricImpl.this});
+                        log.warn("Fabric {} has datacenter with no seeds (after startup); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {CassandraFabricImpl.this});
                         newseeds = currentSeeds;
                     } else {
                         Set<Entity> result = selectSeeds(quorumSize, potentialSeeds);
-                        log.debug("Cluster {} updating seeds: chosen={}; potential={}", new Object[] {CassandraFabricImpl.this, result, potentialSeeds});
+                        if (log.isDebugEnabled() && !Objects.equal(seeds, result)) {
+                            log.debug("Fabric {} updating seeds: chosen={}; potential={}", new Object[] {CassandraFabricImpl.this, result, potentialSeeds});
+                        }
                         newseeds = result;
                     }
                 } else if (potentialSeeds.size() < quorumSize) {
@@ -104,26 +110,30 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
                 } else {
                     // yay, we're quorate
                     Set<Entity> result = selectSeeds(quorumSize, potentialSeeds);
-                    if (log.isDebugEnabled()) log.debug("Cluster {} has reached seed quorum: seeds={}", new Object[] {CassandraFabricImpl.this, result});
+                    log.info("Fabric {} has reached seed quorum: seeds={}", new Object[] {CassandraFabricImpl.this, result});
                     newseeds = result;
                 }
                 
                 if (!Objects.equal(seeds, newseeds)) {
                     setAttribute(CURRENT_SEEDS, newseeds);
                     
-                    // Need to tell every datacenter that seeds are ready.
-                    // Otherwise a datacenter might get no more changes (e.g. to nodes' hostnames etc), 
-                    // and not call seedSupplier.get() again.
-                    for (CassandraDatacenter member : Iterables.filter(getMembers(), CassandraDatacenter.class)) {
-                        member.update();
+                    if (newseeds != null && newseeds.size() > 0) {
+                        setAttribute(HAS_PUBLISHED_SEEDS, true);
+                        
+                        // Need to tell every datacenter that seeds are ready.
+                        // Otherwise a datacenter might get no more changes (e.g. to nodes' hostnames etc), 
+                        // and not call seedSupplier.get() again.
+                        for (CassandraDatacenter member : Iterables.filter(getMembers(), CassandraDatacenter.class)) {
+                            member.update();
+                        }
                     }
                     return newseeds;
                 } else {
                     return seeds;
                 }
             } else {
-                if (log.isDebugEnabled()) log.debug("Not refresheed seeds of fabric {}, because have quorum {} (of {} members), and none are down: seeds={}", new Object[] {
-                    CassandraFabricImpl.class, quorumSize, getMembers().size(), seeds});
+                if (log.isTraceEnabled()) log.trace("Not refresheed seeds of fabric {}, because have quorum {} (of {} members), and none are down: seeds={}", 
+                        new Object[] {CassandraFabricImpl.class, quorumSize, getMembers().size(), seeds});
                 return seeds;
             }
         }
@@ -164,7 +174,7 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
             Lifecycle serviceState = member.getAttribute(Attributes.SERVICE_STATE);
             boolean hasFailed = !managed || (serviceState == Lifecycle.ON_FIRE) || (serviceState == Lifecycle.RUNNING && !serviceUp) || (serviceState == Lifecycle.STOPPED);
             boolean result = (hostname != null && !hasFailed);
-            if (log.isTraceEnabled()) log.trace("Node {} in Cluster {}: viableSeed={}; hostname={}; serviceUp={}; serviceState={}; hasFailed={}", new Object[] {member, this, result, hostname, serviceUp, serviceState, hasFailed});
+            if (log.isTraceEnabled()) log.trace("Node {} in Fabric {}: viableSeed={}; hostname={}; serviceUp={}; serviceState={}; hasFailed={}", new Object[] {member, CassandraFabricImpl.this, result, hostname, serviceUp, serviceState, hasFailed});
             return result;
         }
     };
@@ -180,20 +190,20 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
             setConfig(CassandraDatacenter.SEED_SUPPLIER, getSeedSupplier());
         
         // track members
-        policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Cassandra Cluster Tracker")) {
+        policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Cassandra Fabric Tracker")) {
             @Override
             protected void onEntityChange(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Location {} updated in Cluster {}", member, this);
+                if (log.isDebugEnabled()) log.debug("Location {} updated in Fabric {}", member, CassandraFabricImpl.this);
                 update();
             }
             @Override
             protected void onEntityAdded(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Location {} added to Cluster {}", member, this);
+                if (log.isDebugEnabled()) log.debug("Location {} added to Fabric {}", member, CassandraFabricImpl.this);
                 update();
             }
             @Override
             protected void onEntityRemoved(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Location {} removed from Cluster {}", member, this);
+                if (log.isDebugEnabled()) log.debug("Location {} removed from Fabric {}", member, CassandraFabricImpl.this);
                 update();
             }
         };
