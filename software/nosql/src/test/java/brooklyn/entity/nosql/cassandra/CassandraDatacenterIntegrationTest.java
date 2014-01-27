@@ -26,17 +26,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 /**
- * A live test of the {@link CassandraCluster} entity.
+ * A live test of the {@link CassandraDatacenter} entity.
  *
  * Tests that a two node cluster can be started on Amazon EC2 and data written on one {@link CassandraNode}
  * can be read from another, using the Astyanax API.
  */
-public class CassandraClusterIntegrationTest extends BrooklynMgmtContextTestSupport {
+public class CassandraDatacenterIntegrationTest extends BrooklynMgmtContextTestSupport {
 
-    private static final Logger log = LoggerFactory.getLogger(CassandraClusterIntegrationTest.class);
+    private static final Logger log = LoggerFactory.getLogger(CassandraDatacenterIntegrationTest.class);
 
     protected Location testLocation;
-    protected CassandraCluster cluster;
+    protected CassandraDatacenter cluster;
 
     @Override
     @BeforeMethod(alwaysRun = true)
@@ -51,7 +51,7 @@ public class CassandraClusterIntegrationTest extends BrooklynMgmtContextTestSupp
      */
     @Test(groups = "Integration")
     public void testStartAndShutdownClusterSizeOne() throws Exception {
-        cluster = app.createAndManageChild(EntitySpec.create(CassandraCluster.class)
+        cluster = app.createAndManageChild(EntitySpec.create(CassandraDatacenter.class)
                 .configure("initialSize", 1));
         assertEquals(cluster.getCurrentSize().intValue(), 0);
 
@@ -60,8 +60,8 @@ public class CassandraClusterIntegrationTest extends BrooklynMgmtContextTestSupp
         CassandraNode node = (CassandraNode) Iterables.get(cluster.getMembers(), 0);
         String nodeAddr = checkNotNull(node.getAttribute(CassandraNode.HOSTNAME), "hostname") + ":" + checkNotNull(node.getAttribute(CassandraNode.THRIFT_PORT), "thriftPort");
         
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraCluster.GROUP_SIZE, 1);
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraCluster.CASSANDRA_CLUSTER_NODES, ImmutableList.of(nodeAddr));
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraDatacenter.GROUP_SIZE, 1);
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraDatacenter.CASSANDRA_CLUSTER_NODES, ImmutableList.of(nodeAddr));
 
         EntityTestUtils.assertAttributeEqualsEventually(node, Startable.SERVICE_UP, true);
         EntityTestUtils.assertAttributeEqualsEventually(node, CassandraNode.TOKEN, PosNeg63TokenGenerator.MIN_TOKEN);
@@ -69,8 +69,8 @@ public class CassandraClusterIntegrationTest extends BrooklynMgmtContextTestSupp
         // may take some time to be consistent (with new thrift_latency checks on the node,
         // contactability should not be an issue, but consistency still might be)
         for (int i=0; ; i++) {
-            boolean open = CassandraClusterLiveTest.isSocketOpen(node);
-            Boolean consistant = open ? CassandraClusterLiveTest.areVersionsConsistent(node) : null;
+            boolean open = CassandraDatacenterLiveTest.isSocketOpen(node);
+            Boolean consistant = open ? CassandraDatacenterLiveTest.areVersionsConsistent(node) : null;
             Integer numPeers = node.getAttribute(CassandraNode.PEERS);
             String msg = "consistency:  "
                     + (!open ? "unreachable" : consistant==null ? "error" : consistant)+"; "
@@ -85,6 +85,6 @@ public class CassandraClusterIntegrationTest extends BrooklynMgmtContextTestSupp
 
         EntityTestUtils.assertAttributeEquals(node, CassandraNode.PEERS, 1);
 
-        CassandraClusterLiveTest.checkConnectionRepeatedly(2, 5, node, node);
+        CassandraDatacenterLiveTest.checkConnectionRepeatedly(2, 5, node, node);
     }
 }

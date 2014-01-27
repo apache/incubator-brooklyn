@@ -3,6 +3,7 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Collections;
@@ -22,6 +23,7 @@ import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
@@ -35,12 +37,14 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -51,7 +55,7 @@ import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
 
 /**
- * Implementation of {@link CassandraCluster}.
+ * Implementation of {@link CassandraDatacenter}.
  * <p>
  * Several subtleties to note:
  * - a node may take some time after it is running and serving JMX to actually be contactable on its thrift port
@@ -59,7 +63,7 @@ import com.google.common.net.HostAndPort;
  * - sometimes new nodes take a while to peer, and/or take a while to get a consistent schema
  *   (each up to 1m; often very close to the 1m) 
  */
-public class CassandraClusterImpl extends DynamicClusterImpl implements CassandraCluster {
+public class CassandraDatacenterImpl extends DynamicClusterImpl implements CassandraDatacenter {
 
     /*
      * TODO Seed management is hard!
@@ -67,14 +71,11 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
      *    If we have two nodes that were seeds for each other and they both restart at the same time, we'll have a split brain.
      */
     
-    private static final Logger log = LoggerFactory.getLogger(CassandraClusterImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(CassandraDatacenterImpl.class);
 
     // Mutex for synchronizing during re-size operations
     private final Object mutex = new Object[0];
 
-    // TODO Serialize the token generator state?
-    private final TokenGenerator defaultTokenGenerator = new TokenGenerators.PosNeg63TokenGenerator();
-    
     private final Supplier<Set<Entity>> defaultSeedSupplier = new Supplier<Set<Entity>>() {
         // Mutex for (re)calculating our seeds
         // TODO is this very dangerous?! Calling out to SeedTracker, which calls out to alien getAttribute()/getConfig(). But I think that's ok.
@@ -85,13 +86,13 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         public Set<Entity> get() {
             synchronized (seedMutex) {
                 boolean hasPublishedSeeds = Boolean.TRUE.equals(getAttribute(HAS_PUBLISHED_SEEDS));
-                int quorumSize = getQuorumSize();
+                int quorumSize = getSeedQuorumSize();
                 Set<Entity> potentialSeeds = gatherPotentialSeeds();
                 Set<Entity> potentialRunningSeeds = gatherPotentialRunningSeeds();
                 boolean stillWaitingForQuorum = (!hasPublishedSeeds) && (potentialSeeds.size() < quorumSize);
                 
                 if (stillWaitingForQuorum) {
-                    if (log.isDebugEnabled()) log.debug("Not refresheed seeds of cluster {}, because still waiting for quorum (need {}; have {} potentials)", new Object[] {CassandraClusterImpl.class, getQuorumSize(), potentialSeeds.size()});
+                    if (log.isDebugEnabled()) log.debug("Not refreshed seeds of cluster {}, because still waiting for quorum (need {}; have {} potentials)", new Object[] {CassandraDatacenterImpl.class, quorumSize, potentialSeeds.size()});
                     return ImmutableSet.of();
                 } else if (hasPublishedSeeds) {
                     Set<Entity> currentSeeds = getAttribute(CURRENT_SEEDS);
@@ -128,10 +129,10 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     };
     
     protected SeedTracker seedTracker = new SeedTracker();
-    
+    protected TokenGenerator tokenGenerator = null;
     private AbstractMembershipTrackingPolicy policy;
 
-    public CassandraClusterImpl() {
+    public CassandraDatacenterImpl() {
     }
 
     @Override
@@ -199,6 +200,13 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
                 }
             }
         });
+        
+        getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
+            @Override
+            public String call(ConfigBag parameters) {
+                return executeScript((String)parameters.getStringKey("commands"));
+            }
+        });
     }
     
     protected Supplier<Set<Entity>> getSeedSupplier() {
@@ -206,17 +214,31 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         return (seedSupplier == null) ? defaultSeedSupplier : seedSupplier;
     }
     
-    protected TokenGenerator getTokenGenerator() {
-        TokenGenerator tokenGenerator = getConfig(TOKEN_GENERATOR);
-        return (tokenGenerator == null) ? defaultTokenGenerator : tokenGenerator;
+    protected synchronized TokenGenerator getTokenGenerator() {
+        if (tokenGenerator!=null) 
+            return tokenGenerator;
+        
+        try {
+            tokenGenerator = getConfig(TOKEN_GENERATOR_CLASS).newInstance();
+            
+            BigInteger shift = getConfig(TOKEN_SHIFT);
+            if (shift==null) 
+                shift = BigDecimal.valueOf(Math.random()).multiply(
+                    new BigDecimal(tokenGenerator.range())).toBigInteger();
+            tokenGenerator.setOrigin(shift);
+            
+            return tokenGenerator;
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }        
     }
     
-    protected int getQuorumSize() {
+    protected int getSeedQuorumSize() {
         Integer quorumSize = getConfig(INITIAL_QUORUM_SIZE);
         if (quorumSize!=null && quorumSize>0)
             return quorumSize;
         // default 2 is recommended, unless initial size is smaller
-        return Math.min(getConfig(INITIAL_SIZE), DEFAULT_SEED_QUORUM);
+        return Math.min(Math.max(getConfig(INITIAL_SIZE), 1), DEFAULT_SEED_QUORUM);
     }
 
     @Override
@@ -460,8 +482,8 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
      * <ul>
      * 
      * Also note that {@link CassandraFabric} can take over, because it know about multiple sub-clusters!
-     * It will provide a different {@link CassandraCluster#SEED_SUPPLIER}. Each time we think that our seeds
-     * need to change, we call that. The fabric will call into {@link CassandraClusterImpl#gatherPotentialSeeds()}
+     * It will provide a different {@link CassandraDatacenter#SEED_SUPPLIER}. Each time we think that our seeds
+     * need to change, we call that. The fabric will call into {@link CassandraDatacenterImpl#gatherPotentialSeeds()}
      * to find out what's available.
      * 
      * @author aled
@@ -474,13 +496,13 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             if (maybeRemove) {
                 refreshSeeds();
             } else {
-                if (log.isTraceEnabled()) log.trace("Seeds considered stable for cluster {} (node {} removed)", new Object[] {CassandraClusterImpl.this, member});
+                if (log.isTraceEnabled()) log.trace("Seeds considered stable for cluster {} (node {} removed)", new Object[] {CassandraDatacenterImpl.this, member});
                 return;
             }
         }
         public void onHostnameChanged(Entity member, String hostname) {
             Set<Entity> seeds = getSeeds();
-            int quorum = getQuorumSize();
+            int quorum = getSeedQuorumSize();
             boolean isViable = isViableSeed(member);
             boolean maybeAdd = isViable && seeds.size() < quorum;
             boolean maybeRemove = seeds.contains(member) && !isViable;
@@ -488,7 +510,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             if (maybeAdd || maybeRemove) {
                 refreshSeeds();
             } else {
-                if (log.isTraceEnabled()) log.trace("Seeds considered stable for cluster {} (node {} changed hostname {})", new Object[] {CassandraClusterImpl.this, member, hostname});
+                if (log.isTraceEnabled()) log.trace("Seeds considered stable for cluster {} (node {} changed hostname {})", new Object[] {CassandraDatacenterImpl.this, member, hostname});
                 return;
             }
             
@@ -497,17 +519,17 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         }
         public void onServiceUpChanged(Entity member, Boolean serviceUp) {
             Set<Entity> seeds = getSeeds();
-            int quorum = getQuorumSize();
+            int quorum = getSeedQuorumSize();
             boolean isViable = isViableSeed(member);
             boolean maybeAdd = isViable && seeds.size() < quorum;
             boolean maybeRemove = seeds.contains(member) && !isViable;
             
             if (log.isDebugEnabled())
-                log.debug("Considering refresh of seeds for "+CassandraClusterImpl.this+" because "+member+" is now "+serviceUp+" ("+isViable+" / "+maybeAdd+" / "+maybeRemove+")");
+                log.debug("Considering refresh of seeds for "+CassandraDatacenterImpl.this+" because "+member+" is now "+serviceUp+" ("+isViable+" / "+maybeAdd+" / "+maybeRemove+")");
             if (maybeAdd || maybeRemove) {
                 refreshSeeds();
             } else {
-                if (log.isTraceEnabled()) log.trace("Seeds considered stable for cluster {} (node {} changed serviceUp {})", new Object[] {CassandraClusterImpl.this, member, serviceUp});
+                if (log.isTraceEnabled()) log.trace("Seeds considered stable for cluster {} (node {} changed serviceUp {})", new Object[] {CassandraDatacenterImpl.this, member, serviceUp});
                 return;
             }
             
@@ -515,7 +537,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             Set<Entity> newSeeds = seedSupplier.get();
             setAttribute(CURRENT_SEEDS, newSeeds);
             if (log.isDebugEnabled())
-                log.debug("Seeds for "+CassandraClusterImpl.this+" now "+newSeeds);
+                log.debug("Seeds for "+CassandraDatacenterImpl.this+" now "+newSeeds);
         }
         protected Set<Entity> getSeeds() {
             Set<Entity> result = getAttribute(CURRENT_SEEDS);
@@ -525,9 +547,9 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             Set<Entity> oldseeds = getAttribute(CURRENT_SEEDS);
             Set<Entity> newseeds = getSeedSupplier().get();
             if (Objects.equal(oldseeds, newseeds)) {
-                if (log.isTraceEnabled()) log.debug("Seed refresh no-op for cluster {}: still={}", new Object[] {CassandraClusterImpl.this, oldseeds});
+                if (log.isTraceEnabled()) log.debug("Seed refresh no-op for cluster {}: still={}", new Object[] {CassandraDatacenterImpl.this, oldseeds});
             } else {
-                if (log.isDebugEnabled()) log.debug("Refreshings seeds of cluster {}: now={}; old={}", new Object[] {this, newseeds, oldseeds});
+                if (log.isDebugEnabled()) log.debug("Refreshing seeds of cluster {}: now={}; old={}", new Object[] {this, newseeds, oldseeds});
                 setAttribute(CURRENT_SEEDS, newseeds);
                 if (newseeds != null && newseeds.size() > 0) {
                     setAttribute(HAS_PUBLISHED_SEEDS, true);

@@ -3,6 +3,7 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 
@@ -15,6 +16,7 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.nosql.cassandra.TokenGenerators.PosNeg63TokenGenerator;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -27,16 +29,22 @@ import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
 
 /**
- * A cluster of {@link CassandraNode}s based on {@link DynamicCluster} which can be resized by a policy if required.
+ * A group of {@link CassandraNode}s -- based on Brooklyn's {@link DynamicCluster} 
+ * (though it is a "Datacenter" in Cassandra terms, where Cassandra's "cluster" corresponds
+ * to a Brooklyn Fabric, cf {@link CassandraFabric}). 
+ * The Datacenter can be resized, manually or by policy if required.
+ * Tokens are selected intelligently.
  * <p>
  * Note that due to how Cassandra assumes ports are the same across a cluster,
- * it is <em>NOT</em> possible to deploy a cluster to localhost.
+ * it is <em>NOT</em> possible to deploy a cluster of size larger than 1 to localhost.
+ * (Some exploratory work has been done to use different 127.0.0.x IP's for localhost,
+ * and there is evidence this could be made to work.)
  */
-@Catalog(name="Apache Cassandra Database Cluster", description="Cassandra is a highly scalable, eventually " +
+@Catalog(name="Apache Cassandra Datacenter Cluster", description="Cassandra is a highly scalable, eventually " +
         "consistent, distributed, structured key-value store which provides a ColumnFamily-based data model " +
         "richer than typical key/value systems", iconUrl="classpath:///cassandra-logo.jpeg")
-@ImplementedBy(CassandraClusterImpl.class)
-public interface CassandraCluster extends DynamicCluster, DatastoreMixins.HasDatastoreUrl, DatastoreMixins.CanExecuteScript {
+@ImplementedBy(CassandraDatacenterImpl.class)
+public interface CassandraDatacenter extends DynamicCluster, DatastoreMixins.HasDatastoreUrl, DatastoreMixins.CanExecuteScript {
 
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "cassandra.cluster.name", "Name of the Cassandra cluster", "BrooklynCluster");
@@ -48,8 +56,18 @@ public interface CassandraCluster extends DynamicCluster, DatastoreMixins.HasDat
     @SuppressWarnings("serial")
     ConfigKey<Supplier<Set<Entity>>> SEED_SUPPLIER = ConfigKeys.newConfigKey(new TypeToken<Supplier<Set<Entity>>>() { }, "cassandra.cluster.seedSupplier", "For determining the seed nodes", null);
 
-    @SetFromFlag("tokenGenerator")
-    ConfigKey<TokenGenerator> TOKEN_GENERATOR = ConfigKeys.newConfigKey(TokenGenerator.class, "cassandra.cluster.tokenGenerator", "For determining the tokens of nodes", null);
+    @SuppressWarnings("serial")
+    @SetFromFlag("tokenGeneratorClass")
+    ConfigKey<Class<? extends TokenGenerator>> TOKEN_GENERATOR_CLASS = ConfigKeys.newConfigKey(
+        new TypeToken<Class<? extends TokenGenerator>>() {}, "cassandra.cluster.tokenGenerator.class", "For determining the tokens of nodes", 
+        PosNeg63TokenGenerator.class);
+
+    @SetFromFlag("tokenShift")
+    ConfigKey<BigInteger> TOKEN_SHIFT = ConfigKeys.newConfigKey(BigInteger.class, "cassandra.cluster.tokenShift", 
+        "Delta applied to all tokens generated for this Cassandra datacenter, "
+        + "useful when configuring multiple datacenters which should be shifted; "
+        + "if not set, a random shift is applied. (Pass 0 to prevent any shift.)", null);
+
 
     /**
      * Additional time after the nodes in the cluster are up when starting
@@ -104,7 +122,7 @@ public interface CassandraCluster extends DynamicCluster, DatastoreMixins.HasDat
     AttributeSensor<Double> THRIFT_PORT_LATENCY_IN_WINDOW_PER_NODE = Sensors.newDoubleSensor("cassandra.thrift.latency.windowed.perNode", "Latency for thrift port (ms, over time window) averaged over all nodes");
     AttributeSensor<Double> PROCESS_CPU_TIME_FRACTION_IN_WINDOW_PER_NODE = Sensors.newDoubleSensor("cassandra.cluster.metrics.processCpuTime.fraction.windowed", "Fraction of CPU time used (percentage, over time window), averaged over all nodes");
 
-    MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraCluster.class, "update");
+    MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraDatacenter.class, "update");
 
     brooklyn.entity.Effector<String> EXECUTE_SCRIPT = Effectors.effector(DatastoreMixins.EXECUTE_SCRIPT)
         .description("executes the given script contents using cassandra-cli")

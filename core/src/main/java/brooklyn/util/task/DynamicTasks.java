@@ -124,6 +124,11 @@ public class DynamicTasks {
             if (orSubmitInternal()) task.getUnchecked();
             return this;
         }
+        /** convenience for setting {@link #executionContext(ExecutionContext)} then submitting blocking */
+        public TaskQueueingResult<T> orSubmitAndBlock(Entity entity) {
+            executionContext(entity);
+            return orSubmitAndBlock();
+        }
         /** blocks for the task to be completed
          * <p>
          * needed in any context where subsequent commands assume the task has completed.

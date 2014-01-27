@@ -194,4 +194,10 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
     @Override
     public Integer resize(Integer desiredSize) { return getCluster().resize(desiredSize); }
 
+    @Override
+    public <T extends Entity> T addMemberChild(EntitySpec<T> spec) { return getCluster().addMemberChild(spec); }
+
+    @Override
+    public <T extends Entity> T addMemberChild(T child) { return getCluster().addMemberChild(child); }
+
 }

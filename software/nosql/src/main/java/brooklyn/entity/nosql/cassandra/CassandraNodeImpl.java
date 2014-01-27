@@ -232,6 +232,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         return result;
     }
 
+    // referenced by cassandra-rackdc.properties, read by some of the cassandra snitches
     public String getDatacenterName() {
         String name = getAttribute(CassandraNode.DATACENTER_NAME);
         if (name == null) {

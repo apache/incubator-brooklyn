@@ -25,7 +25,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.nosql.cassandra.CassandraCluster;
+import brooklyn.entity.nosql.cassandra.CassandraDatacenter;
 import brooklyn.entity.nosql.cassandra.CassandraFabric;
 import brooklyn.entity.nosql.cassandra.CassandraNode;
 import brooklyn.entity.proxying.EntitySpec;
@@ -52,12 +52,12 @@ public class WideAreaCassandraCluster extends AbstractApplication {
     @Override
     public void init() {
         addChild(EntitySpec.create(CassandraFabric.class)
-                .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
-                .configure(CassandraCluster.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE)) // per location
-                .configure(CassandraCluster.ENDPOINT_SNITCH_NAME, "brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch")
+                .configure(CassandraDatacenter.CLUSTER_NAME, "Brooklyn")
+                .configure(CassandraDatacenter.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE)) // per location
+                .configure(CassandraDatacenter.ENDPOINT_SNITCH_NAME, "brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch")
                 .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar")
-                .configure(CassandraFabric.MEMBER_SPEC, EntitySpec.create(CassandraCluster.class)
-                        .configure(CassandraCluster.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
+                .configure(CassandraFabric.MEMBER_SPEC, EntitySpec.create(CassandraDatacenter.class)
+                        .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
                                 .policy(PolicySpec.create(ServiceFailureDetector.class))
                                 .policy(PolicySpec.create(ServiceRestarter.class)
                                         .configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, ServiceFailureDetector.ENTITY_FAILED)))

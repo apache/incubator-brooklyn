@@ -24,7 +24,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.nosql.cassandra.CassandraCluster;
+import brooklyn.entity.nosql.cassandra.CassandraDatacenter;
 import brooklyn.entity.nosql.cassandra.CassandraNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.launcher.BrooklynLauncher;
@@ -52,15 +52,15 @@ public class HighAvailabilityCassandraCluster extends AbstractApplication {
     
     @Override
     public void init() {
-        addChild(EntitySpec.create(CassandraCluster.class)
-                .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
-                .configure(CassandraCluster.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE))
-                .configure(CassandraCluster.ENABLE_AVAILABILITY_ZONES, true)
-                .configure(CassandraCluster.NUM_AVAILABILITY_ZONES, getConfig(NUM_AVAILABILITY_ZONES))
+        addChild(EntitySpec.create(CassandraDatacenter.class)
+                .configure(CassandraDatacenter.CLUSTER_NAME, "Brooklyn")
+                .configure(CassandraDatacenter.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE))
+                .configure(CassandraDatacenter.ENABLE_AVAILABILITY_ZONES, true)
+                .configure(CassandraDatacenter.NUM_AVAILABILITY_ZONES, getConfig(NUM_AVAILABILITY_ZONES))
                 //See https://github.com/brooklyncentral/brooklyn/issues/973
                 //.configure(CassandraCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("us-east-1b", "us-east-1c", "us-east-1e"))
-                .configure(CassandraCluster.ENDPOINT_SNITCH_NAME, "GossipingPropertyFileSnitch")
-                .configure(CassandraCluster.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
+                .configure(CassandraDatacenter.ENDPOINT_SNITCH_NAME, "GossipingPropertyFileSnitch")
+                .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
                         .policy(PolicySpec.create(ServiceFailureDetector.class))
                         .policy(PolicySpec.create(ServiceRestarter.class)
                                 .configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, ServiceFailureDetector.ENTITY_FAILED)))

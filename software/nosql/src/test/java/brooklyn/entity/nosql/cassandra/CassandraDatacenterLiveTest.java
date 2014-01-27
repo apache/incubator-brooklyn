@@ -34,14 +34,14 @@ import com.google.common.collect.Iterables;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 /**
- * A live test of the {@link CassandraCluster} entity.
+ * A live test of the {@link CassandraDatacenter} entity.
  *
  * Tests that a two node cluster can be started on Amazon EC2 and data written on one {@link CassandraNode}
  * can be read from another, using the Astyanax API.
  */
-public class CassandraClusterLiveTest {
+public class CassandraDatacenterLiveTest {
 
-    private static final Logger log = LoggerFactory.getLogger(CassandraClusterLiveTest.class);
+    private static final Logger log = LoggerFactory.getLogger(CassandraDatacenterLiveTest.class);
     
     private String provider = 
 //            "rackspace-cloudservers-uk";
@@ -51,7 +51,7 @@ public class CassandraClusterLiveTest {
 
     protected TestApplication app;
     protected Location testLocation;
-    protected CassandraCluster cluster;
+    protected CassandraDatacenter cluster;
 
     @BeforeMethod(alwaysRun = true)
     public void setup() {
@@ -70,14 +70,14 @@ public class CassandraClusterLiveTest {
     @Test(groups = "Live")
     public void canStartupAndShutdown() throws Exception {
         try {
-            cluster = app.createAndManageChild(EntitySpec.create(CassandraCluster.class)
+            cluster = app.createAndManageChild(EntitySpec.create(CassandraDatacenter.class)
                     .configure("initialSize", 2)
                     .configure("clusterName", "CassandraClusterLiveTest"));
             assertEquals(cluster.getCurrentSize().intValue(), 0);
 
             app.start(ImmutableList.of(testLocation));
 
-            EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraCluster.GROUP_SIZE, 2);
+            EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraDatacenter.GROUP_SIZE, 2);
             Entities.dumpInfo(app);
 
             CassandraNode first = (CassandraNode) Iterables.get(cluster.getMembers(), 0);

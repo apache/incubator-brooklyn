@@ -2,6 +2,7 @@ package brooklyn.util.collections;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -115,8 +116,19 @@ public class MutableSet<V> extends LinkedHashSet<V> {
         return false;
     }
 
+    public boolean addAll(Iterable<? extends V> setToAdd) {
+        // exact copy of parent, but accepting Iterable
+        boolean modified = false;
+        Iterator<? extends V> e = setToAdd.iterator();
+        while (e.hasNext()) {
+            if (add(e.next()))
+                modified = true;
+        }
+        return modified;
+    }
+
     /** as {@link #addAll(Collection)} but fluent style and permitting null */
-    public MutableSet<V> putAll(Collection<? extends V> setToAdd) {
+    public MutableSet<V> putAll(Iterable<? extends V> setToAdd) {
         if (setToAdd!=null) addAll(setToAdd);
         return this;
     }

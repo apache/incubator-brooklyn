@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.SetFromLiveMap;
@@ -144,4 +145,19 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
             return members.size();
         }
     }
+    
+    @Override
+    public <T extends Entity> T addMemberChild(EntitySpec<T> spec) {
+        T child = addChild(spec);
+        addMember(child);
+        return child;
+    }
+    
+    @Override
+    public <T extends Entity> T addMemberChild(T child) {
+        child = addChild(child);
+        addMember(child);
+        return child;
+    }
+    
 }

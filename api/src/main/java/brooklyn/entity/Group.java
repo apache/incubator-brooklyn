@@ -2,6 +2,8 @@ package brooklyn.entity;
 
 import java.util.Collection;
 
+import brooklyn.entity.proxying.EntitySpec;
+
 /**
  * An {@link Entity} that groups together other entities.
  * 
@@ -34,4 +36,19 @@ public interface Group extends Entity {
      * @return The number of members in this group.
      */
     Integer getCurrentSize();
+    
+    /** as {@link #addChild(EntitySpec)} followed by {@link #addMember(Entity)} */
+    public <T extends Entity> T addMemberChild(EntitySpec<T> spec);
+    
+    /** as {@link #addChild(Entity)} followed by {@link #addMember(Entity)} */
+    public <T extends Entity> T addMemberChild(T child);
+    
+    @Override
+    /** as in super, but note this does NOT by default add it as a member; see {@link #addMemberChild(EntitySpec)} */
+    public <T extends Entity> T addChild(EntitySpec<T> spec);
+    
+    @Override
+    /** as in super, but note this does NOT by default add it as a member; see {@link #addMemberChild(Entity)} */
+    public <T extends Entity> T addChild(T child);
+
 }

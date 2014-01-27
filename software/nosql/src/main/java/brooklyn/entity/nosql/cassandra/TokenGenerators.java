@@ -10,6 +10,7 @@ import java.util.Set;
 
 import brooklyn.util.collections.MutableList;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -24,11 +25,16 @@ public class TokenGenerators {
         public abstract BigInteger range();
 
         private final Set<BigInteger> currentTokens = Sets.newTreeSet();
-
         private final List<BigInteger> nextTokens = Lists.newArrayList();
+        private BigInteger origin = BigInteger.ZERO;
         
         public AbstractTokenGenerator() { 
             assert range().equals(max().subtract(min()).add(BigInteger.ONE)); 
+        }
+        
+        @Override
+        public void setOrigin(BigInteger shift) {
+            this.origin = Preconditions.checkNotNull(shift, "shift");
         }
         
         /**
@@ -54,7 +60,6 @@ public class TokenGenerators {
                 nextTokens.addAll(generateEquidistantTokens(numNewNodes));
             } else {
                 // simple strategy which iteratively finds best midpoint
-                // TODO ideally this would be informed by load!
                 for (int i=0; i<numNewNodes; i++) {
                     nextTokens.add(generateBestNextToken());
                 }
@@ -76,6 +81,7 @@ public class TokenGenerators {
             List<BigInteger> result = Lists.newArrayList();
             for (int i = 0; i < numTokens; i++) {
                 BigInteger token = range().multiply(BigInteger.valueOf(i)).divide(BigInteger.valueOf(numTokens)).add(min());
+                token = normalize(token.add(origin));
                 result.add(token);
             }
             return result;

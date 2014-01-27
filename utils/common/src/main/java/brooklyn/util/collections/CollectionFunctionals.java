@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
@@ -18,6 +19,15 @@ public class CollectionFunctionals {
             @Override
             public Integer get() {
                 return Iterables.size(collection);
+            }
+        };
+    }
+    
+    public static Function<Iterable<?>, Integer> sizeFunction() {
+        return new Function<Iterable<?>, Integer>() {
+            @Override
+            public Integer apply(Iterable<?> input) {
+                return Iterables.size(input);
             }
         };
     }

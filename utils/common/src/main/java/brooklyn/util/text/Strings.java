@@ -5,7 +5,6 @@ package brooklyn.util.text;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Comparator;
 import java.util.Map;
 
 import javax.annotation.Nullable;
