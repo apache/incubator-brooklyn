@@ -10,9 +10,8 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import brooklyn.event.feed.ConfigToAttributes;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
-
-import com.google.common.base.Throwables;
 
 /**
 * A {@link Sensor} describing an attribute that can be configured with inputs that are used to derive the final value.
@@ -44,7 +43,7 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
             defaultValueTyped = TypeCoercions.coerce(defaultValue, configType);
         } catch (Exception e) {
             log.warn("Invalid default value '"+defaultValue+"' for "+name+" (rethrowing: "+e, e);
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
         configKey = new BasicConfigKey<ConfigType>(configType, name, description, defaultValueTyped);
     }

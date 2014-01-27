@@ -225,6 +225,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
           ApplicationSpec appSpec = mapper().readValue(inputToAutodetectType, ApplicationSpec.class);
           return createFromAppSpec(appSpec);
       } catch (Exception e) {
+          Exceptions.propagateIfFatal(e);
           legacyFormatException = e;
           log.debug("Input is not legacy ApplicationSpec JSON (will try others): "+e, e);
       }
@@ -241,6 +242,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
               }
           }
       } catch (Exception e) {
+          Exceptions.propagateIfFatal(e);
           log.debug("Input is not valid YAML: "+e);
       }
       
@@ -250,8 +252,9 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
           try {
               return launch(template);
           } catch (Exception e) {
+              Exceptions.propagateIfFatal(e);
               if (looksLikeYaml)
-                  throw Throwables.propagate(e);
+                  throw Exceptions.propagate(e);
           }
       }
       
