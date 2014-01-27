@@ -13,7 +13,6 @@ import brooklyn.test.EntityTestUtils;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class RedisEc2LiveTest extends AbstractEc2LiveTest {
 

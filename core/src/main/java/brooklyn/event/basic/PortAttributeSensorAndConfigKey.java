@@ -10,11 +10,11 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
 import brooklyn.location.basic.Locations;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Optional;
@@ -32,6 +32,11 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
     private static final long serialVersionUID = 4680651022807491321L;
     
     public static final Logger LOG = LoggerFactory.getLogger(PortAttributeSensorAndConfigKey.class);
+
+    static {
+        // ensure type coercions are registered
+        PortRanges.init();
+    }
 
     public PortAttributeSensorAndConfigKey(String name) {
         this(name, name, null);

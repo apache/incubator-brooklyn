@@ -45,6 +45,7 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.Collections2;
 
 
@@ -216,24 +217,50 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
   @Override
   public Response createPoly(byte[] inputToAutodetectType) {
       log.debug("Creating app from autodetecting input");
+
+      boolean looksLikeLegacy = false;
+      Exception legacyFormatException = null;
+      // attempt legacy format
       try {
           ApplicationSpec appSpec = mapper().readValue(inputToAutodetectType, ApplicationSpec.class);
           return createFromAppSpec(appSpec);
       } catch (Exception e) {
-          log.debug("Input is not legacy ApplicationSpec JSON (will try others): "+e);
+          Exceptions.propagateIfFatal(e);
+          legacyFormatException = e;
+          log.debug("Input is not legacy ApplicationSpec JSON (will try others): "+e, e);
+      }
+
+      AssemblyTemplate template = null;
+      boolean looksLikeYaml = false;
+      try {
+          template = camp().pdp().registerDeploymentPlan(new StringReader(new String(inputToAutodetectType)));
+          if (!template.getPlatformComponentTemplates().isEmpty() || !template.getApplicationComponentTemplates().isEmpty()) {
+              looksLikeYaml = true;
+          } else {
+              if (template.getCustomAttributes().containsKey("type")) {
+                  looksLikeLegacy = true;
+              }
+          }
+      } catch (Exception e) {
+          Exceptions.propagateIfFatal(e);
+          log.debug("Input is not valid YAML: "+e);
       }
       
       // TODO not json - try ZIP, etc
       
-      // finally try yaml
-      AssemblyTemplate template = null;
-      try {
-          template = camp().pdp().registerDeploymentPlan(new StringReader(new String(inputToAutodetectType)));
-      } catch (Exception e) {
-          log.debug("Input is not valid YAML: "+e);
+      if (template!=null) {
+          try {
+              return launch(template);
+          } catch (Exception e) {
+              Exceptions.propagateIfFatal(e);
+              if (looksLikeYaml)
+                  throw Exceptions.propagate(e);
+          }
       }
-      if (template!=null)
-          return launch(template);
+      
+      if (looksLikeLegacy && legacyFormatException!=null)
+          // throw the error from legacy creation if it looks like it was the legacy format
+          throw Throwables.propagate(legacyFormatException);
       
       return Response.serverError().entity("Unsupported format; not able to autodetect.").build();
   }
@@ -284,7 +311,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
   private void checkLocationsAreValid(ApplicationSpec applicationSpec) {
     for (String locationId : applicationSpec.getLocations()) {
         locationId = BrooklynRestResourceUtils.fixLocation(locationId);
-      if (!brooklyn().getLocationRegistry().canMaybeResolve(locationId)) {
+      if (!brooklyn().getLocationRegistry().canMaybeResolve(locationId) && brooklyn().getLocationRegistry().getDefinedLocationById(locationId)==null) {
         throw WebResourceUtils.notFound("Undefined location '%s'", locationId);
       }
     }

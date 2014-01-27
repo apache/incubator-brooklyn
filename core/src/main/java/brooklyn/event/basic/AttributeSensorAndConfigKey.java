@@ -1,5 +1,8 @@
 package brooklyn.event.basic;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
@@ -7,6 +10,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import brooklyn.event.feed.ConfigToAttributes;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 
 /**
@@ -20,6 +24,7 @@ import brooklyn.util.flags.TypeCoercions;
 public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends BasicAttributeSensor<SensorType> 
         implements ConfigKey.HasConfigKey<ConfigType> {
     private static final long serialVersionUID = -3103809215973264600L;
+    private static final Logger log = LoggerFactory.getLogger(AttributeSensorAndConfigKey.class);
 
     private ConfigKey<ConfigType> configKey;
 
@@ -33,7 +38,14 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
     
     public AttributeSensorAndConfigKey(Class<ConfigType> configType, Class<SensorType> sensorType, String name, String description, Object defaultValue) {
         super(sensorType, name, description);
-        configKey = new BasicConfigKey<ConfigType>(configType, name, description, TypeCoercions.coerce(defaultValue, configType));
+        ConfigType defaultValueTyped;
+        try {
+            defaultValueTyped = TypeCoercions.coerce(defaultValue, configType);
+        } catch (Exception e) {
+            log.warn("Invalid default value '"+defaultValue+"' for "+name+" (rethrowing: "+e, e);
+            throw Exceptions.propagate(e);
+        }
+        configKey = new BasicConfigKey<ConfigType>(configType, name, description, defaultValueTyped);
     }
 
     public AttributeSensorAndConfigKey(AttributeSensorAndConfigKey<ConfigType,SensorType> orig, ConfigType defaultValue) {
