@@ -283,10 +283,13 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     @Override
     public void reloadBrooklynProperties() {
+        log.info("Reloading brooklyn properties from " + builder);
         BrooklynProperties properties = builder.build();
         configMap = properties;
-        if (brooklynAdditionalProperties != null)
+        if (brooklynAdditionalProperties != null) {
+            log.info("Reloading additional brooklyn properties from " + brooklynAdditionalProperties);
             configMap.addFromMap(brooklynAdditionalProperties);
+        }
         this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
 
         // Force reload of location registry

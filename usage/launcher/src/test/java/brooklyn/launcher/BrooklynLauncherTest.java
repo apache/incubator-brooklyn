@@ -143,7 +143,7 @@ public class BrooklynLauncherTest {
     }
     
     @Test
-    public void testReloadBrooklynProperties() throws Exception {
+    public void testReloadBrooklynPropertiesRestoresProgrammaticProperties() throws Exception {
         launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
                 .brooklynProperties("mykey", "myval")
@@ -159,19 +159,22 @@ public class BrooklynLauncherTest {
     @Test
     public void testReloadBrooklynPropertiesFromFile() throws Exception {
         File globalPropertiesFile = File.createTempFile("local-brooklyn-properties-test", ".properties");
-        globalPropertiesFile.deleteOnExit();
-        String property = "mykey=myval";
-        Files.write(property, globalPropertiesFile, Charsets.UTF_8);
-        launcher = BrooklynLauncher.newInstance()
-                .webconsole(false)
-                .globalBrooklynPropertiesFile(globalPropertiesFile.getAbsolutePath())
-                .start();
-        LocalManagementContext managementContext = (LocalManagementContext)launcher.getServerDetails().getManagementContext();
-        assertEquals(managementContext.getConfig().getFirst("mykey"), "myval");
-        property = "mykey=newval";
-        Files.write(property, globalPropertiesFile, Charsets.UTF_8);
-        managementContext.reloadBrooklynProperties();
-        assertEquals(managementContext.getConfig().getFirst("mykey"), "newval");
+        try {
+            String property = "mykey=myval";
+            Files.write(property, globalPropertiesFile, Charsets.UTF_8);
+            launcher = BrooklynLauncher.newInstance()
+                    .webconsole(false)
+                    .globalBrooklynPropertiesFile(globalPropertiesFile.getAbsolutePath())
+                    .start();
+            LocalManagementContext managementContext = (LocalManagementContext)launcher.getServerDetails().getManagementContext();
+            assertEquals(managementContext.getConfig().getFirst("mykey"), "myval");
+            property = "mykey=newval";
+            Files.write(property, globalPropertiesFile, Charsets.UTF_8);
+            managementContext.reloadBrooklynProperties();
+            assertEquals(managementContext.getConfig().getFirst("mykey"), "newval");
+        } finally {
+            globalPropertiesFile.delete();
+        }
     }
 
     private void assertOnlyApp(BrooklynLauncher launcher, Class<? extends Application> expectedType) {

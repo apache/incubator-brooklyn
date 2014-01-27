@@ -152,8 +152,8 @@ define([
                     // TODO render the error better than poor-man's flashing
                     // (would just be connection error -- with timeout=0 we get a task even for invalid input)
 
-                    console.error("ERROR invoking effector");
-                    console.debug(data)
+                    console.error("ERROR reloading brooklyn properties");
+                    console.debug(data);
                 }
             });
         }
