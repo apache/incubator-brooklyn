@@ -4,7 +4,6 @@
  */
 package brooklyn.util.jmx.jmxrmi;
 
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -57,7 +56,15 @@ public class JmxRmiAgent {
     /**
      * The entry point, uses the JDK dynamic agent loading feature.
      */
-    public static void premain(String agentArgs) throws IOException {
+    public static void premain(String agentArgs) {
+        doMain(agentArgs);
+    }
+    
+    public static void agentmain(String agentArgs) {
+        doMain(agentArgs);
+    }
+    
+    public static void doMain(String agentArgs) {
         final JMXConnectorServer connector = new JmxRmiAgent().startServer(System.getProperties());
         if (connector != null) {
             Runtime.getRuntime().addShutdownHook(new Thread("jmxmp-agent-shutdownHookThread") {

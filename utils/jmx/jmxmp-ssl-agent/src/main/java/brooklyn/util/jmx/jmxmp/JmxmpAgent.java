@@ -79,6 +79,14 @@ public class JmxmpAgent {
     public static final int JMXMP_DEFAULT_PORT = 11099;
 
     public static void premain(String agentArgs) {
+        doMain(agentArgs);
+    }
+    
+    public static void agentmain(String agentArgs) {
+        doMain(agentArgs);
+    }
+    
+    public static void doMain(String agentArgs) {
         final JMXConnectorServer connector = new JmxmpAgent().startJmxmpConnector(System.getProperties());
         if (connector != null) {
             Runtime.getRuntime().addShutdownHook(new Thread("jmxmp-agent-shutdownHookThread") {

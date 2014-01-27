@@ -56,6 +56,7 @@
                         </manifest>
                         <manifestEntries>
                             <Premain-Class>brooklyn.util.jmx.jmxmp.JmxmpAgent</Premain-Class>
+                            <Agent-Class>brooklyn.util.jmx.jmxmp.JmxmpAgent</Agent-Class>
                         </manifestEntries>
                     </archive>
                 </configuration>
