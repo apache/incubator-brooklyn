@@ -5,10 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY;
 import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_CC_AMI_QUERY;
 import static org.jclouds.compute.util.ComputeServiceUtils.execHttpResponse;
-import static org.jclouds.scriptbuilder.domain.Statements.appendFile;
-import static org.jclouds.scriptbuilder.domain.Statements.exec;
-import static org.jclouds.scriptbuilder.domain.Statements.interpret;
-import static org.jclouds.scriptbuilder.domain.Statements.newStatementList;
+import static org.jclouds.scriptbuilder.domain.Statements.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,10 +49,12 @@ import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.inject.Module;
 
@@ -205,6 +204,13 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         if (!truth(endpoint)) endpoint = getDeprecatedProperty(conf, Constants.PROPERTY_ENDPOINT);
         if (truth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
 
+        // FIXME Deprecated mechanism, should have a ConfigKey for overrides
+        Map<String, Object> extra = Maps.filterKeys(conf.getAllConfig(), Predicates.containsPattern("^jclouds\\."));
+        if (extra.size() > 0) {
+            LOG.warn("Jclouds using deprecated property overrides: "+Entities.sanitize(extra));
+        }
+        properties.putAll(extra);
+
         Map<?,?> cacheKey = MutableMap.builder()
                 .putAll(properties)
                 .put("provider", provider)
@@ -213,7 +219,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 .putIfNotNull("endpoint", endpoint)
                 .build()
                 .toImmutable();
-        
+
         if (allowReuse) {
             ComputeService result = cachedComputeServices.get(cacheKey);
             if (result!=null) {
