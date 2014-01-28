@@ -3,7 +3,6 @@ package brooklyn.mementos;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.RebindSupport;
@@ -24,10 +23,6 @@ public interface EntityMemento extends Memento, TreeNode {
 
     public Map<AttributeSensor, Object> getAttributes();
 
-    public Set<AttributeSensor> getEntityReferenceAttributes();
-    
-    public Set<ConfigKey> getEntityReferenceConfigs();
-
     /**
      * The ids of the member entities, if this is a Group; otherwise empty.
      * 
@@ -44,8 +39,4 @@ public interface EntityMemento extends Memento, TreeNode {
      * The ids of the policies of this entity.
      */
     public Collection<String> getPolicies();
-
-    public Collection<? extends ConfigKey> getLocationReferenceConfigs();
-
-    public Collection<? extends AttributeSensor> getLocationReferenceAttributes();
 }

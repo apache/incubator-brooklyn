@@ -1,5 +1,6 @@
 package brooklyn.entity.rebind;
 
+import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
@@ -51,8 +52,19 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
             Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
             for (Location location : entity.getLocations()) {
                 if (!locations.containsKey(location.getId())) {
-                    for (Location locationInHierarchy : TreeUtils.findLocationsInHierarchy(location)) {
-                        locations.put(locationInHierarchy.getId(), locationInHierarchy.getRebindSupport().getMemento());
+                    Collection<Location> locsInHierachy = TreeUtils.findLocationsInHierarchy(location);
+
+                    /*
+                     * Need to guarantee "happens before", with any thread that has written 
+                     * fields of these locations. In particular, saw failures where SshMachineLocation
+                     * had null address field. Our hypothesis is that the location had its fields set,
+                     * and then set its parent (which goes through a synchronized in AbstractLocation.addChild),
+                     * but that this memento-generating code did not go through any synchronization or volatiles.
+                     */
+                    synchronized (new Object()) {}
+                    
+                    for (Location locInHierarchy : locsInHierachy) {
+                        locations.put(locInHierarchy.getId(), locInHierarchy.getRebindSupport().getMemento());
                     }
                 }
             }
@@ -67,6 +79,11 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
 //                policies.add(policy.getRebindSupport().getMemento());
 //            }
 //            delta.policies = policies;
+
+            /*
+             * Make the writes to the mementos visible to other threads.
+             */
+            synchronized (new Object()) {}
 
             persister.delta(delta);
         }

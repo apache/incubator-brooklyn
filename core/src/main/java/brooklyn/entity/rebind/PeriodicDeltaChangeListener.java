@@ -155,6 +155,15 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     persisterDelta.removedEntityIds = prevDeltaCollector.removedEntityIds;
                     persisterDelta.removedPolicyIds = prevDeltaCollector.removedPolicyIds;
                     
+                    /*
+                     * Need to guarantee "happens before", with any thread that subsequently reads
+                     * the mementos.
+                     * 
+                     * See MementoFileWriter.writeNow for the corresponding synchronization,
+                     * that guarantees its thread has values visible for reads.
+                     */
+                    synchronized (new Object()) {}
+
                     // Tell the persister to persist it
                     persister.delta(persisterDelta);
                 }

@@ -5,7 +5,9 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.rebind.RebindManager;
+import brooklyn.location.Location;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -15,7 +17,15 @@ import com.google.common.annotations.VisibleForTesting;
  */
 public interface BrooklynMementoPersister {
 
-    BrooklynMemento loadMemento() throws IOException;
+    public static interface LookupContext {
+        Entity lookupEntity(String id);
+        Location lookupLocation(String id);
+    }
+    
+    /**
+     * Note that this method is *not* thread safe.
+     */
+    BrooklynMemento loadMemento(LookupContext lookupContext) throws IOException;
     
     void checkpoint(BrooklynMemento memento);
     

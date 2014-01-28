@@ -19,7 +19,6 @@ import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.rebind.BasicEntityRebindSupport;
-import brooklyn.entity.rebind.MementoTransformer;
 import brooklyn.entity.rebind.RebindContext;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Startable;
@@ -37,7 +36,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
-import com.google.common.reflect.TypeToken;
 
 /**
  * Represents a controller mechanism for a {@link Cluster}.
@@ -406,7 +404,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
                 // Note: using MutableMap so accepts nulls
                 Map<String, Object> flags = Maps.newLinkedHashMap();
                 flags.put("serverPoolAddresses", serverPoolAddresses);
-                flags.put("serverPoolTargets", MementoTransformer.transformEntitiesToIds(serverPoolTargets));
+                flags.put("serverPoolTargets", serverPoolTargets);
                 return super.getMementoWithProperties(flags);
             }
             @SuppressWarnings({ "unchecked", "serial" })
@@ -415,7 +413,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
                 // TODO If pool-target entity couldn't be resolved, then  serverPoolAddresses and serverPoolTargets
                 // will be out-of-sync (for ever more?)
                 serverPoolAddresses.addAll((Collection<String>) memento.getCustomField("serverPoolAddresses"));
-                serverPoolTargets.putAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomField("serverPoolTargets"), new TypeToken<Map<Entity,String>>() {}, true));
+                serverPoolTargets.putAll((Map<Entity,String>) memento.getCustomField("serverPoolTargets"));
             }
         };
     }

@@ -25,6 +25,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -138,7 +139,8 @@ public class CassandraDatacenterLiveTest {
     protected static void checkConnection(int numRetries, CassandraNode first, CassandraNode second) throws ConnectionException {
         // have been seeing intermittent SchemaDisagreementException errors on AWS, probably due to Astyanax / how we are using it
         // (confirmed that clocks are in sync)
-        AstyanaxSample astyanaxFirst = new AstyanaxSample(first);
+        String uniqueName = Identifiers.makeRandomId(8);
+        AstyanaxSample astyanaxFirst = AstyanaxSample.builder().node(first).columnFamilyName(uniqueName).build();
         Map<String, List<String>> versions = astyanaxFirst.getAstyanaxContextForCluster().getEntity().describeSchemaVersions();
         log.info("Cassandra schema versions are: "+versions);
         if (versions.size()>1) {
@@ -147,7 +149,7 @@ public class CassandraDatacenterLiveTest {
 
         astyanaxFirst.writeData(numRetries);
 
-        AstyanaxSample astyanaxSecond = new AstyanaxSample(second);
+        AstyanaxSample astyanaxSecond = AstyanaxSample.builder().node(second).columnFamilyName(uniqueName).build();
         astyanaxSecond.readData(numRetries);
     }
 

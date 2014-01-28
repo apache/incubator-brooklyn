@@ -32,4 +32,6 @@ public interface Memento extends Serializable {
     public Object getCustomField(String name);
 
     public Map<String, ? extends Object> getCustomFields();
+    
+    public String toVerboseString();
 }

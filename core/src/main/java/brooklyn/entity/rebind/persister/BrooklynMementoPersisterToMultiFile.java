@@ -22,10 +22,11 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
+import com.google.common.base.Stopwatch;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -52,7 +53,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     private static final int MAX_SERIALIZATION_ATTEMPTS = 5;
     
     private volatile boolean running = true;
-    
+
     public BrooklynMementoPersisterToMultiFile(File dir, ClassLoader classLoader) {
         this.dir = checkNotNull(dir, "dir");
         MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(classLoader);
@@ -90,7 +91,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     }
     
     @Override
-    public BrooklynMemento loadMemento() throws IOException {
+    public BrooklynMemento loadMemento(LookupContext lookupContext) throws IOException {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
         FileFilter fileFilter = new FileFilter() {
             @Override public boolean accept(File file) {
                 return !file.getName().endsWith(".tmp");
@@ -105,22 +108,30 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         
         BrooklynMementoImpl.Builder builder = BrooklynMementoImpl.builder();
         
-        for (File file : entityFiles) {
-            EntityMemento memento = (EntityMemento) serializer.fromString(readFile(file));
-            builder.entity(memento);
-            if (memento.isTopLevelApp()) {
-                builder.applicationId(memento.getId());
+        serializer.setLookupContext(lookupContext);
+        try {
+            for (File file : entityFiles) {
+                EntityMemento memento = (EntityMemento) serializer.fromString(readFile(file));
+                builder.entity(memento);
+                if (memento.isTopLevelApp()) {
+                    builder.applicationId(memento.getId());
+                }
             }
+            for (File file : locationFiles) {
+                LocationMemento memento = (LocationMemento) serializer.fromString(readFile(file));
+                builder.location(memento);
+            }
+            for (File file : policyFiles) {
+                PolicyMemento memento = (PolicyMemento) serializer.fromString(readFile(file));
+                builder.policy(memento);
+            }
+            
+            if (LOG.isDebugEnabled()) LOG.debug("Loaded memento; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS))); 
+            return builder.build();
+            
+        } finally {
+            serializer.unsetLookupContext();
         }
-        for (File file : locationFiles) {
-            LocationMemento memento = (LocationMemento) serializer.fromString(readFile(file));
-            builder.location(memento);
-        }
-        for (File file : policyFiles) {
-            PolicyMemento memento = (PolicyMemento) serializer.fromString(readFile(file));
-            builder.policy(memento);
-        }
-        return builder.build();
     }
     
     @Override
@@ -188,7 +199,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     }
 
     private String readFile(File file) throws IOException {
-        return Joiner.on("\n").join(Files.readLines(file, Charsets.UTF_8));
+        return Files.asCharSource(file, Charsets.UTF_8).read();
     }
     
     private void persist(EntityMemento entity) {

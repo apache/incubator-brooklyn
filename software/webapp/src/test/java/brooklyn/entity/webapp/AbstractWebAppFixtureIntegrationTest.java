@@ -7,9 +7,6 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.SocketException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
@@ -17,7 +14,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.AfterClass;
 import org.slf4j.Logger;
@@ -33,25 +29,23 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.dto.MementosGenerators;
+import brooklyn.entity.rebind.persister.BrooklynMementoPersisterInMemory;
 import brooklyn.entity.trait.Startable;
-import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.Repeater;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;
@@ -174,7 +168,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
      * Checks an entity can start, set SERVICE_UP to true and shutdown again.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
-    public void testReportsServiceDownWhenKilled(final SoftwareProcess entity) {
+    public void testReportsServiceDownWhenKilled(final SoftwareProcess entity) throws Exception {
         this.entity = entity;
         log.info("test=testReportsServiceDownWithKilled; entity="+entity+"; app="+entity.getApplication());
         
@@ -190,9 +184,11 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         try {
             ManagementContext managementContext = ((EntityInternal)entity).getManagementContext();
             BrooklynMemento brooklynMemento = MementosGenerators.newBrooklynMemento(managementContext);
+            BrooklynMementoPersister newPersister = new BrooklynMementoPersisterInMemory(getClass().getClassLoader());
+            newPersister.checkpoint(brooklynMemento);
             
             newManagementContext = Entities.newManagementContext();
-            newManagementContext.getRebindManager().rebind(brooklynMemento, getClass().getClassLoader());
+            newManagementContext.getRebindManager().rebind(getClass().getClassLoader());
             SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(entity.getId());
             entity2.stop();
         } finally {

@@ -262,8 +262,9 @@ public class FlagUtils {
             try {
                 f.setAccessible(true);
                 oldValue = f.get(o);
-                if (oldValue==null || oldValue.equals(getDefaultValueForType(f.getType())))
+                if (oldValue==null || oldValue.equals(getDefaultValueForType(f.getType()))) {
                     setField(o, f, optionalAnnotation.defaultVal(), optionalAnnotation);
+                }
             } catch (Exception e) {
                 Exceptions.propagate(e);
             }
@@ -338,6 +339,8 @@ public class FlagUtils {
                 throw new IllegalArgumentException("Cannot set "+f+" in "+objectOfField+" from type "+value.getClass()+" ("+value+"): "+e, e);
             }
             f.set(objectOfField, newValue);
+            if (log.isTraceEnabled()) log.trace("FlagUtils for "+objectOfField+", setting field="+f.getName()+"; val="+value+"; newVal="+newValue+"; key="+key);
+
         } catch (IllegalAccessException e) {
             throw Throwables.propagate(e);
         }

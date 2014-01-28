@@ -1,21 +1,21 @@
 package brooklyn.entity.rebind;
 
-import static brooklyn.entity.basic.Entities.sanitize;
-
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Sets;
 
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.flags.TypeCoercions;
+
+import com.google.common.collect.Sets;
 
 public class BasicLocationRebindSupport implements RebindSupport<LocationMemento> {
 
@@ -34,37 +34,34 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
 
     protected LocationMemento getMementoWithProperties(Map<String,?> props) {
         LocationMemento memento = MementosGenerators.newLocationMementoBuilder(location).customFields(props).build();
-    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location {}({}): displayName={}; parent={}; children={}; "+
-    	        "locationConfig={}; locationConfigDescription={}; customProperties={}; ",
-    			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
-                memento.getChildren(), sanitize(memento.getLocationConfig()), memento.getLocationConfigDescription(), 
-                sanitize(memento.getCustomFields())});
+    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location: {}", memento.toVerboseString());
     	return memento;
     }
 
     @Override
     public void reconstruct(RebindContext rebindContext, LocationMemento memento) {
-    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location {}({}): displayName={}; parent={}; children={}; " +
-    			"locationConfig={}; locationConfigDescription={}; customProperties={}",
-    			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
-    			memento.getChildren(), sanitize(memento.getLocationConfig()), memento.getLocationConfigDescription(), 
-    			sanitize(memento.getCustomFields())});
+    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location: {}", memento.toVerboseString());
 
     	// Note that the flags have been set in the constructor
         location.setName(memento.getDisplayName());
+        
         location.getConfigBag().putAll(memento.getLocationConfig()).markAll(
                 Sets.difference(memento.getLocationConfig().keySet(), memento.getLocationConfigUnused())).
                 setDescription(memento.getLocationConfigDescription());
-        
-        // Do late-binding of config that are references to other locations
-        for (String flagName : memento.getLocationConfigReferenceKeys()) {
-            Field field = FlagUtils.findFieldForFlag(flagName, location);
-            Class<?> fieldType = field.getType();
-            Object transformedValue = memento.getLocationConfig().get(flagName);
-            Object restoredValue = MementoTransformer.transformIdsToLocations(rebindContext, transformedValue, fieldType, true);
-            
-            location.getConfigBag().putStringKey(flagName, restoredValue);
-            FlagUtils.setFieldFromFlag(location, flagName, restoredValue);
+
+        for (Map.Entry<String, Object> entry : memento.getLocationConfig().entrySet()) {
+            String flagName = entry.getKey();
+            try {
+                Field field = FlagUtils.findFieldForFlag(flagName, location);
+                Class<?> fieldType = field.getType();
+                Object value = TypeCoercions.coerce(entry.getValue(), fieldType);
+                if (value != null) {
+                    location.getConfigBag().putStringKey(flagName, value);
+                    FlagUtils.setFieldFromFlag(location, flagName, value);
+                }
+            } catch (NoSuchElementException e) {
+                // FIXME How to do findFieldForFlag without throwing exception if it's not there?
+            }
         }
 
         setParent(rebindContext, memento);

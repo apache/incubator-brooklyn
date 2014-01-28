@@ -855,7 +855,11 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
             LOG.debug("configuration being made to {} after deployment: {} = {}; change may not be visible in other contexts", 
                     new Object[] { this, key, val });
         }
-        return (T) configsInternal.setConfig(key, val);
+        T result = (T) configsInternal.setConfig(key, val);
+        
+        getManagementSupport().getEntityChangeListener().onConfigChanged(key);
+        return result;
+
     }
 
     @Override

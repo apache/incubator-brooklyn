@@ -4,10 +4,12 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.TreeNode;
 import brooklyn.util.config.ConfigBag;
 
+import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -28,7 +30,6 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
         protected Map<String,Object> locationConfig = Maps.newLinkedHashMap();
         protected Set<String> locationConfigUnused = Sets.newLinkedHashSet();
         protected String locationConfigDescription;
-        protected Set<String> locationConfigReferenceKeys = Sets.newLinkedHashSet();
         
         public Builder from(LocationMemento other) {
             super.from((TreeNode)other);
@@ -36,7 +37,6 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
             locationConfig.putAll(other.getLocationConfig());
             locationConfigUnused.addAll(other.getLocationConfigUnused());
             locationConfigDescription = other.getLocationConfigDescription();
-            locationConfigReferenceKeys.addAll(other.getLocationConfigReferenceKeys());
             fields.putAll(other.getCustomFields());
             return self();
         }
@@ -53,7 +53,6 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
     private Map<String,Object> locationConfig;
 	private Set<String> locationConfigUnused;
 	private String locationConfigDescription;
-	private Set<String> locationConfigReferenceKeys;
 
     // Trusts the builder to not mess around with mutability after calling build()
 	protected BasicLocationMemento(Builder builder) {
@@ -61,7 +60,6 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
 	    locationConfig = toPersistedMap(builder.locationConfig);
 	    locationConfigUnused = toPersistedSet(builder.locationConfigUnused);
 	    locationConfigDescription = builder.locationConfigDescription;
-	    locationConfigReferenceKeys = toPersistedSet(builder.locationConfigReferenceKeys);
 	}
 	
     @Override
@@ -80,7 +78,9 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
     }
     
     @Override
-    public Set<String> getLocationConfigReferenceKeys() {
-    	return fromPersistedSet(locationConfigReferenceKeys);
+    protected ToStringHelper newVerboseStringHelper() {
+        return super.newVerboseStringHelper()
+                .add("config", Entities.sanitize(getLocationConfig()))
+                .add("locationConfigDescription", getLocationConfigDescription());
     }
 }

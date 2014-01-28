@@ -10,7 +10,7 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
     protected volatile MutableBrooklynMemento memento = new MutableBrooklynMemento();
     
     @Override
-    public BrooklynMemento loadMemento() {
+    public BrooklynMemento loadMemento(LookupContext lookupContext) {
         // Trusting people not to cast+modify, because the in-memory persister wouldn't be used in production code
         return memento;
     }

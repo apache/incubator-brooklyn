@@ -3,6 +3,7 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -90,17 +92,58 @@ public class AstyanaxSupport {
     }
     
     public static class AstyanaxSample extends AstyanaxSupport {
-        public static final ColumnFamily<String, String> SAMPLE_COLUMN_FAMILY = new ColumnFamily<String, String>(
-                "People", // Column Family Name
-                StringSerializer.get(), // Key Serializer
-                StringSerializer.get()); // Column Serializer
+        
+        public static class Builder {
+            protected CassandraNode node;
+            protected String clusterName;
+            protected String hostname;
+            protected Integer thriftPort;
+            protected String columnFamilyName = Identifiers.makeRandomId(8);
+            
+            public Builder node(CassandraNode val) {
+                this.node = val;
+                clusterName = node.getClusterName();
+                hostname = node.getAttribute(Attributes.HOSTNAME);
+                thriftPort = node.getThriftPort();
+                return this;
+            }
+            public Builder host(String clusterName, String hostname, int thriftPort) {
+                this.clusterName = clusterName;
+                this.hostname = hostname;
+                this.thriftPort = thriftPort;
+                return this;
+            }
+            public Builder columnFamilyName(String val) {
+                this.columnFamilyName = val;
+                return this;
+            }
+            public AstyanaxSample build() {
+                return new AstyanaxSample(this);
+            }
+        }
+        
+        public static Builder builder() {
+            return new Builder();
+        }
+        
+        public final String columnFamilyName;
+        public final ColumnFamily<String, String> sampleColumnFamily;
 
         public AstyanaxSample(CassandraNode node) {
-            super(node);
+            this(builder().node(node));
         }
 
         public AstyanaxSample(String clusterName, String hostname, int thriftPort) {
-            super(clusterName, hostname, thriftPort);
+            this(builder().host(clusterName, hostname, thriftPort));
+        }
+
+        protected AstyanaxSample(Builder builder) {
+            super(builder.clusterName, builder.hostname, builder.thriftPort);
+            columnFamilyName = checkNotNull(builder.columnFamilyName, "columnFamilyName");
+            sampleColumnFamily = new ColumnFamily<String, String>(
+                    columnFamilyName, // Column Family Name
+                    StringSerializer.get(), // Key Serializer
+                    StringSerializer.get()); // Column Serializer
         }
 
         /**
@@ -121,7 +164,7 @@ public class AstyanaxSupport {
             try {
                 Keyspace keyspace = context.getEntity();
                 try {
-                    assertNull(keyspace.describeKeyspace().getColumnFamily("People"));
+                    assertNull(keyspace.describeKeyspace().getColumnFamily(columnFamilyName));
                 } catch (Exception ek) {
                     // (Re) Create keyspace if needed
                     log.debug("repairing Cassandra error by re-creating keyspace "+keyspace+": "+ek);
@@ -151,17 +194,17 @@ public class AstyanaxSupport {
                 }
                 
                 assertNull(keyspace.describeKeyspace().getColumnFamily("Rabbits"));
-                assertNull(keyspace.describeKeyspace().getColumnFamily("People"));
+                assertNull(keyspace.describeKeyspace().getColumnFamily(columnFamilyName));
 
                 // Create column family
-                keyspace.createColumnFamily(SAMPLE_COLUMN_FAMILY, null);
+                keyspace.createColumnFamily(sampleColumnFamily, null);
 
                 // Insert rows
                 MutationBatch m = keyspace.prepareMutationBatch();
-                m.withRow(SAMPLE_COLUMN_FAMILY, "one")
+                m.withRow(sampleColumnFamily, "one")
                 .putColumn("name", "Alice", null)
                 .putColumn("company", "Cloudsoft Corp", null);
-                m.withRow(SAMPLE_COLUMN_FAMILY, "two")
+                m.withRow(sampleColumnFamily, "two")
                 .putColumn("name", "Bob", null)
                 .putColumn("company", "Cloudsoft Corp", null)
                 .putColumn("pet", "Cat", null);
@@ -185,7 +228,7 @@ public class AstyanaxSupport {
                 Keyspace keyspace = context.getEntity();
 
                 // Query data
-                OperationResult<ColumnList<String>> query = keyspace.prepareQuery(SAMPLE_COLUMN_FAMILY)
+                OperationResult<ColumnList<String>> query = keyspace.prepareQuery(sampleColumnFamily)
                         .getKey("one")
                         .execute();
                 assertEquals(query.getHost().getHostName(), hostname);

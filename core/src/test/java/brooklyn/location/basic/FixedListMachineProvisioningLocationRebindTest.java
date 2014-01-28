@@ -33,7 +33,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
     private TestApplication newApp;
     private File mementoDir;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);

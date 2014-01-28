@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -331,6 +332,10 @@ public class EntityManagementSupport {
         }
         @Override
         public void onAttributeChanged(AttributeSensor<?> attribute) {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
+        }
+        @Override
+        public void onConfigChanged(ConfigKey<?> key) {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
         @Override

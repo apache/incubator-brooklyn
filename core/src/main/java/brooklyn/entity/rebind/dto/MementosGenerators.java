@@ -11,12 +11,12 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.rebind.MementoTransformer;
 import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -83,32 +83,27 @@ public class MementosGenerators {
         for (Map.Entry<ConfigKey<?>, Object> entry : localConfig.entrySet()) {
             ConfigKey<?> key = checkNotNull(entry.getKey(), localConfig);
             Object value = entry.getValue();
-            Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
-            if (transformedValue != value) {
-                builder.entityReferenceConfigs.add(key);
-            } else {
-                transformedValue = MementoTransformer.transformLocationsToIds(value);
-                if (transformedValue != value) {
-                    builder.locationReferenceConfigs.add(key);
+            
+            // TODO Swapping an attributeWhenReady task for the actual value, if completed.
+            // Long-term, want to just handle task-persistence properly.
+            if (value instanceof Task) {
+                Task task = (Task) value;
+                if (task.isDone() && !task.isError()) {
+                    value = task.getUnchecked();
+                } else {
+                    // TODO how to record a completed but errored task?
+                    value = null;
                 }
             }
-            builder.config.put(key, transformedValue); 
+
+            builder.config.put(key, value); 
         }
         
         Map<AttributeSensor, Object> allAttributes = ((EntityInternal)entity).getAllAttributes();
         for (Map.Entry<AttributeSensor, Object> entry : allAttributes.entrySet()) {
             AttributeSensor<?> key = checkNotNull(entry.getKey(), allAttributes);
             Object value = entry.getValue();
-            Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
-            if (transformedValue != value) {
-                builder.entityReferenceAttributes.add((AttributeSensor<?>)key);
-            } else {
-                transformedValue = MementoTransformer.transformLocationsToIds(value);
-                if (transformedValue != value) {
-                    builder.locationReferenceAttributes.add((AttributeSensor) key);
-                }
-            }
-            builder.attributes.put((AttributeSensor<?>)key, transformedValue);
+            builder.attributes.put((AttributeSensor<?>)key, value);
         }
         
         for (Location location : entity.getLocations()) {
@@ -119,7 +114,7 @@ public class MementosGenerators {
             builder.children.add(child.getId()); 
         }
         
-        // FIXME Not including policies, because lots of places regiser anonymous inner class policies
+        // FIXME Not including policies, because lots of places register anonymous inner class policies
         // (e.g. AbstractController registering a AbstractMembershipTrackingPolicy)
         // Also, the entity constructor often re-creates the policy
         // Also see RebindManagerImpl.CheckpointingChangeListener.onChanged(Entity)
@@ -166,16 +161,6 @@ public class MementosGenerators {
         builder.copyConfig(persistableConfig);
         builder.locationConfig.putAll(persistableFlags);
 
-        for (Map.Entry<String, Object> entry : builder.locationConfig.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            Object transformedValue = MementoTransformer.transformLocationsToIds(value);
-            if (transformedValue != value) {
-                entry.setValue(transformedValue);
-                builder.locationConfigReferenceKeys.add(key);
-            }
-        }
-        
         Location parentLocation = location.getParent();
         builder.parent = (parentLocation != null) ? parentLocation.getId() : null;
         

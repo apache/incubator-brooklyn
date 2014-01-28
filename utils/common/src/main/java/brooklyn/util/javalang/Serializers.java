@@ -7,27 +7,69 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
+import java.io.OutputStream;
 
 import brooklyn.util.stream.Streams;
 
 public class Serializers {
 
+    public interface ObjectReplacer {
+        public static final ObjectReplacer NOOP = new ObjectReplacer() {
+            @Override public Object replace(Object toserialize) {
+                return toserialize;
+            }
+            @Override public Object resolve(Object todeserialize) {
+                return todeserialize;
+            }
+        };
+        
+        public Object replace(Object toserialize);
+        public Object resolve(Object todeserialize);
+    }
+
     public static <T> T reconstitute(T object) throws IOException, ClassNotFoundException {
+        return reconstitute(object, ObjectReplacer.NOOP);
+    }
+    
+    public static <T> T reconstitute(T object, ObjectReplacer replacer) throws IOException, ClassNotFoundException {
         if (object == null) return null;
-        return reconstitute(object, object.getClass().getClassLoader());
+        return reconstitute(object, object.getClass().getClassLoader(), replacer);
+    }
+    
+    public static <T> T reconstitute(T object, ClassLoader classLoader) throws IOException, ClassNotFoundException {
+        return reconstitute(object, classLoader, ObjectReplacer.NOOP);
     }
     
     @SuppressWarnings("unchecked")
-    public static <T> T reconstitute(T object, ClassLoader classLoader) throws IOException, ClassNotFoundException {
+    public static <T> T reconstitute(T object, ClassLoader classLoader, final ObjectReplacer replacer) throws IOException, ClassNotFoundException {
         if (object == null) return null;
         
+        class ReconstitutingObjectOutputStream extends ObjectOutputStream {
+            public ReconstitutingObjectOutputStream(OutputStream outputStream) throws IOException {
+                super(outputStream);
+                enableReplaceObject(true);
+            }
+            @Override
+            protected Object replaceObject(Object obj) throws IOException {
+                return replacer.replace(obj);
+            }
+        };
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        ObjectOutputStream oos = new ReconstitutingObjectOutputStream(baos);
         oos.writeObject(object);
         oos.close();
         
+        class ReconstitutingObjectInputStream extends ClassLoaderObjectInputStream {
+            public ReconstitutingObjectInputStream(InputStream inputStream, ClassLoader classLoader) throws IOException {
+                super(inputStream, classLoader);
+                super.enableResolveObject(true);
+            }
+            @Override protected Object resolveObject(Object obj) throws IOException {
+                return replacer.resolve(obj);
+            }
+        };
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        ObjectInputStream ois = new ClassLoaderObjectInputStream(bais, classLoader);
+        ReconstitutingObjectInputStream ois = new ReconstitutingObjectInputStream(bais, classLoader);
         try {
             return (T) ois.readObject();
         } finally {
