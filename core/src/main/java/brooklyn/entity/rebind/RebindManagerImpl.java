@@ -122,153 +122,158 @@ public class RebindManagerImpl implements RebindManager {
     public List<Application> rebind(final ClassLoader classLoader) throws IOException {
         checkNotNull(classLoader, "classLoader");
         
-        Reflections reflections = new Reflections(classLoader);
-        Map<String,Entity> entities = Maps.newLinkedHashMap();
-        Map<String,Location> locations = Maps.newLinkedHashMap();
-        Map<String,Policy> policies = Maps.newLinkedHashMap();
-        
-        final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
-
-        LookupContext dummyLookupContext = new LookupContext() {
-            private final Entity dummyEntity = (Entity) java.lang.reflect.Proxy.newProxyInstance(
-                    classLoader,
-                    new Class[] {Entity.class, EntityInternal.class, EntityProxy.class},
-                    new InvocationHandler() {
-                        @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
-                            return m.invoke(this, args);
-                        }
-                    });
-            private final Location dummyLocation = (Location) java.lang.reflect.Proxy.newProxyInstance(
-                    classLoader,
-                    new Class[] {Location.class, LocationInternal.class},
-                    new InvocationHandler() {
-                        @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
-                            return m.invoke(this, args);
-                        }
-                    });
-            @Override public Entity lookupEntity(String id) {
-                return dummyEntity;
-            }
-            @Override public Location lookupLocation(String id) {
-                return dummyLocation;
-            }
-        };
-        
-        LookupContext realLookupContext = new LookupContext() {
-            private final boolean removeDanglingRefs = true;
-            @Override public Entity lookupEntity(String id) {
-                Entity result = rebindContext.getEntity(id);
-                if (result == null) {
-                    if (removeDanglingRefs) {
-                        LOG.warn("No entity found with id "+id+"; returning null");
-                    } else {
-                        throw new IllegalStateException("No entity found with id "+id);
-                    }
-                }
-                return result;
-            }
-            @Override public Location lookupLocation(String id) {
-                Location result = rebindContext.getLocation(id);
-                if (result == null) {
-                    if (removeDanglingRefs) {
-                        LOG.warn("No location found with id "+id+"; returning null");
-                    } else {
-                        throw new IllegalStateException("No location found with id "+id);
-                    }
-                }
-                return result;
-            }
-        };
-        
-        // Two-phase deserialization. First we deserialize to find all instances (and their types).
-        // Then we deserialize so that inter-entity references can be set. During the first phase,
-        // any inter-entity reference will get the dummyEntity/dummyLocation.
-        BrooklynMemento mementoHeaders = persister.loadMemento(dummyLookupContext);
-
-        // Instantiate locations
-        LOG.info("RebindManager instantiating locations: {}", mementoHeaders.getLocationIds());
-        for (LocationMemento locMemento : mementoHeaders.getLocationMementos().values()) {
-            if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating location {}", locMemento);
+        try {
+            Reflections reflections = new Reflections(classLoader);
+            Map<String,Entity> entities = Maps.newLinkedHashMap();
+            Map<String,Location> locations = Maps.newLinkedHashMap();
+            Map<String,Policy> policies = Maps.newLinkedHashMap();
             
-            Location location = newLocation(locMemento, reflections);
-            locations.put(locMemento.getId(), location);
-            rebindContext.registerLocation(locMemento.getId(), location);
-        }
-        
-        // Instantiate entities
-        LOG.info("RebindManager instantiating entities: {}", mementoHeaders.getEntityIds());
-        for (EntityMemento entityMemento : mementoHeaders.getEntityMementos().values()) {
-            if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating entity {}", entityMemento);
-            
-            Entity entity = newEntity(entityMemento, reflections);
-            entities.put(entityMemento.getId(), entity);
-            rebindContext.registerEntity(entityMemento.getId(), entity);
-        }
-        
-        // Instantiate policies
-        LOG.info("RebindManager instantiating policies: {}", mementoHeaders.getPolicyIds());
-        for (PolicyMemento policyMemento : mementoHeaders.getPolicyMementos().values()) {
-            if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
-            
-            Policy policy = newPolicy(policyMemento, reflections);
-            policies.put(policyMemento.getId(), policy);
-            rebindContext.registerPolicy(policyMemento.getId(), policy);
-        }
-        
-        BrooklynMemento memento = persister.loadMemento(realLookupContext);
-
-        // Reconstruct locations
-        LOG.info("RebindManager reconstructing locations");
-        for (LocationMemento locMemento : memento.getLocationMementos().values()) {
-            Location location = rebindContext.getLocation(locMemento.getId());
-            if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", locMemento);
-
-            location.getRebindSupport().reconstruct(rebindContext, locMemento);
-        }
-
-        // Reconstruct policies
-        LOG.info("RebindManager reconstructing policies");
-        for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
-            Policy policy = rebindContext.getPolicy(policyMemento.getId());
-            if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing policy {}", policyMemento);
-
-            policy.getRebindSupport().reconstruct(rebindContext, policyMemento);
-        }
-
-        // Reconstruct entities
-        LOG.info("RebindManager reconstructing entities");
-        for (EntityMemento entityMemento : memento.getEntityMementos().values()) {
-            Entity entity = rebindContext.getEntity(entityMemento.getId());
-            if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
-
-            entity.getRebindSupport().reconstruct(rebindContext, entityMemento);
-        }
-        
-        LOG.info("RebindManager managing locations");
-        for (Location location: locations.values()) {
-            if (location.getParent()==null) {
-                // manage all root locations
-                // LocationManager.manage perhaps should not be deprecated, as we need to do this I think?
-                managementContext.getLocationManager().manage(location);
-            }
-        }
-        
-        // Manage the top-level apps (causing everything under them to become managed)
-        LOG.info("RebindManager managing entities");
-        for (String appId : memento.getApplicationIds()) {
-            Entities.startManagement((Application)rebindContext.getEntity(appId), managementContext);
-        }
-        
-        // Return the top-level applications
-        List<Application> apps = Lists.newArrayList();
-        for (String appId : memento.getApplicationIds()) {
-            apps.add((Application)rebindContext.getEntity(appId));
-        }
-        
-        LOG.info("RebindManager complete; return apps: {}", memento.getApplicationIds());
-        return apps;
-    }
+            final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
     
+            LookupContext dummyLookupContext = new LookupContext() {
+                private final Entity dummyEntity = (Entity) java.lang.reflect.Proxy.newProxyInstance(
+                        classLoader,
+                        new Class[] {Entity.class, EntityInternal.class, EntityProxy.class},
+                        new InvocationHandler() {
+                            @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
+                                return m.invoke(this, args);
+                            }
+                        });
+                private final Location dummyLocation = (Location) java.lang.reflect.Proxy.newProxyInstance(
+                        classLoader,
+                        new Class[] {Location.class, LocationInternal.class},
+                        new InvocationHandler() {
+                            @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
+                                return m.invoke(this, args);
+                            }
+                        });
+                @Override public Entity lookupEntity(String id) {
+                    return dummyEntity;
+                }
+                @Override public Location lookupLocation(String id) {
+                    return dummyLocation;
+                }
+            };
+            
+            LookupContext realLookupContext = new LookupContext() {
+                private final boolean removeDanglingRefs = true;
+                @Override public Entity lookupEntity(String id) {
+                    Entity result = rebindContext.getEntity(id);
+                    if (result == null) {
+                        if (removeDanglingRefs) {
+                            LOG.warn("No entity found with id "+id+"; returning null");
+                        } else {
+                            throw new IllegalStateException("No entity found with id "+id);
+                        }
+                    }
+                    return result;
+                }
+                @Override public Location lookupLocation(String id) {
+                    Location result = rebindContext.getLocation(id);
+                    if (result == null) {
+                        if (removeDanglingRefs) {
+                            LOG.warn("No location found with id "+id+"; returning null");
+                        } else {
+                            throw new IllegalStateException("No location found with id "+id);
+                        }
+                    }
+                    return result;
+                }
+            };
+            
+            // Two-phase deserialization. First we deserialize to find all instances (and their types).
+            // Then we deserialize so that inter-entity references can be set. During the first phase,
+            // any inter-entity reference will get the dummyEntity/dummyLocation.
+            BrooklynMemento mementoHeaders = persister.loadMemento(dummyLookupContext);
+    
+            // Instantiate locations
+            LOG.info("RebindManager instantiating locations: {}", mementoHeaders.getLocationIds());
+            for (LocationMemento locMemento : mementoHeaders.getLocationMementos().values()) {
+                if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating location {}", locMemento);
+                
+                Location location = newLocation(locMemento, reflections);
+                locations.put(locMemento.getId(), location);
+                rebindContext.registerLocation(locMemento.getId(), location);
+            }
+            
+            // Instantiate entities
+            LOG.info("RebindManager instantiating entities: {}", mementoHeaders.getEntityIds());
+            for (EntityMemento entityMemento : mementoHeaders.getEntityMementos().values()) {
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating entity {}", entityMemento);
+                
+                Entity entity = newEntity(entityMemento, reflections);
+                entities.put(entityMemento.getId(), entity);
+                rebindContext.registerEntity(entityMemento.getId(), entity);
+            }
+            
+            // Instantiate policies
+            LOG.info("RebindManager instantiating policies: {}", mementoHeaders.getPolicyIds());
+            for (PolicyMemento policyMemento : mementoHeaders.getPolicyMementos().values()) {
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
+                
+                Policy policy = newPolicy(policyMemento, reflections);
+                policies.put(policyMemento.getId(), policy);
+                rebindContext.registerPolicy(policyMemento.getId(), policy);
+            }
+            
+            BrooklynMemento memento = persister.loadMemento(realLookupContext);
+    
+            // Reconstruct locations
+            LOG.info("RebindManager reconstructing locations");
+            for (LocationMemento locMemento : memento.getLocationMementos().values()) {
+                Location location = rebindContext.getLocation(locMemento.getId());
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", locMemento);
+    
+                location.getRebindSupport().reconstruct(rebindContext, locMemento);
+            }
+    
+            // Reconstruct policies
+            LOG.info("RebindManager reconstructing policies");
+            for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
+                Policy policy = rebindContext.getPolicy(policyMemento.getId());
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing policy {}", policyMemento);
+    
+                policy.getRebindSupport().reconstruct(rebindContext, policyMemento);
+            }
+    
+            // Reconstruct entities
+            LOG.info("RebindManager reconstructing entities");
+            for (EntityMemento entityMemento : memento.getEntityMementos().values()) {
+                Entity entity = rebindContext.getEntity(entityMemento.getId());
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
+    
+                entity.getRebindSupport().reconstruct(rebindContext, entityMemento);
+            }
+            
+            LOG.info("RebindManager managing locations");
+            for (Location location: locations.values()) {
+                if (location.getParent()==null) {
+                    // manage all root locations
+                    // LocationManager.manage perhaps should not be deprecated, as we need to do this I think?
+                    managementContext.getLocationManager().manage(location);
+                }
+            }
+            
+            // Manage the top-level apps (causing everything under them to become managed)
+            LOG.info("RebindManager managing entities");
+            for (String appId : memento.getApplicationIds()) {
+                Entities.startManagement((Application)rebindContext.getEntity(appId), managementContext);
+            }
+            
+            // Return the top-level applications
+            List<Application> apps = Lists.newArrayList();
+            for (String appId : memento.getApplicationIds()) {
+                apps.add((Application)rebindContext.getEntity(appId));
+            }
+            
+            LOG.info("RebindManager complete; return apps: {}", memento.getApplicationIds());
+            return apps;
+        } catch (Exception e) {
+            LOG.warn("Problem during rebinid (rethrowing)", e);
+            throw Exceptions.propagate(e);
+        }
+    }
+        
     private Entity newEntity(EntityMemento memento, Reflections reflections) {
         String entityId = memento.getId();
         String entityType = checkNotNull(memento.getType(), "entityType of "+entityId);
