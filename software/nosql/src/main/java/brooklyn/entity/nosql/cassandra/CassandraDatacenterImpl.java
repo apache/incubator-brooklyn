@@ -50,6 +50,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
@@ -489,9 +490,12 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
      * @author aled
      */
     protected class SeedTracker {
+        private final Map<Entity, Boolean> memberUpness = Maps.newLinkedHashMap();
+        
         public void onMemberRemoved(Entity member) {
             Set<Entity> seeds = getSeeds();
             boolean maybeRemove = seeds.contains(member);
+            memberUpness.remove(member);
             
             if (maybeRemove) {
                 refreshSeeds();
@@ -518,6 +522,10 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
             setAttribute(CURRENT_SEEDS, seedSupplier.get());
         }
         public void onServiceUpChanged(Entity member, Boolean serviceUp) {
+            Boolean oldVal = memberUpness.put(member, serviceUp);
+            if (Objects.equal(oldVal, serviceUp)) {
+                if (log.isTraceEnabled()) log.trace("Ignoring duplicate service-up in "+CassandraDatacenterImpl.this+" for "+member+", "+serviceUp);
+            }
             Set<Entity> seeds = getSeeds();
             int quorum = getSeedQuorumSize();
             boolean isViable = isViableSeed(member);
