@@ -78,11 +78,6 @@
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-systems-openshift</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-launcher</artifactId>
             <version>${project.version}</version>
         </dependency>

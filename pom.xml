@@ -677,7 +677,6 @@
                 <module>software/database</module>
                 <module>systems/whirr/base</module>
                 <module>systems/whirr/hadoop</module>
-                <module>systems/paas/openshift</module>
             </modules>
         </profile>
         <profile>

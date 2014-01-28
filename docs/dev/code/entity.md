@@ -73,7 +73,6 @@ hierarchy; it is suggested to avoid these, looking at the ones below instead):
 
 * JBoss7Server
 * MySqlNode
-* OpenShift
 
 You might also find the following helpful:
 

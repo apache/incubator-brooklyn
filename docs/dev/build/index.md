@@ -103,7 +103,6 @@ manifest and in the META-INF/MANIFEST.MF entry in the jar file.
 [INFO] Brooklyn Database Software Entities ............... SUCCESS [7.815s]
 [INFO] Brooklyn Whirr Base Entities ...................... SUCCESS [21.292s]
 [INFO] Brooklyn Hadoop System Entities ................... SUCCESS [9.972s]
-[INFO] Brooklyn OpenShift PaaS System Entities ........... SUCCESS [11.857s]
 [INFO] Brooklyn Web Console .............................. SUCCESS [1:00.814s]
 [INFO] Brooklyn Launcher ................................. SUCCESS [1:00.603s]
 [INFO] Brooklyn All Things ............................... SUCCESS [23.358s]

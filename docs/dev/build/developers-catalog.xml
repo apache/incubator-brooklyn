@@ -42,19 +42,16 @@
 		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/cloud-foundry-logo-icon.png</iconUrl>
 	</template>
 	
-	<template type="brooklyn.extras.openshift.OpenshiftExpressJavaClusterOnlyExample" name="OpenShift Web App">
-		<description>Deploys a web application to an OpenShift target</description>
-		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/openshift_logo-icon.png</iconUrl>
-	</template>
-	
 	<template type="brooklyn.demo.SimpleRedisCluster" name="Redis Cluster">
 		<description>Launches a Redis cluster</description>
 		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/redis-sq-icon.png</iconUrl>
 	</template>
+	
     <template type="brooklyn.demo.SimpleCassandraCluster" name="Cassandra Cluster">
 		<description>Launches a Cassandra cluster</description>
 		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/cassandra-sq-icon.jpg</iconUrl>
 	</template>
+	
 	<template type="brooklyn.demo.SimpleCouchDBCluster" name="CouchDB Cluster">
 		<description>Launches a CouchDB cluster</description>
 		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/couchdb-logo-icon.png</iconUrl>
