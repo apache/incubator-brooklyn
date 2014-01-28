@@ -15,17 +15,7 @@
  */
 package brooklyn.entity.database.postgresql;
 
-import static brooklyn.util.ssh.BashCommands.alternativesGroup;
-import static brooklyn.util.ssh.BashCommands.chainGroup;
-import static brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
-import static brooklyn.util.ssh.BashCommands.executeCommandThenAsUserTeeOutputToFile;
-import static brooklyn.util.ssh.BashCommands.fail;
-import static brooklyn.util.ssh.BashCommands.ifExecutableElse0;
-import static brooklyn.util.ssh.BashCommands.ifExecutableElse1;
-import static brooklyn.util.ssh.BashCommands.installPackage;
-import static brooklyn.util.ssh.BashCommands.sudo;
-import static brooklyn.util.ssh.BashCommands.sudoAsUser;
-import static brooklyn.util.ssh.BashCommands.warn;
+import static brooklyn.util.ssh.BashCommands.*;
 import static java.lang.String.format;
 
 import java.io.File;
@@ -34,6 +24,9 @@ import java.io.InputStream;
 
 import javax.annotation.Nullable;
 
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.software.OsTasks;
+import brooklyn.location.OsDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,11 +125,10 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         // http://yum.postgresql.org/9.3/redhat/rhel-6-i386/pgdg-centos93-9.3-1.noarch.rpm
         // fedora, rhel, sl, and centos supported for RPM's
 
-        // TODO server-side version detection!
-
-        String arch = getMachine().getOsDetails().getArch();
-        String osMajorVersion = getMachine().getOsDetails().getVersion();
-        String osName = getMachine().getOsDetails().getName();
+        OsDetails osDetails = Entities.submit(entity, OsTasks.getOsDetails(entity)).getUnchecked();
+        String arch = osDetails.getArch();
+        String osMajorVersion = osDetails.getVersion();
+        String osName = osDetails.getName();
 
         log.debug("postgres detecting yum information for "+getEntity()+" at "+getMachine()+": "+osName+", "+osMajorVersion+", "+arch);
 
@@ -166,15 +158,17 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         }
 
         return chainGroup(
-            sudo(format("wget http://yum.postgresql.org/%s/redhat/rhel-%s-%s/pgdg-%s%s-%s.noarch.rpm", majorMinorVersion, osMajorVersion, arch, osName, shortVersion, version)),
-            sudo(format("rpm -Uvh pgdg-%s%s-%s.noarch.rpm", osName, shortVersion, version))
+                INSTALL_WGET,
+                sudo(format("wget http://yum.postgresql.org/%s/redhat/rhel-%s-%s/pgdg-%s%s-%s.noarch.rpm", majorMinorVersion, osMajorVersion, arch, osName, shortVersion, version)),
+                sudo(format("rpm -Uvh pgdg-%s%s-%s.noarch.rpm", osName, shortVersion, version))
             );
     }
 
     private String getAptRepository() {
         return chainGroup(
-            "wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo tee -a apt-key add -",
-            "echo \"deb http://apt.postgresql.org/pub/repos/apt/   $(sudo lsb_release --codename --short)-pgdg main\" | sudo tee -a /etc/apt/sources.list.d/postgresql.list"
+                INSTALL_WGET,
+                "wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo tee -a apt-key add -",
+                "echo \"deb http://apt.postgresql.org/pub/repos/apt/   $(sudo lsb_release --codename --short)-pgdg main\" | sudo tee -a /etc/apt/sources.list.d/postgresql.list"
             );
     }
 
