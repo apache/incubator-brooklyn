@@ -7,9 +7,11 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.entity.basic.Entities;
 import brooklyn.mementos.Memento;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Maps;
 
 public abstract class AbstractMemento implements Memento, Serializable {
@@ -108,6 +110,16 @@ public abstract class AbstractMemento implements Memento, Serializable {
         return Objects.toStringHelper(this).add("type", getType()).add("id", getId()).toString();
     }
     
+    @Override
+    public String toVerboseString() {
+        return newVerboseStringHelper().toString();
+    }
+    
+    protected ToStringHelper newVerboseStringHelper() {
+        return Objects.toStringHelper(this).add("id", getId()).add("type", getType())
+                .add("displayName", getDisplayName()).add("customFields", Entities.sanitize(getCustomFields()));
+    }
+    
     protected <T> List<T> fromPersistedList(List<T> l) {
         if (l==null) return Collections.emptyList();
         return Collections.unmodifiableList(l);
@@ -132,5 +144,4 @@ public abstract class AbstractMemento implements Memento, Serializable {
         if (m==null || m.isEmpty()) return null;
         return m;
     }
-
 }

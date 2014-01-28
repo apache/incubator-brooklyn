@@ -8,6 +8,7 @@ import java.util.Map;
 import brooklyn.mementos.Memento;
 import brooklyn.mementos.TreeNode;
 
+import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Lists;
 
 public class AbstractTreeNodeMemento extends AbstractMemento implements Memento, TreeNode, Serializable {
@@ -82,5 +83,10 @@ public class AbstractTreeNodeMemento extends AbstractMemento implements Memento,
     @Override
     public List<String> getChildren() {
         return Collections.unmodifiableList(children);
+    }
+
+    @Override
+    protected ToStringHelper newVerboseStringHelper() {
+        return super.newVerboseStringHelper().add("parent", getParent()).add("children", getChildren());
     }
 }

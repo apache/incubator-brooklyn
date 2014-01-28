@@ -1,7 +1,5 @@
 package brooklyn.entity.rebind;
 
-import static brooklyn.entity.basic.Entities.sanitize;
-
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Map;
@@ -36,21 +34,13 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
 
     protected LocationMemento getMementoWithProperties(Map<String,?> props) {
         LocationMemento memento = MementosGenerators.newLocationMementoBuilder(location).customFields(props).build();
-    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location {}({}): displayName={}; parent={}; children={}; "+
-    	        "locationConfig={}; locationConfigDescription={}; customProperties={}; ",
-    			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
-                memento.getChildren(), sanitize(memento.getLocationConfig()), memento.getLocationConfigDescription(), 
-                sanitize(memento.getCustomFields())});
+    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location: {}", memento.toVerboseString());
     	return memento;
     }
 
     @Override
     public void reconstruct(RebindContext rebindContext, LocationMemento memento) {
-    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location {}({}): displayName={}; parent={}; children={}; " +
-    			"locationConfig={}; locationConfigDescription={}; customProperties={}",
-    			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
-    			memento.getChildren(), sanitize(memento.getLocationConfig()), memento.getLocationConfigDescription(), 
-    			sanitize(memento.getCustomFields())});
+    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location: {}", memento.toVerboseString());
 
     	// Note that the flags have been set in the constructor
         location.setName(memento.getDisplayName());

@@ -3,8 +3,10 @@ package brooklyn.entity.rebind.dto;
 import java.io.Serializable;
 import java.util.Map;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.mementos.PolicyMemento;
 
+import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Maps;
 
 /**
@@ -44,10 +46,12 @@ public class BasicPolicyMemento extends AbstractMemento implements PolicyMemento
 	    flags = toPersistedMap(builder.flags);
 	}
 	
+    @Override
     protected void setCustomFields(Map<String, Object> fields) {
         this.fields = toPersistedMap(fields);
     }
     
+    @Override
     public Map<String, Object> getCustomFields() {
         return fromPersistedMap(fields);
     }
@@ -56,4 +60,9 @@ public class BasicPolicyMemento extends AbstractMemento implements PolicyMemento
     public Map<String, Object> getFlags() {
 		return fromPersistedMap(flags);
 	}
+    
+    @Override
+    protected ToStringHelper newVerboseStringHelper() {
+        return super.newVerboseStringHelper().add("flags", Entities.sanitize(getFlags()));
+    }
 }

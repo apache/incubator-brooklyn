@@ -1,7 +1,5 @@
 package brooklyn.entity.rebind;
 
-import static brooklyn.entity.basic.Entities.sanitize;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -29,19 +27,13 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
 
     protected PolicyMemento getMementoWithProperties(Map<String,?> props) {
         PolicyMemento memento = MementosGenerators.newPolicyMementoBuilder(policy).customFields(props).build();
-    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for policy {}({}): displayName={}; flags={}; " +
-    			"customProperties={}; ",
-    			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(),  
-                sanitize(memento.getFlags()), sanitize(memento.getCustomFields())});
+    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for policy: {}", memento.toVerboseString());
     	return memento;
     }
 
     @Override
     public void reconstruct(RebindContext rebindContext, PolicyMemento memento) {
-    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing policy {}({}): displayName={}; flags={}; " +
-    			"customProperties={}",
-    			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(),  
-				sanitize(memento.getFlags()), sanitize(memento.getCustomFields())});
+    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing policy: {}", memento.toVerboseString());
 
     	// Note that the flags have been set in the constructor
         policy.setName(memento.getDisplayName());

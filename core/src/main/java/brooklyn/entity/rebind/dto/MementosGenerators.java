@@ -87,14 +87,11 @@ public class MementosGenerators {
             // TODO Swapping an attributeWhenReady task for the actual value, if completed.
             // Long-term, want to just handle task-persistence properly.
             if (value instanceof Task) {
-                if (((Task)value).isDone()) {
-                    if (((Task)value).isError()) {
-                        // TODO What to do or log, such that we don't log this repeatedly every time the entity's is memento'ized?!
-                        value = null;
-                    } else {
-                        value = ((Task)value).getUnchecked();
-                    }
+                Task task = (Task) value;
+                if (task.isDone() && !task.isError()) {
+                    value = task.getUnchecked();
                 } else {
+                    // TODO how to record a completed but errored task?
                     value = null;
                 }
             }

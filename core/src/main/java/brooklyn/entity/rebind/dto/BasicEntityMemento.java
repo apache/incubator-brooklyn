@@ -11,6 +11,7 @@ import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityTypes;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
@@ -18,6 +19,7 @@ import brooklyn.event.Sensor;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.TreeNode;
 
+import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -214,4 +216,13 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         return fromPersistedList(locations);
     }
 
+    @Override
+    protected ToStringHelper newVerboseStringHelper() {
+        return super.newVerboseStringHelper()
+                .add("members", getMembers())
+                .add("config", Entities.sanitize(getConfig()))
+                .add("attributes", Entities.sanitize(getAttributes()))
+                .add("policies", getPolicies())
+                .add("locations", getLocations());
+    }
 }

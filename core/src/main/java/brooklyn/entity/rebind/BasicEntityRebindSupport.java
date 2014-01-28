@@ -1,6 +1,5 @@
 package brooklyn.entity.rebind;
 
-import static brooklyn.entity.basic.Entities.sanitize;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collections;
@@ -40,21 +39,13 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
 
     protected EntityMemento getMementoWithProperties(Map<String,?> props) {
         EntityMemento memento = MementosGenerators.newEntityMementoBuilder(entity).customFields(props).build();
-    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity {}({}): parent={}; children={}; locations={}; "+
-    	        "policies={}; members={}; config={}; attributes={}; customProperties={}", 
-    			new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
-                memento.getLocations(), memento.getPolicies(), memento.getMembers(), sanitize(memento.getConfig()), 
-                sanitize(memento.getAttributes()), sanitize(memento.getCustomFields())});
+    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity: {}", memento.toVerboseString());
     	return memento;
     }
 
     @Override
     public void reconstruct(RebindContext rebindContext, EntityMemento memento) {
-    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity {}({}): parent={}; children={}; locations={}; " +
-    	        "policies={}; members={}; config={}; attributes={}; customProperties={}", 
-    	        new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
-    	        memento.getLocations(), memento.getPolicies(), memento.getMembers(), sanitize(memento.getConfig()), 
-    	        sanitize(memento.getAttributes()), sanitize(memento.getCustomFields())});
+    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity: {}", memento.toVerboseString());
 
         // Note that the id should have been set in the constructor; it is immutable
         entity.setDisplayName(memento.getDisplayName());
