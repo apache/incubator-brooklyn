@@ -188,6 +188,18 @@ public class MementoFileWriter<T> {
     private void writeNow() throws IOException {
         T val = requireWrite.getAndSet(null);
         
+        /*
+         * Need to guarantee "happens before", with any thread that has written 
+         * fields of these mementos. In particular, saw failures where SshMachineLocation
+         * had null address field. Our hypothesis is that another thread wrote the memento,
+         * but that no synchronization subsequently happened so we did not see all the values
+         * in that memento from this thread.
+         * 
+         * See PeriodicDeltaChangeListener.persistNow for the corresponding synchronization,
+         * that guarantees its thread made the writes visible.
+         */
+        synchronized (new Object()) {}
+
         Stopwatch stopwatch = Stopwatch.createStarted();
         
         // Write to the temp file, then atomically move it to the permanent file location
