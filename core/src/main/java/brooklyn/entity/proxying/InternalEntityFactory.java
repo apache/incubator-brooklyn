@@ -143,19 +143,29 @@ public class InternalEntityFactory {
             
             T entity = constructEntity(clazz, spec);
             
+            // TODO Could move setManagementContext call into constructEntity; would that break rebind?
             if (spec.getId() != null) {
                 FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", spec.getId()), entity);
             }
+            ((AbstractEntity)entity).setManagementContext(managementContext);
             managementContext.prePreManage(entity);
 
+            initEntity(entity, spec);
+            return entity;
+            
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public <T extends Entity> T initEntity(T entity, EntitySpec<T> spec) {
+        try {
             if (spec.getDisplayName()!=null)
                 ((AbstractEntity)entity).setDisplayName(spec.getDisplayName());
             
-            if (isNewStyleEntity(clazz)) {
-                ((AbstractEntity)entity).setManagementContext(managementContext);
-                ((AbstractEntity)entity).setProxy(createEntityProxy(spec, entity));
-                ((AbstractEntity)entity).configure(MutableMap.copyOf(spec.getFlags()));
-            }
+            if (((AbstractEntity)entity).getProxy() == null) ((AbstractEntity)entity).setProxy(createEntityProxy(spec, entity));
+            ((AbstractEntity)entity).configure(MutableMap.copyOf(spec.getFlags()));
             
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
                 ((EntityLocal)entity).setConfig((ConfigKey)entry.getKey(), entry.getValue());
@@ -179,6 +189,8 @@ public class InternalEntityFactory {
             for (PolicySpec<?> policySpec : spec.getPolicySpecs()) {
                 entity.addPolicy(policyFactory.createPolicy(policySpec));
             }
+            
+            ((AbstractEntity)entity).addLocations(spec.getLocations());
             
             Entity parent = spec.getParent();
             if (parent != null) {

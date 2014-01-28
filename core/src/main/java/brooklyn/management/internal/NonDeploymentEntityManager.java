@@ -109,4 +109,13 @@ public class NonDeploymentEntityManager implements EntityManager {
     private boolean isInitialManagementContextReal() {
         return (initialManagementContext != null && !(initialManagementContext instanceof NonDeploymentManagementContext));
     }
+
+    @Override
+    public Iterable<Entity> getAllEntitiesInApplication(Application application) {
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getEntityManager().getAllEntitiesInApplication(application);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" (with no initial management context supplied) is not valid for this operation.");
+        }
+    }
 }

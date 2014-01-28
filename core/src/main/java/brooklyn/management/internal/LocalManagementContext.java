@@ -198,7 +198,7 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     @Override
     public InternalEntityFactory getEntityFactory() {
-        return entityManager.getEntityFactory();
+        return getEntityManager().getEntityFactory();
     }
 
     @Override

@@ -2,9 +2,11 @@ package brooklyn.test.entity;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.collections.Lists;
+import org.testng.internal.annotations.Sets;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
@@ -40,6 +42,7 @@ public interface TestEntity extends Entity, Startable, EntityLocal, EntityIntern
     public static final ConfigKey<String> CONF_NAME = ConfigKeys.newStringConfigKey("test.confName", "Configuration key, my name", "defaultval");
     public static final BasicConfigKey<Map> CONF_MAP_PLAIN = new BasicConfigKey<Map>(Map.class, "test.confMapPlain", "Configuration key that's a plain map", MutableMap.of());
     public static final BasicConfigKey<List> CONF_LIST_PLAIN = new BasicConfigKey<List>(List.class, "test.confListPlain", "Configuration key that's a plain list", Lists.newArrayList());
+    public static final BasicConfigKey<Set> CONF_SET_PLAIN = new BasicConfigKey<Set>(Set.class, "test.confSetPlain", "Configuration key that's a plain set", Sets.newHashSet());
     public static final MapConfigKey<String> CONF_MAP_THING = new MapConfigKey<String>(String.class, "test.confMapThing", "Configuration key that's a map thing");
     public static final MapConfigKey<Object> CONF_MAP_THING_OBJECT = new MapConfigKey<Object>(Object.class, "test.confMapThing.obj", "Configuration key that's a map thing with objects");
     public static final ListConfigKey<String> CONF_LIST_THING = new ListConfigKey<String>(String.class, "test.confListThing", "Configuration key that's a list thing");

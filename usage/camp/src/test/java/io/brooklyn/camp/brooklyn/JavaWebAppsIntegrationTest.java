@@ -12,6 +12,7 @@ import java.io.Reader;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +20,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.Iterables;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
@@ -40,6 +39,8 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Duration;
+
+import com.google.common.collect.Iterables;
 
 @Test(groups="Integration")
 public class JavaWebAppsIntegrationTest {
@@ -138,8 +139,10 @@ public class JavaWebAppsIntegrationTest {
             
             Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
             log.info("Waiting on "+tasks.size()+" task(s)");
+            AtomicInteger i = new AtomicInteger(0);
             for (Task<?> t: tasks) {
                 t.blockUntilEnded();
+                log.info("Completed task #" + i.incrementAndGet());
             }
 
             log.info("App started:");

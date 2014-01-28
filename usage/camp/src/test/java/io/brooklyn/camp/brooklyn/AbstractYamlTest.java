@@ -25,24 +25,25 @@ public abstract class AbstractYamlTest {
 
     private ManagementContext brooklynMgmt;
     private BrooklynCampPlatform platform;
-
+    private BrooklynCampPlatformLauncherNoServer launcher;
+    
     public AbstractYamlTest() {
         super();
     }
 
     @BeforeMethod(alwaysRun = true)
     public void setup() {
-        BrooklynCampPlatformLauncherNoServer launcher = new BrooklynCampPlatformLauncherNoServer();
+        launcher = new BrooklynCampPlatformLauncherNoServer();
         launcher.launch();
         brooklynMgmt = launcher.getBrooklynMgmt();
-    
-        platform = new BrooklynCampPlatform(PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(), brooklynMgmt);
+        platform = launcher.getCampPlatform(); // FIXME Does this make sense?
+        //platform = new BrooklynCampPlatform(PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(), brooklynMgmt);
     }
 
     @AfterMethod(alwaysRun = true)
     public void teardown() {
-        if (brooklynMgmt != null)
-            Entities.destroyAll(brooklynMgmt);
+        if (brooklynMgmt != null) Entities.destroyAll(brooklynMgmt);
+        if (launcher != null) launcher.stopServers();
     }
 
     protected void waitForApplicationTasks(Entity app) {

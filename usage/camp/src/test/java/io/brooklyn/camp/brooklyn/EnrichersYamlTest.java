@@ -104,7 +104,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
         Asserts.eventually(Entities.attributeSupplier(app, TestEntity.NAME), Predicates.<String>equalTo("New Name"));
     }
     
-    @Test(groups="WIP")
+    @Test
     public void testPropogateChildSensor() throws Exception {
         Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig",
                 new StringBuilder()
