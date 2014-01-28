@@ -47,8 +47,8 @@ public class RebindLocalhostLocationTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
-        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
+        if (origManagementContext != null) Entities.destroyAllCatching(origManagementContext);
+        if (newApp != null) Entities.destroyAllCatching(newApp.getManagementContext());
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
 

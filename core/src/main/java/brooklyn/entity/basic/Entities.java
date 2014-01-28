@@ -1,5 +1,6 @@
 package brooklyn.entity.basic;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -54,6 +55,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Threads;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.Tasks;
@@ -517,6 +519,27 @@ public class Entities {
         }
     }
 
+    /** destroys the given location -- does as many as are valid given the type and state
+     * TODO: unmanage the location, if possible?
+     */
+    public static void destroy(Location loc) {
+        if (loc instanceof Closeable) {
+            Streams.closeQuietly((Closeable)loc);
+            log.debug("closed "+loc);
+        }
+    }
+    
+    /** as {@link #destroy(Location)} but catching all errors */
+    public static void destroyCatching(Location loc) {
+        try {
+            destroy(loc);
+        } catch (Exception e) {
+            log.warn("ERROR destroying "+loc+" (ignoring): "+e, e);
+            Exceptions.propagateIfFatal(e);
+        }
+    }
+
+
     /** stops, destroys, and unmanages all apps in the given context,
      * and then terminates the management context */
     public static void destroyAll(ManagementContext mgmt) {
@@ -540,6 +563,9 @@ public class Entities {
                 log.warn("problems destroying app "+app+" (mgmt now "+mgmt+", will rethrow at least one exception): "+e);
                 if (error==null) error = e;
             }
+        }
+        for (Location loc : mgmt.getLocationManager().getLocations()) {
+            destroyCatching(loc);
         }
         if (mgmt instanceof ManagementContextInternal) 
             ((ManagementContextInternal)mgmt).terminate();

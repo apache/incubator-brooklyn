@@ -54,7 +54,7 @@ public class CassandraDatacenterRebindIntegrationTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
+        if (newApp != null) Entities.destroyAllCatching(newApp.getManagementContext());
         if (origApp != null && origManagementContext.isRunning()) Entities.destroyAll(origManagementContext);
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
