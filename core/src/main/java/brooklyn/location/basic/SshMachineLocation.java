@@ -1,7 +1,6 @@
 package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
-import groovy.lang.Closure;
 
 import java.io.Closeable;
 import java.io.File;
@@ -17,15 +16,34 @@ import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.KeyPair;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
@@ -49,6 +67,7 @@ import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.KeyTransformingLoadingCache.KeyTransformingSameTypeLoadingCache;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
@@ -58,6 +77,7 @@ import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.net.Urls;
 import brooklyn.util.pool.BasicPool;
 import brooklyn.util.pool.Pool;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.ReaderInputStream;
 import brooklyn.util.stream.StreamGobbler;
@@ -65,19 +85,7 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.task.system.internal.ExecWithLoggingHelpers;
 import brooklyn.util.task.system.internal.ExecWithLoggingHelpers.ExecRunner;
 import brooklyn.util.text.Strings;
-
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-import com.google.common.net.HostAndPort;
+import groovy.lang.Closure;
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -90,7 +98,10 @@ import com.google.common.net.HostAndPort;
  * in event the source is accessible by the caller only). 
  */
 public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier, WithMutexes, Closeable {
+
+    /** @deprecated since 0.7.0 shouldn't be public */
     public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
+    /** @deprecated since 0.7.0 shouldn't be public */
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
         
     @SetFromFlag
@@ -108,8 +119,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final ConfigKey<String> SSH_HOST = BrooklynConfigKeys.SSH_CONFIG_HOST;
     public static final ConfigKey<Integer> SSH_PORT = BrooklynConfigKeys.SSH_CONFIG_PORT;
     
-    public static final ConfigKey<String> SSH_EXECUTABLE = ConfigKeys.newStringConfigKey("sshExecutable", "Allows an `ssh` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
-    public static final ConfigKey<String> SCP_EXECUTABLE = ConfigKeys.newStringConfigKey("scpExecutable", "Allows an `scp` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
+    public static final ConfigKey<String> SSH_EXECUTABLE = ConfigKeys.newStringConfigKey("sshExecutable",
+            "Allows an `ssh` executable file to be specified, to be used in place of the default (programmatic) java ssh client",
+            null);
+    public static final ConfigKey<String> SCP_EXECUTABLE = ConfigKeys.newStringConfigKey("scpExecutable",
+            "Allows an `scp` executable file to be specified, to be used in place of the default (programmatic) java ssh client",
+            null);
     
     // TODO remove
     public static final ConfigKey<String> PASSWORD = SshTool.PROP_PASSWORD;
@@ -117,31 +132,38 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final ConfigKey<String> PRIVATE_KEY_DATA = SshTool.PROP_PRIVATE_KEY_DATA;
     public static final ConfigKey<String> PRIVATE_KEY_PASSPHRASE = SshTool.PROP_PRIVATE_KEY_PASSPHRASE;
     
-    public static final ConfigKey<String> SCRIPT_DIR = ConfigKeys.newStringConfigKey("scriptDir", "directory where scripts should be placed and executed on the SSH target machine", null);
-    public static final ConfigKey<Map<String,Object>> SSH_ENV_MAP = new MapConfigKey<Object>(Object.class, "env", "environment variables to pass to the remote SSH shell session", null);
+    public static final ConfigKey<String> SCRIPT_DIR = ConfigKeys.newStringConfigKey(
+            "scriptDir", "directory where scripts should be placed and executed on the SSH target machine", null);
+    public static final ConfigKey<Map<String,Object>> SSH_ENV_MAP = new MapConfigKey<Object>(
+            Object.class, "env", "environment variables to pass to the remote SSH shell session", null);
     
     public static final ConfigKey<Boolean> ALLOCATE_PTY = SshTool.PROP_ALLOCATE_PTY;
-    // TODO remove
-//            new BasicConfigKey<Boolean>(Boolean.class, "allocatePTY", "whether pseudo-terminal emulation should be turned on; " +
-//            "this causes stderr to be redirected to stdout, but it may be required for some commands (such as `sudo` when requiretty is set)", false);
-    
+
     public static final ConfigKey<OutputStream> STDOUT = new BasicConfigKey<OutputStream>(OutputStream.class, "out");
     public static final ConfigKey<OutputStream> STDERR = new BasicConfigKey<OutputStream>(OutputStream.class, "err");
-    public static final ConfigKey<Boolean> NO_STDOUT_LOGGING = new BasicConfigKey<Boolean>(Boolean.class, "noStdoutLogging", "whether to disable logging of stdout from SSH commands (e.g. for verbose commands)", false);
-    public static final ConfigKey<Boolean> NO_STDERR_LOGGING = new BasicConfigKey<Boolean>(Boolean.class, "noStderrLogging", "whether to disable logging of stderr from SSH commands (e.g. for verbose commands)", false);
+    public static final ConfigKey<Boolean> NO_STDOUT_LOGGING = ConfigKeys.newBooleanConfigKey(
+            "noStdoutLogging", "whether to disable logging of stdout from SSH commands (e.g. for verbose commands)", false);
+    public static final ConfigKey<Boolean> NO_STDERR_LOGGING = ConfigKeys.newBooleanConfigKey(
+            "noStderrLogging", "whether to disable logging of stderr from SSH commands (e.g. for verbose commands)", false);
     public static final ConfigKey<String> LOG_PREFIX = ConfigKeys.newStringConfigKey("logPrefix");
     
     public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
 
-    /** specifies config keys where a change in the value does not require a new SshTool instance,
-     * i.e. these can be specified per command on the tool */ 
-    public static final Set<ConfigKey<?>> REUSABLE_SSH_PROPS = ImmutableSet.of(STDOUT, STDERR, SCRIPT_DIR);
+    /**
+     * Specifies config keys where a change in the value does not require a new SshTool instance,
+     * i.e. they can be specified per command on the tool
+     */
+    // TODO: Fully specify.
+    public static final Set<ConfigKey<?>> REUSABLE_SSH_PROPS = ImmutableSet.of(
+            STDOUT, STDERR, SCRIPT_DIR,
+            SshTool.PROP_SCRIPT_HEADER, SshTool.PROP_PERMISSIONS, SshTool.PROP_LAST_MODIFICATION_DATE,
+            SshTool.PROP_LAST_ACCESS_DATE, SshTool.PROP_OWNER_UID, SshTool.PROP_SSH_RETRY_DELAY);
 
     public static final Set<HasConfigKey<?>> ALL_SSH_CONFIG_KEYS = 
-            ImmutableSet.<HasConfigKey<?>>builder().
-                    addAll(ConfigUtils.getStaticKeysOnClass(SshMachineLocation.class)).
-                    addAll(ConfigUtils.getStaticKeysOnClass(SshTool.class)).
-                    build();
+            ImmutableSet.<HasConfigKey<?>>builder()
+                    .addAll(ConfigUtils.getStaticKeysOnClass(SshMachineLocation.class))
+                    .addAll(ConfigUtils.getStaticKeysOnClass(SshTool.class))
+                    .build();
     public static final Set<String> ALL_SSH_CONFIG_KEY_NAMES =
             ImmutableSet.copyOf(Iterables.transform(ALL_SSH_CONFIG_KEYS, new Function<HasConfigKey<?>,String>() {
                 @Override
@@ -150,8 +172,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 }
             }));
             
-    private transient Pool<SshTool> vanillaSshToolPool;
-    
+    private transient LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCache;
+
+
     public SshMachineLocation() {
         this(MutableMap.of());
     }
@@ -159,10 +182,73 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public SshMachineLocation(Map properties) {
         super(properties);
         usedPorts = (usedPorts != null) ? Sets.newLinkedHashSet(usedPorts) : Sets.<Integer>newLinkedHashSet();
-        vanillaSshToolPool = buildVanillaPool();
+        sshPoolCache = buildSshToolPoolCacheLoader();
     }
 
-    private BasicPool<SshTool> buildVanillaPool() {
+    private LoadingCache<Map<String, ?>, Pool<SshTool>> buildSshToolPoolCacheLoader() {
+        // TODO: Appropriate numbers for maximum size and expire after access
+        // At the moment every SshMachineLocation instance creates its own pool.
+        // It might make more sense to create one pool and inject it into all SshMachineLocations.
+        LoadingCache<Map<String, ?>, Pool<SshTool>> delegate = CacheBuilder.newBuilder()
+                .maximumSize(10)
+                .expireAfterAccess(5, TimeUnit.MINUTES)
+                .recordStats()
+                .removalListener(new RemovalListener<Map<String, ?>, Pool<SshTool>>() {
+                    // TODO: Does it matter that this is synchronous? - Can closing pools cause long delays?
+                    @Override
+                    public void onRemoval(RemovalNotification<Map<String, ?>, Pool<SshTool>> notification) {
+                        Pool<SshTool> removed = notification.getValue();
+                        if (removed == null) {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Pool evicted from SshTool cache is null so we can't call pool.close(). " +
+                                        "It's probably already been garbage collected. Eviction cause: {} ",
+                                        notification.getCause().name());
+                            }
+                        } else {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("{} evicted from SshTool cache. Eviction cause: {}",
+                                        removed, notification.getCause().name());
+                            }
+                            try {
+                                removed.close();
+                            } catch (IOException e) {
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("Exception closing "+removed, e);
+                                }
+                            }
+                        }
+                    }
+                })
+                .build(new CacheLoader<Map<String, ?>, Pool<SshTool>>() {
+                    public Pool<SshTool> load(Map<String, ?> properties) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("{} building ssh pool for {} with properties: {}",
+                                    new Object[] {this, getSshHostAndPort(), properties});
+                        }
+                        return buildPool(properties);
+                    }
+                });
+
+        final Set<String> reusableSshProperties = ImmutableSet.copyOf(
+                Iterables.transform(REUSABLE_SSH_PROPS, new Function<ConfigKey<?>, String>() {
+                    @Override public String apply(ConfigKey<?> input) {
+                        return input.getName();
+                    }
+                }));
+        // Groovy-eclipse compiler refused to compile `KeyTransformingSameTypeLoadingCache.from(...)`
+        return new KeyTransformingSameTypeLoadingCache<Map<String, ?>, Pool<SshTool>>(
+                delegate,
+                new Function<Map<String, ?>, Map<String, ?>>() {
+                    @Override
+                    public Map<String, ?> apply(@Nullable Map<String, ?> input) {
+                        Map<String, Object> copy = new HashMap<String, Object>(input);
+                        copy.keySet().removeAll(reusableSshProperties);
+                        return copy;
+                    }
+                });
+    }
+
+    private BasicPool<SshTool> buildPool(final Map<String, ?> properties) {
         return BasicPool.<SshTool>builder()
                 .name(getDisplayName()+"@"+address+
                         (hasConfig(SSH_HOST, true) ? "("+getConfig(SSH_HOST)+":"+getConfig(SSH_PORT)+")" : "")+
@@ -170,7 +256,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                         System.identityHashCode(this))
                 .supplier(new Supplier<SshTool>() {
                         @Override public SshTool get() {
-                            return connectSsh(Collections.emptyMap());
+                            return connectSsh(properties);
                         }})
                 .viabilityChecker(new Predicate<SshTool>() {
                         @Override public boolean apply(SshTool input) {
@@ -178,6 +264,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                         }})
                 .closer(new Function<SshTool,Void>() {
                         @Override public Void apply(SshTool input) {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("{} closing pool for {}", this, input);
+                            }
                             try {
                                 input.disconnect();
                             } catch (Exception e) {
@@ -186,6 +275,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                             return null;
                         }})
                 .build();
+
     }
 
     @Override
@@ -215,16 +305,22 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
+    // TODO: Never observed the logging from this method. Is finalize being called as expected?
     @Override
     public void close() throws IOException {
-        vanillaSshToolPool.close();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("{} invalidating all entries in ssh pool cache. Final stats: {}", this, sshPoolCache.stats());
+        }
+        sshPoolCache.invalidateAll();
     }
 
     @Override
     protected void finalize() throws Throwable {
         close();
+        super.finalize();
     }
-    
+
+    @Override
     public InetAddress getAddress() {
         return address;
     }
@@ -250,21 +346,16 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
     
     /** port for SSHing */
-    @Nonnull public int getPort() {
+    public int getPort() {
         return getConfig(SshTool.PROP_PORT);
     }
-    
-    protected <T> T execSsh(Map props, Function<ShellTool,T> task) {
-        if (props.isEmpty() || Sets.difference(props.keySet(), REUSABLE_SSH_PROPS).isEmpty()) {
-            return vanillaSshToolPool.exec(task);
-        } else {
-            SshTool ssh = connectSsh(props);
-            try {
-                return task.apply(ssh);
-            } finally {
-                ssh.disconnect();
-            }
+
+    protected <T> T execSsh(Map<String, ?> props, Function<ShellTool, T> task) {
+        Pool<SshTool> pool = sshPoolCache.getUnchecked(props);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("{} execSsh got pool: {}", this, pool);
         }
+        return pool.exec(task);
     }
 
     protected SshTool connectSsh() {
@@ -274,13 +365,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     protected boolean previouslyConnected = false;
     protected SshTool connectSsh(Map props) {
         try {
-            if (!truth(user)) user = getUser();
+            if (!truth(user)) {
+                user = getUser();
+            }
             
-            ConfigBag args = new ConfigBag().
-                configure(SshTool.PROP_USER, user).
+            ConfigBag args = new ConfigBag()
+                .configure(SshTool.PROP_USER, user)
                 // default value of host, overridden if SSH_HOST is supplied
-                configure(SshTool.PROP_HOST, address.getHostName()).
-                putAll(props);
+                .configure(SshTool.PROP_HOST, address.getHostName())
+                .putAll(props);
 
             for (Map.Entry<String,Object> entry: getAllConfig(true).entrySet()) {
                 String key = entry.getKey();
@@ -507,8 +600,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             PipedInputStream insE = new PipedInputStream(); OutputStream outE = new PipedOutputStream(insE);
             new StreamGobbler(insO, null, LOG).setLogPrefix("[curl @ "+address+":stdout] ").start();
             new StreamGobbler(insE, null, LOG).setLogPrefix("[curl @ "+address+":stdout] ").start();
-            int result = execScript(MutableMap.of("out", outO, "err", outE), "install-to", 
-                    ImmutableList.of("curl "+url+" -L --silent --insecure --show-error --fail --connect-timeout 60 --max-time 600 --retry 5 -o "+destination));
+            int result = execScript(MutableMap.of("out", outO, "err", outE), "install-to",  ImmutableList.of(
+                    BashCommands.INSTALL_CURL,
+                    "curl "+url+" -L --silent --insecure --show-error --fail --connect-timeout 60 --max-time 600 --retry 5 -o "+destination));
             
             if (result!=0 && loader!=null) {
                 LOG.debug("installing {} to {} on {}, curl failed, attempting local fetch and copy", new Object[] {url, destination, this});
@@ -542,6 +636,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      * @see #obtainPort(PortRange)
      * @see PortRanges#ANY_HIGH_PORT
      */
+    @Override
     public boolean obtainSpecificPort(int portNumber) {
         synchronized (usedPorts) {
             // TODO Does not yet check if the port really is free on this machine
@@ -554,6 +649,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
+    @Override
     public int obtainPort(PortRange range) {
         synchronized (usedPorts) {
             for (int p: range)
@@ -563,6 +659,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
+    @Override
     public void releasePort(int portNumber) {
         synchronized (usedPorts) {
             usedPorts.remove((Object) portNumber);
@@ -611,8 +708,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return BasicOsDetails.Factory.ANONYMOUS_LINUX;
     }
 
-    protected WithMutexes newMutexSupport() { return new MutexSupport(); }
-    
     @Override
     public void acquireMutex(String mutexId, String description) throws InterruptedException {
         mutexSupport.acquireMutex(mutexId, description);
@@ -639,7 +734,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     private void readObject(java.io.ObjectInputStream in)
             throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        vanillaSshToolPool = buildVanillaPool();
+        sshPoolCache = buildSshToolPoolCacheLoader();
     }
 
     /** returns the un-passphrased key-pair info if a key is being used, or else null */ 

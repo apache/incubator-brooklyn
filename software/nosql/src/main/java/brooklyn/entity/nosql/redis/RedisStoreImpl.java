@@ -1,5 +1,7 @@
 package brooklyn.entity.nosql.redis;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
@@ -47,6 +49,7 @@ public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
         sshFeed = SshFeed.builder()
                 .entity(this)
                 .machine(machine)
+                .period(5, TimeUnit.SECONDS)
                 .poll(new SshPollConfig<Integer>(UPTIME)
                         .command(getDriver().getRunDir() + "/bin/redis-cli -p " + getRedisPort() + " info server")
                         .onFailureOrException(Functions.constant(-1))

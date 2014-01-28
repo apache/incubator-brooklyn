@@ -38,7 +38,10 @@ public abstract class ExecWithLoggingHelpers {
     }
 
     protected abstract <T> T execWithTool(MutableMap<String, Object> toolCreationAndConnectionProperties, Function<ShellTool, T> runMethodOnTool);
-    
+    protected abstract void preExecChecks();
+    protected abstract String getTargetName();
+    protected abstract String constructDefaultLoggingPrefix(ConfigBag execFlags);
+
     /** takes a very short name for use in blocking details, e.g. SSH or Process */
     public ExecWithLoggingHelpers(String shortName) {
         this.shortName = shortName;
@@ -64,10 +67,12 @@ public abstract class ExecWithLoggingHelpers {
     }
 
     @SuppressWarnings("resource")
-    public int execWithLogging(Map<String,?> props, final String summaryForLogging, final List<String> commands, final Map<String,?> env, final ExecRunner execCommand) {
+    public int execWithLogging(Map<String,?> props, final String summaryForLogging, final List<String> commands,
+            final Map<String,?> env, final ExecRunner execCommand) {
         if (commandLogger!=null && commandLogger.isDebugEnabled()) {
-            commandLogger.debug("{}, initiating "+shortName.toLowerCase()+" on machine {}{}: {}", new Object[] {summaryForLogging, getTargetName(), 
-                env!=null && !env.isEmpty() ? " (env "+env+")": "", Strings.join(commands, " ; ")});
+            commandLogger.debug("{}, initiating "+shortName.toLowerCase()+" on machine {}{}: {}",
+                    new Object[] {summaryForLogging, getTargetName(),
+                    env!=null && !env.isEmpty() ? " (env "+env+")": "", Strings.join(commands, " ; ")});
         }
 
         if (commands.isEmpty()) {
@@ -78,7 +83,8 @@ public abstract class ExecWithLoggingHelpers {
 
         final ConfigBag execFlags = new ConfigBag().putAll(props);
         // some props get overridden in execFlags, so remove them from the tool flags
-        final ConfigBag toolFlags = new ConfigBag().putAll(props).removeAll(LOG_PREFIX, STDOUT, STDERR, ShellTool.PROP_NO_EXTRA_OUTPUT);
+        final ConfigBag toolFlags = new ConfigBag().putAll(props).removeAll(
+                LOG_PREFIX, STDOUT, STDERR, ShellTool.PROP_NO_EXTRA_OUTPUT);
 
         execFlags.configure(ShellTool.PROP_SUMMARY, summaryForLogging);
         
@@ -119,7 +125,8 @@ public abstract class ExecWithLoggingHelpers {
                     public Integer apply(ShellTool tool) {
                         int result = execCommand.exec(tool, MutableMap.copyOf(execFlags.getAllConfig()), commands, env);
                         if (commandLogger!=null && commandLogger.isDebugEnabled()) 
-                            commandLogger.debug("{}, on machine {}, completed: return status {}", new Object[] {summaryForLogging, getTargetName(), result});
+                            commandLogger.debug("{}, on machine {}, completed: return status {}",
+                                    new Object[] {summaryForLogging, getTargetName(), result});
                         return result;
                     }});
 
@@ -149,8 +156,4 @@ public abstract class ExecWithLoggingHelpers {
 
     }
 
-    protected abstract void preExecChecks();
-    protected abstract String getTargetName();
-    protected abstract String constructDefaultLoggingPrefix(ConfigBag execFlags);
-    
 }

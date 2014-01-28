@@ -25,6 +25,8 @@ import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.InterpretableStatement;
 import org.jclouds.scriptbuilder.domain.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails;
@@ -42,6 +44,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 public class JcloudsSshMachineLocation extends SshMachineLocation implements HasSubnetHostname {
     
+    private static final Logger LOG = LoggerFactory.getLogger(JcloudsSshMachineLocation.class);
     private static final long serialVersionUID = -443866395634771659L;
 
     @SetFromFlag
