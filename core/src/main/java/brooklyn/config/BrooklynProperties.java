@@ -56,6 +56,16 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
             private String globalLocationMetadataFile = Os.mergePaths("~", ".brooklyn", "location-metadata.properties");
             private String globalPropertiesFile = Os.mergePaths("~", ".brooklyn", "brooklyn.properties");
             private String localPropertiesFile = null;
+            private BrooklynProperties originalProperties = null;
+            
+            public Builder(){}
+            
+            /**
+             * Creates a Builder that when built, will return the BrooklynProperties passed to this constructor
+             */
+            private Builder(BrooklynProperties originalProperties) {
+                this.originalProperties = new BrooklynProperties().addFromMap(originalProperties);
+            }
             
             /**
              * The URL of a default location-metadata.properties (for meta-data about different locations, such as iso3166 and global lat/lon). 
@@ -92,6 +102,8 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
             }
             
             public BrooklynProperties build() {
+                if (originalProperties != null) 
+                    return new BrooklynProperties().addFromMap(originalProperties);
                 BrooklynProperties properties = new BrooklynProperties();
 
                 // TODO Could also read from http://brooklyn.io, for up-to-date values?
@@ -106,6 +118,10 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
                 properties.addSystemProperties();
 
                 return properties;
+            }
+
+            public static Builder fromProperties(BrooklynProperties brooklynProperties) {
+                return new Builder(brooklynProperties);
             }
         }
         
@@ -136,6 +152,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         putAll(System.getenv());
         return this;
     }
+
     public BrooklynProperties addSystemProperties() {
         putAll(System.getProperties());
         return this;

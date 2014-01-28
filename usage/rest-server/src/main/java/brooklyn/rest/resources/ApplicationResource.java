@@ -278,6 +278,11 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
       return status(ACCEPTED).entity(ts).build();
   }
 
+  @Override
+  public void reloadBrooklynProperties() {
+      brooklyn().reloadBrooklynProperties();
+  }
+  
   private void checkApplicationTypesAreValid(ApplicationSpec applicationSpec) {
       String appType = applicationSpec.getType();
       if (appType != null) {
@@ -316,4 +321,5 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
       }
     }
   }
+
 }

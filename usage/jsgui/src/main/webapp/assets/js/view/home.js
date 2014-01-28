@@ -17,6 +17,7 @@ define([
         tagName:"div",
         events:{
             'click #add-new-application':'createApplication',
+            'click #reload-brooklyn-properties': 'reloadBrooklynProperties',
             'click .addApplication':'createApplication'
         },
         
@@ -134,6 +135,27 @@ define([
                         that.collection.fetch({reset:true});
                     }).modal('show')
             }
+        },
+
+        reloadBrooklynProperties: function() {
+            var self = this;
+            $.ajax({
+                type: "POST",
+                url: "/v1/applications/reloadBrooklynProperties",
+                contentType: "application/json",
+                success: function() {
+                    console.log("Reloaded brooklyn properties");
+                    self.options.locations.fetch();
+                },
+                error: function(data) {
+                    self.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
+                    // TODO render the error better than poor-man's flashing
+                    // (would just be connection error -- with timeout=0 we get a task even for invalid input)
+
+                    console.error("ERROR reloading brooklyn properties");
+                    console.debug(data);
+                }
+            });
         }
     })
 

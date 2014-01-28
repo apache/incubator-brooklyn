@@ -35,7 +35,6 @@ public class BasicDownloadsRegistryTest {
     public void setUp() throws Exception {
         brooklynProperties = BrooklynProperties.Factory.newEmpty();
         managementContext = new LocalManagementContext(brooklynProperties);
-
         loc = new SimulatedLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
@@ -86,8 +85,9 @@ public class BasicDownloadsRegistryTest {
     
     @Test
     public void testReturnsLocalRepoThenOverrideThenAttributeValThenCloudsoftUrlThenFallback() throws Exception {
-        brooklynProperties.put("brooklyn.downloads.all.url", "http://fromprops/${version}.allprimary");
-        brooklynProperties.put("brooklyn.downloads.all.fallbackurl", "http://fromfallback/${version}.allfallback");
+        BrooklynProperties managementProperties = managementContext.getBrooklynProperties();
+        managementProperties.put("brooklyn.downloads.all.url", "http://fromprops/${version}.allprimary");
+        managementProperties.put("brooklyn.downloads.all.fallbackurl", "http://fromfallback/${version}.allfallback");
         entity.setAttribute(Attributes.DOWNLOAD_URL, "http://fromattrib/${version}.default");
         entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         String expectedFilename = "myversion.allprimary";

@@ -15,9 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.BrooklynProperties.Factory.Builder;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.internal.storage.DataGridFactory;
 import brooklyn.location.Location;
@@ -43,6 +45,8 @@ public class LocalManagementContext extends AbstractManagementContext {
     private static final Logger log = LoggerFactory.getLogger(LocalManagementContext.class);
 
     private static final Set<LocalManagementContext> INSTANCES = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<LocalManagementContext, Boolean>()));
+    
+    private final Builder builder;
 
     @VisibleForTesting
     static Set<LocalManagementContext> getInstances() {
@@ -81,6 +85,8 @@ public class LocalManagementContext extends AbstractManagementContext {
     
     private final Throwable constructionStackTrace = new Throwable("for construction stacktrace").fillInStackTrace();
     
+    private final Map<String, Object> brooklynAdditionalProperties;
+    
     /**
      * Creates a LocalManagement with default BrooklynProperties.
      */
@@ -89,7 +95,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     }
 
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
-        this(brooklynProperties, null);
+        this(brooklynProperties, (DataGridFactory)null);
     }
 
     /**
@@ -102,16 +108,39 @@ public class LocalManagementContext extends AbstractManagementContext {
      */
     @VisibleForTesting
     public LocalManagementContext(BrooklynProperties brooklynProperties, DataGridFactory datagridFactory) {
-        super(brooklynProperties, datagridFactory);
-        
+        this(Builder.fromProperties(brooklynProperties), datagridFactory);
+    }
+    
+    public LocalManagementContext(Builder builder) {
+        this(builder, null, null);
+    }
+    
+    public LocalManagementContext(Builder builder, DataGridFactory datagridFactory) {
+        this(builder, null, datagridFactory);
+    }
+
+    public LocalManagementContext(Builder builder, Map<String, Object> brooklynAdditionalProperties) {
+        this(builder, brooklynAdditionalProperties, null);
+    }
+    
+    public LocalManagementContext(BrooklynProperties brooklynProperties, Map<String, Object> brooklynAdditionalProperties) {
+        this(Builder.fromProperties(brooklynProperties), brooklynAdditionalProperties, null);
+    }
+    
+    public LocalManagementContext(Builder builder, Map<String, Object> brooklynAdditionalProperties, DataGridFactory datagridFactory) {
+        super(builder.build(), datagridFactory);
         // TODO in a persisted world the planeId may be injected
         this.managementPlaneId = Strings.makeRandomId(8);
         
         this.managementNodeId = Strings.makeRandomId(8);
-        configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
+        checkNotNull(configMap, "brooklynProperties");
+        this.builder = builder;
         this.locationManager = new LocalLocationManager(this);
         this.accessManager = new LocalAccessManager();
         this.usageManager = new LocalUsageManager(this);
+        this.brooklynAdditionalProperties = brooklynAdditionalProperties;
+        if (brooklynAdditionalProperties != null)
+            configMap.addFromMap(brooklynAdditionalProperties);
         INSTANCES.add(this);
         log.debug("Created management context "+this);
     }
@@ -250,5 +279,20 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     public String toString() {
         return LocalManagementContext.class.getSimpleName()+"["+getManagementPlaneId()+"-"+getManagementNodeId()+"]";
+    }
+
+    @Override
+    public void reloadBrooklynProperties() {
+        log.info("Reloading brooklyn properties from " + builder);
+        BrooklynProperties properties = builder.build();
+        configMap = properties;
+        if (brooklynAdditionalProperties != null) {
+            log.info("Reloading additional brooklyn properties from " + brooklynAdditionalProperties);
+            configMap.addFromMap(brooklynAdditionalProperties);
+        }
+        this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
+
+        // Force reload of location registry
+        this.locationRegistry = null;
     }
 }

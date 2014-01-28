@@ -159,4 +159,9 @@ public interface ApplicationApi {
   @Path("/createLegacy")
   @Deprecated
   public Response create(ApplicationSpec applicationSpec);
+
+  @POST
+  @Path("/reloadBrooklynProperties")
+  @ApiOperation(value = "Reload brooklyn.properties")
+  public void reloadBrooklynProperties();
 }

@@ -25,8 +25,8 @@ public class HostLocationResolverTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        brooklynProperties = BrooklynProperties.Factory.newEmpty();
-        managementContext = new LocalManagementContext(brooklynProperties);
+        managementContext = new LocalManagementContext(BrooklynProperties.Factory.newEmpty());
+        brooklynProperties = managementContext.getBrooklynProperties();
     }
     
     @AfterMethod(alwaysRun=true)

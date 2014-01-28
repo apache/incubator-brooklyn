@@ -297,6 +297,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
             throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
         }
     }
+    
+    @Override
+    public void reloadBrooklynProperties() {
+        checkInitialManagementContextReal();
+        initialManagementContext.reloadBrooklynProperties();
+    }
 
     private class NonDeploymentExecutionContext extends AbstractExecutionContext {
         @Override

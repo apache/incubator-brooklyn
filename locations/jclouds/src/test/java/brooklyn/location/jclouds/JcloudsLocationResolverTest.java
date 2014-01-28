@@ -27,14 +27,14 @@ public class JcloudsLocationResolverTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
-        brooklynProperties = BrooklynProperties.Factory.newEmpty();
+        managementContext = new LocalManagementContext(BrooklynProperties.Factory.newEmpty());
+        brooklynProperties = managementContext.getBrooklynProperties();
 
         brooklynProperties.put("brooklyn.jclouds.aws-ec2.identity", "aws-ec2-id");
         brooklynProperties.put("brooklyn.jclouds.aws-ec2.credential", "aws-ec2-cred");
         brooklynProperties.put("brooklyn.jclouds.rackspace-cloudservers-uk.identity", "cloudservers-uk-id");
         brooklynProperties.put("brooklyn.jclouds.rackspace-cloudservers-uk.credential", "cloudservers-uk-cred");
 
-        managementContext = new LocalManagementContext(brooklynProperties);
     }
 
     @AfterMethod(alwaysRun = true)

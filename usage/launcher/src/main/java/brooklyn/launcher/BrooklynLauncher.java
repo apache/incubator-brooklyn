@@ -286,15 +286,14 @@ public class BrooklynLauncher {
                 Builder builder = new BrooklynProperties.Factory.Builder();
                 if (globalBrooklynPropertiesFile != null) builder.globalPropertiesFile(globalBrooklynPropertiesFile);
                 if (localBrooklynPropertiesFile != null) builder.localPropertiesFile(localBrooklynPropertiesFile);
-                brooklynProperties = builder.build();
+                managementContext = new LocalManagementContext(builder, brooklynAdditionalProperties);
+            } else {
+                managementContext = new LocalManagementContext(brooklynProperties, brooklynAdditionalProperties);
             }
-            managementContext = new LocalManagementContext(brooklynProperties);
+            brooklynProperties = ((ManagementContextInternal)managementContext).getBrooklynProperties();
         } else if (brooklynProperties == null) {
             brooklynProperties = ((ManagementContextInternal)managementContext).getBrooklynProperties();
-        }
-        
-        for (Map.Entry<String, Object> entry : brooklynAdditionalProperties.entrySet()) {
-            brooklynProperties.put(entry.getKey(), entry.getValue());
+            brooklynProperties.addFromMap(brooklynAdditionalProperties);
         }
 
         // Create the locations
