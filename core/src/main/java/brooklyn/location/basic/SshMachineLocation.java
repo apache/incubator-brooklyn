@@ -305,7 +305,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
-    // TODO: Never observed the logging from this method. Is finalize being called as expected?
     @Override
     public void close() throws IOException {
         if (LOG.isDebugEnabled()) {
