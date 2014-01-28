@@ -188,16 +188,16 @@ public class MementoFileWriter<T> {
     private void writeNow() throws IOException {
         T val = requireWrite.getAndSet(null);
         
-        Stopwatch stopwatch = new Stopwatch();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         
         // Write to the temp file, then atomically move it to the permanent file location
-        Files.write(serializer.toString(val)+"\n", tmpFile, Charsets.UTF_8);
+        Files.write(serializer.toString(val), tmpFile, Charsets.UTF_8);
         Files.move(tmpFile, file);
 
         modCount.incrementAndGet();
 
-        if (LOG.isTraceEnabled()) LOG.trace("Wrote {}, took {}ms; modified file {} times", 
-                new Object[] {file, stopwatch.elapsed(TimeUnit.MILLISECONDS), modCount});
+        if (LOG.isTraceEnabled()) LOG.trace("Wrote {}, took {}; modified file {} times", 
+                new Object[] {file, Time.makeTimeStringRounded(stopwatch), modCount});
     }
     
     private void deleteNow() throws IOException {

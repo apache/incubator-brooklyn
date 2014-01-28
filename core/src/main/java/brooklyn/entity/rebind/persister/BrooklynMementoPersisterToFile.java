@@ -2,7 +2,6 @@ package brooklyn.entity.rebind.persister;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -10,14 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
-import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 
 public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersister {
@@ -47,33 +44,35 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
 
     @Override
     public BrooklynMemento loadMemento(LookupContext lookupContext) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        
+        String xml = readFile();
+        serializer.setLookupContext(lookupContext);
         try {
-            Stopwatch stopwatch = Stopwatch.createStarted();
-            List<String> lines;
+            BrooklynMemento result = serializer.fromString(xml);
+            
+            if (LOG.isDebugEnabled()) LOG.debug("Loaded memento; took {}", Time.makeTimeStringRounded(stopwatch));
+            return result;
+            
+        } finally {
+            serializer.unsetLookupContext();
+        }
+    }
+    
+    private String readFile() {
+        try {
             synchronized (mutex) {
-                lines = Files.readLines(file, Charsets.UTF_8);
+                return Files.asCharSource(file, Charsets.UTF_8).read();
             }
-            String xml = Joiner.on("\n").join(lines);
-            
-            serializer.setLookupContext(lookupContext);
-            try {
-                BrooklynMemento result = serializer.fromString(xml);
-                
-                if (LOG.isDebugEnabled()) LOG.debug("Loaded memento; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)));
-                return result;
-                
-            } finally {
-                serializer.unsetLookupContext();
-            }
-            
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            LOG.error("Failed to persist memento", e);
+            throw Exceptions.propagate(e);
         }
     }
     
     @Override
     public void checkpoint(BrooklynMemento newMemento) {
-        Stopwatch stopwatch = new Stopwatch().start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         synchronized (mutex) {
             long timeObtainedMutex = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             super.checkpoint(newMemento);
@@ -90,7 +89,7 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     
     @Override
     public void delta(Delta delta) {
-        Stopwatch stopwatch = new Stopwatch().start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         synchronized (mutex) {
             long timeObtainedMutex = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             super.delta(delta);
@@ -106,6 +105,7 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     }
     
     private void writeMemento() {
+        assert Thread.holdsLock(mutex);
         try {
             Files.write(serializer.toString(memento), file, Charsets.UTF_8);
         } catch (IOException e) {

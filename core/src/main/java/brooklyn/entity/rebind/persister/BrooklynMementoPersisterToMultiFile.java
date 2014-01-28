@@ -26,7 +26,6 @@ import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -200,7 +199,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     }
 
     private String readFile(File file) throws IOException {
-        return Joiner.on("\n").join(Files.readLines(file, Charsets.UTF_8));
+        return Files.asCharSource(file, Charsets.UTF_8).read();
     }
     
     private void persist(EntityMemento entity) {
