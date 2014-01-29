@@ -15,12 +15,12 @@ import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.policy.Policy;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 
 /**
@@ -82,7 +82,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                             return null;
                         } catch (Throwable t) {
                             LOG.warn("Problem persisting change-delta (rethrowing)", t);
-                            throw Throwables.propagate(t);
+                            throw Exceptions.propagate(t);
                         }
                     }});
             }
@@ -167,7 +167,13 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     // Tell the persister to persist it
                     persister.delta(persisterDelta);
                 }
-
+            } catch (Exception e) {
+                if (isActive()) {
+                    throw Exceptions.propagate(e);
+                } else {
+                    Exceptions.propagateIfFatal(e);
+                    LOG.debug("Problem persisting, but no longer active (ignoring)", e);
+                }
             } finally {
                 writeCount.incrementAndGet();
             }
