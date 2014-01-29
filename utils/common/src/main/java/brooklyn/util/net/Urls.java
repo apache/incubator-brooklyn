@@ -1,5 +1,6 @@
 package brooklyn.util.net;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -140,6 +141,20 @@ public class Urls {
             } else return null;
             i++;
         }
+    }
+
+    public static boolean isDirectory(String fileUrl) {
+        File file;
+        if (isUrlWithProtocol(fileUrl)) {
+            if (getProtocol(fileUrl).equals("file")) {
+                file = new File(URI.create(fileUrl));
+            } else {
+                return false;
+            }
+        } else {
+            file = new File(fileUrl);
+        }
+        return file.isDirectory();
     }
 
 }
