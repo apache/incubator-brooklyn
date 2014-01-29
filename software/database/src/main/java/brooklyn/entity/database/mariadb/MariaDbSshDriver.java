@@ -43,8 +43,6 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     public static final Logger log = LoggerFactory.getLogger(MariaDbSshDriver.class);
 
-    private String expandedInstallDir;
-
     public MariaDbSshDriver(MariaDbNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
 
@@ -94,17 +92,12 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         return String.format("mariadb-%s-%s.tar.gz", getVersion(), getOsTag());
     }
 
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", getInstallFilename()));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("mariadb-%s-%s", getVersion(), getOsTag()));
+        setExpandedInstallDir(getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("mariadb-%s-%s", getVersion(), getOsTag())));
 
         List<String> commands = new LinkedList<String>();
         commands.add(BashCommands.INSTALL_TAR);

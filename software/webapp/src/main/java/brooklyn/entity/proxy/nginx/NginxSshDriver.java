@@ -60,7 +60,6 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public static final String NGINX_PID_FILE = "logs/nginx.pid";
 
     private boolean customizationCompleted = false;
-    private String expandedInstallDir;
 
     public NginxSshDriver(NginxControllerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -98,11 +97,6 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         return getEntity().getPort();
     }
 
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-
     @Override
     public void rebind() {
         customizationCompleted = true;
@@ -122,7 +116,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         DownloadResolver nginxResolver = mgmt().getEntityDownloadsManager().newDownloader(this);
         List<String> nginxUrls = nginxResolver.getTargets();
         String nginxSaveAs = nginxResolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/" + nginxResolver.getUnpackedDirectoryName(format("nginx-%s", getVersion()));
+        setExpandedInstallDir(getInstallDir()+"/" + nginxResolver.getUnpackedDirectoryName(format("nginx-%s", getVersion())));
 
         boolean sticky = ((NginxController) entity).isSticky();
         boolean isMac = getMachine().getOsDetails().isMac();
@@ -147,7 +141,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 this, "stickymodule", ImmutableMap.of("addonversion", stickyModuleVersion));
         List<String> stickyModuleUrls = stickyModuleResolver.getTargets();
         String stickyModuleSaveAs = stickyModuleResolver.getFilename();
-        String stickyModuleExpandedInstallDir = String.format("%s/src/%s", expandedInstallDir,
+        String stickyModuleExpandedInstallDir = String.format("%s/src/%s", getExpandedInstallDir(),
                 stickyModuleResolver.getUnpackedDirectoryName("nginx-sticky-module-"+stickyModuleVersion));
 
         List<String> cmds = Lists.newArrayList();

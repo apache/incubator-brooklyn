@@ -2,6 +2,7 @@ package brooklyn.entity.basic;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.io.StringReader;
@@ -51,6 +52,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     // we cache these in case the entity becomes unmanaged
     private volatile String installDir;
     private volatile String runDir;
+    private volatile String expandedInstallDir;
     
     /** include this flag in newScript creation to prevent entity-level flags from being included;
      * any SSH-specific flags passed to newScript override flags from the entity,
@@ -120,6 +122,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     
     public String getInstallDir() {
         if (installDir != null) return installDir;
+
+        String existingVal = getEntity().getAttribute(SoftwareProcess.INSTALL_DIR);
+        if (Strings.isNonBlank(existingVal)) { // e.g. on rebind
+            installDir = existingVal;
+            return installDir;
+        }
         
         // deprecated in 0.7.0
         Maybe<Object> minstallDir = getEntity().getConfigRaw(SoftwareProcess.INSTALL_DIR, true);
@@ -142,6 +150,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public String getRunDir() {
         if (runDir != null) return runDir;
         
+        String existingVal = getEntity().getAttribute(SoftwareProcess.RUN_DIR);
+        if (Strings.isNonBlank(existingVal)) { // e.g. on rebind
+            runDir = existingVal;
+            return runDir;
+        }
+
         // deprecated in 0.7.0
         Maybe<Object> mRunDir = getEntity().getConfigRaw(SoftwareProcess.RUN_DIR, true);
         if (!mRunDir.isPresent() || mRunDir.get()==null) {
@@ -158,6 +172,29 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         runDir = Os.tidyPath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.RUN_DIR));
         entity.setAttribute(SoftwareProcess.RUN_DIR, runDir);
         return runDir;
+    }
+
+    public void setExpandedInstallDir(String val) {
+        checkNotNull(val, "expandedInstallDir");
+        String oldVal = getEntity().getAttribute(SoftwareProcess.EXPANDED_INSTALL_DIR);
+        if (Strings.isNonBlank(oldVal) && !oldVal.equals(val)) {
+            log.info("Resetting expandedInstallDir (to "+val+" from "+oldVal+") for "+getEntity());
+        }
+        
+        getEntity().setAttribute(SoftwareProcess.EXPANDED_INSTALL_DIR, val);
+    }
+    
+    public String getExpandedInstallDir() {
+        if (expandedInstallDir != null) return expandedInstallDir;
+        
+        String untidiedVal = ConfigToAttributes.apply(getEntity(), SoftwareProcess.EXPANDED_INSTALL_DIR);
+        if (Strings.isNonBlank(untidiedVal)) {
+            expandedInstallDir = Os.tidyPath(untidiedVal);
+            entity.setAttribute(SoftwareProcess.INSTALL_DIR, expandedInstallDir);
+            return expandedInstallDir;
+        } else {
+            throw new IllegalStateException("expandedInstallDir is null; most likely install was not called for "+getEntity());
+        }
     }
 
     public SshMachineLocation getMachine() { return getLocation(); }

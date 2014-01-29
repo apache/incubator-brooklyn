@@ -18,8 +18,6 @@ import com.google.common.collect.ImmutableList;
 
 public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements KarafDriver {
 
-    protected String expandedInstallDir;
-
     // TODO getJmxJavaSystemProperties(), don't set via JAVA_OPTS; set ourselves manually
     // (karaf reads from props files)
     // but do set "java.rmi.server.hostname"
@@ -38,17 +36,12 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         return format("{%s}/data/karaf.out", getRunDir());
     }
 
-    protected String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-    
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-karaf-%s", getVersion()));
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-karaf-%s", getVersion())));
         
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))

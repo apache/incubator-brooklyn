@@ -28,8 +28,6 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
 
     private static final Logger log = LoggerFactory.getLogger(RabbitSshDriver.class);
     
-    private String expandedInstallDir;
-
     public RabbitSshDriver(RabbitBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -47,17 +45,12 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         return (RabbitBrokerImpl) super.getEntity();
     }
     
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-    
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rabbitmq_server-%s", getVersion()));
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rabbitmq_server-%s", getVersion())));
         
         List<String> commands = ImmutableList.<String>builder()
                 .add(installPackage(// NOTE only 'port' states the version of Erlang used, maybe remove this constraint?

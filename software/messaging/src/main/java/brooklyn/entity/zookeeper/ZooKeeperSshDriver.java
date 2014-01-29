@@ -15,6 +15,12 @@
  */
 package brooklyn.entity.zookeeper;
 
+import static java.lang.String.format;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -28,16 +34,11 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.Tasks;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
-
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-
-import static java.lang.String.format;
 
 public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements ZooKeeperDriver {
 
@@ -45,16 +46,9 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
         super(entity, machine);
     }
 
-    private String expandedInstallDir;
-
     @Override
     protected String getLogFileLocation() { return getRunDir()+"/console.out"; }
 
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-    
     protected Map<String, Integer> getPortMap() {
         return MutableMap.of("zookeeperPort", getZooKeeperPort());
     }
@@ -106,7 +100,7 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("zookeeper-%s", getVersion()));
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("zookeeper-%s", getVersion())));
 
         List<String> commands = ImmutableList.<String> builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
