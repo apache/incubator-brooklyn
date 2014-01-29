@@ -2,13 +2,10 @@ package brooklyn.entity.messaging.storm;
 
 import static brooklyn.entity.messaging.storm.Storm.NIMBUS_HOSTNAME;
 import static brooklyn.entity.messaging.storm.Storm.ZOOKEEPER_ENSEMBLE;
-import static brooklyn.entity.messaging.storm.Storm.Role.NIMBUS;
-import static brooklyn.entity.messaging.storm.Storm.Role.SUPERVISOR;
-import static brooklyn.entity.messaging.storm.Storm.Role.UI;
+import static brooklyn.entity.messaging.storm.Storm.Role.*;
 import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -25,9 +22,9 @@ import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.testing.TestWordSpout;
 import backtype.storm.topology.TopologyBuilder;
+import brooklyn.entity.BrooklynMgmtContextTestSupport;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.java.JarBuilder;
 import brooklyn.entity.messaging.storm.topologies.ExclamationBolt;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
@@ -36,14 +33,15 @@ import brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.file.ArchiveBuilder;
+import brooklyn.util.net.Urls;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
-public abstract class StormAbstractCloudLiveTest extends
-        brooklyn.entity.BrooklynMgmtContextTestSupport {
+public abstract class StormAbstractCloudLiveTest extends BrooklynMgmtContextTestSupport {
 
     protected static final Logger log = LoggerFactory
             .getLogger(StormAbstractCloudLiveTest.class);
@@ -169,15 +167,12 @@ public abstract class StormAbstractCloudLiveTest extends
     }
     
     private String createJar(String packageName) {
-        if (new File(packageName).isDirectory()) {
-            try {
-                File jarFile = JarBuilder.buildJar(new File(packageName));
-                return jarFile.getAbsolutePath();
-            } catch (IOException e) {
-                throw new IllegalStateException("Error jarring classpath entry, for directory "+ packageName, e);
-            }
+        if (Urls.isDirectory(packageName)) {
+            File jarFile = ArchiveBuilder.jar().add(packageName).create("topologies.jar");
+            return jarFile.getAbsolutePath();
+        } else {
+            return packageName; // An existing Jar archive?
         }
-            return packageName;
     }
 
 }

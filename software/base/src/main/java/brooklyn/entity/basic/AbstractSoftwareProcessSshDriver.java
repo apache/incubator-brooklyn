@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
+
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -323,7 +324,6 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public int copyResource(String resource, String target) {
         return copyResource(MutableMap.of(), resource, target);
     }
-
 
     /**
      * @param sshFlags Extra flags to be used when making an SSH connection to the entity's machine.

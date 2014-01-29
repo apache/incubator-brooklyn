@@ -57,7 +57,7 @@ public class MyEntityImpl extends SoftwareProcessImpl implements MyEntity {
             if (r.getResourceFromUrl(resourceName) == null) 
                 throw new IllegalStateException("Cannot find resource "+resourceName);
             String tmpFile = "/tmp/brooklyn-test-MyEntityApp-"+Identifiers.makeRandomId(6)+".class";
-            int result = getMachine().installTo(r, resourceName, tmpFile);
+            int result = getMachine().installTo(resourceName, tmpFile);
             if (result!=0) throw new IllegalStateException("Cannot install "+resourceName+" to "+tmpFile);
             String saveAs = "classes/"+MyEntityApp.class.getPackage().getName().replace(".", "/")+"/"+MyEntityApp.class.getSimpleName()+".class";
             newScript(INSTALLING).

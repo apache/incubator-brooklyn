@@ -5,7 +5,6 @@ import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,15 +12,17 @@ import java.util.Map;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
-import brooklyn.entity.java.JarBuilder;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.file.ArchiveBuilder;
+import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.net.Networking;
+import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Strings;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -143,43 +144,19 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
             }
             machine.copyTo(MutableMap.of("permissions", "0600"), resource.getResourceFromUrl(localResource), resolvedRemotePath);
         }
-        
-        // TODO Copied from VanillaJavaApp; share code there? Or delete this functionality from here?
-        for (String f : getEntity().getClasspath()) {
-            // TODO support wildcards
 
-            // If a local folder, then jar it up
-            String toinstall;
-            if (new File(f).isDirectory()) {
-                try {
-                    File jarFile = JarBuilder.buildJar(new File(f));
-                    toinstall = jarFile.getAbsolutePath();
-                } catch (IOException e) {
-                    throw new IllegalStateException("Error jarring classpath entry, for directory "+f, e);
-                }
-            } else {
-                toinstall = f;
+        for (String entry : getEntity().getClasspath()) {
+            // If a local folder, then create archive from contents first
+            if (Urls.isDirectory(entry)) {
+                File jarFile = ArchiveBuilder.jar().add(entry).create();
+                entry = jarFile.getAbsolutePath();
             }
-            
-            int result = machine.installTo(resource, toinstall, getRunDir() + "/" + "lib" + "/");
-            if (result != 0)
-                throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s",f,entity,machine));
-            
-            // if it's a zip or tgz then expand
-            // FIXME dedup with code in machine.installTo above
-            String destName = f;
-            destName = destName.contains("?") ? destName.substring(0, destName.indexOf('?')) : destName;
-            destName = destName.substring(destName.lastIndexOf('/') + 1);
 
-            if (destName.toLowerCase().endsWith(".zip")) {
-                result = machine.execCommands("unzipping", ImmutableList.of(format("cd %s/lib && unzip %s",getRunDir(),destName)));
-            } else if (destName.toLowerCase().endsWith(".tgz") || destName.toLowerCase().endsWith(".tar.gz")) {
-                result = machine.execCommands("untarring gz", ImmutableList.of(format("cd %s/lib && tar xvfz %s",getRunDir(),destName)));
-            } else if (destName.toLowerCase().endsWith(".tar")) {
-                result = machine.execCommands("untarring", ImmutableList.of(format("cd %s/lib && tar xvfz %s",getRunDir(),destName)));
-            }
-            if (result != 0)
-                throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s (failed to expand archive)",f,entity,machine));
+            // Determine filename
+            String destFile = entry.contains("?") ? entry.substring(0, entry.indexOf('?')) : entry;
+            destFile = destFile.substring(destFile.lastIndexOf('/') + 1);
+
+            ArchiveUtils.deploy(MutableMap.<String, Object>of(), entry, machine, getRunDir(), Os.mergePaths(getRunDir(), "lib"), destFile);
         }
     }
 
