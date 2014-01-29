@@ -376,7 +376,8 @@ public class BrooklynRestResourceUtils {
                     public void run() {
                         if (release)
                             Entities.destroyCatching(entity);
-                        mgmt.getEntityManager().unmanage(entity);
+                        else
+                            mgmt.getEntityManager().unmanage(entity);
                     }
                 });
     }
