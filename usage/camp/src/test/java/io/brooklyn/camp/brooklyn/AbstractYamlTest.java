@@ -2,7 +2,6 @@ package io.brooklyn.camp.brooklyn;
 
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.PlatformRootSummary;
 
 import java.io.Reader;
 import java.util.Map;

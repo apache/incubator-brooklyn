@@ -11,10 +11,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.event.AttributeSensor;
+import brooklyn.location.Location;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 
@@ -230,6 +233,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(secondChild.getChildren().size(), 0);
     }
 
+    @Test
     public void testWithInitConfig() throws Exception {
         Entity app = createAndStartApplication("test-entity-with-init-config.yaml");
         waitForApplicationTasks(app);
@@ -248,6 +252,184 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(testWithConfigInit.getEntityCachedOnInit(), testEntity);
         log.info("App started:");
         Entities.dumpInfo(app);
+    }
+    
+    @Test
+    public void testMultipleReferences() throws Exception {
+        final Entity app = createAndStartApplication("test-referencing-entities.yaml");
+        waitForApplicationTasks(app);
+        Assert.assertEquals(app.getDisplayName(), "test-referencing-entities");
+        
+        Entity entity1 = null, entity2 = null, child1 = null, child2 = null, grandchild1 = null, grandchild2 = null;
+        
+        Assert.assertEquals(app.getChildren().size(), 2);
+        for (Entity child : app.getChildren()) {
+            if (child.getDisplayName().equals("entity 1"))
+                entity1 = child;
+            if (child.getDisplayName().equals("entity 2"))
+                entity2 = child;
+        }
+        Assert.assertNotNull(entity1);
+        Assert.assertNotNull(entity2);
+        
+        Assert.assertEquals(entity1.getChildren().size(), 2);
+        for (Entity child : entity1.getChildren()) {
+            if (child.getDisplayName().equals("child 1"))
+                child1 = child;
+            if (child.getDisplayName().equals("child 2"))
+                child2 = child;
+        }
+        Assert.assertNotNull(child1);
+        Assert.assertNotNull(child2);
+        
+        Assert.assertEquals(child1.getChildren().size(), 2);
+        for (Entity child : child1.getChildren()) {
+            if (child.getDisplayName().equals("grandchild 1"))
+               grandchild1 = child;
+            if (child.getDisplayName().equals("grandchild 2"))
+                grandchild2 = child;
+        }
+        Assert.assertNotNull(grandchild1);
+        Assert.assertNotNull(grandchild2);
+        
+        Map<ConfigKey<Entity>, Entity> keyToEntity = new ImmutableMap.Builder<ConfigKey<Entity>, Entity>()
+                .put(ReferencingYamlTestEntity.TEST_REFERENCE_APP, app)
+                .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY1, entity1)
+                .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY2, entity2)
+                .put(ReferencingYamlTestEntity.TEST_REFERENCE_CHILD1, child1)
+                .put(ReferencingYamlTestEntity.TEST_REFERENCE_CHILD2, child2)
+                .put(ReferencingYamlTestEntity.TEST_REFERENCE_GRANDCHILD1, grandchild1)
+                .put(ReferencingYamlTestEntity.TEST_REFERENCE_GRANDCHILD2, grandchild2)
+                .build();
+        
+        Iterable<Entity> entitiesInApp = ((EntityInternal)app).getExecutionContext().submit(MutableMap.of(), new Callable<Iterable<Entity>>() {
+            @Override
+            public Iterable<Entity> call() throws Exception {
+                return ((EntityInternal)app).getManagementContext().getEntityManager().getAllEntitiesInApplication((Application)app);
+            }
+        }).get();
+        
+        for (Entity entityInApp : entitiesInApp)
+            checkReferences(entityInApp, keyToEntity);
+    }
+    
+    private void checkReferences(final Entity entity, Map<ConfigKey<Entity>, Entity> keyToEntity) throws Exception {
+        for (final ConfigKey<Entity> key : keyToEntity.keySet()) {
+            Entity fromConfig = ((EntityInternal)entity).getExecutionContext().submit(MutableMap.of(), new Callable<Entity>() {
+                @Override
+                public Entity call() throws Exception {
+                    return (Entity) entity.getConfig(key);
+                }
+            }).get();
+            Assert.assertEquals(fromConfig, keyToEntity.get(key));
+        }
+    }
+        
+    public void testWithAppLocation() throws Exception {
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig", 
+                "test.confName: first entity\n",
+                "additionalConfig", 
+                "location: localhost:(name=yaml name)\n"));
+        waitForApplicationTasks(app);
+        Assert.assertEquals(app.getLocations().size(), 1);
+        Location location = app.getLocations().iterator().next();
+        Assert.assertNotNull(location);
+        Assert.assertEquals(location.getDisplayName(), "yaml name");
+        Assert.assertEquals(app.getChildren().size(), 1);
+        Entity entity = app.getChildren().iterator().next();
+        Assert.assertNotNull(entity);
+        Assert.assertEquals(entity.getLocations().size(), 0);
+    }
+    
+    @Test
+    public void testWithEntityLocation() throws Exception {
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig", 
+                "test.confName: first entity\n",
+                "additionalConfig", 
+                "  location: localhost:(name=yaml name)\n"));
+        waitForApplicationTasks(app);
+        Assert.assertEquals(app.getLocations().size(), 0);
+        Assert.assertEquals(app.getChildren().size(), 1);
+        Entity entity = app.getChildren().iterator().next();
+        Assert.assertEquals(entity.getLocations().size(), 1);
+        Location location = entity.getLocations().iterator().next();
+        Assert.assertNotNull(location);
+        Assert.assertEquals(location.getDisplayName(), "yaml name");
+        Assert.assertNotNull(entity);
+    }
+
+    @Test
+    public void testWith2AppLocations() throws Exception {
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig", 
+                "test.confName: first entity\n",
+                "additionalConfig",
+                new StringBuilder()
+                    .append("locations: \n")
+                    .append("- localhost:(name=localhost name)\n")
+                    .append("- byon:(hosts=\"1.1.1.1\", name=byon name)\n")
+                    .toString()));
+        waitForApplicationTasks(app);
+        
+        Assert.assertEquals(app.getLocations().size(), 2);
+        Location localhostLocation = null, byonLocation = null; 
+        for (Location location : app.getLocations()) {
+            if (location.getDisplayName().equals("localhost name"))
+                localhostLocation = location;
+            else if (location.getDisplayName().equals("byon name"))
+                byonLocation = location;
+        }
+        Assert.assertNotNull(localhostLocation);
+        Assert.assertNotNull(byonLocation);
+        Assert.assertEquals(app.getChildren().size(), 1);
+        Entity entity = app.getChildren().iterator().next();
+        Assert.assertNotNull(entity);
+        Assert.assertEquals(entity.getLocations().size(), 0);
+    }
+    
+    @Test
+    public void testWith2EntityLocations() throws Exception {
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig", 
+                "test.confName: first entity\n",
+                "additionalConfig",
+                new StringBuilder()
+                    .append("  locations: \n")
+                    .append("  - localhost:(name=localhost name)\n")
+                    .append("  - byon:(hosts=\"1.1.1.1\", name=byon name)\n")
+                    .toString()));
+        waitForApplicationTasks(app);
+        Assert.assertEquals(app.getLocations().size(), 0);
+        Assert.assertEquals(app.getChildren().size(), 1);
+        Entity entity = app.getChildren().iterator().next();
+        Assert.assertEquals(entity.getLocations().size(), 2);
+        Location localhostLocation = null, byonLocation = null; 
+        for (Location location : entity.getLocations()) {
+            if (location.getDisplayName().equals("localhost name"))
+                localhostLocation = location;
+            else if (location.getDisplayName().equals("byon name"))
+                byonLocation = location;
+        }
+        Assert.assertNotNull(localhostLocation);
+        Assert.assertNotNull(byonLocation);
+    }
+    
+    @Test
+    public void testWithAppAndEntityLocations() throws Exception {
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig", 
+                "test.confName: first entity\n",
+                "additionalConfig",
+                new StringBuilder()
+                    .append("  location: localhost:(name=localhost name)\n")
+                    .append("location: byon:(hosts=\"1.1.1.1\", name=byon name)\n")
+                    .toString()));
+        waitForApplicationTasks(app);
+        Assert.assertEquals(app.getLocations().size(), 1);
+        Assert.assertEquals(app.getChildren().size(), 1);
+        Entity entity = app.getChildren().iterator().next();
+        Assert.assertEquals(entity.getLocations().size(), 1);
+        Location appLocation = app.getLocations().iterator().next();
+        Assert.assertEquals(appLocation.getDisplayName(), "byon name");
+        Location entityLocation = entity.getLocations().iterator().next();
+        Assert.assertEquals(entityLocation.getDisplayName(), "localhost name");
     }
     
     protected Logger getLogger() {

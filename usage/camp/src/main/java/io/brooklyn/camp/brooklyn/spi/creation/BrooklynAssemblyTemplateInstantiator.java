@@ -364,6 +364,9 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         Map<String, EntitySpec<?>> entitySpecs = Maps.newLinkedHashMap();
         
         EntitySpec<StartableApplication> appSpec = buildSpec(mgmt, StartableApplication.class, BasicApplicationImpl.class, template);
+        String planId = (String) template.getCustomAttributes().get("id");
+        if (planId != null)
+            appSpec.configure(BrooklynCampConstants.PLAN_ID, planId);
         Application app = newEntity(mgmt, appSpec);
         entitySpecs.put(app.getId(), appSpec);
         entities.put(app.getId(), app);
