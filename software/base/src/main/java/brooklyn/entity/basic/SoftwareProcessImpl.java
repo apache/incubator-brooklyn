@@ -142,7 +142,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 
     /**
-     * For disconneting the {@link #SERVICE_UP} feed.
+     * For disconnecting the {@link #SERVICE_UP} feed.
      * <p>
      * Should be called from {@link #disconnectSensors()}.
      *

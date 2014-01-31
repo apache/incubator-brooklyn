@@ -185,7 +185,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
   }
 
   private Response launch(AssemblyTemplate at) {
-    try {
+      try {
           AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
           Assembly assembly;
           Task<?> task = null;

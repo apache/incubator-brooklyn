@@ -133,7 +133,7 @@ public class Main {
             System.out.println("Website:  http://brooklyn.io/");
             System.out.println("Source:   https://github.com/brooklyncentral/brooklyn/");
             System.out.println();
-            System.out.println("Copyright 2011-2013 by Cloudsoft Corp.");
+            System.out.println("Copyright 2011-2014 by Cloudsoft Corp.");
             System.out.println("Licensed under the Apache 2.0 License");
             System.out.println();
 

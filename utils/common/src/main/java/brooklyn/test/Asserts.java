@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,12 @@ import com.google.common.collect.Lists;
 
 @Beta
 public class Asserts {
+
+    /**
+     * The default timeout for assertions. Alter in individual tests by giving a
+     * "timeout" entry in method flags.
+     */
+    private static final Duration DEFAULT_TIMEOUT = Duration.THIRTY_SECONDS;
 
     private static final Logger log = LoggerFactory.getLogger(Asserts.class);
 
@@ -116,7 +123,10 @@ public class Asserts {
     }
 
     
-    
+    /**
+     * Asserts given runnable succeeds in default duration.
+     * @see #DEFAULT_TIMEOUT
+     */
     public static void succeedsEventually(Runnable r) {
         succeedsEventually(ImmutableMap.<String,Object>of(), r);
     }
@@ -125,6 +135,10 @@ public class Asserts {
         succeedsEventually(flags, toCallable(r));
     }
     
+    /**
+     * Asserts given callable succeeds in default duration.
+     * @see #DEFAULT_TIMEOUT
+     */
     public static <T> T succeedsEventually(Callable<T> c) {
         return succeedsEventually(ImmutableMap.<String,Object>of(), c);
     }
@@ -175,7 +189,7 @@ public class Asserts {
         boolean logException = get(flags, "logException", true);
 
         // To speed up tests, default is for the period to start small and increase...
-        Duration duration = toDuration(flags.get("timeout"), Duration.THIRTY_SECONDS);
+        Duration duration = toDuration(flags.get("timeout"), DEFAULT_TIMEOUT);
         Duration fixedPeriod = toDuration(flags.get("period"), null);
         Duration minPeriod = (fixedPeriod != null) ? fixedPeriod : toDuration(flags.get("minPeriod"), Duration.millis(1));
         Duration maxPeriod = (fixedPeriod != null) ? fixedPeriod : toDuration(flags.get("maxPeriod"), Duration.millis(500));
