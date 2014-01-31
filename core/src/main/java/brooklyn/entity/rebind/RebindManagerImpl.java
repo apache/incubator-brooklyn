@@ -284,6 +284,14 @@ public class RebindManagerImpl implements RebindManager {
         
         if (InternalEntityFactory.isNewStyleEntity(managementContext, entityClazz)) {
             // Not using entityManager.createEntity(EntitySpec) because don't want init() to be called
+            // TODO Need to rationalise this to move code into methods of InternalEntityFactory.
+            //      The InternalEntityFactory.constructEntity is used in three places:
+            //       1. normal entity creation (through entityManager.createEntity)
+            //       2. rebind (i.e. here)
+            //       3. yaml parsing
+            //      Purpose is to create a new (unconfigured/uninitialised) entity, but that is
+            //      known about by the managementContext and that has things like the right id and 
+            //      a proxy for if another entity needs to reference it during the init phase.
             InternalEntityFactory entityFactory = managementContext.getEntityFactory();
             Entity entity = entityFactory.constructEntity(entityClazz);
             
