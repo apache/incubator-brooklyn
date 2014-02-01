@@ -23,6 +23,11 @@ import com.wordnik.swagger.core.ApiOperation;
 public interface ServerApi {
 
     @POST
+    @Path("/properties/reload")
+    @ApiOperation(value = "Reload brooklyn.properties")
+    public void reloadBrooklynProperties();
+
+    @POST
     @Path("/shutdown")
     @ApiOperation(value = "Terminate this Brooklyn server instance")
     @Consumes({MediaType.APPLICATION_FORM_URLENCODED})

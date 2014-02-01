@@ -283,11 +283,6 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
       TaskSummary ts = TaskTransformer.FROM_TASK.apply(t);
       return status(ACCEPTED).entity(ts).build();
   }
-
-  @Override
-  public void reloadBrooklynProperties() {
-      brooklyn().reloadBrooklynProperties();
-  }
   
   private void checkApplicationTypesAreValid(ApplicationSpec applicationSpec) {
       String appType = applicationSpec.getType();

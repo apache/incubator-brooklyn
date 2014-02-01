@@ -10,21 +10,18 @@ import java.util.logging.Level;
 
 import javax.ws.rs.core.MediaType;
 
-import brooklyn.rest.domain.ApplicationSpec;
-import brooklyn.rest.domain.Status;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.Status;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.Repeater;
-import brooklyn.util.text.StringEscapes;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.spi.inject.Errors;
 
 public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {

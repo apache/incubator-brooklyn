@@ -163,11 +163,6 @@ public interface ApplicationApi {
   @Deprecated
   public Response create(ApplicationSpec applicationSpec);
 
-  @POST
-  @Path("/reloadBrooklynProperties")
-  @ApiOperation(value = "Reload brooklyn.properties")
-  public void reloadBrooklynProperties();
-  
   @GET
   @Path("/{application}/descendants")
   @ApiOperation(value = "Fetch entity info for all (or filtered) descendants",
