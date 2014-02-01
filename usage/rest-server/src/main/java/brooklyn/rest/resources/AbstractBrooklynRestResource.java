@@ -2,23 +2,19 @@ package brooklyn.rest.resources;
 
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
-import brooklyn.config.BrooklynServiceAttributes;
-import brooklyn.management.ManagementContext;
-import brooklyn.rest.util.BrooklynRestResourceUtils;
-import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public abstract class AbstractBrooklynRestResource {
 

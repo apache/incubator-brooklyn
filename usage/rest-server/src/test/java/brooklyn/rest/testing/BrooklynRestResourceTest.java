@@ -20,9 +20,11 @@ import org.testng.annotations.BeforeClass;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.Repeater;
+import brooklyn.util.text.StringEscapes;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.spi.inject.Errors;
 
 public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
@@ -52,7 +54,7 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
             throw Exceptions.propagate(e);
         }
     }
-
+    
     protected void waitForApplicationToBeRunning(final URI applicationRef) {
         if (applicationRef==null)
             throw new NullPointerException("No application URI available (consider using BrooklynRestResourceTest.clientDeploy)");

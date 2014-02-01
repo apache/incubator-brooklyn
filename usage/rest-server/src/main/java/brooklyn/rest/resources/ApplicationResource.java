@@ -12,6 +12,7 @@ import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
+import java.util.Collections;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
@@ -30,11 +31,15 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.Sensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.management.Task;
 import brooklyn.rest.api.ApplicationApi;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.EntitySpec;
+import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.transform.ApplicationTransformer;
 import brooklyn.rest.transform.EntityTransformer;
@@ -47,6 +52,7 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 
 
 public class ApplicationResource extends AbstractBrooklynRestResource implements ApplicationApi {
@@ -320,6 +326,34 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         throw WebResourceUtils.notFound("Undefined location '%s'", locationId);
       }
     }
+  }
+
+  @Override
+  public Iterable<EntitySummary> getDescendants(String application, String typeRegex) {
+      return EntityTransformer.entitySummaries(brooklyn().descendantsOfType(application, application, typeRegex));
+  }
+
+  @Override
+  public Map<String, Object> getDescendantsSensor(String application, String sensor, String typeRegex) {
+      Iterable<Entity> descs = brooklyn().descendantsOfType(application, application, typeRegex);
+      return getSensorMap(sensor, descs);
+  }
+
+  public static Map<String, Object> getSensorMap(String sensor, Iterable<Entity> descs) {
+      if (Iterables.isEmpty(descs))
+          return Collections.emptyMap();
+      Map<String, Object> result = MutableMap.of();
+      Entity type = descs.iterator().next();
+      Sensor<?> s = type.getEntityType().getSensor(sensor);
+      if (s==null) s = Sensors.newSensor(Object.class, sensor);
+      for (Entity e: descs) {
+          Object v = null;
+          if (s instanceof AttributeSensor<?>)
+              v = e.getAttribute((AttributeSensor<?>)s);
+          if (v!=null)
+              result.put(e.getId(), v);
+      }
+      return result;
   }
 
 }

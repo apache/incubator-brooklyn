@@ -8,6 +8,7 @@ import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -50,7 +51,9 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
@@ -448,6 +451,32 @@ public class BrooklynRestResourceUtils {
         if (mime==null) return false;
         
         return !Urls.isUrlWithProtocol(url) || url.startsWith("classpath:");
+    }
+
+    
+    public Iterable<Entity> descendantsOfAnyType(String application, String entity) {
+        List<Entity> result = Lists.newArrayList();
+        EntityLocal e = getEntity(application, entity);
+        gatherAllDescendants(e, result);
+        return result;
+    }
+    
+    private static void gatherAllDescendants(Entity e, List<Entity> result) {
+        if (result.add(e)) {
+            for (Entity ee: e.getChildren())
+                gatherAllDescendants(ee, result);
+        }
+    }
+
+    public Iterable<Entity> descendantsOfType(String application, String entity, final String typeRegex) {
+        Iterable<Entity> result = descendantsOfAnyType(application, entity);
+        return Iterables.filter(result, new Predicate<Entity>() {
+            @Override
+            public boolean apply(Entity entity) {
+                if (entity==null) return false;
+                return (entity.getEntityType().getName().matches(typeRegex));
+            }
+        });
     }
 
     public void reloadBrooklynProperties() {
