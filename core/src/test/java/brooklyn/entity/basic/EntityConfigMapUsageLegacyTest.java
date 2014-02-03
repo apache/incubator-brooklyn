@@ -1,0 +1,274 @@
+package brooklyn.entity.basic;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import brooklyn.config.ConfigKey;
+import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
+import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Time;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.Callables;
+
+/**
+ * Test that configuration properties are usable and inherited correctly.
+ * 
+ * Uses legacy mechanism of calling entity constructors.
+ */
+public class EntityConfigMapUsageLegacyTest {
+    private ConfigKey<Integer> intKey = ConfigKeys.newIntegerConfigKey("bkey", "b key");
+    private ConfigKey<String> strKey = ConfigKeys.newStringConfigKey("akey", "a key");
+    private ConfigKey<Integer> intKeyWithDefault = ConfigKeys.newIntegerConfigKey("ckey", "c key", 1);
+    private ConfigKey<String> strKeyWithDefault = ConfigKeys.newStringConfigKey("strKey", "str key", "str key default");
+    
+    private TestApplication app;
+    
+    @BeforeMethod
+    public void setUp() {
+        app = new TestApplicationImpl();
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(){
+        if (app != null) Entities.destroyAll(app.getManagementContext());
+    }
+    
+    @Test
+    public void testConfigPassedInAtConstructorIsAvailable() throws Exception {
+        Map<?,?> conf = MutableMap.of(strKey, "aval", intKey, 2);
+        
+        TestEntity entity = new TestEntityImpl(MutableMap.of("config", conf), app);
+        
+        assertEquals(entity.getConfig(strKey), "aval");
+        assertEquals(entity.getConfig(intKey), Integer.valueOf(2));
+    }
+    
+    @Test
+    public void testConfigSetToGroovyTruthFalseIsAvailable() throws Exception {
+        TestEntity entity = new TestEntityImpl(MutableMap.of("config", MutableMap.of(intKeyWithDefault, 0)), app);
+        
+        assertEquals(entity.getConfig(intKeyWithDefault), (Integer)0);
+    }
+    
+    @Test
+    public void testInheritedConfigSetToGroovyTruthFalseIsAvailable() throws Exception {
+        TestEntity parent = new TestEntityImpl(MutableMap.of("config", MutableMap.of(intKeyWithDefault, 0)), app);
+        TestEntity entity = new TestEntityImpl(parent);
+        
+        assertEquals(entity.getConfig(intKeyWithDefault), (Integer)0);
+    }
+    
+    @Test
+    public void testConfigSetToNullIsAvailable() throws Exception {
+        TestEntity entity = new TestEntityImpl(MutableMap.of("config", MutableMap.of(strKeyWithDefault, null)), app);
+        
+        assertEquals(entity.getConfig(strKeyWithDefault), null);
+    }
+    
+    @Test
+    public void testInheritedConfigSetToNullIsAvailable() throws Exception {
+        TestEntity parent = new TestEntityImpl(MutableMap.of("config", MutableMap.of(strKeyWithDefault, null)), app);
+        TestEntity entity = new TestEntityImpl(parent);
+        
+        assertEquals(entity.getConfig(strKeyWithDefault), null);
+    }
+    
+    @Test
+    public void testConfigCanBeSetOnEntity() throws Exception {
+        TestEntity entity = new TestEntityImpl(app);
+        entity.setConfig(strKey, "aval");
+        entity.setConfig(intKey, 2);
+        
+        assertEquals(entity.getConfig(strKey), "aval");
+        assertEquals(entity.getConfig(intKey), (Integer)2);
+    }
+    
+    @Test
+    public void testConfigInheritedFromParent() throws Exception {
+        TestEntity parent = new TestEntityImpl(MutableMap.of("config", MutableMap.of(strKey, "aval")), app);
+        parent.setConfig(intKey, 2);
+        TestEntity entity = new TestEntityImpl(parent);
+        
+        assertEquals(entity.getConfig(strKey), "aval");
+        assertEquals(entity.getConfig(intKey), (Integer)2);
+    }
+    
+    @Test
+    public void testConfigInConstructorOverridesParentValue() throws Exception {
+        TestEntity parent = new TestEntityImpl(MutableMap.of("config", MutableMap.of(strKey, "aval")), app);
+        TestEntity entity = new TestEntityImpl(MutableMap.of("config", MutableMap.of(strKey, "diffval")), parent);
+        
+        assertEquals("diffval", entity.getConfig(strKey));
+    }
+    
+    @Test
+    public void testConfigSetterOverridesParentValue() throws Exception {
+        TestEntity parent = new TestEntityImpl(MutableMap.of("config", MutableMap.of(strKey, "aval")));
+        TestEntity entity = new TestEntityImpl(parent);
+        entity.setConfig(strKey, "diffval");
+        
+        assertEquals("diffval", entity.getConfig(strKey));
+    }
+    
+    @Test
+    public void testConfigSetterOverridesConstructorValue() throws Exception {
+        TestEntity entity = new TestEntityImpl(MutableMap.of("config", MutableMap.of(strKey, "aval")), app);
+        entity.setConfig(strKey, "diffval");
+        
+        assertEquals("diffval", entity.getConfig(strKey));
+    }
+
+    @Test
+    public void testConfigSetOnParentInheritedByExistingChildrenBeforeStarted() throws Exception {
+        TestEntity entity = new TestEntityImpl(app);
+        app.setConfig(strKey,"aval");
+        
+        assertEquals("aval", entity.getConfig(strKey));
+    }
+
+    @Test
+    public void testConfigInheritedThroughManyGenerations() throws Exception {
+        TestEntity e = new TestEntityImpl(app);
+        TestEntity e2 = new TestEntityImpl(e);
+        app.setConfig(strKey,"aval");
+        
+        assertEquals("aval", app.getConfig(strKey));
+        assertEquals("aval", e.getConfig(strKey));
+        assertEquals("aval", e2.getConfig(strKey));
+    }
+
+    @Test(enabled=false)
+    public void testConfigCannotBeSetAfterApplicationIsStarted() throws Exception {
+        TestEntity entity = new TestEntityImpl(app);
+        app.start(ImmutableList.of(new SimulatedLocation()));
+        
+        try {
+            app.setConfig(strKey,"aval");
+            fail();
+        } catch (IllegalStateException e) {
+            // success
+        }
+        
+        assertEquals(null, entity.getConfig(strKey));
+    }
+    
+    @Test
+    public void testConfigReturnsDefaultValueIfNotSet() throws Exception {
+        TestEntity entity = new TestEntityImpl(app);
+        assertEquals(entity.getConfig(TestEntity.CONF_NAME), "defaultval");
+    }
+    
+    @Test
+    public void testGetFutureConfigWhenReady() throws Exception {
+        TestEntity entity = new TestEntityImpl(app);
+        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone(Callables.returning("aval")));
+        Entities.startManagement(app);
+        app.start(ImmutableList.of(new SimulatedLocation()));
+        
+        assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval");
+    }
+    
+    @Test
+    public void testGetFutureConfigBlocksUntilReady() throws Exception {
+        TestEntity entity = new TestEntityImpl(app);
+        final CountDownLatch latch = new CountDownLatch(1);
+        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone(new Callable<String>() {
+            @Override public String call() throws Exception {
+                latch.await();
+                return "aval";
+            }}));
+        Entities.startManagement(app);
+        app.start(ImmutableList.of(new SimulatedLocation()));
+        
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                Time.sleep(10);
+                latch.countDown();
+            }});
+        try {
+            long starttime = System.currentTimeMillis();
+            t.start();
+            assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval");
+            long endtime = System.currentTimeMillis();
+            
+            assertTrue((endtime - starttime) >= 10, "starttime="+starttime+"; endtime="+endtime);
+            
+        } finally {
+            t.interrupt();
+        }
+    }
+    
+    @Test
+    public void testGetAttributeWhenReadyConfigReturnsWhenSet() throws Exception {
+        TestEntity entity = new TestEntityImpl(app);
+        TestEntity entity2 = new TestEntityImpl(app);
+        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME));
+        Entities.startManagement(app);
+        app.start(ImmutableList.of(new SimulatedLocation()));
+        
+        entity2.setAttribute(TestEntity.NAME, "aval");
+        assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval");
+    }
+    
+    @Test
+    public void testGetAttributeWhenReadyWithPostProcessingConfigReturnsWhenSet() throws Exception {
+        TestEntity entity = new TestEntityImpl(app);
+        TestEntity entity2 = new TestEntityImpl(app);
+        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributePostProcessedWhenReady(entity2, TestEntity.NAME, Predicates.notNull(), new Function<String,String>() {
+            @Override public String apply(String input) {
+                return (input == null) ? null : input+"mysuffix";
+            }}));
+        Entities.startManagement(app);
+        app.start(ImmutableList.of(new SimulatedLocation()));
+        
+        entity2.setAttribute(TestEntity.NAME, "aval");
+        assertEquals(entity.getConfig(TestEntity.CONF_NAME), "avalmysuffix");
+    }
+    
+    @Test
+    public void testGetAttributeWhenReadyConfigBlocksUntilSet() throws Exception {
+        TestEntity entity = new TestEntityImpl(app);
+        final TestEntity entity2 = new TestEntityImpl(app);
+        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME));
+        Entities.startManagement(app);
+        app.start(ImmutableList.of(new SimulatedLocation()));
+
+        // previously was just sleep 10, and (endtime-starttime > 10); failed with exactly 10ms        
+        final long sleepTime = 20;
+        final long earlyReturnGrace = 5;
+        Thread t = new Thread(new Runnable() {
+            @Override public void run() {
+                Time.sleep(sleepTime);
+                entity2.setAttribute(TestEntity.NAME, "aval");
+            }});
+        try {
+            long starttime = System.currentTimeMillis();
+            t.start();
+            assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval");
+            long endtime = System.currentTimeMillis();
+            
+            assertTrue((endtime - starttime) >= (sleepTime - earlyReturnGrace), "starttime=$starttime; endtime=$endtime");
+            
+        } finally {
+            t.interrupt();
+        }
+    }
+
+}
