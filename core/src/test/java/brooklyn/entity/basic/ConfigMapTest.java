@@ -74,12 +74,14 @@ public class ConfigMapTest {
     @Test
     public void testConfigureFromKey() throws Exception {
         MySubEntity entity2 = new MySubEntity(MutableMap.of(MySubEntity.SUPER_KEY_1, "changed"), app);
+        Entities.manage(entity2);
         assertEquals(entity2.getConfig(MySubEntity.SUPER_KEY_1), "changed");
     }
 
     @Test
     public void testConfigureFromSuperKey() throws Exception {
         MySubEntity entity2 = new MySubEntity(MutableMap.of(MyBaseEntity.SUPER_KEY_1, "changed"), app);
+        Entities.manage(entity2);
         assertEquals(entity2.getConfig(MySubEntity.SUPER_KEY_1), "changed");
     }
 
@@ -122,6 +124,7 @@ public class ConfigMapTest {
 
         MyOtherEntity entity2 = new MyOtherEntity(app);
         entity2.setConfig(MyOtherEntity.INT_KEY, supplier);
+        Entities.manage(entity2);
 
         assertEquals(entity2.getConfig(MyOtherEntity.INT_KEY), Integer.valueOf(0));
         assertEquals(entity2.getConfig(MyOtherEntity.INT_KEY), Integer.valueOf(1));
@@ -196,15 +199,15 @@ public class ConfigMapTest {
         public static final ConfigKey<String> SUPER_KEY_1 = ConfigKeys.newStringConfigKey("superKey1", "superKey1 key", "superKey1 default");
         public static final ConfigKey<String> SUPER_KEY_2 = ConfigKeys.newStringConfigKey("superKey2", "superKey2 key", "superKey2 default");
         
-        MyBaseEntity() {
+        public MyBaseEntity() {
         }
-        MyBaseEntity(Map flags) {
+        public MyBaseEntity(Map flags) {
             super(flags);
         }
-        MyBaseEntity(Map flags, Entity parent) {
+        public MyBaseEntity(Map flags, Entity parent) {
             super(flags, parent);
         }
-        MyBaseEntity(Entity parent) {
+        public MyBaseEntity(Entity parent) {
             super(parent);
         }
     }
@@ -240,15 +243,15 @@ public class ConfigMapTest {
         public static final ConfigKey<Predicate> PREDICATE_KEY = ConfigKeys.newConfigKey(Predicate.class, "predicateKey", "predicate key", null);
         public static final IntegerAttributeSensorAndConfigKey SENSOR_AND_CONFIG_KEY = new IntegerAttributeSensorAndConfigKey("sensorConfigKey", "sensor+config key", 1);
         
-        MyOtherEntity() {
+        public MyOtherEntity() {
         }
-        MyOtherEntity(Map flags) {
+        public MyOtherEntity(Map flags) {
             super(flags);
         }
-        MyOtherEntity(Map flags, Entity parent) {
+        public MyOtherEntity(Map flags, Entity parent) {
             super(flags, parent);
         }
-        MyOtherEntity(Entity parent) {
+        public MyOtherEntity(Entity parent) {
             super(parent);
         }
     }
