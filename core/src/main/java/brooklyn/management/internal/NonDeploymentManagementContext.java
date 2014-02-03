@@ -21,6 +21,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
+import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.rebind.ChangeListener;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.internal.storage.BrooklynStorage;
@@ -114,6 +115,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     public boolean isRunning() {
         // Assume that the real management context has not been terminated, so always true
         return true;
+    }
+
+    @Override
+    public InternalEntityFactory getEntityFactory() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.getEntityFactory();
     }
 
     @Override

@@ -12,13 +12,16 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Creates locations of required types.
@@ -92,7 +95,13 @@ public class InternalLocationFactory {
         if (spec.getFlags().containsKey("parent")) {
             throw new IllegalArgumentException("Spec's flags must not contain parent; use spec.parent() instead for "+spec);
         }
-        
+        if (spec.getFlags().containsKey("id")) {
+            throw new IllegalArgumentException("Spec's flags must not contain id; use spec.id() instead for "+spec);
+        }
+        if (spec.getId() != null && ((LocalLocationManager)managementContext.getLocationManager()).isKnownLocationId(spec.getId())) {
+            throw new IllegalArgumentException("Entity with id "+spec.getId()+" already exists; cannot create new entity with this explicit id from spec "+spec);
+        }
+
         try {
             Class<? extends T> clazz = spec.getType();
             
@@ -102,6 +111,11 @@ public class InternalLocationFactory {
             } else {
                 loc = constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
             }
+
+            if (spec.getId() != null) {
+                FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", spec.getId()), loc);
+            }
+            managementContext.prePreManage(loc);
 
             if (spec.getDisplayName()!=null)
                 ((AbstractLocation)loc).setName(spec.getDisplayName());

@@ -84,6 +84,11 @@ public class LocalEntityManager implements EntityManager {
         applicationIds = SetFromLiveMap.create(storage.<String,Boolean>getMap("applications"));
     }
 
+    public InternalEntityFactory getEntityFactory() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        return entityFactory;
+    }
+
     @Override
     public EntityTypeRegistry getEntityTypeRegistry() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
@@ -96,7 +101,6 @@ public class LocalEntityManager implements EntityManager {
         try {
             T entity = entityFactory.createEntity(spec);
             Entity proxy = ((AbstractEntity)entity).getProxy();
-            managementContext.prePreManage(entity);
             return (T) checkNotNull(proxy, "proxy for entity %s, spec %s", entity, spec);
         } catch (Throwable e) {
             log.warn("Failed to create entity using spec "+spec+" (rethrowing)", e);
@@ -424,6 +428,10 @@ public class LocalEntityManager implements EntityManager {
         }
     }
 
+    public boolean isKnownEntityId(String id) {
+        return entitiesById.containsKey(id) || preManagedEntitiesById.containsKey(id) || preRegisteredEntitiesById.containsKey(id);
+    }
+    
     private Entity toRealEntityOrNull(String id) {
         Entity result = entitiesById.get(id);
         if (result == null) {

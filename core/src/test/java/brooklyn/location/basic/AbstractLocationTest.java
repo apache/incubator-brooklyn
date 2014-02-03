@@ -13,12 +13,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class AbstractLocationTest {
 
@@ -52,29 +54,32 @@ public class AbstractLocationTest {
         return createConcrete(MutableMap.<String,Object>of());
     }
     private ConcreteLocation createConcrete(Map<String,?> flags) {
-        return mgmt.getLocationManager().createLocation( LocationSpec.create(ConcreteLocation.class).configure(flags) );
+        return createConcrete(null, flags);
+    }
+    private ConcreteLocation createConcrete(String id, Map<String,?> flags) {
+        return mgmt.getLocationManager().createLocation( LocationSpec.create(ConcreteLocation.class).id(id).configure(flags) );
     }
     
     @Test
-    public void testEquals() {
-        AbstractLocation l1 = createConcrete(MutableMap.of("id", "1", "name", "bob"));
-        AbstractLocation l2 = createConcrete(MutableMap.of("id", "1", "name", "frank"));
-        AbstractLocation l3 = createConcrete(MutableMap.of("id", "2", "name", "frank"));
-        assertEquals(l1, l2);
-        assertNotEquals(l2, l3);
+    public void testEqualsUsesId() {
+        Location l1 = createConcrete("1", MutableMap.of("name", "bob"));
+        Location l1b = new ConcreteLocation(ImmutableMap.of("id", 1));
+        Location l2 = createConcrete("2", MutableMap.of("name", "frank"));
+        assertEquals(l1, l1b);
+        assertNotEquals(l1, l2);
     }
 
     @Test
     public void nullNameAndParentLocationIsAcceptable() {
-        AbstractLocation location = createConcrete(MutableMap.of("name", null, "parentLocation", null));
+        Location location = createConcrete(MutableMap.of("name", null, "parentLocation", null));
         assertEquals(location.getDisplayName(), null);
         assertEquals(location.getParent(), null);
     }
 
     @Test
     public void testSettingParentLocation() {
-        AbstractLocation location = createConcrete();
-        AbstractLocation locationSub = createConcrete();
+        Location location = createConcrete();
+        Location locationSub = createConcrete();
         locationSub.setParent(location);
         
         assertEquals(ImmutableList.copyOf(location.getChildren()), ImmutableList.of(locationSub));
@@ -83,8 +88,8 @@ public class AbstractLocationTest {
 
     @Test
     public void testClearingParentLocation() {
-        AbstractLocation location = createConcrete();
-        AbstractLocation locationSub = createConcrete();
+        Location location = createConcrete();
+        Location locationSub = createConcrete();
         locationSub.setParent(location);
         
         locationSub.setParent(null);
@@ -94,8 +99,8 @@ public class AbstractLocationTest {
     
     @Test
     public void testContainsLocation() {
-        AbstractLocation location = createConcrete();
-        AbstractLocation locationSub = createConcrete();
+        Location location = createConcrete();
+        Location locationSub = createConcrete();
         locationSub.setParent(location);
         
         assertTrue(location.containsLocation(location));
@@ -107,22 +112,22 @@ public class AbstractLocationTest {
     @Test
     public void queryingNameReturnsNameGivenInConstructor() {
         String name = "Outer Mongolia";
-        AbstractLocation location = createConcrete(MutableMap.of("name", "Outer Mongolia"));
+        Location location = createConcrete(MutableMap.of("name", "Outer Mongolia"));
         assertEquals(location.getDisplayName(), name);;
     }
 
     @Test
     public void constructorParentLocationReturnsExpectedLocation() {
-        AbstractLocation parent = createConcrete(MutableMap.of("name", "Middle Earth"));
-        AbstractLocation child = createConcrete(MutableMap.of("name", "The Shire", "parentLocation", parent));
+        Location parent = createConcrete(MutableMap.of("name", "Middle Earth"));
+        Location child = createConcrete(MutableMap.of("name", "The Shire", "parentLocation", parent));
         assertEquals(child.getParent(), parent);
         assertEquals(ImmutableList.copyOf(parent.getChildren()), ImmutableList.of(child));
     }
 
     @Test
     public void setParentLocationReturnsExpectedLocation() {
-        AbstractLocation parent = createConcrete(MutableMap.of("name", "Middle Earth"));
-        AbstractLocation child = createConcrete(MutableMap.of("name", "The Shire"));
+        Location parent = createConcrete(MutableMap.of("name", "Middle Earth"));
+        Location child = createConcrete(MutableMap.of("name", "The Shire"));
         child.setParent(parent);
         assertEquals(child.getParent(), parent);
         assertEquals(ImmutableList.copyOf(parent.getChildren()), ImmutableList.of(child));
@@ -130,8 +135,8 @@ public class AbstractLocationTest {
     
     @Test
     public void testAddChildToParentLocationReturnsExpectedLocation() {
-        AbstractLocation parent = createConcrete(MutableMap.of("id", "1"));
-        AbstractLocation child = createConcrete(MutableMap.of("id", "2"));
+        ConcreteLocation parent = createConcrete();
+        Location child = createConcrete();
         parent.addChild(child);
         assertEquals(child.getParent(), parent);
         assertEquals(ImmutableList.copyOf(parent.getChildren()), ImmutableList.of(child));

@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntityProxy;
@@ -27,7 +28,7 @@ import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocationInternal;
-import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoPersister.Delta;
@@ -38,10 +39,12 @@ import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -56,14 +59,14 @@ public class RebindManagerImpl implements RebindManager {
     
     private volatile boolean running = true;
     
-    private final ManagementContext managementContext;
+    private final ManagementContextInternal managementContext;
 
     private volatile PeriodicDeltaChangeListener realChangeListener;
     private volatile ChangeListener changeListener;
     
     private volatile BrooklynMementoPersister persister;
 
-    public RebindManagerImpl(ManagementContext managementContext) {
+    public RebindManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
         this.changeListener = ChangeListener.NOOP;
     }
@@ -277,12 +280,36 @@ public class RebindManagerImpl implements RebindManager {
     private Entity newEntity(EntityMemento memento, Reflections reflections) {
         String entityId = memento.getId();
         String entityType = checkNotNull(memento.getType(), "entityType of "+entityId);
-        Class<?> entityClazz = reflections.loadClass(entityType);
+        Class<? extends Entity> entityClazz = (Class<? extends Entity>) reflections.loadClass(entityType);
         
         if (InternalEntityFactory.isNewStyleEntity(managementContext, entityClazz)) {
+            // Not using entityManager.createEntity(EntitySpec) because don't want init() to be called
+            // TODO Need to rationalise this to move code into methods of InternalEntityFactory.
+            //      The InternalEntityFactory.constructEntity is used in three places:
+            //       1. normal entity creation (through entityManager.createEntity)
+            //       2. rebind (i.e. here)
+            //       3. yaml parsing
+            //      Purpose is to create a new (unconfigured/uninitialised) entity, but that is
+            //      known about by the managementContext and that has things like the right id and 
+            //      a proxy for if another entity needs to reference it during the init phase.
+            InternalEntityFactory entityFactory = managementContext.getEntityFactory();
+            Entity entity = entityFactory.constructEntity(entityClazz);
+            
+            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", entityId), entity);
+            if (entity instanceof AbstractApplication) {
+                FlagUtils.setFieldsFromFlags(ImmutableMap.of("mgmt", managementContext), entity);
+            }
+            managementContext.prePreManage(entity);
+            
             Class<?> entityInterface = managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)entityClazz);
-            EntitySpec<?> entitySpec = EntitySpec.create((Class)entityInterface).impl((Class)entityClazz).configure("id", entityId);
-            return managementContext.getEntityManager().createEntity(entitySpec);
+            EntitySpec<Entity> entitySpec = EntitySpec.create((Class)entityInterface)
+                    .impl((Class)entityClazz)
+                    .id(entityId);
+
+            ((AbstractEntity)entity).setProxy(entityFactory.createEntityProxy(entitySpec, entity));
+            
+            return entity;
+
         } else {
             // There are several possibilities for the constructor; find one that works.
             // Prefer passing in the flags because required for Application to set the management context
@@ -290,7 +317,6 @@ public class RebindManagerImpl implements RebindManager {
             Map<String,Object> flags = Maps.newLinkedHashMap();
             flags.put("id", entityId);
             if (AbstractApplication.class.isAssignableFrom(entityClazz)) flags.put("mgmt", managementContext);
-            
             return (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
         }
     }
@@ -304,7 +330,7 @@ public class RebindManagerImpl implements RebindManager {
         Class<?> locationClazz = reflections.loadClass(locationType);
 
         if (InternalLocationFactory.isNewStyleLocation(managementContext, locationClazz)) {
-            LocationSpec<?> locationSpec = LocationSpec.create((Class)locationClazz).configure("id", locationId);
+            LocationSpec<?> locationSpec = LocationSpec.create((Class)locationClazz).id(locationId);
             return managementContext.getLocationManager().createLocation(locationSpec);
         } else {
             // There are several possibilities for the constructor; find one that works.
