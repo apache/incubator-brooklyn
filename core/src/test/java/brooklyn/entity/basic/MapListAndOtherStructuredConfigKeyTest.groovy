@@ -79,7 +79,8 @@ public class MapListAndOtherStructuredConfigKeyTest {
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_PLAIN), v1)
     }
 
-    @Test(groups="WIP")
+    // TODO getConfig returns null; it iterated over the set to add each value so setting it to a null set was like a no-op
+    @Test(enabled=false)
     public void testSetConfigKeyAsEmptySet() throws Exception {
         Entity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class)
             .configure(TestEntity.CONF_SET_THING.getName(), ImmutableSet.of()));

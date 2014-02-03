@@ -35,11 +35,7 @@ public class TestEnricher extends AbstractEnricher {
         .build();
     
     public TestEnricher() {
-        this(Collections.emptyMap());
-    }
-    
-    public TestEnricher(Map<?, ?> properties) {
-        super(properties);
+        super();
     }
     
     public Map<?, ?> getLeftoverProperties() {

@@ -91,6 +91,4 @@ public interface EntityManager {
      */
     void unmanage(Entity e);
 
-    Iterable<Entity> getAllEntitiesInApplication(Application application);
-
 }

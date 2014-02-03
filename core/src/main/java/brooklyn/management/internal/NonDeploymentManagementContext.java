@@ -83,10 +83,6 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
     
     public void setManagementContext(ManagementContextInternal val) {
-        if (val == null && (val instanceof NonDeploymentManagementContext)) {
-            System.out.println("fafe");
-        }
-
         this.initialManagementContext = checkNotNull(val, "initialManagementContext");
         this.entityManager = new NonDeploymentEntityManager(val);
         this.locationManager = new NonDeploymentLocationManager(val);

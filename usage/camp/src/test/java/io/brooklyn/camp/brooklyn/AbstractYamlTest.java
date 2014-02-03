@@ -35,8 +35,7 @@ public abstract class AbstractYamlTest {
         launcher = new BrooklynCampPlatformLauncherNoServer();
         launcher.launch();
         brooklynMgmt = launcher.getBrooklynMgmt();
-        platform = launcher.getCampPlatform(); // FIXME Does this make sense?
-        //platform = new BrooklynCampPlatform(PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(), brooklynMgmt);
+        platform = launcher.getCampPlatform();
     }
 
     @AfterMethod(alwaysRun = true)

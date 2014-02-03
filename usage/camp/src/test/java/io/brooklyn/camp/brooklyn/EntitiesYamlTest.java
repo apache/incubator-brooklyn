@@ -18,6 +18,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
+import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 
@@ -150,7 +151,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         TestEntity testEntity = (TestEntity) entity;
         Object object = testEntity.getConfig(TestEntity.CONF_OBJECT);
         Assert.assertNotNull(object);
-        Assert.assertTrue(object instanceof AttributeSensor);
+        Assert.assertTrue(object instanceof AttributeSensor, "attributeSensor="+object);
         Assert.assertEquals(object, TestEntity.SEQUENCE);
     }
     
@@ -305,7 +306,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Iterable<Entity> entitiesInApp = ((EntityInternal)app).getExecutionContext().submit(MutableMap.of(), new Callable<Iterable<Entity>>() {
             @Override
             public Iterable<Entity> call() throws Exception {
-                return ((EntityInternal)app).getManagementContext().getEntityManager().getAllEntitiesInApplication((Application)app);
+                return ((EntityManagerInternal)((EntityInternal)app).getManagementContext().getEntityManager()).getAllEntitiesInApplication((Application)app);
             }
         }).get();
         

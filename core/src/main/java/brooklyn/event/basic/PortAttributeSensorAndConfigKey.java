@@ -106,8 +106,4 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
         return null;
     }
 
-    static {
-        // FIXME: Make sure the PortRanges class is loaded, so that required type coercions are registered!
-        PortRanges.init();
-    }
 }

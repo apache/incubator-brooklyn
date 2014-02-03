@@ -1,7 +1,5 @@
 package io.brooklyn.camp.brooklyn;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -23,8 +21,6 @@ import brooklyn.util.collections.MutableMap;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 
 @Test
 public class EnrichersYamlTest extends AbstractYamlTest {
@@ -41,7 +37,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
         
         Assert.assertEquals(app.getEnrichers().size(), 1);
         final Enricher enricher = app.getEnrichers().iterator().next();
-        Assert.assertTrue(enricher instanceof TestEnricher);
+        Assert.assertTrue(enricher instanceof TestEnricher, "enricher="+enricher);
         Assert.assertEquals(enricher.getConfig(TestEnricher.CONF_NAME), "Name from YAML");
         Assert.assertEquals(enricher.getConfig(TestEnricher.CONF_FROM_FUNCTION), "$brooklyn: is a fun place");
         
