@@ -331,7 +331,19 @@ public class RebindManagerImpl implements RebindManager {
             flags.put("id", entityId);
             if (AbstractApplication.class.isAssignableFrom(entityClazz)) flags.put("mgmt", managementContext);
             Entity entity = (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
+            
+            // In case the constructor didn't take the Map arg, then also set it here.
+            // e.g. for top-level app instances such as WebClusterDatabaseExampleApp will (often?) not have
+            // interface + constructor.
+            // TODO On serializing the memento, we should capture which interfaces so can recreate
+            // the proxy+spec (including for apps where there's not an obvious interface).
+            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", entityId), entity);
+            if (entity instanceof AbstractApplication) {
+                FlagUtils.setFieldsFromFlags(ImmutableMap.of("mgmt", managementContext), entity);
+            }
             ((AbstractEntity)entity).setManagementContext(managementContext);
+            managementContext.prePreManage(entity);
+            
             return entity;
         }
     }
