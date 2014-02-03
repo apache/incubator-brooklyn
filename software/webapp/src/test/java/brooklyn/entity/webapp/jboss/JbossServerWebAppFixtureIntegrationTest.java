@@ -12,6 +12,11 @@ import brooklyn.test.entity.TestApplication;
 
 public class JbossServerWebAppFixtureIntegrationTest extends AbstractWebAppFixtureIntegrationTest {
 
+    @Test(groups = "Integration", dataProvider = "basicEntities")
+    public void testReportsServiceDownWhenKilled(final SoftwareProcess entity) throws Exception {
+        super.testReportsServiceDownWhenKilled(entity);
+    }
+    
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
         TestApplication jboss6App = newTestApplication();

@@ -33,6 +33,13 @@ public interface RebindManager {
 
     public ChangeListener getChangeListener();
 
+    /**
+     * Starts the persisting of state (if persister is set; otherwise will start persisting as soon as
+     * persister is set). Until {@link #start()} is called, no data will be persisted but entities can 
+     * rebind.
+     */
+    public void start();
+
     public void stop();
 
     @VisibleForTesting

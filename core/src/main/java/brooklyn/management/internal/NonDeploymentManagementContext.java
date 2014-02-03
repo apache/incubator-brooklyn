@@ -356,6 +356,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         }
 
         @Override
+        public void start() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        
+        @Override
         public void stop() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }

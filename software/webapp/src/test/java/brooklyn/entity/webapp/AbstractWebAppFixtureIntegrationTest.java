@@ -189,6 +189,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
             
             newManagementContext = Entities.newManagementContext();
             newManagementContext.getRebindManager().rebind(getClass().getClassLoader());
+            newManagementContext.getRebindManager().start();
             SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(entity.getId());
             entity2.stop();
         } finally {

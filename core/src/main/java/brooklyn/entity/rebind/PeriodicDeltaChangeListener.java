@@ -18,6 +18,7 @@ import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -58,15 +59,26 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     private final BrooklynMementoPersister persister;
 
+    private final Duration period;
+    
     private final AtomicLong writeCount = new AtomicLong();
     
     private DeltaCollector deltaCollector = new DeltaCollector();
 
-    private volatile boolean running = true;
+    private volatile boolean running = false;
+
+    private volatile boolean stopped = false;
+
+    private volatile ScheduledTask scheduledTask;
 
     public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, long periodMillis) {
         this.executionManager = executionManager;
         this.persister = persister;
+        this.period = Duration.of(periodMillis, TimeUnit.MILLISECONDS);
+    }
+    
+    public void start() {
+        running = true;
         
         Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
             @Override public Task<Void> call() {
@@ -87,12 +99,18 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     }});
             }
         };
-        ScheduledTask scheduledTask = new ScheduledTask(taskFactory).period(periodMillis);
-        executionManager.submit(scheduledTask);
+        scheduledTask = (ScheduledTask) executionManager.submit(new ScheduledTask(taskFactory).period(period));
     }
     
     void stop() {
+        stopped = true;
         running = false;
+        if (scheduledTask != null) scheduledTask.cancel();
+
+        // Discard all state that was waiting to be persisted
+        synchronized (this) {
+            deltaCollector = new DeltaCollector();
+        }
     }
     
     /**
@@ -122,8 +140,19 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         }
     }
 
+    /**
+     * Indicates whether to persist things now. Even when not active, we will still store what needs
+     * to be persisted unless {@link #isStopped()}.
+     */
     private boolean isActive() {
-        return running && persister != null && !executionManager.isShutdown();
+        return running && persister != null && !isStopped();
+    }
+
+    /**
+     * Whether we have been stopped, in which case will not persist or store anything.
+     */
+    private boolean isStopped() {
+        return stopped || executionManager.isShutdown();
     }
     
     private void persistNow() {
@@ -182,21 +211,21 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @Override
     public synchronized void onManaged(Entity entity) {
-        if (isActive()) {
+        if (!isStopped()) {
             onChanged(entity);
         }
     }
 
     @Override
     public synchronized void onManaged(Location location) {
-        if (isActive()) {
+        if (!isStopped()) {
             onChanged(location);
         }
     }
     
     @Override
     public synchronized void onChanged(Entity entity) {
-        if (isActive()) {
+        if (!isStopped()) {
             deltaCollector.entities.add(entity);
 
             // FIXME How to let the policy/location tell us about changes? Don't do this every time!
@@ -216,7 +245,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @Override
     public synchronized void onUnmanaged(Entity entity) {
-        if (isActive()) {
+        if (!isStopped()) {
             deltaCollector.removedEntityIds.add(entity.getId());
             deltaCollector.entities.remove(entity);
         }
@@ -224,7 +253,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
 
     @Override
     public synchronized void onUnmanaged(Location location) {
-        if (isActive()) {
+        if (!isStopped()) {
             deltaCollector.removedLocationIds.add(location.getId());
             deltaCollector.locations.remove(location);
         }
@@ -232,14 +261,14 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
 
     @Override
     public synchronized void onChanged(Location location) {
-        if (isActive()) {
+        if (!isStopped()) {
             deltaCollector.locations.add(location);
         }
     }
     
     @Override
     public synchronized void onChanged(Policy policy) {
-        if (isActive()) {
+        if (!isStopped()) {
             deltaCollector.policies.add(policy);
         }
     }
