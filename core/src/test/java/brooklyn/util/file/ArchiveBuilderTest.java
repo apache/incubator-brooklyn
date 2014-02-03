@@ -13,8 +13,6 @@ import java.util.zip.ZipInputStream;
 
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -28,12 +26,13 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+/**
+ * Test the operation of the {@link ArchiveBuilder} class.
+ */
 @Test
 public class ArchiveBuilderTest {
 
-    private static final Logger log = LoggerFactory.getLogger(ArchiveBuilderTest.class);
-
-    private File tmpDir;
+    private File parentDir, tmpDir;
     private Predicate<ZipEntry> isDirectory = new Predicate<ZipEntry>() {
                 @Override
                 public boolean apply(@Nullable ZipEntry input) {
@@ -42,9 +41,10 @@ public class ArchiveBuilderTest {
             };
 
     @BeforeTest
-    public void createFiles() throws IOException {
-        tmpDir = new File(Os.tmp(), Os.mergePaths(Identifiers.makeRandomId(4), Identifiers.makeRandomId(4)));
-        // Os.deleteOnExitRecursively(tmpDir);
+    public void createTmpDirAndFiles() throws IOException {
+        parentDir = new File(Os.tmp(), Identifiers.makeRandomId(4));
+        Os.deleteOnExitRecursively(parentDir);
+        tmpDir = new File(parentDir, Identifiers.makeRandomId(4));
         Os.mkdirs(tmpDir);
         Files.write("abcdef", new File(tmpDir, "data01.txt"), Charsets.US_ASCII);
         Files.write("123456", new File(tmpDir, "data02.txt"), Charsets.US_ASCII);
@@ -53,7 +53,9 @@ public class ArchiveBuilderTest {
 
     @Test
     public void testCreateZipFromDir() throws Exception {
-        File archive = ArchiveBuilder.zip().add(tmpDir.getAbsolutePath()).create();
+        File archive = ArchiveBuilder.zip().entry(".", tmpDir).create();
+        archive.deleteOnExit();
+
         List<ZipEntry> entries = Lists.newArrayList();
         ZipInputStream input = new ZipInputStream(new FileInputStream(archive));
         ZipEntry entry = input.getNextEntry();
@@ -67,6 +69,7 @@ public class ArchiveBuilderTest {
         assertEquals(Iterables.size(directories), 1);
         assertEquals(Iterables.size(files), 3);
         String dirName = Iterables.getOnlyElement(directories).getName();
+        assertEquals(dirName, "./");
         for (ZipEntry file : files) {
             assertTrue(file.getName().startsWith(dirName));
         }
@@ -80,6 +83,8 @@ public class ArchiveBuilderTest {
             builder.add(new File(tmpDir, fileName).getAbsolutePath());
         }
         File archive = builder.create();
+        archive.deleteOnExit();
+
         List<ZipEntry> entries = Lists.newArrayList();
         ZipInputStream input = new ZipInputStream(new FileInputStream(archive));
         ZipEntry entry = input.getNextEntry();
@@ -101,12 +106,13 @@ public class ArchiveBuilderTest {
     @Test
     public void testCreateZipFromFilesWithBaseDir() throws Exception {
         ArchiveBuilder builder = ArchiveBuilder.zip();
-        String base = tmpDir.getParent();
-        String parent = tmpDir.getName();
+        String baseDir = tmpDir.getName();
         for (String fileName : Arrays.asList("data01.txt", "data02.txt", "data03.txt")) {
-            builder.add(base, Os.mergePaths(parent, fileName));
+            builder.add(parentDir.getPath(), Os.mergePaths(baseDir, fileName));
         }
         File archive = builder.create();
+        archive.deleteOnExit();
+
         List<ZipEntry> entries = Lists.newArrayList();
         ZipInputStream input = new ZipInputStream(new FileInputStream(archive));
         ZipEntry entry = input.getNextEntry();
@@ -120,7 +126,7 @@ public class ArchiveBuilderTest {
         assertTrue(Iterables.isEmpty(directories));
         assertEquals(Iterables.size(files), 3);
         for (ZipEntry file : files) {
-            assertTrue(file.getName().startsWith(parent));
+            assertTrue(file.getName().startsWith(baseDir));
         }
         input.close();
     }

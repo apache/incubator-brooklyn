@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.EnumSet;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
@@ -41,6 +40,10 @@ import com.google.common.io.Files;
 /**
  * Build a Zip or Jar archive.
  * <p>
+ * Supports creating temporary archives that will be deleted on exit, if no name is
+ * specified. The created file must be a Java archive type, with the extension {@code .zip},
+ * {@code .jar}, {@code .war} or {@code .ear}.
+ * <p>
  * Examples:
  * <pre> File zip = ArchiveBuilder.archive("data/archive.zip")
  *         .add("src", applicationDir + "/deploy/" + version + "/src/")
@@ -58,14 +61,23 @@ import com.google.common.io.Files;
  */
 public class ArchiveBuilder {
 
+    /**
+     * Create an {@link ArchiveBuilder} for an archive with the given name.
+     */
     public static ArchiveBuilder archive(String archive) {
         return new ArchiveBuilder(archive);
     }
 
+    /**
+     * Create an {@link ArchiveBuilder} for a {@link ArchiveType#ZIP Zip} format archive.
+     */
     public static ArchiveBuilder zip() {
         return new ArchiveBuilder(ArchiveType.ZIP);
     }
 
+    /**
+     * Create an {@link ArchiveBuilder} for a {@link ArchiveType#JAR Jar} format archive.
+     */
     public static ArchiveBuilder jar() {
         return new ArchiveBuilder(ArchiveType.JAR);
     }
@@ -75,24 +87,27 @@ public class ArchiveBuilder {
     private Manifest manifest;
     private Map<String, File> entries = Maps.newHashMap();
 
-    public ArchiveBuilder() {
+    private ArchiveBuilder() {
         this(ArchiveType.ZIP);
     }
 
-    public ArchiveBuilder(String filename) {
+    private ArchiveBuilder(String filename) {
         this(ArchiveType.of(filename));
 
         named(filename);
     }
 
-    public ArchiveBuilder(ArchiveType type) {
+    private ArchiveBuilder(ArchiveType type) {
         checkNotNull(type);
-        checkArgument(EnumSet.of(ArchiveType.ZIP, ArchiveType.JAR).contains(type));
+        checkArgument(ArchiveType.ZIP_ARCHIVES.contains(type));
 
         this.type = type;
         this.manifest = new Manifest();
     }
 
+    /**
+     * Set the name and location of the generated archive file.
+     */
     public ArchiveBuilder named(String name) {
         checkNotNull(name);
         String ext = Files.getFileExtension(name);
@@ -105,62 +120,119 @@ public class ArchiveBuilder {
         return this;
     }
 
+    /**
+     * @see #named(String)
+     */
     public ArchiveBuilder named(File file) {
         checkNotNull(file);
         return named(file.getPath());
     }
 
+    /**
+     * Add a manifest entry with the given {@literal key} and {@literal value}.
+     */
     public ArchiveBuilder manifest(Object key, Object value) {
         manifest.getMainAttributes().put(key, value);
         return this;
     }
 
-    public ArchiveBuilder add(String file) {
-        checkNotNull(file, "file");
-        File path = new File(Os.tidyPath(file));
-        if (path.isAbsolute()) {
-            entries.put(path.getName(), path.getAbsoluteFile());
+    /**
+     * Add the file located at the {@literal filePath} to the archive.
+     * <p>
+     * If the {literal filePath} is absolute, the file is added as a top-level entry
+     * to the archive using the file name only. For relative {@literal filePath}s the
+     * file is added using the path given and is assumed to be located relative to
+     * the current working directory. No checks for file existence are made at this
+     * stage.
+     */
+    public ArchiveBuilder add(String filePath) {
+        checkNotNull(filePath, "file");
+        File fullPath = new File(Os.tidyPath(filePath));
+        if (fullPath.isAbsolute()) {
+            return entry(fullPath.getName(), fullPath.getAbsoluteFile());
         } else {
-            entries.put(file, path);
+            return entry(filePath, fullPath);
         }
-        return this;
     }
 
-    public ArchiveBuilder add(String base, String file) {
-        checkNotNull(base, "base");
+    /**
+     * Add the file located at the {@literal filePath}, relative to the {@literal baseDir},
+     * to the archive.
+     * <p>
+     * Uses the {@literal filePath} as the name of the file in the archive. Note that the
+     * two path components are simply concatenated using {@link Os#mergePaths(String...)}
+     * which may not behave as expected if the {@literal filePath} is absolute. Use the
+     * {@link #entry(String, File)} or {@link #addAll(Map)} methods for complete control
+     * over file locations and names.
+     */
+    public ArchiveBuilder add(String baseDir, String filePath) {
+        checkNotNull(baseDir, "baseDir");
+        checkNotNull(filePath, "filePath");
+        return entry(filePath, new File(Os.mergePaths(baseDir, filePath)));
+    }
+
+    /**
+     * Add the {@literal file} to the archive with the path {@literal entryPath}.
+     */
+    public ArchiveBuilder entry(String entryPath, File file) {
+        checkNotNull(entryPath, "baseDir");
         checkNotNull(file, "file");
-        File path = new File(Os.tidyPath(base), Os.tidyPath(file));
-        entries.put(file, path);
+        entries.put(entryPath, file);
         return this;
     }
 
+    /**
+     * Add the collection of {@literal files} to the archive.
+     * <p>
+     * Uses {@link #add(String)} on each element.
+     */
     public ArchiveBuilder add(Iterable<String> files) {
         checkNotNull(files, "files");
-        for (String file : files) {
-            add(file);
+        for (String filePath : files) {
+            add(filePath);
         }
         return this;
     }
 
-    public ArchiveBuilder add(String base, Iterable<String> files) {
-        checkNotNull(base, "base");
+    /**
+     * Add the collection of {@literal files}, relative to the {@literal baseDir}, to
+     * the archive.
+     * <p>
+     * Uses {@link #add(String, String)} on each element.
+     */
+    public ArchiveBuilder add(String baseDir, Iterable<String> files) {
+        checkNotNull(baseDir, "baseDir");
         checkNotNull(files, "files");
-        for (String file : files) {
-            add(base, file);
+        for (String filePath : files) {
+            add(baseDir, filePath);
         }
         return this;
     }
 
+    /**
+     * Add a {@link Map} of entries to the archive.
+     * <p>
+     * The keys should be the names of the file entries to be added to the archive and
+     * the associated {@link File} value should point to the actual file to add. This
+     * allows complete control over the directory structure of the eventual archive, as
+     * the file names do not need to bear any relationship to the location of the files
+     * on the filesystem.
+     */
     public ArchiveBuilder addAll(Map<String, File> entries) {
         checkNotNull(entries, "entries");
         this.entries.putAll(entries);
         return this;
     }
 
+    /**
+     * Generates the archive and ouputs it to the given stream, ignoring any file name.
+     * <p>
+     * This will add a manifest filw if the type is a Jar archive.
+     */
     public void stream(OutputStream output) {
         try {
             JarOutputStream target;
-            if (type == ArchiveType.JAR) {
+            if (type == ArchiveType.JAR) { // TODO what about War and Ear types?
                 manifest(Attributes.Name.MANIFEST_VERSION, "1.0");
                 target = new JarOutputStream(output, manifest);
             } else {
@@ -175,10 +247,19 @@ public class ArchiveBuilder {
         }
     }
 
-    public File create(String archive) {
-        return named(archive).create();
+    /**
+     * Generates the archive, saving it with the given name.
+     */
+    public File create(String archiveFile) {
+        return named(archiveFile).create();
     }
 
+    /**
+     * Generates the archive.
+     * <p>
+     * If no name has been specified, the archive will be created as a tenporary file with
+     * a unique name, that is deleted on exit. Otherwise, the given name will be used.
+     */
     public File create() {
         if (archive == null) {
             File temp = new File(Os.tmp(), "brooklyn-archive-" + Identifiers.makeRandomId(6));
@@ -197,8 +278,8 @@ public class ArchiveBuilder {
 
     // Code adapted from example in http://stackoverflow.com/questions/1281229/how-to-use-jaroutputstream-to-create-a-jar-file
     // but modified so that given an absolute dir the entries in the jar file will all be relative.
-
     // TODO Probably doesn't handle symbolic links etc
+
     private void entry(String path, File source, JarOutputStream target) throws IOException {
         String name = path.replace("\\", "/");
         if (source.isDirectory()) {

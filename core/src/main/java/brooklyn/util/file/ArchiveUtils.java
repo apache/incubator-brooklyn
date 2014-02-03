@@ -19,9 +19,11 @@ import static java.lang.String.format;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +43,13 @@ public class ArchiveUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ArchiveUtils.class);
 
+    /** Number of attempts when copying a file to a remote server. */
+    // TODO Make this a ConfigKey on the machine location
     public static final int NUM_RETRIES_FOR_COPYING = 5;
 
+    /**
+     * The types of archive that are supported by Brooklyn.
+     */
     public static enum ArchiveType {
         TAR,
         TGZ,
@@ -51,6 +58,11 @@ public class ArchiveUtils {
         WAR,
         EAR,
         UNKNOWN;
+
+        /**
+         * Zip format archives used by Java.
+         */
+        public static Set<ArchiveType> ZIP_ARCHIVES = EnumSet.of(ArchiveType.ZIP, ArchiveType.JAR, ArchiveType.WAR, ArchiveType.EAR);
 
         public static ArchiveUtils.ArchiveType of(String filename) {
             if (filename == null) return null;
@@ -76,9 +88,12 @@ public class ArchiveUtils {
         }
     }
 
-    public static List<String> installCommands(String filename) {
+    /**
+     * Returns the list of commands used to install support for an archive with the given name.
+     */
+    public static List<String> installCommands(String fileName) {
         List<String> commands = new LinkedList<String>();
-        switch (ArchiveType.of(filename)) {
+        switch (ArchiveType.of(fileName)) {
             case TAR:
             case TGZ:
                 commands.add(BashCommands.INSTALL_TAR);
@@ -95,6 +110,13 @@ public class ArchiveUtils {
         return commands;
     }
 
+    /**
+     * Returns the list of commands used to extract the contents of the archive with the given name.
+     * <p>
+     * Optionally, Java archives of type
+     *
+     * @see #extractCommands(String, String)
+     */
     public static List<String> extractCommands(String fileName, String sourceDir, String targetDir, boolean extractJar) {
         List<String> commands = new LinkedList<String>();
         commands.add("cd " + targetDir);
@@ -123,20 +145,30 @@ public class ArchiveUtils {
         return commands;
     }
 
+    /**
+     * Returns the list of commands used to extract the contents of the archive with the given name.
+     * <p>
+     * The archive will be extracted in its current directory unless it is a Java archive of type {@code .jar},
+     * {@code .war} or {@code .ear}, which will be left as is.
+     *
+     * @see #extractCommands(String, String, String, boolean)
+     */
     public static List<String> extractCommands(String fileName, String sourceDir) {
         return extractCommands(fileName, sourceDir, ".", false);
     }
 
     /**
-     * Deploys an archive file from the given URL to a directory on a remote machine and extracts the contents.
+     * Deploys an archive file to a remote machine and extracts the contents.
      * <p>
-     * If the URL is a local directory, the contents are packaged as a Zip archive first.
+     * Copies the archive file from the given URL to the destination directory and extracts
+     * the contents. If the URL is a local directory, the contents are packaged as a Zip archive first.
      *
      * @see #deploy(String, SshMachineLocation, String, String)
+     * @see #deploy(Map, String, SshMachineLocation, String, String, String)
      */
     public static void deploy(String archiveUrl, SshMachineLocation machine, String destDir) {
         if (Urls.isDirectory(archiveUrl)) {
-            File zipFile = ArchiveBuilder.zip().add(archiveUrl).create();
+            File zipFile = ArchiveBuilder.zip().entry(".", new File(archiveUrl)).create();
             archiveUrl = zipFile.getAbsolutePath();
         }
 
@@ -147,15 +179,28 @@ public class ArchiveUtils {
         deploy(archiveUrl, machine, destDir, destFile);
     }
 
+    /**
+     * Deploys an archive file to a remote machine and extracts the contents.
+     * <p>
+     * Copies the archive file from the given URL to a file in the destination directory and extracts
+     * the contents.
+     *
+     * @see #deploy(String, SshMachineLocation, String)
+     * @see #deploy(Map, String, SshMachineLocation, String, String, String)
+     */
     public static void deploy(String archiveUrl, SshMachineLocation machine, String destDir, String destFile) {
         deploy(MutableMap.<String, Object>of(), archiveUrl, machine, destDir, destDir, destFile);
     }
 
     /**
-     * Deploys an archive file from the given URL to a remote machine and extracts the contents.
+     * Deploys an archive file to a remote machine and extracts the contents.
      * <p>
-     * For Java archives of type Jar, War and Ear, the file is simply copied.
+     * Copies the archive file from the given URL to a file in a temporary directory and extracts
+     * the contents in the destination directory. For Java archives of type {@code .jar},
+     * {@code .war} or {@code .ear} the file is simply copied.
      *
+     * @see #deploy(String, SshMachineLocation, String)
+     * @see #deploy(Map, String, SshMachineLocation, String, String, String)
      * @see #install(SshMachineLocation, String, String, int)
      */
     public static void deploy(Map<String, ?> sshProps, String archiveUrl, SshMachineLocation machine, String tmpDir, String destDir, String destFile) {
@@ -179,10 +224,21 @@ public class ArchiveUtils {
         }
     }
 
+    /**
+     * Installs a URL onto a remote machine.
+     *
+     * @see #install(Map, SshMachineLocation, String, String, int)
+     */
     public static int install(SshMachineLocation machine, String urlToInstall, String target) {
         return install(MutableMap.<String, Object>of(), machine, urlToInstall, target, NUM_RETRIES_FOR_COPYING);
     }
 
+    /**
+     * Installs a URL onto a remote machine.
+     *
+     * @see #install(SshMachineLocation, String, String)
+     * @see SshMachineLocation#installTo(Map, String, String)
+     */
     public static int install(Map<String, ?> sshProps, SshMachineLocation machine, String urlToInstall, String target, int numAttempts) {
         Exception lastError = null;
         int retriesRemaining = numAttempts;
@@ -206,6 +262,11 @@ public class ArchiveUtils {
         throw Exceptions.propagate(lastError);
     }
 
+    /**
+     * Copies the entire contents of a file to a String.
+     *
+     * @see com.google.common.io.Files#toString(File, java.nio.charset.Charset)
+     */
     public static String readFullyString(File sourceFile) {
         try {
             return Files.toString(sourceFile, Charsets.UTF_8);
