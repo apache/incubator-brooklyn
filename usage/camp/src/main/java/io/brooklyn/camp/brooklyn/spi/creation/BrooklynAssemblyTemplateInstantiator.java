@@ -117,7 +117,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                 
                 if (!Strings.isEmpty(name)) appBuilder.appDisplayName(name);
         
-                // TODO use addEntityConfig instead
+                // TODO use buildEntityConfig instead
                 final Map<?,?> configO = (Map<?,?>) template.getCustomAttributes().get("brooklyn.config");
 
                 log.info("REST placing '{}' under management", appBuilder);
@@ -129,7 +129,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                     ((EntityInternal)instance).addLocations(locations);
                 
             } else if (Application.class.isAssignableFrom(clazz)) {
-                // TODO use addEntityConfig instead
+                // TODO use buildEntityConfig instead
                 final Map<?,?> configO = (Map<?,?>) template.getCustomAttributes().get("brooklyn.config");
                 
                 brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
@@ -466,22 +466,4 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         }
         return enricherSpecs;
     }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected void addEntityConfig(EntitySpec<? extends Entity> child, Map<?, ?> config) {
-        if (config==null) 
-            return ;
-        
-        for (Map.Entry<?,?> entry: config.entrySet()) {
-            // set as config key (rather than flags) so that it is inherited
-            Object key = entry.getKey();
-            if (key instanceof ConfigKey)
-                child.configure( (ConfigKey)key, entry.getValue() );
-            else if (key instanceof HasConfigKey)
-                child.configure( (HasConfigKey)key, entry.getValue() );
-            else
-                child.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), entry.getValue());
-        }
-    }
-
 }
