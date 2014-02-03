@@ -308,6 +308,7 @@ public class RebindManagerImpl implements RebindManager {
                 FlagUtils.setFieldsFromFlags(ImmutableMap.of("mgmt", managementContext), entity);
             }
             managementContext.prePreManage(entity);
+            ((AbstractEntity)entity).setManagementContext(managementContext);
             
             Class<?> entityInterface = managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)entityClazz);
             EntitySpec<Entity> entitySpec = EntitySpec.create((Class)entityInterface)
@@ -325,7 +326,9 @@ public class RebindManagerImpl implements RebindManager {
             Map<String,Object> flags = Maps.newLinkedHashMap();
             flags.put("id", entityId);
             if (AbstractApplication.class.isAssignableFrom(entityClazz)) flags.put("mgmt", managementContext);
-            return (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
+            Entity entity = (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
+            ((AbstractEntity)entity).setManagementContext(managementContext);
+            return entity;
         }
     }
     
