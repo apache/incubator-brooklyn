@@ -82,8 +82,18 @@ public class RebindTestUtils {
     public static LocalManagementContext newPersistingManagementContext(File mementoDir, ClassLoader classLoader) {
         return newPersistingManagementContext(mementoDir, classLoader, 100);
     }
-    
+
     public static LocalManagementContext newPersistingManagementContext(File mementoDir, ClassLoader classLoader, long persistPeriodMillis) {
+        LocalManagementContext result = newPersistingManagementContextUnstarted(mementoDir, classLoader, persistPeriodMillis);
+        result.getRebindManager().start();
+        return result;
+    }
+
+    public static LocalManagementContext newPersistingManagementContextUnstarted(File mementoDir, ClassLoader classLoader) {
+        return newPersistingManagementContextUnstarted(mementoDir, classLoader, 100);
+    }
+    
+    public static LocalManagementContext newPersistingManagementContextUnstarted(File mementoDir, ClassLoader classLoader, long persistPeriodMillis) {
         checkArgument(persistPeriodMillis > 0, "persistPeriodMillis must be greater than 0; was "+persistPeriodMillis);
         LocalManagementContext result = new LocalManagementContext();
         BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
@@ -95,8 +105,9 @@ public class RebindTestUtils {
     public static Application rebind(File mementoDir, ClassLoader classLoader) throws Exception {
         LOG.info("Rebinding app, using directory "+mementoDir);
         
-        LocalManagementContext newManagementContext = newPersistingManagementContext(mementoDir, classLoader);
+        LocalManagementContext newManagementContext = newPersistingManagementContextUnstarted(mementoDir, classLoader);
         List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        newManagementContext.getRebindManager().start();
         return newApps.get(0);
     }
 
@@ -106,6 +117,7 @@ public class RebindTestUtils {
         BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
         newManagementContext.getRebindManager().setPersister(newPersister);
         List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        newManagementContext.getRebindManager().start();
         return newApps.get(0);
     }
 

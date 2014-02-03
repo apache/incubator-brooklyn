@@ -57,7 +57,7 @@ public class RebindManagerImpl implements RebindManager {
 
     private volatile long periodicPersistPeriod = 1000;
     
-    private volatile boolean running = true;
+    private volatile boolean running = false;
     
     private final ManagementContextInternal managementContext;
 
@@ -85,15 +85,23 @@ public class RebindManagerImpl implements RebindManager {
         }
         this.persister = checkNotNull(val, "persister");
         
+        this.realChangeListener = new PeriodicDeltaChangeListener(managementContext.getExecutionManager(), persister, periodicPersistPeriod);
+        this.changeListener = new SafeChangeListener(realChangeListener);
+        
         if (running) {
-            this.realChangeListener = new PeriodicDeltaChangeListener(managementContext.getExecutionManager(), persister, periodicPersistPeriod);
-            this.changeListener = new SafeChangeListener(realChangeListener);
+            realChangeListener.start();
         }
     }
 
     @Override
     public BrooklynMementoPersister getPersister() {
         return persister;
+    }
+    
+    @Override
+    public void start() {
+        running = true;
+        if (realChangeListener != null) realChangeListener.start();
     }
     
     @Override
