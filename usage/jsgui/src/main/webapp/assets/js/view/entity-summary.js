@@ -25,7 +25,7 @@ define([
             // TODO we should have a backbone object exported from the sensors view which we can listen to here
             // (currently we just take the URL from that view) - and do the same for active tasks;
             if (this.options.sensors) {
-                ViewUtils.getRepeatedlyWithDelay(this, this.options.sensors.getSensorUpdateUrl(), 
+                ViewUtils.getRepeatedlyWithDelay(this, this.options.sensors.getSensorUpdateUrl(),
                     function(data) { that.updateWithData(data) });
             } else {
                 // e.g. in tests
@@ -70,21 +70,13 @@ define([
             }
         },
         updateWithData: function (data) {
-            var that = this
-            that.revealIfHasValue("service.isUp", that.$(".serviceUp"), null, data)
-            that.revealIfHasValue("service.state", that.$(".status"), null, data)
-            
-            that.revealIfHasValue("webapp.url", that.$(".url"),
+            this.revealIfHasValue("service.isUp", this.$(".serviceUp"), null, data)
+            this.revealIfHasValue("service.state", this.$(".status"), null, data)
+            this.revealIfHasValue("webapp.url", this.$(".url"),
                     function(data) { return "<a href='"+_.escape(data)+"'>"+_.escape(data)+"</img>" }, data)
         },
         updateSensorsNow: function() {
-            // hard-coded display of the most commonly used sensors
-            
-            this.revealIfHasValue("service.isUp", this.$(".serviceUp"))
-            this.revealIfHasValue("service.state", this.$(".status"))
-            
-            this.revealIfHasValue("webapp.url", this.$(".url"),
-                    function(data) { return "<a href='"+_.escape(data)+"'>"+_.escape(data)+"</img>" })
+            this.updateWithData();
         },
         
         updateStatusIcon: function() {

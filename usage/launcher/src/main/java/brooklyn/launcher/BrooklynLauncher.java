@@ -99,9 +99,9 @@ public class BrooklynLauncher {
      * Specifies that the launcher should manage the given Brooklyn application.
      * The application must not yet be managed. 
      * The application will not be started as part of this call (callers can
-     * subsequently call {@link start()} or {@link getApplications()}.
+     * subsequently call {@link #start()} or {@link #getApplications()}.
      * 
-     * @see application(ApplicationBuilder)
+     * @see #application(ApplicationBuilder)
      */
     public BrooklynLauncher application(Application app) {
         if (Entities.isManaged(app)) throw new IllegalArgumentException("Application must not already be managed");
@@ -113,9 +113,9 @@ public class BrooklynLauncher {
      * Specifies that the launcher should build and manage the given Brooklyn application.
      * The application must not yet be managed. 
      * The application will not be started as part of this call (callers can
-     * subsequently call {@link start()} or {@link getApplications()}.
+     * subsequently call {@link #start()} or {@link #getApplications()}.
      * 
-     * @see application(Application)
+     * @see #application(Application)
      */
     public BrooklynLauncher application(ApplicationBuilder appBuilder) {
         appBuildersToManage.add(checkNotNull(appBuilder, "appBuilder"));
@@ -126,9 +126,9 @@ public class BrooklynLauncher {
      * Specifies that the launcher should build and manage the Brooklyn application
      * described by the given spec.
      * The application will not be started as part of this call (callers can
-     * subsequently call {@link start()} or {@link getApplications()}.
+     * subsequently call {@link #start()} or {@link #getApplications()}.
      * 
-     * @see application(Application)
+     * @see #application(Application)
      */
     public BrooklynLauncher application(EntitySpec<? extends StartableApplication> appSpec) {
         appBuildersToManage.add(new ApplicationBuilder(checkNotNull(appSpec, "appSpec")) {
@@ -138,7 +138,7 @@ public class BrooklynLauncher {
     }
     
     /**
-     * Adds a location to be passed in on {@link start()}, when that calls
+     * Adds a location to be passed in on {@link #start()}, when that calls
      * {@code application.start(locations)}.
      */
     public BrooklynLauncher location(Location location) {
@@ -149,7 +149,7 @@ public class BrooklynLauncher {
     /**
      * Give the spec of an application, to be created.
      * 
-     * @see location(Location)
+     * @see #location(Location)
      */
     public BrooklynLauncher location(String spec) {
         locationSpecs.add(checkNotNull(spec, "spec"));

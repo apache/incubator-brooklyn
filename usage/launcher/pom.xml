@@ -18,6 +18,10 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
+    <properties>
+        <camp.version>0.1.0-SNAPSHOT</camp.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
@@ -36,12 +40,12 @@
         <dependency>
             <groupId>io.brooklyn.camp</groupId>
             <artifactId>camp-server</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>${camp.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brooklyn.camp</groupId>
             <artifactId>camp-server</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>${camp.version}</version>
             <scope>test</scope>
             <classifier>tests</classifier>
         </dependency>
