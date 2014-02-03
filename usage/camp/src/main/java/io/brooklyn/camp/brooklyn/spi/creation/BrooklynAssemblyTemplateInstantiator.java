@@ -281,8 +281,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         if (locations != null)
             spec.locations(locations);
         
-        spec.policySpecs(buildPolicySpecs(attrs.remove("brooklyn.policies")));
-        spec.enricherSpecs(buildEnricherSpecs(attrs.remove("brooklyn.enrichers")));
+        spec.policySpecs(buildPolicySpecs(mgmt, attrs.remove("brooklyn.policies")));
+        spec.enricherSpecs(buildEnricherSpecs(mgmt, attrs.remove("brooklyn.enrichers")));
         spec.configure(buildEntityConfig(attrs));
         
         return spec;
@@ -310,8 +310,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         if (childLocations != null)
             spec.locations(childLocations);
         
-        spec.policySpecs(buildPolicySpecs(customAttrs.remove("brooklyn.policies")));
-        spec.enricherSpecs(buildEnricherSpecs(customAttrs.remove("brooklyn.enrichers")));
+        spec.policySpecs(buildPolicySpecs(mgmt, customAttrs.remove("brooklyn.policies")));
+        spec.enricherSpecs(buildEnricherSpecs(mgmt, customAttrs.remove("brooklyn.enrichers")));
         spec.configure(buildEntityConfig(customAttrs));
         
         return spec;
@@ -419,7 +419,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         return result;
     }
     
-    private List<PolicySpec<?>> buildPolicySpecs(Object policies) {
+    private List<PolicySpec<?>> buildPolicySpecs(ManagementContext mgmt, Object policies) {
         List<PolicySpec<?>> policySpecs = new ArrayList<PolicySpec<? extends Policy>>(); 
         if (policies instanceof Iterable) {
             for (Object policy : (Iterable<Object>)policies) {
@@ -427,8 +427,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                     String policyTypeName = ((Map<?, ?>) policy).get("policyType").toString();
                     Class<? extends Policy> policyType = null;
                     try {
-                        // TODO: Is there a better way of getting this than Class.forName()?
-                        policyType = (Class<? extends Policy>) Class.forName(policyTypeName);
+                        policyType = (Class<? extends Policy>) loadClass(mgmt.getCatalog(), policyTypeName);
                     } catch (ClassNotFoundException e) {
                         throw Exceptions.propagate(e);
                     }
@@ -444,7 +443,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         return policySpecs;
     }
     
-    private List<EnricherSpec<?>> buildEnricherSpecs(Object enrichers) {
+    private List<EnricherSpec<?>> buildEnricherSpecs(ManagementContext mgmt, Object enrichers) {
         List<EnricherSpec<?>> enricherSpecs = Lists.newArrayList();
         if (enrichers instanceof Iterable) {
             for (Object enricher : (Iterable<Object>)enrichers) {
@@ -452,7 +451,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                     String enricherTypeName = ((Map<?, ?>) enricher).get("enricherType").toString();
                     Class<? extends Enricher> enricherType = null;
                     try {
-                        enricherType = ((Class<? extends Enricher>) Class.forName(enricherTypeName));
+                        enricherType = (Class<? extends Enricher>) loadClass(mgmt.getCatalog(), enricherTypeName);
                     } catch (ClassNotFoundException e) {
                         throw Exceptions.propagate(e);
                     }
