@@ -27,6 +27,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
 import brooklyn.entity.trait.Startable;
@@ -41,6 +42,7 @@ import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.net.Networking;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Duration;
@@ -436,14 +438,16 @@ public class BrooklynLauncher {
                     }
                 }
     
+                RebindManager rebindManager = managementContext.getRebindManager();
                 BrooklynMementoPersister persister = new BrooklynMementoPersisterToMultiFile(persistenceDir, managementContext.getCatalog().getRootClassLoader());
-                ((RebindManagerImpl)managementContext.getRebindManager()).setPeriodicPersistPeriod(persistPeriod);
-                managementContext.getRebindManager().setPersister(persister);
+                ((RebindManagerImpl)rebindManager).setPeriodicPersistPeriod(persistPeriod);
+                rebindManager.setPersister(persister);
                 
                 if (rebinding) {
                     ClassLoader classLoader = managementContext.getCatalog().getRootClassLoader();
-                    managementContext.getRebindManager().rebind(classLoader);
+                    rebindManager.rebind(classLoader);
                 }
+                rebindManager.start();
             }
         } catch (Exception e) {
             throw Exceptions.propagate(e);
@@ -508,6 +512,8 @@ public class BrooklynLauncher {
                 Stopwatch stopwatch = Stopwatch.createStarted();
                 managementContext.getRebindManager().waitForPendingComplete(10, TimeUnit.SECONDS);
                 LOG.info("Finished waiting for persist; took "+Time.makeTimeStringRounded(stopwatch));
+            } catch (RuntimeInterruptedException e) {
+                Thread.currentThread().interrupt(); // keep going with shutdown
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // keep going with shutdown
             } catch (TimeoutException e) {
