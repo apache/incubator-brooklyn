@@ -22,7 +22,7 @@
         // async deliberately excluded
         "text":"js/libs/text",
         "uri":"js/libs/URI",
-        "zeroclipboard":"js/libs/ZeroClipboard.js",
+        "zeroclipboard":"js/libs/ZeroClipboard",
 
         "model":"js/model",
         "view":"js/view",

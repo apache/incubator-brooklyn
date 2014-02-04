@@ -31,14 +31,23 @@ define([
             'click .refresh': 'updateSensorsNow',
             'click .filterEmpty':'toggleFilterEmpty',
             'click .toggleAutoRefresh':'toggleAutoRefresh',
-            'click .valueOpen':'valueOpen',
+            
+            'mouseup .valueOpen':'valueOpen',
+            'mouseover #sensors-table tbody tr':'noteFloatMenuActive',
+            'mouseout #sensors-table tbody tr':'noteFloatMenuSeemsInactive',
             'mouseover .floatGroup':'noteFloatMenuActive',
             'mouseout .floatGroup':'noteFloatMenuSeemsInactive',
             'mouseover .clipboard-item':'noteFloatMenuActiveCI',
             'mouseout .clipboard-item':'noteFloatMenuSeemsInactiveCI',
             'mouseover .hasFloatLeft':'showFloatLeft',
-            'mouseover .hasFloatDown':'showFloatDown',
-            'click .light-popup-menu-item':'closeFloatMenuNow'
+            'mouseover .hasFloatDown':'enterFloatDown',
+            'mouseout .hasFloatDown':'exitFloatDown',
+            'mouseup .light-popup-menu-item':'closeFloatMenuNow',
+
+            // these have no effect: you must register on the zeroclipboard object, below
+            // (presumably the same for the .clipboard-item event listeners above, but unconfirmed)
+//            'mouseup .clipboard-item':'closeFloatMenuNow',
+//            'mouseup .global-zeroclipboard-container object':'closeFloatMenuNow',
         },
 
         initialize:function () {
@@ -121,7 +130,7 @@ define([
                                              "<div class='light-popup-menu-item handy valueCopy actions-json-copy clipboard-item' copy-value='"+
                                                  jsonUrl+"'>Copy REST Link</div>";
                                          if (downMenu=="") {
-                                             log("no actions for "+sensorName);
+//                                             log("no actions for "+sensorName);
                                              downMenu += 
                                                  "<div class='light-popup-menu-item'>(no actions)</div>";
                                          }
@@ -150,17 +159,37 @@ define([
                 var text = $(this).attr('copy-value');
                 if (!text) text = $(this).closest('.floatGroup').find('.value').html();
                 try {
+//                    log("Copying text '"+text+"' to clipboard");
                     client.setText(text);
+                    
+                    var $widget = $(this);
+                    var oldHtml = $widget.html();
+                    var fnRestore = _.once(function() { $widget.html(oldHtml); });
+                    // show the word copied for feedback;
+                    // NB this occurs on mousedown, due to how flash plugin works
+                    // (same style of feedback and interaction as github)
+                    // the other "clicks" are now triggered by *mouseup*
+                    $widget.html('<b>Copied!</b>');
+                    setTimeout(fnRestore, 3000);
+                    
+                    // these listeners stay registered until page is reloaded
+                    // but they do nothing after first run, due to use of _.once
+                    // however the timeout is good enough, and actually desired
+                    // because on corner case of mousedown-moveaway-mouseup,
+                    // we want to keep the feedback; so they work, but are disabled for now.
+                    // (remove once we are happy with this behaviour, since Feb 2014)
+//                    that.zeroClipboard.on( "mouseout", fnRestore);
+//                    that.zeroClipboard.on( "mouseup", fnRestore);
                 } catch (e) {
                     log("Zeroclipboard failure; falling back to prompt mechanism");
                     log(e);
                     Util.promptCopyToClipboard(text);
                 }
-                that.closeFloatMenuNow();
             });
             // these seem to arrive delayed sometimes, so we also work with the clipboard-item class events
             this.zeroClipboard.on( "mouseover", function() { that.noteFloatMenuZeroClipboardItem(true, this); } );
             this.zeroClipboard.on( "mouseout", function() { that.noteFloatMenuZeroClipboardItem(false, this); } );
+            this.zeroClipboard.on( "mouseup", function() { that.closeFloatMenuNow(); } );
             
             ViewUtils.addFilterEmptyButton(this.table);
             ViewUtils.addAutoRefreshButton(this.table);
@@ -178,22 +207,48 @@ define([
          * its ancestors *lose* focus - we have to suppress the event which makes the
          * float group disappear.  i have left logging in, commented out, for more debugging.
          * there are notes that ZeroClipboard 2.0 will support hover properly.
+         * 
+         * see git commit history and review comments in https://github.com/brooklyncentral/brooklyn/pull/1171
+         * for more information.
          */
         floatMenuActive: false,
-        lastFloatMenu: null,
-        lastFloatFocusIn: null,
+        lastFloatMenuRowId: null,
+        lastFloatFocusInTextForEventUnmangling: null,
         updateFloatMenus: function() { this.zeroClipboard.clip( $('.valueCopy') ); },
         showFloatLeft: function(event) {
             this.noteFloatMenuFocusChange(true, event, "show-left");
-            $(event.currentTarget).next('.floatLeft').show(); },
-        showFloatDown: function(event) {
+            this.showFloatLeftOf($(event.currentTarget));
+        },
+        showFloatLeftOf: function($hasFloatLeft) {
+            $hasFloatLeft.next('.floatLeft').show(); 
+        },
+        enterFloatDown: function(event) {
             this.noteFloatMenuFocusChange(true, event, "show-down");
-            var down = $(event.currentTarget).next('.floatDown');
+//            log("entering float down");
+            var fdTarget = $(event.currentTarget);
+//            log( fdTarget );
+            this.floatDownFocus = fdTarget;
+            var that = this;
+            setTimeout(function() {
+                that.showFloatDownOf( fdTarget );
+            }, 200);
+        },
+        exitFloatDown: function(event) {
+//            log("exiting float down");
+            this.floatDownFocus = null;
+        },
+        showFloatDownOf: function($hasFloatDown) {
+            if ($hasFloatDown != this.floatDownFocus) {
+//                log("float down did not hover long enough");
+                return;
+            }
+            var down = $hasFloatDown.next('.floatDown');
             down.show();
-            $('.light-popup', down).show(); 
+            $('.light-popup', down).show(2000); 
         },
         noteFloatMenuActive: function(focus) { 
             this.noteFloatMenuFocusChange(true, focus, "menu");
+            
             // remove dangling zc events (these don't always get removed, apparent bug in zc event framework)
             // this causes it to flash sometimes but that's better than leaving the old item highlighted
             if (focus.toElement && $(focus.toElement).hasClass('clipboard-item')) {
@@ -224,32 +279,33 @@ define([
         noteFloatMenuFocusChange: function(seemsActive, focus, caller) {
 //            log(""+new Date().getTime()+" note active "+caller+" "+seemsActive);
             var delayCheckFloat = true;
-            var fg = null;
+            var focusRowId = null;
+            var focusElement = null;
             if (focus) {
-                var focusElement = focus.target ? focus.target : focus;
+                focusElement = focus.target ? focus.target : focus;
                 if (seemsActive) {
-                    this.lastFloatFocusIn = $(focusElement).text();
-                    fg = focus.target ? $(focus.target).closest('tr').attr('id') : $(focus).closest('tr').attr('id');
-                    if (this.floatMenuActive && fg==this.lastFloatMenu) {
-                        // lastFloatMenu has not changed, when moving within a floatgroup
+                    this.lastFloatFocusInTextForEventUnmangling = $(focusElement).text();
+                    focusRowId = focus.target ? $(focus.target).closest('tr').attr('id') : $(focus).closest('tr').attr('id');
+                    if (this.floatMenuActive && focusRowId==this.lastFloatMenuRowId) {
+                        // lastFloatMenuRowId has not changed, when moving within a floatgroup
                         // (but we still get mouseout events when the submenu changes)
-//                        log("redundant mousein from "+ fg );
+//                        log("redundant mousein from "+ focusRowId );
                         return;
                     }
                 } else {
                     // on mouseout, skip events which are bogus
                     // first, if the toElement is in the same floatGroup
-                    fg = focus.toElement ? $(focus.toElement).closest('tr').attr('id') : null;
-                    if (fg==this.lastFloatMenu) {
-                        // lastFloatMenu has not changed, when moving within a floatgroup
+                    focusRowId = focus.toElement ? $(focus.toElement).closest('tr').attr('id') : null;
+                    if (focusRowId==this.lastFloatMenuRowId) {
+                        // lastFloatMenuRowId has not changed, when moving within a floatgroup
                         // (but we still get mouseout events when the submenu changes)
-//                        log("skipping, internal mouseout from "+ fg );
+//                        log("skipping, internal mouseout from "+ focusRowId );
                         return;
                     }
                     // check (a) it is the 'out' event corresponding to the most recent 'in'
                     // (because there is a race where it can say  in1, in2, out1 rather than in1, out2, in2
-                    if ($(focusElement).text() != this.lastFloatFocusIn) {
-//                        log("skipping, not most recent mouseout from "+ fg );
+                    if ($(focusElement).text() != this.lastFloatFocusInTextForEventUnmangling) {
+//                        log("skipping, not most recent mouseout from "+ focusRowId );
                         return;
                     }
                     if (focus.toElement) {
@@ -264,19 +320,29 @@ define([
                     }
                 } 
             }           
-//            log( "moving to "+fg );
-            if (seemsActive && fg) {
-//                log("setting lastFloat when "+this.floatMenuActive + ", from "+this.lastFloatMenu );
-                if (this.lastFloatMenu && this.lastFloatMenu != fg) {
-                    // the floating menu has changed, hide them, then we will reshow
-//                    log("hiding old menu on float-focus change");
-                    this.closeFloatMenuNow();
+//            log( "moving to "+focusRowId );
+            if (seemsActive && focusRowId) {
+//                log("setting lastFloat when "+this.floatMenuActive + ", from "+this.lastFloatMenuRowId );
+                if (this.lastFloatMenuRowId != focusRowId) {
+                    if (this.lastFloatMenuRowId) {
+                        // the floating menu has changed, hide the old
+//                        log("hiding old menu on float-focus change");
+                        this.closeFloatMenuNow();
+                    }
                 }
-                this.lastFloatMenu = fg;
+                // now show the new, if possible (might happen multiple times, but no matter
+                if (focusElement) {
+//                    log("ensuring row "+focusRowId+" is showing on change");
+                    this.showFloatLeftOf($(focusElement).closest('tr').find('.hasFloatLeft'));
+                    this.lastFloatMenuRowId = focusRowId;
+                } else {
+                    this.lastFloatMenuRowId = null;
+                }
             }
             this.floatMenuActive = seemsActive;
-            if (!seemsActive)
+            if (!seemsActive) {
                 this.scheduleCheckFloatMenuNeedsHiding(delayCheckFloat);
+            }
         },
         scheduleCheckFloatMenuNeedsHiding: function(delayCheckFloat) {
             if (delayCheckFloat) {
@@ -308,7 +374,7 @@ define([
                 $('.floatLeft').hide(); 
                 $('.floatDown').hide();
                 $('.zeroclipboard-is-hover').removeClass('zeroclipboard-is-hover');
-                lastFloatMenu = null;
+                lastFloatMenuRowId = null;
             } else {
 //                log("we're still in")
             }
