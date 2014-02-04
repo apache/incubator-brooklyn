@@ -13,6 +13,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
@@ -338,13 +339,27 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
       if (Iterables.isEmpty(descs))
           return Collections.emptyMap();
       Map<String, Object> result = MutableMap.of();
-      Entity type = descs.iterator().next();
-      Sensor<?> s = type.getEntityType().getSensor(sensor);
-      if (s==null) s = Sensors.newSensor(Object.class, sensor);
+      Iterator<Entity> di = descs.iterator();
+      Sensor<?> s = null;
+      while (di.hasNext()) {
+          Entity potentialSource = di.next();
+          s = potentialSource.getEntityType().getSensor(sensor);
+          if (s!=null) break;
+      }
+      if (s==null) 
+          s = Sensors.newSensor(Object.class, sensor);
+      if (!(s instanceof AttributeSensor<?>)) {
+          log.warn("Cannot retrieve non-attribute sensor "+s+" for entities; returning empty map");
+          return result;
+      }
       for (Entity e: descs) {
           Object v = null;
-          if (s instanceof AttributeSensor<?>)
+          try {
               v = e.getAttribute((AttributeSensor<?>)s);
+          } catch (Exception exc) {
+              Exceptions.propagateIfFatal(exc);
+              log.warn("Error retrieving sensor "+s+" for "+e+" (ignoring): "+exc);
+          }
           if (v!=null)
               result.put(e.getId(), v);
       }
