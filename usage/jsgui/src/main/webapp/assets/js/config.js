@@ -26,6 +26,9 @@ require.config({
         "googlemaps":"view/googlemaps",
         "async":"libs/async",  //not explicitly referenced, but needed for google
         "text":"libs/text",
+        "uri":"libs/URI",
+        "zeroclipboard":"libs/ZeroClipboard",
+        
         "tpl":"../tpl"
     },
     
