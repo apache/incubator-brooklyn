@@ -4,12 +4,15 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone", "URI", "brooklyn-utils",
+    "brooklyn-utils", "zeroclipboard", 
     "view/viewutils", "model/sensor-summary",
     "text!tpl/apps/sensors.html", "text!tpl/apps/sensor-name.html",
-    "jquery-datatables", "datatables-extensions"
-], function (_, $, Backbone, _URI, Util, ViewUtils, SensorSummary, SensorsHtml, SensorNameHtml) {
+    "jquery-datatables", "datatables-extensions", "underscore", "jquery", "backbone", "uri",
+], function (Util, ZeroClipboard, ViewUtils, SensorSummary, SensorsHtml, SensorNameHtml) {
 
+    // TODO if ZeroClipboard is used elsewhere consider extracting this to a ZeroClipboard wrapper
+    ZeroClipboard.config({ moviePath: 'assets/js/libs/ZeroClipboard.swf' });
+    
     var sensorHtml = _.template(SensorsHtml),
         sensorNameHtml = _.template(SensorNameHtml);
 
@@ -20,6 +23,11 @@ define([
         zeroClipboard: null,
 
         events:{
+            /* mouseup might technically be preferred, as moving out then releasing wouldn't
+             * normally be expected to trigger the action; however this introduces complexity
+             * as mouseup seems possibly to fire even if a widget has mouseoutted;
+             * also i note many other places (including backbone examples) seem to use click
+             * perhaps for this very reason.  worth exploring, but as a low priority. */
             'click .refresh': 'updateSensorsNow',
             'click .filterEmpty':'toggleFilterEmpty',
             'click .toggleAutoRefresh':'toggleAutoRefresh',
@@ -82,7 +90,7 @@ define([
 
                                          var $row = $('tr[id="'+sensorName+'"]');
                                          var existing = $row.find('.dynamic-contents');
-                                         // for the json url, use the full url (relative ro window.location.href)
+                                         // for the json url, use the full url (relative to window.location.href)
                                          var jsonUrl = actions.json ? new URI(actions.json).resolve(new URI(window.location.href)).toString() : null;
                                          // prefer to update in place, so menus don't disappear, also more efficient
                                          // (but if menu is changed, we do recreate it)

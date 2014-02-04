@@ -21,7 +21,8 @@
         "googlemaps":"view/googlemaps",
         // async deliberately excluded
         "text":"js/libs/text",
-        "URI":"js/libs/URI",
+        "uri":"js/libs/URI",
+        "zeroclipboard":"js/libs/ZeroClipboard.js",
 
         "model":"js/model",
         "view":"js/view",
