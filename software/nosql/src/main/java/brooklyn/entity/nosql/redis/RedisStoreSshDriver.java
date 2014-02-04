@@ -4,24 +4,25 @@ import static java.lang.String.format;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
+
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
-import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.BashCommands;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 /**
  * Start a {@link RedisStore} in a {@link Location} accessible over ssh.
  */
 public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implements RedisStoreDriver {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RedisStoreSshDriver.class);
     private String expandedInstallDir;
 
     public RedisStoreSshDriver(RedisStoreImpl entity, SshMachineLocation machine) {
@@ -100,9 +101,12 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
      */
     @Override
     public void stop() {
-        newScript(MutableMap.of("usePidFile", false), STOPPING)
-                .failOnNonZeroResultCode()
+        int exitCode = newScript(MutableMap.of("usePidFile", false), STOPPING)
                 .body.append("./bin/redis-cli -p " + getEntity().getAttribute(RedisStore.REDIS_PORT) + " shutdown")
                 .execute();
+        // TODO: Good enough? Will cause warnings when trying to stop a server that is already not running.
+        if (exitCode != 0) {
+            LOG.warn("Unexpected exit code when stopping {}: {}", entity, exitCode);
+        }
     }
 }
