@@ -1,0 +1,18 @@
+name: test-entity-with-enricher
+description: TestEntity with Enricher at entity-level using Brooklyn
+origin: http://brooklyn.io
+services:
+- serviceType: brooklyn.entity.basic.BasicEntity
+  name: testentity
+  foo: bar
+  brooklyn.config:
+    serviceLiteralValue1: Foo
+    serviceLiteralValue2: Bar
+  brooklyn.enrichers:
+  - enricherType: brooklyn.test.policy.TestEnricher
+    brooklyn.config:
+      enricherLiteralValue1: Hello
+      enricherLiteralValue2: World
+      test.confName: Name from YAML
+      test.confFromFunction:  "$brooklyn:formatString(\"%s: is a fun place\", \"$brooklyn\")"
+      test.attributeSensor: $brooklyn:sensor("brooklyn.test.entity.TestEntity", "test.name")

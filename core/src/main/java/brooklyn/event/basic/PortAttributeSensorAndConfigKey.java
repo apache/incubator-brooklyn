@@ -105,5 +105,5 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
         }
         return null;
     }
-    
+
 }

@@ -1,0 +1,14 @@
+name: test-propagating-enricher
+description: TestEntity with Propagating Enricher at application-level using Brooklyn
+origin: http://brooklyn.io
+services:
+- serviceType: brooklyn.test.entity.TestEntity
+  id: te1
+  name: testentity
+  brooklyn.config:
+    test.confName: Name from YAML
+brooklyn.enrichers:
+- enricherType: brooklyn.enricher.basic.Propagator
+  brooklyn.config:
+    enricher.producer: $brooklyn:component("te1")
+    enricher.propagating.propagatingAll: true

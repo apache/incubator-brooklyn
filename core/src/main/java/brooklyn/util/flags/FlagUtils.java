@@ -136,8 +136,8 @@ public class FlagUtils {
         for (Field f: getAllFields(o.getClass())) {
             ConfigKey<?> key = getFieldAsConfigKey(o, f);
             if (key!=null && bag.containsKey(key)) {
-                Object uncoercedValue = bag.get(key);
-                setConfig(o, key, uncoercedValue, null);
+                Object uncoercedValue = bag.getStringKey(key.getName());
+                setField(o, f, uncoercedValue, null);
             }
         }
     }
@@ -253,8 +253,8 @@ public class FlagUtils {
         // first check whether it is a key
         ConfigKey<?> key = getFieldAsConfigKey(o, f);
         if (key!=null && bag.containsKey(key)) {
-            Object uncoercedValue = bag.get(key);
-            setConfig(o, key, uncoercedValue, null);
+            Object uncoercedValue = bag.getStringKey(key.getName());
+            setField(o, f, uncoercedValue, optionalAnnotation);
             return;
         }
         if (setDefaultVals && optionalAnnotation!=null && truth(optionalAnnotation.defaultVal())) {

@@ -140,6 +140,28 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         if (!brooklynPolicies.isEmpty())
             builder.customAttribute("brooklyn.policies", brooklynPolicies);
         
+        List<Object> brooklynEnrichers = Lists.newArrayList();
+        Object origBrooklynEnrichers = attrs.remove("brooklyn.enrichers");
+        if (origBrooklynEnrichers != null) {
+            if (!(origBrooklynEnrichers instanceof List))
+                throw new IllegalArgumentException("brooklyn.enrichers must be a list of brooklyn enricher definitions");
+            brooklynEnrichers.addAll((List<?>)origBrooklynEnrichers);
+        }
+        
+        if (!brooklynEnrichers.isEmpty())
+            builder.customAttribute("brooklyn.enrichers", brooklynEnrichers);
+        
+        List<Object> brooklynChildren = Lists.newArrayList();
+        Object origBrooklynChildren = attrs.remove("brooklyn.children");
+        if (origBrooklynChildren != null) {
+            if (!(origBrooklynChildren instanceof List))
+                throw new IllegalArgumentException("brooklyn.children must be a list of brooklyn entity definitions");
+            brooklynChildren.addAll((List<?>)origBrooklynChildren);
+        }
+        
+        if (!brooklynChildren.isEmpty())
+            builder.customAttribute("brooklyn.children",  brooklynChildren);
+        
         if (!attrs.isEmpty()) {
             log.warn("Ignoring PDP attributes on "+deploymentPlanItem+": "+attrs);
         }

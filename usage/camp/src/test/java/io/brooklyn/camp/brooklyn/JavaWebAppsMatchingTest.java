@@ -44,7 +44,7 @@ public class JavaWebAppsMatchingTest {
     
     // FIXME all commented-out lines require camp server
     
-    @AfterMethod
+    @AfterMethod(alwaysRun=true)
     public void teardown() {
         if (brooklynMgmt!=null) Entities.destroyAll(brooklynMgmt);
     }

@@ -3,6 +3,7 @@ package brooklyn.management.internal;
 import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.util.ObservableList;
 
+import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,6 @@ import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.trait.Startable;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.management.AccessController;
-import brooklyn.management.EntityManager;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
@@ -35,14 +35,16 @@ import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class LocalEntityManager implements EntityManager {
+public class LocalEntityManager implements EntityManagerInternal {
 
     private static final Logger log = LoggerFactory.getLogger(LocalEntityManager.class);
 
@@ -143,7 +145,18 @@ public class LocalEntityManager implements EntityManager {
         Predicate<Entity> predicate = EntityPredicates.applicationIdEqualTo(application.getId());
         return ImmutableList.copyOf(Iterables.filter(entityProxiesById.values(), predicate));
     }
-    
+
+    @Override
+    public synchronized Iterable<Entity> getAllEntitiesInApplication(Application application) {
+        Predicate<Entity> predicate = EntityPredicates.applicationIdEqualTo(application.getId());
+        Iterable<Entity> allentities = Iterables.concat(preRegisteredEntitiesById.values(), preManagedEntitiesById.values(), entityProxiesById.values());
+        Iterable<Entity> result = Iterables.filter(allentities, predicate);
+        return ImmutableSet.copyOf(Iterables.transform(result, new Function<Entity, Entity>() {
+            @Override public Entity apply(Entity input) {
+                return (input == null) ? null : input instanceof Proxy ? input : ((AbstractEntity)input).getProxyIfAvailable();
+            }}));
+    }
+
     @Override
     public synchronized Entity getEntity(String id) {
         return entityProxiesById.get(id);

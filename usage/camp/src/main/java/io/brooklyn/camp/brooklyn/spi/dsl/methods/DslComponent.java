@@ -12,6 +12,7 @@ import brooklyn.event.Sensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
 import brooklyn.management.Task;
+import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.util.task.TaskBuilder;
 
 import com.google.common.base.Optional;
@@ -31,7 +32,8 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
         return TaskBuilder.<Entity>builder().name("component("+componentId+")").body(new Callable<Entity>() {
             @Override
             public Entity call() throws Exception {
-                Iterable<Entity> entitiesInApp = entity().getManagementContext().getEntityManager().getEntitiesInApplication( entity().getApplication() );
+                Iterable<Entity> entitiesInApp = ((EntityManagerInternal)entity().getManagementContext().getEntityManager())
+                        .getAllEntitiesInApplication( entity().getApplication() );
                 Optional<Entity> result = Iterables.tryFind(entitiesInApp, new Predicate<Entity>() {
                     @Override
                     public boolean apply(Entity input) {

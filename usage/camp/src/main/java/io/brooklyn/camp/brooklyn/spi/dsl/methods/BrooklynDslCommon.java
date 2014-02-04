@@ -36,7 +36,8 @@ public class BrooklynDslCommon {
 
     // TODO: Would be nice to have sensor(String sensorName), which would take the sensor from the entity in question, 
     //       but that would require refactoring of Brooklyn DSL
-    /** returns a Sensor from the given class */
+    // TODO: Should use catalog's classloader, rather than Class.forName; how to get that? Should we return a future?!
+    /** returns a Sensor from the given entity type */
     @SuppressWarnings("unchecked")
     public static Object sensor(String clazzName, String sensorName) {
         try {

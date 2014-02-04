@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -35,7 +34,6 @@ import brooklyn.management.LocationManager;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.util.task.AbstractExecutionContext;
 
 public class NonDeploymentManagementContext implements ManagementContextInternal {
 
@@ -58,7 +56,6 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     
     private final QueueingSubscriptionManager qsm;
     private final BasicSubscriptionContext subscriptionContext;
-    private final NonDeploymentExecutionContext executionContext;
     private NonDeploymentEntityManager entityManager;
     private NonDeploymentLocationManager locationManager;
     private NonDeploymentAccessManager accessManager;
@@ -69,7 +66,6 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         this.mode = checkNotNull(mode, "mode");
         qsm = new QueueingSubscriptionManager();
         subscriptionContext = new BasicSubscriptionContext(qsm, entity);
-        executionContext = new NonDeploymentExecutionContext();
         entityManager = new NonDeploymentEntityManager(null);
         locationManager = new NonDeploymentLocationManager(null);
         accessManager = new NonDeploymentAccessManager(null);
@@ -150,7 +146,8 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
     @Override
     public ExecutionManager getExecutionManager() {
-        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: executions cannot be performed prior to management");
+        checkInitialManagementContextReal();
+        return initialManagementContext.getExecutionManager();
     }
 
     @Override
@@ -167,7 +164,8 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     @Override
     public ExecutionContext getExecutionContext(Entity entity) {
         if (!this.entity.equals(entity)) throw new IllegalStateException("Non-deployment context "+this+" can only use a single Entity: has "+this.entity+", but passed "+entity);
-        return executionContext;
+        checkInitialManagementContextReal();
+        return initialManagementContext.getExecutionContext(entity);
     }
 
     // TODO the methods below should delegate to the application?
@@ -311,18 +309,6 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         initialManagementContext.reloadBrooklynProperties();
     }
 
-    private class NonDeploymentExecutionContext extends AbstractExecutionContext {
-        @Override
-        public Set<Task<?>> getTasks() {
-            return Collections.emptySet();
-        }
-
-        @Override
-        protected <T> Task<T> submitInternal(Map<?, ?> properties, Object task) {
-            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
-        }
-    }
-    
     /**
      * For when the initial management context is not "real"; the changeListener is a no-op, but everything else forbidden.
      * 

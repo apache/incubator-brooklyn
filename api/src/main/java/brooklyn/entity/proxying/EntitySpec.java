@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
@@ -117,6 +118,7 @@ public class EntitySpec<T extends Entity> implements Serializable {
     private final List<PolicySpec<?>> policySpecs = Lists.newArrayList();
     private final List<Enricher> enrichers = Lists.newArrayList();
     private final List<EnricherSpec<?>> enricherSpecs = Lists.newArrayList();
+    private final List<Location> locations = Lists.newArrayList();
     private final Set<Class<?>> additionalInterfaces = Sets.newLinkedHashSet();
     private final List<EntityInitializer> entityInitializers = Lists.newArrayList();
     private volatile boolean immutable;
@@ -206,6 +208,10 @@ public class EntitySpec<T extends Entity> implements Serializable {
     
     public List<Enricher> getEnrichers() {
         return enrichers;
+    }
+    
+    public List<Location> getLocations() {
+        return locations;
     }
 
     public EntitySpec<T> id(String val) {
@@ -374,6 +380,20 @@ public class EntitySpec<T extends Entity> implements Serializable {
         return this;
     }
     
+    /** adds a location to the spec */
+    public <V> EntitySpec<T> location(Location val) {
+        checkMutable();
+        locations.add(checkNotNull(val, "location"));
+        return this;
+    }
+    
+    /** adds the supplied locations to the spec */
+    public <V> EntitySpec<T> locations(Iterable<? extends Location> val) {
+        checkMutable();
+        locations.addAll(Sets.newLinkedHashSet(checkNotNull(val, "locations")));
+        return this;
+    }
+
     /** "seals" this spec, preventing any future changes */
     public EntitySpec<T> immutable() {
         immutable = true;
@@ -409,4 +429,5 @@ public class EntitySpec<T extends Entity> implements Serializable {
         if (implClazz.isInterface()) throw new IllegalStateException("Implementation "+implClazz+" is an interface, but must be a non-abstract class");
         if (Modifier.isAbstract(implClazz.getModifiers())) throw new IllegalStateException("Implementation "+implClazz+" is abstract, but must be a non-abstract class");
     }
+
 }

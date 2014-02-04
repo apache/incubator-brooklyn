@@ -8,6 +8,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Entity
 import brooklyn.entity.proxying.EntitySpec
 import brooklyn.event.basic.DependentConfiguration
 import brooklyn.event.basic.ListConfigKey.ListModifications
@@ -78,6 +79,21 @@ public class MapListAndOtherStructuredConfigKeyTest {
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_PLAIN), v1)
     }
 
+    // TODO getConfig returns null; it iterated over the set to add each value so setting it to a null set was like a no-op
+    @Test(enabled=false)
+    public void testSetConfigKeyAsEmptySet() throws Exception {
+        Entity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+            .configure(TestEntity.CONF_SET_THING.getName(), ImmutableSet.of()));
+
+        Entity entity3 = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+            .configure(TestEntity.CONF_SET_THING, ImmutableSet.of()));
+
+        app.start(locs)
+        
+        assertEquals(entity3.getConfig(TestEntity.CONF_SET_THING), ImmutableSet.of())
+        assertEquals(entity2.getConfig(TestEntity.CONF_SET_THING), ImmutableSet.of())
+    }
+    
     @Test
     public void testSetConfigKeyCanStoreAndRetrieveVals() throws Exception {
         entity.setConfig(TestEntity.CONF_SET_THING.subKey(), "aval")

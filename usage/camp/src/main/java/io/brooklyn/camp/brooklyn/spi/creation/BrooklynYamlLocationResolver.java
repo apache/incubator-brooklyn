@@ -40,7 +40,7 @@ public class BrooklynYamlLocationResolver {
         }
         
         if (locations!=null) {
-            if (!(location instanceof Iterable))
+            if (!(locations instanceof Iterable))
                 throw new IllegalStateException("Illegal parameter for 'locations' ("+locations+"); must be an iterable");
             locationsFromList = resolveLocations( (Iterable<Object>)locations );
         }

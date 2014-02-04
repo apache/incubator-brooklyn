@@ -8,14 +8,13 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
-import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 
-public class NonDeploymentEntityManager implements EntityManager {
+public class NonDeploymentEntityManager implements EntityManagerInternal {
 
     private final ManagementContext initialManagementContext;
     
@@ -108,5 +107,14 @@ public class NonDeploymentEntityManager implements EntityManager {
     
     private boolean isInitialManagementContextReal() {
         return (initialManagementContext != null && !(initialManagementContext instanceof NonDeploymentManagementContext));
+    }
+
+    @Override
+    public Iterable<Entity> getAllEntitiesInApplication(Application application) {
+        if (isInitialManagementContextReal()) {
+            return ((EntityManagerInternal)initialManagementContext.getEntityManager()).getAllEntitiesInApplication(application);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" (with no initial management context supplied) is not valid for this operation.");
+        }
     }
 }
