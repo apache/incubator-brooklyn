@@ -8,11 +8,13 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.policy.Enricher;
+import brooklyn.policy.Policy;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestEnricher;
@@ -21,6 +23,7 @@ import brooklyn.util.collections.MutableMap;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 @Test
 public class EnrichersYamlTest extends AbstractYamlTest {
@@ -147,6 +150,87 @@ public class EnrichersYamlTest extends AbstractYamlTest {
         Asserts.assertTrue(Boolean.valueOf(propagator.getConfig(Propagator.PROPAGATING_ALL)), "Expected Propagator.PROPAGATING_ALL to be true");
         ((TestEntity)childEntity).setAttribute(TestEntity.NAME, "New Name");
         Asserts.eventually(Entities.attributeSupplier(parentEntity, TestEntity.NAME), Predicates.<String>equalTo("New Name"));
+    }
+    
+    @Test
+    public void testMultipleEnricherReferences() throws Exception {
+        final Entity app = createAndStartApplication("test-referencing-enrichers.yaml");
+        waitForApplicationTasks(app);
+        
+        Entity entity1 = null, entity2 = null, child1 = null, child2 = null, grandchild1 = null, grandchild2 = null;
+        
+        Assert.assertEquals(app.getChildren().size(), 2);
+        for (Entity child : app.getChildren()) {
+            if (child.getDisplayName().equals("entity 1"))
+                entity1 = child;
+            if (child.getDisplayName().equals("entity 2"))
+                entity2 = child;
+        }
+        Assert.assertNotNull(entity1);
+        Assert.assertNotNull(entity2);
+        
+        Assert.assertEquals(entity1.getChildren().size(), 2);
+        for (Entity child : entity1.getChildren()) {
+            if (child.getDisplayName().equals("child 1"))
+                child1 = child;
+            if (child.getDisplayName().equals("child 2"))
+                child2 = child;
+        }
+        Assert.assertNotNull(child1);
+        Assert.assertNotNull(child2);
+        
+        Assert.assertEquals(child1.getChildren().size(), 2);
+        for (Entity child : child1.getChildren()) {
+            if (child.getDisplayName().equals("grandchild 1"))
+               grandchild1 = child;
+            if (child.getDisplayName().equals("grandchild 2"))
+                grandchild2 = child;
+        }
+        Assert.assertNotNull(grandchild1);
+        Assert.assertNotNull(grandchild2);
+        
+        ImmutableSet<Enricher> enrichers = new ImmutableSet.Builder<Enricher>()
+                .add(getEnricher(app))
+                .add(getEnricher(entity1))
+                .add(getEnricher(entity2))
+                .add(getEnricher(child1))
+                .add(getEnricher(child2))
+                .add(getEnricher(grandchild1))
+                .add(getEnricher(grandchild2))
+                .build();
+        
+        Map<ConfigKey<Entity>, Entity> keyToEntity = new ImmutableMap.Builder<ConfigKey<Entity>, Entity>()
+                .put(TestReferencingEnricher.TEST_APPLICATION, app)
+                .put(TestReferencingEnricher.TEST_ENTITY_1, entity1)
+                .put(TestReferencingEnricher.TEST_ENTITY_2, entity2)
+                .put(TestReferencingEnricher.TEST_CHILD_1, child1)
+                .put(TestReferencingEnricher.TEST_CHILD_2, child2)
+                .put(TestReferencingEnricher.TEST_GRANDCHILD_1, grandchild1)
+                .put(TestReferencingEnricher.TEST_GRANDCHILD_2, grandchild2)
+                .build();
+        
+        for (Enricher enricher : enrichers)
+            checkReferences(enricher, keyToEntity);
+    }
+    
+    private void checkReferences(final Enricher enricher, Map<ConfigKey<Entity>, Entity> keyToEntity) throws Exception {
+        for (final ConfigKey<Entity> key : keyToEntity.keySet()) {
+            final Entity entity = keyToEntity.get(key); // Grab an entity whose execution context we can use
+            Entity fromConfig = ((EntityInternal)entity).getExecutionContext().submit(MutableMap.of(), new Callable<Entity>() {
+                @Override
+                public Entity call() throws Exception {
+                    return (Entity) enricher.getConfig(key);
+                }
+            }).get();
+            Assert.assertEquals(fromConfig, keyToEntity.get(key));
+        }
+    }
+    
+    private Enricher getEnricher(Entity entity) {
+        Assert.assertEquals(entity.getEnrichers().size(), 1);
+        Enricher enricher = entity.getEnrichers().iterator().next();
+        Assert.assertTrue(enricher instanceof TestReferencingEnricher);
+        return enricher;
     }
     
     @Override
