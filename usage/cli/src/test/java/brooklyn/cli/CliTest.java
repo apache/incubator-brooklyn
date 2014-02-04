@@ -257,7 +257,7 @@ public class CliTest {
                 }
             }});
 
-        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), runnable);
+        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.ONE_MINUTE), runnable);
     }
 
     //  An empty app to be used for testing
