@@ -8,13 +8,10 @@ import javax.annotation.Nullable;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.entity.rebind.Rebindable;
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
-import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
@@ -34,7 +31,7 @@ import brooklyn.util.guava.Maybe;
  * 
  * @see brooklyn.entity.basic.AbstractEntity
  */
-public interface Entity extends Identifiable, Rebindable {
+public interface Entity extends Identifiable {
     /**
      * The unique identifier for this entity.
      */
@@ -212,7 +209,4 @@ public interface Entity extends Identifiable, Rebindable {
      * @return True if the policy enricher at this entity; false otherwise
      */
     boolean removeEnricher(Enricher enricher);
-
-    @Override
-    RebindSupport<EntityMemento> getRebindSupport();
 }

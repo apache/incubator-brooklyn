@@ -44,6 +44,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     public static class Builder extends AbstractTreeNodeMemento.Builder<Builder> {
         protected boolean isTopLevelApp;
         protected Map<ConfigKey, Object> config = Maps.newLinkedHashMap();
+        protected Map<String, Object> configUnmatched = Maps.newLinkedHashMap();
         protected Map<AttributeSensor, Object> attributes = Maps.newLinkedHashMap();
         protected List<String> locations = Lists.newArrayList();
         protected List<String> policies = Lists.newArrayList();
@@ -54,6 +55,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             isTopLevelApp = other.isTopLevelApp();
             displayName = other.getDisplayName();
             config.putAll(other.getConfig());
+            configUnmatched.putAll(other.getConfigUnmatched());
             attributes.putAll(other.getAttributes());
             locations.addAll(other.getLocations());
             policies.addAll(other.getPolicies());
@@ -86,6 +88,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     private transient Map<String, Sensor<?>> staticSensorKeys;
     
     private transient Map<ConfigKey, Object> configByKey;
+    private transient Map<String, Object> configUnmatched;
     private transient Map<AttributeSensor, Object> attributesByKey;
 
     // for de-serialization
@@ -103,6 +106,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         members = toPersistedList(builder.members);
         
         configByKey = builder.config;
+        configUnmatched = builder.configUnmatched;
         attributesByKey = builder.attributes;
         
         if (configByKey!=null) {
@@ -117,7 +121,11 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             configKeys = toPersistedMap(configKeys);
             config = toPersistedMap(config);
         }
-        
+        if (configUnmatched!=null) {
+            if (config == null) config = Maps.newLinkedHashMap();
+            config.putAll(configUnmatched);
+            config = toPersistedMap(config);
+        }
         if (attributesByKey!=null) {
             attributeKeys = Maps.newLinkedHashMap();
             attributes = Maps.newLinkedHashMap();
@@ -170,9 +178,15 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
      */
     private void postDeserialize() {
         configByKey = Maps.newLinkedHashMap();
+        configUnmatched = Maps.newLinkedHashMap();
         if (config!=null) {
             for (Map.Entry<String, Object> entry : config.entrySet()) {
-                configByKey.put(getConfigKey(entry.getKey()), entry.getValue());
+                ConfigKey<?> configKey = getConfigKey(entry.getKey());
+                if (configKey != null) {
+                    configByKey.put(configKey, entry.getValue());
+                } else {
+                    configUnmatched.put(entry.getKey(), entry.getValue());
+                }
             }
         }
 
@@ -193,6 +207,12 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     public Map<ConfigKey, Object> getConfig() {
         if (configByKey == null) postDeserialize();
         return Collections.unmodifiableMap(configByKey);
+    }
+    
+    @Override
+    public Map<String, Object> getConfigUnmatched() {
+        if (configUnmatched == null) postDeserialize();
+        return Collections.unmodifiableMap(configUnmatched);
     }
     
     @Override
@@ -221,6 +241,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         return super.newVerboseStringHelper()
                 .add("members", getMembers())
                 .add("config", Entities.sanitize(getConfig()))
+                .add("configUnmatched", Entities.sanitize(getConfigUnmatched()))
                 .add("attributes", Entities.sanitize(getAttributes()))
                 .add("policies", getPolicies())
                 .add("locations", getLocations());

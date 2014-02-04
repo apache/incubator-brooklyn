@@ -213,6 +213,7 @@ public class RebindManagerImpl implements RebindManager {
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating entity {}", entityMemento);
                 
                 Entity entity = newEntity(entityMemento, reflections);
+                managementContext.prePreManage(entity);
                 entities.put(entityMemento.getId(), entity);
                 rebindContext.registerEntity(entityMemento.getId(), entity);
             }
@@ -235,7 +236,7 @@ public class RebindManagerImpl implements RebindManager {
                 Location location = rebindContext.getLocation(locMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", locMemento);
     
-                location.getRebindSupport().reconstruct(rebindContext, locMemento);
+                ((LocationInternal)location).getRebindSupport().reconstruct(rebindContext, locMemento);
             }
     
             // Reconstruct policies
@@ -253,7 +254,7 @@ public class RebindManagerImpl implements RebindManager {
                 Entity entity = rebindContext.getEntity(entityMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
     
-                entity.getRebindSupport().reconstruct(rebindContext, entityMemento);
+                ((EntityInternal)entity).getRebindSupport().reconstruct(rebindContext, entityMemento);
             }
             
             LOG.info("RebindManager managing locations");
@@ -323,9 +324,15 @@ public class RebindManagerImpl implements RebindManager {
             // There are several possibilities for the constructor; find one that works.
             // Prefer passing in the flags because required for Application to set the management context
             // TODO Feels very hacky!
-            Map<String,Object> flags = Maps.newLinkedHashMap();
+
+            Map<Object,Object> flags = Maps.newLinkedHashMap();
             flags.put("id", entityId);
             if (AbstractApplication.class.isAssignableFrom(entityClazz)) flags.put("mgmt", managementContext);
+
+            // TODO document the multiple sources of flags, and the reason for setting the mgmt context *and* supplying it as the flag
+            // (NB: merge reported conflict as the two things were added separately)
+            flags.putAll(memento.getConfig());
+            flags.putAll(memento.getConfigUnmatched());
             Entity entity = (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
             ((AbstractEntity)entity).setManagementContext(managementContext);
             return entity;

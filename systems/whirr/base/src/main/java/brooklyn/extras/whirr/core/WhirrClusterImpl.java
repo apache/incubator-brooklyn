@@ -160,8 +160,8 @@ public class WhirrClusterImpl extends AbstractEntity implements WhirrCluster {
         clusterSpec.setIdentity(location.getIdentity());
         clusterSpec.setCredential(location.getCredential());
         // TODO inherit key data?
-        clusterSpec.setPrivateKey(LocationConfigUtils.getPrivateKeyData(location.getConfigBag()));
-        clusterSpec.setPublicKey(LocationConfigUtils.getPublicKeyData(location.getConfigBag()));
+        clusterSpec.setPrivateKey(LocationConfigUtils.getPrivateKeyData(location.getAllConfigBag()));
+        clusterSpec.setPublicKey(LocationConfigUtils.getPublicKeyData(location.getAllConfigBag()));
         // TODO: also add security groups when supported in the Whirr trunk
 
         startWithClusterSpec(clusterSpec, config);

@@ -36,7 +36,7 @@ implements MachineProvisioningLocation<SshMachineLocation>, CloudLocationConfig
         // TODO was previously `return LocationCreationUtils.newSubLocation(newFlags, this)`; need to retest on CloudStack etc
         return getManagementContext().getLocationManager().createLocation(LocationSpec.create(type)
                 .parent(this)
-                .configure(getRawLocalConfigBag().getAllConfig())
+                .configure(getLocalConfigBag().getAllConfig()) // FIXME Should this just be inherited?
                 .configure(newFlags));
     }
     

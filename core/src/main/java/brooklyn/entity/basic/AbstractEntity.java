@@ -55,6 +55,7 @@ import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.SetFromLiveMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.guava.Maybe;
@@ -362,7 +363,8 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         }
         
         if (!flags.isEmpty()) {
-            LOG.warn("Unsupported flags when configuring {}; ignoring: {}", this, flags);
+            LOG.warn("Unsupported flags when configuring {}; storing: {}", this, flags);
+            configsInternal.addToLocalBag(flags);
         }
 
         return this;
@@ -910,7 +912,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     @Override
     public void refreshInheritedConfig() {
         if (getParent() != null) {
-            configsInternal.setInheritedConfig(((EntityInternal)getParent()).getAllConfig());
+            configsInternal.setInheritedConfig(((EntityInternal)getParent()).getAllConfig(), ((EntityInternal)getParent()).getAllConfigBag());
         } else {
             configsInternal.clearInheritedConfig();
         }
@@ -932,6 +934,18 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     @Override
     public Map<ConfigKey<?>,Object> getAllConfig() {
         return configsInternal.getAllConfig();
+    }
+
+    @Beta
+    @Override
+    public ConfigBag getAllConfigBag() {
+        return configsInternal.getAllConfigBag();
+    }
+
+    @Beta
+    @Override
+    public ConfigBag getLocalConfigBag() {
+        return configsInternal.getLocalConfigBag();
     }
 
     @Override

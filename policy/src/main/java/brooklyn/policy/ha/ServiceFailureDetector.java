@@ -67,7 +67,7 @@ public class ServiceFailureDetector extends AbstractPolicy {
     
     public ServiceFailureDetector(ConfigBag configBag) {
         // TODO hierarchy should use ConfigBag, and not change flags
-        super(configBag.getAllConfigRaw());
+        super(configBag.getAllConfigMutable());
     }
 
     @Override

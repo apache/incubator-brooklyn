@@ -15,6 +15,7 @@ import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMemento;
@@ -22,6 +23,7 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Policy;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 
@@ -41,13 +43,13 @@ public class MementosGenerators {
             builder.applicationIds.add(app.getId());
         }
         for (Entity entity : managementContext.getEntityManager().getEntities()) {
-            builder.entities.put(entity.getId(), entity.getRebindSupport().getMemento());
+            builder.entities.put(entity.getId(), ((EntityInternal)entity).getRebindSupport().getMemento());
             
             for (Location location : entity.getLocations()) {
                 if (!builder.locations.containsKey(location.getId())) {
                     for (Location locationInHierarchy : TreeUtils.findLocationsInHierarchy(location)) {
                         if (!builder.locations.containsKey(locationInHierarchy.getId())) {
-                            builder.locations.put(locationInHierarchy.getId(), locationInHierarchy.getRebindSupport().getMemento());
+                            builder.locations.put(locationInHierarchy.getId(), ((LocationInternal)locationInHierarchy).getRebindSupport().getMemento());
                         }
                     }
                 }
@@ -97,6 +99,17 @@ public class MementosGenerators {
             }
 
             builder.config.put(key, value); 
+        }
+        
+        Map<String, Object> localConfigUnmatched = MutableMap.copyOf(((EntityInternal)entity).getConfigMap().getLocalConfigBag().getAllConfig());
+        for (ConfigKey<?> key : localConfig.keySet()) {
+            localConfigUnmatched.remove(key.getName());
+        }
+        for (Map.Entry<String, Object> entry : localConfigUnmatched.entrySet()) {
+            String key = checkNotNull(entry.getKey(), localConfig);
+            Object value = entry.getValue();
+            // TODO Not transforming; that code is deleted in another pending PR anyway!
+            builder.configUnmatched.put(key, value); 
         }
         
         Map<AttributeSensor, Object> allAttributes = ((EntityInternal)entity).getAllAttributes();
@@ -153,7 +166,7 @@ public class MementosGenerators {
                 FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.TRANSIENT).keySet(),
                 FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.STATIC).keySet());
         Map<String, Object> persistableFlags = FlagUtils.getFieldsWithFlagsExcludingModifiers(location, Modifier.STATIC ^ Modifier.TRANSIENT);
-        ConfigBag persistableConfig = new ConfigBag().copy( ((AbstractLocation)location).getConfigBag() ).removeAll(nonPersistableFlagNames);
+        ConfigBag persistableConfig = new ConfigBag().copy( ((AbstractLocation)location).getLocalConfigBag() ).removeAll(nonPersistableFlagNames);
 
         builder.type = location.getClass().getName();
         builder.id = location.getId();
