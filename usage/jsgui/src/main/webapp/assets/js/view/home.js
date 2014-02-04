@@ -141,7 +141,7 @@ define([
             var self = this;
             $.ajax({
                 type: "POST",
-                url: "/v1/applications/reloadBrooklynProperties",
+                url: "/v1/server/properties/reload",
                 contentType: "application/json",
                 success: function() {
                     console.log("Reloaded brooklyn properties");

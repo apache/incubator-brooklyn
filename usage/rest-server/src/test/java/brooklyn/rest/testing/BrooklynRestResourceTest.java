@@ -10,14 +10,13 @@ import java.util.logging.Level;
 
 import javax.ws.rs.core.MediaType;
 
-import brooklyn.rest.domain.ApplicationSpec;
-import brooklyn.rest.domain.Status;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.Status;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.Repeater;
 
@@ -52,7 +51,7 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
             throw Exceptions.propagate(e);
         }
     }
-
+    
     protected void waitForApplicationToBeRunning(final URI applicationRef) {
         if (applicationRef==null)
             throw new NullPointerException("No application URI available (consider using BrooklynRestResourceTest.clientDeploy)");

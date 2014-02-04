@@ -53,6 +53,7 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
         int status = response.getStatus();
         assertTrue(status >= 200 && status <= 299, "expected HTTP Response of 2xx but got " + status);
         application = response.getLocation();
+        log.debug("Built app: application");
         waitForApplicationToBeRunning(application);
     }
 
