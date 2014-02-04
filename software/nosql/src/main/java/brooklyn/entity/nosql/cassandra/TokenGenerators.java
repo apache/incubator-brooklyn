@@ -22,6 +22,8 @@ public class TokenGenerators {
      */
     public static abstract class AbstractTokenGenerator implements TokenGenerator, Serializable {
         
+        private static final long serialVersionUID = -1884526356161711176L;
+        
         public static final BigInteger TWO = BigInteger.valueOf(2);
         
         public abstract BigInteger max();
@@ -127,6 +129,8 @@ public class TokenGenerators {
     }
 
     public static class PosNeg63TokenGenerator extends AbstractTokenGenerator {
+        private static final long serialVersionUID = 7327403957176106754L;
+        
         public static final BigInteger MIN_TOKEN = TWO.pow(63).negate();
         public static final BigInteger MAX_TOKEN = TWO.pow(63).subtract(BigInteger.ONE);
         public static final BigInteger RANGE = TWO.pow(64);
@@ -142,6 +146,8 @@ public class TokenGenerators {
     
     /** token generator used by cassandra pre v1.2 */
     public static class NonNeg127TokenGenerator extends AbstractTokenGenerator {
+        private static final long serialVersionUID = 1357426905711548198L;
+        
         public static final BigInteger MIN_TOKEN = BigInteger.ZERO;
         public static final BigInteger MAX_TOKEN = TWO.pow(127).subtract(BigInteger.ONE);
         public static final BigInteger RANGE = TWO.pow(127);

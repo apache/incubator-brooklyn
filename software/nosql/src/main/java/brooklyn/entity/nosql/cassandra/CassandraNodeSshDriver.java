@@ -238,6 +238,9 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         List<Entity> queuedStart = null;
         if (CassandraDatacenter.DELAY_BETWEEN_STARTS!=null && !ancestors.isEmpty()) {
             Entity root = ancestors.get(ancestors.size()-1);
+            // TODO currently use the class as a semaphore; messy, and obviously will not federate;
+            // should develop a brooklyn framework semaphore (similar to that done on SshMachineLocation)
+            // and use it - note however the synch block is very very short so relatively safe at least
             synchronized (CassandraNode.class) {
                 queuedStart = root.getAttribute(CassandraDatacenter.QUEUED_START_NODES);
                 if (queuedStart==null) {
@@ -245,8 +248,11 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                     ((EntityLocal)root).setAttribute(CassandraDatacenter.QUEUED_START_NODES, queuedStart);
                 }
                 queuedStart.add(getEntity());
+                ((EntityLocal)root).setAttribute(CassandraDatacenter.QUEUED_START_NODES, queuedStart);
             }
             do {
+                // get it again in case it is backed by something external
+                queuedStart = root.getAttribute(CassandraDatacenter.QUEUED_START_NODES);
                 if (queuedStart.get(0).equals(getEntity()))
                     break;
                 synchronized (queuedStart) {

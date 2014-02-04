@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.net.Socket;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,7 +37,6 @@ import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.event.feed.jmx.JmxOperationPollConfig;
-import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.Machines;
@@ -129,15 +127,6 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         setCloudPreferredSensorNames();
     }
     
-    @Override
-    public void doStart(Collection<? extends Location> locations) {
-        // prefer this JMX mode so that agents can connect
-        if (!getConfigRaw(JMX_AGENT_MODE, true).isPresentAndNonNull())
-            setConfig(JMX_AGENT_MODE, JmxAgentModes.JMXMP_AND_RMI);
-        
-        super.doStart(locations);
-    }
-
     @Override public Integer getGossipPort() { return getAttribute(CassandraNode.GOSSIP_PORT); }
     @Override public Integer getSslGossipPort() { return getAttribute(CassandraNode.SSL_GOSSIP_PORT); }
     @Override public Integer getThriftPort() { return getAttribute(CassandraNode.THRIFT_PORT); }
