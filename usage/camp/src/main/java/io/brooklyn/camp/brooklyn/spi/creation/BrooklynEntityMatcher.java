@@ -92,7 +92,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         if (item instanceof CatalogItem) {
             builder.type( "brooklyn:"+((CatalogItem<?>)item).getJavaType() );
         } else if (item instanceof Class) {
-            builder.type( "brooklyn:"+((Class<?>) item).getCanonicalName() );
+            builder.type( "brooklyn:"+((Class<?>) item).getName() );
         } else {
             throw new IllegalStateException("Item "+item+" is not recognised here");
         }

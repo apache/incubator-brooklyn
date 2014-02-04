@@ -28,6 +28,7 @@ import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
+import brooklyn.test.entity.TestEntity;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
@@ -103,6 +104,23 @@ public class BrooklynLauncherTest {
                 .start();
         
         assertOnlyApp(launcher, TestApplication.class);
+    }
+
+    @Test
+    public void testStartsAppFromYAML() throws Exception {
+        String yaml = "name: example-app\n" +
+                "services:\n" +
+                "- serviceType: brooklyn.test.entity.TestEntity\n" +
+                "  name: test-app";
+        launcher = BrooklynLauncher.newInstance()
+                .webconsole(false)
+                .application(yaml)
+                .start();
+
+        assertEquals(launcher.getApplications().size(), 1, "apps="+launcher.getApplications());
+        Application app = Iterables.getOnlyElement(launcher.getApplications());
+        assertEquals(app.getChildren().size(), 1, "children=" + app.getChildren());
+        assertTrue(Iterables.getOnlyElement(app.getChildren()) instanceof TestEntity);
     }
     
     @Test

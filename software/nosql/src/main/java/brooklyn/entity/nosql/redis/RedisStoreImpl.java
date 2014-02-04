@@ -27,6 +27,7 @@ import com.google.common.collect.Iterables;
  * An entity that represents a Redis key-value store service.
  */
 public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(RedisStore.class);
 
     private transient SshFeed sshFeed;
