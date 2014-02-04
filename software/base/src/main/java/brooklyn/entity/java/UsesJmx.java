@@ -28,7 +28,9 @@ public interface UsesJmx extends UsesJava {
         @Override protected Integer convertConfigToSensor(PortRange value, Entity entity) {
             // TODO when using JmxAgentModes.NONE we should *not* convert, but leave it null
             // (e.g. to prevent a warning in e.g. ActiveMQIntegrationTest)
-            // however supporting that means moving these keys to UsesJmx (which would be a good thing in any case)
+            // [there was - previously - a note about needing to move these keys to UsesJmx,
+            // that has been done, so not sure if there is anything more needed or if we can just
+            // check here entity.getConfig(JMX_AGENT_MODE) ... needs testing of course]
             return super.convertConfigToSensor(value, entity);
         }
     };

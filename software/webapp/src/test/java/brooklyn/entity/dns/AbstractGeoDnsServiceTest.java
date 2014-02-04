@@ -35,6 +35,7 @@ import brooklyn.util.internal.Repeater;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class AbstractGeoDnsServiceTest {
@@ -168,7 +169,7 @@ public class AbstractGeoDnsServiceTest {
         @Override
         public Map<String, HostGeoInfo> getTargetHostsByName() {
             synchronized (targetHostsByName) {
-                return targetHostsByName;
+                return ImmutableMap.copyOf(targetHostsByName);
             }
         }
         

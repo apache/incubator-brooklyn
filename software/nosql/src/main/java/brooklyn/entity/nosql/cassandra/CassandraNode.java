@@ -62,6 +62,14 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     @SetFromFlag("nativePort")
     PortAttributeSensorAndConfigKey NATIVE_TRANSPORT_PORT = new PortAttributeSensorAndConfigKey("cassandra.native.port", "Cassandra Native Transport port", PortRanges.fromString("9042+"));
 
+    @SetFromFlag("rmiRegistryPort")
+    // cassandra nodetool and others want 7199 - not required, but useful
+    PortAttributeSensorAndConfigKey RMI_REGISTRY_PORT = new PortAttributeSensorAndConfigKey(UsesJmx.RMI_REGISTRY_PORT, 
+        PortRanges.fromInteger(7199));
+
+    // some of the cassandra tooing (eg nodetool) use RMI, but we want JMXMP, so do both!
+    ConfigKey<JmxAgentModes> JMX_AGENT_MODE = ConfigKeys.newConfigKeyWithDefault(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.JMXMP_AND_RMI);
+    
     @SetFromFlag("customSnitchJarUrl")
     ConfigKey<String> CUSTOM_SNITCH_JAR_URL = ConfigKeys.newStringConfigKey("cassandra.config.customSnitchUrl", 
             "URL for a jar file to be uploaded (e.g. \"classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar\"); defaults to null which means nothing to upload", 

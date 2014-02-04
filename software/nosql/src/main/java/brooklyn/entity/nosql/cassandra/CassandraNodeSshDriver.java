@@ -7,6 +7,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +30,7 @@ import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
@@ -41,6 +43,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -210,15 +213,18 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     public void launch() {
         String subnetHostname = Machines.findSubnetOrPublicHostname(entity).get();
         Set<Entity> seeds = getEntity().getConfig(CassandraNode.INITIAL_SEEDS);
+        List<Entity> ancestors = getCassandraAncestors();
         log.info("Launching " + entity + ": " +
                 "cluster "+getClusterName()+", " +
         		"hostname (public) " + getEntity().getAttribute(Attributes.HOSTNAME) + ", " +
         		"hostname (subnet) " + subnetHostname + ", " +
         		"seeds "+((CassandraNode)entity).getSeeds()+" (from "+seeds+")");
+        
         boolean isFirst = seeds.iterator().next().equals(entity);
         if (isClustered() && !isFirst && CassandraDatacenter.WAIT_FOR_FIRST) {
             // wait for the first node
-            long firstStartTime = Entities.submit(entity, DependentConfiguration.attributeWhenReady(getEntity().getParent(), CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC)).getUnchecked();
+            long firstStartTime = Entities.submit(entity, DependentConfiguration.attributeWhenReady(
+                ancestors.get(ancestors.size()-1), CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC)).getUnchecked();
             // optionally force a delay before starting subsequent nodes; see comment at CassandraCluster.DELAY_AFTER_FIRST
             Duration toWait = Duration.millis(firstStartTime + CassandraDatacenter.DELAY_AFTER_FIRST.toMilliseconds() -  System.currentTimeMillis());
             if (toWait.toMilliseconds()>0) {
@@ -228,27 +234,85 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 Tasks.resetBlockingDetails();
             }
         }
-        newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
-                .body.append(
-                        // log the date to attempt to debug occasional http://wiki.apache.org/cassandra/FAQ#schema_disagreement
-                        // (can be caused by machines out of synch time-wise; but in our case it seems to be caused by other things!)
-                        "echo date on cassandra server `hostname` when launching is `date`",
-                        launchEssentialCommand())
-                .execute();
-        if (!isClustered()) {
-            InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
-            if (creationScript!=null) { 
-                Tasks.setBlockingDetails("Pausing to ensure Cassandra (singleton) has started before running creation script");
-                Time.sleep(Duration.seconds(20));
-                Tasks.resetBlockingDetails();
-                executeScriptAsync(Streams.readFullyString(creationScript));
+        
+        List<Entity> queuedStart = null;
+        if (CassandraDatacenter.DELAY_BETWEEN_STARTS!=null && !ancestors.isEmpty()) {
+            Entity root = ancestors.get(ancestors.size()-1);
+            // TODO currently use the class as a semaphore; messy, and obviously will not federate;
+            // should develop a brooklyn framework semaphore (similar to that done on SshMachineLocation)
+            // and use it - note however the synch block is very very short so relatively safe at least
+            synchronized (CassandraNode.class) {
+                queuedStart = root.getAttribute(CassandraDatacenter.QUEUED_START_NODES);
+                if (queuedStart==null) {
+                    queuedStart = new ArrayList<Entity>();
+                    ((EntityLocal)root).setAttribute(CassandraDatacenter.QUEUED_START_NODES, queuedStart);
+                }
+                queuedStart.add(getEntity());
+                ((EntityLocal)root).setAttribute(CassandraDatacenter.QUEUED_START_NODES, queuedStart);
             }
+            do {
+                // get it again in case it is backed by something external
+                queuedStart = root.getAttribute(CassandraDatacenter.QUEUED_START_NODES);
+                if (queuedStart.get(0).equals(getEntity()))
+                    break;
+                synchronized (queuedStart) {
+                    try {
+                        queuedStart.wait(1000);
+                    } catch (InterruptedException e) {
+                        Exceptions.propagate(e);
+                    }
+                }
+            } while (true);
+            
+            // TODO should look at last start time... but instead we always wait
+            CassandraDatacenter.DELAY_BETWEEN_STARTS.countdownTimer().waitForExpiryUnchecked();
         }
-        if (isClustered() && isFirst) {
-            ((EntityLocal)getEntity().getParent()).setAttribute(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
+
+        try {
+            newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
+            .body.append(
+                // log the date to attempt to debug occasional http://wiki.apache.org/cassandra/FAQ#schema_disagreement
+                // (can be caused by machines out of synch time-wise; but in our case it seems to be caused by other things!)
+                "echo date on cassandra server `hostname` when launching is `date`",
+                launchEssentialCommand())
+                .execute();
+            if (!isClustered()) {
+                InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
+                if (creationScript!=null) { 
+                    Tasks.setBlockingDetails("Pausing to ensure Cassandra (singleton) has started before running creation script");
+                    Time.sleep(Duration.seconds(20));
+                    Tasks.resetBlockingDetails();
+                    executeScriptAsync(Streams.readFullyString(creationScript));
+                }
+            }
+            if (isClustered() && isFirst) {
+                for (Entity ancestor: getCassandraAncestors())
+                    ((EntityLocal)ancestor).setAttribute(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
+            }
+            
+        } finally {
+            if (queuedStart!=null) {
+                Entity head = queuedStart.remove(0);
+                Preconditions.checkArgument(head.equals(getEntity()), "first queued node was "+head+" but we are "+getEntity());
+                synchronized (queuedStart) {
+                    queuedStart.notifyAll();
+                }
+            }
         }
     }
 
+    /** returns cassandra-related ancestors (datacenter, fabric), with datacenter first and fabric last */
+    protected List<Entity> getCassandraAncestors() {
+        List<Entity> result = new ArrayList<Entity>();
+        Entity ancestor = getEntity().getParent();
+        while (ancestor!=null) {
+            if (ancestor instanceof CassandraDatacenter || ancestor instanceof CassandraFabric)
+                result.add(ancestor);
+            ancestor = ancestor.getParent();
+        }
+        return result;
+    }
+    
     protected String launchEssentialCommand() {
         return String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile());
     }

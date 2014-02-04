@@ -102,7 +102,10 @@ public interface CassandraDatacenter extends DynamicCluster, DatastoreMixins.Has
     AttributeSensor<Integer> THRIFT_PORT = Sensors.newIntegerSensor("cassandra.cluster.thrift.port", "Cassandra Thrift RPC port to connect to cluster with");
 
     AttributeSensor<Long> FIRST_NODE_STARTED_TIME_UTC = Sensors.newLongSensor("cassandra.cluster.first.node.started.utc", "Time (UTC) when the first node was started");
-
+    @SuppressWarnings("serial")
+    AttributeSensor<List<Entity>> QUEUED_START_NODES = Sensors.newSensor(new TypeToken<List<Entity>>() {}, "cassandra.cluster.start.nodes.queued",
+        "Nodes queued for starting (for sequential start)");
+    
     AttributeSensor<Integer> SCHEMA_VERSION_COUNT = Sensors.newIntegerSensor("cassandra.cluster.schema.versions.count",
             "Number of different schema versions in the cluster; should be 1 for a healthy cluster, 0 when off; " +
             "2 and above indicats a Schema Disagreement Error (and keyspace access may fail)");
@@ -146,6 +149,19 @@ public interface CassandraDatacenter extends DynamicCluster, DatastoreMixins.Has
      */
     Duration DELAY_AFTER_FIRST = Duration.ONE_MINUTE;
 
+    /**
+     * If set (ie non-null), this waits the indicated time after a successful launch of one node
+     * before starting the next.  (If it is null, all nodes start simultaneously,
+     * possibly after the DELAY_AFTER_FIRST.)
+     * <p>
+     * When subsequent nodes start simultaneously, we occasionally see schema disagreement problems;
+     * if nodes start sequentially, we occasionally get "no sources for (tokenRange]" problems.
+     * Either way the node stops. Ideally this can be solved at the Cassandra level,
+     * but if not, we will have to introduce some restarts at the Cassandra nodes (which does seem
+     * to resolve the problems.)
+     */
+    Duration DELAY_BETWEEN_STARTS = null;
+    
     /**
      * Whether to wait for the first node to start up
      * <p>
