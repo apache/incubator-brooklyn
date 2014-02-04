@@ -37,6 +37,7 @@ import brooklyn.event.Sensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.LocationManager;
 import brooklyn.management.ManagementContext;
@@ -51,6 +52,7 @@ import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.guava.Maybe;
@@ -201,6 +203,10 @@ public class Entities {
                 (v instanceof CharSequence&& ((CharSequence)v).length() == 0);
     }
 
+    public static Map<String,Object> sanitize(ConfigBag input) {
+        return sanitize(input.getAllConfig());
+    }
+
     public static <K> Map<K,Object> sanitize(Map<K,?> input) {
         Map<K,Object> result = Maps.newLinkedHashMap();
         for (Map.Entry<K,?> e: input.entrySet()) {
@@ -317,7 +323,7 @@ public class Entities {
     public static void dumpInfo(Location loc, Writer out, String currentIndentation, String tab) throws IOException {
         out.append(currentIndentation+loc.toString()+"\n");
 
-        for (Object entryO : loc.getAllConfig(true).entrySet()) {
+        for (Object entryO : ((LocationInternal)loc).getAllConfigBag().getAllConfig().entrySet()) {
             Map.Entry entry = (Map.Entry)entryO;
             Object keyO = entry.getKey();
             String key =

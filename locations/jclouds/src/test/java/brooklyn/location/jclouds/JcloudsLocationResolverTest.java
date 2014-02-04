@@ -163,7 +163,7 @@ public class JcloudsLocationResolverTest {
         brooklynProperties.put("brooklyn.jclouds.openstack-nova.endpoint", "myendpoint");
         JcloudsLocation loc = resolve("jclouds:openstack-nova");
         // just checking
-        assertEquals(loc.getRawLocalConfigBag().getStringKey("endpoint"), "myendpoint");
+        assertEquals(loc.getLocalConfigBag().getStringKey("endpoint"), "myendpoint");
         assertEquals(loc.getConfig(CloudLocationConfig.CLOUD_ENDPOINT), "myendpoint");
         // this is the one we really care about!:
         assertEquals(loc.getEndpoint(), "myendpoint");
@@ -173,14 +173,14 @@ public class JcloudsLocationResolverTest {
     public void testJcloudsLegacyRandomProperty() {
         brooklynProperties.put("brooklyn.jclouds.openstack-nova.foo", "bar");
         JcloudsLocation loc = resolve("jclouds:openstack-nova");
-        assertEquals(loc.getRawLocalConfigBag().getStringKey("foo"), "bar");
+        assertEquals(loc.getLocalConfigBag().getStringKey("foo"), "bar");
     }
 
     @Test
     public void testJcloudsRandomProperty() {
         brooklynProperties.put("brooklyn.location.jclouds.openstack-nova.foo", "bar");
         JcloudsLocation loc = resolve("jclouds:openstack-nova");
-        assertEquals(loc.getRawLocalConfigBag().getStringKey("foo"), "bar");
+        assertEquals(loc.getLocalConfigBag().getStringKey("foo"), "bar");
     }
 
     @Test

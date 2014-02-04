@@ -5,12 +5,16 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
+import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.entity.rebind.Rebindable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.internal.EntityManagementSupport;
+import brooklyn.mementos.EntityMemento;
+import brooklyn.util.config.ConfigBag;
 
 import com.google.common.annotations.Beta;
 
@@ -19,7 +23,7 @@ import com.google.common.annotations.Beta;
  * for the brooklyn framework only).
  */
 @Beta
-public interface EntityInternal extends EntityLocal {
+public interface EntityInternal extends EntityLocal, Rebindable {
     
     void addLocations(Collection<? extends Location> locations);
 
@@ -40,6 +44,20 @@ public interface EntityInternal extends EntityLocal {
      */
     @Beta
     Map<ConfigKey<?>,Object> getAllConfig();
+
+    /**
+     * Returns a read-only view of all the config key/value pairs on this entity, backed by a string-based map, 
+     * including config names that did not match anything on this entity.
+     */
+    @Beta
+    ConfigBag getAllConfigBag();
+
+    /**
+     * Returns a read-only view of the local (i.e. not inherited) config key/value pairs on this entity, 
+     * backed by a string-based map, including config names that did not match anything on this entity.
+     */
+    @Beta
+    ConfigBag getLocalConfigBag();
 
     @Beta
     public Map<AttributeSensor, Object> getAllAttributes();
@@ -96,4 +114,7 @@ public interface EntityInternal extends EntityLocal {
     Effector<?> getEffector(String effectorName);
     
     Map<String, String> toMetadataRecord();
+    
+    @Override
+    RebindSupport<EntityMemento> getRebindSupport();
 }

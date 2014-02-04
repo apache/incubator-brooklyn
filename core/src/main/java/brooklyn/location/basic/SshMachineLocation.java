@@ -376,7 +376,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 .configure(SshTool.PROP_HOST, address.getHostName())
                 .putAll(props);
 
-            for (Map.Entry<String,Object> entry: getAllConfig(true).entrySet()) {
+            for (Map.Entry<String,Object> entry: getAllConfigBag().getAllConfig().entrySet()) {
                 String key = entry.getKey();
                 if (key.startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                     key = Strings.removeFromStart(key, SshTool.BROOKLYN_CONFIG_KEY_PREFIX);

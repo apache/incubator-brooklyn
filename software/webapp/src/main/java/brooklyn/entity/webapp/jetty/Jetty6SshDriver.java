@@ -17,8 +17,6 @@ import brooklyn.util.ssh.BashCommands;
 
 public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver {
 
-    private String expandedInstallDir;
-
     public Jetty6SshDriver(Jetty6ServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -33,17 +31,12 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
        return "webapps";
     }
 
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-    
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName("jetty-"+getVersion());
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName("jetty-"+getVersion()));
 
         List<String> commands = new LinkedList<String>();
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));

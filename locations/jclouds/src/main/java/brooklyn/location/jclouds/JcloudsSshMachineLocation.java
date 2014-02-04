@@ -114,7 +114,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
      */
     @Override
     public String getSubnetHostname() {
-        String publicHostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getRawLocalConfigBag());
+        String publicHostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getAllConfigBag());
         
         if ("aws-ec2".equals(jcloudsParent.getProvider())) {
             // prefer hostname over IP for aws (resolves to private ip in subnet, and to public from outside)
@@ -133,7 +133,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
             return privateAddress.get();
         }
         
-        String hostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getRawLocalConfigBag());
+        String hostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getAllConfigBag());
         if (hostname != null && !Networking.isValidIp4(hostname)) {
             try {
                 return InetAddress.getByName(hostname).getHostAddress();

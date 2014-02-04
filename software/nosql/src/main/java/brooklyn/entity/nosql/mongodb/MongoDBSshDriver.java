@@ -9,14 +9,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
@@ -24,11 +18,14 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implements MongoDBDriver {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBSshDriver.class);
-
-    private String expandedInstallDir;
 
     public MongoDBSshDriver(MongoDBServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -37,11 +34,6 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
     @Override
     public MongoDBServerImpl getEntity() {
         return MongoDBServerImpl.class.cast(super.getEntity());
-    }
-
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
     }
 
     public String getDataDirectory() {
@@ -55,7 +47,7 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getBaseName());
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getBaseName()));
 
         List<String> commands = new LinkedList<String>();
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));

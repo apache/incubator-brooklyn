@@ -33,12 +33,6 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
 
     private static final Logger log = LoggerFactory.getLogger(StormSshDriver.class);
 
-    protected String expandedInstallDir;
-
-    public String getExpandedInstallDir() {
-        return expandedInstallDir;
-    }
-
     public StormSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -116,7 +110,8 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("storm-%s", getVersion()));
+        setExpandedInstallDir(getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("storm-%s", getVersion())));
+        
         ImmutableList.Builder<String> commandsBuilder = ImmutableList.<String> builder();
         if (!getLocation().getOsDetails().isMac()) {
             commandsBuilder.add(BashCommands.installPackage(ImmutableMap.of(

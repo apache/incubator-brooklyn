@@ -47,6 +47,7 @@ import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -365,12 +366,14 @@ public class RebindEntityTest {
     @Test
     public void testRestoresConfigKeys() throws Exception {
         TestEntity origE = origApp.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .configure(TestEntity.CONF_NAME, "nameval")
                 .configure(TestEntity.CONF_LIST_PLAIN, ImmutableList.of("val1", "val2"))
                 .configure(TestEntity.CONF_MAP_PLAIN, ImmutableMap.of("akey", "aval")));
         
         newApp = rebind();
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
 
+        assertEquals(newE.getConfig(TestEntity.CONF_NAME), "nameval");
         assertEquals(newE.getConfig(TestEntity.CONF_LIST_PLAIN), ImmutableList.of("val1", "val2"));
         assertEquals(newE.getConfig(TestEntity.CONF_MAP_PLAIN), ImmutableMap.of("akey", "aval"));
     }
@@ -444,6 +447,30 @@ public class RebindEntityTest {
         
         assertNull(newE.getConfig(MyEntity.MY_CONFIG));
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG, "mydefault"), "mydefault");
+    }
+
+    @Test
+    public void testRestoresUnmatchedConfig() throws Exception {
+        TestEntity origE = origApp.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .configure("myunmatchedkey", "myunmatchedval"));
+        
+        TestEntity origChildE = origE.createAndManageChild(EntitySpec.create(TestEntity.class));
+
+        //Thread.sleep(1000);
+        newApp = rebind();
+        final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
+        final TestEntity newChildE = (TestEntity) Iterables.find(newE.getChildren(), Predicates.instanceOf(TestEntity.class));
+
+        assertEquals(newE.getAllConfigBag().getStringKey("myunmatchedkey"), "myunmatchedval");
+        assertEquals(newE.getLocalConfigBag().getStringKey("myunmatchedkey"), "myunmatchedval");
+        
+        try {
+            assertEquals(newChildE.getAllConfigBag().getStringKey("myunmatchedkey"), "myunmatchedval");
+            assertFalse(newChildE.getLocalConfigBag().containsKey("myunmatchedkey"));
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw Exceptions.propagate(t);
+        }
     }
 
     @Test

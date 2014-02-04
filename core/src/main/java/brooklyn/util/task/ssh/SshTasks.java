@@ -14,6 +14,7 @@ import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
@@ -94,10 +95,10 @@ public class SshTasks {
                 allConfig.putAll(mgmt.getConfig().getAllConfig());
         }
         
-        allConfig.putAll(location.getAllConfig(true));
+        allConfig.putAll(((LocationInternal)location).getAllConfigBag());
         
         Map<String, Object> result = Maps.newLinkedHashMap();
-        for (String keyS : allConfig.getAllConfigRaw().keySet()) {
+        for (String keyS : allConfig.getAllConfig().keySet()) {
             ConfigKey<?> key = ConfigKeys.newConfigKey(Object.class, keyS);
             if (key.getName().startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                 result.put(ConfigUtils.unprefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, key).getName(), allConfig.get(key));

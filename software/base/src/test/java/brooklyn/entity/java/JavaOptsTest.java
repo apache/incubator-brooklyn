@@ -2,7 +2,8 @@ package brooklyn.entity.java;
 
 import static org.testng.Assert.fail;
 
-import java.net.InetAddress;
+import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -10,11 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -24,18 +21,21 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
-import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.MapDifference.ValueDifference;
 import com.google.common.collect.Maps;
 
@@ -66,31 +66,71 @@ public class JavaOptsTest {
         }
     }
     
+    public static class RecordingSshTool implements SshTool {
+        static List<ExecCmd> execScriptCmds = Lists.newCopyOnWriteArrayList();
+        
+        private boolean connected;
+        
+        public RecordingSshTool(Map<?,?> props) {
+        }
+        @Override public void connect() {
+            connected = true;
+        }
+        @Override public void connect(int maxAttempts) {
+            connected = true;
+        }
+        @Override public void disconnect() {
+            connected = false;
+        }
+        @Override public boolean isConnected() {
+            return connected;
+        }
+        @Override public int execScript(Map<String, ?> props, List<String> commands, Map<String, ?> env) {
+            execScriptCmds.add(new ExecCmd(props, "", commands, env));
+            return 0;
+        }
+        @Override public int execScript(Map<String, ?> props, List<String> commands) {
+            return execScript(props, commands, ImmutableMap.<String,Object>of());
+        }
+        @Override public int execCommands(Map<String, ?> props, List<String> commands, Map<String, ?> env) {
+            execScriptCmds.add(new ExecCmd(props, "", commands, env));
+            return 0;
+        }
+        @Override public int execCommands(Map<String, ?> props, List<String> commands) {
+            return execCommands(props, commands, ImmutableMap.<String,Object>of());
+        }
+        @Override public int copyToServer(Map<String, ?> props, File localFile, String pathAndFileOnRemoteServer) {
+            return 0;
+        }
+        @Override public int copyToServer(Map<String, ?> props, InputStream contents, String pathAndFileOnRemoteServer) {
+            return 0;
+        }
+        @Override public int copyToServer(Map<String, ?> props, byte[] contents, String pathAndFileOnRemoteServer) {
+            return 0;
+        }
+        @Override public int copyFromServer(Map<String, ?> props, String pathAndFileOnRemoteServer, File local) {
+            return 0;
+        }
+    }
+
+    private ManagementContext managementContext;
     private TestApplication app;
     private SshMachineLocation loc;
-    List<ExecCmd> execScriptCmds;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        execScriptCmds = new CopyOnWriteArrayList<ExecCmd>();
+        RecordingSshTool.execScriptCmds.clear();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        loc = Mockito.mock(SshMachineLocation.class);
-        Mockito.when(loc.getId()).thenReturn("mymockid");
-        Mockito.when(loc.getAddress()).thenReturn(InetAddress.getByName("localhost"));
-        Mockito.when(loc.obtainPort(Mockito.<PortRange>anyObject())).thenReturn(1);
-        Mockito.when(loc.execScript(Mockito.<Map>anyObject(), Mockito.anyString(), Mockito.<List<String>>anyObject(), Mockito.<Map>anyObject())).thenAnswer(
-                new Answer<Integer>() {
-                    @Override public Integer answer(InvocationOnMock invocation) throws Throwable {
-                        Object[] args = invocation.getArguments();
-                        execScriptCmds.add(new ExecCmd((Map)args[0], (String)args[1], (List<String>)args[2], (Map)args[3]));
-                        return 0;
-                    }
-                });
+        managementContext = app.getManagementContext();
+        loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                .configure("address", "localhost")
+                .configure(SshTool.PROP_TOOL_CLASS, RecordingSshTool.class.getName()));
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
         if (app != null) Entities.destroyAll(app.getManagementContext());
+        RecordingSshTool.execScriptCmds.clear();
     }
     
     @Test
@@ -198,10 +238,10 @@ public class JavaOptsTest {
      * There could be other commands in between though.
      */
     private void assertHasExpectedCmds(List<String> expectedCmds, Map<String,?> expectedEnvs) {
-        if (execScriptCmds.isEmpty())
+        if (RecordingSshTool.execScriptCmds.isEmpty())
             fail("No commands recorded");
         
-        for (ExecCmd cmd : execScriptCmds) {
+        for (ExecCmd cmd : RecordingSshTool.execScriptCmds) {
             // TODO Check expectedCmds in-order
             
             // check if expectedEnv is a set, then the string value contains all elements in the set
@@ -244,7 +284,7 @@ public class JavaOptsTest {
             }
         }
         
-        for (ExecCmd cmd : execScriptCmds) {
+        for (ExecCmd cmd : RecordingSshTool.execScriptCmds) {
             log.info("Command:");
             log.info("\tEnv:");
             for (Map.Entry<?,?> entry : cmd.env.entrySet()) {
@@ -256,7 +296,7 @@ public class JavaOptsTest {
             }
         }
         
-        fail("Cmd not present: expected="+expectedCmds+"/"+expectedEnvs+"; actual="+execScriptCmds);
+        fail("Cmd not present: expected="+expectedCmds+"/"+expectedEnvs+"; actual="+RecordingSshTool.execScriptCmds);
     }
 
     public static class TestingNoSensorsVanillaJavaAppImpl extends VanillaJavaAppImpl {
@@ -277,7 +317,7 @@ public class JavaOptsTest {
         
         List<String> phrases = new ArrayList<String>(expectedPhrases);
         Set<String> forbiddenPhrasesFound = new LinkedHashSet<String>();
-        for (ExecCmd cmd : execScriptCmds) {
+        for (ExecCmd cmd : RecordingSshTool.execScriptCmds) {
             String biggun = ""+cmd.env+" "+cmd.commands;
             Iterator<String> pi = phrases.iterator();
             while (pi.hasNext()) {
@@ -290,11 +330,11 @@ public class JavaOptsTest {
         }
         
         if (!phrases.isEmpty()) {
-            log.warn("Missing phrases in commands: "+phrases+"\nCOMMANDS: "+execScriptCmds);
+            log.warn("Missing phrases in commands: "+phrases+"\nCOMMANDS: "+RecordingSshTool.execScriptCmds);
             fail("Missing phrases in commands: "+phrases);
         }
         if (!forbiddenPhrasesFound.isEmpty()) {
-            log.warn("Forbidden phrases found in commands: "+forbiddenPhrasesFound+"\nCOMMANDS: "+execScriptCmds);
+            log.warn("Forbidden phrases found in commands: "+forbiddenPhrasesFound+"\nCOMMANDS: "+RecordingSshTool.execScriptCmds);
             fail("Forbidden phrases found in commands: "+forbiddenPhrasesFound);
         }
     }
@@ -342,31 +382,31 @@ public class JavaOptsTest {
             FORBIDDEN_BASIC_JMX_OPTS);
     }
     
-    private static final List<String> EXPECTED_SECURE_JMX_OPTS = Arrays.asList(
-            "-Dcom.sun.management.jmxremote",
-            "-Dbrooklyn.jmxmp.port=1",
-            "-Dcom.sun.management.jmxremote.ssl=true",
-            "-D"+JmxmpAgent.AUTHENTICATE_CLIENTS_PROPERTY+"=true",
-            "keyStore", "/jmx-keystore",
-            "trustStore", "/jmx-truststore",
-            "-javaagent", "brooklyn-jmxmp-agent"
-        );
-
-    private static final List<String> FORBIDDEN_SECURE_JMX_OPTS = Arrays.asList(
-            "-Dcom.sun.management.jmxremote.authenticate=true",
-            "-Dcom.sun.management.jmxremote.ssl=false",
-            // hostname isn't forbidden -- but it is generally not used now
-            "-Djava.rmi.server.hostname="
-        );
-
     @Test
     public void testSecureJmxConfigFromDefault() {
+        final List<String> EXPECTED_SECURE_JMX_OPTS = Arrays.asList(
+                "-Dcom.sun.management.jmxremote",
+                "-Dbrooklyn.jmxmp.port=31009",
+                "-Dcom.sun.management.jmxremote.ssl=true",
+                "-D"+JmxmpAgent.AUTHENTICATE_CLIENTS_PROPERTY+"=true",
+                "keyStore", "/jmx-keystore",
+                "trustStore", "/jmx-truststore",
+                "-javaagent", "brooklyn-jmxmp-agent"
+            );
+
+        final List<String> FORBIDDEN_SECURE_JMX_OPTS = Arrays.asList(
+                "-Dcom.sun.management.jmxremote.authenticate=true",
+                "-Dcom.sun.management.jmxremote.ssl=false",
+                // hostname isn't forbidden -- but it is generally not used now
+                "-Djava.rmi.server.hostname="
+            );
+        
         assertJmxWithPropsHasPhrases(
-                MutableMap.builder().
-                put(UsesJmx.JMX_SSL_ENABLED, true).
-                build(), 
-            EXPECTED_SECURE_JMX_OPTS,
-            FORBIDDEN_SECURE_JMX_OPTS);
+                MutableMap.builder()
+                        .put(UsesJmx.JMX_SSL_ENABLED, true)
+                        .put(UsesJmx.JMX_PORT, 31009)
+                        .build(), 
+                EXPECTED_SECURE_JMX_OPTS,
+                FORBIDDEN_SECURE_JMX_OPTS);
     }
-    
 }

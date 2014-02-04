@@ -1,7 +1,9 @@
 package brooklyn.entity.database.mysql;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
-import static brooklyn.util.ssh.BashCommands.*;
+import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
+import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.ok;
 import static java.lang.String.format;
 
 import java.io.InputStream;
@@ -42,8 +44,6 @@ import com.google.common.collect.ImmutableMap;
 public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements MySqlDriver {
 
     public static final Logger log = LoggerFactory.getLogger(MySqlSshDriver.class);
-
-    private String expandedInstallDir;
 
     public MySqlSshDriver(MySqlNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -92,17 +92,12 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         return String.format("mysql-%s-%s.tar.gz", getVersion(), getOsTag());
     }
 
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", getInstallFilename()));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("mysql-%s-%s", getVersion(), getOsTag()));
+        setExpandedInstallDir(getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("mysql-%s-%s", getVersion(), getOsTag())));
 
         List<String> commands = new LinkedList<String>();
         commands.add(BashCommands.INSTALL_TAR);

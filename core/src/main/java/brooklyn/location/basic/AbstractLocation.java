@@ -6,7 +6,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Closeable;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -156,7 +155,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
 
         Location oldParent = parent.get();
         Set<Location> oldChildren = children;
-        Map<String, Object> oldConfig = configBag.getAllConfigRaw();
+        Map<String, Object> oldConfig = configBag.getAllConfig();
         long oldCreationTimeUtc = creationTimeUtc.get();
         String oldDisplayName = name.get();
         HostGeoInfo oldHostGeoInfo = hostGeoInfo.get();
@@ -225,6 +224,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
 
         // NB: flag-setting done here must also be done in BasicLocationRebindSupport 
         FlagUtils.setFieldsFromFlagsWithBag(this, properties, configBag, firstTime);
+        FlagUtils.setAllConfigKeys(this, configBag);
 
         if (properties.containsKey("displayName")) {
             name.set((String) removeIfPossible(properties, "displayName"));
@@ -351,40 +351,45 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
 
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
-        if (hasConfig(key, false)) return getConfigBag().get(key);
+        if (hasConfig(key, false)) return getLocalConfigBag().get(key);
         if (getParent()!=null) return getParent().getConfig(key);
         return key.getDefaultValue();
     }
 
     @Override
     public boolean hasConfig(ConfigKey<?> key, boolean includeInherited) {
-        boolean locally = getRawLocalConfigBag().containsKey(key);
+        boolean locally = getLocalConfigBag().containsKey(key);
         if (locally) return true;
         if (!includeInherited) return false;
         if (getParent()!=null) return getParent().hasConfig(key, true);
         return false;
     }
-    
+
     @Override
     public Map<String,Object> getAllConfig(boolean includeInherited) {
-        Map<String,Object> result = null;
-        if (includeInherited) {
-            Location p = getParent();
-            if (p!=null) result = getParent().getAllConfig(true);
-        }
-        if (result==null) {
-            result = new LinkedHashMap<String, Object>();
-        }
-        result.putAll(getConfigBag().getAllConfig());
+        ConfigBag bag = (includeInherited ? getAllConfigBag() : getLocalConfigBag());
+        return bag.getAllConfig();
+    }
+    
+    @Override
+    public ConfigBag getAllConfigBag() {
+        ConfigBag result = ConfigBag.newInstanceExtending(configBag, ImmutableMap.of());
+        Location p = getParent();
+        if (p!=null) result.putIfAbsent(((LocationInternal)p).getAllConfigBag().getAllConfig());
         return result;
     }
     
-    /** @deprecated since 0.6.0 use {@link #getRawLocalConfigBag()} */
-    public ConfigBag getConfigBag() {
+    @Override
+    public ConfigBag getLocalConfigBag() {
         return configBag;
     }
+
+    /** 
+     * @deprecated since 0.7; use {@link #getLocalConfigBag()}
+     * @since 0.6
+     */
     public ConfigBag getRawLocalConfigBag() {
-        return configBag;
+        return getLocalConfigBag();
     }
     
     @Override

@@ -41,8 +41,6 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     private static final Logger log = LoggerFactory.getLogger(SolrServerSshDriver.class);
 
-    private String expandedInstallDir;
-
     public SolrServerSshDriver(SolrServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -57,18 +55,13 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     public String getPidFile() { return String.format("%s/solr.pid", getRunDir()); }
 
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-
     @Override
     public void install() {
         log.debug("Installing {}", entity);
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("solr-%s", getVersion()));
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("solr-%s", getVersion())));
 
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))

@@ -128,7 +128,7 @@ public class FlagUtils {
     public static Map<String, ?> setAllConfigKeys(Map<String, ?> flagsOrConfig, Configurable instance) {
         ConfigBag bag = new ConfigBag().putAll(flagsOrConfig);
         setAllConfigKeys(instance, bag);
-        return bag.getUnusedConfigRaw();
+        return bag.getUnusedConfigMutable();
     }
     /** sets _all_ accessible _{@link ConfigKey}_ and {@link HasConfigKey} fields on the given object, 
      * using the indicated flags/config-bag */
@@ -240,7 +240,7 @@ public class FlagUtils {
             SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
             if (cf!=null) setFieldFromConfig(o, f, bag, cf, setDefaultVals);
         }
-        return bag.getUnusedConfigRaw();
+        return bag.getUnusedConfigMutable();
     }
 
     private static void setFieldFromConfig(Object o, Field f, ConfigBag bag, SetFromFlag optionalAnnotation, boolean setDefaultVals) {
@@ -382,6 +382,25 @@ public class FlagUtils {
         for (Field f: getAllFields(type)) {
             SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
             if (truth(cf)) result.put(f, cf);
+        }
+        return result;
+    }
+
+    /** returns a map of all {@link ConfigKey} fields which are annotated 'SetFromFlag', along with the annotation */
+    public static Map<ConfigKey<?>,SetFromFlag> getAnnotatedConfigKeys(Class<?> type) {
+        Map<ConfigKey<?>, SetFromFlag> result = Maps.newLinkedHashMap();
+        List<Field> fields = getAllFields(type, new Predicate<Field>() {
+            @Override public boolean apply(Field f) {
+                return (f != null) && ConfigKey.class.isAssignableFrom(f.getType()) && ((f.getModifiers() & Modifier.STATIC)!=0);
+            }});
+        for (Field f: fields) {
+            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+            if (cf != null) {
+                ConfigKey<?> key = getFieldAsConfigKey(null, f);
+                if (key != null) {
+                    result.put(key, cf);
+                }
+            }
         }
         return result;
     }

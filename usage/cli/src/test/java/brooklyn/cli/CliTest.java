@@ -4,6 +4,8 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import groovy.lang.GroovyClassLoader;
+import io.airlift.command.Cli;
+import io.airlift.command.ParseException;
 
 import java.io.File;
 import java.util.Collection;
@@ -12,8 +14,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.airlift.command.Cli;
-import io.airlift.command.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -182,16 +182,46 @@ public class CliTest {
 
     @Test
     public void testLaunchCommandParsesArgs() throws ParseException {
-        Cli<BrooklynCommand> cli = Main.buildCli();
-        BrooklynCommand command = cli.parse("launch", "--app", "my.App", "--location", "localhost");
+        BrooklynCommand command = Main.buildCli().parse("launch", 
+                "--app", "my.App", 
+                "--location", "localhost",
+                "--port", "1234",
+                "--bindAddress", "myhostname",
+                "--noConsole", "--noConsoleSecurity", "--noShutdownOnExit", "--stopOnKeyPress", 
+                "--localBrooklynProperties", "/path/to/myprops",
+                "--persist", "rebind", "--persistenceDir", "/path/to/mypersist");
         assertTrue(command instanceof LaunchCommand, ""+command);
         String details = command.toString();
         assertTrue(details.contains("app=my.App"), details);   
         assertTrue(details.contains("script=null"), details);
         assertTrue(details.contains("location=localhost"), details);
+        assertTrue(details.contains("port=1234"), details);
+        assertTrue(details.contains("bindAddress=myhostname"), details);
+        assertTrue(details.contains("noConsole=true"), details);
+        assertTrue(details.contains("noConsoleSecurity=true"), details);
+        assertTrue(details.contains("noShutdownOnExit=true"), details);
+        assertTrue(details.contains("stopOnKeyPress=true"), details);
+        assertTrue(details.contains("localBrooklynProperties=/path/to/myprops"), details);
+        assertTrue(details.contains("persist=rebind"), details);
+        assertTrue(details.contains("persistenceDir=/path/to/mypersist"), details);
+    }
+
+    @Test
+    public void testLaunchCommandUsesDefaults() throws ParseException {
+        BrooklynCommand command = Main.buildCli().parse("launch");
+        assertTrue(command instanceof LaunchCommand, ""+command);
+        String details = command.toString();
+        assertTrue(details.contains("app=null"), details);   
+        assertTrue(details.contains("script=null"), details);
+        assertTrue(details.contains("location=null"), details);
         assertTrue(details.contains("port=8081"), details);
         assertTrue(details.contains("noConsole=false"), details);
+        assertTrue(details.contains("noConsoleSecurity=false"), details);
         assertTrue(details.contains("noShutdownOnExit=false"), details);
+        assertTrue(details.contains("stopOnKeyPress=false"), details);
+        assertTrue(details.contains("localBrooklynProperties=null"), details);
+        assertTrue(details.contains("persist=disabled"), details);
+        assertTrue(details.contains("persistenceDir=null"), details);
     }
 
     @Test

@@ -102,9 +102,9 @@ implements MachineProvisioningLocation<T>, Closeable {
     public FixedListMachineProvisioningLocation<T> newSubLocation(Map<?,?> newFlags) {
         // TODO shouldn't have to copy config bag as it should be inherited (but currently it is not used inherited everywhere; just most places)
         return getManagementContext().getLocationManager().createLocation(LocationSpec.create(getClass())
-                .configure(getRawLocalConfigBag().getAllConfig())
-                .configure(newFlags)
-                .parent(this));
+                .parent(this)
+                .configure(getLocalConfigBag().getAllConfig())  // FIXME Should this just be inherited?
+                .configure(newFlags));
     }
 
     @Override

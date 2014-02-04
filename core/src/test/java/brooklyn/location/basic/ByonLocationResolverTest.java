@@ -213,7 +213,7 @@ public class ByonLocationResolverTest {
         Assert.assertEquals("/tmp/x", ll.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE));
         Assert.assertTrue(ll.hasConfig(LocationConfigKeys.PRIVATE_KEY_FILE, false));
         Assert.assertEquals("/tmp/x", ll.getAllConfig(false).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
-        Assert.assertEquals("/tmp/x", ((AbstractLocation)ll).getRawLocalConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
+        Assert.assertEquals("/tmp/x", ((AbstractLocation)ll).getAllConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
 
         SshMachineLocation l = ll.obtain(MutableMap.of());
         
@@ -222,10 +222,10 @@ public class ByonLocationResolverTest {
         Assert.assertTrue(l.hasConfig(LocationConfigKeys.PRIVATE_KEY_FILE, true));
         Assert.assertFalse(l.hasConfig(LocationConfigKeys.PRIVATE_KEY_FILE, false));
 
-        Assert.assertNull(l.getAllConfig(false).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
         Assert.assertEquals("/tmp/x", l.getAllConfig(true).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
-        
-        Assert.assertEquals(l.getRawLocalConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE), LocationConfigKeys.PRIVATE_KEY_FILE.getDefaultValue());
+        Assert.assertEquals("/tmp/x", l.getAllConfig(true).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
+
+        Assert.assertEquals("/tmp/x", l.getAllConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
     }
 
     private void assertByonClusterEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<String> expectedHosts) {

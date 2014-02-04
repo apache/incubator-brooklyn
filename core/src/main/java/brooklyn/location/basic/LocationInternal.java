@@ -1,12 +1,17 @@
 package brooklyn.location.basic;
 
-import brooklyn.location.Location;
 import java.util.Map;
+
+import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.entity.rebind.Rebindable;
+import brooklyn.location.Location;
+import brooklyn.mementos.LocationMemento;
+import brooklyn.util.config.ConfigBag;
 
 /**
  * Information about locations private to Brooklyn.
  */
-public interface LocationInternal extends Location {
+public interface LocationInternal extends Location, Rebindable {
     
     /**
      * Registers the given extension for the given type. If an extension already existed for
@@ -27,4 +32,11 @@ public interface LocationInternal extends Location {
      * @return
      */
     public Map<String, String> toMetadataRecord();
+
+    ConfigBag getLocalConfigBag();
+
+    ConfigBag getAllConfigBag();
+
+    @Override
+    RebindSupport<LocationMemento> getRebindSupport();
 }

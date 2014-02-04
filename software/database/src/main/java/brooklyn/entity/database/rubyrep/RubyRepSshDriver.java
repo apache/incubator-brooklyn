@@ -26,17 +26,10 @@ public class RubyRepSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     public static final Logger log = LoggerFactory.getLogger(RubyRepSshDriver.class);
 
-    private String expandedInstallDir;
-
     public RubyRepSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
 
         entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
-    }
-
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
     }
 
     protected String getLogFileLocation() {
@@ -60,7 +53,7 @@ public class RubyRepSshDriver extends AbstractSoftwareProcessSshDriver implement
                 .failOnNonZeroResultCode()
                 .execute();
 
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rubyrep-%s", getVersion()));
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rubyrep-%s", getVersion())));
     }
 
     @Override

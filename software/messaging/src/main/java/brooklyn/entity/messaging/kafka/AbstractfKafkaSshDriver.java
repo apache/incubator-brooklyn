@@ -33,7 +33,6 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -56,28 +55,21 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
 
     protected abstract String getProcessIdentifier();
 
-    private String expandedInstallDir;
-
     @Override
     protected String getLogFileLocation() { return getRunDir()+"/console.out"; }
-
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
 
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("kafka-%s-src", getVersion()));
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("kafka-%s-src", getVersion())));
 
         List<String> commands = new LinkedList<String>();
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv "+saveAs);
-        commands.add("cd "+expandedInstallDir);
+        commands.add("cd "+getExpandedInstallDir());
         commands.add("./sbt update");
         commands.add("./sbt package");
         if (isV08()) {

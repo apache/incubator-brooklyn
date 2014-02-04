@@ -90,6 +90,21 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         };
     }
     
+    @Override
+    protected void rebind() {
+        // TODO When persists policies, then can delete this code
+        Map<?, ?> policyFlags = MutableMap.of("name", "Controller targets tracker",
+                "sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR), getConfig(PORT_NUMBER_SENSOR)));
+        
+        serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(policyFlags) {
+            protected void onEntityChange(Entity member) { onServerPoolMemberChanged(member); }
+            protected void onEntityAdded(Entity member) { onServerPoolMemberChanged(member); }
+            protected void onEntityRemoved(Entity member) { onServerPoolMemberChanged(member); }
+        };
+        
+        super.rebind();
+    }
+    
     /**
      * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
      * Can pass in the 'serverPool'.

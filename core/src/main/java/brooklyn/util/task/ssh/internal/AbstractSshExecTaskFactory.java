@@ -29,9 +29,9 @@ public abstract class AbstractSshExecTaskFactory<T extends AbstractProcessTaskFa
             protected void run(ConfigBag config) {
                 Preconditions.checkNotNull(getMachine(), "machine");
                 if (Boolean.FALSE.equals(this.runAsScript)) {
-                    this.exitCode = getMachine().execCommands(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
+                    this.exitCode = getMachine().execCommands(config.getAllConfig(), getSummary(), commands, shellEnvironment);
                 } else { // runScript = null or TRUE
-                    this.exitCode = getMachine().execScript(config.getAllConfigRaw(), getSummary(), commands, shellEnvironment);
+                    this.exitCode = getMachine().execScript(config.getAllConfig(), getSummary(), commands, shellEnvironment);
                 }
             }
             protected String taskTypeShortName() { return "SSH"; }

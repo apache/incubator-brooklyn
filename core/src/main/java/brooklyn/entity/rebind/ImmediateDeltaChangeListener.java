@@ -4,7 +4,9 @@ import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.location.Location;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.policy.Policy;
@@ -45,7 +47,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
     public void onChanged(Entity entity) {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
-            delta.entities.add(entity.getRebindSupport().getMemento());
+            delta.entities.add(((EntityInternal)entity).getRebindSupport().getMemento());
 
             // FIXME How to let the policy/location tell us about changes?
             // Don't do this every time!
@@ -64,7 +66,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
                     synchronized (new Object()) {}
                     
                     for (Location locInHierarchy : locsInHierachy) {
-                        locations.put(locInHierarchy.getId(), locInHierarchy.getRebindSupport().getMemento());
+                        locations.put(locInHierarchy.getId(), ((LocationInternal)locInHierarchy).getRebindSupport().getMemento());
                     }
                 }
             }
@@ -111,7 +113,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
     public void onChanged(Location location) {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
-            delta.locations.add(location.getRebindSupport().getMemento());
+            delta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
             persister.delta(delta);
         }
     }

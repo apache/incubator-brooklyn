@@ -55,8 +55,6 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeSshDriver.class);
     
-    protected String expandedInstallDir;
-
     public CassandraNodeSshDriver(CassandraNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
 
@@ -97,11 +95,6 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     public String getMirrorUrl() { return entity.getConfig(CassandraNode.MIRROR_URL); }
     
-    protected String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-    
     protected String getDefaultUnpackedDirectoryName() {
         return "apache-cassandra-"+getVersion();
     }
@@ -112,7 +105,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getDefaultUnpackedDirectoryName());
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getDefaultUnpackedDirectoryName()));
         
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
