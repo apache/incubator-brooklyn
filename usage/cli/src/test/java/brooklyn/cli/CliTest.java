@@ -3,6 +3,10 @@ package brooklyn.cli;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+
+import brooklyn.test.Asserts;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
 import groovy.lang.GroovyClassLoader;
 import io.airlift.command.Cli;
 import io.airlift.command.ParseException;
@@ -34,7 +38,6 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.TestUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -46,12 +49,23 @@ public class CliTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class);
 
+    // See testInvokeGroovyScript test for usage
+    public static final AtomicBoolean GROOVY_INVOKED = new AtomicBoolean(false);
+
     private ExecutorService executor;
     private StartableApplication app;
-    
+
+    // static so that they can be set from the static classes ExampleApp and ExampleEntity
+    private static volatile boolean exampleAppRunning;
+    private static volatile boolean exampleAppConstructed;
+    private static volatile boolean exampleEntityRunning;
+
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         executor = Executors.newCachedThreadPool();
+        exampleAppConstructed = false;
+        exampleAppRunning = false;
+        exampleEntityRunning = false;
     }
     
     @AfterMethod(alwaysRun=true)
@@ -103,7 +117,7 @@ public class CliTest {
     }
 
     @Test
-    public void testLoadApplicationByParsingFile() throws Exception {
+    public void testLoadApplicationByParsingGroovyFile() throws Exception {
         String appName = "ExampleAppInFile.groovy"; // file found in src/test/resources (contains empty app)
         Object appBuilder = loadApplicationFromClasspathOrParse(appName);
         assertTrue(appBuilder instanceof ApplicationBuilder, "app="+appBuilder);
@@ -127,7 +141,6 @@ public class CliTest {
         }
     }
     
-    public static final AtomicBoolean GROOVY_INVOKED = new AtomicBoolean(false);
     @Test
     public void testInvokeGroovyScript() throws Exception {
         File groovyFile = File.createTempFile("testinvokegroovy", "groovy");
@@ -240,12 +253,28 @@ public class CliTest {
 
     @Test
     public void testLaunchWillStartAppWhenGivenImpl() throws Exception {
-        exampleAppConstructed = false;
-        exampleAppRunning = false;
-        
         Cli<BrooklynCommand> cli = Main.buildCli();
-        final BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", ExampleApp.class.getName(), "--location", "localhost");
-        
+        BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", ExampleApp.class.getName(), "--location", "localhost");
+        submitCommandAndAssertRunnableSucceeds(command, new Runnable() {
+                public void run() {
+                    assertTrue(exampleAppConstructed);
+                    assertTrue(exampleAppRunning);
+                }
+            });
+    }
+
+    @Test
+    public void testLaunchStartsYamlApp() throws Exception {
+        Cli<BrooklynCommand> cli = Main.buildCli();
+        BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", "example-app.yaml", "--location", "localhost");
+        submitCommandAndAssertRunnableSucceeds(command, new Runnable() {
+                public void run() {
+                    assertTrue(exampleEntityRunning);
+                }
+            });
+    }
+
+    private void submitCommandAndAssertRunnableSucceeds(final BrooklynCommand command, Runnable runnable) {
         executor.submit(new Callable<Void>() {
             public Void call() throws Exception {
                 try {
@@ -257,19 +286,11 @@ public class CliTest {
                     throw Exceptions.propagate(t);
                 }
             }});
-        
-        TestUtils.executeUntilSucceeds(new Runnable() {
-            public void run() {
-                assertTrue(exampleAppConstructed);
-                assertTrue(exampleAppRunning);
-            }
-        });
+
+        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.ONE_MINUTE), runnable);
     }
 
-    // An empty app to be used for testing
-    private static volatile boolean exampleAppRunning;
-    private static volatile boolean exampleAppConstructed;
-    
+    //  An empty app to be used for testing
     public static class ExampleApp extends AbstractApplication {
         volatile boolean running;
         volatile boolean constructed;
@@ -297,13 +318,11 @@ public class CliTest {
     }
 
     public static class ExampleEntityImpl extends AbstractEntity implements ExampleEntity {
-        volatile boolean running;
-        
         @Override public void start(Collection<? extends Location> locations) {
-            running = true;
+            exampleEntityRunning = true;
         }
         @Override public void stop() {
-            running = false;
+            exampleEntityRunning = false;
         }
         @Override public void restart() {
         }
