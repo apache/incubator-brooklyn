@@ -152,7 +152,7 @@ public class Main {
 
         @Option(name = { "-a", "--app" }, title = "application class or file",
                 description = "The Application to start. " +
-                        "For example my.AppName or file://my/AppName.groovy or classpath://my/AppName.groovy")
+                        "For example, my.AppName, file://my/app.yaml, or classpath://my/AppName.groovy")
         public String app;
 
         @Beta
@@ -216,15 +216,20 @@ public class Main {
                 }
             }
 
-            if (Strings.isBlank(locations)) {
-                if (app != null) {
+            boolean isYamlApp = app != null && app.endsWith(".yaml");
+            boolean hasLocations = !Strings.isBlank(locations);
+            if (app != null) {
+                if (hasLocations && isYamlApp) {
+                    System.err.println("YAML app combined with command line locations; locations in the YAML file will take precedence");
+                } else if (!hasLocations && isYamlApp) {
+                    System.err.println("Using locations defined in YAML or localhost if none given");
+                    locations = "localhost";
+                } else if (!hasLocations) {
                     System.err.println("Locations parameter not supplied: assuming localhost");
                     locations = "localhost";
                 }
-            } else {
-                if (app == null) {
-                    System.err.println("Locations specified without any applications; ignoring locations");
-                }
+            } else if (hasLocations) {
+                System.err.println("Locations specified without any applications; ignoring locations");
             }
 
             ResourceUtils utils = ResourceUtils.create(this);
@@ -249,20 +254,27 @@ public class Main {
                 InetAddress ip = Networking.getInetAddressWithFixedName(bindAddress);
                 launcher.bindAddress(ip);
             }
+
             if (app != null) {
                 // Create the instance of the brooklyn app
-                log.debug("Load the user's application: {}", app);
-                Object loadedApp = loadApplicationFromClasspathOrParse(utils, loader, app);
-                if (loadedApp instanceof ApplicationBuilder) {
-                    launcher.application((ApplicationBuilder)loadedApp);
-                } else if (loadedApp instanceof Application) {
-                    launcher.application((AbstractApplication)loadedApp);
+                log.debug("Loading the user's application: {}", app);
+
+                if (isYamlApp) {
+                    log.debug("Loading application as YAML spec: {}", app);
+                    String content = utils.getResourceAsString(app);
+                    launcher.application(content);
                 } else {
-                    throw new IllegalStateException("Unexpected application type "+(loadedApp==null ? null : loadedApp.getClass())+", for app "+loadedApp);
+                    Object loadedApp = loadApplicationFromClasspathOrParse(utils, loader, app);
+                    if (loadedApp instanceof ApplicationBuilder) {
+                        launcher.application((ApplicationBuilder)loadedApp);
+                    } else if (loadedApp instanceof Application) {
+                        launcher.application((AbstractApplication)loadedApp);
+                    } else {
+                        throw new IllegalStateException("Unexpected application type "+(loadedApp==null ? null : loadedApp.getClass())+", for app "+loadedApp);
+                    }
                 }
             }
 
-            
             // Launch server
             try {
                 launcher.start();
@@ -312,7 +324,7 @@ public class Main {
         }
 
         @VisibleForTesting
-        void execGroovyScript(ResourceUtils utils, GroovyClassLoader loader, String script) {
+        protected void execGroovyScript(ResourceUtils utils, GroovyClassLoader loader, String script) {
             log.debug("Running the user provided script: {}", script);
             String content = utils.getResourceAsString(script);
             GroovyShell shell = new GroovyShell(loader);
@@ -324,14 +336,12 @@ public class Main {
          * Guaranteed to be non-null result of one of those types (throwing exception if app not appropriate).
          */
         @VisibleForTesting
-        Object loadApplicationFromClasspathOrParse(ResourceUtils utils, GroovyClassLoader loader, String app) 
-                throws SecurityException, NoSuchMethodException, IllegalArgumentException, InstantiationException, 
-                IllegalAccessException, InvocationTargetException {
+        protected Object loadApplicationFromClasspathOrParse(ResourceUtils utils, GroovyClassLoader loader, String app)
+                throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
             
-            // Load the app class
             Class<?> tempclazz;
+            log.debug("Loading application as class on classpath: {}", app);
             try {
-                log.debug("Trying to load application as class on classpath: {}", app);
                 tempclazz = loader.loadClass(app, true, false);
             } catch (ClassNotFoundException cnfe) { // Not a class on the classpath
                 log.debug("Loading \"{}\" as class on classpath failed, now trying as .groovy source file", app);

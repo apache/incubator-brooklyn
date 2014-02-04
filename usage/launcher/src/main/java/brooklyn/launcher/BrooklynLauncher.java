@@ -1,9 +1,13 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 import java.io.Closeable;
+import java.io.StringReader;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -34,6 +38,9 @@ import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.stream.Streams;
+import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
+import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -69,6 +76,7 @@ public class BrooklynLauncher {
 
     private final List<Application> appsToManage = new ArrayList<Application>();
     private final List<ApplicationBuilder> appBuildersToManage = new ArrayList<ApplicationBuilder>();
+    private final List<String> yamlAppsToManage = new ArrayList<String>();
     private final List<Application> apps = new ArrayList<Application>();
     
     private boolean startWebApps = true;
@@ -80,6 +88,7 @@ public class BrooklynLauncher {
     private boolean shutdownOnExit = true;
     
     private volatile BrooklynWebServer webServer;
+    private CampPlatform campPlatform;
 
     private boolean started;
     private String globalBrooklynPropertiesFile;
@@ -136,7 +145,20 @@ public class BrooklynLauncher {
                 }});
         return this;
     }
-    
+
+    /**
+     * Specifies that the launcher should build and manage the Brooklyn application
+     * described by the given YAML blueprint.
+     * The application will not be started as part of this call (callers can
+     * subsequently call {@link #start()} or {@link #getApplications()}.
+     *
+     * @see #application(Application)
+     */
+    public BrooklynLauncher application(String yaml) {
+        this.yamlAppsToManage.add(yaml);
+        return this;
+    }
+
     /**
      * Adds a location to be passed in on {@link #start()}, when that calls
      * {@code application.start(locations)}.
@@ -300,9 +322,10 @@ public class BrooklynLauncher {
         locations.addAll(managementContext.getLocationRegistry().resolve(locationSpecs));
 
         // Add a CAMP platform (TODO include a flag for this?)
-        new BrooklynCampPlatformLauncherNoServer()
-            .useManagementContext(managementContext)
-            .launch();
+        campPlatform = new BrooklynCampPlatformLauncherNoServer()
+                .useManagementContext(managementContext)
+                .launch()
+                .getCampPlatform();
         // TODO start CAMP rest _server_ in the below (at /camp) ?
         
         // Start the web-console
@@ -355,6 +378,28 @@ public class BrooklynLauncher {
             Entities.startManagement(app, managementContext);
             apps.add(app);
         }
+        for (String blueprint : yamlAppsToManage) {
+            Application app = getAppFromYaml(blueprint);
+            // Note: BrooklynAssemblyTemplateInstantiator automatically puts applications under management.
+            apps.add(app);
+        }
+    }
+
+    protected Application getAppFromYaml(String input) {
+        AssemblyTemplate at = campPlatform.pdp()
+                .registerDeploymentPlan(new StringReader(input));
+         BrooklynAssemblyTemplateInstantiator instantiator;
+        try {
+            AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
+            if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
+                instantiator = BrooklynAssemblyTemplateInstantiator.class.cast(ati);
+            } else {
+                throw new IllegalStateException("Cannot create application with instantiator: " + ati);
+            }
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+        return instantiator.create(at, campPlatform);
     }
     
     protected void startApps() {

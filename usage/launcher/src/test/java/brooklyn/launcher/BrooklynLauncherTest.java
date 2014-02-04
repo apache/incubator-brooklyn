@@ -15,6 +15,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -22,6 +23,7 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
+import brooklyn.test.entity.TestEntity;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicates;
@@ -93,6 +95,23 @@ public class BrooklynLauncherTest {
                 .start();
         
         assertOnlyApp(launcher, TestApplication.class);
+    }
+
+    @Test
+    public void testStartsAppFromYAML() throws Exception {
+        String yaml = "name: example-app\n" +
+                "services:\n" +
+                "- serviceType: brooklyn.test.entity.TestEntity\n" +
+                "  name: test-app";
+        launcher = BrooklynLauncher.newInstance()
+                .webconsole(false)
+                .application(yaml)
+                .start();
+
+        assertEquals(launcher.getApplications().size(), 1, "apps="+launcher.getApplications());
+        Application app = Iterables.getOnlyElement(launcher.getApplications());
+        assertEquals(app.getChildren().size(), 1, "children=" + app.getChildren());
+        assertTrue(Iterables.getOnlyElement(app.getChildren()) instanceof TestEntity);
     }
     
     @Test

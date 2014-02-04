@@ -1,0 +1,4 @@
+name: example-app
+services:
+- serviceType: brooklyn.cli.CliTest$ExampleEntity
+  name: Example app
