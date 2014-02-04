@@ -45,7 +45,6 @@ Brooklyn is split into the following projects and subprojects:
     * **...**
 * **``systems``**: entities which are mainly created or managed by other systems, where Brooklyn integrates with those (multi-machine) systems and is removed from the processes
     * **``whirr``**:  ``base`` Whirr integration, and entities built on Whirr such as the configurable ``hadoop`` deployment
-    * **``openshift``**:  entity for deploying and managing OpenShift webapps 
     * **...**
 * **``usage``**: projects which make Brooklyn easier to use, either for end-users or Brooklyn developers
     * **all**: maven project to supply a shaded JAR (containing all dependencies) for convenience 
