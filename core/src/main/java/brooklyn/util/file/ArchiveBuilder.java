@@ -46,9 +46,9 @@ import com.google.common.io.Files;
  * <p>
  * Examples:
  * <pre> File zip = ArchiveBuilder.archive("data/archive.zip")
- *         .add("src", applicationDir + "/deploy/" + version + "/src/")
- *         .add("lib", applicationDir + "/deploy/" + version + "/lib/")
- *         .add("etc/config.ini", applicationDir + "/config.ini")
+ *         .entry("src", applicationDir + "/deploy/" + version + "/src/")
+ *         .entry("lib", applicationDir + "/deploy/" + version + "/lib/")
+ *         .entry("etc/config.ini", applicationDir + "/config.ini")
  *         .create();
  * </pre>
  * <pre> OutputStream remote = ...;
@@ -132,26 +132,39 @@ public class ArchiveBuilder {
      * Add a manifest entry with the given {@literal key} and {@literal value}.
      */
     public ArchiveBuilder manifest(Object key, Object value) {
+        checkNotNull(key, "key");
+        checkNotNull(value, "value");
         manifest.getMainAttributes().put(key, value);
         return this;
     }
 
     /**
      * Add the file located at the {@literal filePath} to the archive.
+     *
+     * @see #add(File)
+     */
+    public ArchiveBuilder add(String filePath) {
+        checkNotNull(filePath, "filePath");
+        return add(new File(Os.tidyPath(filePath)));
+    }
+
+    /**
+     * Add {@literal file} to the archive.
      * <p>
-     * If the {literal filePath} is absolute, the file is added as a top-level entry
+     * If the file path is absolute, the file is added as a top-level entry
      * to the archive using the file name only. For relative {@literal filePath}s the
      * file is added using the path given and is assumed to be located relative to
      * the current working directory. No checks for file existence are made at this
      * stage.
+     *
+     * @see #entry(String, File)
      */
-    public ArchiveBuilder add(String filePath) {
-        checkNotNull(filePath, "file");
-        File fullPath = new File(Os.tidyPath(filePath));
-        if (fullPath.isAbsolute()) {
-            return entry(fullPath.getName(), fullPath.getAbsoluteFile());
+    public ArchiveBuilder add(File file) {
+        checkNotNull(file, "file");
+        if (file.isAbsolute()) {
+            return entry(Os.mergePaths(".", file.getName()), file.getAbsoluteFile());
         } else {
-            return entry(filePath, fullPath);
+            return entry(Os.mergePaths(".", file.getPath()), file);
         }
     }
 
@@ -162,29 +175,43 @@ public class ArchiveBuilder {
      * Uses the {@literal filePath} as the name of the file in the archive. Note that the
      * two path components are simply concatenated using {@link Os#mergePaths(String...)}
      * which may not behave as expected if the {@literal filePath} is absolute. Use the
-     * {@link #entry(String, File)} or {@link #addAll(Map)} methods for complete control
+     * {@link #entry(String, File)} or {@link #entries(Map)} methods for complete control
      * over file locations and names.
+     *
+     * @see #entry(String, String)
      */
     public ArchiveBuilder add(String baseDir, String filePath) {
         checkNotNull(baseDir, "baseDir");
         checkNotNull(filePath, "filePath");
-        return entry(filePath, new File(Os.mergePaths(baseDir, filePath)));
+        return entry(Os.mergePaths(".", filePath), Os.mergePaths(baseDir, filePath));
     }
 
     /**
-     * Add the {@literal file} to the archive with the path {@literal entryPath}.
+     * Add the contents of the directory named {@literal dirName} to the archive.
+     *
+     * @see #addDir(File)
      */
-    public ArchiveBuilder entry(String entryPath, File file) {
-        checkNotNull(entryPath, "baseDir");
-        checkNotNull(file, "file");
-        entries.put(entryPath, file);
-        return this;
+    public ArchiveBuilder addDir(String dirName) {
+        checkNotNull(dirName, "dirName");
+        return addDir(new File(Os.tidyPath(dirName)));
+    }
+
+    /**
+     * Add the contents of the directory {@literal dir} to the archive.
+     * <p>
+     * Uses {@literal .} as the parent directory name for the contents.
+     *
+     * @see #entry(String, File)
+     */
+    public ArchiveBuilder addDir(File dir) {
+        checkNotNull(dir, "dir");
+        return entry(".", dir);
     }
 
     /**
      * Add the collection of {@literal files} to the archive.
-     * <p>
-     * Uses {@link #add(String)} on each element.
+     *
+     * @see #add(String)
      */
     public ArchiveBuilder add(Iterable<String> files) {
         checkNotNull(files, "files");
@@ -197,8 +224,8 @@ public class ArchiveBuilder {
     /**
      * Add the collection of {@literal files}, relative to the {@literal baseDir}, to
      * the archive.
-     * <p>
-     * Uses {@link #add(String, String)} on each element.
+     *
+     * @see #add(String, String)
      */
     public ArchiveBuilder add(String baseDir, Iterable<String> files) {
         checkNotNull(baseDir, "baseDir");
@@ -206,6 +233,27 @@ public class ArchiveBuilder {
         for (String filePath : files) {
             add(baseDir, filePath);
         }
+        return this;
+    }
+
+    /**
+     * Add the {@literal file} to the archive with the path {@literal entryPath}.
+     *
+     * @see #entry(String, File)
+     */
+    public ArchiveBuilder entry(String entryPath, String filePath) {
+        checkNotNull(entryPath, "entryPath");
+        checkNotNull(filePath, "filePath");
+        return entry(entryPath, new File(filePath));
+    }
+
+    /**
+     * Add the {@literal file} to the archive with the path {@literal entryPath}.
+     */
+    public ArchiveBuilder entry(String entryPath, File file) {
+        checkNotNull(entryPath, "entryPath");
+        checkNotNull(file, "file");
+        this.entries.put(entryPath, file);
         return this;
     }
 
@@ -218,7 +266,7 @@ public class ArchiveBuilder {
      * the file names do not need to bear any relationship to the location of the files
      * on the filesystem.
      */
-    public ArchiveBuilder addAll(Map<String, File> entries) {
+    public ArchiveBuilder entries(Map<String, File> entries) {
         checkNotNull(entries, "entries");
         this.entries.putAll(entries);
         return this;

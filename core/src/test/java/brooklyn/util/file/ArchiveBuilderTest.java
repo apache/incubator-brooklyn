@@ -53,7 +53,7 @@ public class ArchiveBuilderTest {
 
     @Test
     public void testCreateZipFromDir() throws Exception {
-        File archive = ArchiveBuilder.zip().entry(".", tmpDir).create();
+        File archive = ArchiveBuilder.zip().addDir(tmpDir).create();
         archive.deleteOnExit();
 
         List<ZipEntry> entries = Lists.newArrayList();

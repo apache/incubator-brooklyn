@@ -168,7 +168,7 @@ public class ArchiveUtils {
      */
     public static void deploy(String archiveUrl, SshMachineLocation machine, String destDir) {
         if (Urls.isDirectory(archiveUrl)) {
-            File zipFile = ArchiveBuilder.zip().entry(".", new File(archiveUrl)).create();
+            File zipFile = ArchiveBuilder.zip().entry(".", Urls.toFile(archiveUrl)).create();
             archiveUrl = zipFile.getAbsolutePath();
         }
 
