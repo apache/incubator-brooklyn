@@ -11,12 +11,12 @@ define([
         var sensorNameHtml = _.template(SensorNameHtml);
         var context = {name: "name", description: "description", type: "type"};
 
-        it("should create an anchor tag if context.href is set", function() {
+        it("should not create an anchor tag in name", function() {
             var templated = sensorNameHtml(_.extend(context, {href: "href"}));
-            expect(contains(templated, "<a href=\"href\"")).toBe(true);
+            expect(contains(templated, "<a href=\"href\"")).toBe(false);
         });
-
-        it("should not create an anchor tag if context.href is undefined", function() {
+        
+        it("should not fail if context.href is undefined", function() {
             var templated = sensorNameHtml(_.extend(context, {href: undefined}));
             expect(contains(templated, "<a href=")).toBe(false);
         });
