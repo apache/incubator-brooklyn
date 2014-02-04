@@ -33,7 +33,11 @@ public class URLParamEncoder {
     private static boolean isUnsafe(char ch) {
         if (ch > 128 || ch < 0)
             return true;
-        return " %$&+,/:;=?@<>#%".indexOf(ch) >= 0;
+        return (" %$&+,/:;=?@<>#%"
+            // these are included in httpclient URI as "unwise", and have been found to be problematic
+            // * backslash in a query param breaks URI.create 
+            + "\\"
+            ).indexOf(ch) >= 0;
     }
 
 }

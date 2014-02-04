@@ -1,7 +1,10 @@
 package brooklyn.rest.transform;
 
+import static com.google.common.collect.Iterables.transform;
+
 import java.lang.reflect.Field;
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 import brooklyn.catalog.CatalogConfig;
@@ -12,7 +15,9 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.domain.EntitySummary;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 /**
  * @author Adam Lowe
@@ -42,6 +47,16 @@ public class EntityTransformer {
         return new EntitySummary(entity.getId(), entity.getDisplayName(), type, lb.build());
     }
 
+    public static List<EntitySummary> entitySummaries(Iterable<? extends Entity> entities) {
+        return Lists.newArrayList(transform(
+            entities,
+            new Function<Entity, EntitySummary>() {
+                @Override
+                public EntitySummary apply(Entity entity) {
+                    return EntityTransformer.entitySummary(entity);
+                }
+            }));
+    }
 
     protected static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, String label, Double priority, Map<String, URI> links) {
         Map<String, URI> mapOfLinks =  links==null ? null : ImmutableMap.copyOf(links);

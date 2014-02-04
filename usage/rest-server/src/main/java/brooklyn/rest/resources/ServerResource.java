@@ -22,6 +22,11 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     private static final Logger log = LoggerFactory.getLogger(ServerResource.class);
 
     @Override
+    public void reloadBrooklynProperties() {
+        brooklyn().reloadBrooklynProperties();
+    }
+
+    @Override
     public void shutdown(final boolean stopAppsFirst, final long delayMillis) {
         log.info("REST call to shutdown server, stopAppsFirst="+stopAppsFirst+", delayMillis="+delayMillis);
         

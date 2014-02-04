@@ -1,17 +1,18 @@
 package brooklyn.rest.transform;
 
+import java.net.URI;
+import java.util.Set;
+
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.rest.domain.SensorSummary;
-import brooklyn.rest.util.URLParamEncoder;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import org.slf4j.LoggerFactory;
-
-import java.net.URI;
-import java.util.Set;
+import brooklyn.util.net.URLParamEncoder;
 
 public class SensorTransformer {
 

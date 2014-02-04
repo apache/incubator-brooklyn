@@ -1,11 +1,11 @@
 package brooklyn.rest.resources;
 
-import static com.google.common.collect.Iterables.transform;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.MediaType;
@@ -24,17 +24,14 @@ import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 public class EntityResource extends AbstractBrooklynRestResource implements EntityApi {
 
-
    @Override
   public List<EntitySummary> list(final String application) {
-    return summaryForChildrenEntities(brooklyn().getApplication(application));
+       return EntityTransformer.entitySummaries(brooklyn().getApplication(application).getChildren());
   }
 
     @Override
@@ -44,20 +41,9 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
 
   @Override
   public Iterable<EntitySummary> getChildren( final String application, final String entity) {
-    return summaryForChildrenEntities(brooklyn().getEntity(application, entity));
+    return EntityTransformer.entitySummaries(brooklyn().getEntity(application, entity).getChildren());
   }
 
-  private List<EntitySummary> summaryForChildrenEntities(Entity rootEntity) {
-    return Lists.newArrayList(transform(
-        rootEntity.getChildren(),
-        new Function<Entity, EntitySummary>() {
-          @Override
-          public EntitySummary apply(Entity entity) {
-            return EntityTransformer.entitySummary(entity);
-          }
-        }));
-  }
-  
   @Override
   public Iterable<TaskSummary> listTasks(String applicationId, String entityId) {
       Entity entity = brooklyn().getEntity(applicationId, entityId);
@@ -101,5 +87,16 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
         TaskSummary summary = TaskTransformer.FROM_TASK.apply(task);
         return status(ACCEPTED).entity(summary).build();
     }
+
+  @Override
+  public Iterable<EntitySummary> getDescendants(String application, String entity, String typeRegex) {
+      return EntityTransformer.entitySummaries(brooklyn().descendantsOfType(application, entity, typeRegex));
+  }
+
+  @Override
+  public Map<String, Object> getDescendantsSensor(String application, String entity, String sensor, String typeRegex) {
+      Iterable<Entity> descs = brooklyn().descendantsOfType(application, entity, typeRegex);
+      return ApplicationResource.getSensorMap(sensor, descs);
+  }
 
 }

@@ -14,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import java.util.List;
+import java.util.Map;
 
 @Path("/v1/applications/{application}/entities")
 @Apidoc("Entities")
@@ -98,4 +99,39 @@ public interface EntityApi {
   @Path("/{entity}/expunge")
   public Response expunge(@PathParam("application") final String application, @PathParam("entity") final String entity, @QueryParam("release") final boolean release);
   
+  @GET
+  @Path("/{entity}/descendants")
+  @ApiOperation(value = "Fetch entity info for all (or filtered) descendants",
+      responseClass = "brooklyn.rest.domain.EntitySummary")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Application or entity missing")
+  })
+  public Iterable<EntitySummary> getDescendants(
+      @ApiParam(value = "Application ID or name", required = true)
+      @PathParam("application") String application,
+      @ApiParam(value = "Entity ID or name", required = true)
+      @PathParam("entity") String entity,
+      @ApiParam(value="Regular expression for an entity type which must be matched", required=false)
+      @DefaultValue(".*")
+      @QueryParam("typeRegex") String typeRegex
+  );
+
+  @GET
+  @Path("/{entity}/descendants/sensor/{sensor}")
+  @ApiOperation(value = "Fetch values of a given sensor for all (or filtered) descendants")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Application or entity missing")
+  })
+  public Map<String,Object> getDescendantsSensor(
+      @ApiParam(value = "Application ID or name", required = true)
+      @PathParam("application") String application,
+      @ApiParam(value = "Entity ID or name", required = true)
+      @PathParam("entity") String entity,
+      @ApiParam(value = "Sensor name", required = true)
+      @PathParam("sensor") String sensor,
+      @ApiParam(value="Regular expression for an entity type which must be matched", required=false)
+      @DefaultValue(".*")
+      @QueryParam("typeRegex") String typeRegex
+  );
+
 }

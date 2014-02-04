@@ -1,5 +1,7 @@
 package brooklyn.rest.api;
 
+import java.util.Map;
+
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -18,6 +20,7 @@ import org.codehaus.jackson.JsonNode;
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.EntitySummary;
 
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
@@ -160,8 +163,34 @@ public interface ApplicationApi {
   @Deprecated
   public Response create(ApplicationSpec applicationSpec);
 
-  @POST
-  @Path("/reloadBrooklynProperties")
-  @ApiOperation(value = "Reload brooklyn.properties")
-  public void reloadBrooklynProperties();
+  @GET
+  @Path("/{application}/descendants")
+  @ApiOperation(value = "Fetch entity info for all (or filtered) descendants",
+      responseClass = "brooklyn.rest.domain.EntitySummary")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Application or entity missing")
+  })
+  public Iterable<EntitySummary> getDescendants(
+      @ApiParam(value = "Application ID or name", required = true)
+      @PathParam("application") String application,
+      @ApiParam(value="Regular expression for an entity type which must be matched", required=false)
+      @DefaultValue(".*")
+      @QueryParam("typeRegex") String typeRegex);
+
+  @GET
+  @Path("/{application}/descendants/sensor/{sensor}")
+      @ApiOperation(value = "Fetch values of a given sensor for all (or filtered) descendants")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Application or entity missing")
+  })
+  public Map<String,Object> getDescendantsSensor(
+      @ApiParam(value = "Application ID or name", required = true)
+      @PathParam("application") String application,
+      @ApiParam(value = "Sensor name", required = true)
+      @PathParam("sensor") String sensor,
+      @ApiParam(value="Regular expression for an entity type which must be matched", required=false)
+      @DefaultValue(".*")
+      @QueryParam("typeRegex") String typeRegex
+  );
+
 }
