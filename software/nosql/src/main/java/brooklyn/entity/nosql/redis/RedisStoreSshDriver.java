@@ -7,30 +7,20 @@ import java.util.List;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
-import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 /**
  * Start a {@link RedisStore} in a {@link Location} accessible over ssh.
  */
 public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implements RedisStoreDriver {
 
-    private String expandedInstallDir;
-
     public RedisStoreSshDriver(RedisStoreImpl entity, SshMachineLocation machine) {
         super(entity, machine);
-    }
-
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
     }
 
     @Override
@@ -38,7 +28,7 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("redis-%s", getVersion()));
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("redis-%s", getVersion())));
 
         MutableMap<String, String> installGccPackageFlags = MutableMap.of(
                 "onlyifmissing", "gcc",

@@ -20,6 +20,15 @@ public class EntityPredicates {
         };
     }
     
+    public static <T> Predicate<Entity> displayNameEqualTo(final T val) {
+        return new Predicate<Entity>() {
+            @Override
+            public boolean apply(@Nullable Entity input) {
+                return Objects.equal(input.getDisplayName(), val);
+            }
+        };
+    }
+    
     public static Predicate<Entity> applicationIdEqualTo(final String val) {
         return new Predicate<Entity>() {
             @Override

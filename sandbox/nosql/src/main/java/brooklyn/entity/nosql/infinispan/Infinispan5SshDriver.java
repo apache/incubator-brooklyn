@@ -22,8 +22,6 @@ import com.google.common.collect.ImmutableList;
  */
 public class Infinispan5SshDriver extends JavaSoftwareProcessSshDriver implements Infinispan5Driver {
 
-    private String expandedInstallDir;
-
     public Infinispan5SshDriver(Infinispan5Server entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -41,18 +39,13 @@ public class Infinispan5SshDriver extends JavaSoftwareProcessSshDriver implement
         return entity.getAttribute(Infinispan5Server.PORT);
     }
 
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-    
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         // FIXME will saveAs be "infinispan-${version}-all.zip"?
-        expandedInstallDir = getInstallDir(); // unpacks to current directory, rather than sub-directory
+        setExpandedInstallDir(getInstallDir()); // unpacks to current directory, rather than sub-directory
 
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))

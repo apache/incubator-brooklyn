@@ -1,6 +1,7 @@
 package brooklyn.launcher;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertSame;
@@ -15,29 +16,38 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.EntityPredicates;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 public class BrooklynLauncherTest {
     
     private BrooklynLauncher launcher;
+    private File persistenceDir;
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (launcher != null) launcher.terminate();
+        if (persistenceDir != null) RebindTestUtils.deleteMementoDir(persistenceDir);
     }
-
+    
     // Integration because takes a few seconds to start web-console
     @Test(groups="Integration")
     public void testStartsWebServerOnExpectectedPort() throws Exception {
@@ -177,9 +187,141 @@ public class BrooklynLauncherTest {
         }
     }
 
+    @Test
+    public void testRebindsToExistingApp() throws Exception {
+        persistenceDir = Files.createTempDir();
+        populatePersistenceDir(persistenceDir, EntitySpec.create(TestApplication.class).displayName("myorig"));
+        assertFalse(BrooklynLauncher.isMementoDirEmpty(persistenceDir));
+        
+        // Rebind to the app we started last time
+        launcher = BrooklynLauncher.newInstance()
+                .webconsole(false)
+                .persistMode(PersistMode.REBIND)
+                .persistenceDir(persistenceDir)
+                .persistPeriod(Duration.millis(10))
+                .start();
+        
+        ManagementContext managementContext = launcher.getServerDetails().getManagementContext();
+        assertOnlyApp(managementContext, TestApplication.class);
+        assertNotNull(Iterables.find(managementContext.getApplications(), EntityPredicates.displayNameEqualTo("myorig"), null), "apps="+managementContext.getApplications());
+    }
+
+    @Test
+    public void testRebindCanAddNewApps() throws Exception {
+        persistenceDir = Files.createTempDir();
+        populatePersistenceDir(persistenceDir, EntitySpec.create(TestApplication.class).displayName("myorig"));
+        assertFalse(BrooklynLauncher.isMementoDirEmpty(persistenceDir));
+        
+        // Rebind to the app we started last time
+        launcher = BrooklynLauncher.newInstance()
+                .webconsole(false)
+                .persistMode(PersistMode.REBIND)
+                .persistenceDir(persistenceDir)
+                .persistPeriod(Duration.millis(10))
+                .application(EntitySpec.create(TestApplication.class).displayName("mynew"))
+                .start();
+        
+        // New app was added, and orig app was rebound
+        ManagementContext managementContext = launcher.getServerDetails().getManagementContext();
+        assertEquals(managementContext.getApplications().size(), 2, "apps="+managementContext.getApplications());
+        assertNotNull(Iterables.find(managementContext.getApplications(), EntityPredicates.displayNameEqualTo("mynew"), null), "apps="+managementContext.getApplications());
+
+        // And subsequently can create new apps
+        StartableApplication app3 = launcher.getServerDetails().getManagementContext().getEntityManager().createEntity(
+                EntitySpec.create(TestApplication.class).displayName("mynew2"));
+        app3.start(ImmutableList.<Location>of());
+    }
+
+    @Test
+    public void testAutoRebindsToExistingApp() throws Exception {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class);
+        persistenceDir = Files.createTempDir();
+        populatePersistenceDir(persistenceDir, appSpec);
+        
+        // Auto will rebind if the dir exists
+        launcher = BrooklynLauncher.newInstance()
+                .webconsole(false)
+                .persistMode(PersistMode.AUTO)
+                .persistenceDir(persistenceDir)
+                .persistPeriod(Duration.millis(10))
+                .persistPeriod(Duration.millis(10))
+                .start();
+        
+        assertOnlyApp(launcher.getServerDetails().getManagementContext(), TestApplication.class);
+    }
+
+    @Test
+    public void testCleanDoesNotRebindToExistingApp() throws Exception {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class);
+        persistenceDir = Files.createTempDir();
+        populatePersistenceDir(persistenceDir, appSpec);
+        
+        // Auto will rebind if the dir exists
+        launcher = BrooklynLauncher.newInstance()
+                .webconsole(false)
+                .persistMode(PersistMode.CLEAN)
+                .persistenceDir(persistenceDir)
+                .persistPeriod(Duration.millis(10))
+                .start();
+        
+        ManagementContext managementContext = launcher.getServerDetails().getManagementContext();
+        assertTrue(managementContext.getApplications().isEmpty(), "apps="+managementContext.getApplications());
+    }
+
+    @Test
+    public void testAutoCreatesNewIfEmptyDir() throws Exception {
+        persistenceDir = Files.createTempDir();
+        
+        // Auto will rebind if the dir exists
+        launcher = BrooklynLauncher.newInstance()
+                .webconsole(false)
+                .persistMode(PersistMode.AUTO)
+                .persistenceDir(persistenceDir)
+                .persistPeriod(Duration.millis(10))
+                .application(EntitySpec.create(TestApplication.class))
+                .start();
+        
+        assertOnlyApp(launcher.getServerDetails().getManagementContext(), TestApplication.class);
+        assertMementoDirNonEmptyEventually(persistenceDir);
+    }
+
+    private void assertMementoDirNonEmptyEventually(final File dir) {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.TEN_SECONDS), new Runnable() {
+            @Override public void run() {
+                assertFalse(BrooklynLauncher.isMementoDirEmpty(dir));
+            }});
+    }
+
+    @Test(expectedExceptions=IllegalStateException.class)
+    public void testRebindFailsIfNoDir() throws Exception {
+        launcher = BrooklynLauncher.newInstance()
+                .webconsole(false)
+                .persistMode(PersistMode.REBIND)
+                .persistenceDir("/path/does/not/exist")
+                .start();
+    }
+
+    private void populatePersistenceDir(File dir, EntitySpec<? extends StartableApplication> appSpec) throws Exception {
+        launcher = BrooklynLauncher.newInstance()
+                .webconsole(false)
+                .persistMode(PersistMode.CLEAN)
+                .persistenceDir(dir)
+                .persistPeriod(Duration.millis(10))
+                .application(appSpec)
+                .start();
+        launcher.terminate();
+        launcher = null;
+        assertFalse(BrooklynLauncher.isMementoDirEmpty(dir));
+    }
+    
     private void assertOnlyApp(BrooklynLauncher launcher, Class<? extends Application> expectedType) {
         assertEquals(launcher.getApplications().size(), 1, "apps="+launcher.getApplications());
         assertNotNull(Iterables.find(launcher.getApplications(), Predicates.instanceOf(TestApplication.class), null), "apps="+launcher.getApplications());
+    }
+    
+    private void assertOnlyApp(ManagementContext managementContext, Class<? extends Application> expectedType) {
+        assertEquals(managementContext.getApplications().size(), 1, "apps="+managementContext.getApplications());
+        assertNotNull(Iterables.find(managementContext.getApplications(), Predicates.instanceOf(TestApplication.class), null), "apps="+managementContext.getApplications());
     }
     
     private void assertOnlyLocation(Application app, Class<? extends Location> expectedType) {

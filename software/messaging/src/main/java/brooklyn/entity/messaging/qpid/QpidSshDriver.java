@@ -23,8 +23,6 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
 
     private static final Logger log = LoggerFactory.getLogger(QpidSshDriver.class);
     
-    private String expandedInstallDir;
-
     public QpidSshDriver(QpidBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -40,17 +38,12 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
 
     public Integer getHttpManagementPort() { return entity.getAttribute(QpidBroker.HTTP_MANAGEMENT_PORT); }
     
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-    
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("qpid-broker-%s", getVersion()));
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("qpid-broker-%s", getVersion())));
         
         List<String> commands = new LinkedList<String>();
         commands.addAll( BashCommands.commandsToDownloadUrlsAs(urls, saveAs));

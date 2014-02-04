@@ -41,6 +41,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -74,6 +75,10 @@ public class RebindManagerImpl implements RebindManager {
     /**
      * Must be called before setPerister()
      */
+    public void setPeriodicPersistPeriod(Duration period) {
+        this.periodicPersistPeriod = period.toMilliseconds();
+    }
+
     public void setPeriodicPersistPeriod(long periodMillis) {
         this.periodicPersistPeriod = periodMillis;
     }
@@ -303,7 +308,6 @@ public class RebindManagerImpl implements RebindManager {
             //      a proxy for if another entity needs to reference it during the init phase.
             InternalEntityFactory entityFactory = managementContext.getEntityFactory();
             Entity entity = entityFactory.constructEntity(entityClazz);
-            
             FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", entityId), entity);
             if (entity instanceof AbstractApplication) {
                 FlagUtils.setFieldsFromFlags(ImmutableMap.of("mgmt", managementContext), entity);
@@ -334,7 +338,19 @@ public class RebindManagerImpl implements RebindManager {
             flags.putAll(memento.getConfig());
             flags.putAll(memento.getConfigUnmatched());
             Entity entity = (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
+            
+            // In case the constructor didn't take the Map arg, then also set it here.
+            // e.g. for top-level app instances such as WebClusterDatabaseExampleApp will (often?) not have
+            // interface + constructor.
+            // TODO On serializing the memento, we should capture which interfaces so can recreate
+            // the proxy+spec (including for apps where there's not an obvious interface).
+            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", entityId), entity);
+            if (entity instanceof AbstractApplication) {
+                FlagUtils.setFieldsFromFlags(ImmutableMap.of("mgmt", managementContext), entity);
+            }
             ((AbstractEntity)entity).setManagementContext(managementContext);
+            managementContext.prePreManage(entity);
+            
             return entity;
         }
     }

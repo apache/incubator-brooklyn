@@ -315,6 +315,10 @@ public class EntityManagementSupport {
     
     private class EntityChangeListenerImpl implements EntityChangeListener {
         @Override
+        public void onChanged() {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
+        }
+        @Override
         public void onChildrenChanged() {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }

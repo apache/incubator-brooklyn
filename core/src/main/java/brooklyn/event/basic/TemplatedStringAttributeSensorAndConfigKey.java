@@ -33,7 +33,9 @@ public class TemplatedStringAttributeSensorAndConfigKey extends BasicAttributeSe
         super(orig, defaultValue);
     }
     
+    @Override
     protected String convertConfigToSensor(String value, Entity entity) {
+        if (value == null) return null;
         return TemplateProcessor.processTemplateContents(value, (EntityInternal)entity, ImmutableMap.<String,Object>of());
     }
     

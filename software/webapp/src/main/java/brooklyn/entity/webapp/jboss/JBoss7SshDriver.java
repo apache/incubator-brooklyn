@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp.jboss;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -43,8 +43,6 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
 
     private static final String MANAGEMENT_REALM = "ManagementRealm";
 
-    private String expandedInstallDir;
-    
     public JBoss7SshDriver(JBoss7ServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -108,17 +106,12 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         return entity.getConfig(JBoss7Server.DEPLOYMENT_TIMEOUT);
     }
 
-    private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("jboss-as-%s", getVersion()));
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("jboss-as-%s", getVersion())));
         
         List<String> commands = new LinkedList<String>();
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));

@@ -39,7 +39,12 @@ public class BrooklynConfigKeys {
             + "apps/${entity.applicationId}/"
             + "entities/${entity.entityType.simpleName}_"
             + "${entity.id}");
-    
+
+    public static final BasicAttributeSensorAndConfigKey<String> EXPANDED_INSTALL_DIR = new TemplatedStringAttributeSensorAndConfigKey(
+            "expandedinstall.dir", 
+            "Directory for installed artifacts (e.g. expanded dir after unpacking .tgz)", 
+            null);
+
     /** @deprecated since 0.7.0; use {@link #INSTALL_DIR} */
     public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = INSTALL_DIR.getConfigKey();
     /** @deprecated since 0.7.0; use {@link #RUN_DIR} */

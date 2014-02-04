@@ -1,7 +1,7 @@
 package brooklyn.entity.brooklynnode;
 
-import static com.google.common.base.Preconditions.*;
-import static java.lang.String.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -27,8 +27,6 @@ import com.google.common.collect.Lists;
 
 public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implements BrooklynNodeDriver {
     
-    private String expandedInstallDir;
-
     public BrooklynNodeSshDriver(BrooklynNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -51,11 +49,6 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         return "pid_java";
     }
     
-    protected String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-
     @Override
     public void install() {
         String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
@@ -66,7 +59,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", "brooklyn-dist-"+getVersion()+"-dist.tar.gz"));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("brooklyn-%s", getVersion()));
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("brooklyn-%s", getVersion())));
         
         newScript("createInstallDir")
                 .body.append("mkdir -p "+getInstallDir())

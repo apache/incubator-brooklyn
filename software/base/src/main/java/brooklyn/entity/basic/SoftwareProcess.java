@@ -44,6 +44,9 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("downloadAddonUrls")
     BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = Attributes.DOWNLOAD_ADDON_URLS;
 
+    @SetFromFlag("expandedInstallDir")
+    BasicAttributeSensorAndConfigKey<String> EXPANDED_INSTALL_DIR = BrooklynConfigKeys.EXPANDED_INSTALL_DIR;
+
     @SetFromFlag("installDir")
     BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = BrooklynConfigKeys.INSTALL_DIR;
     @Deprecated

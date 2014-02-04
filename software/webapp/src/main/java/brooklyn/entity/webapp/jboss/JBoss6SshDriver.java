@@ -25,7 +25,6 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
     public static final String SERVER_TYPE = "standard";
     public static final int DEFAULT_HTTP_PORT = 8080;
     private static final String PORT_GROUP_NAME = "ports-brooklyn";
-    private String expandedInstallDir;
 
     public JBoss6SshDriver(JBoss6ServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -56,13 +55,12 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         return entity.getAttribute(JBoss6Server.CLUSTER_NAME);
     }
 
-    private String getExpandedInstallDir() {
+    // FIXME Should this pattern be used elsewhere? How?
+    @Override
+    public String getExpandedInstallDir() {
         // Ensure never returns null, so if stop called even if install/start was not then don't throw exception.
-        if (expandedInstallDir == null) {
-            return getInstallDir()+"/" + "jboss-"+getVersion();
-        } else {
-            return expandedInstallDir;
-        }
+        String result = super.getExpandedInstallDir();
+        return (result != null) ? result : getInstallDir()+"/" + "jboss-"+getVersion();
     }
 
     @Override
@@ -76,7 +74,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/" + resolver.getUnpackedDirectoryName("jboss-"+getVersion());
+        setExpandedInstallDir(getInstallDir()+"/" + resolver.getUnpackedDirectoryName("jboss-"+getVersion()));
         
         // Note the -o option to unzip, to overwrite existing files without warning.
         // The JBoss zip file contains lgpl.txt (at least) twice and the prompt to
