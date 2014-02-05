@@ -6,12 +6,15 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
@@ -219,6 +222,11 @@ public class ConfigBag {
         //if (!isNew && !isUsed) log.debug("updating config value which has already been used");
         return old;
     }
+    public Object putStringKeyIfHasValue(String key, Maybe<?> value) {
+        if (value.isPresent())
+            return putStringKey(key, value.get());
+        return null;
+    }
 
     public boolean containsKey(HasConfigKey<?> key) {
         return config.containsKey(key.getConfigKey());
@@ -239,9 +247,13 @@ public class ConfigBag {
         return get(key, true);
     }
 
-    /** gets a value from a string-valued key; ConfigKey is preferred, but this is useful in some contexts (e.g. setting from flags) */
+    /** gets a value from a string-valued key or null; ConfigKey is preferred, but this is useful in some contexts (e.g. setting from flags) */
     public Object getStringKey(String key) {
-        return getStringKey(key, true);
+        return getStringKeyMaybe(key).orNull();
+    }
+    /** gets a {@link Maybe}-wrapped value from a string-valued key; ConfigKey is preferred, but this is useful in some contexts (e.g. setting from flags) */
+    public @Nonnull Maybe<Object> getStringKeyMaybe(String key) {
+        return getStringKeyMaybe(key, true);
     }
 
     /** like get, but without marking it as used */
@@ -339,12 +351,15 @@ public class ConfigBag {
         return TypeCoercions.coerce(value, key.getTypeToken());
     }
 
-    protected Object getStringKey(String key, boolean remove) {
+    protected Object getStringKey(String key, boolean markUsed) {
+        return getStringKeyMaybe(key, markUsed).orNull();
+    }
+    protected Maybe<Object> getStringKeyMaybe(String key, boolean markUsed) {
         if (config.containsKey(key)) {
-            if (remove) markUsed(key);
-            return config.get(key);
+            if (markUsed) markUsed(key);
+            return Maybe.of(config.get(key));
         }
-        return null;
+        return Maybe.absent();
     }
 
     /** indicates that a string key in the config map has been accessed */
@@ -421,5 +436,9 @@ public class ConfigBag {
             config = getAllConfig();
         }
         return this;
+    }
+
+    public Map<String, Object> getAllConfigRaw() {
+        return getAllConfigMutable();
     }
 }

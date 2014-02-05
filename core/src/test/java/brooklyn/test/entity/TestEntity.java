@@ -46,7 +46,9 @@ public interface TestEntity extends Entity, Startable, EntityLocal, EntityIntern
     public static final MapConfigKey<String> CONF_MAP_THING = new MapConfigKey<String>(String.class, "test.confMapThing", "Configuration key that's a map thing");
     public static final MapConfigKey<Object> CONF_MAP_THING_OBJECT = new MapConfigKey<Object>(Object.class, "test.confMapThing.obj", "Configuration key that's a map thing with objects");
     public static final ListConfigKey<String> CONF_LIST_THING = new ListConfigKey<String>(String.class, "test.confListThing", "Configuration key that's a list thing");
+    public static final ListConfigKey<Object> CONF_LIST_OBJ_THING = new ListConfigKey<Object>(Object.class, "test.confListObjThing", "Configuration key that's a list thing, of objects");
     public static final SetConfigKey<String> CONF_SET_THING = new SetConfigKey<String>(String.class, "test.confSetThing", "Configuration key that's a set thing");
+    public static final SetConfigKey<Object> CONF_SET_OBJ_THING = new SetConfigKey<Object>(Object.class, "test.confSetObjThing", "Configuration key that's a set thing, of objects");
     public static final BasicConfigKey<Object> CONF_OBJECT = new BasicConfigKey<Object>(Object.class, "test.confObject", "Configuration key that's an object");
     
     public static final AttributeSensor<Integer> SEQUENCE = Sensors.newIntegerSensor("test.sequence", "Test Sequence");

@@ -4,9 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -21,7 +18,6 @@ import com.google.common.reflect.TypeToken;
  */
 public class BasicSensor<T> implements Sensor<T> {
     private static final long serialVersionUID = -3762018534086101323L;
-    private static final Logger LOG = LoggerFactory.getLogger(BasicSensor.class);
     
     private static final Splitter dots = Splitter.on('.');
 
@@ -87,7 +83,7 @@ public class BasicSensor<T> implements Sensor<T> {
     public boolean equals(Object other) {
         if (this==other) return true;
         if (!(other instanceof BasicSensor)) return false;
-        BasicSensor<?> o = (BasicSensor) other;
+        BasicSensor<?> o = (BasicSensor<?>) other;
         
         return Objects.equal(getTypeName(), o.getTypeName()) && Objects.equal(name, o.name) && Objects.equal(description, o.description);
     }

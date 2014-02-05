@@ -134,10 +134,9 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
             }
         }
 
-        // TODO use ConfigBag
         ConfigBag bag = new ConfigBag().putAll(flags);
         FlagUtils.setFieldsFromFlags(this, bag, isFirstTime);
-        FlagUtils.setAllConfigKeys(this, bag);
+        FlagUtils.setAllConfigKeys(this, bag, false);
         leftoverProperties.putAll(bag.getUnusedConfig());
 
         //replace properties _contents_ with leftovers so subclasses see leftovers only

@@ -8,6 +8,7 @@ import groovy.lang.GroovyObject;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -24,6 +25,7 @@ import brooklyn.entity.trait.Configurable;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
@@ -124,22 +126,93 @@ public class FlagUtils {
     }
     
     /** sets _all_ accessible _{@link ConfigKey}_ and {@link HasConfigKey} fields on the given object, 
-     * using the indicated flags/config-bag */
+     * using the indicated flags/config-bag 
+     * @deprecated since 0.7.0 use {@link #setAllConfigKeys(Map, Configurable, boolean)} */
     public static Map<String, ?> setAllConfigKeys(Map<String, ?> flagsOrConfig, Configurable instance) {
-        ConfigBag bag = new ConfigBag().putAll(flagsOrConfig);
-        setAllConfigKeys(instance, bag);
-        return bag.getUnusedConfigMutable();
+        return setAllConfigKeys(flagsOrConfig, instance, false);
     }
     /** sets _all_ accessible _{@link ConfigKey}_ and {@link HasConfigKey} fields on the given object, 
      * using the indicated flags/config-bag */
+    public static Map<String, ?> setAllConfigKeys(Map<String, ?> flagsOrConfig, Configurable instance, boolean includeFlags) {
+        ConfigBag bag = new ConfigBag().putAll(flagsOrConfig);
+        setAllConfigKeys(instance, bag, includeFlags);
+        return bag.getUnusedConfigMutable();
+    }
+    
+    /** sets _all_ accessible _{@link ConfigKey}_ and {@link HasConfigKey} fields on the given object, 
+     * using the indicated flags/config-bag 
+    * @deprecated since 0.7.0 use {@link #setAllConfigKeys(Configurable, ConfigBag, boolean)} */
     public static void setAllConfigKeys(Configurable o, ConfigBag bag) {
+        setAllConfigKeys(o, bag, false);
+    }
+    /** sets _all_ accessible _{@link ConfigKey}_ and {@link HasConfigKey} fields on the given object, 
+     * using the indicated flags/config-bag */
+    public static void setAllConfigKeys(Configurable o, ConfigBag bag, boolean includeFlags) {
         for (Field f: getAllFields(o.getClass())) {
             ConfigKey<?> key = getFieldAsConfigKey(o, f);
-            if (key!=null && bag.containsKey(key)) {
-                Object uncoercedValue = bag.getStringKey(key.getName());
-                setField(o, f, uncoercedValue, null);
+            if (key!=null) {
+                FlagConfigKeyAndValueRecord record = getFlagConfigKeyRecord(f, key, bag);
+                if (record.isValuePresent())
+                    setField(o, f, record.getValueOrNullPreferringConfigKey(), null);
             }
         }
+    }
+    
+    public static class FlagConfigKeyAndValueRecord {
+        private String flagName = null;
+        private ConfigKey<?> configKey = null;
+        private Maybe<Object> flagValue = Maybe.absent();
+        private Maybe<Object> configKeyValue = Maybe.absent();
+        
+        public String getFlagName() {
+            return flagName;
+        }
+        public ConfigKey<?> getConfigKey() {
+            return configKey;
+        }
+        public Maybe<Object> getFlagMaybeValue() {
+            return flagValue;
+        }
+        public Maybe<Object> getConfigKeyMaybeValue() {
+            return configKeyValue;
+        }
+        public Object getValueOrNullPreferringConfigKey() {
+            return getConfigKeyMaybeValue().or(getFlagMaybeValue()).orNull();
+        }
+        public Object getValueOrNullPreferringFlag() {
+            return getFlagMaybeValue().or(getConfigKeyMaybeValue()).orNull();
+        }
+        /** true if value is present for either flag or config key */
+        public boolean isValuePresent() {
+            return flagValue.isPresent() || configKeyValue.isPresent();
+        }
+    }
+    
+    /** gets all the flags/keys in the given config bag which are applicable to the given type's config keys and flags */
+    public static <T> List<FlagConfigKeyAndValueRecord> findAllFlagsAndConfigKeys(T optionalInstance, Class<? extends T> type, ConfigBag input) {
+        List<FlagConfigKeyAndValueRecord> output = new ArrayList<FlagUtils.FlagConfigKeyAndValueRecord>();
+        for (Field f: getAllFields(type)) {
+            ConfigKey<?> key = getFieldAsConfigKey(optionalInstance, f);
+            FlagConfigKeyAndValueRecord record = getFlagConfigKeyRecord(f, key, input);
+            if (record.isValuePresent())
+                output.add(record);
+        }
+        return output;
+    }
+
+    /** returns the flag/config-key record for the given input */
+    private static FlagConfigKeyAndValueRecord getFlagConfigKeyRecord(Field f, ConfigKey<?> key, ConfigBag input) {
+        FlagConfigKeyAndValueRecord result = new FlagConfigKeyAndValueRecord(); 
+        result.configKey = key;
+        if (key!=null && input.containsKey(key))
+            result.configKeyValue = Maybe.<Object>of(input.getStringKey(key.getName()));
+        SetFromFlag flag = f.getAnnotation(SetFromFlag.class);
+        if (flag!=null) {
+            result.flagName = flag.value();
+            if (input.containsKey(flag.value()))
+                result.flagValue = Maybe.of(input.getStringKey(flag.value()));
+        }
+        return result;
     }
 
 	/** returns all fields on the given class, superclasses, and interfaces thereof, in that order of preference,
@@ -273,20 +346,21 @@ public class FlagUtils {
     }
 
     /** returns the given field as a config key, if it is an accessible config key, otherwise null */
-    private static ConfigKey<?> getFieldAsConfigKey(Object instance, Field f) {
-        if (instance==null) {
+    private static ConfigKey<?> getFieldAsConfigKey(Object optionalInstance, Field f) {
+        if (optionalInstance==null) {
             if ((f.getModifiers() & Modifier.STATIC)==0)
                 // non-static field on null instance, can't be set
                 return null;
         }
         if (ConfigKey.class.isAssignableFrom(f.getType())) {
-            return (ConfigKey<?>) getField(instance, f);
+            return (ConfigKey<?>) getField(optionalInstance, f);
         } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
-            return ((HasConfigKey<?>)getField(instance, f)).getConfigKey();
+            return ((HasConfigKey<?>)getField(optionalInstance, f)).getConfigKey();
         }
         return null;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void setConfig(Object objectOfField, ConfigKey<?> key, Object value, SetFromFlag optionalAnnotation) {
         if (objectOfField instanceof Configurable) {
             ((Configurable)objectOfField).setConfig((ConfigKey)key, value);
@@ -308,7 +382,6 @@ public class FlagUtils {
     /** sets the field to the value, after checking whether the given value can be set 
      * respecting the constraints of the annotation 
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void setField(Object objectOfField, Field f, Object value, SetFromFlag optionalAnnotation) {
         try {
             ConfigKey<?> key = getFieldAsConfigKey(objectOfField, f);

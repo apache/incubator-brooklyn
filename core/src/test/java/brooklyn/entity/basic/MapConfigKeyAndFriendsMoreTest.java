@@ -1,5 +1,7 @@
 package brooklyn.entity.basic;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -8,14 +10,19 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.event.basic.ListConfigKey;
 import brooklyn.event.basic.ListConfigKey.ListModifications;
+import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.MapConfigKey.MapModifications;
+import brooklyn.event.basic.SetConfigKey;
 import brooklyn.event.basic.SetConfigKey.SetModifications;
 import brooklyn.event.basic.StructuredConfigKey.StructuredModification;
 import brooklyn.event.basic.SubElementConfigKey;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -80,6 +87,16 @@ public class MapConfigKeyAndFriendsMoreTest {
         Assert.assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING_OBJECT), ImmutableMap.<String,Object>of("map", 1, "subkey", 1, "dotext", 1));
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMapEmpty() throws Exception {
+        // ensure it is null before we pass something in, and passing an empty collection makes it be empty
+        log.info("Map-Empty-1: "+MutableMap.copyOf(entity.getConfigMap().asMapWithStringKeys()));
+        Assert.assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), null);
+        entity.setConfig((MapConfigKey)TestEntity.CONF_MAP_THING, MutableMap.of());
+        log.info("Map-Empty-2: "+MutableMap.copyOf(entity.getConfigMap().asMapWithStringKeys()));
+        Assert.assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), ImmutableMap.of());
+    }
+
     
     public void testSetModUsage() throws Exception {
         entity.setConfig(TestEntity.CONF_SET_THING, SetModifications.addItem("x"));
@@ -114,6 +131,32 @@ public class MapConfigKeyAndFriendsMoreTest {
         Assert.assertEquals(entity.getConfig(TestEntity.CONF_SET_THING), ImmutableSet.of("directX", "subkeyX", "dotextX"));
     }
     
+    public void testSetCollectionUsage() throws Exception {
+        // passing a collection to the RHS of setConfig can be ambiguous,
+        // esp if there are already values set, but attempt to act sensibly
+        // (logging warnings if the set is not empty)
+        entity.setConfig(TestEntity.CONF_SET_OBJ_THING, SetModifications.addItem("w"));
+        entity.setConfig(TestEntity.CONF_SET_OBJ_THING, MutableSet.of("x"));
+        entity.setConfig(TestEntity.CONF_SET_OBJ_THING, MutableSet.of("y"));
+        entity.setConfig(TestEntity.CONF_SET_OBJ_THING, MutableSet.of("a", "b"));
+        entity.setConfig(TestEntity.CONF_SET_OBJ_THING, SetModifications.addItem("z"));
+        entity.setConfig(TestEntity.CONF_SET_OBJ_THING, SetModifications.addItem(MutableSet.of("c", "d")));
+        entity.setConfig(TestEntity.CONF_SET_OBJ_THING, MutableSet.of(MutableSet.of("e", "f")));
+        log.info("Set-Coll: "+MutableMap.copyOf(entity.getConfigMap().asMapWithStringKeys()));
+        Assert.assertEquals(entity.getConfig(TestEntity.CONF_SET_OBJ_THING), ImmutableSet.of(
+            "a", "b", "w", "x", "y", "z", ImmutableSet.of("c", "d"), ImmutableSet.of("e", "f")));
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testSetEmpty() throws Exception {
+        // ensure it is null before we pass something in, and passing an empty collection makes it be empty
+        log.info("Set-Empty-1: "+MutableMap.copyOf(entity.getConfigMap().asMapWithStringKeys()));
+        Assert.assertEquals(entity.getConfig(TestEntity.CONF_SET_THING), null);
+        entity.setConfig((SetConfigKey)TestEntity.CONF_SET_THING, MutableSet.of());
+        log.info("Set-Empty-2: "+MutableMap.copyOf(entity.getConfigMap().asMapWithStringKeys()));
+        Assert.assertEquals(entity.getConfig(TestEntity.CONF_SET_THING), ImmutableSet.of());
+    }
+
 
     public void testListModUsage() throws Exception {
         entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.add("x", "x"));
@@ -186,6 +229,33 @@ public class MapConfigKeyAndFriendsMoreTest {
         
         log.info("List-ManyWays: "+MutableMap.copyOf(entity.getConfigMap().asMapWithStringKeys()));
         Assert.assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ImmutableList.of("x1", "w1", "x2", "x2", "x3", "w3"));
+    }
+    
+    public void testListCollectionUsage() throws Exception {
+        // passing a collection to the RHS of setConfig can be ambiguous,
+        // esp if there are already values set, but attempt to act sensibly
+        // (logging warnings if the set is not empty)
+        entity.setConfig(TestEntity.CONF_LIST_OBJ_THING, ListModifications.addItem("w"));
+        entity.setConfig(TestEntity.CONF_LIST_OBJ_THING, MutableList.of("x"));
+        entity.setConfig(TestEntity.CONF_LIST_OBJ_THING, MutableList.of("y"));
+        entity.setConfig(TestEntity.CONF_LIST_OBJ_THING, MutableList.of("a", "b"));
+        entity.setConfig(TestEntity.CONF_LIST_OBJ_THING, ListModifications.addItem("z"));
+        entity.setConfig(TestEntity.CONF_LIST_OBJ_THING, ListModifications.addItem(MutableList.of("c", "d")));
+        entity.setConfig(TestEntity.CONF_LIST_OBJ_THING, MutableList.of(MutableList.of("e", "f")));
+        log.info("List-Coll: "+MutableMap.copyOf(entity.getConfigMap().asMapWithStringKeys()));
+        List<? extends Object> list = entity.getConfig(TestEntity.CONF_LIST_OBJ_THING);
+        Assert.assertEquals(list.size(), 8, "list is: "+list);
+        // "a", "b", "w", "x", "y", "z", ImmutableList.of("c", "d"), ImmutableList.of("e", "f"))
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testListEmpty() throws Exception {
+        // ensure it is null before we pass something in, and passing an empty collection makes it be empty
+        log.info("List-Empty-1: "+MutableMap.copyOf(entity.getConfigMap().asMapWithStringKeys()));
+        Assert.assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), null);
+        entity.setConfig((ListConfigKey)TestEntity.CONF_LIST_THING, MutableList.of());
+        log.info("List-Empty-2: "+MutableMap.copyOf(entity.getConfigMap().asMapWithStringKeys()));
+        Assert.assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ImmutableList.of());
     }
     
 

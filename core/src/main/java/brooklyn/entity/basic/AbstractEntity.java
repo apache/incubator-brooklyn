@@ -347,11 +347,12 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         }
         
         // allow config keys, and fields, to be set from these flags if they have a SetFromFlag annotation
-        // TODO use the setDefaultVals variant
-        flags = FlagUtils.setFieldsFromFlags(flags, this);
-        flags = FlagUtils.setAllConfigKeys(flags, this);
+        // TODO the default values on flags are not used? (we should remove that support, since ConfigKeys gives a better way)
+        FlagUtils.setFieldsFromFlags(flags, this);
+        flags = FlagUtils.setAllConfigKeys(flags, this, false);
         
-        // all config keys specified in map should be set as config
+        // finally all config keys specified in map should be set as config
+        // TODO use a config bag and remove the ones set above in the code below
         for (Iterator<Map.Entry> fi = flags.entrySet().iterator(); fi.hasNext();) {
             Map.Entry entry = fi.next();
             Object k = entry.getKey();

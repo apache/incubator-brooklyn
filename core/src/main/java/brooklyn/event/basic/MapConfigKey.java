@@ -90,6 +90,8 @@ public class MapConfigKey<V> extends AbstractStructuredConfigKey<Map<String,V>,M
             Map.Entry entryT = (Map.Entry)entry;
             result.put(entryT.getKey(), applyEntryValueToMap(entryT, target));
         }
+        if (((Map)value).isEmpty() && !isSet(target))
+            target.put(this, MutableMap.of());
         return result;
     }
 

@@ -55,13 +55,13 @@ public class FlagUtilsTest {
     @Test
     public void testSetFieldsFromFlags() {
         Foo f = new Foo();
-		Map m = MutableMap.of("w", 3, "x", 1, "y", 7, "z", 9);
+		Map<?,?> m = MutableMap.of("w", 3, "x", 1, "y", 7, "z", 9);
         Map<?, ?> unused = FlagUtils.setFieldsFromFlags(m, f);
 		assertEquals(f.w, 3);
         assertEquals(f.x, 1);
         assertEquals(f.yNotY, 7);
         assertEquals(unused, ImmutableMap.of("z", 9));
-		Map m2 = FlagUtils.getFieldsWithValues(f);
+		Map<?,?> m2 = FlagUtils.getFieldsWithValues(f);
 		m.remove("z");
 		assertEquals(m2, m);
     }
@@ -69,16 +69,16 @@ public class FlagUtilsTest {
     @Test
     public void testCollectionCoercionOnSetFromFlags() {
         WithSpecialFieldTypes s = new WithSpecialFieldTypes();
-        Map m = ImmutableMap.of("set", ImmutableSet.of(1));
-        Map<?, ?> unused = FlagUtils.setFieldsFromFlags(m, s);
+        Map<?,?> m = ImmutableMap.of("set", ImmutableSet.of(1));
+        FlagUtils.setFieldsFromFlags(m, s);
         assertEquals(s.set, ImmutableSet.of(1));
     }
 
     @Test
     public void testInetAddressCoercionOnSetFromFlags() {
         WithSpecialFieldTypes s = new WithSpecialFieldTypes();
-        Map m = ImmutableMap.of("inet", "127.0.0.1");
-        Map<?, ?> unused = FlagUtils.setFieldsFromFlags(m, s);
+        Map<?,?> m = ImmutableMap.of("inet", "127.0.0.1");
+        FlagUtils.setFieldsFromFlags(m, s);
         assertEquals(s.inet.getHostAddress(), "127.0.0.1");
     }
 
@@ -157,7 +157,7 @@ public class FlagUtilsTest {
     @Test
     public void testCheckRequired() {
         WithImmutableNonNullableObject f = new WithImmutableNonNullableObject();
-        Map<?, ?> unused = FlagUtils.setFieldsFromFlags(ImmutableMap.of("a", "a is a"), f);
+        FlagUtils.setFieldsFromFlags(ImmutableMap.of("a", "a is a"), f);
         assertEquals(f.a, "a is a");
         assertEquals(f.b, null);
         int exceptions = 0;
@@ -172,8 +172,9 @@ public class FlagUtilsTest {
     @Test
     public void testSetConfigKeys() {
         FooCK f = new FooCK();
-        Map<?,?> unused = FlagUtils.setFieldsFromFlags(ImmutableMap.of("f1", 9, "ck1", "do-set", "ck2", "dont-set"), f);
+        Map<?,?> unused = FlagUtils.setFieldsFromFlags(ImmutableMap.of("f1", 9, "ck1", "do-set", "ck2", "dont-set", "c3", "do-set"), f);
         assertEquals(f.bag.get(FooCK.CK1), "do-set");
+        assertEquals(f.bag.get(FooCK.CK3), "do-set");
         assertEquals(f.f1, 9);
         assertEquals(f.bag.containsKey(FooCK.CK2), false);
         assertEquals(unused, ImmutableMap.of("ck2", "dont-set"));
@@ -182,8 +183,9 @@ public class FlagUtilsTest {
     @Test
     public void testSetAllConfigKeys() {
         FooCK f = new FooCK();
-        Map<?,?> unused = FlagUtils.setAllConfigKeys(ImmutableMap.of("f1", 9, "ck1", "do-set", "ck2", "do-set-2"), f);
+        Map<?,?> unused = FlagUtils.setAllConfigKeys(ImmutableMap.of("f1", 9, "ck1", "do-set", "ck2", "do-set-2", "c3", "do-set"), f, true);
         assertEquals(f.bag.get(FooCK.CK1), "do-set");
+        assertEquals(f.bag.get(FooCK.CK3), "do-set");
         assertEquals(f.bag.containsKey(FooCK.CK2), true);
         assertEquals(f.bag.get(FooCK.CK2), "do-set-2");
         assertEquals(unused, ImmutableMap.of("f1", 9));
@@ -215,7 +217,8 @@ public class FlagUtilsTest {
     }
     
     public static class Baz extends Foo implements Bar {
-    	private static int A;
+    	@SuppressWarnings("unused")  //inspected by reflection
+        private static int A;
     }
     
     public static class WithImmutableNonNullableObject {
@@ -226,7 +229,7 @@ public class FlagUtilsTest {
     }
     
     public static class WithSpecialFieldTypes {
-        @SetFromFlag Set set;
+        @SetFromFlag Set<?> set;
         @SetFromFlag InetAddress inet;
     }
     
@@ -235,7 +238,10 @@ public class FlagUtilsTest {
         public static ConfigKey<String> CK1 = ConfigKeys.newStringConfigKey("ck1");
         
         public static ConfigKey<String> CK2 = ConfigKeys.newStringConfigKey("ck2");
-    
+
+        @SetFromFlag("c3")
+        public static ConfigKey<String> CK3 = ConfigKeys.newStringConfigKey("ck3");
+
         @SetFromFlag
         int f1;
         

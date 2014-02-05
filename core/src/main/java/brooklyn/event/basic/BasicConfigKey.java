@@ -24,6 +24,7 @@ import com.google.common.reflect.TypeToken;
 
 public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializable {
     
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(BasicConfigKey.class);
     private static final long serialVersionUID = -1762014059150215376L;
     
