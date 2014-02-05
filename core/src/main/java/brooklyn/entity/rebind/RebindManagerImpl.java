@@ -286,7 +286,7 @@ public class RebindManagerImpl implements RebindManager {
             LOG.info("RebindManager complete; return apps: {}", memento.getApplicationIds());
             return apps;
         } catch (Exception e) {
-            LOG.warn("Problem during rebinid (rethrowing)", e);
+            LOG.warn("Problem during rebind (rethrowing)", e);
             throw Exceptions.propagate(e);
         }
     }

@@ -177,7 +177,7 @@ public class LocalEntityManager implements EntityManagerInternal {
     
     synchronized void prePreManage(Entity entity) {
         if (isPreRegistered(entity)) {
-            log.warn(""+this+" redundant call to pre-pre-manage entity"+entity+"; skipping", 
+            log.warn(""+this+" redundant call to pre-pre-manage entity "+entity+"; skipping", 
                     new Exception("source of duplicate pre-pre-manage of "+entity));
             return;
         }
