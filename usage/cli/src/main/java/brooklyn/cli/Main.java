@@ -213,9 +213,18 @@ public class Main {
         public boolean stopOnKeyPress = false;
 
         // TODO currently defaults to disabled; want it to default to on, when we're ready
+        // TODO how to force a line-split per option?!
+        //      Looks like java.io.airlift.airline.UsagePrinter is splitting the description by word, and
+        //      wrapping it automatically.
+        //      See https://github.com/airlift/airline/issues/30
         @Option(name = { "--persist" }, allowedValues = { "disabled", "auto", "rebind", "clean" },
                 title = "persistance mode",
-                description = "the persistence mode")
+                description =
+                        "The persistence mode. Possible values are: \n"+
+                        "disabled: will not read or persist any state; \n"+
+                        "auto: will rebind to any existing state, or start up fresh if no state; \n"+
+                        "rebind: will rebind to the existing state, or fail if no state available; \n"+
+                        "clean: will start up fresh (not using any existing state)")
         public String persist = "disabled";
 
         @Option(name = { "--persistenceDir" }, title = "persistence dir",
