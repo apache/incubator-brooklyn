@@ -215,10 +215,7 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     @Override
     public String getStatusCmd() {
-        // TODO Is this very bad, to include the password in the command being executed
-        // (so is in `ps` listing temporarily, and in .bash_history)
-        return format("%s/bin/mysqladmin --user=%s --password=%s --socket=/tmp/mysql.sock.%s.%s status",
-                getExpandedInstallDir(), "root", getPassword(), getSocketUid(), getPort());
+        return format("%s/bin/mysqladmin --defaults-file=%s status", getExpandedInstallDir(), getConfigFile());
     }
 
     public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
