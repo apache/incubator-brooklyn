@@ -410,15 +410,19 @@ public class BrooklynLauncher {
                 LOG.info("Persistence disabled");
                 
             } else {
-                if (persistenceDir == null) throw new IllegalStateException("Persistence dir must be set with persistence mode "+persistMode);
+                if (persistenceDir == null) throw new FatalConfigurationRuntimeException("Persistence dir must be set with persistence mode "+persistMode);
                 String persistencePath = persistenceDir.getAbsolutePath();
                 
                 boolean rebinding;
                 switch (persistMode) {
                     case CLEAN:
                         if (persistenceDir.exists()) {
-                            File old = moveDirectory(persistenceDir);
-                            LOG.info("Clean start using "+persistencePath+"; moved old directory to "+old.getAbsolutePath());
+                            try {
+                                File old = moveDirectory(persistenceDir);
+                                LOG.info("Clean start using "+persistencePath+"; moved old directory to "+old.getAbsolutePath());
+                            } catch (IOException e) {
+                                throw new FatalConfigurationRuntimeException("Error moving old persistence directory "+persistenceDir.getAbsolutePath(), e);
+                            }
                         } else {
                             LOG.info("Clean start using "+persistencePath+"; no pre-existing persisted data");
                         }
@@ -426,10 +430,14 @@ public class BrooklynLauncher {
                         break;
                     case REBIND:
                         if (persistenceDir.exists() && persistenceDir.isDirectory() && persistenceDir.canRead() && persistenceDir.canWrite() && !isMementoDirEmpty(persistenceDir)) {
-                            File backup = backupDirectory(persistenceDir);
-                            LOG.info("Rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
+                            try {
+                                File backup = backupDirectory(persistenceDir);
+                                LOG.info("Rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
+                            } catch (IOException e) {
+                                throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+persistenceDir.getAbsolutePath(), e);
+                            }
                         } else {
-                            throw new IllegalStateException("Cannot rebind to persistence directory "+persistenceDir+" because "+
+                            throw new FatalConfigurationRuntimeException("Cannot rebind to persistence directory "+persistenceDir+" because "+
                                     (persistenceDir.exists() ? "does not exist" :
                                         (!persistenceDir.isDirectory() ? "not a directory" :
                                             (persistenceDir.canRead() ? "not readable" :
@@ -440,8 +448,12 @@ public class BrooklynLauncher {
                         break;
                     case AUTO:
                         if (persistenceDir.exists() && !isMementoDirEmpty(persistenceDir)) {
-                            File backup = backupDirectory(persistenceDir);
-                            LOG.info("Auto rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
+                            try {
+                                File backup = backupDirectory(persistenceDir);
+                                LOG.info("Auto rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
+                            } catch (IOException e) {
+                                throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+persistenceDir.getAbsolutePath(), e);
+                            }
                             rebinding = true;
                         } else {
                             rebinding = false;
@@ -449,13 +461,13 @@ public class BrooklynLauncher {
                         }
                         break;
                     default:
-                        throw new IllegalStateException("Unexpected persist mode "+persistMode+"; modified during initialization?!");
+                        throw new FatalConfigurationRuntimeException("Unexpected persist mode "+persistMode+"; modified during initialization?!");
                 };
                 
                 if (!persistenceDir.exists()) {
                     boolean success = persistenceDir.mkdirs();
                     if (!success) {
-                        throw new IllegalStateException("Failed to create persistence directory "+persistenceDir);
+                        throw new FatalConfigurationRuntimeException("Failed to create persistence directory "+persistenceDir);
                     }
                 }
     
@@ -585,7 +597,7 @@ public class BrooklynLauncher {
         Process proc = Runtime.getRuntime().exec(cmd);
         proc.waitFor();
         if (proc.exitValue() != 0) {
-            throw new IllegalStateException("Error backing up directory, with command "+cmd);
+            throw new IOException("Error backing up directory, with command "+cmd);
         }
         return backupDir;
     }
@@ -600,7 +612,7 @@ public class BrooklynLauncher {
         Process proc = Runtime.getRuntime().exec(cmd);
         proc.waitFor();
         if (proc.exitValue() != 0) {
-            throw new IllegalStateException("Error moving directory, with command "+cmd);
+            throw new IOException("Error moving directory, with command "+cmd);
         }
         return newDir;
     }

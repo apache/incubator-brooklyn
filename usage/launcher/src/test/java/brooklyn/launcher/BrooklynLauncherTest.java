@@ -310,7 +310,7 @@ public class BrooklynLauncherTest {
             }});
     }
 
-    @Test(expectedExceptions=IllegalStateException.class)
+    @Test(expectedExceptions=FatalConfigurationRuntimeException.class)
     public void testRebindFailsIfNoDir() throws Exception {
         launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
