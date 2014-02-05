@@ -10,6 +10,7 @@ import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityTypes;
@@ -141,8 +142,10 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     }
 
     protected synchronized Map<String, ConfigKey<?>> getStaticConfigKeys() {
-        if (staticConfigKeys==null) 
-            staticConfigKeys = EntityTypes.getDefinedConfigKeys(getType());
+        if (staticConfigKeys==null) {
+            Class<? extends Entity> clazz = (Class<? extends Entity>) getTypeClass();
+            staticConfigKeys = (clazz == null) ? EntityTypes.getDefinedConfigKeys(getType()) : EntityTypes.getDefinedConfigKeys(clazz);
+        }
         return staticConfigKeys;
     }
 
@@ -155,8 +158,10 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     }
 
     protected synchronized Map<String, Sensor<?>> getStaticSensorKeys() {
-        if (staticSensorKeys==null) 
-            staticSensorKeys = EntityTypes.getDefinedSensors(getType());
+        if (staticSensorKeys==null) {
+            Class<? extends Entity> clazz = (Class<? extends Entity>) getTypeClass();
+            staticSensorKeys = (clazz == null) ? EntityTypes.getDefinedSensors(getType()) : EntityTypes.getDefinedSensors(clazz);
+        }
         return staticSensorKeys;
     }
 

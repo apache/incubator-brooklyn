@@ -259,6 +259,7 @@ public class RebindManagerImpl implements RebindManager {
                 Entity entity = rebindContext.getEntity(entityMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
     
+                entityMemento.injectTypeClass(entity.getClass());
                 ((EntityInternal)entity).getRebindSupport().reconstruct(rebindContext, entityMemento);
             }
             
@@ -295,6 +296,7 @@ public class RebindManagerImpl implements RebindManager {
         String entityId = memento.getId();
         String entityType = checkNotNull(memento.getType(), "entityType of "+entityId);
         Class<? extends Entity> entityClazz = (Class<? extends Entity>) reflections.loadClass(entityType);
+        memento.injectTypeClass(entityClazz);
         
         if (InternalEntityFactory.isNewStyleEntity(managementContext, entityClazz)) {
             // Not using entityManager.createEntity(EntitySpec) because don't want init() to be called

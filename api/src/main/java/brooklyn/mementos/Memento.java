@@ -34,4 +34,14 @@ public interface Memento extends Serializable {
     public Map<String, ? extends Object> getCustomFields();
     
     public String toVerboseString();
+    
+    public void injectTypeClass(Class<?> clazz);
+    
+    /**
+     * Returns the injected type class, or null if not injected.
+     * <p>
+     * This is useful for ensuring the correct classloader is used (e.g. for {@link EntityMemento} 
+     * previously calling {@code EntityTypes.getDefinedSensors(getType())}. 
+     */
+    public Class<?> getTypeClass();
 }
