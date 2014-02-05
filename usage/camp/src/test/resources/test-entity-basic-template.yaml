@@ -5,6 +5,4 @@ origin: http://brooklyn.io
 services:
 - serviceType: brooklyn.test.entity.TestEntity
   name: testentity
-  brooklyn.config:
-    ${brooklynConfig}
-${additionalConfig?if_exists}
+# should have nothing below here as the test appends things underneath

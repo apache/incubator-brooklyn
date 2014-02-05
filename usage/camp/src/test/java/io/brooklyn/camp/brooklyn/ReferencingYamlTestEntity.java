@@ -1,12 +1,11 @@
 package io.brooklyn.camp.brooklyn;
 
-import com.google.common.reflect.TypeToken;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.test.entity.TestApplicationImpl;
+
+import com.google.common.reflect.TypeToken;
 
 @ImplementedBy(ReferencingYamlTestEntityImpl.class)
 public interface ReferencingYamlTestEntity {

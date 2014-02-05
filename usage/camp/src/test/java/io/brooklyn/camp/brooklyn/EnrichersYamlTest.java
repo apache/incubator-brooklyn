@@ -102,24 +102,20 @@ public class EnrichersYamlTest extends AbstractYamlTest {
     
     @Test
     public void testPropogateChildSensor() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig",
-                new StringBuilder()
-                    .append("test.confName: parent entity\n")
-                    .toString(),
-                "additionalConfig",
-                new StringBuilder()
-                    .append("  id: parentId\n")
-                    .append("  brooklyn.enrichers:\n")
-                    .append("  - enricherType: brooklyn.enricher.basic.Propagator\n")
-                    .append("    brooklyn.config:\n")
-                    .append("      enricher.producer: $brooklyn:component(\"childId\")\n")
-                    .append("      enricher.propagating.propagatingAll: true\n")
-                    .append("  brooklyn.children:\n")
-                    .append("  - serviceType: brooklyn.test.entity.TestEntity\n")
-                    .append("    id: childId\n")
-                    .append("    brooklyn.config:\n")
-                    .append("      test.confName: Child Name")
-                    .toString()));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml",
+                    "  brooklyn.config:",
+                    "    test.confName: parent entity",
+                    "  id: parentId",
+                    "  brooklyn.enrichers:",
+                    "  - enricherType: brooklyn.enricher.basic.Propagator",
+                    "    brooklyn.config:",
+                    "      enricher.producer: $brooklyn:component(\"childId\")",
+                    "      enricher.propagating.propagatingAll: true",
+                    "  brooklyn.children:",
+                    "  - serviceType: brooklyn.test.entity.TestEntity",
+                    "    id: childId",
+                    "    brooklyn.config:",
+                    "      test.confName: Child Name");
         waitForApplicationTasks(app);
         
         log.info("App started:");

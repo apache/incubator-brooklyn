@@ -19,7 +19,10 @@ import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.entity.Entity;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import brooklyn.util.text.Strings;
 
 public class BrooklynEntityMatcher implements PdpMatcher {
@@ -89,13 +92,15 @@ public class BrooklynEntityMatcher implements PdpMatcher {
 
         Builder<? extends PlatformComponentTemplate> builder = PlatformComponentTemplate.builder();
         
+        String type;
         if (item instanceof CatalogItem) {
-            builder.type( "brooklyn:"+((CatalogItem<?>)item).getJavaType() );
+            type = ((CatalogItem<?>)item).getJavaType();
         } else if (item instanceof Class) {
-            builder.type( "brooklyn:"+((Class<?>) item).getName() );
+            type = ((Class<?>) item).getName();
         } else {
             throw new IllegalStateException("Item "+item+" is not recognised here");
         }
+        builder.type( "brooklyn:"+type );
         
         // currently instantiator must be brooklyn at the ATC level
         // optionally would be nice to support multiple/mixed instantiators, 
@@ -118,12 +123,20 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         if (locations!=null)
             builder.customAttribute("locations", locations);
         
-        Map<Object, Object> brooklynConfig = MutableMap.of();
+        MutableMap<Object, Object> brooklynConfig = MutableMap.of();
         Object origBrooklynConfig = attrs.remove("brooklyn.config");
         if (origBrooklynConfig!=null) {
             if (!(origBrooklynConfig instanceof Map))
                 throw new IllegalArgumentException("brooklyn.config must be a map of brooklyn config keys");
             brooklynConfig.putAll((Map<?,?>)origBrooklynConfig);
+        }
+        // also take *recognised* flags and config keys from the top-level, and put them under config
+        List<FlagConfigKeyAndValueRecord> topLevelApparentConfig = extractValidConfigFlagsOrKeys(Strings.removeFromStart(type, "brooklyn:"), attrs, true);
+        if (topLevelApparentConfig!=null) for (FlagConfigKeyAndValueRecord r: topLevelApparentConfig) {
+            if (r.getConfigKeyMaybeValue().isPresent())
+                brooklynConfig.put(r.getConfigKey(), r.getConfigKeyMaybeValue().get());
+            if (r.getFlagMaybeValue().isPresent())
+                brooklynConfig.put(r.getFlagName(), r.getFlagMaybeValue().get());
         }
         // (any other brooklyn config goes here)
         if (!brooklynConfig.isEmpty())
@@ -169,6 +182,34 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         atc.add(builder.build());
         
         return true;
+    }
+
+    /** finds flags and keys on the given typeName which are present in the given map;
+     * returns those (using the config key name), and removes them from attrs
+     */
+    protected List<FlagConfigKeyAndValueRecord> extractValidConfigFlagsOrKeys(String typeName, Map<String, Object> attrs, boolean removeIfFound) {
+        if (attrs==null || attrs.isEmpty())
+            return null;
+        try {
+            Class<?> type = Class.forName(typeName);
+            ConfigBag bag = ConfigBag.newInstance(attrs);
+            List<FlagConfigKeyAndValueRecord> values = FlagUtils.findAllFlagsAndConfigKeys(null, type, bag);
+            
+            if (removeIfFound) {
+                // remove from attrs
+                MutableMap<String, Object> used = MutableMap.copyOf(bag.getAllConfig());
+                for (String unusedKey: bag.getUnusedConfig().keySet())
+                    used.remove(unusedKey);
+                for (String usedKey: used.keySet())
+                    attrs.remove(usedKey);
+            }
+            
+            return values;
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            log.warn("Ignoring configuration attributes on "+typeName+" due to "+e, e);
+            return null;
+        }
     }
 
 }
