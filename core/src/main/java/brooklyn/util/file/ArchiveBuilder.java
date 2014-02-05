@@ -27,6 +27,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.zip.ZipOutputStream;
 
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveUtils.ArchiveType;
@@ -106,7 +107,7 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Set the name and location of the generated archive file.
+     * Set the location of the generated archive file.
      */
     public ArchiveBuilder named(String name) {
         checkNotNull(name);
@@ -129,7 +130,7 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add a manifest entry with the given {@literal key} and {@literal value}.
+     * Add a manifest entry with the given {@code key} and {@code value}.
      */
     public ArchiveBuilder manifest(Object key, Object value) {
         checkNotNull(key, "key");
@@ -139,7 +140,7 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add the file located at the {@literal filePath} to the archive.
+     * Add the file located at the {@code filePath} to the archive.
      *
      * @see #add(File)
      */
@@ -149,34 +150,39 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add {@literal file} to the archive.
+     * Add the {@code file} to the archive.
      * <p>
-     * If the file path is absolute, the file is added as a top-level entry
-     * to the archive using the file name only. For relative {@literal filePath}s the
-     * file is added using the path given and is assumed to be located relative to
-     * the current working directory. No checks for file existence are made at this
-     * stage.
+     * If the file path is absolute, or points to a file above the current directory,
+     * the file is added to the archive as a top-level entry, using the file name only.
+     * For relative {@code filePath}s below the current directory, the file is added
+     * using the path given and is assumed to be located relative to the current
+     * working directory.
+     * <p>
+     * No checks for file existence are made at this stage.
      *
      * @see #entry(String, File)
      */
     public ArchiveBuilder add(File file) {
         checkNotNull(file, "file");
-        if (file.isAbsolute()) {
-            return entry(Os.mergePaths(".", file.getName()), file.getAbsoluteFile());
+        String filePath = Os.tidyPath(file.getPath());
+        if (file.isAbsolute() || filePath.startsWith("../")) {
+            return entry(Os.mergePaths(".", file.getName()), file);
         } else {
-            return entry(Os.mergePaths(".", file.getPath()), file);
+            return entry(Os.mergePaths(".", filePath), file);
         }
     }
 
     /**
-     * Add the file located at the {@literal filePath}, relative to the {@literal baseDir},
+     * Add the file located at the {@code filePath}, relative to the {@code baseDir},
      * to the archive.
      * <p>
-     * Uses the {@literal filePath} as the name of the file in the archive. Note that the
+     * Uses the {@code filePath} as the name of the file in the archive. Note that the
      * two path components are simply concatenated using {@link Os#mergePaths(String...)}
-     * which may not behave as expected if the {@literal filePath} is absolute. Use the
-     * {@link #entry(String, File)} or {@link #entries(Map)} methods for complete control
-     * over file locations and names.
+     * which may not behave as expected if the {@code filePath} is absolute or points to
+     * a location above the current directory.
+     * <p>
+     * Use {@link #entry(String, String)} directly or {@link #entries(Map)} for complete
+     * control over file locations and names in the archive.
      *
      * @see #entry(String, String)
      */
@@ -187,7 +193,7 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add the contents of the directory named {@literal dirName} to the archive.
+     * Add the contents of the directory named {@code dirName} to the archive.
      *
      * @see #addDir(File)
      */
@@ -197,7 +203,7 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add the contents of the directory {@literal dir} to the archive.
+     * Add the contents of the directory {@code dir} to the archive.
      * <p>
      * Uses {@literal .} as the parent directory name for the contents.
      *
@@ -209,7 +215,7 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add the collection of {@literal files} to the archive.
+     * Add the collection of {@code files} to the archive.
      *
      * @see #add(String)
      */
@@ -222,7 +228,7 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add the collection of {@literal files}, relative to the {@literal baseDir}, to
+     * Add the collection of {@code files}, relative to the {@code baseDir}, to
      * the archive.
      *
      * @see #add(String, String)
@@ -237,7 +243,7 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add the {@literal file} to the archive with the path {@literal entryPath}.
+     * Add the {@code file} to the archive with the path {@code entryPath}.
      *
      * @see #entry(String, File)
      */
@@ -248,7 +254,7 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add the {@literal file} to the archive with the path {@literal entryPath}.
+     * Add the {@code file} to the archive with the path {@code entryPath}.
      */
     public ArchiveBuilder entry(String entryPath, File file) {
         checkNotNull(entryPath, "entryPath");
@@ -261,10 +267,11 @@ public class ArchiveBuilder {
      * Add a {@link Map} of entries to the archive.
      * <p>
      * The keys should be the names of the file entries to be added to the archive and
-     * the associated {@link File} value should point to the actual file to add. This
-     * allows complete control over the directory structure of the eventual archive, as
-     * the file names do not need to bear any relationship to the location of the files
-     * on the filesystem.
+     * the value should point to the actual {@link File} to be added.
+     * <p>
+     * This allows complete control over the directory structure of the eventual archive,
+     * as the entry names do not need to bear any relationship to the name or location
+     * of the files on the filesystem.
      */
     public ArchiveBuilder entries(Map<String, File> entries) {
         checkNotNull(entries, "entries");
@@ -279,12 +286,12 @@ public class ArchiveBuilder {
      */
     public void stream(OutputStream output) {
         try {
-            JarOutputStream target;
-            if (type == ArchiveType.JAR) { // TODO what about War and Ear types?
+            ZipOutputStream target;
+            if (type == ArchiveType.ZIP) {
+                target = new ZipOutputStream(output);
+            } else {
                 manifest(Attributes.Name.MANIFEST_VERSION, "1.0");
                 target = new JarOutputStream(output, manifest);
-            } else {
-                target = new JarOutputStream(output);
             }
             for (String entry : entries.keySet()) {
                 entry(entry, entries.get(entry), target);
@@ -324,11 +331,17 @@ public class ArchiveBuilder {
         return archive;
     }
 
-    // Code adapted from example in http://stackoverflow.com/questions/1281229/how-to-use-jaroutputstream-to-create-a-jar-file
-    // but modified so that given an absolute dir the entries in the jar file will all be relative.
-    // TODO Probably doesn't handle symbolic links etc
-
-    private void entry(String path, File source, JarOutputStream target) throws IOException {
+    /**
+     * Recursively add files to the archive.
+     * <p>
+     * Code adapted from this <a href="http://stackoverflow.com/questions/1281229/how-to-use-jaroutputstream-to-create-a-jar-file">example</a>
+     * <p>
+     * <strong>Note</strong> {@link File} provides no support for symbolic links, and as such there is
+     * no way to ensure that a symbolic link to a directory is not followed when traversing the
+     * tree. In this case, iterables created by this traverser could contain files that are
+     * outside of the given directory or even be infinite if there is a symbolic link loop.
+     */
+    private void entry(String path, File source, ZipOutputStream target) throws IOException {
         String name = path.replace("\\", "/");
         if (source.isDirectory()) {
             name += "/";

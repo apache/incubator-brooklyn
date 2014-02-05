@@ -43,8 +43,8 @@ public class ArchiveUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ArchiveUtils.class);
 
-    /** Number of attempts when copying a file to a remote server. */
     // TODO Make this a ConfigKey on the machine location
+    /** Number of attempts when copying a file to a remote server. */
     public static final int NUM_RETRIES_FOR_COPYING = 5;
 
     /**
