@@ -465,7 +465,9 @@ public class Main {
     @VisibleForTesting
     static Cli<BrooklynCommand> buildCli() {
         @SuppressWarnings({ "unchecked" })
-        CliBuilder<BrooklynCommand> builder = Cli.<BrooklynCommand>builder("brooklyn").withCommand(BrooklynCommand.class)
+        CliBuilder<BrooklynCommand> builder = Cli.buildCli("brooklyn", BrooklynCommand.class)
+            //throws exception:
+            //<BrooklynCommand>builder("brooklyn").withCommand(BrooklynCommand.class)
                 .withDescription("Brooklyn Management Service")
                 .withCommands(
                         HelpCommand.class,
