@@ -186,6 +186,16 @@ public class FlagUtils {
         public boolean isValuePresent() {
             return flagValue.isPresent() || configKeyValue.isPresent();
         }
+        
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).omitNullValues()
+                .add("flag", flagName)
+                .add("configKey", configKey)
+                .add("flagValue", flagValue.orNull())
+                .add("configKeyValue", configKeyValue.orNull())
+                .toString();
+        }
     }
     
     /** gets all the flags/keys in the given config bag which are applicable to the given type's config keys and flags */
