@@ -75,6 +75,7 @@ public class MementoFileWriter<T> {
             return;
         }
         
+        requireWrite.set(null);
         requireDelete.set(true);
         if (executing.compareAndSet(false, true)) {
             if (LOG.isTraceEnabled()) LOG.trace("Submitting delete task for {}", file);

@@ -235,6 +235,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @Override
     public synchronized void onManaged(Entity entity) {
+        if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", entity);
         if (!isStopped()) {
             onChanged(entity);
         }
@@ -242,6 +243,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
 
     @Override
     public synchronized void onManaged(Location location) {
+        if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", location);
         if (!isStopped()) {
             onChanged(location);
         }
@@ -249,6 +251,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @Override
     public synchronized void onChanged(Entity entity) {
+        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", entity);
         if (!isStopped()) {
             deltaCollector.entities.add(entity);
 
@@ -269,6 +272,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @Override
     public synchronized void onUnmanaged(Entity entity) {
+        if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", entity);
         if (!isStopped()) {
             deltaCollector.removedEntityIds.add(entity.getId());
             deltaCollector.entities.remove(entity);
@@ -277,6 +281,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
 
     @Override
     public synchronized void onUnmanaged(Location location) {
+        if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", location);
         if (!isStopped()) {
             deltaCollector.removedLocationIds.add(location.getId());
             deltaCollector.locations.remove(location);
@@ -285,6 +290,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
 
     @Override
     public synchronized void onChanged(Location location) {
+        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", location);
         if (!isStopped()) {
             deltaCollector.locations.add(location);
         }
@@ -292,6 +298,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @Override
     public synchronized void onChanged(Policy policy) {
+        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", policy);
         if (!isStopped()) {
             deltaCollector.policies.add(policy);
         }

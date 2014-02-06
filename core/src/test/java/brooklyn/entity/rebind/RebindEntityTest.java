@@ -23,6 +23,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
@@ -501,9 +502,27 @@ public class RebindEntityTest {
         assertNull(newFailingE);
     }
 
-    @Test(invocationCount=500, groups="Integration")
+    @Test(invocationCount=100, groups="Integration")
     public void testFailureGeneratingMementoStillPersistsOtherEntitiesRepeatedly() throws Exception {
         testFailureGeneratingMementoStillPersistsOtherEntities();
+    }
+
+    @Test
+    public void testRebindWhenPreviousAppDestroyedHasNoApp() throws Exception {
+        origApp.stop();
+        
+        RebindTestUtils.waitForPersisted(origManagementContext);
+        LocalManagementContext newManagementContext = RebindTestUtils.newPersistingManagementContextUnstarted(mementoDir, classLoader);
+        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        newManagementContext.getRebindManager().start();
+        
+        assertEquals(newApps.size(), 0, "apps="+newApps);
+        assertEquals(newManagementContext.getApplications().size(), 0, "apps="+newManagementContext.getApplications());
+    }
+
+    @Test(invocationCount=100, groups="Integration")
+    public void testRebindWhenPreviousAppDestroyedHasNoAppRepeatedly() throws Exception {
+        testRebindWhenPreviousAppDestroyedHasNoApp();
     }
 
     private TestApplication rebind() throws Exception {
