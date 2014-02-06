@@ -2,6 +2,8 @@ package brooklyn.entity.basic;
 
 import java.util.Map;
 
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -26,9 +28,10 @@ import brooklyn.util.flags.SetFromFlag;
 public interface SameServerEntity extends Entity, Startable {
 
     @SetFromFlag("provisioningProperties")
-    ConfigKey<Map<String,Object>> PROVISIONING_PROPERTIES = new BasicConfigKey(
-            Map.class, "provisioning.properties", 
-            "Custom properties to be passed in when provisioning a new machine", MutableMap.of());
+    ConfigKey<Map<String,Object>> PROVISIONING_PROPERTIES = ConfigKeys.newConfigKey(
+            new TypeToken<Map<String, Object>>() {},
+            "provisioning.properties", "Custom properties to be passed in when provisioning a new machine",
+            MutableMap.<String, Object>of());
     
     AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
 

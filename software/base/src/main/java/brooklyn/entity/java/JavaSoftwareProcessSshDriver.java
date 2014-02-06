@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.EffectorTasks;
@@ -25,6 +26,7 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
@@ -33,6 +35,7 @@ import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -249,55 +252,102 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         }
         return result;
     }
-        
-    public boolean installJava() {
+
+    /**
+     * Checks for the presence of Java 6 or 7 on the entity's location, installing if necessary.
+     * @return true if Java 6 or 7 was found on the machine or if it was installed correctly, otherwise false.
+     */
+    protected boolean checkForAndInstallJava6or7() {
+        Optional<String> version = getCurrentJavaVersion();
+        if (version.isPresent() && (version.get().startsWith("1.7") || version.get().startsWith("1.6"))) {
+            log.debug("Java version {} already installed at {}@{}", new Object[]{version.get(), getEntity(), getLocation()});
+            return true;
+        } else {
+            // Let's hope not!
+            if (version.isPresent()) {
+                log.debug("Found Java version {} on {}@{}. Going to install Java 7.",
+                        new Object[]{version.get(), getEntity(), getLocation()});
+            }
+            return tryJavaInstall("7", BashCommands.installJava7OrFail()) == 0;
+        }
+    }
+
+    /**
+     * Checks for the presence of Java 6 on the entity's location, installing if necessary.
+     * @return true if Java 6 was found on the machine or if it was installed correctly, otherwise false.
+     */
+    protected boolean checkForAndInstallJava6() {
+        Optional<String> version = getCurrentJavaVersion();
+        if (version.isPresent() && version.get().startsWith("1.6")) {
+            log.debug("Java 6 already installed at {}@{}", getEntity(), getLocation());
+            return true;
+        } else {
+            return tryJavaInstall("6", BashCommands.installJava6OrFail()) == 0;
+        }
+    }
+
+    /**
+     * Checks for the presence of Java 7 on the entity's location, installing if necessary.
+     * @return true if Java 7 was found on the machine or if it was installed correctly, otherwise false.
+     */
+    protected boolean checkForAndInstallJava7() {
+        Optional<String> version = getCurrentJavaVersion();
+        if (version.isPresent() && version.get().startsWith("1.7")) {
+            log.debug("Java 7 already installed at {}@{}", getEntity(), getLocation());
+            return true;
+        } else {
+            return tryJavaInstall("7", BashCommands.installJava7OrFail()) == 0;
+        }
+    }
+
+    private int tryJavaInstall(String version, String command) {
         try {
             getLocation().acquireMutex("installing", "installing Java at " + getLocation());
-            log.debug("checking for java at " + entity + " @ " + getLocation());
-            int result = getLocation().execCommands("check java", Arrays.asList("which java"));
-            if (result == 0) {
-                log.debug("java detected at " + entity + " @ " + getLocation());
-                return true;
-            } else {
-                log.debug("java not detected at " + entity + " @ " + getLocation() + ", installing using BashCommands.installJava6");
-
-                result = DynamicTasks.queue(SshEffectorTasks.ssh(BashCommands.installJava7Or6OrFail())).get();
-                // could use Jclouds routines -- but the following complains about yum-install not defined
-                // even though it is set as an alias (at the start of the first file)
-                //   resource.getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
-                //   resource.getResourceAsString("classpath:///functions/installOpenJDK.sh"),
-                //   "installOpenJDK"
-                if (result==0) return true;
-
-                // some failures might want a delay and a retry; 
-                // NOT confirmed this is needed, so:
-                // if we don't see the warning then remove, 
-                // or if we do see the warning then just remove this comment!  3 Sep 2013
-                log.warn("Unable to install Java at " + getLocation() + " for " + entity +
-                        " (and Java not detected); invalid result "+result+". " + 
-                        "Will retry.");
-                Time.sleep(Duration.TEN_SECONDS);
-
-                result = DynamicTasks.queue(SshEffectorTasks.ssh(BashCommands.installJava7Or6OrFail())).get();
-                if (result==0) {
-                    log.info("Succeeded installing Java at " + getLocation() + " for " + entity + " after retry.");
-                    return true;
-                }
-                log.error("Unable to install Java at " + getLocation() + " for " + entity +
-                          " (and Java not detected), including one retry; invalid result "+result+". " + 
-                          "Processes may fail to start.");
-                return false;
+            log.debug("Installing Java {} at {}@{}", new Object[]{version, getEntity(), getLocation()});
+            ProcessTaskWrapper<Integer> installCommand = Entities.submit(getEntity(),
+                    SshTasks.newSshExecTaskFactory(getLocation(), command));
+            int result = installCommand.get();
+            if (result != 0) {
+                log.warn("Installation of Java {} failed at {}@{}: {}",
+                        new Object[]{version, getEntity(), getLocation(), installCommand.getStderr()});
             }
+           return result;
         } catch (Exception e) {
             throw Throwables.propagate(e);
         } finally {
             getLocation().releaseMutex("installing");
         }
+    }
 
-        // //this works on ubuntu (surprising that jdk not in default repos!)
-        // "sudo add-apt-repository ppa:dlecan/openjdk",
-        // "sudo apt-get update",
-        // "sudo apt-get install -y --allow-unauthenticated openjdk-7-jdk"
+    /**
+     * Checks for the version of Java installed on the entity's location over SSH.
+     * @return An Optional containing the version portion of `java -version`, or absent if no Java found.
+     */
+    protected Optional<String> getCurrentJavaVersion() {
+        log.debug("Checking Java version at {}@{}", getEntity(), getLocation());
+        // sed gets stdin like 'java version "1.7.0_45"'
+        ProcessTaskWrapper<Integer> versionCommand = Entities.submit(getEntity(), SshTasks.newSshExecTaskFactory(
+                getLocation(), "java -version 2>&1 | grep \"java version\" | sed 's/.*\"\\(.*\\).*\"/\\1/'"));
+        versionCommand.get();
+        String stdOut = versionCommand.getStdout().trim();
+        if (!Strings.isBlank(stdOut)) {
+            log.debug("Found Java version at {}@{}: {}", new Object[] {getEntity(), getLocation(), stdOut});
+            return Optional.of(stdOut);
+        } else {
+            log.debug("Found no Java installed at {}@{}", getEntity(), getLocation());
+            return Optional.absent();
+        }
+    }
+
+    /**
+     * Checks for Java 6 or 7, installing Java 7 if neither are found. Override this method to
+     * check for and install specific versions of Java.
+     * @see #checkForAndInstallJava6()
+     * @see #checkForAndInstallJava7()
+     * @see #checkForAndInstallJava6or7()
+     */
+    public boolean installJava() {
+        return checkForAndInstallJava6or7();
     }
 
     public void installJmxSupport() {
@@ -332,7 +382,8 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     @Override
     public void start() {
         DynamicTasks.queue("install java", new Runnable() { public void run() {
-            installJava(); }});
+            installJava();
+        }});
             
         // TODO check java version
         
