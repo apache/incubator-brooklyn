@@ -129,6 +129,7 @@ public class BasicExecutionManager implements ExecutionManager {
 	
     public void shutdownNow() {
         runner.shutdownNow();
+        delayedRunner.shutdownNow();
     }
     
     public void addListener(ExecutionListener listener) {
