@@ -134,9 +134,8 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Object object = testEntity.getConfig(TestEntity.CONF_OBJECT);
         Assert.assertEquals(object, "");
     }
-
+    
     @SuppressWarnings("unchecked")
-    @Test(groups="WIP")
     public void testEmptyStructuredConfig() throws Exception {
         Entity app = createAndStartApplication("test-entity-basic-template.yaml",
             "  brooklyn.config:",
