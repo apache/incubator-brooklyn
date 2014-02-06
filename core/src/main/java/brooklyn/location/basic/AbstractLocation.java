@@ -224,7 +224,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
 
         // NB: flag-setting done here must also be done in BasicLocationRebindSupport 
         FlagUtils.setFieldsFromFlagsWithBag(this, properties, configBag, firstTime);
-        FlagUtils.setAllConfigKeys(this, configBag);
+        FlagUtils.setAllConfigKeys(this, configBag, false);
 
         if (properties.containsKey("displayName")) {
             name.set((String) removeIfPossible(properties, "displayName"));

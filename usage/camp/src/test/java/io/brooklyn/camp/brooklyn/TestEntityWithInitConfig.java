@@ -12,6 +12,7 @@ import com.google.common.reflect.TypeToken;
 
 @ImplementedBy(TestEntityWithInitConfigImpl.class)
 public interface TestEntityWithInitConfig extends Entity, Startable, EntityLocal, EntityInternal {
+    @SuppressWarnings("serial")
     public static final ConfigKey<Entity> TEST_ENTITY = BasicConfigKey.builder(new TypeToken<Entity>(){})
             .name("test.entity")
             .build();

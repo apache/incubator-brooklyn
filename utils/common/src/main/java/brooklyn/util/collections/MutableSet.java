@@ -117,7 +117,8 @@ public class MutableSet<V> extends LinkedHashSet<V> {
     }
 
     public boolean addAll(Iterable<? extends V> setToAdd) {
-        // exact copy of parent, but accepting Iterable
+        // copy of parent, but accepting Iterable and null
+        if (setToAdd==null) return false;
         boolean modified = false;
         Iterator<? extends V> e = setToAdd.iterator();
         while (e.hasNext()) {
@@ -126,7 +127,7 @@ public class MutableSet<V> extends LinkedHashSet<V> {
         }
         return modified;
     }
-
+    
     /** as {@link #addAll(Collection)} but fluent style and permitting null */
     public MutableSet<V> putAll(Iterable<? extends V> setToAdd) {
         if (setToAdd!=null) addAll(setToAdd);

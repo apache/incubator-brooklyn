@@ -37,6 +37,7 @@ import brooklyn.test.Asserts;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.net.Urls;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Duration;
 
@@ -148,8 +149,8 @@ public class JavaWebAppsIntegrationTest {
             log.info("App started:");
             Entities.dumpInfo(app);
 
-            Assert.assertEquals(Lifecycle.RUNNING, app.getAttribute(Attributes.SERVICE_STATE));
-            Assert.assertEquals(Boolean.TRUE, app.getAttribute(Attributes.SERVICE_UP));
+            Assert.assertEquals(app.getAttribute(Attributes.SERVICE_STATE), Lifecycle.RUNNING);
+            Assert.assertEquals(app.getAttribute(Attributes.SERVICE_UP), Boolean.TRUE);
             
             final String url = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
                     @Override public String call() throws Exception {
@@ -168,7 +169,8 @@ public class JavaWebAppsIntegrationTest {
             Assert.assertTrue(site.toLowerCase().contains("hello"), site);
             Assert.assertTrue(!platform.assemblies().isEmpty());
             
-            // TODO assert DB is working (send visitors command, and get result)
+            String dbPage = new ResourceUtils(this).getResourceAsString(Urls.mergePaths(url, "db.jsp"));
+            Assert.assertTrue(dbPage.contains("Isaac Asimov"), "db.jsp does not mention Isaac Asimov, probably the DB did not get initialised:\n"+dbPage);
         } catch (Exception e) {
             log.warn("Unable to instantiate "+at+" (rethrowing): "+e);
             throw Exceptions.propagate(e);
@@ -220,8 +222,8 @@ public class JavaWebAppsIntegrationTest {
             Assert.assertEquals(policy.getConfig(AutoScalerPolicy.METRIC_UPPER_BOUND), (Integer)100);
             Assert.assertTrue(policy.isRunning());
 
-            Assert.assertEquals(Lifecycle.RUNNING, app.getAttribute(Attributes.SERVICE_STATE));
-            Assert.assertEquals(Boolean.TRUE, app.getAttribute(Attributes.SERVICE_UP));
+            Assert.assertEquals(app.getAttribute(Attributes.SERVICE_STATE), Lifecycle.RUNNING);
+            Assert.assertEquals(app.getAttribute(Attributes.SERVICE_UP), Boolean.TRUE);
             
             final String url = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
                     @Override public String call() throws Exception {
@@ -239,6 +241,9 @@ public class JavaWebAppsIntegrationTest {
             Assert.assertTrue(url.contains("921"), "URL should be on port 9280+ based on config set in yaml, url "+url+", app "+app);
             Assert.assertTrue(site.toLowerCase().contains("hello"), site);
             Assert.assertTrue(!platform.assemblies().isEmpty());
+            
+            String dbPage = new ResourceUtils(this).getResourceAsString(Urls.mergePaths(url, "db.jsp"));
+            Assert.assertTrue(dbPage.contains("Isaac Asimov"), "db.jsp does not mention Isaac Asimov, probably the DB did not get initialised:\n"+dbPage);
         } catch (Exception e) {
             log.warn("Unable to instantiate "+at+" (rethrowing): "+e);
             throw Exceptions.propagate(e);

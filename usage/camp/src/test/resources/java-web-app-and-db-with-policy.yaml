@@ -24,4 +24,5 @@ services:
   name: My DB
   location: localhost
   brooklyn.config:
+    # this also uses the flag rather than the config key
     creationScriptUrl: classpath://visitors-creation-script.sql

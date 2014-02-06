@@ -1,8 +1,6 @@
 package brooklyn.event.basic;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 
 import com.google.common.reflect.TypeToken;
 

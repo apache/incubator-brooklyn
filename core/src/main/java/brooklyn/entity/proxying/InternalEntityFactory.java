@@ -126,7 +126,6 @@ public class InternalEntityFactory {
                 new EntityProxyImpl(entity));
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T extends Entity> T createEntity(EntitySpec<T> spec) {
         if (spec.getFlags().containsKey("parent") || spec.getFlags().containsKey("owner")) {
             throw new IllegalArgumentException("Spec's flags must not contain parent or owner; use spec.parent() instead for "+spec);

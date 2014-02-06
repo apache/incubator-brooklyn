@@ -4,7 +4,6 @@ import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 
 import java.io.Reader;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -18,7 +17,6 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.stream.Streams;
-import brooklyn.util.text.TemplateProcessor;
 
 public abstract class AbstractYamlTest {
 
@@ -52,12 +50,10 @@ public abstract class AbstractYamlTest {
         }
     }
 
-    protected Entity createAndStartApplication(String yamlFileName) throws Exception {
-        return createAndStartApplication(Streams.reader(new ResourceUtils(this).getResourceFromUrl(yamlFileName)));
-    }
-    
-    protected Entity createAndStartApplication(String yamlTemplateFileName, Map<String, ?> substitutions) throws Exception {
-        String yaml = TemplateProcessor.processTemplateContents(new ResourceUtils(this).getResourceAsString(yamlTemplateFileName), substitutions);
+    protected Entity createAndStartApplication(String yamlFileName, String ...extraLines) throws Exception {
+        String yaml = new ResourceUtils(this).getResourceAsString(yamlFileName).trim();
+        for (String l: extraLines)
+            yaml += "\n"+l;
         return createAndStartApplication(Streams.newReaderWithContents(yaml));
     }
 

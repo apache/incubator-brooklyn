@@ -9,11 +9,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.text.Identifiers;
 
 /** A config key representing a set of values. 
  * If a value is set using this *typed* key, it is _added_ to the set
@@ -30,9 +26,10 @@ import brooklyn.util.text.Identifiers;
  * Specific values can be added in a replaceable way by referring to a subkey.
  */
 //TODO Create interface
-public class SetConfigKey<V> extends AbstractStructuredConfigKey<Set<? extends V>, Set<Object>, V> {
+public class SetConfigKey<V> extends AbstractCollectionConfigKey<Set<? extends V>, Set<Object>, V> {
 
     private static final long serialVersionUID = 751024268729803210L;
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(SetConfigKey.class);
 
     public SetConfigKey(Class<V> subType, String name) {
@@ -48,57 +45,12 @@ public class SetConfigKey<V> extends AbstractStructuredConfigKey<Set<? extends V
         super((Class)Set.class, subType, name, description, defaultValue);
     }
 
-    public ConfigKey<V> subKey() {
-        String subName = Identifiers.makeRandomId(8);
-        return new SubElementConfigKey<V>(this, subType, getName()+"."+subName, "element of "+getName()+", uid "+subName, null);
-    }
-
     @Override
-    protected Set<Object> extractValueMatchingThisKey(Object potentialBase, ExecutionContext exec, boolean coerce) {
-        if (potentialBase instanceof Map<?,?>) {
-            return MutableSet.copyOf( ((Map<?,?>) potentialBase).values() );
-        } else if (potentialBase instanceof Collection<?>) {
-            return MutableSet.copyOf( (Collection<?>) potentialBase );
-        } else if (coerce) {
-            // TODO if it's a future could attempt type coercion
-            // (e.g. if we have a MapConfigKey we use to set dependent configuration
-        }
-        return null;
-    }
-
-    @Override
-    protected Set<Object> merge(Set<Object> base, Map<String, Object> subkeys, boolean unmodifiable) {
-        Set<Object> result = MutableSet.copyOf(base).putAll(subkeys.values());
-        if (unmodifiable) result = Collections.unmodifiableSet(result);
+    protected Set<Object> merge(boolean unmodifiable, Iterable<?>... sets) {
+        MutableSet<Object> result = MutableSet.of();
+        for (Iterable<?> set: sets) result.addAll(set);
+        if (unmodifiable) return result.toImmutable();
         return result;
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Override
-    public Object applyValueToMap(Object value, Map target) {
-        if (value instanceof StructuredModification) {
-            return ((StructuredModification)value).applyToKeyInMap(this, target);
-        } else if (value instanceof Collection) {
-            String warning = "Discouraged undecorated setting of a collection to SetConfigKey "+this+": use SetModification.{set,add}. " +
-            		"Defaulting to 'add'. Look at debug logging for call stack.";
-            log.warn(warning);
-            if (log.isDebugEnabled())
-                log.debug("Trace for: "+warning, new Throwable("Trace for: "+warning));
-            for (Object v: (Collection)value) 
-                applyValueToMap(v, target);
-            return null;
-        } else if (value instanceof TaskAdaptable) {
-            String warning = "Discouraged undecorated setting of a task to SetConfigKey "+this+": use SetModification.{set,add}. " +
-                    "Defaulting to 'add'. Look at debug logging for call stack.";
-            log.warn(warning);
-            // just add to set, using anonymous key
-            target.put(subKey(), value);
-            return null;
-        } else {
-            // just add to set, using anonymous key
-            target.put(subKey(), value);
-            return null;
-        }
     }
     
     public interface SetModification<T> extends StructuredModification<SetConfigKey<T>>, Set<T> {

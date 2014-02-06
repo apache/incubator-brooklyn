@@ -29,28 +29,27 @@ import com.google.common.collect.ImmutableSet;
 @Test
 public class EntitiesYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(EnrichersYamlTest.class);
-    
+
     @SuppressWarnings("unchecked")
     @Test
     public void testSingleEntity() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig",
-                new StringBuilder()
-                    .append("test.confName: Test Entity Name\n")
-                    .append("    test.confMapPlain:\n")
-                    .append("      foo: bar\n")
-                    .append("      baz: qux\n")
-                    .append("    test.confListPlain:\n")
-                    .append("      - dogs\n")
-                    .append("      - cats\n")
-                    .append("      - badgers\n")
-                    .append("    test.confSetThing: !!set\n")
-                    .append("      ? square\n")
-                    .append("      ? circle\n")
-                    .append("      ? triangle\n")
-                    .append("    test.confObject: 5")
-                    .toString()));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", 
+            "  brooklyn.config:",
+            "    test.confName: Test Entity Name",
+            "    test.confMapPlain:",
+            "      foo: bar",
+            "      baz: qux",
+            "    test.confListPlain:",
+            "      - dogs",
+            "      - cats",
+            "      - badgers",
+            "    test.confSetThing: !!set",
+            "      ? square",
+            "      ? circle",
+            "      ? triangle",
+            "    test.confObject: 5");
         waitForApplicationTasks(app);
-        
+
         Assert.assertEquals(app.getDisplayName(), "test-entity-basic-template");
 
         log.info("App started:");
@@ -69,25 +68,57 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Object object = testEntity.getConfig(TestEntity.CONF_OBJECT);
         Assert.assertEquals(object, 5);
     }
-    
+
+    @Test
+    public void testConfigFromBrooklynConfigFlag() throws Exception {
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml",
+            "  brooklyn.config:",
+            "    confName: Foo Bar");
+        waitForApplicationTasks(app);
+
+        log.info("App started:");
+        Entities.dumpInfo(app);
+
+        Entity entity = app.getChildren().iterator().next();
+        Assert.assertNotNull(entity, "Expected app to have child entity");
+        Assert.assertTrue(entity instanceof TestEntity, "Expected TestEntity, found " + entity.getClass());
+        TestEntity testEntity = (TestEntity) entity;
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
+    }
+
+    @Test
+    public void testConfigFromTopLevelFlag() throws Exception {
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", 
+            "  confName: Foo Bar");
+        waitForApplicationTasks(app);
+
+        log.info("App started:");
+        Entities.dumpInfo(app);
+
+        Entity entity = app.getChildren().iterator().next();
+        Assert.assertNotNull(entity, "Expected app to have child entity");
+        Assert.assertTrue(entity instanceof TestEntity, "Expected TestEntity, found " + entity.getClass());
+        TestEntity testEntity = (TestEntity) entity;
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
+    }
+
     @SuppressWarnings("unchecked")
     @Test
     public void testEmptyConfig() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig",
-                new StringBuilder()
-                    .append("test.confName: \"\"\n")
-                    .append("    test.confListPlain: !!seq []\n")
-                    .append("    test.confMapPlain: !!map {}\n")
-                    .append("    test.confSetPlain: !!set {}\n")
-                    .append("    test.confObject: \"\"")
-                    .toString()));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml",
+            "  brooklyn.config:",
+            "    test.confName: \"\"",
+            "    test.confListPlain: !!seq []",
+            "    test.confMapPlain: !!map {}",
+            "    test.confSetPlain: !!set {}",
+            "    test.confObject: \"\"");
         waitForApplicationTasks(app);
-        
+
         Assert.assertEquals(app.getDisplayName(), "test-entity-basic-template");
 
         log.info("App started:");
         Entities.dumpInfo(app);
-        
+
         Entity entity = app.getChildren().iterator().next();
         Assert.assertNotNull(entity, "Expected app to have child entity");
         Assert.assertTrue(entity instanceof TestEntity, "Expected TestEntity, found " + entity.getClass());
@@ -105,22 +136,20 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     }
     
     @SuppressWarnings("unchecked")
-    @Test(groups="WIP")
     public void testEmptyStructuredConfig() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig",
-                new StringBuilder()
-                    .append("test.confName: \"\"\n")
-                    .append("    test.confListThing: !!seq []\n")
-                    .append("    test.confSetThing: !!set {}\n")
-                    .append("    test.confMapThing: !!map {}\n")
-                    .toString()));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml",
+            "  brooklyn.config:",
+            "    test.confName: \"\"",
+            "    test.confListThing: !!seq []",
+            "    test.confSetThing: !!set {}",
+            "    test.confMapThing: !!map {}");
         waitForApplicationTasks(app);
-        
+
         Assert.assertEquals(app.getDisplayName(), "test-entity-basic-template");
 
         log.info("App started:");
         Entities.dumpInfo(app);
-        
+
         Entity entity = app.getChildren().iterator().next();
         Assert.assertNotNull(entity, "Expected app to have child entity");
         Assert.assertTrue(entity instanceof TestEntity, "Expected TestEntity, found " + entity.getClass());
@@ -132,19 +161,19 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(thingSet, ImmutableSet.of());
         Assert.assertEquals(thingMap, ImmutableMap.of());
     }
-    
+
     @Test
     public void testSensor() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig",
-                new StringBuilder()
-                    .append("test.confObject: $brooklyn:sensor(\"brooklyn.test.entity.TestEntity\", \"test.sequence\")\n")));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", 
+            "  brooklyn.config:",
+            "    test.confObject: $brooklyn:sensor(\"brooklyn.test.entity.TestEntity\", \"test.sequence\")");
         waitForApplicationTasks(app);
-        
+
         Assert.assertEquals(app.getDisplayName(), "test-entity-basic-template");
-        
+
         log.info("App started:");
         Entities.dumpInfo(app);
-        
+
         Entity entity = app.getChildren().iterator().next();
         Assert.assertNotNull(entity, "Expected app to have child entity");
         Assert.assertTrue(entity instanceof TestEntity, "Expected TestEntity, found " + entity.getClass());
@@ -154,21 +183,17 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertTrue(object instanceof AttributeSensor, "attributeSensor="+object);
         Assert.assertEquals(object, TestEntity.SEQUENCE);
     }
-    
+
     @Test
     public void testComponent() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig",
-                new StringBuilder()
-                    .append("test.confName: first entity\n")
-                    .toString(),
-                "additionalConfig", 
-                new StringBuilder()
-                    .append("  id: te1\n")
-                    .append("- serviceType: brooklyn.test.entity.TestEntity\n")
-                    .append("  name: second entity\n")
-                    .append("  brooklyn.config:\n")
-                    .append("    test.confObject: $brooklyn:component(\"te1\")\n")
-                    .toString()));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml",
+            "  brooklyn.config:",
+            "    test.confName: first entity",
+            "  id: te1",
+            "- serviceType: brooklyn.test.entity.TestEntity",
+            "  name: second entity",
+            "  brooklyn.config:",
+            "    test.confObject: $brooklyn:component(\"te1\")");
         waitForApplicationTasks(app);
         Entity firstEntity = null;
         Entity secondEntity = null;
@@ -189,30 +214,26 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertNotNull(object);
         Assert.assertEquals(object, firstEntity, "Expected second entity's test.confObject to contain first entity");
     }
-    
+
     @Test
     public void testGrandchildEntities() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig",
-                new StringBuilder()
-                    .append("test.confName: first entity\n")
-                    .toString(),
-                "additionalConfig", 
-                new StringBuilder()
-                    .append("  brooklyn.children:\n")
-                    .append("  - serviceType: brooklyn.test.entity.TestEntity\n")
-                    .append("    name: Child Entity\n")
-                    .append("    brooklyn.config:\n")
-                    .append("      test.confName: Name of the first Child\n")
-                    .append("    brooklyn.children:\n")
-                    .append("    - serviceType: brooklyn.test.entity.TestEntity\n")
-                    .append("      name: Grandchild Entity\n")
-                    .append("      brooklyn.config:\n")
-                    .append("        test.confName: Name of the Grandchild\n")
-                    .append("  - serviceType: brooklyn.test.entity.TestEntity\n")
-                    .append("    name: Second Child\n")
-                    .append("    brooklyn.config:\n")
-                    .append("      test.confName: Name of the second Child")
-                    .toString()));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", 
+            "  brooklyn.config:",
+            "    test.confName: first entity",
+            "  brooklyn.children:",
+            "  - serviceType: brooklyn.test.entity.TestEntity",
+            "    name: Child Entity",
+            "    brooklyn.config:",
+            "      test.confName: Name of the first Child",
+            "    brooklyn.children:",
+            "    - serviceType: brooklyn.test.entity.TestEntity",
+            "      name: Grandchild Entity",
+            "      brooklyn.config:",
+            "        test.confName: Name of the Grandchild",
+            "  - serviceType: brooklyn.test.entity.TestEntity",
+            "    name: Second Child",
+            "    brooklyn.config:",
+            "      test.confName: Name of the second Child");
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity firstEntity = app.getChildren().iterator().next();
@@ -254,15 +275,15 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         log.info("App started:");
         Entities.dumpInfo(app);
     }
-    
+
     @Test
     public void testMultipleReferences() throws Exception {
         final Entity app = createAndStartApplication("test-referencing-entities.yaml");
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getDisplayName(), "test-referencing-entities");
-        
+
         Entity entity1 = null, entity2 = null, child1 = null, child2 = null, grandchild1 = null, grandchild2 = null;
-        
+
         Assert.assertEquals(app.getChildren().size(), 2);
         for (Entity child : app.getChildren()) {
             if (child.getDisplayName().equals("entity 1"))
@@ -272,7 +293,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         }
         Assert.assertNotNull(entity1);
         Assert.assertNotNull(entity2);
-        
+
         Assert.assertEquals(entity1.getChildren().size(), 2);
         for (Entity child : entity1.getChildren()) {
             if (child.getDisplayName().equals("child 1"))
@@ -282,38 +303,38 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         }
         Assert.assertNotNull(child1);
         Assert.assertNotNull(child2);
-        
+
         Assert.assertEquals(child1.getChildren().size(), 2);
         for (Entity child : child1.getChildren()) {
             if (child.getDisplayName().equals("grandchild 1"))
-               grandchild1 = child;
+                grandchild1 = child;
             if (child.getDisplayName().equals("grandchild 2"))
                 grandchild2 = child;
         }
         Assert.assertNotNull(grandchild1);
         Assert.assertNotNull(grandchild2);
-        
+
         Map<ConfigKey<Entity>, Entity> keyToEntity = new ImmutableMap.Builder<ConfigKey<Entity>, Entity>()
-                .put(ReferencingYamlTestEntity.TEST_REFERENCE_APP, app)
-                .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY1, entity1)
-                .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY2, entity2)
-                .put(ReferencingYamlTestEntity.TEST_REFERENCE_CHILD1, child1)
-                .put(ReferencingYamlTestEntity.TEST_REFERENCE_CHILD2, child2)
-                .put(ReferencingYamlTestEntity.TEST_REFERENCE_GRANDCHILD1, grandchild1)
-                .put(ReferencingYamlTestEntity.TEST_REFERENCE_GRANDCHILD2, grandchild2)
-                .build();
-        
+            .put(ReferencingYamlTestEntity.TEST_REFERENCE_APP, app)
+            .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY1, entity1)
+            .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY2, entity2)
+            .put(ReferencingYamlTestEntity.TEST_REFERENCE_CHILD1, child1)
+            .put(ReferencingYamlTestEntity.TEST_REFERENCE_CHILD2, child2)
+            .put(ReferencingYamlTestEntity.TEST_REFERENCE_GRANDCHILD1, grandchild1)
+            .put(ReferencingYamlTestEntity.TEST_REFERENCE_GRANDCHILD2, grandchild2)
+            .build();
+
         Iterable<Entity> entitiesInApp = ((EntityInternal)app).getExecutionContext().submit(MutableMap.of(), new Callable<Iterable<Entity>>() {
             @Override
             public Iterable<Entity> call() throws Exception {
                 return ((EntityManagerInternal)((EntityInternal)app).getManagementContext().getEntityManager()).getAllEntitiesInApplication((Application)app);
             }
         }).get();
-        
+
         for (Entity entityInApp : entitiesInApp)
             checkReferences(entityInApp, keyToEntity);
     }
-    
+
     private void checkReferences(final Entity entity, Map<ConfigKey<Entity>, Entity> keyToEntity) throws Exception {
         for (final ConfigKey<Entity> key : keyToEntity.keySet()) {
             Entity fromConfig = ((EntityInternal)entity).getExecutionContext().submit(MutableMap.of(), new Callable<Entity>() {
@@ -325,12 +346,10 @@ public class EntitiesYamlTest extends AbstractYamlTest {
             Assert.assertEquals(fromConfig, keyToEntity.get(key));
         }
     }
-        
+
     public void testWithAppLocation() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig", 
-                "test.confName: first entity\n",
-                "additionalConfig", 
-                "location: localhost:(name=yaml name)\n"));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml",  
+            "location: localhost:(name=yaml name)");
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getLocations().size(), 1);
         Location location = app.getLocations().iterator().next();
@@ -341,13 +360,11 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertNotNull(entity);
         Assert.assertEquals(entity.getLocations().size(), 0);
     }
-    
+
     @Test
     public void testWithEntityLocation() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig", 
-                "test.confName: first entity\n",
-                "additionalConfig", 
-                "  location: localhost:(name=yaml name)\n"));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml",  
+            "  location: localhost:(name=yaml name)\n");
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getLocations().size(), 0);
         Assert.assertEquals(app.getChildren().size(), 1);
@@ -361,16 +378,12 @@ public class EntitiesYamlTest extends AbstractYamlTest {
 
     @Test
     public void testWith2AppLocations() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig", 
-                "test.confName: first entity\n",
-                "additionalConfig",
-                new StringBuilder()
-                    .append("locations: \n")
-                    .append("- localhost:(name=localhost name)\n")
-                    .append("- byon:(hosts=\"1.1.1.1\", name=byon name)\n")
-                    .toString()));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml",  
+            "locations:",
+            "- localhost:(name=localhost name)",
+            "- byon:(hosts=\"1.1.1.1\", name=byon name)");
         waitForApplicationTasks(app);
-        
+
         Assert.assertEquals(app.getLocations().size(), 2);
         Location localhostLocation = null, byonLocation = null; 
         for (Location location : app.getLocations()) {
@@ -386,17 +399,13 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertNotNull(entity);
         Assert.assertEquals(entity.getLocations().size(), 0);
     }
-    
+
     @Test
     public void testWith2EntityLocations() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig", 
-                "test.confName: first entity\n",
-                "additionalConfig",
-                new StringBuilder()
-                    .append("  locations: \n")
-                    .append("  - localhost:(name=localhost name)\n")
-                    .append("  - byon:(hosts=\"1.1.1.1\", name=byon name)\n")
-                    .toString()));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml",  
+            "  locations:",
+            "  - localhost:(name=localhost name)",
+            "  - byon:(hosts=\"1.1.1.1\", name=byon name)");
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getLocations().size(), 0);
         Assert.assertEquals(app.getChildren().size(), 1);
@@ -412,16 +421,12 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertNotNull(localhostLocation);
         Assert.assertNotNull(byonLocation);
     }
-    
+
     @Test
     public void testWithAppAndEntityLocations() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig", 
-                "test.confName: first entity\n",
-                "additionalConfig",
-                new StringBuilder()
-                    .append("  location: localhost:(name=localhost name)\n")
-                    .append("location: byon:(hosts=\"1.1.1.1\", name=byon name)\n")
-                    .toString()));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml",  
+            "  location: localhost:(name=localhost name)",
+            "location: byon:(hosts=\"1.1.1.1\", name=byon name)");
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getLocations().size(), 1);
         Assert.assertEquals(app.getChildren().size(), 1);
@@ -432,7 +437,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Location entityLocation = entity.getLocations().iterator().next();
         Assert.assertEquals(entityLocation.getDisplayName(), "localhost name");
     }
-    
+
     protected Logger getLogger() {
         return log;
     }

@@ -67,21 +67,17 @@ public class PoliciesYamlTest extends AbstractYamlTest {
     
     @Test
     public void testChildWithPolicy() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", ImmutableMap.of("brooklynConfig",
-                new StringBuilder()
-                    .append("test.confName: parent entity\n")
-                    .toString(),
-                "additionalConfig",
-                new StringBuilder()
-                    .append("  brooklyn.children:\n")
-                    .append("  - serviceType: brooklyn.test.entity.TestEntity\n")
-                    .append("    name: Child Entity\n")
-                    .append("    brooklyn.policies:\n")
-                    .append("    - policyType: brooklyn.test.policy.TestPolicy\n")
-                    .append("      brooklyn.config:\n")
-                    .append("        test.confName: Name from YAML\n")
-                    .append("        test.attributeSensor: $brooklyn:sensor(\"brooklyn.test.entity.TestEntity\", \"test.name\")")
-                    .toString()));
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml",
+                    "  brooklyn.config:",
+                    "    test.confName: parent entity",
+                    "  brooklyn.children:",
+                    "  - serviceType: brooklyn.test.entity.TestEntity",
+                    "    name: Child Entity",
+                    "    brooklyn.policies:",
+                    "    - policyType: brooklyn.test.policy.TestPolicy",
+                    "      brooklyn.config:",
+                    "        test.confName: Name from YAML",
+                    "        test.attributeSensor: $brooklyn:sensor(\"brooklyn.test.entity.TestEntity\", \"test.name\")");
         waitForApplicationTasks(app);
 
         Assert.assertEquals(app.getChildren().size(), 1);

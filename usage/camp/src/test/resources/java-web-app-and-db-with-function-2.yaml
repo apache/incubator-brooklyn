@@ -20,4 +20,4 @@ services:
   name: My DB
   id: db
   brooklyn.config:
-    creationScriptUrl: classpath://visitors-creation-script.sql
+    datastore.creation.script.url: classpath://visitors-creation-script.sql

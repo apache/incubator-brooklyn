@@ -60,6 +60,16 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
                     failOnNonZeroResultCode().
                     // don't set vars yet -- it resolves dependencies (e.g. DB) which we don't want until we start
                     environmentVariablesReset().
+                    execute();
+                
+                // don't attempt to bail out (the default INSTALLING mode will bail out if BROOKLYN exsits
+                // for the VanillaSoftwareProcess; we could optimize to detect this custom url, but
+                // also its are more likely to change so we probably don't want to do that until we have
+                // a flag to FORCE_REINSTALL or similar...)
+                newScript("installing:"+url.get()).
+                    failOnNonZeroResultCode().
+                    // don't set vars yet -- it resolves dependencies (e.g. DB) which we don't want until we start
+                    environmentVariablesReset().
                     body.append(commands).execute();
             }
         }
