@@ -218,7 +218,6 @@ public class RebindManagerImpl implements RebindManager {
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating entity {}", entityMemento);
                 
                 Entity entity = newEntity(entityMemento, reflections);
-                managementContext.prePreManage(entity);
                 entities.put(entityMemento.getId(), entity);
                 rebindContext.registerEntity(entityMemento.getId(), entity);
             }
