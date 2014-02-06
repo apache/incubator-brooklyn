@@ -1,6 +1,7 @@
-package brooklyn.entity.basic.lifecycle;
+package brooklyn.entity.java;
 
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import org.slf4j.Logger;
@@ -13,33 +14,49 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.lifecycle.MyEntity;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class JavaSoftwareProcessSshDriverIntegrationTest {
 
-    private static final long TIMEOUT_MS = 10*1000;
+    private static final long TIMEOUT_MS = 10 * 1000;
 
-    private static final Logger log = LoggerFactory.getLogger(JavaSoftwareProcessSshDriverIntegrationTest.class);
-    
+    private static final Logger LOG = LoggerFactory.getLogger(JavaSoftwareProcessSshDriverIntegrationTest.class);
+
     private MachineProvisioningLocation localhost;
     private TestApplication app;
 
+    private static class ConcreteJavaSoftwareProcessSshDriver extends JavaSoftwareProcessSshDriver {
+        public ConcreteJavaSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
+            super(entity, machine);
+        }
+        @Override protected String getLogFileLocation() { return null; }
+        @Override public boolean isRunning() { return false; }
+        @Override public void stop() {}
+        @Override public void install() {}
+        @Override public void customize() {}
+        @Override public void launch() {}
+    }
+
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        localhost = new LocalhostMachineProvisioningLocation(MutableMap.of("name", "localhost"));
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        localhost = new LocalhostMachineProvisioningLocation(MutableMap.of("name", "localhost"));
     }
 
     @AfterMethod(alwaysRun=true)
@@ -58,6 +75,17 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         
         entity.stop();
         assertFalse(entity.getAttribute(SoftwareProcess.SERVICE_UP));
+    }
+
+    @Test(groups = "Integration")
+    public void testGetJavaVersion() {
+        SshMachineLocation sshLocation = app.getManagementContext().getLocationManager().createLocation(
+                LocationSpec.create(SshMachineLocation.class).configure("address", "localhost"));
+        JavaSoftwareProcessSshDriver driver = new ConcreteJavaSoftwareProcessSshDriver(app, sshLocation);
+        Optional<String> version = driver.getCurrentJavaVersion();
+        assertNotNull(version);
+        assertTrue(version.isPresent());
+        LOG.info("{}.testGetJavaVersion found: {} on localhost", getClass(), version.get());
     }
 
     @Test(groups = "Integration")
@@ -126,7 +154,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         
         String installDir = entity.getAttribute(SoftwareProcess.INSTALL_DIR);
         String runDir = entity.getAttribute(SoftwareProcess.RUN_DIR);
-        log.info("dirs for "+app+" are: install="+installDir+", run="+runDir);
+        LOG.info("dirs for " + app + " are: install=" + installDir + ", run=" + runDir);
         assertTrue(installDir.startsWith(Os.tidyPath(installDirPrefix)), "INSTALL_DIR is "+installDir+", does not start with expected prefix "+installDirPrefix);
         assertTrue(runDir.startsWith(Os.tidyPath(runDirPrefix)), "RUN_DIR is "+runDir+", does not start with expected prefix "+runDirPrefix);
         
