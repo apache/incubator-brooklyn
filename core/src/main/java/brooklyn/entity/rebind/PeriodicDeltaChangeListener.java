@@ -174,13 +174,25 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 } else {
                     PersisterDeltaImpl persisterDelta = new PersisterDeltaImpl();
                     for (Location location : prevDeltaCollector.locations) {
-                        persisterDelta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
+                        try {
+                            persisterDelta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
+                        } catch (Exception e) {
+                            handleGenerateMementoException(e, "location "+location.getClass().getSimpleName()+"("+location.getId()+")");
+                        }
                     }
                     for (Entity entity : prevDeltaCollector.entities) {
-                        persisterDelta.entities.add(((EntityInternal)entity).getRebindSupport().getMemento());
+                        try {
+                            persisterDelta.entities.add(((EntityInternal)entity).getRebindSupport().getMemento());
+                        } catch (Exception e) {
+                            handleGenerateMementoException(e, "entity "+entity.getEntityType().getSimpleName()+"("+entity.getId()+")");
+                        }
                     }
                     for (Policy policy : prevDeltaCollector.policies) {
-                        persisterDelta.policies.add(policy.getRebindSupport().getMemento());
+                        try {
+                            persisterDelta.policies.add(policy.getRebindSupport().getMemento());
+                        } catch (Exception e) {
+                            handleGenerateMementoException(e, "location "+policy.getClass().getSimpleName()+"("+policy.getId()+")");
+                        }
                     }
                     persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;
                     persisterDelta.removedEntityIds = prevDeltaCollector.removedEntityIds;
@@ -208,6 +220,16 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
             } finally {
                 writeCount.incrementAndGet();
             }
+        }
+    }
+    
+    protected void handleGenerateMementoException(Exception e, String context) {
+        Exceptions.propagateIfFatal(e);
+        if (isActive()) {
+            LOG.warn("Problem generating memento for "+context, e);
+        } else {
+            Exceptions.propagateIfFatal(e);
+            LOG.debug("Problem generating memento for "+context+", but no longer active (ignoring)", e);
         }
     }
     
