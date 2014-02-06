@@ -453,7 +453,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         Exception cause = (exceptions.size() == 1) 
                 ? exceptions.get(0)
-                : new CompoundRuntimeException(msg + " Causes include: "+exceptions.get(exceptions.size()-1), exceptions);
+                : new CompoundRuntimeException(msg + " - "
+                    + "First cause is "+exceptions.get(0)+" (listed in primary trace); "
+                    + "plus " + (exceptions.size()-1) + " more (e.g. the last is "+exceptions.get(exceptions.size()-1)+")", 
+                    exceptions.get(0), exceptions);
 
         if (exceptions.get(exceptions.size()-1) instanceof NoMachinesAvailableException) {
             throw new NoMachinesAvailableException(msg, cause);
@@ -953,9 +956,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
             } catch (Exception e2) {
                 LOG.warn("Error loading available images to report (following original error matching template which will be rethrown): "+e2, e2);
-                throw new IllegalStateException("Unable to access cloud "+this+" to resolve "+templateBuilder, e);
+                throw new IllegalStateException("Unable to access cloud "+this+" to resolve "+templateBuilder+": "+e, e);
             }
-            throw new IllegalStateException("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+". See list of images in log.", e);
+            throw new IllegalStateException("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+"; "
+                + "see list of images in log. Root cause: "+e, e);
         }
         TemplateOptions options = template.getOptions();
                
