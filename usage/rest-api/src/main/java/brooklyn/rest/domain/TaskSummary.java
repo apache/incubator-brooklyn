@@ -29,6 +29,7 @@ public class TaskSummary {
   private final Long endTimeUtc;
   
   private final String currentStatus;
+  private final Object result;
   private final List<LinkWithMetadata> children;
   private final LinkWithMetadata submittedByTask;
   private final LinkWithMetadata blockingTask;
@@ -48,6 +49,7 @@ public class TaskSummary {
           @JsonProperty("startTimeUtc") Long startTimeUtc, 
           @JsonProperty("endTimeUtc") Long endTimeUtc, 
           @JsonProperty("currentStatus") String currentStatus, 
+          @JsonProperty("result") Object result, 
           @JsonProperty("children") List<LinkWithMetadata> children,
           @JsonProperty("submittedByTask") LinkWithMetadata submittedByTask,
           @JsonProperty("blockingTask") LinkWithMetadata blockingTask,
@@ -65,6 +67,7 @@ public class TaskSummary {
     this.startTimeUtc = startTimeUtc;
     this.endTimeUtc = endTimeUtc;
     this.currentStatus = currentStatus;
+    this.result = result;
     this.children = children;
     this.blockingDetails = blockingDetails;
     this.blockingTask = blockingTask;
@@ -123,6 +126,10 @@ public class TaskSummary {
     return currentStatus;
   }
 
+  public Object getResult() {
+    return result;
+  }
+  
   public List<LinkWithMetadata> getChildren() {
       return children;
   }

@@ -23,6 +23,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
@@ -34,8 +35,12 @@ import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringPredicates;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -192,11 +197,20 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     
             resize(initialSize);
     
+            Maybe<Task<?>> firstFailed = Maybe.next(Tasks.failed(Tasks.children(Tasks.current())).iterator());
+            
             int currentSize = getCurrentSize().intValue();
             if (currentSize < initialQuorumSize) {
-                throw new IllegalStateException("On start of cluster " + this + ", failed to get to initial size of " + initialSize
+                String message;
+                if (currentSize == 0 && firstFailed.isPresent()) {
+                    message = "All nodes in cluster "+this+" failed";
+                } else {
+                    message = "On start of cluster " + this + ", failed to get to initial size of " + initialSize
                         + "; size is " + getCurrentSize()
-                        + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : ""));
+                        + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : "");
+                }
+                message += (firstFailed.isPresent() ? "; first failure is: "+Exceptions.collapseText(Tasks.getError(firstFailed.get())) : "");
+                throw new IllegalStateException(message); 
             } else if (currentSize < initialSize) {
                 LOG.warn(
                         "On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing",
@@ -421,8 +435,10 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             addedEntities.add(entity);
             addedEntityLocations.put(entity, chosenLocation);
             Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(chosenLocation));
-            tasks.put(entity, entity.invoke(Startable.START, args));
+            Task<Void> task = Effectors.invocation(entity, Startable.START, args).asTask();
+            tasks.put(entity, task);
         }
+        DynamicTasks.queueIfPossible(Tasks.parallel("starting "+tasks.size()+" node"+Strings.s(tasks.size())+" (parallel)", tasks.values())).orSubmitAsync(this);
         Map<Entity, Throwable> errors = waitForTasksOnEntityStart(tasks);
 
         // if tracking, then report success/fail to the ZoneFailureDetector

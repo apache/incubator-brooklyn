@@ -2,6 +2,7 @@ package brooklyn.util.guava;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -45,6 +46,10 @@ public abstract class Maybe<T> implements Serializable {
                 return value.get();
             }
         };
+    }
+    
+    public static <T> Maybe<T> next(Iterator<T> iterator) {
+        return iterator.hasNext() ? Maybe.of(iterator.next()) : Maybe.<T>absent();
     }
     
     public abstract boolean isPresent();

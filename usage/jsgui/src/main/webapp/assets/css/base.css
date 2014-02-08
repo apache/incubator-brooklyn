@@ -1290,6 +1290,16 @@ input[type="file"] {
     margin-bottom: 18px;
 }
 
+.activity-detail-results .result-literal {
+    font-style: italic;
+}
+.activity-detail-results div.result-literal {
+    margin-top: 12px;
+}
+.activity-detail-results div.result-literal br {
+	line-height: 24px;
+}
+
 .activity-tag-giftlabel {
     background-color: #E0E4E0;
     padding: 2px 4px 2px 4px;

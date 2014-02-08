@@ -5,21 +5,56 @@ import static com.google.common.base.Predicates.instanceOf;
 import static com.google.common.base.Throwables.getCausalChain;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class Exceptions {
 
-    @SuppressWarnings("unchecked")
-    private static final Predicate<Object> IS_THROWABLE_BORING = Predicates.<Object>or(
-            instanceOf(ExecutionException.class),
-            instanceOf(InvocationTargetException.class),
-            instanceOf(PropagatedRuntimeException.class)
-        );
+    private static List<Class<? extends Throwable>> BORING_THROWABLES = ImmutableList.<Class<? extends Throwable>>of(
+        ExecutionException.class, InvocationTargetException.class, PropagatedRuntimeException.class);
+
+    private static boolean isBoring(Throwable t) {
+        for (Class<? extends Throwable> type: BORING_THROWABLES)
+            if (type.isInstance(t)) return true;
+        return false;
+    }
+
+    private static Predicate<Throwable> IS_THROWABLE_BORING = new Predicate<Throwable>() {
+        @Override
+        public boolean apply(Throwable input) {
+            return isBoring(input);
+        }
+    };
+
+    private static List<Class<? extends Throwable>> BORING_PREFIX_THROWABLES = MutableList.copyOf(BORING_THROWABLES)
+        .append(IllegalStateException.class).append(RuntimeException.class)
+        .toImmutable();
+
+    private static boolean isPrefixBoring(Throwable t) {
+        for (Class<? extends Throwable> type: BORING_PREFIX_THROWABLES)
+            if (type.isInstance(t)) return true;
+        return false;
+    }
+
+    private static String stripBoringPrefixes(String s) {
+        String was;
+        do {
+            was = s;
+            for (Class<? extends Throwable> type: BORING_PREFIX_THROWABLES) {
+                s = Strings.removeAllFromStart(type.getCanonicalName(), type.getName(), type.getSimpleName(), ":", " ");
+            }
+        } while (!was.equals(s));
+        return s;
+    }
 
     /**
      * Propagate a {@link Throwable} as a {@link RuntimeException}.
@@ -62,37 +97,63 @@ public class Exceptions {
         return Iterables.tryFind(getCausalChain(throwable), Predicates.not(IS_THROWABLE_BORING)).or(throwable);
     }
 
-    /** as {@link #propagateCollapsed(Throwable)} but does not throw */
+    /** creates (but does not throw) a new {@link PropagatedRuntimeException} whose 
+     * message and cause are taken from the first _interesting_ element in the source */
     public static Throwable collapse(Throwable source) {
+        return collapse(source, true);
+    }
+    
+    /** creates (but does not throw) a new {@link PropagatedRuntimeException} whose 
+     * message is taken from the first _interesting_ element in the source,
+     * and optionally also the causal chain */
+    public static Throwable collapse(Throwable source, boolean collapseCausalChain) {
         String message = "";
         Throwable collapsed = source;
         int collapseCount = 0;
-        while (IS_THROWABLE_BORING.apply(collapsed)) {
+        // remove boring stack traces at the head
+        while (isBoring(collapsed)) {
             collapseCount++;
             Throwable cause = collapsed.getCause();
             if (cause==null)
-                // everything in the tree is boring
+                // everything in the tree is boring...
                 return source;
-            if (collapsed.getMessage()!=null) {
-                // prevents repeated propagation from embedding endless toStrings
-                String collapsedS = collapsed.getMessage();
-                String causeM = cause.toString();
-                if (collapsedS.endsWith(causeM))
-                    collapsedS = collapsedS.substring(0, collapsedS.length()-causeM.length());
-                if (message.length()>0 && collapsedS.length()>0) message += ": ";
-                message += collapsedS;
+            String collapsedS = collapsed.getMessage();
+            if (Strings.isNonBlank(collapsedS)) {
+                collapsedS = Strings.removeFromEnd(collapsedS, cause.toString(), stripBoringPrefixes(cause.toString()), cause.getMessage());
+                collapsedS = stripBoringPrefixes(collapsedS);
+                if (Strings.isNonBlank(collapsedS))
+                    message = appendSeparator(message, collapsedS);
             }
             collapsed = cause;
         }
+        // if no messages so far (ie we will be the toString) then remove boring prefixes from the message
+        Throwable messagesCause = collapsed;
+        while (isPrefixBoring(messagesCause) && Strings.isBlank(message)) {
+            collapseCount++;
+            if (Strings.isNonBlank(messagesCause.getMessage())) {
+                message = messagesCause.getMessage();
+                break;
+            }
+            messagesCause = messagesCause.getCause();
+        }
         if (collapseCount==0)
             return source;
-        if (message.length()==0)
-            return new PropagatedRuntimeException(collapsed);
+        if (Strings.isBlank(message))
+            return new PropagatedRuntimeException(collapseCausalChain ? collapsed : source);
         else
-            return new PropagatedRuntimeException(message, collapsed);
+            return new PropagatedRuntimeException(message, collapseCausalChain ? collapsed : source, true);
+    }
+    
+    private static String appendSeparator(String message, String next) {
+        if (Strings.isBlank(message))
+            return next;
+        if (message.trim().endsWith(":") || message.trim().endsWith(";"))
+            return message.trim()+" "+next;
+        return message + ": " + next;
     }
 
-    /** removes uninteresting items from the top of the call stack (but keeps interesting messages), and throws */
+    /** removes uninteresting items from the top of the call stack (but keeps interesting messages), and throws 
+     * @deprecated since 0.7.0 same as {@link #propagate(Throwable)} */
     public static RuntimeException propagateCollapsed(Throwable source) {
         throw propagate(source);
     }
@@ -102,7 +163,10 @@ public class Exceptions {
         if (t == null) return null;
         Throwable t2 = collapse(t);
         if (t2 instanceof PropagatedRuntimeException) {
-            if (t2.getMessage()!=null && t2.getMessage().length()>0) 
+            if (((PropagatedRuntimeException)t2).isCauseEmbeddedInMessage())
+                // normally
+                return t2.getMessage();
+            else if (Strings.isNonBlank(t2.getMessage())) 
                 return t2.getMessage() + ": "+collapseText(t2.getCause());
             else
                 return collapseText(t2.getCause());

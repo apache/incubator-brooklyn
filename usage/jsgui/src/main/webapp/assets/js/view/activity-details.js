@@ -107,6 +107,14 @@ define([
                 function(v) { 
                     return "<a class='showDrillDownBlockerOfAnchor handy' link='"+_.escape(v.link)+"'>"+
                         that.displayTextForLinkedTask(v)+"</a>" })
+            this.updateFieldWith('result',
+                function(v) {
+                    if (v.toString().length<20 &&  !/\r|\n/.exec(v)) {
+                        return " with result: <span class='result-literal'>"+_.escape(v)+"</span>";
+                    } else {
+                        return "<div class='result-literal'>"+_.escape(v).replace(/\n+/g,"<br>")+"</div>"
+                    }
+                 })
             this.updateFieldWith('tags', function(tags) {
                 var tagBody = "";
                 for (var tag in tags)

@@ -1,8 +1,10 @@
 package brooklyn.util.task;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
@@ -13,13 +15,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionContext;
+import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -180,6 +186,10 @@ public class Tasks {
     public static Task<List<?>> parallel(String name, TaskAdaptable<?> ...tasks) {
         return parallelInternal(name, asTasks(tasks));
     }
+
+    public static Task<List<?>> parallel(String name, Iterable<? extends TaskAdaptable<?>> tasks) {
+        return parallelInternal(name, asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
+    }
     
     public static Task<List<?>> parallelInternal(String name, Task<?> tasks[]) {
         TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().name(name).parallel(true);
@@ -268,5 +278,35 @@ public class Tasks {
         };
     }
     
+    /** return all children tasks of the given tasks, if it has children, else empty list */
+    public static Iterable<Task<?>> children(Task<?> task) {
+        if (task instanceof HasTaskChildren)
+            return ((HasTaskChildren)task).getChildren();
+        return Collections.emptyList();
+    }
+    
+    /** returns failed tasks */
+    public static Iterable<Task<?>> failed(Iterable<Task<?>> subtasks) {
+        return Iterables.filter(subtasks, new Predicate<Task<?>>() {
+            @Override
+            public boolean apply(Task<?> input) {
+                return input.isError();
+            }
+        });
+    }
+
+    /** returns the error thrown by the task if {@link Task#isError()}, or null if no error or not done */
+    public static Throwable getError(Task<?> t) {
+        if (t==null) return null;
+        if (!t.isDone()) return null;
+        if (t.isCancelled()) return new CancellationException();
+        try {
+            t.get();
+            return null;
+        } catch (Throwable error) {
+            Exceptions.propagateIfFatal(error);
+            return error;
+        }
+    }
 
 }
