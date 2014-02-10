@@ -122,7 +122,11 @@ public class RebindTestUtils {
     }
 
     public static void waitForPersisted(Application origApp) throws InterruptedException, TimeoutException {
-        origApp.getManagementContext().getRebindManager().waitForPendingComplete(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        waitForPersisted(origApp.getManagementContext());
+    }
+    
+    public static void waitForPersisted(ManagementContext managementContext) throws InterruptedException, TimeoutException {
+        managementContext.getRebindManager().waitForPendingComplete(TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
     
     public static void checkCurrentMementoSerializable(Application app) throws Exception {

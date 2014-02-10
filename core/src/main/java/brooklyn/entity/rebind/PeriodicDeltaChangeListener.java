@@ -174,13 +174,25 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 } else {
                     PersisterDeltaImpl persisterDelta = new PersisterDeltaImpl();
                     for (Location location : prevDeltaCollector.locations) {
-                        persisterDelta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
+                        try {
+                            persisterDelta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
+                        } catch (Exception e) {
+                            handleGenerateMementoException(e, "location "+location.getClass().getSimpleName()+"("+location.getId()+")");
+                        }
                     }
                     for (Entity entity : prevDeltaCollector.entities) {
-                        persisterDelta.entities.add(((EntityInternal)entity).getRebindSupport().getMemento());
+                        try {
+                            persisterDelta.entities.add(((EntityInternal)entity).getRebindSupport().getMemento());
+                        } catch (Exception e) {
+                            handleGenerateMementoException(e, "entity "+entity.getEntityType().getSimpleName()+"("+entity.getId()+")");
+                        }
                     }
                     for (Policy policy : prevDeltaCollector.policies) {
-                        persisterDelta.policies.add(policy.getRebindSupport().getMemento());
+                        try {
+                            persisterDelta.policies.add(policy.getRebindSupport().getMemento());
+                        } catch (Exception e) {
+                            handleGenerateMementoException(e, "location "+policy.getClass().getSimpleName()+"("+policy.getId()+")");
+                        }
                     }
                     persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;
                     persisterDelta.removedEntityIds = prevDeltaCollector.removedEntityIds;
@@ -211,8 +223,18 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         }
     }
     
+    protected void handleGenerateMementoException(Exception e, String context) {
+        Exceptions.propagateIfFatal(e);
+        if (isActive()) {
+            LOG.warn("Problem generating memento for "+context, e);
+        } else {
+            LOG.debug("Problem generating memento for "+context+", but no longer active (ignoring)", e);
+        }
+    }
+    
     @Override
     public synchronized void onManaged(Entity entity) {
+        if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", entity);
         if (!isStopped()) {
             onChanged(entity);
         }
@@ -220,6 +242,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
 
     @Override
     public synchronized void onManaged(Location location) {
+        if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", location);
         if (!isStopped()) {
             onChanged(location);
         }
@@ -227,6 +250,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @Override
     public synchronized void onChanged(Entity entity) {
+        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", entity);
         if (!isStopped()) {
             deltaCollector.entities.add(entity);
 
@@ -247,6 +271,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @Override
     public synchronized void onUnmanaged(Entity entity) {
+        if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", entity);
         if (!isStopped()) {
             deltaCollector.removedEntityIds.add(entity.getId());
             deltaCollector.entities.remove(entity);
@@ -255,6 +280,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
 
     @Override
     public synchronized void onUnmanaged(Location location) {
+        if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", location);
         if (!isStopped()) {
             deltaCollector.removedLocationIds.add(location.getId());
             deltaCollector.locations.remove(location);
@@ -263,6 +289,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
 
     @Override
     public synchronized void onChanged(Location location) {
+        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", location);
         if (!isStopped()) {
             deltaCollector.locations.add(location);
         }
@@ -270,6 +297,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @Override
     public synchronized void onChanged(Policy policy) {
+        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", policy);
         if (!isStopped()) {
             deltaCollector.policies.add(policy);
         }

@@ -79,6 +79,7 @@ public class MementosGenerators {
         builder.id = entity.getId();
         builder.displayName = entity.getDisplayName();
         builder.type = entity.getClass().getName();
+        builder.typeClass = entity.getClass();
         builder.isTopLevelApp = (entity instanceof Application && entity.getParent() == null);
         
         Map<ConfigKey<?>, Object> localConfig = ((EntityInternal)entity).getConfigMap().getLocalConfig();
@@ -169,6 +170,7 @@ public class MementosGenerators {
         ConfigBag persistableConfig = new ConfigBag().copy( ((AbstractLocation)location).getLocalConfigBag() ).removeAll(nonPersistableFlagNames);
 
         builder.type = location.getClass().getName();
+        builder.typeClass = location.getClass();
         builder.id = location.getId();
         builder.displayName = location.getDisplayName();
         builder.copyConfig(persistableConfig);
@@ -195,6 +197,7 @@ public class MementosGenerators {
         BasicPolicyMemento.Builder builder = BasicPolicyMemento.builder();
         
         builder.type = policy.getClass().getName();
+        builder.typeClass = policy.getClass();
         builder.id = policy.getId();
         builder.displayName = policy.getName();
 

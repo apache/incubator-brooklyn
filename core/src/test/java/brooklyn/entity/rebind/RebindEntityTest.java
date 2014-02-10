@@ -13,6 +13,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -22,12 +23,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.rebind.RebindLocationTest.MyLocation;
@@ -428,8 +431,7 @@ public class RebindEntityTest {
         assertEquals(newApp.getConfig(MyEntity.MY_CONFIG), "myValInSuper");
         
         // This config should be inherited by dynamically-added children of app
-        MyEntity newE2 = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
-        Entities.manage(newE2);
+        MyEntity newE2 = newApp.createAndManageChild(EntitySpec.create(MyEntity.class));
         
         assertEquals(newE2.getConfig(MyEntity.MY_CONFIG), "myValInSuper");
         
@@ -486,9 +488,52 @@ public class RebindEntityTest {
         assertNull(newE.getAttribute(MyEntity.MY_SENSOR));
     }
 
+    @Test
+    public void testFailureGeneratingMementoStillPersistsOtherEntities() throws Exception {
+        MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
+        MyEntity origFailingE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).impl(MyEntityFailingImpl.class));
+        
+        newApp = rebind(false);
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), EntityPredicates.idEqualTo(origE.getId()));
+        MyEntity newFailingE = (MyEntity) Iterables.find(newApp.getChildren(), EntityPredicates.idEqualTo(origFailingE.getId()), null);
+        
+        // Expect origFailingE to never have been persisted, but origE to have worked
+        assertNotNull(newE);
+        assertNull(newFailingE);
+    }
+
+    @Test(invocationCount=100, groups="Integration")
+    public void testFailureGeneratingMementoStillPersistsOtherEntitiesRepeatedly() throws Exception {
+        testFailureGeneratingMementoStillPersistsOtherEntities();
+    }
+
+    @Test
+    public void testRebindWhenPreviousAppDestroyedHasNoApp() throws Exception {
+        origApp.stop();
+        
+        RebindTestUtils.waitForPersisted(origManagementContext);
+        LocalManagementContext newManagementContext = RebindTestUtils.newPersistingManagementContextUnstarted(mementoDir, classLoader);
+        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        newManagementContext.getRebindManager().start();
+        
+        assertEquals(newApps.size(), 0, "apps="+newApps);
+        assertEquals(newManagementContext.getApplications().size(), 0, "apps="+newManagementContext.getApplications());
+    }
+
+    @Test(invocationCount=100, groups="Integration")
+    public void testRebindWhenPreviousAppDestroyedHasNoAppRepeatedly() throws Exception {
+        testRebindWhenPreviousAppDestroyedHasNoApp();
+    }
+
     private TestApplication rebind() throws Exception {
+        return rebind(true);
+    }
+    
+    private TestApplication rebind(boolean checkSerializable) throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
-        RebindTestUtils.checkCurrentMementoSerializable(origApp);
+        if (checkSerializable) {
+            RebindTestUtils.checkCurrentMementoSerializable(origApp);
+        }
         return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }
 
@@ -715,6 +760,13 @@ public class RebindEntityTest {
                     MyLatchingEntityImpl.this.onReconstruct();
                 }
             };
+        }
+    }
+    
+    public static class MyEntityFailingImpl extends MyEntityImpl implements MyEntity {
+        @Override
+        public Map<AttributeSensor, Object> getAllAttributes() {
+            throw new RuntimeException("Simulating failure in "+this+", which will cause memento-generation to fail");
         }
     }
 }

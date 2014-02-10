@@ -12,12 +12,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
-import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -75,6 +75,7 @@ public class MementoFileWriter<T> {
             return;
         }
         
+        requireWrite.set(null);
         requireDelete.set(true);
         if (executing.compareAndSet(false, true)) {
             if (LOG.isTraceEnabled()) LOG.trace("Submitting delete task for {}", file);
@@ -124,10 +125,11 @@ public class MementoFileWriter<T> {
                 } catch (Throwable t) {
                     if (executor.isShutdown()) {
                         LOG.debug("Error deleting "+file+" (but executor shutdown)", t);
+                        return null; // just return without throwing; no more work to do
                     } else {
                         LOG.error("Error deleting "+file, t);
+                        throw Exceptions.propagate(t);
                     }
-                    throw Throwables.propagate(t);
                 }
             }});
         addPostExecListener(future);
@@ -142,10 +144,11 @@ public class MementoFileWriter<T> {
                 } catch (Throwable t) {
                     if (executor.isShutdown()) {
                         LOG.debug("Error writing to "+file+" (but executor shutdown)", t);
+                        return null; // just return without throwing; no more work to do
                     } else {
                         LOG.error("Error writing to "+file, t);
+                        throw Exceptions.propagate(t);
                     }
-                    throw Throwables.propagate(t);
                 }
              }});
         addPostExecListener(future);
@@ -177,8 +180,13 @@ public class MementoFileWriter<T> {
                                 if (LOG.isTraceEnabled()) LOG.trace("No pending exec-requirements for {}", file);
                             }
                         } catch (Throwable t) {
-                            LOG.error("Error in post-exec for "+file, t);
-                            throw Throwables.propagate(t);
+                            if (executor.isShutdown()) {
+                                LOG.debug("Error in post-exec for "+file+" (but executor shutdown)", t);
+                                return; // just return without throwing; no more work to do
+                            } else {
+                                LOG.error("Error in post-exec for "+file, t);
+                                throw Exceptions.propagate(t);
+                            }
                         }
                     }
                 }, 

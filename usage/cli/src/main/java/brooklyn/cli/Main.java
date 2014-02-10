@@ -35,6 +35,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
+import brooklyn.launcher.FatalConfigurationRuntimeException;
 import brooklyn.launcher.PersistMode;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.ResourceUtils;
@@ -63,6 +64,7 @@ public class Main {
     public static final int SUCCESS = 0;
     public static final int PARSE_ERROR = 1;
     public static final int EXECUTION_ERROR = 2;
+    public static final int CONFIGURATION_ERROR = 3;
 
     public static final Logger log = LoggerFactory.getLogger(Main.class);
 
@@ -79,8 +81,12 @@ public class Main {
                                                                    // error
             System.err.println(getUsageInfo(parser)); // display cli help
             System.exit(PARSE_ERROR);
+        } catch (FatalConfigurationRuntimeException e) {
+            log.error("Configuration error: " + e.getMessage(), e);
+            System.err.println("Configuration error: " + e.getMessage());
+            System.exit(CONFIGURATION_ERROR);
         } catch (Exception e) { // unexpected error during command execution
-            log.error("Execution error: {}\n{}" + e.getMessage(), e.getStackTrace());
+            log.error("Execution error: " + e.getMessage(), e);
             System.err.println("Execution error: " + e.getMessage());
             e.printStackTrace();
             System.exit(EXECUTION_ERROR);
@@ -207,9 +213,18 @@ public class Main {
         public boolean stopOnKeyPress = false;
 
         // TODO currently defaults to disabled; want it to default to on, when we're ready
+        // TODO how to force a line-split per option?!
+        //      Looks like java.io.airlift.airline.UsagePrinter is splitting the description by word, and
+        //      wrapping it automatically.
+        //      See https://github.com/airlift/airline/issues/30
         @Option(name = { "--persist" }, allowedValues = { "disabled", "auto", "rebind", "clean" },
                 title = "persistance mode",
-                description = "the persistence mode")
+                description =
+                        "The persistence mode. Possible values are: \n"+
+                        "disabled: will not read or persist any state; \n"+
+                        "auto: will rebind to any existing state, or start up fresh if no state; \n"+
+                        "rebind: will rebind to the existing state, or fail if no state available; \n"+
+                        "clean: will start up fresh (not using any existing state)")
         public String persist = "disabled";
 
         @Option(name = { "--persistenceDir" }, title = "persistence dir",
@@ -218,112 +233,120 @@ public class Main {
 
         @Override
         public Void call() throws Exception {
-            if (log.isDebugEnabled()) log.debug("Invoked launch command {}", this);
-            if (!quiet) System.out.println(BANNER);
-
-            if (verbose) {
-                if (app != null) {
-                    System.out.println("Launching brooklyn app: " + app + " in " + locations);
-                } else {
-                    System.out.println("Launching brooklyn server (no app)");
-                }
-            }
-
-            boolean isYamlApp = app != null && app.endsWith(".yaml");
-            boolean hasLocations = !Strings.isBlank(locations);
-            if (app != null) {
-                if (hasLocations && isYamlApp) {
-                    System.err.println("YAML app combined with command line locations; locations in the YAML file will take precedence");
-                } else if (!hasLocations && isYamlApp) {
-                    System.err.println("Using locations defined in YAML or localhost if none given");
-                    locations = "localhost";
-                } else if (!hasLocations) {
-                    System.err.println("Locations parameter not supplied: assuming localhost");
-                    locations = "localhost";
-                }
-            } else if (hasLocations) {
-                System.err.println("Locations specified without any applications; ignoring locations");
-            }
-            
-            PersistMode persistMode;
-            if (Strings.isBlank(persist)) {
-                throw new IllegalStateException("Persist mode must not be blank");
-            } else if (persist.equalsIgnoreCase("disabled")) {
-                persistMode = PersistMode.DISABLED;
-            } else if (persist.equalsIgnoreCase("auto")) {
-                persistMode = PersistMode.AUTO;
-            } else if (persist.equalsIgnoreCase("rebind")) {
-                persistMode = PersistMode.REBIND;
-            } else if (persist.equalsIgnoreCase("clean")) {
-                persistMode = PersistMode.CLEAN;
-            } else {
-                throw new IllegalStateException("Illegal persist setting: "+persist);
-            }
-
-            if (persistMode == PersistMode.DISABLED) {
-                if (Strings.isNonBlank(persistenceDir)) {
-                    throw new IllegalStateException("Cannot specify peristanceDir when persist is disabled");
-                }
-            } else {
-                if (Strings.isBlank(persistenceDir)) {
-                    persistenceDir = "brooklyn-persisted-state"+File.separator+"data"+File.separator; 
-                }
-            }
-            
-            ResourceUtils utils = ResourceUtils.create(this);
-            ClassLoader parent = utils.getLoader();
-            GroovyClassLoader loader = new GroovyClassLoader(parent);
-
-            // First, run a setup script if the user has provided one
-            if (script != null) {
-                execGroovyScript(utils, loader, script);
-            }
-
-            BrooklynLauncher launcher = BrooklynLauncher.newInstance();
-            launcher.localBrooklynPropertiesFile(localBrooklynProperties)
-                    .webconsolePort(port)
-                    .webconsole(!noConsole)
-                    .shutdownOnExit(!noShutdownOnExit)
-                    .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : ImmutableList.of(locations));
-            if (noConsoleSecurity) {
-                launcher.installSecurityFilter(false);
-            }
-            if (Strings.isNonEmpty(bindAddress)) {
-                InetAddress ip = Networking.getInetAddressWithFixedName(bindAddress);
-                launcher.bindAddress(ip);
-            }
-
-            if (app != null) {
-                // Create the instance of the brooklyn app
-                log.debug("Loading the user's application: {}", app);
-
-                if (isYamlApp) {
-                    log.debug("Loading application as YAML spec: {}", app);
-                    String content = utils.getResourceAsString(app);
-                    launcher.application(content);
-                } else {
-                    Object loadedApp = loadApplicationFromClasspathOrParse(utils, loader, app);
-                    if (loadedApp instanceof ApplicationBuilder) {
-                        launcher.application((ApplicationBuilder)loadedApp);
-                    } else if (loadedApp instanceof Application) {
-                        launcher.application((AbstractApplication)loadedApp);
+            // Configure launcher
+            BrooklynLauncher launcher;
+            try {
+                if (log.isDebugEnabled()) log.debug("Invoked launch command {}", this);
+                if (!quiet) System.out.println(BANNER);
+    
+                if (verbose) {
+                    if (app != null) {
+                        System.out.println("Launching brooklyn app: " + app + " in " + locations);
                     } else {
-                        throw new IllegalStateException("Unexpected application type "+(loadedApp==null ? null : loadedApp.getClass())+", for app "+loadedApp);
+                        System.out.println("Launching brooklyn server (no app)");
                     }
                 }
-            }
-
-            launcher.persistMode(persistMode);
-            if (persistMode != PersistMode.DISABLED) {
-                if (Strings.isBlank(persistenceDir)) {
-                    persistenceDir = "/some/default/somewhere?"; 
+    
+                boolean isYamlApp = app != null && app.endsWith(".yaml");
+                boolean hasLocations = !Strings.isBlank(locations);
+                if (app != null) {
+                    if (hasLocations && isYamlApp) {
+                        System.err.println("YAML app combined with command line locations; locations in the YAML file will take precedence");
+                    } else if (!hasLocations && isYamlApp) {
+                        System.err.println("Using locations defined in YAML or localhost if none given");
+                        locations = "localhost";
+                    } else if (!hasLocations) {
+                        System.err.println("Locations parameter not supplied: assuming localhost");
+                        locations = "localhost";
+                    }
+                } else if (hasLocations) {
+                    System.err.println("Locations specified without any applications; ignoring locations");
                 }
-                launcher.persistenceDir(persistenceDir);
+                
+                PersistMode persistMode;
+                if (Strings.isBlank(persist)) {
+                    throw new FatalConfigurationRuntimeException("Persist mode must not be blank");
+                } else if (persist.equalsIgnoreCase("disabled")) {
+                    persistMode = PersistMode.DISABLED;
+                } else if (persist.equalsIgnoreCase("auto")) {
+                    persistMode = PersistMode.AUTO;
+                } else if (persist.equalsIgnoreCase("rebind")) {
+                    persistMode = PersistMode.REBIND;
+                } else if (persist.equalsIgnoreCase("clean")) {
+                    persistMode = PersistMode.CLEAN;
+                } else {
+                    throw new FatalConfigurationRuntimeException("Illegal persist setting: "+persist);
+                }
+    
+                if (persistMode == PersistMode.DISABLED) {
+                    if (Strings.isNonBlank(persistenceDir)) {
+                        throw new FatalConfigurationRuntimeException("Cannot specify peristanceDir when persist is disabled");
+                    }
+                } else {
+                    if (Strings.isBlank(persistenceDir)) {
+                        persistenceDir = "brooklyn-persisted-state"+File.separator+"data"+File.separator; 
+                    }
+                }
+                
+                ResourceUtils utils = ResourceUtils.create(this);
+                ClassLoader parent = utils.getLoader();
+                GroovyClassLoader loader = new GroovyClassLoader(parent);
+    
+                // First, run a setup script if the user has provided one
+                if (script != null) {
+                    execGroovyScript(utils, loader, script);
+                }
+    
+                launcher = BrooklynLauncher.newInstance();
+                launcher.localBrooklynPropertiesFile(localBrooklynProperties)
+                        .webconsolePort(port)
+                        .webconsole(!noConsole)
+                        .shutdownOnExit(!noShutdownOnExit)
+                        .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : ImmutableList.of(locations));
+                if (noConsoleSecurity) {
+                    launcher.installSecurityFilter(false);
+                }
+                if (Strings.isNonEmpty(bindAddress)) {
+                    InetAddress ip = Networking.getInetAddressWithFixedName(bindAddress);
+                    launcher.bindAddress(ip);
+                }
+    
+                if (app != null) {
+                    // Create the instance of the brooklyn app
+                    log.debug("Loading the user's application: {}", app);
+    
+                    if (isYamlApp) {
+                        log.debug("Loading application as YAML spec: {}", app);
+                        String content = utils.getResourceAsString(app);
+                        launcher.application(content);
+                    } else {
+                        Object loadedApp = loadApplicationFromClasspathOrParse(utils, loader, app);
+                        if (loadedApp instanceof ApplicationBuilder) {
+                            launcher.application((ApplicationBuilder)loadedApp);
+                        } else if (loadedApp instanceof Application) {
+                            launcher.application((AbstractApplication)loadedApp);
+                        } else {
+                            throw new FatalConfigurationRuntimeException("Unexpected application type "+(loadedApp==null ? null : loadedApp.getClass())+", for app "+loadedApp);
+                        }
+                    }
+                }
+    
+                launcher.persistMode(persistMode);
+                if (persistMode != PersistMode.DISABLED) {
+                    launcher.persistenceDir(persistenceDir);
+                }
+            } catch (FatalConfigurationRuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new FatalConfigurationRuntimeException("Fatal error configuring Brooklyn launch: "+e.getMessage(), e);
             }
             
             // Launch server
             try {
                 launcher.start();
+            } catch (FatalConfigurationRuntimeException e) {
+                // rely on caller logging this propagated exception
+                throw e;
             } catch (Exception e) {
                 // Don't terminate the JVM; leave it as-is until someone explicitly stops it
                 Exceptions.propagateIfFatal(e);
@@ -427,7 +450,7 @@ public class Main {
                         addChild(EntitySpec.create((Class<? extends Entity>)clazz));
                     }};
             } else {
-                throw new IllegalArgumentException("Application class "+clazz+" must extend one of ApplicationBuilder or AbstractApplication");
+                throw new FatalConfigurationRuntimeException("Application class "+clazz+" must extend one of ApplicationBuilder or AbstractApplication");
             }
         }
 

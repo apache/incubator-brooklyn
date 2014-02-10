@@ -22,6 +22,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
         protected String brooklynVersion = BrooklynVersion.get();
         protected String id;
         protected String type;
+        protected Class<?> typeClass;
         protected String displayName;
         protected Map<String, Object> fields = Maps.newLinkedHashMap();
         
@@ -33,6 +34,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
             brooklynVersion = other.getBrooklynVersion();
             id = other.getId();
             type = other.getType();
+            typeClass = other.getTypeClass();
             displayName = other.getDisplayName();
             fields.putAll(other.getCustomFields());
             return self();
@@ -46,6 +48,9 @@ public abstract class AbstractMemento implements Memento, Serializable {
         public B type(String val) {
             type = val; return self();
         }
+        public B typeClass(Class<?> val) {
+            typeClass = val; return self();
+        }
         public B displayName(String val) {
             displayName = val; return self();
         }
@@ -58,7 +63,9 @@ public abstract class AbstractMemento implements Memento, Serializable {
     private String type;
     private String id;
     private String displayName;
-    
+
+    private transient Class<?> typeClass;
+
     // for de-serialization
     protected AbstractMemento() {
     }
@@ -68,6 +75,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
         brooklynVersion = builder.brooklynVersion;
         id = builder.id;
         type = builder.type;
+        typeClass = builder.typeClass;
         displayName = builder.displayName;
         setCustomFields(builder.fields);
     }
@@ -75,6 +83,16 @@ public abstract class AbstractMemento implements Memento, Serializable {
     // "fields" is not included as a field here, so that it is serialized after selected subclass fields
     // but the method declared here simplifies how it is connected in via builder etc
     protected abstract void setCustomFields(Map<String, Object> fields);
+    
+    @Override
+    public void injectTypeClass(Class<?> clazz) {
+        this.typeClass = clazz;
+    }
+    
+    @Override
+    public Class<?> getTypeClass() {
+        return typeClass;
+    }
     
     @Override
     public String getBrooklynVersion() {

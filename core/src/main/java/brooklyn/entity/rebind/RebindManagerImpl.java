@@ -218,7 +218,6 @@ public class RebindManagerImpl implements RebindManager {
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating entity {}", entityMemento);
                 
                 Entity entity = newEntity(entityMemento, reflections);
-                managementContext.prePreManage(entity);
                 entities.put(entityMemento.getId(), entity);
                 rebindContext.registerEntity(entityMemento.getId(), entity);
             }
@@ -259,6 +258,7 @@ public class RebindManagerImpl implements RebindManager {
                 Entity entity = rebindContext.getEntity(entityMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
     
+                entityMemento.injectTypeClass(entity.getClass());
                 ((EntityInternal)entity).getRebindSupport().reconstruct(rebindContext, entityMemento);
             }
             
@@ -286,7 +286,7 @@ public class RebindManagerImpl implements RebindManager {
             LOG.info("RebindManager complete; return apps: {}", memento.getApplicationIds());
             return apps;
         } catch (Exception e) {
-            LOG.warn("Problem during rebinid (rethrowing)", e);
+            LOG.warn("Problem during rebind (rethrowing)", e);
             throw Exceptions.propagate(e);
         }
     }
@@ -295,6 +295,7 @@ public class RebindManagerImpl implements RebindManager {
         String entityId = memento.getId();
         String entityType = checkNotNull(memento.getType(), "entityType of "+entityId);
         Class<? extends Entity> entityClazz = (Class<? extends Entity>) reflections.loadClass(entityType);
+        memento.injectTypeClass(entityClazz);
         
         if (InternalEntityFactory.isNewStyleEntity(managementContext, entityClazz)) {
             // Not using entityManager.createEntity(EntitySpec) because don't want init() to be called
