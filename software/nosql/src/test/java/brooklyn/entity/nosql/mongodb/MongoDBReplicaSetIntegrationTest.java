@@ -23,7 +23,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -31,6 +30,7 @@ import com.mongodb.DBObject;
 
 public class MongoDBReplicaSetIntegrationTest {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(MongoDBReplicaSetIntegrationTest.class);
     
     private TestApplication app;

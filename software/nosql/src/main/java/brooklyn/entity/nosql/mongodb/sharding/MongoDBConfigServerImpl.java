@@ -6,7 +6,7 @@ import brooklyn.entity.nosql.mongodb.MongoDBDriver;
 public class MongoDBConfigServerImpl extends SoftwareProcessImpl implements MongoDBConfigServer {
 
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return MongoDBDriver.class;
     }
 
