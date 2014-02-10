@@ -13,11 +13,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Closeables;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
+import brooklyn.util.stream.Streams;
 
 /**
  * Tests the re-use of SshTools in SshMachineLocation
@@ -53,7 +53,7 @@ public class SshMachineLocationReuseIntegrationTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (host != null) Closeables.closeQuietly(host);
+        if (host != null) Streams.closeQuietly(host);
         RecordingSshjTool.reset();
     }
 

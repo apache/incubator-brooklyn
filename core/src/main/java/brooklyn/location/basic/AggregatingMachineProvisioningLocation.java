@@ -12,11 +12,11 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.Closeables;
 
 /**
  * Takes a list of other provisioners, and round-robins across them when obtaining a machine.
@@ -78,7 +78,7 @@ public class AggregatingMachineProvisioningLocation<T extends MachineLocation> e
     public void close() {
         for (MachineProvisioningLocation<?> provisioner : provisioners) {
             if (provisioner instanceof Closeable) {
-                Closeables.closeQuietly((Closeable)provisioner);
+                Streams.closeQuietly((Closeable)provisioner);
             }
         }
     }

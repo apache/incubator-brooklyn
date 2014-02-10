@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -19,7 +20,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 
 public class BasicPool<T> implements Pool<T> {
 
@@ -128,7 +128,7 @@ public class BasicPool<T> implements Pool<T> {
             if (LOG.isTraceEnabled()) LOG.trace("{} executing {} with leasee {}", new Object[] {this, receiver, lease.leasedObject()});
             return receiver.apply(lease.leasedObject());
         } finally {
-            Closeables.closeQuietly(lease);
+            Streams.closeQuietly(lease);
         }
     }
     

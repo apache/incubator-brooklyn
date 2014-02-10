@@ -78,7 +78,7 @@
         <ant.version>1.8.4</ant.version>
 
         <jclouds.version>1.7.0</jclouds.version>
-        <guava.version>15.0</guava.version>
+        <guava.version>16.0.1</guava.version>
         <groovy.version>1.8.6</groovy.version>
         <logback.version>1.0.7</logback.version>
         <testng.version>6.8</testng.version>
