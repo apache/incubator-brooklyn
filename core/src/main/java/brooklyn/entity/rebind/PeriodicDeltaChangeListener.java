@@ -228,7 +228,6 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         if (isActive()) {
             LOG.warn("Problem generating memento for "+context, e);
         } else {
-            Exceptions.propagateIfFatal(e);
             LOG.debug("Problem generating memento for "+context+", but no longer active (ignoring)", e);
         }
     }
