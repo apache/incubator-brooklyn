@@ -4,6 +4,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
@@ -11,12 +14,18 @@ import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSshDriver {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractMongoDBSshDriver.class);
+    
     public AbstractMongoDBSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -39,9 +48,33 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
     }
     
     @Override
+    public void customize() {
+        Map<?,?> ports = ImmutableMap.of("port", getServerPort());
+        Networking.checkPortsValid(ports);
+        String command = String.format("mkdir -p %s", getDataDirectory());
+        newScript(CUSTOMIZING)
+                .updateTaskAndFailOnNonZeroResultCode()
+                .body.append(command).execute();
+        String templateUrl = entity.getConfig(MongoDBServer.MONGODB_CONF_TEMPLATE_URL);
+        if (!Strings.isNullOrEmpty(templateUrl)) copyTemplate(templateUrl, getConfFile());
+    }
+    
+    @Override
     public boolean isRunning() {
         Map<String,?> flags = ImmutableMap.of("usePidFile", getPidFile());
         return newScript(flags, CHECK_RUNNING).execute() == 0;
+    }
+    
+    /**
+     * Kills the server with SIGINT. Sending SIGKILL is likely to resuult in data corruption.
+     * @see <a href="http://docs.mongodb.org/manual/tutorial/manage-mongodb-processes/#sending-a-unix-int-or-term-signal">http://docs.mongodb.org/manual/tutorial/manage-mongodb-processes/#sending-a-unix-int-or-term-signal</a>
+     */
+    @Override
+    public void stop() {
+        // We could also use SIGTERM (15)
+        new ScriptHelper(this, "Send SIGINT to MongoDB server")
+        .body.append("kill -2 $(cat " + getPidFile() + ")")
+        .execute();
     }
 
     protected String getBaseName() {
@@ -67,6 +100,12 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
         }
     }
 
+    public String getDataDirectory() {
+        String result = entity.getConfig(MongoDBServer.DATA_DIRECTORY);
+        if (result!=null) return result;
+        return getRunDir() + "/data";
+    }
+
     protected String getLogFile() {
         return getRunDir() + "/log.txt";
     }
@@ -75,16 +114,32 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
         return getRunDir() + "/pid";
     }
 
-    /**
-     * Kills the server with SIGINT. Sending SIGKILL is likely to resuult in data corruption.
-     * @see <a href="http://docs.mongodb.org/manual/tutorial/manage-mongodb-processes/#sending-a-unix-int-or-term-signal">http://docs.mongodb.org/manual/tutorial/manage-mongodb-processes/#sending-a-unix-int-or-term-signal</a>
-     */
-    @Override
-    public void stop() {
-        // We could also use SIGTERM (15)
-        new ScriptHelper(this, "Send SIGINT to MongoDB server")
-                .body.append("kill -2 $(cat " + getPidFile() + ")")
-                .execute();
+    protected Integer getServerPort() {
+        return entity.getAttribute(MongoDBServer.PORT);
     }
 
+    protected String getConfFile() {
+        return getRunDir() + "/mongo.conf";
+    }
+
+    protected ImmutableList.Builder<String> getArgsBuilderWithDefaults(AbstractMongoDBServer server) {
+        Integer port = server.getAttribute(MongoDBServer.PORT);
+
+        return ImmutableList.<String>builder()
+                .add("--config", getConfFile())
+                .add("--pidfilepath", getPidFile())
+                .add("--dbpath", getDataDirectory())
+                .add("--logpath", getLogFile())
+                .add("--port", port.toString())
+                .add("--fork");
+    }
+    
+    protected void launch(ImmutableList.Builder<String> argsBuilder) {
+        String args = Joiner.on(" ").join(argsBuilder.build());
+        String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args);
+        LOG.info(command);
+        newScript(LAUNCHING)
+                .updateTaskAndFailOnNonZeroResultCode()
+                .body.append(command).execute();
+    }
 }

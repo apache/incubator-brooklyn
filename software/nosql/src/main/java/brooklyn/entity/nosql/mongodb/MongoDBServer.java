@@ -5,7 +5,6 @@ import org.bson.BasicBSONObject;
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
@@ -17,21 +16,12 @@ import brooklyn.util.flags.SetFromFlag;
     description="MongoDB (from \"humongous\") is a scalable, high-performance, open source NoSQL database",
     iconUrl="classpath:///mongodb-logo.png")
 @ImplementedBy(MongoDBServerImpl.class)
-public interface MongoDBServer extends SoftwareProcess, AbstractMongoDBServer {
-
+public interface MongoDBServer extends AbstractMongoDBServer {
+    
     // See http://docs.mongodb.org/ecosystem/tools/http-interfaces/#http-console
     // This is *always* 1000 more than port. We disable if it is not available.
     PortAttributeSensorAndConfigKey HTTP_PORT =
         new PortAttributeSensorAndConfigKey("mongodb.server.httpPort", "HTTP port for the server (estimated)", "28017+");
-
-    @SetFromFlag("dataDirectory")
-    ConfigKey<String> DATA_DIRECTORY = ConfigKeys.newStringConfigKey(
-            "mongodb.data.directory", "Data directory to store MongoDB journals");
-
-    @SetFromFlag("mongodbConfTemplateUrl")
-    ConfigKey<String> MONGODB_CONF_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
-            "mongodb.config.url", "Template file (in freemarker format) for a MongoDB configuration file",
-            "classpath://brooklyn/entity/nosql/mongodb/default-mongodb.conf");
 
     @SetFromFlag("enableRestInterface")
     ConfigKey<Boolean> ENABLE_REST_INTERFACE = ConfigKeys.newBooleanConfigKey(
