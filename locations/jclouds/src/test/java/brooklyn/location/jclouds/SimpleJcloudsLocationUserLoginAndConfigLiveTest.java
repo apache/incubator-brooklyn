@@ -22,11 +22,11 @@ import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Throwables;
 
-public class SimpleJcloudsLocationUserLoginAndConfigTest {
+public class SimpleJcloudsLocationUserLoginAndConfigLiveTest {
 
     // FIXME And tidy up this one
     
-    private static final Logger log = LoggerFactory.getLogger(SimpleJcloudsLocationUserLoginAndConfigTest.class);
+    private static final Logger log = LoggerFactory.getLogger(SimpleJcloudsLocationUserLoginAndConfigLiveTest.class);
     
     private LocalManagementContext managementContext;
 

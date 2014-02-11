@@ -1,7 +1,6 @@
 package brooklyn.location.jclouds;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -26,8 +25,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
-public class JcloudsLocationRebindTest {
-    private static final Logger LOG = LoggerFactory.getLogger(JcloudsLocationRebindTest.class);
+public class JcloudsLocationRebindLiveTest {
+    private static final Logger LOG = LoggerFactory.getLogger(JcloudsLocationRebindLiveTest.class);
     
     private static final String PROVIDER = "aws-ec2";
     private static final String EUWEST_REGION_NAME = "eu-west-1";

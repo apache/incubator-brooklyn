@@ -9,9 +9,9 @@ import org.testng.annotations.Test;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 
-public class AwsJcloudsMinRamTest {
+public class JcloudsMinRamLiveTest {
 
-    private static final Logger log = LoggerFactory.getLogger(AwsJcloudsMinRamTest.class);
+    private static final Logger log = LoggerFactory.getLogger(JcloudsMinRamLiveTest.class);
     
     private LocalManagementContext managementContext;
 

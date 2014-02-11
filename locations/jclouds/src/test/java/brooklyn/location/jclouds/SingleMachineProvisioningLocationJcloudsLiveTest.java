@@ -6,7 +6,6 @@ import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +29,7 @@ import brooklyn.util.exceptions.CompoundRuntimeException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class SingleMachineProvisioningLocationJcloudsTest {
+public class SingleMachineProvisioningLocationJcloudsLiveTest {
 private static final Logger log = LoggerFactory.getLogger(SingleMachineProvisioningLocation.class);
     
     private LocalManagementContext managementContext;
