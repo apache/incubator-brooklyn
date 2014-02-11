@@ -97,7 +97,7 @@ define([
             }
             
             var statusIconUrl = nModel
-                ? ViewUtils.computeStatusIcon(nModel.get("serviceUp"),nModel.get("serviceState"))
+                ? ViewUtils.computeStatusIconInfo(nModel.get("serviceUp"),nModel.get("serviceState")).url
                 : null;
 
             var newNode = this.template({
@@ -294,7 +294,7 @@ define([
                     stateId = entityId+"/"+tab
                     this.preselectTab(tab)
                 }
-                window.history.pushState(stateId, "", href)
+                Backbone.history.navigate(href);
                 this.displayEntityId(entityId, nodeSpan.data("app-id"));
             } else {
                 log("no a.href in clicked target")
@@ -426,8 +426,9 @@ define([
          * Causes the tab with the given name to be selected automatically when
          * the view is next rendered.
          */
-        preselectTab: function(tab) {
+        preselectTab: function(tab, tabDetails) {
             this.currentTab = tab
+            this.currentTabDetails = tabDetails;
         },
 
         showDetails: function(app, entitySummary) {
@@ -446,16 +447,17 @@ define([
             }
             this.detailsView = new EntityDetailsView({
                 model:entitySummary,
-                application:app
+                application:app,
+                appRouter:this.options.appRouter,
+                preselectTab:whichTab,
+                preselectTabDetails:this.currentTabDetails,
             })
             var self = this;
             this.detailsView.on("entity.expunged", function() {
                 self.preselectTab("summary");
                 self.displayEntityId(self.collection.first().id);
             });
-            $("div#details").html(this.detailsView.render().el)
-            // preserve the tab selected before
-            $("div#details").find('a[href="#'+whichTab+'"]').tab('show');
+            this.detailsView.render( $("div#details") );
         },
 
         highlightEntity:function (id) {

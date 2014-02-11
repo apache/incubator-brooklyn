@@ -166,10 +166,9 @@ public class Exceptions {
             if (((PropagatedRuntimeException)t2).isCauseEmbeddedInMessage())
                 // normally
                 return t2.getMessage();
-            else if (Strings.isNonBlank(t2.getMessage())) 
-                return t2.getMessage() + ": "+collapseText(t2.getCause());
-            else
-                return collapseText(t2.getCause());
+            else if (t2.getCause()!=null)
+                return ""+t2.getCause();
+            return ""+t2.getClass();
         }
         return t2.toString();
     }

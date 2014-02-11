@@ -9,6 +9,8 @@ import java.util.Set;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import brooklyn.util.collections.Jsonya;
 
@@ -30,12 +32,22 @@ public class TaskSummary {
   
   private final String currentStatus;
   private final Object result;
+  private final boolean isError;
+  private final boolean isCancelled; 
+
   private final List<LinkWithMetadata> children;
   private final LinkWithMetadata submittedByTask;
+  
+  @JsonSerialize(include=Inclusion.NON_NULL)
   private final LinkWithMetadata blockingTask;
+  @JsonSerialize(include=Inclusion.NON_NULL)
   private final String blockingDetails;
+  
   private final String detailedStatus;
+  
+  @JsonSerialize(include=Inclusion.NON_NULL)
   private final Map<String, LinkWithMetadata> streams;
+  
   private final Map<String, URI> links;
   
   public TaskSummary(
@@ -50,6 +62,8 @@ public class TaskSummary {
           @JsonProperty("endTimeUtc") Long endTimeUtc, 
           @JsonProperty("currentStatus") String currentStatus, 
           @JsonProperty("result") Object result, 
+          @JsonProperty("isError") boolean isError, 
+          @JsonProperty("isCancelled") boolean isCancelled, 
           @JsonProperty("children") List<LinkWithMetadata> children,
           @JsonProperty("submittedByTask") LinkWithMetadata submittedByTask,
           @JsonProperty("blockingTask") LinkWithMetadata blockingTask,
@@ -68,6 +82,8 @@ public class TaskSummary {
     this.endTimeUtc = endTimeUtc;
     this.currentStatus = currentStatus;
     this.result = result;
+    this.isError = isError;
+    this.isCancelled = isCancelled;
     this.children = children;
     this.blockingDetails = blockingDetails;
     this.blockingTask = blockingTask;
@@ -128,6 +144,14 @@ public class TaskSummary {
 
   public Object getResult() {
     return result;
+  }
+  
+  public boolean getIsError() {
+    return isError;
+  }
+  
+  public boolean getIsCancelled() {
+    return isCancelled;
   }
   
   public List<LinkWithMetadata> getChildren() {

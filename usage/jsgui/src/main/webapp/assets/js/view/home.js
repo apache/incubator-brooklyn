@@ -3,13 +3,13 @@
  */
 
 define([
-    "underscore", "jquery", "backbone", "view/viewutils", 
+    "view/viewutils", 
     "./application-add-wizard", "model/location",
     "text!tpl/home/applications.html",
     "text!tpl/home/summaries.html",
     "text!tpl/home/app-entry.html",
-    "bootstrap"
-], function (_, $, Backbone, ViewUtils,
+    "bootstrap", "underscore", "jquery", "backbone", "brooklyn-utils"
+], function (ViewUtils,
         AppAddWizard, Location, 
         ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
 

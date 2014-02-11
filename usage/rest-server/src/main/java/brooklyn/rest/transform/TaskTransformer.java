@@ -97,7 +97,8 @@ public class TaskTransformer {
         
         return new TaskSummary(task.getId(), task.getDisplayName(), task.getDescription(), entityId, entityDisplayName, 
                 task.getTags(), ifPositive(task.getSubmitTimeUtc()), ifPositive(task.getStartTimeUtc()), ifPositive(task.getEndTimeUtc()),
-                task.getStatusSummary(), result, children, asLink(task.getSubmittedByTask()), 
+                task.getStatusSummary(), result, task.isError(), task.isCancelled(),
+                children, asLink(task.getSubmittedByTask()), 
                 task instanceof TaskInternal ? asLink(((TaskInternal<?>)task).getBlockingTask()) : null, 
                 task instanceof TaskInternal ? ((TaskInternal<?>)task).getBlockingDetails() : null, 
                 task.getStatusDetail(true),

@@ -25,7 +25,8 @@ define([
             $(".nav1_apps").addClass("active");
 
             this.treeView = new ApplicationTreeView({
-                collection:this.collection
+                collection:this.collection,
+                appRouter:this.options.appRouter
             })
             this.$('div#app-tree').html(this.treeView.renderFull().el)
             ViewUtils.fetchRepeatedlyWithDelay(this, this.collection)
@@ -40,10 +41,28 @@ define([
             this.treeView.close()
         },
         show: function(entityId) {
+            var tab = "";
+            var tabDetails = "";
+            if (entityId) {
+                if (entityId[0]=='/') entityId = entityId.substring(1);
+                var slash = entityId.indexOf('/');
+                if (slash>0) {
+                    tab = entityId.substring(slash+1)
+                    entityId = entityId.substring(0, slash);
+                }
+            }
+            if (tab) {
+                var slash = tab.indexOf('/');
+                if (slash>0) {
+                    tabDetails = tab.substring(slash+1)
+                    tab = tab.substring(0, slash);
+                }
+                this.preselectTab(tab, tabDetails);
+            }
             this.treeView.displayEntityId(entityId)
         },
-        preselectTab: function(tab) {
-            this.treeView.preselectTab(tab)
+        preselectTab: function(tab, tabDetails) {
+            this.treeView.preselectTab(tab, tabDetails)
         },
         
         createApplication:function () {

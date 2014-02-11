@@ -662,6 +662,9 @@ line-height: 18px;
 .app-summary .inforow .info-name-value { white-space: nowrap; }
 .app-summary .inforow .info-name-value > div { display: inline-block; }
 .app-summary .inforow .info-name-value .name { font-weight: 700; width: 120px; padding-right: 12px; }
+.app-summary .additional-info-on-problem { color: #D01; }
+.app-summary .additional-info-on-problem a { color: #563; }
+a.open-tab { cursor: hand; cursor: pointer; }
 
 table.dataTable tbody td.row-expansion {
     background: #D8E4D0;

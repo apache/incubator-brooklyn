@@ -25,15 +25,14 @@
   <div class="inforow" style="position: relative;">
      
     <div style="display: inline-block; padding-left: 8px; padding-right: 24px; padding-top: 6px;">
+        <div class="info-name-value status hide">
+            <div class="name">Status</div>
+            <div class="value"><i>Loading...</i></div>
+        </div>
         <div class="info-name-value serviceUp hide">
             <div class="name">Service Up</div>
             <div class="value"><i>Loading...</i></div>
         </div>
-        <div class="info-name-value status hide">
-            <div class="name">Expected State</div>
-            <div class="value"><i>Loading...</i></div>
-        </div>
-        
         <div class="info-name-value url hide" style="margin-top: 12px;">
             <div class="name">URL</div>
             <div class="value"><i>Loading...</i></div>
@@ -46,6 +45,9 @@
         <div class="info-name-value id">
             <div class="name">ID</div>
             <div class="value"><%= entity.get('id') %></div>
+        </div>
+
+        <div class="additional-info-on-problem hide" style="margin-top: 12px;">
         </div>
  
      <div id="status-icon" style="display: inline-block; padding-top: 12px; padding-bottom: 18px; padding-right: 8px; position: absolute; right: 0; top: 0;"></div>

@@ -19,7 +19,7 @@
   
   <span class="entity_tree_node name entity" id="span-<%= id %>" 
         data-entity-type="<%= model.get('type') %>" data-parent-id="<%= parentId %>" data-app-id="<%= model.get('applicationId') %>">
-    <a href="#/v1/applications/<%= model.get('applicationId') %>/entities/<%= id %>">
+    <a href="#v1/applications/<%= model.get('applicationId') %>/entities/<%= id %>">
     
       <div style="min-width: <%= statusColumnWidth + (iconUrl ? entityIconSize : 6)%>px; min-height: <%= minHeight %>px; max-height: 40px; display: inline-block; margin-right: 4px; vertical-align: middle;">
         <% if (statusIconUrl) { %>
