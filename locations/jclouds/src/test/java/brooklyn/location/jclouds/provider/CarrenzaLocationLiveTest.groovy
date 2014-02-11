@@ -1,4 +1,4 @@
-package brooklyn.location.jclouds;
+package brooklyn.location.jclouds.provider;
 
 import static org.testng.Assert.*
 
@@ -10,6 +10,8 @@ import org.testng.annotations.Test
 
 import brooklyn.config.BrooklynProperties
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.jclouds.JcloudsLocation
+import brooklyn.location.jclouds.JcloudsSshMachineLocation
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.collections.MutableMap
 

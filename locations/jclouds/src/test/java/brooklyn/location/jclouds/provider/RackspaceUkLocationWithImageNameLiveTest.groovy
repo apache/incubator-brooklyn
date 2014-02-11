@@ -1,4 +1,4 @@
-package brooklyn.location.jclouds
+package brooklyn.location.jclouds.provider;
 
 import static org.testng.Assert.*
 
@@ -7,8 +7,8 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.Entities
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import brooklyn.location.jclouds.JcloudsLocation
+import brooklyn.location.jclouds.JcloudsSshMachineLocation
 import brooklyn.management.ManagementContext
 
 import com.google.common.collect.ImmutableMap

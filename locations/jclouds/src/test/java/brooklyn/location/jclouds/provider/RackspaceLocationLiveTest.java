@@ -1,4 +1,4 @@
-package brooklyn.location.jclouds;
+package brooklyn.location.jclouds.provider;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;

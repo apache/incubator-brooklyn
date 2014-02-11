@@ -1,9 +1,8 @@
-package brooklyn.location.jclouds
+package brooklyn.location.jclouds.provider;
 
 import static org.testng.Assert.*
 
 import org.testng.annotations.DataProvider
-import org.testng.annotations.Test
 
 public class GoGridLocationLiveTest extends AbstractJcloudsLocationTest {
     

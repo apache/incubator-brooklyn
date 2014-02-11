@@ -1,9 +1,7 @@
-package brooklyn.location.jclouds
-
-import brooklyn.config.BrooklynProperties
+package brooklyn.location.jclouds.provider;
 
 import org.testng.annotations.DataProvider
-import org.testng.annotations.Test;
+import org.testng.annotations.Test
 
 //FIXME get Greenhouse working
 
