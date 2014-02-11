@@ -2,7 +2,6 @@ package brooklyn.location.jclouds;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -45,23 +44,11 @@ public class AbstractJcloudsTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         machines = Lists.newCopyOnWriteArrayList();
-        managementContext = new LocalManagementContext();
+        managementContext = newManagementContext();
         
         // Don't let any defaults from brooklyn.properties (except credentials) interfere with test
         brooklynProperties = managementContext.getBrooklynProperties();
-        for (String key : ImmutableSet.copyOf(brooklynProperties.asMapWithStringKeys().keySet())) {
-            if (key.startsWith(BROOKLYN_PROPERTIES_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
-                brooklynProperties.remove(key);
-            }
-            if (key.startsWith(BROOKLYN_PROPERTIES_LEGACY_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
-                brooklynProperties.remove(key);
-            }
-            
-            // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
-            if (key.startsWith("brooklyn.ssh")) {
-                brooklynProperties.remove(key);
-            }
-        }
+        stripBrooklynProperties(brooklynProperties);
     }
 
     @AfterMethod(alwaysRun=true)
@@ -96,6 +83,26 @@ public class AbstractJcloudsTest {
         }
     }
 
+    protected LocalManagementContext newManagementContext() {
+        return new LocalManagementContext();
+    }
+    
+    protected void stripBrooklynProperties(BrooklynProperties props) {
+        for (String key : ImmutableSet.copyOf(props.asMapWithStringKeys().keySet())) {
+            if (key.startsWith(BROOKLYN_PROPERTIES_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
+                props.remove(key);
+            }
+            if (key.startsWith(BROOKLYN_PROPERTIES_LEGACY_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
+                props.remove(key);
+            }
+            
+            // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
+            if (key.startsWith("brooklyn.ssh")) {
+                props.remove(key);
+            }
+        }
+    }
+    
     protected void assertSshable(SshMachineLocation machine) {
         int result = machine.execScript("simplecommand", ImmutableList.of("true"));
         assertEquals(result, 0);
