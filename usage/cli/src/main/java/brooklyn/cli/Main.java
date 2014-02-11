@@ -10,7 +10,6 @@ import io.airlift.command.Option;
 import io.airlift.command.OptionType;
 import io.airlift.command.ParseException;
 
-import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
@@ -282,10 +281,6 @@ public class Main {
                     if (Strings.isNonBlank(persistenceDir)) {
                         throw new FatalConfigurationRuntimeException("Cannot specify peristanceDir when persist is disabled");
                     }
-                } else {
-                    if (Strings.isBlank(persistenceDir)) {
-                        persistenceDir = "brooklyn-persisted-state"+File.separator+"data"+File.separator; 
-                    }
                 }
                 
                 ResourceUtils utils = ResourceUtils.create(this);
@@ -332,7 +327,7 @@ public class Main {
                 }
     
                 launcher.persistMode(persistMode);
-                if (persistMode != PersistMode.DISABLED) {
+                if (persistMode != PersistMode.DISABLED && Strings.isNonBlank(persistenceDir)) {
                     launcher.persistenceDir(persistenceDir);
                 }
             } catch (FatalConfigurationRuntimeException e) {

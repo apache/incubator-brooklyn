@@ -13,10 +13,15 @@ import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.os.Os;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Preconditions;
 
 public class BrooklynConfigKeys {
+
+    public static final ConfigKey<String> BROOKLYN_PERSISTENCE_DIR = newStringConfigKey(
+            "brooklyn.persitence.dir", "Directory for writing all brooklyn state", 
+            Os.mergePaths("~", ".brooklyn", "brooklyn-persisted-state", "data"));
 
     public static final ConfigKey<String> BROOKLYN_DATA_DIR = newStringConfigKey(
             "brooklyn.datadir", "Directory for writing all brooklyn data", 

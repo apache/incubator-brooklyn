@@ -16,10 +16,12 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
+import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
@@ -29,6 +31,7 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
@@ -287,7 +290,7 @@ public class BrooklynLauncherTest {
     }
 
     @Test
-    public void testAutoCreatesNewIfEmptyDir() throws Exception {
+    public void testAutoRebindCreatesNewIfEmptyDir() throws Exception {
         persistenceDir = Files.createTempDir();
         
         // Auto will rebind if the dir exists
@@ -303,6 +306,39 @@ public class BrooklynLauncherTest {
         assertMementoDirNonEmptyEventually(persistenceDir);
     }
 
+    @Test
+    public void testRebindRespectsPersistenceDirSetInProperties() throws Exception {
+        persistenceDir = Files.createTempDir();
+        
+        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        brooklynProperties.put(BrooklynConfigKeys.BROOKLYN_PERSISTENCE_DIR, persistenceDir.getAbsolutePath());
+        
+        // Rebind to the app we started last time
+        launcher = BrooklynLauncher.newInstance()
+                .brooklynProperties(brooklynProperties)
+                .webconsole(false)
+                .persistMode(PersistMode.AUTO)
+                .start();
+        
+        ManagementContext managementContext = launcher.getServerDetails().getManagementContext();
+        assertEquals(getPersistenceDir(managementContext), persistenceDir);
+    }
+
+    @Test
+    public void testRebindRespectsDefaultPersistenceDir() throws Exception {
+        launcher = BrooklynLauncher.newInstance()
+                .webconsole(false)
+                .persistMode(PersistMode.AUTO)
+                .start();
+        
+        ManagementContext managementContext = launcher.getServerDetails().getManagementContext();
+        assertEquals(getPersistenceDir(managementContext), new File(Os.tidyPath(BrooklynConfigKeys.BROOKLYN_PERSISTENCE_DIR.getDefaultValue())));
+    }
+
+    private File getPersistenceDir(ManagementContext managementContext) {
+        return ((BrooklynMementoPersisterToMultiFile)managementContext.getRebindManager().getPersister()).getDir();
+    }
+    
     private void assertMementoDirNonEmptyEventually(final File dir) {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.TEN_SECONDS), new Runnable() {
             @Override public void run() {
