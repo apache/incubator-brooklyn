@@ -1,8 +1,11 @@
 package brooklyn.entity.nosql.mongodb.sharding;
 
+import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
+
 import java.util.Collection;
 
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 
@@ -10,28 +13,33 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
     private MongoDBRouterCluster routers;
     private MongoDBShardCluster shards;
     private MongoDBConfigServerCluster configServers;
-    
+
     @Override
     public void init() {
-        EntitySpec<MongoDBRouterCluster> routersSpec = EntitySpec.create(MongoDBRouterCluster.class);
-        EntitySpec<MongoDBShardCluster> shardsSpec = EntitySpec.create(MongoDBShardCluster.class);
-        EntitySpec<MongoDBConfigServerCluster> configServersSpec = EntitySpec.create(MongoDBConfigServerCluster.class);
-        
-        routers = addChild(routersSpec);
-        shards = addChild(shardsSpec);
-        configServers = addChild(configServersSpec);
+        configServers = addChild(EntitySpec.create(MongoDBConfigServerCluster.class)
+                .configure(DynamicCluster.INITIAL_SIZE, getConfig(CONFIG_CLUSTER_SIZE)));
+        routers = addChild(EntitySpec.create(MongoDBRouterCluster.class)
+                .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_ROUTER_CLUSTER_SIZE))
+                .configure(MongoDBRouter.CONFIG_SERVERS, attributeWhenReady(configServers, MongoDBConfigServerCluster.SERVER_ADDRESSES)));
+        shards = addChild(EntitySpec.create(MongoDBShardCluster.class)
+                .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_SHARD_CLUSTER_SIZE)));
     }
 
     @Override
     public void start(Collection<? extends Location> locations) {
-        // TODO Auto-generated method stub
-        
+        configServers.start(locations);
+        routers.start(locations);
+        shards.start(locations);
+        // FIXME: Check if service is up
+        setAttribute(SERVICE_UP, true);
     }
 
     @Override
     public void stop() {
-        // TODO Auto-generated method stub
-        
+        routers.stop();
+        shards.stop();
+        configServers.stop();
+        setAttribute(SERVICE_UP, false);
     }
 
     @Override

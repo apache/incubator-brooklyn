@@ -6,7 +6,7 @@ public class MongoDBRouterImpl extends SoftwareProcessImpl implements MongoDBRou
 
     @Override
     public Class<?> getDriverInterface() {
-        return MongoDBRouter.class;
+        return MongoDBRouterDriver.class;
     }
 
     @Override

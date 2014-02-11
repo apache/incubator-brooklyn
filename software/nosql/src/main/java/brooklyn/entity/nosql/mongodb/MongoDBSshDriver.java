@@ -21,7 +21,8 @@ public class MongoDBSshDriver extends AbstractMongoDBSshDriver implements MongoD
     public void launch() {
         MongoDBServer server = getEntity();
 
-        ImmutableList.Builder<String> argsBuilder = getArgsBuilderWithDefaults(server);
+        ImmutableList.Builder<String> argsBuilder = getArgsBuilderWithDefaults(server)
+            .add("--dbpath", getDataDirectory());
 
         if (server.isReplicaSetMember()) {
             String replicaSetName = server.getReplicaSet().getName();

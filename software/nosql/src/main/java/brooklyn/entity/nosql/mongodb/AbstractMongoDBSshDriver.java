@@ -128,7 +128,6 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
         return ImmutableList.<String>builder()
                 .add("--config", getConfFile())
                 .add("--pidfilepath", getPidFile())
-                .add("--dbpath", getDataDirectory())
                 .add("--logpath", getLogFile())
                 .add("--port", port.toString())
                 .add("--fork");

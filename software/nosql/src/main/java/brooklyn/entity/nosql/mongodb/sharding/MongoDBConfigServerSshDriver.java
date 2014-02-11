@@ -17,7 +17,9 @@ public class MongoDBConfigServerSshDriver extends AbstractMongoDBSshDriver imple
 
     @Override
     public void launch() {
-        launch(getArgsBuilderWithDefaults(getEntity()).add("--configsvr"));
+        launch(getArgsBuilderWithDefaults(getEntity())
+                .add("--configsvr")
+                .add("--dbpath", getDataDirectory()));
     }
 
 }
