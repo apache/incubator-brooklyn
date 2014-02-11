@@ -8,6 +8,7 @@ import java.util.NoSuchElementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
@@ -42,6 +43,8 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     public void reconstruct(RebindContext rebindContext, LocationMemento memento) {
     	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location: {}", memento.toVerboseString());
 
+    	// FIXME Treat config like we do for entities; this code will disappear when locations become entities.
+    	
     	// Note that the flags have been set in the constructor
         // FIXME Relies on location.getLocalConfigBag being mutable (to modify the location's own config)
         location.setName(memento.getDisplayName());
@@ -55,7 +58,13 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
             try {
                 Field field = FlagUtils.findFieldForFlag(flagName, location);
                 Class<?> fieldType = field.getType();
-                Object value = TypeCoercions.coerce(entry.getValue(), fieldType);
+                Object value = entry.getValue();
+                if (ConfigKey.class.isAssignableFrom(fieldType)) {
+                    ConfigKey<?> configKey = (ConfigKey<?>) FlagUtils.getField(location, field);
+                    value = TypeCoercions.coerce(entry.getValue(), configKey.getType());
+                } else {
+                    value = TypeCoercions.coerce(entry.getValue(), fieldType);
+                }
                 if (value != null) {
                     location.getLocalConfigBag().putStringKey(flagName, value);
                     FlagUtils.setFieldFromFlag(location, flagName, value);
@@ -64,9 +73,10 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
                 // FIXME How to do findFieldForFlag without throwing exception if it's not there?
             }
         }
-
+        
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);
+        location.rebind();
         
         doReconsruct(rebindContext, memento);
     }

@@ -75,7 +75,20 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
 
     @Override
     public void init() {
-        super.init();
+        if (jcloudsParent != null) {
+            super.init();
+            ComputeServiceContext context = jcloudsParent.getComputeService().getContext();
+            runScriptFactory = context.utils().injector().getInstance(RunScriptOnNode.Factory.class);
+        } else {
+            // TODO Need to fix the rebind-detection, and not call init() on rebind.
+            // This will all change when locations become entities.
+            if (LOG.isDebugEnabled()) LOG.debug("Not doing init() of {} because parent not set; presuming rebinding", this);
+        }
+    }
+    
+    @Override
+    public void rebind() {
+        super.rebind();
         ComputeServiceContext context = jcloudsParent.getComputeService().getContext();
         runScriptFactory = context.utils().injector().getInstance(RunScriptOnNode.Factory.class);
     }

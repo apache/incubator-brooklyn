@@ -27,7 +27,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 
-import com.google.common.collect.Sets;
+import com.google.common.base.Predicates;
 
 public class MementosGenerators {
 
@@ -163,9 +163,12 @@ public class MementosGenerators {
     public static BasicLocationMemento.Builder newLocationMementoBuilder(Location location) {
         BasicLocationMemento.Builder builder = BasicLocationMemento.builder();
 
-        Set<String> nonPersistableFlagNames = Sets.union(
-                FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.TRANSIENT).keySet(),
-                FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.STATIC).keySet());
+        Set<String> nonPersistableFlagNames = MutableMap.<String,Object>builder()
+                .putAll(FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.TRANSIENT))
+                .putAll(FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.STATIC))
+                .filterValues(Predicates.not(Predicates.instanceOf(ConfigKey.class)))
+                .build()
+                .keySet();
         Map<String, Object> persistableFlags = FlagUtils.getFieldsWithFlagsExcludingModifiers(location, Modifier.STATIC ^ Modifier.TRANSIENT);
         ConfigBag persistableConfig = new ConfigBag().copy( ((AbstractLocation)location).getLocalConfigBag() ).removeAll(nonPersistableFlagNames);
 

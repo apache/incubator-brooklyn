@@ -281,6 +281,15 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         // no-op
     }
 
+    /**
+     * Called by framework (in new-style locations) on rebind, after configuring, setting parent, etc.
+     * Note that a future change to Brooklyn is that {@link #init()} will not be called when rebinding.
+     */
+    public void rebind() {
+        // no-op
+    }
+
+
     public boolean isManaged() {
         return managementContext != null && managed;
     }

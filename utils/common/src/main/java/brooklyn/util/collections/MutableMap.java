@@ -1,11 +1,13 @@
 package brooklyn.util.collections;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 
 /** Map impl, exposing simple builder operations (add) in a fluent-style API,
@@ -181,6 +183,21 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         public MutableMap<K, V> build() {
           return new MutableMap<K,V>(result);
         }
+        
+        public Builder<K, V> filterValues(Predicate<? super V> filter) {
+            for (Iterator<V> iter = result.values().iterator(); iter.hasNext();) {
+                V val = iter.next();
+                if (!filter.apply(val)) iter.remove();
+            }
+            return this;
+        }
+        
+        public Builder<K, V> filterKeys(Predicate<? super K> filter) {
+            for (Iterator<K> iter = result.keySet().iterator(); iter.hasNext();) {
+                K key = iter.next();
+                if (!filter.apply(key)) iter.remove();
+            }
+            return this;
+        }
     }
-
 }
