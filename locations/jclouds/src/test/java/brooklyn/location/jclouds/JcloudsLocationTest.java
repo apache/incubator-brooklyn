@@ -21,7 +21,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
-import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
@@ -189,13 +188,14 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             }
         };
     }
+    
     private BrooklynProperties brooklynProperties;
     private LocalManagementContext managementContext;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        brooklynProperties = BrooklynProperties.Factory.newDefault();
-        managementContext = new LocalManagementContext(brooklynProperties);
+        managementContext = new LocalManagementContext();
+        brooklynProperties = managementContext.getBrooklynProperties();
     }
     
     @AfterMethod(alwaysRun=true)

@@ -3,11 +3,8 @@ package brooklyn.location.jclouds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.Entities;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;
 
@@ -15,13 +12,6 @@ public class JcloudsMachineNamerTest {
 
     private static final Logger log = LoggerFactory.getLogger(JcloudsMachineNamerTest.class);
     
-    private TestApplication app;
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
-
     @Test
     public void testGenerateGroupIdInVcloud() {
         ConfigBag cfg = new ConfigBag()

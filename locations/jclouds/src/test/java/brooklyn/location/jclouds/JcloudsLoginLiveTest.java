@@ -7,37 +7,25 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Tests different login options for ssh keys, passwords, etc.
  */
-public class JcloudsLoginLiveTest {
+public class JcloudsLoginLiveTest extends AbstractJcloudsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsLoginLiveTest.class);
 
-    public static final String BROOKLYN_PROPERTIES_PREFIX = "brooklyn.jclouds.";
-    
-    public static final String AWS_EC2_PROVIDER = "aws-ec2";
     public static final String AWS_EC2_REGION_NAME = "us-east-1";
-    public static final String AWS_EC2_TINY_HARDWARE_ID = "t1.micro";
-    public static final String AWS_EC2_SMALL_HARDWARE_ID = "m1.small";
     public static final String AWS_EC2_LOCATION_SPEC = "jclouds:" + AWS_EC2_PROVIDER + (AWS_EC2_REGION_NAME == null ? "" : ":" + AWS_EC2_REGION_NAME);
     
     // Image: {id=us-east-1/ami-7d7bfc14, providerId=ami-7d7bfc14, name=RightImage_CentOS_6.3_x64_v5.8.8.5, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=6.0, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, version=5.8.8.5, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
@@ -46,7 +34,6 @@ public class JcloudsLoginLiveTest {
     // Image: {id=us-east-1/ami-d0f89fb9, providerId=ami-d0f89fb9, name=ubuntu/images/ebs/ubuntu-precise-12.04-amd64-server-20130411.1, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=12.04, description=099720109477/ubuntu/images/ebs/ubuntu-precise-12.04-amd64-server-20130411.1, is64Bit=true}, description=099720109477/ubuntu/images/ebs/ubuntu-precise-12.04-amd64-server-20130411.1, version=20130411.1, status=AVAILABLE[available], loginUser=ubuntu, userMetadata={owner=099720109477, rootDeviceType=ebs, virtualizationType=paravirtual, hypervisor=xen}}
     public static final String AWS_EC2_UBUNTU_IMAGE_ID = "us-east-1/ami-d0f89fb9";
 
-    public static final String RACKSPACE_PROVIDER = "rackspace-cloudservers-uk";
     public static final String RACKSPACE_LOCATION_SPEC = "jclouds:" + RACKSPACE_PROVIDER;
     
     // Image: {id=LON/c52a0ca6-c1f2-4cd1-b7d6-afbcd1ebda22, providerId=c52a0ca6-c1f2-4cd1-b7d6-afbcd1ebda22, name=CentOS 6.0, location={scope=ZONE, id=LON, description=LON, parent=rackspace-cloudservers-uk, iso3166Codes=[GB-SLG]}, os={family=centos, name=CentOS 6.0, version=6.0, description=CentOS 6.0, is64Bit=true}, description=CentOS 6.0, status=AVAILABLE, loginUser=root, userMetadata={os_distro=centos, com.rackspace__1__visible_core=1, com.rackspace__1__build_rackconnect=1, com.rackspace__1__options=0, image_type=base, cache_in_nova=True, com.rackspace__1__source=kickstart, org.openstack__1__os_distro=org.centos, com.rackspace__1__release_build_date=2013-07-25_18-56-29, auto_disk_config=True, com.rackspace__1__release_version=5, os_type=linux, com.rackspace__1__visible_rackconnect=1, com.rackspace__1__release_id=210, com.rackspace__1__visible_managed=0, com.rackspace__1__build_core=1, org.openstack__1__os_version=6.0, org.openstack__1__architecture=x64, com.rackspace__1__build_managed=0}}
@@ -55,10 +42,6 @@ public class JcloudsLoginLiveTest {
     // Image: {id=LON/29fe3e2b-f119-4715-927b-763e99ebe23e, providerId=29fe3e2b-f119-4715-927b-763e99ebe23e, name=Debian 6.06 (Squeeze), location={scope=ZONE, id=LON, description=LON, parent=rackspace-cloudservers-uk, iso3166Codes=[GB-SLG]}, os={family=debian, name=Debian 6.06 (Squeeze), version=6.0, description=Debian 6.06 (Squeeze), is64Bit=true}, description=Debian 6.06 (Squeeze), status=AVAILABLE, loginUser=root, userMetadata={os_distro=debian, com.rackspace__1__visible_core=1, com.rackspace__1__build_rackconnect=1, com.rackspace__1__options=0, image_type=base, cache_in_nova=True, com.rackspace__1__source=kickstart, org.openstack__1__os_distro=org.debian, com.rackspace__1__release_build_date=2013-08-06_13-05-36, auto_disk_config=True, com.rackspace__1__release_version=4, os_type=linux, com.rackspace__1__visible_rackconnect=1, com.rackspace__1__release_id=300, com.rackspace__1__visible_managed=0, com.rackspace__1__build_core=1, org.openstack__1__os_version=6.06, org.openstack__1__architecture=x64, com.rackspace__1__build_managed=0}}
     public static final String RACKSPACE_DEBIAN_IMAGE_NAME_REGEX = "Debian 6";
     
-    protected BrooklynProperties brooklynProperties;
-    protected ManagementContext managementContext;
-    
-    protected JcloudsLocation jcloudsLocation;
     protected JcloudsSshMachineLocation machine;
     
     private File privateRsaFile = new File(Os.tidyPath("~/.ssh/id_rsa"));
@@ -73,34 +56,6 @@ public class JcloudsLoginLiveTest {
     private boolean privateDsaFileMoved;
     private boolean publicRsaFileMoved;
     private boolean publicDsaFileMoved;
-    
-    @BeforeMethod(alwaysRun=true)
-    public void setUp() throws Exception {
-        // Don't let any defaults from brooklyn.properties (except credentials) interfere with test
-        brooklynProperties = BrooklynProperties.Factory.newDefault();
-        for (String key : ImmutableSet.copyOf(brooklynProperties.asMapWithStringKeys().keySet())) {
-            if (key.startsWith("brooklyn.jclouds") && !(key.endsWith("identity") || key.endsWith("credential"))) {
-                brooklynProperties.remove(key);
-            }
-            
-            // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
-            if (key.startsWith("brooklyn.ssh")) {
-                brooklynProperties.remove(key);
-            }
-        }
-        
-        managementContext = new LocalManagementContext(brooklynProperties);
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        try {
-            if (machine != null) jcloudsLocation.release(machine);
-            machine = null;
-        } finally {
-            if (managementContext != null) Entities.destroyAllCatching(managementContext);
-        }
-    }
 
     @Test(groups = {"Live"})
     protected void testAwsEc2SpecifyingJustPrivateSshKeyInDeprecatedForm() throws Exception {
@@ -324,8 +279,13 @@ public class JcloudsLoginLiveTest {
                 .build());
     }
     
+    @Override
+    protected void releaseMachine(JcloudsSshMachineLocation machine) {
+        jcloudsLocation.release(machine);
+    }
+    
     private JcloudsSshMachineLocation createEc2Machine(Map<String,? extends Object> conf) throws Exception {
-        return createMachine(MutableMap.<String,Object>builder()
+        return obtainMachine(MutableMap.<String,Object>builder()
                 .putAll(conf)
                 .putIfAbsent("imageId", AWS_EC2_CENTOS_IMAGE_ID)
                 .putIfAbsent("hardwareId", AWS_EC2_SMALL_HARDWARE_ID)
@@ -334,22 +294,13 @@ public class JcloudsLoginLiveTest {
     }
     
     private JcloudsSshMachineLocation createRackspaceMachine(Map<String,? extends Object> conf) throws Exception {
-        return createMachine(MutableMap.<String,Object>builder()
+        return obtainMachine(MutableMap.<String,Object>builder()
                 .putAll(conf)
                 .putIfAbsent("inboundPorts", ImmutableList.of(22))
                 .build());
     }
     
-    private JcloudsSshMachineLocation createMachine(Map<String,? extends Object> conf) throws Exception {
-        return jcloudsLocation.obtain(conf);
-    }
-    
-    private void assertSshable(SshMachineLocation machine) {
-        int result = machine.execScript("simplecommand", ImmutableList.of("true"));
-        assertEquals(result, 0);
-    }
-    
-    private void assertSshable(Map<?,?> machineConfig) {
+    protected void assertSshable(Map<?,?> machineConfig) {
         SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure(machineConfig));
         try {

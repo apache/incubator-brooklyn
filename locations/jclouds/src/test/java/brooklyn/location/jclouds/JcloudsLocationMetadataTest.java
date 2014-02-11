@@ -7,6 +7,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.management.internal.LocalManagementContext;
@@ -18,20 +19,21 @@ import com.google.common.collect.ImmutableSet;
  */
 public class JcloudsLocationMetadataTest implements JcloudsLocationConfig {
 
-    private LocalManagementContext managementContext;
-    private BrooklynProperties brooklynProperties;
+    protected BrooklynProperties brooklynProperties;
+    protected LocalManagementContext managementContext;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext(BrooklynProperties.Factory.newDefault());
+        managementContext = new LocalManagementContext();
         brooklynProperties = managementContext.getBrooklynProperties();
     }
-    
+
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (managementContext != null) managementContext.terminate();
+        if (managementContext != null) Entities.destroyAll(managementContext);
     }
-    
+
+
     @Test
     public void testGetsDefaultAwsEc2Metadata() throws Exception {
         Location loc = managementContext.getLocationRegistry().resolve("jclouds:aws-ec2:us-west-1");

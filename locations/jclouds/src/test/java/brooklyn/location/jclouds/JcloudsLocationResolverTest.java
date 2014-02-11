@@ -21,9 +21,9 @@ public class JcloudsLocationResolverTest {
 
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(JcloudsLocationResolverTest.class);
-
-    private BrooklynProperties brooklynProperties;
+    
     private LocalManagementContext managementContext;
+    private BrooklynProperties brooklynProperties;
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
@@ -34,7 +34,6 @@ public class JcloudsLocationResolverTest {
         brooklynProperties.put("brooklyn.jclouds.aws-ec2.credential", "aws-ec2-cred");
         brooklynProperties.put("brooklyn.jclouds.rackspace-cloudservers-uk.identity", "cloudservers-uk-id");
         brooklynProperties.put("brooklyn.jclouds.rackspace-cloudservers-uk.credential", "cloudservers-uk-cred");
-
     }
 
     @AfterMethod(alwaysRun = true)

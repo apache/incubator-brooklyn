@@ -8,22 +8,17 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
-import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.collect.Iterables;
 
-public class JcloudsByonLocationResolverTest {
+public class JcloudsByonLocationResolverTest extends AbstractJcloudsTest {
 
-    private BrooklynProperties brooklynProperties;
-    private LocalManagementContext managementContext;
     private LocationRegistry registry;
 
     // TODO Expects this VM to exist; how to write this better? 
@@ -34,17 +29,12 @@ public class JcloudsByonLocationResolverTest {
     private final String hostname = "ec2-54-226-119-72.compute-1.amazonaws.com";
 
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        brooklynProperties = BrooklynProperties.Factory.newDefault();
-        managementContext = new LocalManagementContext(brooklynProperties);
+        super.setUp();
         registry = new BasicLocationRegistry(managementContext);
     }
     
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (managementContext != null) managementContext.terminate();
-    }
-
     @Test
     public void testThrowsOnInvalid() throws Exception {
         assertThrowsNoSuchElement("wrongprefix:(hosts=\"1.1.1.1\")");
