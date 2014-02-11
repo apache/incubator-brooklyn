@@ -25,8 +25,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
-public class JcloudsLocationRebindLiveTest {
-    private static final Logger LOG = LoggerFactory.getLogger(JcloudsLocationRebindLiveTest.class);
+public class JcloudsLocationRebindMachineLiveTest {
+    private static final Logger LOG = LoggerFactory.getLogger(JcloudsLocationRebindMachineLiveTest.class);
     
     private static final String PROVIDER = "aws-ec2";
     private static final String EUWEST_REGION_NAME = "eu-west-1";
