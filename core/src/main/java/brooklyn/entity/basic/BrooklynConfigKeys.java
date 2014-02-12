@@ -18,6 +18,10 @@ import com.google.common.base.Preconditions;
 
 public class BrooklynConfigKeys {
 
+    public static final ConfigKey<String> BROOKLYN_PERSISTENCE_DIR = newStringConfigKey(
+            "brooklyn.persistence.dir", "Directory for writing all brooklyn state", 
+            Os.mergePaths("~", ".brooklyn", "brooklyn-persisted-state", "data"));
+
     public static final ConfigKey<String> BROOKLYN_DATA_DIR = newStringConfigKey(
             "brooklyn.datadir", "Directory for writing all brooklyn data", 
             Os.mergePaths(Os.tmp(), "brooklyn-"+Os.user())

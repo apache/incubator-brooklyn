@@ -184,6 +184,11 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         }
     }
 
+    @VisibleForTesting
+    public File getDir() {
+        return dir;
+    }
+    
     @Override
     @VisibleForTesting
     public void waitForWritesCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
