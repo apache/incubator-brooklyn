@@ -67,7 +67,7 @@ public class RebindJcloudsLocationLiveTest extends AbstractJcloudsTest {
         return RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
     }
     
-    @Test
+    @Test(groups="Live")
     public void testRebindsToJcloudsMachine() throws Exception {
         origApp.start(ImmutableList.of(jcloudsLocation));
         JcloudsLocation origJcloudsLocation = jcloudsLocation;

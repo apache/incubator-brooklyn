@@ -110,27 +110,27 @@ public abstract class AbstractJcloudsLocationTest {
     @Test(groups = "Live", dataProvider="fromImageId")
     public void testProvisionVmUsingImageId(String regionName, String imageId, String imageOwner) {
         loc = (JcloudsLocation) ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
-        SshMachineLocation machine = obtainMachine(ImmutableMap.of("imageId", imageId, "imageOwner", imageOwner));
+        SshMachineLocation machine = obtainMachine(MutableMap.of("imageId", imageId, "imageOwner", imageOwner));
 
-        LOG.info("Provisioned AWS vm {}; checking if ssh'able", machine);
+        LOG.info("Provisioned {} vm {}; checking if ssh'able", provider, machine);
         assertTrue(machine.isSshable());
     }
     
     @Test(groups = "Live", dataProvider="fromImageNamePattern")
     public void testProvisionVmUsingImageNamePattern(String regionName, String imageNamePattern, String imageOwner) {
         loc = (JcloudsLocation) ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
-        SshMachineLocation machine = obtainMachine(ImmutableMap.of("imageNameRegex", imageNamePattern, "imageOwner", imageOwner));
+        SshMachineLocation machine = obtainMachine(MutableMap.of("imageNameRegex", imageNamePattern, "imageOwner", imageOwner));
         
-        LOG.info("Provisioned AWS vm {}; checking if ssh'able", machine);
+        LOG.info("Provisioned {} vm {}; checking if ssh'able", provider, machine);
         assertTrue(machine.isSshable());
     }
     
     @Test(groups = "Live", dataProvider="fromImageDescriptionPattern")
     public void testProvisionVmUsingImageDescriptionPattern(String regionName, String imageDescriptionPattern, String imageOwner) {
         loc = (JcloudsLocation) ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
-        SshMachineLocation machine = obtainMachine(ImmutableMap.of("imageDescriptionRegex", imageDescriptionPattern, "imageOwner", imageOwner));
+        SshMachineLocation machine = obtainMachine(MutableMap.of("imageDescriptionRegex", imageDescriptionPattern, "imageOwner", imageOwner));
         
-        LOG.info("Provisioned AWS vm {}; checking if ssh'able", machine);
+        LOG.info("Provisioned {} vm {}; checking if ssh'able", provider, machine);
         assertTrue(machine.isSshable());
     }
 
@@ -145,7 +145,7 @@ public abstract class AbstractJcloudsLocationTest {
             "userName", "myname");
 
         SshMachineLocation machine = obtainMachine(flags);
-        LOG.info("Provisioned AWS vm {}; checking if ssh'able", machine);
+        LOG.info("Provisioned {} vm {}; checking if ssh'able", provider, machine);
 
         File sshPublicKey = new File("~/.ssh/id_rsa.pub");
         File sshPrivateKey = new File("~/.ssh/id_rsa");
