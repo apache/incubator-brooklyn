@@ -296,9 +296,13 @@ public class RebindManagerImpl implements RebindManager {
      * Sorts the map of nodes, so that a node's parent is guaranteed to come before that node
      * (unless the parent is missing).
      * 
+     * Relies on ordering guarantees of returned map (i.e. LinkedHashMap, which guarantees insertion order 
+     * even if a key is re-inserted into the map).
+     * 
      * TODO Inefficient implementation!
      */
-    private <T extends TreeNode> Map<String, T> sortParentFirst(Map<String, T> nodes) {
+    @VisibleForTesting
+    <T extends TreeNode> Map<String, T> sortParentFirst(Map<String, T> nodes) {
         Map<String, T> result = Maps.newLinkedHashMap();
         for (Map.Entry<String, T> entry : nodes.entrySet()) {
             String id = entry.getKey();
