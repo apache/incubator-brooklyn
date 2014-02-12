@@ -22,15 +22,14 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsTest {
     
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsLocationRebindMachineLiveTest.class);
     
-    private static final String EUWEST_REGION_NAME = "eu-west-1";
-    private static final String EUWEST_IMAGE_ID = EUWEST_REGION_NAME+"/"+"ami-89def4fd";
+    private static final String EUWEST_IMAGE_ID = AWS_EC2_EUWEST_REGION_NAME+"/"+"ami-89def4fd";
     private static final String IMAGE_OWNER = "411009282317";
 
     @BeforeMethod(alwaysRun=true)
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+EUWEST_REGION_NAME);
+        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+AWS_EC2_EUWEST_REGION_NAME);
     }
 
     @Test(groups = { "Live" })
@@ -61,7 +60,7 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsTest {
         String user = checkNotNull(machine.getUser(), "user");
         
         // Create a new jclouds location, and re-bind the existing VM to that
-        JcloudsLocation loc2 = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+EUWEST_REGION_NAME);
+        JcloudsLocation loc2 = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+AWS_EC2_EUWEST_REGION_NAME);
         SshMachineLocation machine2 = loc2.rebindMachine(ImmutableMap.of("id", id, "hostname", hostname, "user", user));
         
         // Confirm the re-bound machine is wired up
@@ -88,7 +87,7 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsTest {
         String username = machine.getUser();
         
         // Create a new jclouds location, and re-bind the existing VM to that
-        JcloudsLocation loc2 = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+EUWEST_REGION_NAME);
+        JcloudsLocation loc2 = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+AWS_EC2_EUWEST_REGION_NAME);
         // pass deprecated userName
         SshMachineLocation machine2 = loc2.rebindMachine(ImmutableMap.of("id", id, "hostname", hostname, "userName", username));
         

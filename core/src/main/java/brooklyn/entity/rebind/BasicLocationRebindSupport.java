@@ -59,6 +59,12 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
                 Field field = FlagUtils.findFieldForFlag(flagName, location);
                 Class<?> fieldType = field.getType();
                 Object value = entry.getValue();
+                
+                // Field is either of type ConfigKey, or it's a vanilla java field annotated with @SetFromFlag.
+                // If the former, need to look up the field value (i.e. the ConfigKey) to find out the type.
+                // If the latter, just want to look at the field itself to get the type.
+                // Then coerce the value we have to that type.
+                // And use magic of setFieldFromFlag's magic to either set config or field as appropriate.
                 if (ConfigKey.class.isAssignableFrom(fieldType)) {
                     ConfigKey<?> configKey = (ConfigKey<?>) FlagUtils.getField(location, field);
                     value = TypeCoercions.coerce(entry.getValue(), configKey.getType());

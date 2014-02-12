@@ -21,9 +21,11 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     
     private SingleMachineProvisioningLocation<JcloudsSshMachineLocation> location;
 
+    private static final String JCLOUDS_LOCATION_SPEC = "jclouds:" + AWS_EC2_PROVIDER + ":" + AWS_EC2_USEAST_REGION_NAME;
+    
     @Test(groups="Live")
     public void testJcloudsSingle() throws Exception {
-        location = resolve("single:(target='jclouds:aws-ec2:us-east-1')");
+        location = resolve("single:(target='"+JCLOUDS_LOCATION_SPEC+"')");
         
         MachineLocation m1 = obtainMachine();
         assertNotNull(m1);
@@ -33,7 +35,7 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     
     @Test(groups="Live")
     public void testJcloudsSingleRelease() throws Exception {
-        location = resolve("single:(target='jclouds:aws-ec2:us-east-1')");
+        location = resolve("single:(target='"+JCLOUDS_LOCATION_SPEC+"')");
         
         JcloudsSshMachineLocation m1 = obtainMachine();
         log.info("GOT " + m1);
@@ -50,7 +52,7 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     
     @Test(groups="Live")
     public void testJcloudsSingleObtainReleaseObtain() throws Exception {
-        location = resolve("single:(target='jclouds:aws-ec2:us-east-1')");
+        location = resolve("single:(target='"+JCLOUDS_LOCATION_SPEC+"')");
         
         JcloudsSshMachineLocation m1 = obtainMachine();
         log.info("GOT " + m1);
@@ -68,7 +70,7 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     
     @Test(groups="Live")
     public void testJCloudsNamedSingle() throws Exception {
-        brooklynProperties.put(ConfigKeys.newStringConfigKey("brooklyn.location.named.FooServers"), "jclouds:aws-ec2:us-east-1");
+        brooklynProperties.put(ConfigKeys.newStringConfigKey("brooklyn.location.named.FooServers"), JCLOUDS_LOCATION_SPEC);
         location = resolve("single:(target='named:FooServers')");
         
         JcloudsSshMachineLocation m1 = obtainMachine();

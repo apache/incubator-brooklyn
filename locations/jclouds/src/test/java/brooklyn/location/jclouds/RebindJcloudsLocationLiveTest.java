@@ -30,8 +30,8 @@ import com.google.common.io.Files;
 
 public class RebindJcloudsLocationLiveTest extends AbstractJcloudsTest {
 
-    public static final String AWS_EC2_REGION_NAME = "us-east-1";
-    public static final String AWS_EC2_LOCATION_SPEC = "jclouds:" + AWS_EC2_PROVIDER + (AWS_EC2_REGION_NAME == null ? "" : ":" + AWS_EC2_REGION_NAME);
+    public static final String AWS_EC2_REGION_NAME = AWS_EC2_USEAST_REGION_NAME;
+    public static final String AWS_EC2_LOCATION_SPEC = "jclouds:" + AWS_EC2_PROVIDER + ":" + AWS_EC2_REGION_NAME;
 
     private ClassLoader classLoader = getClass().getClassLoader();
     private TestApplication origApp;
@@ -56,9 +56,9 @@ public class RebindJcloudsLocationLiveTest extends AbstractJcloudsTest {
     @AfterMethod(alwaysRun = true)
     @Override
     public void tearDown() throws Exception {
-//        super.tearDown();
-//        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
-//        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+        super.tearDown();
+        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
+        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
     
     @Override

@@ -22,12 +22,14 @@ public class SimpleJcloudsLocationUserLoginAndConfigLiveTest extends AbstractJcl
 
     // FIXME And tidy up this one
     
+    private static final String LOCATION_SPEC = AWS_EC2_PROVIDER + ":" + AWS_EC2_USEAST_REGION_NAME;
+    
     private static final Logger log = LoggerFactory.getLogger(SimpleJcloudsLocationUserLoginAndConfigLiveTest.class);
     
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        jcloudsLocation = resolve("aws-ec2:us-east-1");
+        jcloudsLocation = resolve(LOCATION_SPEC);
     }
     
     @SuppressWarnings("rawtypes")

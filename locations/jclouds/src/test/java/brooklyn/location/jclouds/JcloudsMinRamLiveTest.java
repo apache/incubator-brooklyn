@@ -12,9 +12,11 @@ public class JcloudsMinRamLiveTest extends AbstractJcloudsTest {
 
     private static final Logger log = LoggerFactory.getLogger(JcloudsMinRamLiveTest.class);
     
+    private static final String LOCATION_SPEC = AWS_EC2_PROVIDER + ":" + AWS_EC2_USEAST_REGION_NAME;
+    
     @Test(groups="Live")
     public void testJcloudsCreateWithMinRam() throws Exception {
-        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve("jclouds:aws-ec2:us-east-1");
+        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(LOCATION_SPEC);
         jcloudsLocation.configure(MutableMap.of("minRam", "4096"));
         
         JcloudsSshMachineLocation m1 = obtainMachine(ImmutableMap.<String, Object>of());

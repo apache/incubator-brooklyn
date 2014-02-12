@@ -40,6 +40,9 @@ import com.google.common.reflect.TypeToken;
  */
 public class JcloudsLocationTest implements JcloudsLocationConfig {
 
+    // Don't care which image; not actually provisioning
+    private static final String US_EAST_IMAGE_ID = "us-east-1/ami-7d7bfc14";
+    
     public static final RuntimeException BAIL_OUT_FOR_TESTING = 
             new RuntimeException("early termination for test");
     
@@ -153,9 +156,9 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         if (credential == null) identity = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.credential");
         
         Map<ConfigKey<?>,?> allConfig = MutableMap.<ConfigKey<?>,Object>builder()
-                .put(CLOUD_PROVIDER, "aws-ec2")
-                .put(CLOUD_REGION_ID, "eu-west-1")
-                .put(IMAGE_ID, "us-east-1/ami-7d7bfc14") // so it runs faster, without loading all EC2 images
+                .put(CLOUD_PROVIDER, AbstractJcloudsTest.AWS_EC2_PROVIDER)
+                .put(CLOUD_REGION_ID, AbstractJcloudsTest.AWS_EC2_USEAST_REGION_NAME)
+                .put(IMAGE_ID, US_EAST_IMAGE_ID) // so it runs faster, without loading all EC2 images
                 .put(ACCESS_IDENTITY, identity)
                 .put(ACCESS_CREDENTIAL, credential)
                 .put(USER, "fred")
