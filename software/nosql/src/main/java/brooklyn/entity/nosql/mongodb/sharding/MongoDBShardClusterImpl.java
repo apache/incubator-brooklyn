@@ -8,9 +8,11 @@ public class MongoDBShardClusterImpl extends DynamicClusterImpl implements Mongo
 
     @Override
     protected EntitySpec<?> getMemberSpec() {
-        if (super.getMemberSpec() != null)
-            return super.getMemberSpec();
-        return EntitySpec.create(MongoDBReplicaSet.class);
+        EntitySpec<?> result = super.getMemberSpec(); 
+        if (result == null)
+            result = EntitySpec.create(MongoDBReplicaSet.class);
+        result.configure(DynamicClusterImpl.INITIAL_SIZE, getConfig(MongoDBShardedDeployment.SHARD_REPLICASET_SIZE));
+        return result;
     }
     
 }

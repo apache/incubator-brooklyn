@@ -18,5 +18,9 @@ public interface MongoDBShardedDeployment extends Entity, Startable {
     
     @SetFromFlag("initialShardClusterSize")
     BasicConfigKey<Integer> INITIAL_SHARD_CLUSTER_SIZE = new BasicConfigKey<Integer>(
-            Integer.class, "mongodb.shard.cluster.initial.size", "Initial number of shards (mongod)", 2);
+            Integer.class, "mongodb.shard.cluster.initial.size", "Initial number of shards (replicasets)", 2);
+    
+    @SetFromFlag("shardReplicaSetSize")
+    BasicConfigKey<Integer> SHARD_REPLICASET_SIZE = new BasicConfigKey<Integer>(
+            Integer.class, "mongodb.shard.replicaset.size", "Number of servers (mongod) in each shard (replicaset)", 2);
 }

@@ -48,7 +48,7 @@ public class MongoDBClientSupport implements Closeable {
      * Creates a {@link MongoDBClientSupport} instance in standalone mode.
      * Returns {@link com.google.common.base.Optional#absent} if the server's host and port are unknown.
      */
-    public static MongoDBClientSupport forServer(MongoDBServer standalone) throws UnknownHostException {
+    public static MongoDBClientSupport forServer(AbstractMongoDBServer standalone) throws UnknownHostException {
         String hostname = standalone.getAttribute(MongoDBServer.HOSTNAME);
         Integer port = standalone.getAttribute(MongoDBServer.PORT);
         ServerAddress address = new ServerAddress(hostname, port);
@@ -201,6 +201,13 @@ public class MongoDBClientSupport implements Closeable {
     private boolean reconfigureReplicaSet(BasicBSONObject newConfig) {
         BasicDBObject command = new BasicDBObject("replSetReconfig", newConfig);
         LOG.debug("Reconfiguring replica set to: " + command);
+        Optional<CommandResult> result = runDBCommand("admin", command);
+        return result.isPresent() && result.get().ok();
+    }
+
+    public boolean addShardToRouter(String hostAndPort) {
+        LOG.debug("Adding shard " + hostAndPort);
+        BasicDBObject command = new BasicDBObject("addShard", hostAndPort);
         Optional<CommandResult> result = runDBCommand("admin", command);
         return result.isPresent() && result.get().ok();
     }

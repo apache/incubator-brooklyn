@@ -33,8 +33,10 @@ public class MongoDBShardedDeploymentIntegrationTest {
     }
     
     private MongoDBShardedDeployment makeAndStartDeployment() {
-        final MongoDBShardedDeployment deployment = app.createAndManageChild(EntitySpec.create(MongoDBShardedDeployment.class).configure(
-                MongoDBShardedDeployment.INITIAL_ROUTER_CLUSTER_SIZE, 1));
+        final MongoDBShardedDeployment deployment = app.createAndManageChild(EntitySpec.create(MongoDBShardedDeployment.class)
+                .configure(MongoDBShardedDeployment.INITIAL_ROUTER_CLUSTER_SIZE, 1)
+                .configure(MongoDBShardedDeployment.SHARD_REPLICASET_SIZE, 2)
+                .configure(MongoDBShardedDeployment.INITIAL_SHARD_CLUSTER_SIZE, 5));
         app.start(ImmutableList.of(localhostProvisioningLocation));
         EntityTestUtils.assertAttributeEqualsEventually(deployment, Startable.SERVICE_UP, true);
         return deployment;
