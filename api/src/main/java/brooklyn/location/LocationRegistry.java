@@ -32,6 +32,9 @@ public interface LocationRegistry {
     /** returns fully populated (config etc) location from the given definition */
     public Location resolve(LocationDefinition l);
     
+    /** returns fully populated (config etc) location from the given definition */
+    public Location resolve(LocationDefinition l, Map<?,?> locationFlags);
+    
     /** See {@link #resolve(String, Map)} (with no options) */
     public Location resolve(String spec);
     
