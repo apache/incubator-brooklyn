@@ -55,7 +55,7 @@ public class StandaloneJcloudsLiveTest {
     String identity = globals.getFirst("brooklyn.location.jclouds.aws-ec2.identity");
     String credential = globals.getFirst("brooklyn.location.jclouds.aws-ec2.credential");
     
-    @Test(groups={"WIP","Live"})
+    @Test(enabled=false, groups={"WIP","Live"})
     public void createVm() {
         String groupId = "mygroup-"+System.getProperty("user.name")+"-"+UUID.randomUUID().toString();
  
@@ -136,7 +136,7 @@ public class StandaloneJcloudsLiveTest {
         
     }
     
-    @Test(groups={"WIP","Live"})
+    @Test(enabled=false, groups={"WIP","Live"})
     public void createVmWithAdminUser() {
         String groupId = "mygroup-"+System.getProperty("user.name")+"-"+UUID.randomUUID().toString();
  
