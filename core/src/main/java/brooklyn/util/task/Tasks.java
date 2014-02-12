@@ -20,7 +20,6 @@ import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Predicate;
@@ -304,7 +303,8 @@ public class Tasks {
             t.get();
             return null;
         } catch (Throwable error) {
-            Exceptions.propagateIfFatal(error);
+            // do not propagate as we are pretty much guaranteed above that it wasn't this
+            // thread which originally threw the error
             return error;
         }
     }

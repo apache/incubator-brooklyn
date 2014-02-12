@@ -209,8 +209,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                         + "; size is " + getCurrentSize()
                         + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : "");
                 }
-                message += (firstFailed.isPresent() ? "; first failure is: "+Exceptions.collapseText(Tasks.getError(firstFailed.get())) : "");
-                throw new IllegalStateException(message); 
+                Throwable firstError = Tasks.getError(firstFailed.orNull()); 
+                if (firstError!=null) message += "; first failure is: "+Exceptions.collapseText(firstError); 
+                throw new IllegalStateException(message, firstError); 
             } else if (currentSize < initialSize) {
                 LOG.warn(
                         "On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing",

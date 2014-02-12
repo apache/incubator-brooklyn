@@ -279,11 +279,13 @@ define([
         },
 
         displayEntity: function(event) {
+            if (event.metaKey || event.shiftKey)
+                // trying to open in a new tab, do not act on it here!
+                return;
             event.preventDefault();
             var nodeSpan = $(event.currentTarget)
             var nodeA = $(event.currentTarget).children('a').first()
             var entityId = nodeSpan.parent().attr("id"),
-                stateId = entityId,
                 href = nodeA.attr('href'),
                 tab = (this.detailsView)
                     ? this.detailsView.$el.find(".tab-pane.active").attr("id")

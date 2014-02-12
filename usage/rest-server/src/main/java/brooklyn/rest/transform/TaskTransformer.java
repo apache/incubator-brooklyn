@@ -91,7 +91,6 @@ public class TaskTransformer {
                 result = null;
             }
         } catch (Throwable t) {
-            Exceptions.propagateIfFatal(t);
             result = Exceptions.collapseText(t);
         }
         
@@ -99,8 +98,8 @@ public class TaskTransformer {
                 task.getTags(), ifPositive(task.getSubmitTimeUtc()), ifPositive(task.getStartTimeUtc()), ifPositive(task.getEndTimeUtc()),
                 task.getStatusSummary(), result, task.isError(), task.isCancelled(),
                 children, asLink(task.getSubmittedByTask()), 
-                task instanceof TaskInternal ? asLink(((TaskInternal<?>)task).getBlockingTask()) : null, 
-                task instanceof TaskInternal ? ((TaskInternal<?>)task).getBlockingDetails() : null, 
+                task.isDone() ? null : task instanceof TaskInternal ? asLink(((TaskInternal<?>)task).getBlockingTask()) : null, 
+                task.isDone() ? null : task instanceof TaskInternal ? ((TaskInternal<?>)task).getBlockingDetails() : null, 
                 task.getStatusDetail(true),
                 streams,
                 links);

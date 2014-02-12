@@ -19,7 +19,7 @@ import com.google.common.collect.Iterables;
 
 public class Exceptions {
 
-    private static List<Class<? extends Throwable>> BORING_THROWABLES = ImmutableList.<Class<? extends Throwable>>of(
+    private static final List<Class<? extends Throwable>> BORING_THROWABLES = ImmutableList.<Class<? extends Throwable>>of(
         ExecutionException.class, InvocationTargetException.class, PropagatedRuntimeException.class);
 
     private static boolean isBoring(Throwable t) {
@@ -28,7 +28,7 @@ public class Exceptions {
         return false;
     }
 
-    private static Predicate<Throwable> IS_THROWABLE_BORING = new Predicate<Throwable>() {
+    private static final Predicate<Throwable> IS_THROWABLE_BORING = new Predicate<Throwable>() {
         @Override
         public boolean apply(Throwable input) {
             return isBoring(input);

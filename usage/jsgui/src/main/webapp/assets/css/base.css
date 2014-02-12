@@ -39,7 +39,8 @@ add-app .tab-content-scroller {
     padding: 15px;
 }
 #application-content .tab-content {
-    max-height: 720px;
+    /* easier to scroll in the main window; but if we wanted to prevent it, we could with this */
+    /* max-height: 720px; */
     overflow: auto;
 }
 
@@ -1300,7 +1301,7 @@ input[type="file"] {
     margin-top: 12px;
 }
 .activity-detail-results div.result-literal br {
-	line-height: 24px;
+    line-height: 24px;
 }
 
 .activity-tag-giftlabel {

@@ -465,9 +465,7 @@ public class BasicTask<T> implements TaskInternal<T> {
                 rv = "Failed";
                 if (verbosity >= 1) {
                     rv += " after "+duration;
-                    Throwable error;
-                    try { String rvx = ""+get(); error = new IllegalStateException("No error, return value "+abbreviate(rvx.toString())); /* shouldn't happen */ }
-                    catch (Throwable tt) { error = tt; }
+                    Throwable error = Tasks.getError(this);
 
                     if (verbosity >= 2 && getExtraStatusText()!=null) {
                         rv += "\n\n"+getExtraStatusText();
@@ -545,7 +543,7 @@ public class BasicTask<T> implements TaskInternal<T> {
 			//thread might have moved on to a new task; if so, recompute (it should now say "done")
 			return getStatusString(verbosity);
         
-        if (verbosity >= 1 && GroovyJavaMethods.truth(blockingDetails)) {
+        if (verbosity >= 1 && Strings.isNonBlank(blockingDetails)) {
             if (verbosity==1)
                 // short status string will just show blocking details
                 return blockingDetails;
@@ -553,7 +551,7 @@ public class BasicTask<T> implements TaskInternal<T> {
             rv = blockingDetails + "\n\n";
         }
         
-        if (verbosity >= 1 && GroovyJavaMethods.truth(blockingTask)) {
+        if (verbosity >= 1 && blockingTask!=null) {
             if (verbosity==1)
                 // short status string will just show blocking details
                 return "Waiting on "+blockingTask;
@@ -591,7 +589,7 @@ public class BasicTask<T> implements TaskInternal<T> {
 		LockInfo lock = ti.getLockInfo();
 		rv += "In progress";
 		if (verbosity>=1) {
-		    if (!GroovyJavaMethods.truth(lock) && ti.getThreadState()==Thread.State.RUNNABLE) {
+		    if (lock==null && ti.getThreadState()==Thread.State.RUNNABLE) {
 		        //not blocked
 		        if (ti.isSuspended()) {
 		            // when does this happen?
@@ -626,7 +624,7 @@ public class BasicTask<T> implements TaskInternal<T> {
 	}
 	
     protected String lookup(LockInfo info) {
-        return GroovyJavaMethods.truth(info) ? ""+info : "unknown (sleep)";
+        return info!=null ? ""+info : "unknown (sleep)";
     }
 
     @Override

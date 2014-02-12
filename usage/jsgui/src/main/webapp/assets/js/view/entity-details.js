@@ -1,5 +1,9 @@
 /**
  * Renders details information about an application (sensors, summary, effectors, etc.).
+ * 
+ * Options preselectTab (e.g. 'activities') and preselectTabDetails ('subtasks/1234') can be set
+ * before a render to cause the given tab / details to be opened.
+ * 
  * @type {*}
  */
 define([
@@ -70,6 +74,9 @@ define([
             this.activitiesView.close();
             this.lifecycleView.close();
         },
+        getEntityHref: function() {
+            return $("#app-tree .entity_tree_node_wrapper.active a").attr("href");
+        },
         render: function(optionalParent) {
             this.summaryView.render()
             this.configView.render()
@@ -80,43 +87,64 @@ define([
             if (optionalParent) {
                 optionalParent.html(this.el)
             }
+            var entityHref = this.getEntityHref();
+            if (entityHref) {
+                $("a[data-toggle='tab'").each(function(i,a) {
+                    $(a).attr('href',entityHref+"/"+$(a).attr("data-target").slice(1));
+                });
+            } else {
+                log("could not find entity href for tab");
+            }
             if (this.options.preselectTab) {
-                var tabLink = this.$('a[href="#'+this.options.preselectTab+'"]');
-                var showFn = function() { tabLink.tab('show'); }
+                var tabLink = this.$('a[data-target="#'+this.options.preselectTab+'"]');
+                var showFn = function() { tabLink.tab('show'); };
                 if (optionalParent) showFn();
                 else _.defer(showFn);
             }
             return this;
         },
         tabSelected: function(event) {
-            var tabName = $(event.currentTarget).attr("href").slice(1);
+            // TODO: the bootstrap JS code still prevents shift-click from working
+            // have to add the following logic to bootstrap tab click handler also
+//            if (event.metaKey || event.shiftKey)
+//                // trying to open in a new tab, do not act on it here!
+//                return;
+            event.preventDefault();
+            
+            var tabName = $(event.currentTarget).attr("data-target").slice(1);
             var entityId = $("#app-tree .entity_tree_node_wrapper.active").attr("id");
             var route = this.getTab(entityId, tabName);
             if (route) {
                 if (route[0]=='#') route = route.substring(1);
                 Backbone.history.navigate(route);
             }
+            // caller will ensure tab is shown
         },
         getTab: function(entityId, tabName, entityHref) {
-            if (!entityHref)
-                entityHref = $("#app-tree .entity_tree_node_wrapper.active a").attr("href");
-            
-            var route = "#v1/applications";
-            var stateName = "notfound"
-            if (entityId && entityHref) {                
-                route = entityHref+"/"+tabName;
-                stateName = entityId+"/"+tabName;
-            }
-            return route;
+            if (!entityHref) entityHref = this.getEntityHref();
+            if (entityId && entityHref)                
+                return entityHref+"/"+tabName;
+            return null;
         },
-        /** for tabs to redirect to other tabs; entityHref is optional; tabName is e.g. 'acitvities' */ 
-        openTab: function(entityId, tabName, entityHref) {
-            var route = this.getTab(entityId, tabName, entityHref);
-            if (route) {
-                if (route[0]=='#') route = route.substring(1);
-                Backbone.history.navigate(route);
-                Backbone.history.loadUrl(route);
-            }
+        /** for tabs to redirect to other tabs; entityHref is optional; tabPath is e.g. 'sensors' or 'activities/subtask/1234' */ 
+        openTab: function(entityId, tabPath, entityHref) {
+            var route = this.getTab(entityId, tabPath, entityHref);
+            if (!route) return;
+            if (route[0]=='#') route = route.substring(1);
+            Backbone.history.navigate(route);
+                
+            tabPaths = tabPath.split('/');
+            if (!tabPaths) return;
+            var tabName = tabPaths.shift();
+            if (!tabName)
+                // ignore leading /
+                tabName = tabPaths.shift();
+            if (!tabName) return;
+
+            this.options.preselectTab = tabName;
+            if (tabPaths)
+                this.options.preselectTabDetails = tabPaths.join('/');
+            this.render();
         }
     });
     return EntityDetailsView;

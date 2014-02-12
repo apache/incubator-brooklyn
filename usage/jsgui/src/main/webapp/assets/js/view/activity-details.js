@@ -48,6 +48,7 @@ define([
         subtasksTable: null,
         children: null,
         breadcrumbs: [],
+        firstLoad: true,
         events:{
             "click #activities-children-table .activity-table tr":"childrenRowClick",
             "click #activities-submitted-table .activity-table tr":"submittedRowClick",
@@ -57,22 +58,22 @@ define([
         },
         // requires taskLink or task; breadcrumbs is optional
         initialize:function () {
-            var that = this
-            this.taskLink = this.options.taskLink
-            this.taskId = this.options.taskId
+            var that = this;
+            this.taskLink = this.options.taskLink;
+            this.taskId = this.options.taskId;
             if (this.options.task)
-                this.task = this.options.task
+                this.task = this.options.task;
             else if (this.options.tabView)
-                this.task = this.options.tabView.collection.get(this.taskId)
-            if (!this.taskLink && this.task) this.taskLink = this.task.get('links').self
-            if (!this.taskLink && this.taskId) this.taskLink = "v1/activities/"+this.taskId;
+                this.task = this.options.tabView.collection.get(this.taskId);
+            if (!this.taskLink && this.task) this.taskLink = this.task.get('links').self;
+            if (!this.taskLink && this.taskId) this.taskLink = "v1/activities/"+this.taskId;;
             
             this.tabView = this.options.tabView || null;
             
-            if (this.options.breadcrumbs) this.breadcrumbs = this.options.breadcrumbs
+            if (this.options.breadcrumbs) this.breadcrumbs = this.options.breadcrumbs;
 
-            this.$el.html(this.template({ taskLink: this.taskLink, taskId: this.taskId, task: this.task, breadcrumbs: this.breadcrumbs }))
-            this.$el.addClass('activity-detail-panel')
+            this.$el.html(this.template({ taskLink: this.taskLink, taskId: this.taskId, task: this.task, breadcrumbs: this.breadcrumbs }));
+            this.$el.addClass('activity-detail-panel');
 
             this.childrenTable = makeActivityTable(this.$('#activities-children-table'));
             this.subtasksTable = makeActivityTable(this.$('#activities-submitted-table'));
@@ -108,12 +109,22 @@ define([
         },
         renderTask: function() {
             // update task fields
-            var that = this
+            var that = this, firstLoad = this.firstLoad;
+            this.firstLoad = false;
+            
+            if (firstLoad  && this.task) {
+//                log("rendering "+firstLoad+" "+this.task.get('isError')+" "+this.task.id);
+                if (this.task.get('isError')) {
+                    // on first load, expand the details if there is a problem
+                    var $details = this.$(".toggler-region.task-detail .toggler-header");
+                    ViewUtils.showTogglerClickElement($details);
+                }
+            }
             
             this.updateFields('displayName', 'entityDisplayName', 'id', 'description', 'currentStatus', 'blockingDetails');
             this.updateFieldWith('blockingTask',
                 function(v) { 
-                    return "<a class='showDrillDownBlockerOfAnchor handy' link='"+_.escape(v.link)+"' id='"+v.id+"'>"+
+                    return "<a class='showDrillDownBlockerOfAnchor handy' link='"+_.escape(v.link)+"' id='"+v.metadata.id+"'>"+
                         that.displayTextForLinkedTask(v)+"</a>" })
             this.updateFieldWith('result',
                 function(v) {
@@ -137,10 +148,10 @@ define([
             this.updateFieldWith('endTimeUtc',
                 function(v) { return v <= 0 ? "-" : moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).from(startTimeUtc, true)+" later</i>" })
 
-            ViewUtils.updateTextareaWithData($(".task-json .for-textarea", this.$el), 
+            ViewUtils.updateTextareaWithData(this.$(".task-json .for-textarea"), 
                 FormatJSON(this.task.toJSON()), false, false, 150, 400)
 
-            ViewUtils.updateTextareaWithData($(".task-detail .for-textarea", this.$el), 
+            ViewUtils.updateTextareaWithData(this.$(".task-detail .for-textarea"), 
                 this.task.get('detailedStatus'), false, false, 30, 250)
 
             this.updateFieldWith('streams',
@@ -160,39 +171,45 @@ define([
                 })
 
             this.updateFieldWith('submittedByTask',
-                function(v) { return "<a class='showDrillDownSubmittedByAnchor handy' link='"+_.escape(v.link)+"' id='"+v.link+"'>"+
+                function(v) { return "<a class='showDrillDownSubmittedByAnchor handy' link='"+_.escape(v.link)+"' id='"+v.metadata.id+"'>"+
                     that.displayTextForLinkedTask(v)+"</a>" })
 
             if (this.task.get("children").length==0)
-                $('.toggler-region.tasks-children', this.$el).hide();
+                this.$('.toggler-region.tasks-children').hide();
         },
         setUpPolling: function() {
-                var that = this
-                
-                // on first load, clear any funny cursor
-                this.$el.css('cursor', 'auto')
-                
-                this.task.url = this.taskLink;
-                this.task.on("all", this.renderTask, this)
-                ViewUtils.fetchRepeatedlyWithDelay(this, this.task, { doitnow: true });
+            var that = this
+
+            // on first load, clear any funny cursor
+            this.$el.css('cursor', 'auto')
+
+            this.task.url = this.taskLink;
+            this.task.on("all", this.renderTask, this)
+            
+            ViewUtils.get(this, this.taskLink, function(data) {
+                // if we can get the data, then start fetching certain things repeatedly
+                // (would be good to skip the immediate "doitnow" below but not a big deal)
+                ViewUtils.fetchRepeatedlyWithDelay(that, that.task, { doitnow: true });
                 
                 // and set up to load children (now that the task is guaranteed to be loaded)
-                this.children = new TaskSummary.Collection()
-                this.children.url = this.task.get("links").children
-                this.children.on("reset", this.renderChildren, this)
-                ViewUtils.fetchRepeatedlyWithDelay(this, this.children, { 
-                    fetchOptions: { reset: true }, doitnow: true, fadeTarget: $('.tasks-children') });
-                
-                $.get(this.task.get("links").entity, function(entity) {
-                    if (that.collection==null || entity.links.activities != that.collection.url) {
-                        // need to rewire collection to point to the right ExecutionContext
-                        that.collection = new TaskSummary.Collection()
-                        that.collection.url = entity.links.activities
-                        that.collection.on("reset", this.renderSubtasks, this)
-                        ViewUtils.fetchRepeatedlyWithDelay(that, that.collection, { 
-                            fetchOptions: { reset: true }, doitnow: true, fadeTarget: $('.tasks-submitted') });
-                    }
-                });
+                that.children = new TaskSummary.Collection()
+                that.children.url = that.task.get("links").children
+                that.children.on("reset", that.renderChildren, that)
+                ViewUtils.fetchRepeatedlyWithDelay(that, that.children, { 
+                    fetchOptions: { reset: true }, doitnow: true, fadeTarget: that.$('.tasks-children') });
+            }).fail( function() { that.$('.toggler-region.tasks-children').hide() } );
+
+
+            $.get(this.task.get("links").entity, function(entity) {
+                if (that.collection==null || entity.links.activities != that.collection.url) {
+                    // need to rewire collection to point to the right ExecutionContext
+                    that.collection = new TaskSummary.Collection()
+                    that.collection.url = entity.links.activities
+                    that.collection.on("reset", this.renderSubtasks, this)
+                    ViewUtils.fetchRepeatedlyWithDelay(that, that.collection, { 
+                        fetchOptions: { reset: true }, doitnow: true, fadeTarget: this.$('.tasks-submitted') });
+                }
+            });
         },
         
         renderChildren: function() {
@@ -207,18 +224,19 @@ define([
                     ]; 
                 });
             if (children && children.length>0) {
-                $('.toggler-region.tasks-children', this.$el).show();
+                this.$('.toggler-region.tasks-children').show();
             } else {
-                $('.toggler-region.tasks-children', this.$el).hide();
+                this.$('.toggler-region.tasks-children').hide();
             }
         },
         renderSubtasks: function() {
             var that = this
+            var taskId = this.taskId || (this.task ? this.task.id : null);
             if (!this.collection) {
-                $('.toggler-region.tasks-submitted', this.$el).hide();
+                this.$('.toggler-region.tasks-submitted').hide();
                 return;
             }
-            if (this.task==null) {
+            if (!taskId) {
                 // task not available yet; just wait for it to be loaded
                 // (and in worst case, if it can't be loaded, this panel stays faded)
                 return;
@@ -230,8 +248,8 @@ define([
             for (var taskI in this.collection.models) {
                 var task = this.collection.models[taskI]
                 var submittedBy = task.get("submittedByTask")
-                if (submittedBy!=null && submittedBy.metadata!=null && submittedBy.metadata["id"] == this.task.id &&
-                        this.children.get(task.id)==null) {
+                if (submittedBy!=null && submittedBy.metadata!=null && submittedBy.metadata["id"] == taskId &&
+                        (!this.children || this.children.get(task.id)==null)) {
                     subtasks.push(task)
                 }
             }
@@ -241,12 +259,12 @@ define([
                          task.get("displayName"),
                          task.get("submitTimeUtc") <= 0 ? "-" : moment(task.get("submitTimeUtc")).calendar(),
                          task.get("currentStatus")
-                    ]; 
+                    ];
                 });
             if (subtasks && subtasks.length>0) {
-                $('.toggler-region.tasks-submitted', this.$el).show();
+                this.$('.toggler-region.tasks-submitted').show();
             } else {
-                $('.toggler-region.tasks-submitted', this.$el).hide();
+                this.$('.toggler-region.tasks-submitted').hide();
             }
         },
         
@@ -267,12 +285,12 @@ define([
             var v = this.task.get(field)
             if (v !== undefined && v != null && 
                     (typeof v !== "object" || _.size(v) > 0)) {
-                $('.updateField-'+field, this.$el).html( f(v) );
-                $('.ifField-'+field, this.$el).show();
+                this.$('.updateField-'+field, this.$el).html( f(v) );
+                this.$('.ifField-'+field, this.$el).show();
             } else {
                 // blank if there is no value
-                $('.updateField-'+field, this.$el).empty();
-                $('.ifField-'+field, this.$el).hide();
+                this.$('.updateField-'+field).empty();
+                this.$('.ifField-'+field).hide();
             }
             return v
         },
@@ -320,8 +338,9 @@ define([
                 this.parent = parent;
             }
             
-            if (Backbone.history && (!this.tabView || !this.tabView.openingQueuedTasks))
+            if (Backbone.history && (!this.tabView || !this.tabView.openingQueuedTasks)) {
                 Backbone.history.navigate(Backbone.history.fragment+"/"+"subtask"+"/"+this.taskId);
+            }
 
             var $t = parent.closest('.slide-panel');
             var $t2 = $t.after('<div>').next();

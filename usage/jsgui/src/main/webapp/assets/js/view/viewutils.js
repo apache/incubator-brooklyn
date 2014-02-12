@@ -187,6 +187,11 @@ define([
                 next.slideDown('fast');
             }
         },
+        showTogglerClickElement: function(root) {
+            root.removeClass("user-hidden");
+            $(".toggler-icon", root).removeClass("icon-chevron-left").addClass("icon-chevron-down");
+            root.next().slideDown('fast');
+        },
         updateTextareaWithData: function($div, data, showIfEmpty, doSlideDown, minPx, maxPx) {
             var $ta = $("textarea", $div);
             var show = showIfEmpty;
@@ -197,24 +202,25 @@ define([
                 $ta.val("");
             }
             if (show) {
-                ViewUtils.setHeightAutomatically($ta, minPx, maxPx, false)
+                this.setHeightAutomatically($ta, minPx, maxPx, false);
                 if (doSlideDown) { $div.slideDown(100); }
             } else {
                 $div.hide();
             }
         },
         setHeightAutomatically: function($ta, minPx, maxPx, deferred) {
-            var height = $ta.prop("scrollHeight");
+            var height = $ta.prop("scrollHeight"), that = this;
             if ($ta.css("padding-top")) height -= parseInt($ta.css("padding-top"), 10)
             if ($ta.css("padding-bottom")) height -= parseInt($ta.css("padding-bottom"), 10)
 //            log("scroll height "+height+" - old real height "+$ta.css("height"))
             if (height==0 && !deferred) {
-                _.defer(function() { ViewUtils.setHeightAutomatically($ta, minPx, maxPx, true) })
+                _.defer(function() { that.setHeightAutomatically($ta, minPx, maxPx, true) })
             } else {
                 height = Math.min(height, maxPx);
                 height = Math.max(height, minPx);
                 $ta.css("height", height);
             }
+            return height;
         },
         each: function(collection, fn) {
             if (_.isFunction(collection.each)) {

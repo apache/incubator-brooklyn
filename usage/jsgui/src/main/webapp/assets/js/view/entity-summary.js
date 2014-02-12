@@ -86,7 +86,7 @@ define([
             var statusIconInfo = ViewUtils.computeStatusIconInfo(this.$(".serviceUp .value").html(), this.$(".status .value").html());
             if (statusIconInfo.url) {
                 this.$('#status-icon').html('<img src="'+statusIconInfo.url+'" '+
-                        'style="max-width: 64px; max-height: 64px;"/>')
+                        'style="max-width: 64px; max-height: 64px;"/>');
             } else {
                 this.$('#status-icon').html('');
             }
@@ -110,8 +110,12 @@ define([
             } );
 
             if (lastFailedTask) {
+                var path = "activities/subtask/"+lastFailedTask.id;
+                var base = this.model.getLinkByName("self");
                 problemDetails = "<b>"+_.escape("Failure running task ")
-                    +"<a class='open-tab' tab-target='activities/subtask/"+lastFailedTask.id+"'><i>"+_.escape(lastFailedTask.attributes.displayName)+"</i> "
+                    +"<a class='open-tab' tab-target='"+path+"'" +
+                    		"href='#"+base+"/"+path+"'>" +
+            				"<i>"+_.escape(lastFailedTask.attributes.displayName)+"</i> "
                     +"("+lastFailedTask.id+")</a>: </b>"+
                     _.escape(lastFailedTask.attributes.result);
             } else {
@@ -122,25 +126,31 @@ define([
                 });
             }      
             if (problemDetails) {
-                this.$(".additional-info-on-problem").html(problemDetails).show()
+                this.$(".additional-info-on-problem").html(problemDetails).show();
             } else {
+                var base = this.model.getLinkByName("self");
                 this.$(".additional-info-on-problem").html(
                         "The entity appears to have failed externally. " +
                         "<br style='line-height: 24px;'>" +
-                        "No brooklyn-managed task failures reported. " +
+                        "No Brooklyn-managed task failures reported. " +
                         "For more information, investigate " +
-                            "<a class='open-tab' tab-target='sensors'>sensors</a> and " +
-                            "streams on recent <a class='open-tab' tab-target='activities'>activity</a>, " +
+                            "<a class='open-tab' tab-target='sensors' href='#"+base+"/sensors'>sensors</a> and " +
+                            "streams on recent " +
+                            "<a class='open-tab' tab-target='activities' href='#"+base+"/activities'>activity</a>, " +
                             "as well as external systems and logs where necessary.").show();
             }
         },
         tabSelected: function(event) {
+            if (event.metaKey || event.shiftKey)
+                // trying to open in a new tab, do not act on it here!
+                return;
             var tab = $(event.currentTarget).attr('tab-target');
-            this.options.tabView.openTab(this.model.id, tab)
+            this.options.tabView.openTab(this.model.id, tab);
             // and prevent the a from firing
-            return false
+            event.preventDefault();
+            return false;
         }
     });
 
-    return EntitySummaryView
-})
+    return EntitySummaryView;
+});
