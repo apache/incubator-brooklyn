@@ -346,13 +346,72 @@ public class BrooklynLauncherTest {
             }});
     }
 
-    @Test(expectedExceptions=FatalConfigurationRuntimeException.class)
-    public void testRebindFailsIfNoDir() throws Exception {
-        launcher = BrooklynLauncher.newInstance()
-                .webconsole(false)
-                .persistMode(PersistMode.REBIND)
-                .persistenceDir("/path/does/not/exist")
-                .start();
+    @Test
+    public void testPersistenceFailsIfNoDir() throws Exception {
+        runRebindFails(PersistMode.REBIND, new File("/path/does/not/exist"), "does not exist");
+    }
+
+    @Test
+    public void testPersistenceFailsIfIsFile() throws Exception {
+        File tempFile = File.createTempFile("rebindFailsIfIsFile", "tmp");
+        try {
+            runRebindFails(PersistMode.AUTO, tempFile, "not a directory");
+            runRebindFails(PersistMode.REBIND, tempFile, "not a directory");
+            runRebindFails(PersistMode.CLEAN, tempFile, "not a directory");
+        } finally {
+            tempFile.delete();
+        }
+    }
+
+    @Test
+    public void testPersistenceFailsIfNotWritable() throws Exception {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class);
+        persistenceDir = Files.createTempDir();
+        populatePersistenceDir(persistenceDir, appSpec);
+        persistenceDir.setWritable(false);
+        try {
+            runRebindFails(PersistMode.AUTO, persistenceDir, "not writable");
+            runRebindFails(PersistMode.REBIND, persistenceDir, "not writable");
+            runRebindFails(PersistMode.CLEAN, persistenceDir, "not writable");
+        } finally {
+            persistenceDir.setWritable(true);
+        }
+    }
+
+    @Test
+    public void testPersistenceFailsIfNotReadable() throws Exception {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class);
+        persistenceDir = Files.createTempDir();
+        populatePersistenceDir(persistenceDir, appSpec);
+        persistenceDir.setReadable(false);
+        try {
+            runRebindFails(PersistMode.AUTO, persistenceDir, "not readable");
+            runRebindFails(PersistMode.REBIND, persistenceDir, "not readable");
+            runRebindFails(PersistMode.CLEAN, persistenceDir, "not readable");
+        } finally {
+            persistenceDir.setReadable(true);
+        }
+    }
+
+    @Test
+    public void testExplicitRebindFailsIfEmpty() throws Exception {
+        persistenceDir = Files.createTempDir();
+        
+        runRebindFails(PersistMode.REBIND, persistenceDir, "directory is empty");
+    }
+
+    protected void runRebindFails(PersistMode persistMode, File dir, String errmsg) throws Exception {
+        try {
+            launcher = BrooklynLauncher.newInstance()
+                    .webconsole(false)
+                    .persistMode(persistMode)
+                    .persistenceDir(dir)
+                    .start();
+        } catch (FatalConfigurationRuntimeException e) {
+            if (!e.toString().contains(errmsg)) {
+                throw e;
+            }
+        }
     }
 
     private void populatePersistenceDir(File dir, EntitySpec<? extends StartableApplication> appSpec) throws Exception {

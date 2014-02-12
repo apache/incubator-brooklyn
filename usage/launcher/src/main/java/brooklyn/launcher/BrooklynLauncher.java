@@ -426,6 +426,7 @@ public class BrooklynLauncher {
                 switch (persistMode) {
                     case CLEAN:
                         if (persistenceDir.exists()) {
+                            checkPersistenceDirAccessible(persistenceDir);
                             try {
                                 File old = moveDirectory(persistenceDir);
                                 LOG.info("Clean start using "+persistencePath+"; moved old directory to "+old.getAbsolutePath());
@@ -438,24 +439,20 @@ public class BrooklynLauncher {
                         rebinding = false;
                         break;
                     case REBIND:
-                        if (persistenceDir.exists() && persistenceDir.isDirectory() && persistenceDir.canRead() && persistenceDir.canWrite() && !isMementoDirEmpty(persistenceDir)) {
-                            try {
-                                File backup = backupDirectory(persistenceDir);
-                                LOG.info("Rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
-                            } catch (IOException e) {
-                                throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+persistenceDir.getAbsolutePath(), e);
-                            }
-                        } else {
-                            throw new FatalConfigurationRuntimeException("Cannot rebind to persistence directory "+persistenceDir+" because "+
-                                    (persistenceDir.exists() ? "does not exist" :
-                                        (!persistenceDir.isDirectory() ? "not a directory" :
-                                            (persistenceDir.canRead() ? "not readable" :
-                                                (persistenceDir.canWrite() ? "not writable" : 
-                                                    (isMementoDirEmpty(persistenceDir) ? "directory is empty" : "unknown reason"))))));
+                        checkPersistenceDirAccessible(persistenceDir);
+                        checkPersistenceDirNonEmpty(persistenceDir);
+                        try {
+                            File backup = backupDirectory(persistenceDir);
+                            LOG.info("Rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
+                        } catch (IOException e) {
+                            throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+persistenceDir.getAbsolutePath(), e);
                         }
                         rebinding = true;
                         break;
                     case AUTO:
+                        if (persistenceDir.exists()) {
+                            checkPersistenceDirAccessible(persistenceDir);
+                        }
                         if (persistenceDir.exists() && !isMementoDirEmpty(persistenceDir)) {
                             try {
                                 File backup = backupDirectory(persistenceDir);
@@ -493,6 +490,22 @@ public class BrooklynLauncher {
             }
         } catch (Exception e) {
             throw Exceptions.propagate(e);
+        }
+    }
+
+    protected void checkPersistenceDirAccessible(File persistenceDir) {
+        if (!(persistenceDir.exists() && persistenceDir.isDirectory() && persistenceDir.canRead() && persistenceDir.canWrite())) {
+            throw new FatalConfigurationRuntimeException("Invalid persistence directory "+persistenceDir+" because "+
+                    (!persistenceDir.exists() ? "does not exist" :
+                        (!persistenceDir.isDirectory() ? "not a directory" :
+                            (!persistenceDir.canRead() ? "not readable" :
+                                (!persistenceDir.canWrite() ? "not writable" : "unknown reason")))));
+        }
+    }
+    
+    protected void checkPersistenceDirNonEmpty(File persistenceDir) {
+        if (isMementoDirEmpty(persistenceDir)) {
+            throw new FatalConfigurationRuntimeException("Invalid persistence directory "+persistenceDir+" because directory is empty");
         }
     }
 
