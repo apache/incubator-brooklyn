@@ -70,6 +70,10 @@ public class Main {
 
     public static void main(String... args) {
         Cli<BrooklynCommand> parser = buildCli();
+        execCli(parser, args);
+    }
+    
+    protected static void execCli(Cli<BrooklynCommand> parser, String[] args) {
         try {
             log.debug("Parsing command line arguments: {}", Arrays.asList(args));
             BrooklynCommand command = parser.parse(args);
@@ -501,11 +505,12 @@ public class Main {
         return builder.build();
     }
 
-    static String getUsageInfo(Cli<BrooklynCommand> parser) {
+    protected static String getUsageInfo(Cli<BrooklynCommand> parser) {
+        String name = parser.getMetadata().getName();
         StringBuilder help = new StringBuilder();
         help.append("\n");
         Help.help(parser.getMetadata(), ImmutableList.of("brooklyn"), help);
-        help.append("See 'brooklyn help <command>' for more information on a specific command.");
+        help.append("See '"+name+" help <command>' for more information on a specific command.");
         return help.toString();
     }
 
