@@ -81,7 +81,7 @@ public class StringsTest {
     public void testRemoveFromEnd() {
         assertEquals("", Strings.removeFromEnd("", "bar"));
         assertEquals(null, Strings.removeFromEnd(null, "bar"));
-        
+
         assertEquals("foo", Strings.removeFromEnd("foobar", "bar"));
         assertEquals("foo", Strings.removeFromEnd("foo", "bar"));
         assertEquals("foo", Strings.removeFromEnd("foobar", "foo", "bar"));
@@ -92,7 +92,7 @@ public class StringsTest {
     public void testRemoveAllFromEnd() {
         assertEquals("", Strings.removeAllFromEnd("", "bar"));
         assertEquals(null, Strings.removeAllFromEnd(null, "bar"));
-        
+
         assertEquals("", Strings.removeAllFromEnd("foobar", "foo", "bar"));
         assertEquals("f", Strings.removeAllFromEnd("foobar", "ar", "car", "b", "o"));
         // test they are applied in order
@@ -103,7 +103,7 @@ public class StringsTest {
     public void testRemoveFromStart() {
         assertEquals("", Strings.removeFromStart("", "foo"));
         assertEquals(null, Strings.removeFromStart(null, "foo"));
-        
+
         assertEquals("bar", Strings.removeFromStart("foobar", "foo"));
         assertEquals("foo", Strings.removeFromStart("foo", "bar"));
         assertEquals("bar", Strings.removeFromStart("foobar", "foo", "bar"));
@@ -113,11 +113,11 @@ public class StringsTest {
     public void testRemoveAllFromStart() {
         assertEquals("", Strings.removeAllFromStart("", "foo"));
         assertEquals(null, Strings.removeAllFromStart(null, "foo"));
-        
+
         assertEquals("bar", Strings.removeAllFromStart("foobar", "foo"));
         assertEquals("foo", Strings.removeAllFromStart("foo", "bar"));
         assertEquals("", Strings.removeAllFromStart("foobar", "foo", "bar"));
-        
+
         assertEquals("ar", Strings.removeAllFromStart("foobar", "fo", "ob", "o"));
         assertEquals("ar", Strings.removeAllFromStart("foobar", "ob", "fo", "o"));
         // test they are applied in order, "ob" doesn't match because "o" eats the o
@@ -129,7 +129,7 @@ public class StringsTest {
         assertEquals(Strings.removeFromStart("xyz", "."), "xyz");
         assertEquals(Strings.removeFromStart("http://foo.com", "http://"), "foo.com");
     }
-    
+
     public void testRemoveFromEnd2() {
         assertEquals(Strings.removeFromEnd("xyz", "z"), "xy");
         assertEquals(Strings.removeFromEnd("xyz", "."), "xyz");
@@ -172,7 +172,7 @@ public class StringsTest {
         assertTrue(Strings.containsLiteral("hELlo", "ELl"));
         assertFalse(Strings.containsLiteral("hello", "!"));
     }
-    
+
     public void testContainsLiteralIgnoreCase() {
         assertTrue(Strings.containsLiteralIgnoreCase("hello", "ell"));
         assertTrue(Strings.containsLiteralIgnoreCase("hello", "H"));
@@ -184,15 +184,6 @@ public class StringsTest {
         assertFalse(Strings.containsLiteralIgnoreCase("hello", "!"));
     }
 
-    public void testSizeString() {
-        assertEquals(Strings.makeSizeString(0), "0B");
-        assertEquals(Strings.makeSizeString(999), "999B");
-        assertEquals(Strings.makeSizeString(1234), "1.23kB");
-        assertEquals(Strings.makeSizeString(23456789), "23.5MB");
-        assertEquals(Strings.makeSizeString(23456789012L), "23.5GB");
-        assertEquals(Strings.makeSizeString(23456789012345L), "2.35E4GB");
-    }
-    
     @Test
     public void testDeferredFormat() {
         ToStringCounter c = new ToStringCounter();
@@ -261,7 +252,7 @@ public class StringsTest {
         Assert.assertEquals(Strings.getLastWord(""), null);
         Assert.assertEquals(Strings.getLastWord(null), null);
     }
-    
+
     @Test
     public void testFirstWordAfter() {
         Assert.assertEquals(Strings.getFirstWordAfter("hello world", "hello"), "world");

@@ -26,19 +26,19 @@ public interface SoftwareProcess extends Entity, Startable {
 
     @SetFromFlag("startLatch")
     public static final ConfigKey<Boolean> START_LATCH = BrooklynConfigKeys.START_LATCH;
-    
+
     @SetFromFlag("installLatch")
     public static final ConfigKey<Boolean> INSTALL_LATCH = BrooklynConfigKeys.INSTALL_LATCH;
-    
+
     @SetFromFlag("customizeLatch")
     public static final ConfigKey<Boolean> CUSTOMIZE_LATCH = BrooklynConfigKeys.CUSTOMIZE_LATCH;
-    
+
     @SetFromFlag("launchLatch")
     public static final ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
-    
+
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION = BrooklynConfigKeys.SUGGESTED_VERSION;
-    
+
     @SetFromFlag("downloadUrl")
     public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = Attributes.DOWNLOAD_URL;
 
@@ -52,14 +52,14 @@ public interface SoftwareProcess extends Entity, Startable {
     BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = BrooklynConfigKeys.INSTALL_DIR;
     @Deprecated
     public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = BrooklynConfigKeys.SUGGESTED_INSTALL_DIR;
-    
+
     @SetFromFlag("runDir")
     BasicAttributeSensorAndConfigKey<String> RUN_DIR = BrooklynConfigKeys.RUN_DIR;
     @Deprecated
     public static final ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
 
     @SetFromFlag("env")
-    public static final MapConfigKey<Object> SHELL_ENVIRONMENT = new MapConfigKey<Object>(Object.class, 
+    public static final MapConfigKey<Object> SHELL_ENVIRONMENT = new MapConfigKey<Object>(Object.class,
             "shell.env", "Map of environment variables to pass to the runtime shell", MutableMap.<String,Object>of());
 
     @SetFromFlag("provisioningProperties")
@@ -73,8 +73,8 @@ public interface SoftwareProcess extends Entity, Startable {
      * developers should either subclass the {@link SoftwareProcessDriverLifecycleEffectorTasks} and/or lean on sensors from the parent */
     public enum ChildStartableMode {
         /** do nothing with {@link Startable} children */
-        NONE(true, false, false), 
-        /** start (stop) {@link Startable} children concurrent with *driver* start (stop), 
+        NONE(true, false, false),
+        /** start (stop) {@link Startable} children concurrent with *driver* start (stop),
          * in foreground, so invoking entity will wait for children to complete.
          * <p>
          * if the child requires the parent to reach a particular state before acting,
@@ -82,16 +82,16 @@ public interface SoftwareProcess extends Entity, Startable {
          * which the child listens for.
          * note that often sensors at the parent are not activated until it is started,
          * so the usual sensors connected at an entity may not be available when running in this mode */
-        FOREGROUND(false, false, false), 
+        FOREGROUND(false, false, false),
         /** as {@link #FOREGROUND} but {@link ChildStartableMode#isLate} */
-        FOREGROUND_LATE(false, false, true), 
-        /** start {@link Startable} children concurrent with *driver* start (stop, restart), 
+        FOREGROUND_LATE(false, false, true),
+        /** start {@link Startable} children concurrent with *driver* start (stop, restart),
          * but in background, ie disassociated from the effector task at this entity
          * (so that this entity can complete start/stop independent of children) */
         BACKGROUND(false, true, false),
         /** as {@link #BACKGROUND} but {@link ChildStartableMode#isLate} */
         BACKGROUND_LATE(false, true, true);
-        
+
         /** whether starting (stopping, restarting) children is disabled */
         public final boolean isDisabled;
         /** whether starting (stopping, restarting) children is backgrounded, so parent should not wait on them */
@@ -100,7 +100,7 @@ public interface SoftwareProcess extends Entity, Startable {
          * and stop before the driver is stopped (if false the children operations are concurrent with the parent),
          * (with restart always being done in parallel though this behaviour may change) */
         public final boolean isLate;
-        
+
         private ChildStartableMode(boolean isDisabled, boolean isBackground, boolean isLate) {
             this.isDisabled = isDisabled;
             this.isBackground = isBackground;
@@ -108,15 +108,16 @@ public interface SoftwareProcess extends Entity, Startable {
         }
 
     }
-    
+
     @SetFromFlag("childStartMode")
     public static final ConfigKey<ChildStartableMode> CHILDREN_STARTABLE_MODE = ConfigKeys.newConfigKey(ChildStartableMode.class, "children.startable.mode");
 
     @SuppressWarnings("rawtypes")
     public static final AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = new BasicAttributeSensor<MachineProvisioningLocation>(
             MachineProvisioningLocation.class, "softwareservice.provisioningLocation", "Location used to provision a machine where this is running");
-        
+
     public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
  
-    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor( "softwareprocess.pid.file", "PID file");
+    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor("softwareprocess.pid.file", "PID file");
+
 }
