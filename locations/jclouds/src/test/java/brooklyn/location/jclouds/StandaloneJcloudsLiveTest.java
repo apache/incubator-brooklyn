@@ -52,8 +52,8 @@ public class StandaloneJcloudsLiveTest {
     
     static BrooklynProperties globals = BrooklynProperties.Factory.newDefault();
 
-    String identity = globals.getFirst("brooklyn.jclouds.aws-ec2.identity");
-    String credential = globals.getFirst("brooklyn.jclouds.aws-ec2.credential");
+    String identity = globals.getFirst("brooklyn.location.jclouds.aws-ec2.identity");
+    String credential = globals.getFirst("brooklyn.location.jclouds.aws-ec2.credential");
     
     @Test(groups={"WIP","Live"})
     public void createVm() {

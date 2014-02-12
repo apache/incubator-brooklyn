@@ -153,7 +153,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         String identity = (String) brooklynProperties.get("brooklyn.location.jclouds.aws-ec2.identity");
         if (identity == null) identity = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.identity");
         String credential = (String) brooklynProperties.get("brooklyn.location.jclouds.aws-ec2.credential");
-        if (credential == null) identity = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.credential");
+        if (credential == null) credential = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.credential");
         
         Map<ConfigKey<?>,?> allConfig = MutableMap.<ConfigKey<?>,Object>builder()
                 .put(CLOUD_PROVIDER, AbstractJcloudsTest.AWS_EC2_PROVIDER)
