@@ -14,16 +14,15 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.Entities;
+import brooklyn.location.jclouds.AbstractJcloudsTest;
 import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.management.internal.LocalManagementContext;
 
-import com.google.common.collect.ImmutableSet;
-
-public class JcloudsMachinePoolLiveTest {
+public class JcloudsMachinePoolLiveTest extends AbstractJcloudsTest {
 
     public static final Logger log = LoggerFactory.getLogger(JcloudsMachinePoolLiveTest.class);
+    
+    private static final String PROVIDER = AWS_EC2_PROVIDER;
+    private static final String LOCATION_SPEC = PROVIDER + ":" + AWS_EC2_EUWEST_REGION_NAME;
     
     public static class SamplePool extends MachinePool {
         public SamplePool(ComputeService svc) {
@@ -52,45 +51,29 @@ public class JcloudsMachinePoolLiveTest {
         { registerTemplates(USUAL_VM, ANYONE_NOT_TINY_VM, VM_LARGE1, VM_SMALL1); }
     }
     
-    public static String getRequiredSystemProperty(String field) {
-        String result = System.getProperty(field);
-        if (result==null)
-            throw new IllegalArgumentException("This requires 'field' to be passed on the command-line (-D"+field+"=...");
-        return result;
-    }
-
-    private LocalManagementContext managementContext;
-    private JcloudsLocation jcloudsLocation;
     private ComputeServiceContext context;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        // Don't let any defaults from brooklyn.properties (except credentials) interfere with test
-        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
-        for (String key : ImmutableSet.copyOf(brooklynProperties.asMapWithStringKeys().keySet())) {
-            if (key.startsWith("brooklyn.jclouds") && !(key.endsWith("identity") || key.endsWith("credential"))) {
-                brooklynProperties.remove(key);
-            }
-            
-            // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
-            if (key.startsWith("brooklyn.ssh")) {
-                brooklynProperties.remove(key);
-            }
-        }
+        super.setUp();
         
-        managementContext = new LocalManagementContext(brooklynProperties);
-        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve("aws-ec2:eu-west-1");
+        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(LOCATION_SPEC);
         
-        context = ContextBuilder.newBuilder("aws-ec2")
+        context = ContextBuilder.newBuilder(PROVIDER)
                 .modules(Arrays.asList(new SshjSshClientModule(), new SLF4JLoggingModule()))
                 .credentials(jcloudsLocation.getIdentity(), jcloudsLocation.getCredential())
                 .build(ComputeServiceContext.class);
     }
     
     @AfterMethod(alwaysRun=true)
+    @Override
     public void tearDown() throws Exception {
-        if (managementContext != null) Entities.destroyAll(managementContext);
-        if (context != null) context.close();
+        try {
+            super.tearDown();
+        } finally {
+            if (context != null) context.close();
+        }
     }
     
     @Test(groups={"Live","WIP"})
