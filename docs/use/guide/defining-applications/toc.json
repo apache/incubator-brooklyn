@@ -4,7 +4,7 @@
   "file":  "{{ site.url }}/use/guide/defining-applications/advanced-concepts.html" }, 
 { "title": "Common Usage",
   "file":  "{{ site.url }}/use/guide/defining-applications/common-usage.html" },
-{ "title": "YAML blueprints",
+{ "title": "YAML Blueprints",
   "file":  "{{ site.url }}/use/guide/defining-applications/yaml.html" },
 { "title": "Maven Archetype",
   "file":  "{{ site.url }}/use/guide/defining-applications/archetype.html" }

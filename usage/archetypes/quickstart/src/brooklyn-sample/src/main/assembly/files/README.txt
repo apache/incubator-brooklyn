@@ -41,9 +41,9 @@ custom keys and passphrases. For more information see:
 
 Usage:
 
-    ./start.sh [ <command> ] \
+    ./start.sh launch <--type> \
         [--port 8081+] \
-        [--location location] ]
+        [--location location] 
 
 The optional port argument specifies the port where the Brooklyn console 
 will be running, such as localhost:8081. (The console is only bound to 
@@ -53,13 +53,11 @@ http://brooklyncentral.github.io/use/guide/management/ .)
 In the console, you can access the catalog and deploy applications to
 configured locations.
 
-Valid commands in this sample application include:
+In this sample application, `--cluster` and `--single` are supported as <--type>,
+or leave it blank to have nothing launched. (These sample classes will be in the catalog.)
 
-* help
-* server - brooklyn server only (no application)
-* simple - a single web server
-* cluster - an elastic cluster with a database
- 
+Use `./start.sh help` or `./start.sh help launch` for more detailed help.
+
 The location might be `localhost` (the default), `aws-ec2:us-east-1`, 
 `openstack:endpoint`, `softlayer`, or based on names, such as
 `named:My_Amazon_US_west`, so long as it is configured as above. 
@@ -93,4 +91,4 @@ contact Cloudsoft, the supporters of Brooklyn, at:
 Brooklyn is (c) 2013 Cloudsoft Corporation and released as open source under 
 the Apache License v2.0.
 
-A sample Brooklyn project should specify its license.
+A sample Brooklyn project should specify its license here.

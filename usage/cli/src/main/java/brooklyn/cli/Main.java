@@ -2,6 +2,7 @@ package brooklyn.cli;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
+import io.airlift.command.Arguments;
 import io.airlift.command.Cli;
 import io.airlift.command.Cli.CliBuilder;
 import io.airlift.command.Command;
@@ -10,11 +11,15 @@ import io.airlift.command.Option;
 import io.airlift.command.OptionType;
 import io.airlift.command.ParseException;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
@@ -23,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
@@ -48,6 +54,19 @@ import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 
+/**
+ * This class is the primary CLI for brooklyn.
+ * Run with the `help` argument for help.
+ * <p>
+ * This class is designed for subclassing, with subclasses typically:
+ * <li> providing their own static {@link #main(String...)} (of course) which need simply invoke 
+ *      {@link #execCli(String[])} with the arguments 
+ * <li> returning their CLI name (e.g. "start.sh") in an overridden {@link #cliScriptName()}
+ * <li> providing an overridden {@link LaunchCommand} via {@link #cliLaunchCommand()} if desired
+ * <li> providing any other CLI customisations by overriding {@link #cliBuilder()}
+ *      (typically calling the parent and then customizing the builder)
+ * <li> populating a custom catalog using {@link LaunchCommand#populateCatalog(BrooklynCatalog)}
+ */
 public class Main {
 
     // Launch banner
@@ -68,38 +87,12 @@ public class Main {
     public static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String... args) {
-        Cli<BrooklynCommand> parser = buildCli();
-        execCli(parser, args);
-    }
-    
-    protected static void execCli(Cli<BrooklynCommand> parser, String[] args) {
-        try {
-            log.debug("Parsing command line arguments: {}", Arrays.asList(args));
-            BrooklynCommand command = parser.parse(args);
-            log.debug("Executing command: {}", command);
-            command.call();
-            System.exit(SUCCESS);
-        } catch (ParseException pe) { // looks like the user typed it wrong
-            System.err.println("Parse error: " + pe.getMessage()); // display
-                                                                   // error
-            System.err.println(getUsageInfo(parser)); // display cli help
-            System.exit(PARSE_ERROR);
-        } catch (FatalConfigurationRuntimeException e) {
-            log.error("Configuration error: " + e.getMessage(), e);
-            System.err.println("Configuration error: " + e.getMessage());
-            System.exit(CONFIGURATION_ERROR);
-        } catch (Exception e) { // unexpected error during command execution
-            log.error("Execution error: " + e.getMessage(), e);
-            System.err.println("Execution error: " + e.getMessage());
-            e.printStackTrace();
-            System.exit(EXECUTION_ERROR);
-        }
+        new Main().execCli(args);
     }
 
+    /** abstract superclass for commands defining global options, but not arguments,
+     * as that prevents Help from being injectable in the {@link HelpCommand} subclass */
     public static abstract class BrooklynCommand implements Callable<Void> {
-
-        @Inject
-        public Help help;
 
         @Option(type = OptionType.GLOBAL, name = { "-v", "--verbose" }, description = "Verbose mode")
         public boolean verbose = false;
@@ -118,9 +111,39 @@ public class Main {
             return string().toString();
         }
     }
+    
+    /** common superclass for commands, defining global options (in our super) and extracting the arguments */
+    public static abstract class BrooklynCommandCollectingArgs extends BrooklynCommand {
+
+        /** extra arguments */
+        @Arguments
+        public List<String> arguments = new ArrayList<String>();
+        
+        /** @return true iff there are arguments; it also sys.errs a warning in that case  */
+        protected boolean warnIfNoArguments() {
+            if (arguments.isEmpty()) return false;
+            System.err.println("Invalid subcommand arguments: "+Strings.join(arguments, " "));
+            return true;
+        }
+        
+        /** throw {@link ParseException} iff there are arguments */
+        protected void failIfNoArguments() {
+            if (arguments.isEmpty()) return ;
+            throw new ParseException("Invalid subcommand arguments '"+Strings.join(arguments, " ")+"'");
+        }
+        
+        @Override
+        public ToStringHelper string() {
+            return super.string()
+                    .add("arguments", arguments);
+        }
+    }
 
     @Command(name = "help", description = "Display help for available commands")
     public static class HelpCommand extends BrooklynCommand {
+
+        @Inject
+        public Help help;
 
         @Override
         public Void call() throws Exception {
@@ -130,11 +153,12 @@ public class Main {
     }
 
     @Command(name = "info", description = "Display information about brooklyn")
-    public static class InfoCommand extends BrooklynCommand {
-
+    public static class InfoCommand extends BrooklynCommandCollectingArgs {
+        
         @Override
         public Void call() throws Exception {
             if (log.isDebugEnabled()) log.debug("Invoked info command: {}", this);
+            warnIfNoArguments();
 
             // Get current version
             String version = BrooklynVersion.get();
@@ -153,10 +177,8 @@ public class Main {
         }
     }
 
-    @Command(name = "launch", description = "Starts a brooklyn application. " +
-            "Note that a BROOKLYN_CLASSPATH environment variable needs to be set up beforehand " +
-            "to point to the user application classpath.")
-    public static class LaunchCommand extends BrooklynCommand {
+    @Command(name = "launch", description = "Starts a server, optionally with applications")
+    public static class LaunchCommand extends BrooklynCommandCollectingArgs {
 
         @Option(name = { "--localBrooklynProperties" }, title = "local brooklyn.properties file",
                 description = "local brooklyn.properties file, specific to this launch (appending to and overriding global properties)")
@@ -164,7 +186,9 @@ public class Main {
 
         @Option(name = { "-a", "--app" }, title = "application class or file",
                 description = "The Application to start. " +
-                        "For example, my.AppName, file://my/app.yaml, or classpath://my/AppName.groovy")
+                        "For example, my.AppName, file://my/app.yaml, or classpath://my/AppName.groovy -- "
+                        + "note that a BROOKLYN_CLASSPATH environment variable may be required to "
+                        + "load classes from other locations")
         public String app;
 
         @Beta
@@ -238,8 +262,10 @@ public class Main {
         public Void call() throws Exception {
             // Configure launcher
             BrooklynLauncher launcher;
+            failIfNoArguments();
             try {
                 if (log.isDebugEnabled()) log.debug("Invoked launch command {}", this);
+                
                 if (!quiet) System.out.println(BANNER);
     
                 if (verbose) {
@@ -250,42 +276,9 @@ public class Main {
                     }
                 }
     
-                boolean isYamlApp = app != null && app.endsWith(".yaml");
-                boolean hasLocations = !Strings.isBlank(locations);
-                if (app != null) {
-                    if (hasLocations && isYamlApp) {
-                        System.err.println("YAML app combined with command line locations; locations in the YAML file will take precedence");
-                    } else if (!hasLocations && isYamlApp) {
-                        System.err.println("Using locations defined in YAML or localhost if none given");
-                        locations = "localhost";
-                    } else if (!hasLocations) {
-                        System.err.println("Locations parameter not supplied: assuming localhost");
-                        locations = "localhost";
-                    }
-                } else if (hasLocations) {
-                    System.err.println("Locations specified without any applications; ignoring locations");
-                }
+                computeLocations();
                 
-                PersistMode persistMode;
-                if (Strings.isBlank(persist)) {
-                    throw new FatalConfigurationRuntimeException("Persist mode must not be blank");
-                } else if (persist.equalsIgnoreCase("disabled")) {
-                    persistMode = PersistMode.DISABLED;
-                } else if (persist.equalsIgnoreCase("auto")) {
-                    persistMode = PersistMode.AUTO;
-                } else if (persist.equalsIgnoreCase("rebind")) {
-                    persistMode = PersistMode.REBIND;
-                } else if (persist.equalsIgnoreCase("clean")) {
-                    persistMode = PersistMode.CLEAN;
-                } else {
-                    throw new FatalConfigurationRuntimeException("Illegal persist setting: "+persist);
-                }
-    
-                if (persistMode == PersistMode.DISABLED) {
-                    if (Strings.isNonBlank(persistenceDir)) {
-                        throw new FatalConfigurationRuntimeException("Cannot specify peristanceDir when persist is disabled");
-                    }
-                }
+                PersistMode persistMode = computePersistMode();
                 
                 ResourceUtils utils = ResourceUtils.create(this);
                 ClassLoader parent = utils.getLoader();
@@ -296,39 +289,9 @@ public class Main {
                     execGroovyScript(utils, loader, script);
                 }
     
-                launcher = BrooklynLauncher.newInstance();
-                launcher.localBrooklynPropertiesFile(localBrooklynProperties)
-                        .webconsolePort(port)
-                        .webconsole(!noConsole)
-                        .shutdownOnExit(!noShutdownOnExit)
-                        .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : ImmutableList.of(locations));
-                if (noConsoleSecurity) {
-                    launcher.installSecurityFilter(false);
-                }
-                if (Strings.isNonEmpty(bindAddress)) {
-                    InetAddress ip = Networking.getInetAddressWithFixedName(bindAddress);
-                    launcher.bindAddress(ip);
-                }
+                launcher = createLauncher();
     
-                if (app != null) {
-                    // Create the instance of the brooklyn app
-                    log.debug("Loading the user's application: {}", app);
-    
-                    if (isYamlApp) {
-                        log.debug("Loading application as YAML spec: {}", app);
-                        String content = utils.getResourceAsString(app);
-                        launcher.application(content);
-                    } else {
-                        Object loadedApp = loadApplicationFromClasspathOrParse(utils, loader, app);
-                        if (loadedApp instanceof ApplicationBuilder) {
-                            launcher.application((ApplicationBuilder)loadedApp);
-                        } else if (loadedApp instanceof Application) {
-                            launcher.application((AbstractApplication)loadedApp);
-                        } else {
-                            throw new FatalConfigurationRuntimeException("Unexpected application type "+(loadedApp==null ? null : loadedApp.getClass())+", for app "+loadedApp);
-                        }
-                    }
-                }
+                launchApp(launcher, utils, loader);
     
                 launcher.persistMode(persistMode);
                 if (persistMode != PersistMode.DISABLED && Strings.isNonBlank(persistenceDir)) {
@@ -355,29 +318,136 @@ public class Main {
             BrooklynServerDetails server = launcher.getServerDetails();
             ManagementContext ctx = server.getManagementContext();
             
-            // Force load of catalog (so web console is up to date)
-            ctx.getCatalog().getCatalogItems();
+            populateCatalog(launcher.getServerDetails().getManagementContext().getCatalog());
 
             if (verbose) {
                 Entities.dumpInfo(launcher.getApplications());
             }
             
+            waitAfterLaunch(ctx);
+
+            return null;
+        }
+        
+        protected void computeLocations() {
+            boolean hasLocations = !Strings.isBlank(locations);
+            if (app != null) {
+                if (hasLocations && isYamlApp()) {
+                    System.err.println("YAML app combined with command line locations; locations in the YAML file will take precedence");
+                } else if (!hasLocations && isYamlApp()) {
+                    System.err.println("Using locations defined in YAML or localhost if none given");
+                    locations = "localhost";
+                } else if (!hasLocations) {
+                    System.err.println("Locations parameter not supplied: assuming localhost");
+                    locations = "localhost";
+                }
+            } else if (hasLocations) {
+                System.err.println("Locations specified without any applications; ignoring locations");
+            }
+        }
+
+        protected boolean isYamlApp() {
+            return app != null && app.endsWith(".yaml");
+        }
+
+        protected PersistMode computePersistMode() {
+            PersistMode persistMode;
+            if (Strings.isBlank(persist)) {
+                throw new FatalConfigurationRuntimeException("Persist mode must not be blank");
+            } else if (persist.equalsIgnoreCase("disabled")) {
+                persistMode = PersistMode.DISABLED;
+            } else if (persist.equalsIgnoreCase("auto")) {
+                persistMode = PersistMode.AUTO;
+            } else if (persist.equalsIgnoreCase("rebind")) {
+                persistMode = PersistMode.REBIND;
+            } else if (persist.equalsIgnoreCase("clean")) {
+                persistMode = PersistMode.CLEAN;
+            } else {
+                throw new FatalConfigurationRuntimeException("Illegal persist setting: "+persist);
+            }
+   
+            if (persistMode == PersistMode.DISABLED) {
+                if (Strings.isNonBlank(persistenceDir)) {
+                    throw new FatalConfigurationRuntimeException("Cannot specify peristanceDir when persist is disabled");
+                }
+            }
+            return persistMode;
+        }
+
+        protected BrooklynLauncher createLauncher() {
+            BrooklynLauncher launcher;
+            launcher = BrooklynLauncher.newInstance();
+            launcher.localBrooklynPropertiesFile(localBrooklynProperties)
+                    .webconsolePort(port)
+                    .webconsole(!noConsole)
+                    .shutdownOnExit(!noShutdownOnExit)
+                    .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : ImmutableList.of(locations));
+            if (noConsoleSecurity) {
+                launcher.installSecurityFilter(false);
+            }
+            if (Strings.isNonEmpty(bindAddress)) {
+                InetAddress ip = Networking.getInetAddressWithFixedName(bindAddress);
+                launcher.bindAddress(ip);
+            }
+            return launcher;
+        }
+
+        /** method intended for subclassing, to add items to the catalog */
+        protected void populateCatalog(BrooklynCatalog catalog) {
+            // Force load of catalog (so web console is up to date)
+            catalog.getCatalogItems();
+
+            // nothing else added here
+        }
+
+        /** convenience for subclasses to specify that an app should run,
+         * throwing the right (caught) error if another app has already been specified */
+        protected void setAppToLaunch(String className) {
+            if (app!=null) {
+                if (app.equals(className)) return;
+                throw new FatalConfigurationRuntimeException("Cannot specify app '"+className+"' when '"+app+"' is already specified; "
+                    + "remove one or more conflicting CLI arguments.");
+            }
+            app = className;
+        }
+        
+        protected void launchApp(BrooklynLauncher launcher, ResourceUtils utils, GroovyClassLoader loader)
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
+            if (app != null) {
+                // Create the instance of the brooklyn app
+                log.debug("Loading the user's application: {}", app);
+   
+                if (isYamlApp()) {
+                    log.debug("Loading application as YAML spec: {}", app);
+                    String content = utils.getResourceAsString(app);
+                    launcher.application(content);
+                } else {
+                    Object loadedApp = loadApplicationFromClasspathOrParse(utils, loader, app);
+                    if (loadedApp instanceof ApplicationBuilder) {
+                        launcher.application((ApplicationBuilder)loadedApp);
+                    } else if (loadedApp instanceof Application) {
+                        launcher.application((AbstractApplication)loadedApp);
+                    } else {
+                        throw new FatalConfigurationRuntimeException("Unexpected application type "+(loadedApp==null ? null : loadedApp.getClass())+", for app "+loadedApp);
+                    }
+                }
+            }
+        }
+        
+        protected void waitAfterLaunch(ManagementContext ctx) throws IOException {
             if (stopOnKeyPress) {
                 // Wait for the user to type a key
                 log.info("Server started. Press return to stop.");
                 System.in.read();
-            	stopAllApps(ctx.getApplications());
+                stopAllApps(ctx.getApplications());
             } else {
                 // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
                 log.info("Launched Brooklyn; now blocking to wait for cntrl-c or kill");
                 waitUntilInterrupted();
             }
-
-            return null;
         }
 
-        @VisibleForTesting
-        void waitUntilInterrupted() {
+        protected void waitUntilInterrupted() {
             Object mutex = new Object();
             synchronized (mutex) {
                 try {
@@ -392,7 +462,6 @@ public class Main {
             }
         }
 
-        @VisibleForTesting
         protected void execGroovyScript(ResourceUtils utils, GroovyClassLoader loader, String script) {
             log.debug("Running the user provided script: {}", script);
             String content = utils.getResourceAsString(script);
@@ -404,7 +473,6 @@ public class Main {
          * Helper method that gets an instance of a brooklyn {@link AbstractApplication} or an {@link ApplicationBuilder}.
          * Guaranteed to be non-null result of one of those types (throwing exception if app not appropriate).
          */
-        @VisibleForTesting
         protected Object loadApplicationFromClasspathOrParse(ResourceUtils utils, GroovyClassLoader loader, String app)
                 throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
             
@@ -454,7 +522,7 @@ public class Main {
         }
 
         @VisibleForTesting
-        void stopAllApps(Collection<? extends Application> applications) {
+        protected void stopAllApps(Collection<? extends Application> applications) {
             for (Application application : applications) {
                 try {
                     if (application instanceof Startable) {
@@ -484,28 +552,64 @@ public class Main {
         }
     }
 
-    @VisibleForTesting
-    static Cli<BrooklynCommand> buildCli() {
+    /** method intended for overriding when the script filename is different 
+     * @return the name of the script the user has invoked */
+    protected String cliScriptName() {
+        return "brooklyn";
+    }
+
+    /** method intended for overriding when a different {@link Cli} is desired,
+     * or when the subclass wishes to change any of the arguments */
+    protected CliBuilder<BrooklynCommand> cliBuilder() {
         @SuppressWarnings({ "unchecked" })
-        CliBuilder<BrooklynCommand> builder = Cli.buildCli("brooklyn", BrooklynCommand.class)
-            //throws exception:
-            //<BrooklynCommand>builder("brooklyn").withCommand(BrooklynCommand.class)
+        CliBuilder<BrooklynCommand> builder = Cli.<BrooklynCommand>builder(cliScriptName())
                 .withDescription("Brooklyn Management Service")
                 .withCommands(
                         HelpCommand.class,
                         InfoCommand.class,
-                        LaunchCommand.class
+                        cliLaunchCommand()
                 );
 
-        return builder.build();
+        return builder;
+    }
+    
+    /** method intended for overriding when a custom {@link LaunchCommand} is being specified  */
+    protected Class<? extends BrooklynCommand> cliLaunchCommand() {
+        return LaunchCommand.class;
+    }
+    
+    protected void execCli(String ...args) {
+        execCli(cliBuilder().build(), args);
+    }
+    
+    protected void execCli(Cli<BrooklynCommand> parser, String ...args) {
+        try {
+            log.debug("Parsing command line arguments: {}", Arrays.asList(args));
+            BrooklynCommand command = parser.parse(args);
+            log.debug("Executing command: {}", command);
+            command.call();
+            System.exit(SUCCESS);
+        } catch (ParseException pe) { // looks like the user typed it wrong
+            System.err.println("Parse error: " + pe.getMessage()); // display
+                                                                   // error
+            System.err.println(getUsageInfo(parser)); // display cli help
+            System.exit(PARSE_ERROR);
+        } catch (FatalConfigurationRuntimeException e) {
+            log.error("Configuration error: " + e.getMessage(), e);
+            System.err.println("Configuration error: " + e.getMessage());
+            System.exit(CONFIGURATION_ERROR);
+        } catch (Exception e) { // unexpected error during command execution
+            log.error("Execution error: " + e.getMessage(), e);
+            System.err.println("Execution error: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(EXECUTION_ERROR);
+        }
     }
 
-    protected static String getUsageInfo(Cli<BrooklynCommand> parser) {
-        String name = parser.getMetadata().getName();
+    protected String getUsageInfo(Cli<BrooklynCommand> parser) {
         StringBuilder help = new StringBuilder();
         help.append("\n");
-        Help.help(parser.getMetadata(), ImmutableList.of("brooklyn"), help);
-        help.append("See '"+name+" help <command>' for more information on a specific command.");
+        Help.help(parser.getMetadata(), Collections.<String>emptyList(), help);
         return help.toString();
     }
 

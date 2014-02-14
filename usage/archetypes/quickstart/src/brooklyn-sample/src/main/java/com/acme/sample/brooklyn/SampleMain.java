@@ -1,20 +1,26 @@
-package ${package};
+package com.acme.sample.brooklyn;
 
-import io.airlift.command.Cli;
-import io.airlift.command.Cli.CliBuilder;
+import java.util.Arrays;
+
 import io.airlift.command.Command;
 import io.airlift.command.Option;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.cli.Main;
-import brooklyn.launcher.FatalConfigurationRuntimeException;
 
 import com.google.common.base.Objects.ToStringHelper;
-import ${package}.sample.app.ClusterWebServerDatabaseSample;
-import ${package}.sample.app.SingleWebServerSample;
 
+import com.acme.sample.brooklyn.sample.app.*;
+
+/**
+ * This class provides a static main entry point for launching a custom Brooklyn-based app.
+ * <p>
+ * It inherits the standard Brooklyn CLI options from {@link Main},
+ * plus adds a few more shortcuts for favourite blueprints to the {@link LaunchCommand}.
+ */
 public class SampleMain extends Main {
     
     private static final Logger log = LoggerFactory.getLogger(SampleMain.class);
@@ -22,50 +28,47 @@ public class SampleMain extends Main {
     public static final String DEFAULT_LOCATION = "localhost";
 
     public static void main(String... args) {
-        Cli<BrooklynCommand> parser = buildCli();
-        Main.execCli(parser, args);
+        log.debug("CLI invoked with args "+Arrays.asList(args));
+        new SampleMain().execCli(args);
     }
 
-    static Cli<BrooklynCommand> buildCli() {
-        @SuppressWarnings({ "unchecked" })
-        CliBuilder<BrooklynCommand> builder = Cli.buildCli("start.sh", BrooklynCommand.class)
-                .withDescription("Brooklyn Management Service")
-                .withCommands(
-                        HelpCommand.class,
-                        InfoCommand.class,
-                        LaunchCommand.class
-                );
-
-        return builder.build();
+    @Override
+    protected String cliScriptName() {
+        return "start.sh";
+    }
+    
+    @Override
+    protected Class<? extends BrooklynCommand> cliLaunchCommand() {
+        return LaunchCommand.class;
     }
 
-    @Command(name = "launch", description = "Starts a brooklyn application. " +
-            "Note that a BROOKLYN_CLASSPATH environment variable needs to be set up beforehand " +
-            "to point to the user application classpath.")
+    @Command(name = "launch", description = "Starts a server, and optionally an application. "
+        + "Use e.g. --single or --cluster to launch one-node and clustered variants of the sample web applicaiton.")
     public static class LaunchCommand extends Main.LaunchCommand {
 
-        @Option(name = { "--single" }, title = "launch single web-server instance")
+        // add these options to the LaunchCommand as shortcuts for our favourite applications
+        
+        @Option(name = { "--single" }, description = "Launch a single web-server instance")
         public boolean single;
 
-        @Option(name = { "--cluster" }, title = "launch web-server cluster")
+        @Option(name = { "--cluster" }, description = "Launch a web-server cluster")
         public boolean cluster;
 
         @Override
         public Void call() throws Exception {
-            if (app != null) {
-                if (single || cluster) {
-                    throw new FatalConfigurationRuntimeException("Cannot specify app and either of single or cluster");
-                }
-            } else if (single) {
-                if (cluster) {
-                    throw new FatalConfigurationRuntimeException("Cannot specify single and cluster");
-                }
-                app = SingleWebServerSample.class.getCanonicalName();
-            } else if (cluster) {
-                app = ClusterWebServerDatabaseSample.class.getCanonicalName();
-            }
+            // process our CLI arguments
+            if (single) setAppToLaunch( SingleWebServerSample.class.getCanonicalName() );
+            if (cluster) setAppToLaunch( ClusterWebServerDatabaseSample.class.getCanonicalName() );
             
+            // now process the standard launch arguments
             return super.call();
+        }
+
+        @Override
+        protected void populateCatalog(BrooklynCatalog catalog) {
+            super.populateCatalog(catalog);
+            catalog.addItem(SingleWebServerSample.class);
+            catalog.addItem(ClusterWebServerDatabaseSample.class);
         }
 
         @Override

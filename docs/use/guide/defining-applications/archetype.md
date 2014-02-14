@@ -11,7 +11,7 @@ Brooklyn includes a maven archetype, which can be used to create the project str
 
 This can be done interactively using:
 {% highlight bash %}
-mvn archetype:generate
+$ mvn archetype:generate
 {% endhighlight %}
 
 The user will be prompted for the archetype to use (i.e. group "io.brooklyn" 
@@ -22,7 +22,7 @@ Alternatively, all options can be supplied at the command line. For example,
 if creating a project named "autobrick" for "com.acme":
 
 {% highlight bash %}
-mvn archetype:generate \
+$ mvn archetype:generate \
 	-DarchetypeGroupId=io.brooklyn \
 	-DarchetypeArtifactId=brooklyn-archetype-quickstart \
 	-DarchetypeVersion={{ site.brooklyn-version }} \
@@ -41,22 +41,24 @@ application code.
 To build, run the commands:
 
 {% highlight bash %}
-cd autobrick
-mvn clean install
-mvn assembly:assembly
+$ cd autobrick
+$ mvn clean install assembly:assembly
 {% endhighlight %}
 
-The assembly command will build a complete distribution in target/autobrick-0.1.0-SNAPSHOT-dist.tar.gz
+The assembly command will build a complete standalone distribution archive in `target/autobrick-0.1.0-SNAPSHOT-dist.tar.gz`,
+suitable for redistribution and containing `./start.sh` in the root.
 
-You can unpack this and run the example:
+An unpacked equivalent is placed in `target/autobrick-0.1.0-SNAPSHOT-dist`,
+thus you can run the single-node sample locally with:
 
 {% highlight bash %}
-./start.sh launch --cluster
+$ cd target/autobrick-0.1.0-SNAPSHOT-dist/autobrick-0.1.0-SNAPSHOT/
+$ ./start.sh launch --single
 {% endhighlight %}
 
-This start.sh script has all of the same options as the default `brooklyn` script, with a couple 
-of extra options:
+This `start.sh` script has all of the same options as the default `brooklyn` script, 
+including `./start.sh help` and the `--location` argument for `launch`,
+with a couple of extra `launch` options for the sample blueprints in the archetype project:
 
 - `./start.sh launch --single` will launch a single app-server instance
-- `./start.sh launch --cluster` will launch a cluster of app-servers (i.e. will launch the example app)
-
+- `./start.sh launch --cluster` will launch a cluster of app-servers

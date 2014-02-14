@@ -4,6 +4,10 @@ brooklyn-sample
 This is a Sample Brooklyn project, showing how to define an application
 which Brooklyn will deploy and manage.
 
+This sample project is intended to be customized to suit your purposes: but
+search for all lines containing the word "sample" to make sure all the
+references to this being a sample are removed!   
+
 To build an assembly, simply run:
 
     mvn clean assembly:assembly
