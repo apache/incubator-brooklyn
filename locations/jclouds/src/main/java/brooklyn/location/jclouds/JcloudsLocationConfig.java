@@ -80,6 +80,8 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Minimum amount of RAM (in MB), for use in selecting the machine/hardware profile", null);
     public static final ConfigKey<Integer> MIN_CORES = new BasicConfigKey<Integer>(Integer.class, "minCores",
             "Minimum number of cores, for use in selecting the machine/hardware profile", null);
+    public static final ConfigKey<Double> MIN_DISK = new BasicConfigKey<Double>(Double.class, "minDisk",
+        "Minimum size of disk (in GB), for use in selecting the machine/hardware profile", null);
     public static final ConfigKey<String> HARDWARE_ID = ConfigKeys.newStringConfigKey("hardwareId",
             "A system-specific identifier for the hardware profile or machine type to be used when creating a VM", null);
     

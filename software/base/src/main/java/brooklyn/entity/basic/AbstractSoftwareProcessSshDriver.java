@@ -5,6 +5,7 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,11 +27,13 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -354,14 +357,28 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         // TODO use PAX-URL style URIs for maven artifacts
         if (resource.toLowerCase().matches("^https?://.*")) {
             // try resolving http resources remotely using curl
-            result = getMachine().execCommands(flags, "download-resource",
-                    ImmutableList.of(
-                            BashCommands.INSTALL_CURL,
-                            String.format("curl -f --silent --insecure %s -o %s", resource, dest)));
+            ProcessTaskWrapper<Integer> sshGet = SshEffectorTasks.ssh(
+                BashCommands.INSTALL_CURL,
+                String.format("curl -f --silent --insecure %s -o %s", resource, dest)).configure(flags).summary("downloading "+resource+" at server").newTask();
+            DynamicTasks.queueIfPossible(sshGet).orSubmitAsync(getEntity());
+            Tasks.setBlockingTask(sshGet.asTask());
+            try {
+                result = sshGet.block().get();
+            } finally { Tasks.setBlockingTask(null); }
+            
+            if (result!=0)
+                log.warn("URL "+resource+" is not accessible from "+getEntity()+"; will attempt to download then copy across");
         }
         // if not downloaded yet, retrieve locally and copy across
         if (result != 0) {
-            result = getMachine().copyTo(flags, getResource(resource), dest);
+            try {
+                Tasks.setBlockingDetails("retrieving resource "+resource+" for copying across");
+                InputStream r1 = getResource(resource);
+                Tasks.setBlockingDetails("copying resource "+resource+" to server");
+                result = getMachine().copyTo(flags, r1, dest);
+            } finally {
+                Tasks.setBlockingDetails(null);
+            }
         }
         if (log.isDebugEnabled())
             log.debug("Copied file for {}: {} to {} - result {}", new Object[] { entity, resource, dest, result });

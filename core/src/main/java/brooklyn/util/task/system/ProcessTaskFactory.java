@@ -5,6 +5,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.TaskFactory;
+import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.task.system.ProcessTaskStub.ScriptReturnType;
 
 import com.google.common.annotations.Beta;
@@ -31,7 +32,13 @@ public interface ProcessTaskFactory<T> extends TaskFactory<ProcessTaskWrapper<T>
     /** allows setting config-key based properties for specific underlying tools */
     @Beta
     public <V> ProcessTaskFactory<T> configure(ConfigKey<V> key, V value);
-    
+
+    /** allows setting config-key/flag based properties for specific underlying tools;
+     * but note that if any are prefixed with {@link SshTool#BROOKLYN_CONFIG_KEY_PREFIX}
+     * these should normally be filtered out */
+    @Beta
+    public ProcessTaskFactory<T> configure(Map<?,?> flags);
+
     /** adds a listener which will be notified of (otherwise) successful completion,
      * typically used to invalidate the result (ie throw exception, to promote a string in the output to an exception);
      * invoked even if return code is zero, so a better error can be thrown */

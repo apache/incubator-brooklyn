@@ -727,6 +727,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
                         tb.minCores(TypeCoercions.coerce(v, Double.class));
                     }})
+            .put(MIN_DISK, new CustomizeTemplateBuilder() {
+                    public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
+                        tb.minDisk(TypeCoercions.coerce(v, Double.class));
+                    }})
             .put(HARDWARE_ID, new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
                         tb.hardwareId(((CharSequence)v).toString());
