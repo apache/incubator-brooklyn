@@ -169,6 +169,13 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         config.configure(key, value);
         return self();
     }
+    
+    @Override
+    public T configure(Map<?, ?> flags) {
+        if (flags!=null)
+            config.putAll(flags);
+        return self();
+    }
  
     @Override
     public T addCompletionListener(Function<ProcessTaskWrapper<?>, Void> listener) {
