@@ -9,6 +9,7 @@ import io.brooklyn.camp.brooklyn.spi.platform.HasBrooklynManagementContext;
 import io.brooklyn.camp.spi.PlatformRootSummary;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ManagementContext.PropertiesReloadListener;
 
 /** {@link CampPlatform} implementation which includes Brooklyn entities 
  * (via {@link BrooklynImmutableCampPlatform})
@@ -25,6 +26,12 @@ public class BrooklynCampPlatform extends AggregatingCampPlatform implements Has
         
         addMatchers();
         addInterpreters();
+        
+        managementContext.registerPropertiesReloadListener(new PropertiesReloadListener() {
+            @Override public void reloaded() {
+                setConfigKeyAtManagmentContext();
+            }
+        });
     }
 
     // --- brooklyn setup

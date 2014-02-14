@@ -144,4 +144,18 @@ public interface ManagementContext {
      * @return 
      */
     void reloadBrooklynProperties();
+    
+    interface PropertiesReloadListener {
+        void reloaded();
+    }
+    
+    /**
+     * Registers a listener to be notified when brooklyn.properties is reloaded
+     */
+    void registerPropertiesReloadListener(PropertiesReloadListener listener);
+    
+    /**
+     * Deregisters a listener from brooklyn.properties reload notifications 
+     */
+    void deregisterPropertiesReloadListener(PropertiesReloadListener listener);
 }

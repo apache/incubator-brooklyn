@@ -308,6 +308,18 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         checkInitialManagementContextReal();
         initialManagementContext.reloadBrooklynProperties();
     }
+    
+    @Override
+    public void registerPropertiesReloadListener(PropertiesReloadListener listener) {
+        checkInitialManagementContextReal();
+        initialManagementContext.registerPropertiesReloadListener(listener);
+    }
+    
+    @Override
+    public void deregisterPropertiesReloadListener(PropertiesReloadListener listener) {
+        checkInitialManagementContextReal();
+        initialManagementContext.deregisterPropertiesReloadListener(listener);
+    }
 
     /**
      * For when the initial management context is not "real"; the changeListener is a no-op, but everything else forbidden.
