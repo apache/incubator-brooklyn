@@ -4,6 +4,7 @@ import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.List;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
@@ -25,25 +26,25 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class MongoDBShardedDeploymentImpl extends AbstractEntity implements MongoDBShardedDeployment {
-    private MongoDBRouterCluster routers;
-    private MongoDBShardCluster shards;
-    private MongoDBConfigServerCluster configServers;
 
     @Override
     public void init() {
-        configServers = addChild(EntitySpec.create(MongoDBConfigServerCluster.class)
-                .configure(DynamicCluster.INITIAL_SIZE, getConfig(CONFIG_CLUSTER_SIZE)));
-        routers = addChild(EntitySpec.create(MongoDBRouterCluster.class)
+        setAttribute(CONFIG_SERVER_CLUSTER, addChild(EntitySpec.create(MongoDBConfigServerCluster.class)
+                .configure(DynamicCluster.INITIAL_SIZE, getConfig(CONFIG_CLUSTER_SIZE))));
+        setAttribute(ROUTER_CLUSTER, addChild(EntitySpec.create(MongoDBRouterCluster.class)
                 .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_ROUTER_CLUSTER_SIZE))
-                .configure(MongoDBRouter.CONFIG_SERVERS, attributeWhenReady(configServers, MongoDBConfigServerCluster.SERVER_ADDRESSES)));
-        shards = addChild(EntitySpec.create(MongoDBShardCluster.class)
-                .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_SHARD_CLUSTER_SIZE)));
+                .configure(MongoDBRouter.CONFIG_SERVERS, attributeWhenReady(getAttribute(CONFIG_SERVER_CLUSTER), MongoDBConfigServerCluster.SERVER_ADDRESSES))));
+        setAttribute(SHARD_CLUSTER, addChild(EntitySpec.create(MongoDBShardCluster.class)
+                .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_SHARD_CLUSTER_SIZE))));
     }
 
     @Override
     public void start(Collection<? extends Location> locations) {
+        MongoDBRouterCluster routers = getAttribute(ROUTER_CLUSTER);
+        MongoDBShardCluster shards = getAttribute(SHARD_CLUSTER);
+        List<DynamicCluster> clusters = ImmutableList.of(getAttribute(CONFIG_SERVER_CLUSTER), routers, shards);
         try {
-            Entities.invokeEffectorList(this, ImmutableList.of(configServers, routers, shards), Startable.START, ImmutableMap.of("locations", locations))
+            Entities.invokeEffectorList(this, clusters, Startable.START, ImmutableMap.of("locations", locations))
                 .get();
             // wait for everything to start, then add the sharded servers
         } catch (Exception e) {
@@ -73,17 +74,34 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
     public void stop() {
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
         try {
-            Entities.invokeEffectorList(this, ImmutableList.of(configServers, routers, shards), Startable.STOP).get();
+            Entities.invokeEffectorList(this, ImmutableList.of(getAttribute(CONFIG_SERVER_CLUSTER), getAttribute(ROUTER_CLUSTER), 
+                    getAttribute(SHARD_CLUSTER)), Startable.STOP).get();
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPED);
         setAttribute(SERVICE_UP, false);
     }
-
+    
     @Override
     public void restart() {
         // TODO Auto-generated method stub
         
     }
+
+    @Override
+    public MongoDBConfigServerCluster getConfigCluster() {
+        return getAttribute(CONFIG_SERVER_CLUSTER);
+    }
+
+    @Override
+    public MongoDBRouterCluster getRouterCluster() {
+        return getAttribute(ROUTER_CLUSTER);
+    }
+
+    @Override
+    public MongoDBShardCluster getShardCluster() {
+        return getAttribute(SHARD_CLUSTER);
+    }
+
 }

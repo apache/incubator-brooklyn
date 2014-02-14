@@ -109,7 +109,7 @@ public class MongoDBClientSupport implements Closeable {
 
         Optional<CommandResult> result = runDBCommand("admin", dbObject);
         if (result.isPresent() && result.get().ok() && LOG.isDebugEnabled()) {
-            LOG.debug("Completed intiating MongoDB replica set {} on entity {}", replicaSetName, this);
+            LOG.debug("Completed initiating MongoDB replica set {} on entity {}", replicaSetName, this);
         }
         return result.isPresent() && result.get().ok();
     }
