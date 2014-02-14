@@ -3,10 +3,6 @@ package brooklyn.cli;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Duration;
 import groovy.lang.GroovyClassLoader;
 import io.airlift.command.Cli;
 import io.airlift.command.ParseException;
@@ -20,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -38,8 +35,11 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.test.Asserts;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -193,9 +193,13 @@ public class CliTest {
         assertFalse(t.isAlive());
     }
 
+    protected Cli<BrooklynCommand> buildCli() {
+        return new Main().cliBuilder().build();
+    }
+    
     @Test
     public void testLaunchCommandParsesArgs() throws ParseException {
-        BrooklynCommand command = Main.buildCli().parse("launch", 
+        BrooklynCommand command = buildCli().parse("launch", 
                 "--app", "my.App", 
                 "--location", "localhost",
                 "--port", "1234",
@@ -221,7 +225,7 @@ public class CliTest {
 
     @Test
     public void testLaunchCommandUsesDefaults() throws ParseException {
-        BrooklynCommand command = Main.buildCli().parse("launch");
+        BrooklynCommand command = buildCli().parse("launch");
         assertTrue(command instanceof LaunchCommand, ""+command);
         String details = command.toString();
         assertTrue(details.contains("app=null"), details);   
@@ -238,13 +242,27 @@ public class CliTest {
     }
 
     @Test
+    public void testLaunchCommandComplainsWithInvalidArgs() {
+        Cli<BrooklynCommand> cli = buildCli();
+        try {
+            BrooklynCommand command = cli.parse("launch", "invalid");
+            command.call();
+            Assert.fail("Should have thrown exception; instead got "+command);
+        } catch (ParseException e) {
+            /* expected */
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    @Test
     public void testAppOptionIsOptional() throws ParseException {
-        Cli<BrooklynCommand> cli = Main.buildCli();
+        Cli<BrooklynCommand> cli = buildCli();
         cli.parse("launch", "blah", "my.App");
     }
     
     public void testHelpCommand() {
-        Cli<BrooklynCommand> cli = Main.buildCli();
+        Cli<BrooklynCommand> cli = buildCli();
         BrooklynCommand command = cli.parse("help");
         assertTrue(command instanceof HelpCommand);
         command = cli.parse();
@@ -253,7 +271,7 @@ public class CliTest {
 
     @Test
     public void testLaunchWillStartAppWhenGivenImpl() throws Exception {
-        Cli<BrooklynCommand> cli = Main.buildCli();
+        Cli<BrooklynCommand> cli = buildCli();
         BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", ExampleApp.class.getName(), "--location", "localhost");
         submitCommandAndAssertRunnableSucceeds(command, new Runnable() {
                 public void run() {
@@ -265,7 +283,7 @@ public class CliTest {
 
     @Test
     public void testLaunchStartsYamlApp() throws Exception {
-        Cli<BrooklynCommand> cli = Main.buildCli();
+        Cli<BrooklynCommand> cli = buildCli();
         BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", "example-app.yaml", "--location", "localhost");
         submitCommandAndAssertRunnableSucceeds(command, new Runnable() {
                 public void run() {
