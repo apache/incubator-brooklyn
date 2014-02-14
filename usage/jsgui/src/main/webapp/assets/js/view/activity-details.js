@@ -48,6 +48,7 @@ define([
         subtasksTable: null,
         children: null,
         breadcrumbs: [],
+        firstLoad: true,
         events:{
             "click #activities-children-table .activity-table tr":"childrenRowClick",
             "click #activities-submitted-table .activity-table tr":"submittedRowClick",
@@ -57,16 +58,22 @@ define([
         },
         // requires taskLink or task; breadcrumbs is optional
         initialize:function () {
-            var that = this
-            this.taskLink = this.options.taskLink
-            if (this.options.task) {
-                this.task = this.options.task
-                if (!this.taskLink) this.taskLink = this.task.get('links').self
-            }
-            if (this.options.breadcrumbs) this.breadcrumbs = this.options.breadcrumbs
+            var that = this;
+            this.taskLink = this.options.taskLink;
+            this.taskId = this.options.taskId;
+            if (this.options.task)
+                this.task = this.options.task;
+            else if (this.options.tabView)
+                this.task = this.options.tabView.collection.get(this.taskId);
+            if (!this.taskLink && this.task) this.taskLink = this.task.get('links').self;
+            if (!this.taskLink && this.taskId) this.taskLink = "v1/activities/"+this.taskId;;
+            
+            this.tabView = this.options.tabView || null;
+            
+            if (this.options.breadcrumbs) this.breadcrumbs = this.options.breadcrumbs;
 
-            this.$el.html(this.template({ taskLink: this.taskLink, task: this.task, breadcrumbs: this.breadcrumbs }))
-            this.$el.addClass('activity-detail-panel')
+            this.$el.html(this.template({ taskLink: this.taskLink, taskId: this.taskId, task: this.task, breadcrumbs: this.breadcrumbs }));
+            this.$el.addClass('activity-detail-panel');
 
             this.childrenTable = makeActivityTable(this.$('#activities-children-table'));
             this.subtasksTable = makeActivityTable(this.$('#activities-submitted-table'));
@@ -76,13 +83,15 @@ define([
             if (this.task) {
                 this.renderTask()
                 this.setUpPolling()
-            } else {                
+            } else {      
+                ViewUtils.fadeToIndicateInitialLoad(this.$el);
                 this.$el.css('cursor', 'wait')
                 $.get(this.taskLink, function(data) {
+                    ViewUtils.cancelFadeOnceLoaded(that.$el);
                     that.task = new TaskSummary.Model(data)
                     that.renderTask()
                     that.setUpPolling();
-                })
+                }).fail(function() { log("unable to load "+that.taskLink) })
             }
 
             // initial subtasks may be available from parent, so try to render those
@@ -100,13 +109,31 @@ define([
         },
         renderTask: function() {
             // update task fields
-            var that = this
+            var that = this, firstLoad = this.firstLoad;
+            this.firstLoad = false;
+            
+            if (firstLoad  && this.task) {
+//                log("rendering "+firstLoad+" "+this.task.get('isError')+" "+this.task.id);
+                if (this.task.get('isError')) {
+                    // on first load, expand the details if there is a problem
+                    var $details = this.$(".toggler-region.task-detail .toggler-header");
+                    ViewUtils.showTogglerClickElement($details);
+                }
+            }
             
             this.updateFields('displayName', 'entityDisplayName', 'id', 'description', 'currentStatus', 'blockingDetails');
             this.updateFieldWith('blockingTask',
                 function(v) { 
-                    return "<a class='showDrillDownBlockerOfAnchor handy' link='"+_.escape(v.link)+"'>"+
+                    return "<a class='showDrillDownBlockerOfAnchor handy' link='"+_.escape(v.link)+"' id='"+v.metadata.id+"'>"+
                         that.displayTextForLinkedTask(v)+"</a>" })
+            this.updateFieldWith('result',
+                function(v) {
+                    if (v.toString().length<20 &&  !/\r|\n/.exec(v)) {
+                        return " with result: <span class='result-literal'>"+_.escape(v)+"</span>";
+                    } else {
+                        return "<div class='result-literal'>"+_.escape(v).replace(/\n+/g,"<br>")+"</div>"
+                    }
+                 })
             this.updateFieldWith('tags', function(tags) {
                 var tagBody = "";
                 for (var tag in tags)
@@ -121,10 +148,10 @@ define([
             this.updateFieldWith('endTimeUtc',
                 function(v) { return v <= 0 ? "-" : moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).from(startTimeUtc, true)+" later</i>" })
 
-            ViewUtils.updateTextareaWithData($(".task-json .for-textarea", this.$el), 
+            ViewUtils.updateTextareaWithData(this.$(".task-json .for-textarea"), 
                 FormatJSON(this.task.toJSON()), false, false, 150, 400)
 
-            ViewUtils.updateTextareaWithData($(".task-detail .for-textarea", this.$el), 
+            ViewUtils.updateTextareaWithData(this.$(".task-detail .for-textarea"), 
                 this.task.get('detailedStatus'), false, false, 30, 250)
 
             this.updateFieldWith('streams',
@@ -136,7 +163,7 @@ define([
                                   "<span class='activity-label'>"+
                                     _.escape(si)+
                                   "</span><span>"+
-                                      "<a href='"+sv.link+"'</a>download</a>"+
+                                      "<a href='"+sv.link+"'>download</a>"+
                                       (sv.metadata["sizeText"] ? " ("+_.escape(sv.metadata["sizeText"])+")" : "")+
                                   "</span></div>";
                     }
@@ -144,39 +171,45 @@ define([
                 })
 
             this.updateFieldWith('submittedByTask',
-                function(v) { return "<a class='showDrillDownSubmittedByAnchor handy' link='"+_.escape(v.link)+"'>"+
+                function(v) { return "<a class='showDrillDownSubmittedByAnchor handy' link='"+_.escape(v.link)+"' id='"+v.metadata.id+"'>"+
                     that.displayTextForLinkedTask(v)+"</a>" })
 
             if (this.task.get("children").length==0)
-                $('.toggler-region.tasks-children', this.$el).hide();
+                this.$('.toggler-region.tasks-children').hide();
         },
         setUpPolling: function() {
-                var that = this
-                
-                // on first load, clear any funny cursor
-                this.$el.css('cursor', 'auto')
-                
-                this.task.url = this.taskLink;
-                this.task.on("all", this.renderTask, this)
-                ViewUtils.fetchRepeatedlyWithDelay(this, this.task, { doitnow: true });
+            var that = this
+
+            // on first load, clear any funny cursor
+            this.$el.css('cursor', 'auto')
+
+            this.task.url = this.taskLink;
+            this.task.on("all", this.renderTask, this)
+            
+            ViewUtils.get(this, this.taskLink, function(data) {
+                // if we can get the data, then start fetching certain things repeatedly
+                // (would be good to skip the immediate "doitnow" below but not a big deal)
+                ViewUtils.fetchRepeatedlyWithDelay(that, that.task, { doitnow: true });
                 
                 // and set up to load children (now that the task is guaranteed to be loaded)
-                this.children = new TaskSummary.Collection()
-                this.children.url = this.task.get("links").children
-                this.children.on("reset", this.renderChildren, this)
-                ViewUtils.fetchRepeatedlyWithDelay(this, this.children, { 
-                    fetchOptions: { reset: true }, doitnow: true, fadeTarget: $('.tasks-children') });
-                
-                $.get(this.task.get("links").entity, function(entity) {
-                    if (that.collection==null || entity.links.activities != that.collection.url) {
-                        // need to rewire collection to point to the right ExecutionContext
-                        that.collection = new TaskSummary.Collection()
-                        that.collection.url = entity.links.activities
-                        that.collection.on("reset", this.renderSubtasks, this)
-                        ViewUtils.fetchRepeatedlyWithDelay(that, that.collection, { 
-                            fetchOptions: { reset: true }, doitnow: true, fadeTarget: $('.tasks-submitted') });
-                    }
-                });
+                that.children = new TaskSummary.Collection()
+                that.children.url = that.task.get("links").children
+                that.children.on("reset", that.renderChildren, that)
+                ViewUtils.fetchRepeatedlyWithDelay(that, that.children, { 
+                    fetchOptions: { reset: true }, doitnow: true, fadeTarget: that.$('.tasks-children') });
+            }).fail( function() { that.$('.toggler-region.tasks-children').hide() } );
+
+
+            $.get(this.task.get("links").entity, function(entity) {
+                if (that.collection==null || entity.links.activities != that.collection.url) {
+                    // need to rewire collection to point to the right ExecutionContext
+                    that.collection = new TaskSummary.Collection()
+                    that.collection.url = entity.links.activities
+                    that.collection.on("reset", this.renderSubtasks, this)
+                    ViewUtils.fetchRepeatedlyWithDelay(that, that.collection, { 
+                        fetchOptions: { reset: true }, doitnow: true, fadeTarget: this.$('.tasks-submitted') });
+                }
+            });
         },
         
         renderChildren: function() {
@@ -191,19 +224,21 @@ define([
                     ]; 
                 });
             if (children && children.length>0) {
-                $('.toggler-region.tasks-children', this.$el).show();
+                this.$('.toggler-region.tasks-children').show();
             } else {
-                $('.toggler-region.tasks-children', this.$el).hide();
+                this.$('.toggler-region.tasks-children').hide();
             }
         },
         renderSubtasks: function() {
             var that = this
+            var taskId = this.taskId || (this.task ? this.task.id : null);
             if (!this.collection) {
-                $('.toggler-region.tasks-submitted', this.$el).hide();
+                this.$('.toggler-region.tasks-submitted').hide();
                 return;
             }
-            if (this.task==null) {
-                log("task not yet available")
+            if (!taskId) {
+                // task not available yet; just wait for it to be loaded
+                // (and in worst case, if it can't be loaded, this panel stays faded)
                 return;
             } 
             
@@ -213,8 +248,8 @@ define([
             for (var taskI in this.collection.models) {
                 var task = this.collection.models[taskI]
                 var submittedBy = task.get("submittedByTask")
-                if (submittedBy!=null && submittedBy.metadata!=null && submittedBy.metadata["id"] == this.task.id &&
-                        this.children.get(task.id)==null) {
+                if (submittedBy!=null && submittedBy.metadata!=null && submittedBy.metadata["id"] == taskId &&
+                        (!this.children || this.children.get(task.id)==null)) {
                     subtasks.push(task)
                 }
             }
@@ -224,12 +259,12 @@ define([
                          task.get("displayName"),
                          task.get("submitTimeUtc") <= 0 ? "-" : moment(task.get("submitTimeUtc")).calendar(),
                          task.get("currentStatus")
-                    ]; 
+                    ];
                 });
             if (subtasks && subtasks.length>0) {
-                $('.toggler-region.tasks-submitted', this.$el).show();
+                this.$('.toggler-region.tasks-submitted').show();
             } else {
-                $('.toggler-region.tasks-submitted', this.$el).hide();
+                this.$('.toggler-region.tasks-submitted').hide();
             }
         },
         
@@ -250,61 +285,74 @@ define([
             var v = this.task.get(field)
             if (v !== undefined && v != null && 
                     (typeof v !== "object" || _.size(v) > 0)) {
-                $('.updateField-'+field, this.$el).html( f(v) );
-                $('.ifField-'+field, this.$el).show();
+                this.$('.updateField-'+field, this.$el).html( f(v) );
+                this.$('.ifField-'+field, this.$el).show();
             } else {
                 // blank if there is no value
-                $('.updateField-'+field, this.$el).empty();
-                $('.ifField-'+field, this.$el).hide();
+                this.$('.updateField-'+field).empty();
+                this.$('.ifField-'+field).hide();
             }
             return v
         },
         childrenRowClick:function(evt) {
-            var that = this;
             var row = $(evt.currentTarget).closest("tr");
-            var table = $(evt.currentTarget).closest(".activity-table");
             var id = row.attr("id");
-            this.showDrillDownTask("subtask of", this.children.get(id).get("links").self, this.children.get(id))
+            this.showDrillDownTask("subtask of", this.children.get(id).get("links").self, id, this.children.get(id))
         },
         submittedRowClick:function(evt) {
-            var that = this;
             var row = $(evt.currentTarget).closest("tr");
-            var table = $(evt.currentTarget).closest(".activity-table");
             var id = row.attr("id");
             // submitted tasks are guaranteed to be in the collection, so this is safe
-            this.showDrillDownTask("subtask of", this.collection.get(id).get('links').self)
+            this.showDrillDownTask("subtask of", this.collection.get(id).get('links').self, id)
         },
         
         showDrillDownSubmittedByAnchor: function(from) {
-            var link = $(from.target).closest('a').attr("link")
-            this.showDrillDownTask("submitter of", link)
+            var $a = $(from.target).closest('a');
+            this.showDrillDownTask("submitter of", $a.attr("link"), $a.attr("id"))
         },
         showDrillDownBlockerOfAnchor: function(from) {
-            var link = $(from.target).closest('a').attr("link")
-            this.showDrillDownTask("blocker of", link)
+            var $a = $(from.target).closest('a');
+            this.showDrillDownTask("blocker of", $a.attr("link"), $a.attr("id"))
         },
-        showDrillDownTask: function(relation, newTaskLink, newTask) {
-            log("activities deeper drill down - "+newTaskLink)
-            var $t = this.$el.closest('.slide-panel'),
-                $t2 = $t.after('<div>').next()
-            $t2.addClass('slide-panel')
+        showDrillDownTask: function(relation, newTaskLink, newTaskId, newTask) {
+//            log("activities deeper drill down - "+newTaskId +" / "+newTaskLink)
+            var that = this;
             
             var newBreadcrumbs = [ relation + ' ' +
                 this.task.get('entityDisplayName') + ' ' +
                 this.task.get('displayName') ].concat(this.breadcrumbs)
+                
             var activityDetailsPanel = new ActivityDetailsView({
                 taskLink: newTaskLink,
+                taskId: newTaskId,
                 task: newTask,
+                tabView: that.tabView,
                 collection: this.collection,
                 breadcrumbs: newBreadcrumbs
-            })
+            });
+            activityDetailsPanel.addToView(this.$el);
+        },
+        addToView: function(parent) {
+            if (this.parent) {
+                log("WARN: adding details to view when already added")
+                this.parent = parent;
+            }
+            
+            if (Backbone.history && (!this.tabView || !this.tabView.openingQueuedTasks)) {
+                Backbone.history.navigate(Backbone.history.fragment+"/"+"subtask"+"/"+this.taskId);
+            }
 
-            // load drill-down page
-            $t2.html(activityDetailsPanel.render().el)
+            var $t = parent.closest('.slide-panel');
+            var $t2 = $t.after('<div>').next();
+            $t2.addClass('slide-panel');
 
+            // load the drill-down page
+            $t2.html(this.render().el)
+
+            var speed = (!this.tabView || !this.tabView.openingQueuedTasks) ? 300 : 0;
             $t.animate({
                     left: -600
-                }, 300, function() { 
+                }, speed, function() { 
                     $t.hide() 
                 });
 
@@ -313,14 +361,21 @@ define([
                     , top: 0
                 }).animate({
                     left: 0
-                }, 300);
+                }, speed);
         },
         backDrillDown: function(event) {
-            log("activities drill back from "+this.taskLink)
+//            log("activities drill back from "+this.taskLink)
             var that = this
             var $t2 = this.$el.closest('.slide-panel')
             var $t = $t2.prev()
-            
+
+            if (Backbone.history) {
+                var fragment = Backbone.history.fragment
+                var thisLoc = fragment.indexOf("/subtask/"+this.taskId);
+                if (thisLoc>=0)
+                    Backbone.history.navigate( fragment.substring(0, thisLoc) );
+            }
+
             $t2.animate({
                     left: 569 //prevTable.width()
                 }, 300, function() {

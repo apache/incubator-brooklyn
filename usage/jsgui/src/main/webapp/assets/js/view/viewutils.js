@@ -187,6 +187,11 @@ define([
                 next.slideDown('fast');
             }
         },
+        showTogglerClickElement: function(root) {
+            root.removeClass("user-hidden");
+            $(".toggler-icon", root).removeClass("icon-chevron-left").addClass("icon-chevron-down");
+            root.next().slideDown('fast');
+        },
         updateTextareaWithData: function($div, data, showIfEmpty, doSlideDown, minPx, maxPx) {
             var $ta = $("textarea", $div);
             var show = showIfEmpty;
@@ -197,24 +202,25 @@ define([
                 $ta.val("");
             }
             if (show) {
-                ViewUtils.setHeightAutomatically($ta, minPx, maxPx, false)
+                this.setHeightAutomatically($ta, minPx, maxPx, false);
                 if (doSlideDown) { $div.slideDown(100); }
             } else {
                 $div.hide();
             }
         },
         setHeightAutomatically: function($ta, minPx, maxPx, deferred) {
-            var height = $ta.prop("scrollHeight");
+            var height = $ta.prop("scrollHeight"), that = this;
             if ($ta.css("padding-top")) height -= parseInt($ta.css("padding-top"), 10)
             if ($ta.css("padding-bottom")) height -= parseInt($ta.css("padding-bottom"), 10)
 //            log("scroll height "+height+" - old real height "+$ta.css("height"))
             if (height==0 && !deferred) {
-                _.defer(function() { ViewUtils.setHeightAutomatically($ta, minPx, maxPx, true) })
+                _.defer(function() { that.setHeightAutomatically($ta, minPx, maxPx, true) })
             } else {
                 height = Math.min(height, maxPx);
                 height = Math.max(height, minPx);
                 $ta.css("height", height);
             }
+            return height;
         },
         each: function(collection, fn) {
             if (_.isFunction(collection.each)) {
@@ -452,48 +458,79 @@ define([
                 setTimeout(fetcher, period);
             }
         },
+        /** @deprecated since 0.7.0 use computeStatusIconInfo */
         computeStatusIcon: function(serviceUp, lifecycleState) {
+            return this.computeStatusIconInfo(serviceUp, lifecycleState).url;
+        },
+        /** returns object with properties:
+         *  String word;
+         *  String url;
+         *  boolean problem;
+         */
+        computeStatusIconInfo: function(serviceUp, lifecycleState) {
+            var result = {};
+            
             if (lifecycleState != null)
                 lifecycleState = lifecycleState.toLowerCase();
             
             if (serviceUp===false || serviceUp=="false") serviceUp=false;
             else if (serviceUp===true || serviceUp=="true") serviceUp=true;
             else {
-                if (serviceUp!=null && serviceUp !== "" && serviceUp !== undefined) {
+                if (serviceUp!=null && serviceUp !== "" && serviceUp !== undefined && serviceUp.toLowerCase().indexOf("loading")<0) {
                     log("Unknown 'serviceUp' value:")
                     log(serviceUp)
                 }
                 serviceUp = null;
             }
-            var PATH = "/assets/img/";
+            var mode = null;
+            var imgext = "png";
+            var problem = false;
             
             if (lifecycleState=="running") {
-                if (serviceUp==false) return PATH+"icon-status-running-onfire.png";
-                return PATH+"icon-status-running.png";
+                if (serviceUp==false) {
+                    mode = "running-onfire";
+                    problem = true;
+                } else {
+                    mode = "running";
+                }
+            } else if (lifecycleState=="stopped" || lifecycleState=="created") {
+                if (serviceUp==true) {
+                    mode = "stopped-onfire";
+                    problem = true;
+                } else {
+                    mode = "stopped";
+                }
+            } else if (lifecycleState=="starting") {
+                mode = "starting";
+                imgext = "gif";  //animated
+            } else if (lifecycleState=="stopping") {
+                mode = "stopping";
+                imgext = "gif";  //animated
+            } else if (lifecycleState=="on-fire" || /* just in case */ lifecycleState=="onfire") {
+                mode = "onfire";
+                problem = true;
             }
-            if (lifecycleState=="stopped" || lifecycleState=="created") {
-                if (serviceUp==true) return PATH+"icon-status-stopped-onfire.png";
-                return PATH+"icon-status-stopped.png";
+            
+            if (mode==null) {
+                // no lifecycle state, rely on serviceUp
+                if (lifecycleState!=null && lifecycleState !== "" && lifecycleState !== undefined && lifecycleState.toLowerCase().indexOf("loading")<0) {
+                    log("Unknown 'lifecycleState' value:")
+                    log(lifecycleState)
+                }
+                if (serviceUp) mode = "running"; 
+                else if (serviceUp===false) mode = "stopped";
             }
-            if (lifecycleState=="starting") {
-                return PATH+"icon-status-starting.gif";
+
+            result.word = mode;
+            result.problem = problem;
+            if (mode==null) {
+                // no status info at all
+                result.url = null;
+            } else {
+                result.url = "/assets/img/"+"icon-status-"+mode+"."+imgext;
             }
-            if (lifecycleState=="stopping") {
-                return PATH+"icon-status-stopping.gif";
-            }
-            if (lifecycleState=="on-fire" || /* just in case */ lifecycleState=="onfire") {
-                return PATH+"icon-status-onfire.png";
-            }
-            if (lifecycleState!=null && lifecycleState !== "" && lifecycleState !== undefined) {
-                log("Unknown 'lifecycleState' value:")
-                log(lifecycleState)
-                return null;
-            }
-            // no lifecycle state, rely on serviceUp
-            if (serviceUp) return PATH+"icon-status-running.png"; 
-            if (serviceUp===false) return PATH+"icon-status-stopped.png";
-            // no status info at all
-            return null;
+            
+            return result;
         }
     };
     return ViewUtils;

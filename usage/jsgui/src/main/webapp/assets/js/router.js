@@ -54,7 +54,6 @@ define([
     var Router = Backbone.Router.extend({
         routes:{
             'v1/home':'homePage',
-            'v1/applications/:app/entities/:trail/:tab':'applicationsPage',
             'v1/applications/:app/entities/*trail':'applicationsPage',
             'v1/applications/*trail':'applicationsPage',
             'v1/applications':'applicationsPage',
@@ -110,7 +109,6 @@ define([
                     appRouter:that
                 })
                 that.showView("#application-content", appExplorer)
-                if (tab !== undefined) appExplorer.preselectTab(tab)
                 if (trail !== undefined) appExplorer.show(trail)
             }})
         },

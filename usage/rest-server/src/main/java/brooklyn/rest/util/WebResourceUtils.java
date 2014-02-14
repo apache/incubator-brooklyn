@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableMap;
 
 import brooklyn.rest.domain.ApiError;
+import brooklyn.util.collections.Jsonya;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 public class WebResourceUtils {
 
@@ -53,5 +55,28 @@ public class WebResourceUtils {
             return null;
         }
     }
-    
+
+    /** returns an object which jersey will handle nicely, converting to json,
+     * sometimes wrapping in quotes if needed (for outermost json return types) */ 
+    public static Object getValueForDisplay(Object value, boolean preferJson, boolean isJerseyReturnValue) {
+        
+        if (preferJson) {
+            if (value==null) return null;
+            Object result = Jsonya.convertToJsonPrimitive(value);
+            
+            if (isJerseyReturnValue) {
+                if (result instanceof String)
+                    // Jersey does not do json encoding if the return type is a string,
+                    // expecting the returner to do the json encoding himself
+                    // cf discussion at https://github.com/dropwizard/dropwizard/issues/231
+                    result = JavaStringEscapes.wrapJavaString((String)result);
+            }
+            
+            return result;
+        } else {
+            if (value==null) return "";
+            return value.toString();            
+        }
+    }
+
 }

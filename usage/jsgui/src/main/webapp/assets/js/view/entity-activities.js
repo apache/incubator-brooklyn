@@ -17,7 +17,6 @@ define([
         refreshActive:true,
         selectedId:null,
         selectedRow:null,
-        activityDetailsPanel:null,
         events:{
             "click #activities-root .activity-table tr":"rowClick",
             'click #activities-root .refresh':'refreshNow',
@@ -73,12 +72,39 @@ define([
         },
         render:function () {
             this.updateActivitiesNow();
+            var details = this.options.tabView ? this.options.tabView.options.preselectTabDetails : null;
+            if (details && details!=this.lastPreselectTabDetails) {
+                this.lastPreselectTabDetails = details;
+                // should be a path
+                this.queuedTasksToOpen = details.split("/");
+            }
+            this.tryOpenQueuedTasks();
             return this;
+        },
+        tryOpenQueuedTasks: function() {
+            if (!this.queuedTasksToOpen || this.tryingOpenQueuedTasks) return;
+            this.openingQueuedTasks = true;
+            var $lastActivityPanel = null;
+            while (true) {
+                var task = this.queuedTasksToOpen.shift();
+                if (task == undefined) {
+                    this.openingQueuedTasks = false;                    
+                    return;
+                }
+                if (task == 'subtask') {
+                    var subtask = this.queuedTasksToOpen.shift();
+                    $lastActivityPanel = this.showDrillDownTask(subtask, $lastActivityPanel);
+                } else {
+                    log("unknown queued task for activities panel: "+task)
+                    // skip it, just continue
+                }
+            }
         },
         beforeClose:function () {
             this.collection.off("reset", this.renderOnLoad);
         },
         renderOnLoad: function() {
+            this.loaded = true;
             this.render();
             ViewUtils.cancelFadeOnceLoaded(this.table);
         },
@@ -119,54 +145,32 @@ define([
             return this;
         },
         rowClick:function(evt) {
-            var that = this;
             var row = $(evt.currentTarget).closest("tr");
-            var table = $(evt.currentTarget).closest(".activity-table");
             var id = row.attr("id");
-            
             if (id==null)
                 // is the details row, ignore click here
                 return;
-
             this.showDrillDownTask(id);
             return;
-            // below this line in this function (and much of the other functions here)
-            // would replace the above to show an in-line short-form view of the task;
-            // drill-down is more useful however, i think
-
-            $(table).find("tr").removeClass("selected");
-            
-            if (this.selectedRow!=null) {
-                var r = this.selectedRow;
-                // slide it up, then close once it is hidden (else it vanishes suddenly)
-                // the slide effect isn't just cool, it helps keep rows in a visually consistent place
-                // (so that it doesn't just jump when you click, if a row above it was previously selected)
-                $('tr[#'+id+'] .opened-row-details').slideUp(300, function() { 
-                    that.table.fnClose(r);
-                })
-            }
-            
-            if (this.selectedId == id) {
-                // deselected
-                this.selectedRow = null;
-                this.selectedId = null;
-                this.hideFullActivity(id);
-            } else {
-                row.addClass("selected");
-                this.selectedRow = row[0];
-                this.selectedId = id;
-                this.table.fnOpen(row[0], '', 'row-expansion'); 
-                this.showDetailRow(false);
-            }
         },
-        showDetailRow: function(updateOnly) {
-//            // auto-drill-down -- useful for testing
-//            if (this.selectedId==null) {
-//                log("auto-selecting")
-//                this.selectedId = this.collection.models[0].get('id')
-//                this.showDrillDownTask(this.selectedId)
-//            }
+        showDrillDown: function(event) {
+            this.showDrillDownTask($(event.currentTarget).closest("td.row-expansion").attr("id"));
+        },
+        showDrillDownTask: function(taskId, optionalParent) {  
+//            log("showing initial drill down "+taskId)
+            var that = this;
             
+            var activityDetailsPanel = new ActivityDetailsView({
+                taskId: taskId,
+                tabView: that,
+                collection: this.collection,
+                breadcrumbs: ''
+            })
+            activityDetailsPanel.addToView(optionalParent || this.$(".activity-table"));
+            return activityDetailsPanel.$el;
+        },
+        
+        showDetailRow: function(updateOnly) {
             var id = this.selectedId,
                 that = this;
             if (id==null) return;
@@ -176,7 +180,7 @@ define([
                 var html = _.template(ActivityRowDetailsHtml, { 
                     task: task==null ? null : task.attributes,
                     link: that.model.getLinkByName("activities")+"/"+id,
-                    updateOnly: updateOnly 
+                    updateOnly: updateOnly
                 })
                 $('tr#'+id).next().find('td.row-expansion').html(html)
                 $('tr#'+id).next().find('td.row-expansion').attr('id', id)
@@ -221,34 +225,6 @@ define([
             var $details = $("td.row-expansion#"+id+" .expansion-footer");
             $details.slideUp(100);
         },
-        showDrillDown: function(event) {
-            this.showDrillDownTask($(event.currentTarget).closest("td.row-expansion").attr("id"));
-        },
-        showDrillDownTask: function(taskId) {    
-            this.activityDetailsPanel = new ActivityDetailsView({
-                task: this.collection.get(taskId),
-                collection: this.collection,
-                breadcrumbs: ''
-            })
-            var $t = this.$('#activities-root')
-            $t2 = $t.after('<div>').next()
-            $t2.addClass('slide-panel')
-            
-            $t2.html(this.activityDetailsPanel.render().el)
-
-            $t.animate({
-                    left: -600
-                }, 300, function() { 
-                    $t.hide() 
-                });
-
-            $t2.show().css({
-                    left: 600
-                    , top: 0
-                }).animate({
-                    left: 0
-                }, 300);
-        }
     });
 
     return ActivitiesView;

@@ -17,12 +17,13 @@
     <span class="updateField-description"/>
 </div>
 <div class="activity-details-section activity-status">
-    <span class="updateField-currentStatus"/>
+    <b><span class="updateField-currentStatus"/></b>
     <span class="ifField-blockingDetails hide">- <span class="updateField-blockingDetails"/></span>
     <span class="ifField-blockingTask hide"> (blocked on <span class="updateField-blockingTask"/>)</span>
+    <span class="updateField-result activity-detail-results"/>
 </div>
 
-  <div class="toggler-region task-detail">
+  <div class="toggler-region task-summary">
     <div class="toggler-header">
       <div class="toggler-icon icon-chevron-down"></div>
       <div><b>Summary</b></div>
@@ -31,7 +32,7 @@
 
 <div class="activity-details-section activity-name-and-id">
     <span class="activity-label">Name:</span> <span class="updateField-displayName">Loading...</span> <br/>
-    <span class="activity-label">ID:</span> <span class="updateField-id"><%= taskLink %></span>
+    <span class="activity-label">ID:</span> <span class="updateField-id"><%= taskId %></span>
 </div>
 <div class="activity-details-section activity-time">
     <!-- these are dynamic -->

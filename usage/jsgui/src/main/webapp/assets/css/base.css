@@ -39,7 +39,8 @@ add-app .tab-content-scroller {
     padding: 15px;
 }
 #application-content .tab-content {
-    max-height: 720px;
+    /* easier to scroll in the main window; but if we wanted to prevent it, we could with this */
+    /* max-height: 720px; */
     overflow: auto;
 }
 
@@ -662,6 +663,9 @@ line-height: 18px;
 .app-summary .inforow .info-name-value { white-space: nowrap; }
 .app-summary .inforow .info-name-value > div { display: inline-block; }
 .app-summary .inforow .info-name-value .name { font-weight: 700; width: 120px; padding-right: 12px; }
+.app-summary .additional-info-on-problem { color: #D01; }
+.app-summary .additional-info-on-problem a { color: #563; }
+a.open-tab { cursor: hand; cursor: pointer; }
 
 table.dataTable tbody td.row-expansion {
     background: #D8E4D0;
@@ -1288,6 +1292,16 @@ input[type="file"] {
 .activity-detail-panel .toggler-region.tasks-submitted .table-scroll-wrapper,
 .activity-detail-panel .toggler-region.tasks-children .table-scroll-wrapper {
     margin-bottom: 18px;
+}
+
+.activity-detail-results .result-literal {
+    font-style: italic;
+}
+.activity-detail-results div.result-literal {
+    margin-top: 12px;
+}
+.activity-detail-results div.result-literal br {
+    line-height: 24px;
 }
 
 .activity-tag-giftlabel {

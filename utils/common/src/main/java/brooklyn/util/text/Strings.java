@@ -98,7 +98,7 @@ public class Strings {
 	public static String removeFromEnd(String string, String ...suffixes) {
 	    if (isEmpty(string)) return string;
 		for (String suffix : suffixes)
-			if (string.endsWith(suffix)) return string.substring(0, string.length() - suffix.length());
+			if (suffix!=null && string.endsWith(suffix)) return string.substring(0, string.length() - suffix.length());
 		return string;
 	}
 
@@ -666,6 +666,12 @@ public class Strings {
      * in event of a tie, it uses the toString order */
     public static Ordering<String> lengthComparator() {
         return Ordering.<Integer>natural().onResultOf(StringFunctions.length()).compound(Ordering.<String>natural()).nullsFirst();
+    }
+
+    public static String getFirstLine(String s) {
+        int idx = s.indexOf('\n');
+        if (idx==-1) return s;
+        return s.substring(0, idx);
     }
     
 }

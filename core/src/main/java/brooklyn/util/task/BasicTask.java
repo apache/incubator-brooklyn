@@ -31,6 +31,7 @@ import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -453,46 +454,42 @@ public class BasicTask<T> implements TaskInternal<T> {
         } else if (isDone()) {
             long elapsed = endTimeUtc - submitTimeUtc;
             String duration = Time.makeTimeStringRounded(elapsed);
-            rv = "Ended ";
             if (isCancelled()) {
-                rv += "by cancellation";
+                rv = "Cancelled";
                 if (verbosity >= 1) rv+=" after "+duration;
                 
                 if (verbosity >= 2 && getExtraStatusText()!=null) {
                     rv += "\n\n"+getExtraStatusText();
                 }
             } else if (isError()) {
-                rv += "by error";
+                rv = "Failed";
                 if (verbosity >= 1) {
                     rv += " after "+duration;
-                    Object error;
-                    try { String rvx = ""+get(); error = "no error, return value "+rvx; /* shouldn't happen */ }
-                    catch (Throwable tt) { error = tt; }
+                    Throwable error = Tasks.getError(this);
 
                     if (verbosity >= 2 && getExtraStatusText()!=null) {
                         rv += "\n\n"+getExtraStatusText();
                     }
                     
                     //remove outer ExecException which is reported by the get(), we want the exception the task threw
-                    while (error instanceof ExecutionException) error = ((Throwable)error).getCause();
-                    String errorMessage = null;
-                    if (error instanceof Throwable) errorMessage = ((Throwable)error).getMessage();
-                    if (errorMessage==null || errorMessage.isEmpty()) errorMessage = ""+error;
+                    while (error instanceof ExecutionException) error = error.getCause();
+                    String errorMessage = Exceptions.collapseText(error);
 
-                    if (verbosity >= 1) rv += ": "+errorMessage;
+                    if (verbosity == 1) rv += ": "+abbreviate(errorMessage);
                     if (verbosity >= 2) {
+                        rv += ": "+errorMessage;
                         StringWriter sw = new StringWriter();
                         ((Throwable)error).printStackTrace(new PrintWriter(sw));
                         rv += "\n\n"+sw.getBuffer();
                     }
                 }
             } else {
-                rv += "normally";
+                rv = "Completed";
                 if (verbosity>=1) {
                     if (verbosity==1) {
                         try {
                             Object v = get();
-                            rv += ", " +(v==null ? "no return value (null)" : "result: "+v);
+                            rv += ", " +(v==null ? "no return value (null)" : "result: "+abbreviate(v.toString()));
                         } catch (Exception e) {
                             rv += ", but error accessing result ["+e+"]"; //shouldn't happen
                         }
@@ -515,6 +512,12 @@ public class BasicTask<T> implements TaskInternal<T> {
 			rv = getActiveTaskStatusString(verbosity);
         }
         return rv;
+    }
+    
+    private static String abbreviate(String s) {
+        s = Strings.getFirstLine(s);
+        if (s.length()>255) s = s.substring(0, 252)+ "...";
+        return s;
     }
 
 	protected String getActiveTaskStatusString(int verbosity) {
@@ -540,7 +543,7 @@ public class BasicTask<T> implements TaskInternal<T> {
 			//thread might have moved on to a new task; if so, recompute (it should now say "done")
 			return getStatusString(verbosity);
         
-        if (verbosity >= 1 && GroovyJavaMethods.truth(blockingDetails)) {
+        if (verbosity >= 1 && Strings.isNonBlank(blockingDetails)) {
             if (verbosity==1)
                 // short status string will just show blocking details
                 return blockingDetails;
@@ -548,7 +551,7 @@ public class BasicTask<T> implements TaskInternal<T> {
             rv = blockingDetails + "\n\n";
         }
         
-        if (verbosity >= 1 && GroovyJavaMethods.truth(blockingTask)) {
+        if (verbosity >= 1 && blockingTask!=null) {
             if (verbosity==1)
                 // short status string will just show blocking details
                 return "Waiting on "+blockingTask;
@@ -580,38 +583,33 @@ public class BasicTask<T> implements TaskInternal<T> {
 		            rv += "  (children not available - currently being modified)\n";
 		        }
 		    }
-//		    // TODO spawned tasks would be interesting, but hard to retrieve
-//		    // as we store execution context in thread local for the _task_;
-//		    // it isn't actually stored on the task itself so not available to
-//		    // 3rd party threads calling this extended toString method
 		    rv += "\n";
 		}
 		
 		LockInfo lock = ti.getLockInfo();
-		if (!GroovyJavaMethods.truth(lock) && ti.getThreadState()==Thread.State.RUNNABLE) {
-			//not blocked
-			if (ti.isSuspended()) {
-				// when does this happen?
-				rv += "Waiting";
-				if (verbosity >= 1) rv += ", thread suspended";
-			} else {
-				rv += "Running";
-				if (verbosity >= 1) rv += " ("+ti.getThreadState()+")";
-			}
-		} else {
-			rv += "Waiting";
-			if (verbosity>=1) {
-				if (ti.getThreadState() == Thread.State.BLOCKED) {
-					rv += " (mutex) on "+lookup(lock);
-					//TODO could say who holds it
-				} else if (ti.getThreadState() == Thread.State.WAITING) {
-					rv += " (notify) on "+lookup(lock);
-				} else if (ti.getThreadState() == Thread.State.TIMED_WAITING) {
-					rv += " (timed) on "+lookup(lock);
-				} else {
-					rv = " ("+ti.getThreadState()+") on "+lookup(lock);
-				}
-			}
+		rv += "In progress";
+		if (verbosity>=1) {
+		    if (lock==null && ti.getThreadState()==Thread.State.RUNNABLE) {
+		        //not blocked
+		        if (ti.isSuspended()) {
+		            // when does this happen?
+		            rv += ", thread suspended";
+		        } else {
+		            if (verbosity >= 2) rv += " ("+ti.getThreadState()+")";
+		        }
+		    } else {
+		        rv +=", thread waiting ";
+		        if (ti.getThreadState() == Thread.State.BLOCKED) {
+		            rv += "(mutex) on "+lookup(lock);
+		            //TODO could say who holds it
+		        } else if (ti.getThreadState() == Thread.State.WAITING) {
+		            rv += "(notify) on "+lookup(lock);
+		        } else if (ti.getThreadState() == Thread.State.TIMED_WAITING) {
+		            rv += "(timed) on "+lookup(lock);
+		        } else {
+		            rv = "("+ti.getThreadState()+") on "+lookup(lock);
+		        }
+		    }
 		}
 		if (verbosity>=2) {
 			StackTraceElement[] st = ti.getStackTrace();
@@ -626,7 +624,7 @@ public class BasicTask<T> implements TaskInternal<T> {
 	}
 	
     protected String lookup(LockInfo info) {
-        return GroovyJavaMethods.truth(info) ? ""+info : "unknown (sleep)";
+        return info!=null ? ""+info : "unknown (sleep)";
     }
 
     @Override

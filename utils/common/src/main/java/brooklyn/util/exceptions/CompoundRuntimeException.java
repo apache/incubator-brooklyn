@@ -28,8 +28,11 @@ public class CompoundRuntimeException extends RuntimeException {
     }
 
     public CompoundRuntimeException(String message, Iterable<? extends Throwable> causes) {
-        super(message, (Iterables.isEmpty(causes) ? null : Iterables.get(causes, 0)));
-        this.causes = ImmutableList.copyOf(causes);
+        this(message, (Iterables.isEmpty(causes) ? null : Iterables.get(causes, 0)), causes);
+    }
+    public CompoundRuntimeException(String message, Throwable primaryCauseToReport, Iterable<? extends Throwable> allCauses) {
+        super(message, primaryCauseToReport);
+        this.causes = ImmutableList.copyOf(allCauses);
     }
 
     public List<Throwable> getAllCauses() {

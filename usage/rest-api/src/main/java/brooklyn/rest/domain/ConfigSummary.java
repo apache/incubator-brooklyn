@@ -59,6 +59,7 @@ public abstract class ConfigSummary {
     this(config, null, null);
   }
 
+  @SuppressWarnings("rawtypes")
   protected ConfigSummary(ConfigKey<?> config, String label, Double priority) {
     this.name = config.getName();
     this.description = config.getDescription();

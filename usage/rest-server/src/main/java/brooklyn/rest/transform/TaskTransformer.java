@@ -19,6 +19,7 @@ import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.rest.domain.LinkWithMetadata;
 import brooklyn.rest.domain.TaskSummary;
+import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.TaskInternal;
@@ -82,11 +83,23 @@ public class TaskTransformer {
                 "children", new URI(selfLink+"/"+"children"));
         if (entityLink!=null) links.put("entity", entityLink);
         
+        Object result;
+        try {
+            if (task.isDone()) {
+                result = WebResourceUtils.getValueForDisplay(task.get(), true, false);
+            } else {
+                result = null;
+            }
+        } catch (Throwable t) {
+            result = Exceptions.collapseText(t);
+        }
+        
         return new TaskSummary(task.getId(), task.getDisplayName(), task.getDescription(), entityId, entityDisplayName, 
                 task.getTags(), ifPositive(task.getSubmitTimeUtc()), ifPositive(task.getStartTimeUtc()), ifPositive(task.getEndTimeUtc()),
-                task.getStatusSummary(), children, asLink(task.getSubmittedByTask()), 
-                task instanceof TaskInternal ? asLink(((TaskInternal<?>)task).getBlockingTask()) : null, 
-                task instanceof TaskInternal ? ((TaskInternal<?>)task).getBlockingDetails() : null, 
+                task.getStatusSummary(), result, task.isError(), task.isCancelled(),
+                children, asLink(task.getSubmittedByTask()), 
+                task.isDone() ? null : task instanceof TaskInternal ? asLink(((TaskInternal<?>)task).getBlockingTask()) : null, 
+                task.isDone() ? null : task instanceof TaskInternal ? ((TaskInternal<?>)task).getBlockingDetails() : null, 
                 task.getStatusDetail(true),
                 streams,
                 links);
