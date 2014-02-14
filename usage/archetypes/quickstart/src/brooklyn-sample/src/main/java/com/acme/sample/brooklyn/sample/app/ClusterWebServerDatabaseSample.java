@@ -97,7 +97,7 @@ public class ClusterWebServerDatabaseSample extends AbstractApplication {
         ControlledDynamicWebAppCluster web = addChild(
                 EntitySpec.create(ControlledDynamicWebAppCluster.class)
                         // set WAR to use, and port to use
-                        .configure(JavaWebAppService.ROOT_WAR, Entities.getRequiredUrlConfig(this, WAR_URL))
+                        .configure(JavaWebAppService.ROOT_WAR, getConfig(WAR_URL))
                         .configure(WebAppService.HTTP_PORT, PortRanges.fromString("8080+"))
                         
 //                        // optionally - use Tomcat instead of JBoss (default:
