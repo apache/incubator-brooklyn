@@ -221,7 +221,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
 
     // TODO exact copy of BRRU
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private <T extends Entity> brooklyn.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<?,?> configO) {
+    private <T extends Entity> EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<?,?> configO) {
         Map<?, ?> config = (configO == null) ? Maps.<Object,Object>newLinkedHashMap() : Maps.newLinkedHashMap(configO);
         
         EntitySpec result;
@@ -279,7 +279,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         Map<String, Object> attrs = MutableMap.copyOf(attrsOrig);
         String name = (String)attrs.remove("name");
         String id = (String)attrs.remove("id");
-        List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations((Map<String, Object>)attrs, true);
+        List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(attrs, true);
         
         EntitySpec<T> spec = EntitySpec.create(type);
         if (!Strings.isBlank(name))
@@ -309,7 +309,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         String name = template.getName();
         String id = template.getId();
         String planId = (String) customAttrs.remove("planId");
-        List<Location> childLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations((Map<String, Object>)customAttrs, true);
+        List<Location> childLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(customAttrs, true);
 
         EntitySpec<T> spec = EntitySpec.create(type);
         if (impl != null) spec.impl(impl);
@@ -442,8 +442,9 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
     private List<PolicySpec<?>> extractPolicySpecs(ManagementContext mgmt, Map<String, Object> attrs) {
         return buildPolicySpecs(mgmt, attrs.remove("brooklyn.policies"));
     }
+
     private List<PolicySpec<?>> buildPolicySpecs(ManagementContext mgmt, Object policies) {
-        List<PolicySpec<?>> policySpecs = new ArrayList<PolicySpec<? extends Policy>>(); 
+        List<PolicySpec<?>> policySpecs = new ArrayList<PolicySpec<?>>();
         if (policies instanceof Iterable) {
             for (Object policy : (Iterable<?>)policies) {
                 if (policy instanceof Map) {

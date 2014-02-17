@@ -33,6 +33,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+import com.google.common.reflect.TypeToken;
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
@@ -85,16 +86,18 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
             -1);
 
     @SetFromFlag("memberSpec")
-    public static final ConfigKey<EntitySpec<?>> MEMBER_SPEC = new BasicConfigKey(
-            EntitySpec.class, "dynamiccluster.memberspec", "entity spec for creating new cluster members", null);
+    public static final ConfigKey<EntitySpec<?>> MEMBER_SPEC = ConfigKeys.newConfigKey(
+            new TypeToken<EntitySpec<?>>() {
+            }, "dynamiccluster.memberspec", "entity spec for creating new cluster members", null);
 
     @SetFromFlag("factory")
     public static final ConfigKey<EntityFactory> FACTORY = new BasicConfigKey<EntityFactory>(
             EntityFactory.class, "dynamiccluster.factory", "factory for creating new cluster members", null);
 
     @SetFromFlag("removalStrategy")
-    public static final ConfigKey<Function<Collection<Entity>, Entity>> REMOVAL_STRATEGY = new BasicConfigKey(
-            Function.class, "dynamiccluster.removalstrategy", "strategy for deciding what to remove when down-sizing", null);
+    public static final ConfigKey<Function<Collection<Entity>, Entity>> REMOVAL_STRATEGY = ConfigKeys.newConfigKey(
+            new TypeToken<Function<Collection<Entity>, Entity>>() {},
+            "dynamiccluster.removalstrategy", "strategy for deciding what to remove when down-sizing", null);
     
     @SetFromFlag("customChildFlags")
     public static final ConfigKey<Map> CUSTOM_CHILD_FLAGS = new BasicConfigKey<Map>(
@@ -113,16 +116,21 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
             NodePlacementStrategy.class, "dynamiccluster.zone.placementStrategy", "Node placement strategy", new BalancingNodePlacementStrategy());
     
     @SetFromFlag("availabilityZoneNames")
-    ConfigKey<Collection<String>> AVAILABILITY_ZONE_NAMES = (ConfigKey) ConfigKeys.newConfigKey(
-            Collection.class, "dynamiccluster.availabilityZones", "availability zones to use (if non-null, overrides other configuration)", null);
+    ConfigKey<Collection<String>> AVAILABILITY_ZONE_NAMES = ConfigKeys.newConfigKey(
+            new TypeToken<Collection<String>>() {},
+            "dynamiccluster.availabilityZones", "availability zones to use (if non-null, overrides other configuration)", null);
     
     @SetFromFlag("numAvailabilityZones")
     ConfigKey<Integer> NUM_AVAILABILITY_ZONES = ConfigKeys.newIntegerConfigKey(
             "dynamiccluster.numAvailabilityZones", "number of availability zones to use (will attempt to auto-discover this number)", 3);
 
-    AttributeSensor<List<Location>> SUB_LOCATIONS = new BasicAttributeSensor(List.class, "dynamiccluster.subLocations", "Locations for each availability zone to use");
+    AttributeSensor<List<Location>> SUB_LOCATIONS = new BasicAttributeSensor<List<Location>>(
+            new TypeToken<List<Location>>() {},
+            "dynamiccluster.subLocations", "Locations for each availability zone to use");
     
-    AttributeSensor<Set<Location>> FAILED_SUB_LOCATIONS = new BasicAttributeSensor(Set.class, "dynamiccluster.failedSubLocations", "Sub locations that seem to have failed");
+    AttributeSensor<Set<Location>> FAILED_SUB_LOCATIONS = new BasicAttributeSensor<Set<Location>>(
+            new TypeToken<Set<Location>>() {},
+            "dynamiccluster.failedSubLocations", "Sub locations that seem to have failed");
     
     /**
      * 
