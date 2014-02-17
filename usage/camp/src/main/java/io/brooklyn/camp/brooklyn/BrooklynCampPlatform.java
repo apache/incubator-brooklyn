@@ -27,7 +27,7 @@ public class BrooklynCampPlatform extends AggregatingCampPlatform implements Has
         addMatchers();
         addInterpreters();
         
-        managementContext.registerPropertiesReloadListener(new PropertiesReloadListener() {
+        managementContext.addPropertiesReloadListener(new PropertiesReloadListener() {
             @Override public void reloaded() {
                 setConfigKeyAtManagmentContext();
             }

@@ -310,15 +310,15 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
     
     @Override
-    public void registerPropertiesReloadListener(PropertiesReloadListener listener) {
+    public void addPropertiesReloadListener(PropertiesReloadListener listener) {
         checkInitialManagementContextReal();
-        initialManagementContext.registerPropertiesReloadListener(listener);
+        initialManagementContext.addPropertiesReloadListener(listener);
     }
     
     @Override
-    public void deregisterPropertiesReloadListener(PropertiesReloadListener listener) {
+    public void removePropertiesReloadListener(PropertiesReloadListener listener) {
         checkInitialManagementContextReal();
-        initialManagementContext.deregisterPropertiesReloadListener(listener);
+        initialManagementContext.removePropertiesReloadListener(listener);
     }
 
     /**

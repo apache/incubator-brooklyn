@@ -313,12 +313,12 @@ public class LocalManagementContext extends AbstractManagementContext {
     }
 
     @Override
-    public void registerPropertiesReloadListener(PropertiesReloadListener listener) {
+    public void addPropertiesReloadListener(PropertiesReloadListener listener) {
         reloadListeners.add(listener);
     }
 
     @Override
-    public void deregisterPropertiesReloadListener(PropertiesReloadListener listener) {
+    public void removePropertiesReloadListener(PropertiesReloadListener listener) {
         reloadListeners.remove(listener);
     }
 }

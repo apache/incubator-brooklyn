@@ -152,10 +152,10 @@ public interface ManagementContext {
     /**
      * Registers a listener to be notified when brooklyn.properties is reloaded
      */
-    void registerPropertiesReloadListener(PropertiesReloadListener listener);
+    void addPropertiesReloadListener(PropertiesReloadListener listener);
     
     /**
      * Deregisters a listener from brooklyn.properties reload notifications 
      */
-    void deregisterPropertiesReloadListener(PropertiesReloadListener listener);
+    void removePropertiesReloadListener(PropertiesReloadListener listener);
 }
