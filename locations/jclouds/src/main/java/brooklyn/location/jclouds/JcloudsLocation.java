@@ -901,7 +901,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         if (templateBuilder instanceof PortableTemplateBuilder<?>) {
             if (((PortableTemplateBuilder<?>)templateBuilder).imageChooser()==null) {
-                templateBuilder.imageChooser(getConfig(JcloudsLocationConfig.IMAGE_CHOOSER));
+                templateBuilder.imageChooser(config.get(JcloudsLocationConfig.IMAGE_CHOOSER));
             } else {
                 // an image chooser is already set, so do nothing
             }
