@@ -122,7 +122,12 @@ public class KeyTransformingLoadingCache<A, B, V> extends AbstractLoadingCache<A
             super(delegate, keyTransformer);
         }
 
-        public static <A, V> KeyTransformingSameTypeLoadingCache<A, V> from(LoadingCache<A, V> delegate, Function<A, A> keyTransformer) {
+        // IDE note: This was named `from` to be consistent with KeyTransformingLoadingCache but Intellij 13
+        // claims a name clash with the superclass `from`:
+        // java: name clash: <A,V>from(LoadingCache<A,V>, Function<A,A>) in KeyTransformingSameTypeLoadingCache
+        // and <A,B,V>from(LoadingCache<B,V>, Function<A,B>) in KeyTransformingLoadingCache have the same erasure,
+        // yet neither hides the other
+        public static <A, V> KeyTransformingSameTypeLoadingCache<A, V> with(LoadingCache<A, V> delegate, Function<A, A> keyTransformer) {
             return new KeyTransformingSameTypeLoadingCache<A, V>(delegate, keyTransformer);
         }
     }
