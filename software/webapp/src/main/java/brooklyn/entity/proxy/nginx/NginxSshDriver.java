@@ -152,13 +152,14 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         cmds.add(BashCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
         cmds.addAll(BashCommands.commandsToDownloadUrlsAs(nginxUrls, nginxSaveAs));
 
+        String pcreExpandedInstallDirname = "";
         if (isMac) {
             String pcreVersion = entity.getConfig(NginxController.PCRE_VERSION);
             DownloadResolver pcreResolver = mgmt().getEntityDownloadsManager().newDownloader(
                     this, "pcre", ImmutableMap.of("addonversion", pcreVersion));
             List<String> pcreUrls = pcreResolver.getTargets();
             String pcreSaveAs = pcreResolver.getFilename();
-            String pcreExpandedInstallDirname = pcreResolver.getUnpackedDirectoryName("pcre-"+pcreVersion);
+            pcreExpandedInstallDirname = pcreResolver.getUnpackedDirectoryName("pcre-"+pcreVersion);
 
             // Install PCRE
             cmds.addAll(BashCommands.commandsToDownloadUrlsAs(pcreUrls, pcreSaveAs));
@@ -187,14 +188,21 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         if (isMac) withLdOpt = format("-L%s/pcre-dist/lib", getInstallDir()) + (Strings.isBlank(withLdOpt) ? "" : " " + withLdOpt);
         String withCcOpt = entity.getConfig(NginxController.WITH_CC_OPT);
 
-        cmds.addAll(ImmutableList.<String>of(
+        StringBuilder configureCommand = new StringBuilder("./configure")
+                .append(format(" --prefix=%s/dist", getExpandedInstallDir()))
+                .append(" --with-http_ssl_module")
+                .append(sticky ? format(" --add-module=%s ", stickyModuleExpandedInstallDir) : "")
+                .append(!Strings.isBlank(withLdOpt) ? format(" --with-ld-opt=\"%s\"", withLdOpt) : "")
+                .append(!Strings.isBlank(withCcOpt) ? format(" --with-cc-opt=\"%s\"", withCcOpt) : "")
+                ;
+        if (isMac) {
+            configureCommand.append(" --with-pcre=")
+                    .append(getInstallDir()).append("/").append(pcreExpandedInstallDirname);
+        }
+
+        cmds.addAll(ImmutableList.of(
                 "mkdir -p dist",
-                "./configure"+
-                    format(" --prefix=%s/dist", getExpandedInstallDir()) +
-                    " --with-http_ssl_module" +
-                    (sticky ? format(" --add-module=%s ", stickyModuleExpandedInstallDir) : "") +
-                    (!Strings.isBlank(withLdOpt) ? format(" --with-ld-opt=\"%s\"", withLdOpt) : "") +
-                    (!Strings.isBlank(withCcOpt) ? format(" --with-cc-opt=\"%s\"", withCcOpt) : "") ,
+                configureCommand.toString(),
                 "make install"));
 
         ScriptHelper script = newScript(INSTALLING)
