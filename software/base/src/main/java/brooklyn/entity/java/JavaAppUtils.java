@@ -133,7 +133,7 @@ public class JavaAppUtils {
                 windowPeriod));
     }
     
-    private static Function<Number,Double> times(final double x) {
+    public static Function<Number,Double> times(final double x) {
         return new Function<Number,Double>() {
             @Override public Double apply(Number input) {
                 if (input==null) return null;
@@ -142,7 +142,7 @@ public class JavaAppUtils {
         };
     }
         
-    private static Function<CompositeData, MemoryUsage> compositeDataToMemoryUsage() {
+    public static Function<CompositeData, MemoryUsage> compositeDataToMemoryUsage() {
         return new Function<CompositeData, MemoryUsage>() {
             @Override public MemoryUsage apply(CompositeData input) {
                 return (input == null) ? null : MemoryUsage.from(input);
