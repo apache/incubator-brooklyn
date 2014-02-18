@@ -8,7 +8,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.util.time.Duration;
 
@@ -201,13 +200,13 @@ public abstract class ForwardingTask<T> extends ForwardingObject implements Task
     }
 
     @Override
-    public void setBlockingDetails(String blockingDetails) {
-        delegate().setBlockingDetails(blockingDetails);
+    public String setBlockingDetails(String blockingDetails) {
+        return delegate().setBlockingDetails(blockingDetails);
     }
 
     @Override
-    public void setBlockingTask(Task<?> blockingTask) {
-        delegate().setBlockingTask(blockingTask);
+    public Task<?> setBlockingTask(Task<?> blockingTask) {
+        return delegate().setBlockingTask(blockingTask);
     }
 
     @Override

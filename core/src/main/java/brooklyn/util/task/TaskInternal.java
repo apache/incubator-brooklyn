@@ -48,10 +48,17 @@ public interface TaskInternal<T> extends Task<T> {
     /** allows a task user to specify why a task is blocked; for use immediately before a blocking/wait,
      * and typically cleared immediately afterwards; referenced by management api to inspect a task
      * which is blocking
+     * <p>
+     * returns previous details, in case caller wishes to recall and restore it (e.g. if it is doing a sub-blocking)
      */
-    void setBlockingDetails(String blockingDetails);
-    
-    void setBlockingTask(Task<?> blockingTask);
+    String setBlockingDetails(String blockingDetails);
+
+    /** as {@link #setBlockingDetails(String)} but records a task which is blocking,
+     * for use e.g. in a gui to navigate to the current active subtask
+     * <p>
+     * returns previous blocking task, in case caller wishes to recall and restore it
+     */
+    Task<?> setBlockingTask(Task<?> blockingTask);
     
     void resetBlockingDetails();
     

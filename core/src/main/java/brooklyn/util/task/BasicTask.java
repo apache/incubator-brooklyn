@@ -643,13 +643,17 @@ public class BasicTask<T> implements TaskInternal<T> {
      * which is blocking
      */
     @Override
-    public void setBlockingDetails(String blockingDetails) {
+    public String setBlockingDetails(String blockingDetails) {
+        String old = this.blockingDetails;
         this.blockingDetails = blockingDetails;
+        return old;
     }
     
     @Override
-    public void setBlockingTask(Task<?> blockingTask) {
+    public Task<?> setBlockingTask(Task<?> blockingTask) {
+        Task<?> old = this.blockingTask;
         this.blockingTask = blockingTask;
+        return old;
     }
     
     @Override

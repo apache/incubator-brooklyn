@@ -175,4 +175,9 @@ public class MutableList<V> extends ArrayList<V> {
         return modified;
     }
 
+    public boolean removeIfNotNull(V item) {
+        if (item==null) return false;
+        return remove(item);
+    }
+
 }

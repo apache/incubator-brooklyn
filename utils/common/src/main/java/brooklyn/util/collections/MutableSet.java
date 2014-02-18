@@ -134,4 +134,9 @@ public class MutableSet<V> extends LinkedHashSet<V> {
         return this;
     }
     
+    public boolean removeIfNotNull(V item) {
+        if (item==null) return false;
+        return remove(item);
+    }
+
 }
