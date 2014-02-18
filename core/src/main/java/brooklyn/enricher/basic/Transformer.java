@@ -17,9 +17,9 @@ import brooklyn.util.flags.TypeCoercions;
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;
 
+@SuppressWarnings("serial")
 public class Transformer<T,U> extends AbstractEnricher implements SensorEventListener<T> {
 
-    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(Transformer.class);
 
     public static ConfigKey<Function<?, ?>> TRANSFORMATION = ConfigKeys.newConfigKey(new TypeToken<Function<?, ?>>() {}, "enricher.transformation");
@@ -45,13 +45,22 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
         this.transformation = (Function<? super T, ? extends U>) getRequiredConfig(TRANSFORMATION);
         this.producer = getConfig(PRODUCER) == null ? entity: getConfig(PRODUCER);
         this.sourceSensor = (Sensor<T>) getRequiredConfig(SOURCE_SENSOR);
-        this.targetSensor = (Sensor<U>) getRequiredConfig(TARGET_SENSOR);
+        Sensor<?> targetSensorSpecified = getConfig(TARGET_SENSOR);
+        this.targetSensor = targetSensorSpecified!=null ? (Sensor<U>) targetSensorSpecified : (Sensor<U>) this.sourceSensor;
+        if (producer.equals(entity) && targetSensorSpecified==null) {
+            LOG.error("Refusing to add an enricher which reads and publishes on the same sensor: "+
+                producer+"."+sourceSensor+" (computing "+transformation+")");
+            // we don't throw because this error may manifest itself after a lengthy deployment, 
+            // and failing it at that point simply because of an enricher is not very pleasant
+            // (at least not until we have good re-run support across the board)
+            return;
+        }
+        
         subscribe(producer, sourceSensor, this);
         
         if (sourceSensor instanceof AttributeSensor) {
             Object value = producer.getAttribute((AttributeSensor<?>)sourceSensor);
-            // TODO Aled didn't you write a convenience to "subscribeAndRunIfSet" ? (-Alex)
-            //      Unfortunately not yet!
+            // TODO would be useful to have a convenience to "subscribeAndThenIfItIsAlreadySetRunItOnce"
             if (value!=null) {
                 onEvent(new BasicSensorEvent(sourceSensor, producer, value));
             }
