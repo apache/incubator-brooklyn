@@ -59,6 +59,7 @@ import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
+import com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
@@ -262,7 +263,10 @@ public class BrooklynWebServer {
         // load all our REST API modules, JSON, and Swagger
         for (Object r: BrooklynRestApi.getAllResources())
             config.getSingletons().add(r);
-        
+
+        // Accept gzipped requests and responses
+        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_REQUEST_FILTERS, GZIPContentEncodingFilter.class.getName());
+        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, GZIPContentEncodingFilter.class.getName());
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
         config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/asserts/[^?]+\\.[A-Za-z0-9_]+)");
@@ -270,7 +274,7 @@ public class BrooklynWebServer {
         config.getFeatures().put(ServletContainer.FEATURE_FILTER_FORWARD_ON_404, true);
         // finally create this as a _filter_ which falls through to a web app or something (optionally)
         FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
-        
+
         context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
     }
 
@@ -304,10 +308,10 @@ public class BrooklynWebServer {
         if (log.isDebugEnabled())
             log.debug("Starting Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
         
-        if(getHttpsEnabled()){
+        if (getHttpsEnabled()) {
             //by default the server is configured with a http connector, this needs to be removed since we are going
             //to provide https
-            for(Connector c: server.getConnectors()){
+            for (Connector c: server.getConnectors()) {
                 server.removeConnector(c);
             }
 
