@@ -34,6 +34,8 @@ public class MongoDBShardedDeploymentEc2LiveTest extends AbstractEc2LiveTest {
                 .configure(MongoDBShardedDeployment.INITIAL_SHARD_CLUSTER_SIZE, SHARD_CLUSTER_SIZE));
 
         app.start(ImmutableList.of(loc));
+        
+        Entities.dumpInfo(app);
 
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Callable<Boolean>() {
             @Override
@@ -47,8 +49,5 @@ public class MongoDBShardedDeploymentEc2LiveTest extends AbstractEc2LiveTest {
                 return true;
             }
         });
-        
-        Entities.dumpInfo(app);
     }
-
 }

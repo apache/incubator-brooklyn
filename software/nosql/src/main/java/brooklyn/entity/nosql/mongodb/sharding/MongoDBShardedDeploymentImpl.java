@@ -6,6 +6,9 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
@@ -17,15 +20,20 @@ import brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
 import brooklyn.entity.nosql.mongodb.MongoDBServer;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class MongoDBShardedDeploymentImpl extends AbstractEntity implements MongoDBShardedDeployment {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBShardedDeploymentImpl.class);
 
     @Override
     public void init() {
@@ -40,34 +48,46 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
 
     @Override
     public void start(Collection<? extends Location> locations) {
-        MongoDBRouterCluster routers = getAttribute(ROUTER_CLUSTER);
-        MongoDBShardCluster shards = getAttribute(SHARD_CLUSTER);
+        final MongoDBRouterCluster routers = getAttribute(ROUTER_CLUSTER);
+        final MongoDBShardCluster shards = getAttribute(SHARD_CLUSTER);
         List<DynamicCluster> clusters = ImmutableList.of(getAttribute(CONFIG_SERVER_CLUSTER), routers, shards);
+        // TODO: Ensure that the routers are only added once
+        subscribe(shards, MongoDBReplicaSet.SERVICE_UP, new SensorEventListener<Boolean>() {
+            public void onEvent(SensorEvent<Boolean> event) {
+                if (event.getValue()) {
+                    // TODO: Throw exception if shard cannot be added, or set shard on fire?
+                    // TODO: What to do if there are no routers (yet)
+                    // Shards are added via a router, but only need to be added to one router. The other routers will read the shard configuration from the config servers
+                    MongoDBRouter router = (MongoDBRouter) Iterables.getFirst(routers.getMembers(), null);
+                    // TODO: Get the wait duration from a config key
+                    router.waitForServiceUp(Duration.FIVE_MINUTES);
+                    MongoDBClientSupport client;
+                    try {
+                        client = MongoDBClientSupport.forServer(router);
+                    } catch (UnknownHostException e) {
+                        throw Exceptions.propagate(e);
+                    }
+                    for (Entity entity : shards.getMembers()) {
+                        MongoDBReplicaSet replicaSet = (MongoDBReplicaSet) entity;
+                        MongoDBServer primary = null;
+                        primary = replicaSet.getAttribute(MongoDBReplicaSet.PRIMARY_ENTITY);
+                        String replicaSetURL = replicaSet.getName() + "/"
+                                + Strings.removeFromStart(primary.getAttribute(MongoDBServer.MONGO_SERVER_ENDPOINT), "http://");
+                        LOG.info("Using {} to add shard URL {}...", router, replicaSetURL);
+                        client.addShardToRouter(replicaSetURL);
+                    }
+                    // FIXME: Check if service is up, call checkSensors
+                    setAttribute(SERVICE_UP, true);
+                }
+            }
+        });
         try {
             Entities.invokeEffectorList(this, clusters, Startable.START, ImmutableMap.of("locations", locations))
-                .get();
+            .get();
             // wait for everything to start, then add the sharded servers
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
-        // TODO: What to do if there are no routers (yet)
-        // Shards are added via a router, but only need to be added to one router. The other routers will read the shard configuration from the config servers
-        MongoDBRouter router = (MongoDBRouter) Iterables.getFirst(routers.getMembers(), null);
-        MongoDBClientSupport client;
-        try {
-            client = MongoDBClientSupport.forServer(router);
-        } catch (UnknownHostException e) {
-            throw Exceptions.propagate(e);
-        }
-        for (Entity entity : shards.getMembers()) {
-            MongoDBReplicaSet replicaSet = (MongoDBReplicaSet)entity;
-            
-            String replicaSetURL = replicaSet.getName() + "/" + Strings.removeFromStart(replicaSet.getPrimary().getAttribute(MongoDBServer.MONGO_SERVER_ENDPOINT), "http://");
-            // TODO: Throw exception if shard cannot be added, or set shard on fire?
-            client.addShardToRouter(replicaSetURL);
-        }
-        // FIXME: Check if service is up, call checkSensors
-        setAttribute(SERVICE_UP, true);
     }
 
     @Override
