@@ -51,10 +51,11 @@ public abstract class AbstractYamlTest {
     }
 
     protected Entity createAndStartApplication(String yamlFileName, String ...extraLines) throws Exception {
-        String yaml = new ResourceUtils(this).getResourceAsString(yamlFileName).trim();
+        String input = new ResourceUtils(this).getResourceAsString(yamlFileName).trim();
+        StringBuilder builder = new StringBuilder(input);
         for (String l: extraLines)
-            yaml += "\n"+l;
-        return createAndStartApplication(Streams.newReaderWithContents(yaml));
+            builder.append("\n").append(l);
+        return createAndStartApplication(Streams.newReaderWithContents(builder.toString()));
     }
 
     private Entity createAndStartApplication(Reader input) throws Exception {

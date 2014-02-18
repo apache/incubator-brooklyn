@@ -1,5 +1,8 @@
 package io.brooklyn.camp.brooklyn;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +19,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.group.DynamicCluster;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.internal.EntityManagerInternal;
@@ -25,6 +29,7 @@ import brooklyn.util.collections.MutableMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 @Test
 public class EntitiesYamlTest extends AbstractYamlTest {
@@ -436,6 +441,24 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(appLocation.getDisplayName(), "byon name");
         Location entityLocation = entity.getLocations().iterator().next();
         Assert.assertEquals(entityLocation.getDisplayName(), "localhost name");
+    }
+
+    @Test
+    public void testCreateClusterWithMemberSpec() throws Exception {
+        Entity app = createAndStartApplication("test-cluster-with-member-spec.yaml");
+        waitForApplicationTasks(app);
+        assertEquals(app.getChildren().size(), 1);
+
+        Entity clusterEntity = Iterables.getOnlyElement(app.getChildren());
+        assertTrue(clusterEntity instanceof DynamicCluster, "cluster="+clusterEntity);
+
+        DynamicCluster cluster = DynamicCluster.class.cast(clusterEntity);
+        assertEquals(cluster.getMembers().size(), 2, "members="+cluster.getMembers());
+
+        for (Entity member : cluster.getMembers()) {
+            assertTrue(member instanceof TestEntity, "member="+member);
+            assertEquals(member.getConfig(TestEntity.CONF_NAME), "yamlTest");
+        }
     }
 
     protected Logger getLogger() {

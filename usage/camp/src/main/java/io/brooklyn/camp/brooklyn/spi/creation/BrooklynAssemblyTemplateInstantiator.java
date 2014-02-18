@@ -1,5 +1,7 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatform;
@@ -93,7 +95,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
 
     protected Application createApplicationFromCatalog(CampPlatform platform, CatalogItem<?> item, AssemblyTemplate template) {
         ManagementContext mgmt = getBrooklynManagementContext(platform);
-        BrooklynCatalog catalog = mgmt.getCatalog();
 
         if (!template.getApplicationComponentTemplates().isEmpty() ||
                 !template.getPlatformComponentTemplates().isEmpty())
@@ -111,7 +112,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         if (Strings.isEmpty(type)) {
             clazz = BasicApplication.class;
         } else {
-            clazz = loadEntityType(catalog, type);
+            clazz = new BrooklynEntityClassResolver(type).apply(mgmt);
         }
         
         try {
@@ -159,25 +160,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
     }
 
     @SuppressWarnings("unchecked")
-    protected Class<? extends Entity> loadEntityType(BrooklynCatalog catalog, String type) {
-        final Class<? extends Entity> clazz;
-        Class<? extends Entity> tempclazz;
-        try {
-            tempclazz = catalog.loadClassByType(type, Entity.class);
-        } catch (NoSuchElementException e) {
-            try {
-                tempclazz = (Class<? extends Entity>) catalog.getRootClassLoader().loadClass(type);
-                log.debug("Catalog does not contain item for type {}; loaded class directly instead", type);
-            } catch (ClassNotFoundException e2) {
-                log.warn("No catalog item for type {}, and could not load class directly; rethrowing", type);
-                throw e;
-            }
-        }
-        clazz = tempclazz;
-        return clazz;
-    }
-
-    @SuppressWarnings("unchecked")
     protected <T> Class<T> loadClass(BrooklynCatalog catalog, String type) throws ClassNotFoundException {
         try {
             Class<T> result = (Class<T>) catalog.getRootClassLoader().loadClass(type);
@@ -222,7 +204,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
     // TODO exact copy of BRRU
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private <T extends Entity> EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<?,?> configO) {
-        Map<?, ?> config = (configO == null) ? Maps.<Object,Object>newLinkedHashMap() : Maps.newLinkedHashMap(configO);
+        Map<?, ?> config = (configO == null) ? Maps.newLinkedHashMap() : Maps.newLinkedHashMap(configO);
         
         EntitySpec result;
         if (clazz.isInterface()) {
@@ -335,7 +317,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         Set<String> keyNamesUsed = new LinkedHashSet<String>();
         for (FlagConfigKeyAndValueRecord r: records) {
             if (r.getFlagMaybeValue().isPresent()) {
-                spec.configure(r.getFlagName(), r.getFlagMaybeValue().get());
+                Object transformed = transformSpecialFlags(r.getFlagMaybeValue().get(), mgmt);
+                spec.configure(r.getFlagName(), transformed);
                 keyNamesUsed.add(r.getFlagName());
             }
             if (r.getConfigKeyMaybeValue().isPresent()) {
@@ -355,17 +338,29 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         }
     }
 
+    /**
+     * Makes additional transformations to the given flag with the extra knowledge of the flag's management context.
+     * @return The modified flag, or the flag unchanged.
+     */
+    protected Object transformSpecialFlags(Object flag, ManagementContext mgmt) {
+        if (flag instanceof BrooklynEntityClassResolver) {
+            BrooklynEntityClassResolver specResolver = (BrooklynEntityClassResolver) flag;
+            Class<? extends Entity> specClass = specResolver.apply(mgmt);
+            return buildSpec(mgmt, specClass, specResolver.getSpecConfiguration());
+        }
+        return flag;
+    }
+
     /*
      * recursive method that finds child entities referenced in the config map, side-effecting the entities and entitySpecs maps.
      */
     @SuppressWarnings("unchecked")
     protected void buildEntityHierarchy(ManagementContext mgmt, Map<Entity, EntitySpec<?>> entitySpecs, Entity parent, List<Map<String, Object>> childConfig) {
         if (childConfig != null) {
-            BrooklynCatalog catalog = mgmt.getCatalog();
             for (Map<String, Object> childAttrs : childConfig) {
                 MutableMap<String, Object> childAttrsMutable = MutableMap.copyOf(childAttrs);
                 String bTypeName = Strings.removeFromStart((String)childAttrsMutable.remove("serviceType"), "brooklyn:");
-                final Class<? extends Entity> bType = loadEntityType(catalog, bTypeName);
+                final Class<? extends Entity> bType = new BrooklynEntityClassResolver(bTypeName).apply(mgmt);
 
                 final EntitySpec<? extends Entity> spec = buildSpec(mgmt, bType, childAttrsMutable);
                 spec.parent(parent);
@@ -381,7 +376,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
     protected Application createApplicationFromNonCatalogCampTemplate(AssemblyTemplate template, CampPlatform platform) {
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
         final ManagementContext mgmt = getBrooklynManagementContext(platform);
-        final BrooklynCatalog catalog = mgmt.getCatalog();
 
         Map<Entity, EntitySpec<?>> entitySpecs = Maps.newLinkedHashMap();
         
@@ -395,7 +389,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             final PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             final String bTypeName = Strings.removeFromStart(appChildComponentTemplate.getType(), "brooklyn:");
-            final Class<? extends Entity> bType = loadEntityType(catalog, bTypeName);
+            final Class<? extends Entity> bType = new BrooklynEntityClassResolver(bTypeName).apply(mgmt);
 
             final EntitySpec<? extends Entity> spec = buildSpec(mgmt, bType, appChildComponentTemplate);
             spec.parent(app);
