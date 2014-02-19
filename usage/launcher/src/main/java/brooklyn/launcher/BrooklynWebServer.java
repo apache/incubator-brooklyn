@@ -269,7 +269,7 @@ public class BrooklynWebServer {
         config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, GZIPContentEncodingFilter.class.getName());
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
-        config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/asserts/[^?]+\\.[A-Za-z0-9_]+)");
+        config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
         // and anything which is not matched as a servlet also falls through (but more expensive than a regex check?)
         config.getFeatures().put(ServletContainer.FEATURE_FILTER_FORWARD_ON_404, true);
         // finally create this as a _filter_ which falls through to a web app or something (optionally)
