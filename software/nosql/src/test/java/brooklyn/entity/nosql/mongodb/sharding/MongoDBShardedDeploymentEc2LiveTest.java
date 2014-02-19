@@ -18,6 +18,14 @@ import brooklyn.test.Asserts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+/**
+ * NOTE: These test will provision 9 machines in AWS, which can cause 'Request limit exceeded' and
+ * 'Exhausted available authentication methods' exceptions, depending upon current AWS load. You can
+ * mitigate this issue by adding the following lines to your brooklyn.properties:
+ *
+ * brooklyn.location.jclouds.machineCreateAttempts=3
+ * brooklyn.jclouds.aws-ec2.maxConcurrentMachineCreations=5
+ */
 @Test
 public class MongoDBShardedDeploymentEc2LiveTest extends AbstractEc2LiveTest {
 

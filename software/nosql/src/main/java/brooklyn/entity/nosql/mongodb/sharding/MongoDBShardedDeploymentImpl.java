@@ -5,6 +5,7 @@ import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,6 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +34,9 @@ import com.google.common.collect.Iterables;
 public class MongoDBShardedDeploymentImpl extends AbstractEntity implements MongoDBShardedDeployment {
     
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBShardedDeploymentImpl.class);
+    
+    // Used to ensure that the shards on only added the first time that SERVICE_UP is set on the shard cluster
+    private AtomicBoolean shardsAdded = new AtomicBoolean(false);
 
     @Override
     public void init() {
@@ -51,16 +54,13 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
         final MongoDBRouterCluster routers = getAttribute(ROUTER_CLUSTER);
         final MongoDBShardCluster shards = getAttribute(SHARD_CLUSTER);
         List<DynamicCluster> clusters = ImmutableList.of(getAttribute(CONFIG_SERVER_CLUSTER), routers, shards);
-        // TODO: Ensure that the routers are only added once
         subscribe(shards, MongoDBReplicaSet.SERVICE_UP, new SensorEventListener<Boolean>() {
             public void onEvent(SensorEvent<Boolean> event) {
-                if (event.getValue()) {
-                    // TODO: Throw exception if shard cannot be added, or set shard on fire?
+                if (event.getValue() && shardsAdded.compareAndSet(false, true)) {
                     // TODO: What to do if there are no routers (yet)
                     // Shards are added via a router, but only need to be added to one router. The other routers will read the shard configuration from the config servers
                     MongoDBRouter router = (MongoDBRouter) Iterables.getFirst(routers.getMembers(), null);
-                    // TODO: Get the wait duration from a config key
-                    router.waitForServiceUp(Duration.FIVE_MINUTES);
+                    router.waitForServiceUp(getConfig(ROUTER_UP_TIMEOUT));
                     MongoDBClientSupport client;
                     try {
                         client = MongoDBClientSupport.forServer(router);
@@ -83,8 +83,7 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
         });
         try {
             Entities.invokeEffectorList(this, clusters, Startable.START, ImmutableMap.of("locations", locations))
-            .get();
-            // wait for everything to start, then add the sharded servers
+                .get();
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
