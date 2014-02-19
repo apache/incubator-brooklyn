@@ -1,14 +1,5 @@
 package brooklyn.location.jclouds;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.concurrent.Semaphore;
-
-import org.jclouds.Constants;
-import org.jclouds.compute.domain.Image;
-import org.jclouds.compute.domain.TemplateBuilder;
-import org.jclouds.domain.LoginCredentials;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
@@ -18,9 +9,16 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
 import brooklyn.util.internal.ssh.SshTool;
-
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;
+import org.jclouds.Constants;
+import org.jclouds.compute.domain.Image;
+import org.jclouds.compute.domain.TemplateBuilder;
+import org.jclouds.domain.LoginCredentials;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.concurrent.Semaphore;
 
 public interface JcloudsLocationConfig extends CloudLocationConfig {
 

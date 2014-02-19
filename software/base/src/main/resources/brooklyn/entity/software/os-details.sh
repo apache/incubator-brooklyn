@@ -21,6 +21,16 @@ elif [ -f /etc/redhat-release ]; then
     # Match everything between 'release ' and the next space
     VERSION_ID=$(cat /etc/redhat-release | sed 's/.*release \([^ ]*\).*/\1/')
 
+# Try Ubuntu
+elif [ -f /etc/lsb-release ]; then
+    # Example: DISTRIB_ID=Ubuntu
+    #          DISTRIB_RELEASE=12.04
+    #          DISTRIB_CODENAME=precise
+    #          DISTRIB_DESCRIPTION="Ubuntu 12.04 LTS"
+    NAME=$(cat /etc/lsb-release| grep DISTRIB_ID= | sed 's/DISTRIB_ID=//')
+    # Match everything between 'release ' and the next space
+    VERSION_ID=$(cat /etc/lsb-release| grep DISTRIB_RELEASE= | sed 's/DISTRIB_RELEASE=//')
+
 # Try OSX
 elif command -v sw_vers >/dev/null 2>&1; then
     NAME=$(sw_vers -productName)

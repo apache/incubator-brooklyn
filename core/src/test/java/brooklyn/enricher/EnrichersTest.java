@@ -1,12 +1,5 @@
 package brooklyn.enricher;
 
-import java.util.Collection;
-import java.util.Set;
-
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
@@ -19,13 +12,18 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.text.StringFunctions;
-
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.util.Collection;
+import java.util.Set;
 
 public class EnrichersTest {
 
@@ -210,7 +208,7 @@ public class EnrichersTest {
         entity2.setAttribute(STR1, "4");
         EntityTestUtils.assertAttributeEqualsEventually(group, SET1, ImmutableSet.<Object>of("4"));
     }
-    
+
     @Test
     public void testAggregatingExcludingNull() {
         group.addMember(entity);
@@ -237,7 +235,7 @@ public class EnrichersTest {
         entity.setAttribute(NUM1, 2);
         EntityTestUtils.assertAttributeEqualsEventually(group, SET1, ImmutableSet.<Object>of(2));
     }
-    
+
     @Test
     public void testAggregatingCastsResult() {
         group.addMember(entity);

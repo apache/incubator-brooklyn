@@ -296,6 +296,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 .publishing(MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT)
                 .fromMembers()
                 .valueToReportIfNoSensors(null)
+                /*
                 .computing(new Function<Collection<String>,String>() {
                         @Override
                         public String apply(Collection<String> input) {
@@ -304,10 +305,11 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                             for (String endpoint: input)
                                 if (!Strings.isBlank(endpoint))
                                     distinct.add(endpoint);
-                            if (distinct.size()>1) 
+                            if (distinct.size()>1)
                                 LOG.warn("Mongo replica set "+MongoDBReplicaSetImpl.this+" detetcted multiple masters (transitioning?): "+distinct);
                             return input.iterator().next();
                         }})
+                */
                 .build());
 
         addEnricher(Enrichers.builder()
@@ -315,6 +317,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 .publishing(REPLICA_SET_ENDPOINTS)
                 .fromMembers()
                 .valueToReportIfNoSensors(null)
+                /*
                 .computing(new Function<Collection<String>,List<String>>() {
                         @Override
                         public List<String> apply(Collection<String> input) {
@@ -326,6 +329,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                             }
                             return MutableList.copyOf(endpoints);
                         }})
+                        */
                 .build());
 
         subscribeToMembers(this, MongoDBServer.IS_PRIMARY_FOR_REPLICA_SET, new SensorEventListener<Boolean>() {

@@ -68,11 +68,13 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.Entities;
+import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineManagementMixins.MachineMetadata;
 import brooklyn.location.MachineManagementMixins.RichMachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.access.PortForwardManager;
 import brooklyn.location.basic.BasicMachineMetadata;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationConfigUtils;
@@ -110,7 +112,6 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -133,6 +134,77 @@ import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.Ints;
+import com.google.inject.Module;
+import org.jclouds.ContextBuilder;
+import org.jclouds.abiquo.compute.options.AbiquoTemplateOptions;
+import org.jclouds.cloudstack.compute.options.CloudStackTemplateOptions;
+import org.jclouds.compute.ComputeService;
+import org.jclouds.compute.ComputeServiceContext;
+import org.jclouds.compute.RunNodesException;
+import org.jclouds.compute.config.AdminAccessConfiguration;
+import org.jclouds.compute.domain.ComputeMetadata;
+import org.jclouds.compute.domain.ExecResponse;
+import org.jclouds.compute.domain.Hardware;
+import org.jclouds.compute.domain.Image;
+import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.NodeMetadata.Status;
+import org.jclouds.compute.domain.NodeMetadataBuilder;
+import org.jclouds.compute.domain.Template;
+import org.jclouds.compute.domain.TemplateBuilder;
+import org.jclouds.compute.domain.TemplateBuilderSpec;
+import org.jclouds.compute.functions.Sha512Crypt;
+import org.jclouds.compute.options.TemplateOptions;
+import org.jclouds.docker.DockerApi;
+import org.jclouds.docker.domain.Container;
+import org.jclouds.domain.Credentials;
+import org.jclouds.domain.LocationScope;
+import org.jclouds.domain.LoginCredentials;
+import org.jclouds.ec2.compute.options.EC2TemplateOptions;
+import org.jclouds.googlecomputeengine.compute.options.GoogleComputeEngineTemplateOptions;
+import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
+import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
+import org.jclouds.rest.AuthorizationException;
+import org.jclouds.scriptbuilder.domain.Statement;
+import org.jclouds.scriptbuilder.domain.StatementList;
+import org.jclouds.scriptbuilder.domain.Statements;
+import org.jclouds.scriptbuilder.functions.InitAdminAccess;
+import org.jclouds.scriptbuilder.statements.login.AdminAccess;
+import org.jclouds.scriptbuilder.statements.login.ReplaceShadowPasswordEntry;
+import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
+import org.jclouds.sshj.config.SshjSshClientModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static brooklyn.util.GroovyJavaMethods.elvis;
+import static brooklyn.util.GroovyJavaMethods.truth;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.Iterables.getOnlyElement;
+import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials;
+import static org.jclouds.scriptbuilder.domain.Statements.exec;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -164,7 +236,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d*$");
     
     private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
-    
+
     @SetFromFlag // so it's persisted
     private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
     
@@ -470,7 +542,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 exceptions.add(e);
             }
         }
-        String msg = String.format("Failed to get VM after %d attempt%s.", attempts, attempts == 1 ? "" : "s");
+        String msg = format("Failed to get VM after %d attempt%s.", attempts, attempts == 1 ? "" : "s");
 
         Exception cause = (exceptions.size() == 1) 
                 ? exceptions.get(0)
@@ -520,7 +592,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             
             Stopwatch provisioningStopwatch = Stopwatch.createStarted();
             Duration templateTimestamp, provisionTimestamp, usableTimestamp, customizedTimestamp;
-            
+
             LoginCredentials initialCredentials = null;
             Set<? extends NodeMetadata> nodes;
             Template template;
@@ -535,8 +607,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
                     customizer.customize(this, computeService, template.getOptions());
                 }
-                LOG.debug("jclouds using template {} / options {} to provision machine in {}", new Object[] {
-                        template, template.getOptions(), setup.getDescription()});
+                LOG.debug("jclouds using template {} / options {} to provision machine in {}", template, template.getOptions(), setup.getDescription());
     
                 if (!setup.getUnusedConfig().isEmpty())
                     LOG.debug("NOTE: unused flags passed to obtain VM in "+setup.getDescription()+": "+
@@ -551,7 +622,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 machineCreationSemaphore.release();
             }
             
-            node = Iterables.getOnlyElement(nodes, null);
+            node = getOnlyElement(nodes, null);
             LOG.debug("jclouds created {} for {}", node, setup.getDescription());
             if (node == null)
                 throw new IllegalStateException("No nodes returned by jclouds create-nodes in " + setup.getDescription());
@@ -608,7 +679,24 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (template!=null && sshMachineLocation.getTemplate()==null) {
                 sshMachineLocation.template = template;
             }
-            
+
+            if ("docker".equals(this.getProvider())) {
+                Map<Integer, Integer> portMappings = getPortMappingsForDocker(sshMachineLocation);
+                PortForwardManager portForwardManager = null;
+                for(Location location : this.getChildren()) {
+                    if(location.hasConfig(PORT_FORWARDING_MANAGER, true)) {
+                        portForwardManager = location.getConfig(PORT_FORWARDING_MANAGER);
+                    }
+                }
+                for(Integer containerPort : portMappings.keySet()) {
+                    Integer hostPort = portMappings.get(containerPort);
+                    String dockerHost = sshMachineLocation.getSshHostAndPort().getHostText();
+                    portForwardManager.recordPublicIpHostname(node.getId(), dockerHost);
+                    portForwardManager.acquirePublicPortExplicit(node.getId(), hostPort);
+                    portForwardManager.associate(node.getId(), hostPort, sshMachineLocation, containerPort);
+                }
+            }
+
             List<String> customisationForLogging = new ArrayList<String>();
             // Apply same securityGroups rules to iptables, if iptables is running on the node
             if (waitForSshable) {
@@ -707,6 +795,31 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     }
 
+    private Map<Integer, Integer> getPortMappingsForDocker(JcloudsSshMachineLocation entity) {
+        ComputeServiceContext context = ContextBuilder.newBuilder("docker")
+                .endpoint(URI.create(entity.getParent().getEndpoint()).toASCIIString())
+                .modules(ImmutableSet.<Module>of(new SLF4JLoggingModule(), new SshjSshClientModule()))
+                .build(ComputeServiceContext.class);
+
+        DockerApi api = context.unwrapApi(DockerApi.class);
+        String containerId = entity.getJcloudsId();
+        Container container = api.getRemoteApi().inspectContainer(containerId);
+        context.close();
+        Map<Integer, Integer> portMappings = Maps.newLinkedHashMap();
+        for(Map.Entry<String, List<Map<String, String>>> entrySet : container.getNetworkSettings().getPorts().entrySet()) {
+            String containerPort = Iterables.get(Splitter.on("/").split(entrySet.getKey()), 0);
+            String hostPort = getOnlyElement(Iterables.transform(entrySet.getValue(),
+                    new Function<Map<String, String>, String>() {
+                        @Override
+                        public String apply(Map<String, String> hostIpAndPort) {
+                            return hostIpAndPort.get("HostPort");
+                        }
+                    }));
+            portMappings.put(Integer.parseInt(containerPort), Integer.parseInt(hostPort));
+        }
+        return portMappings;
+    }
+
     private void mapSecurityGroupRuleToIpTables(ComputeService computeService, NodeMetadata node,
             LoginCredentials credentials, String networkInterface, Iterable<Integer> ports) {
         for (Integer port : ports) {
@@ -716,7 +829,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             ExecResponse response = computeService.runScriptOnNode(node.getId(), statement,
                     overrideLoginCredentials(credentials).runAsRoot(false));
             if (response.getExitStatus() != 0) {
-                String msg = String.format("Cannot insert the iptables rule for port %d. Error: %s", port, 
+                String msg = format("Cannot insert the iptables rule for port %d. Error: %s", port,
                         response.getError());
                 LOG.error(msg);
                 throw new RuntimeException(msg);

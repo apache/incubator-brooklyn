@@ -78,7 +78,7 @@
         <ant.version>1.8.4</ant.version>
 
         <jclouds.groupId>io.cloudsoft.jclouds</jclouds.groupId>
-        <jclouds.version>1.7.2-ea-brooklyn.1</jclouds.version>
+        <jclouds.version>1.7.2-ea-brooklyn.2</jclouds.version>
         <guava.version>15.0</guava.version>
         <groovy.version>1.8.6</groovy.version>
         <logback.version>1.0.7</logback.version>
@@ -521,7 +521,7 @@
                                 </pluginExecution>
                                 <pluginExecution>
                                   <pluginExecutionFilter>
-                                    <groupId>com.github.mcheely</groupId>
+                                    <groupId>coodule.github.mcheely</groupId>
                                     <artifactId>requirejs-maven-plugin</artifactId>
                                     <versionRange>[2.0.0,)</versionRange>
                                     <goals>
@@ -670,6 +670,7 @@
                 <module>utils/jmx/jmxmp-ssl-agent</module>
                 <module>utils/jmx/jmxrmi-agent</module>
                 <module>software/base</module>
+                <module>software/container</module>
                 <module>software/network</module>
                 <module>software/osgi</module>
                 <module>software/webapp</module>
