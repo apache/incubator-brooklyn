@@ -196,9 +196,19 @@ public class BasicLocationRegistry implements LocationRegistry {
             }
 
             // problem: but let's ensure that classpath is sane to give better errors in common IDE bogus case
-            throw new NoSuchElementException("No resolver found for '"+spec+"': "
-                + "known resolvers are "+resolvers.keySet()+"; if you do not see an expected resolver, "
-                + "ensure your classpath is correct and includes META-INF/services");
+            if (resolvers.get("id")==null || resolvers.get("named")==null) {
+                log.error("Standard location resolvers not installed, location resolution will fail shortly. This usually indicates a classpath problem, "
+                    + "such as when running from an IDE which has not properly copied META-INF/services from src/main/resources."
+                    + "Known resolvers are: "+resolvers.keySet());
+                throw new NoSuchElementException("Unresolvable location '"+spec+"': "
+                    + "Problem detected with location resolver configuration: "+resolvers.keySet()+" are the only available location resolvers. "
+                    + "More information can be found in the logs.");
+            } else {
+                log.warn("Location resolution failed for '"+spec+"' (will fail shortly): known resolvers are: "+resolvers.keySet());
+                throw new NoSuchElementException("Unknown location '"+spec+"': "
+                    + "either this location is not recognised or there is a problem with location resolver configuration.");
+            }
+                
         } finally {
             specsSeen.remove();
         }
