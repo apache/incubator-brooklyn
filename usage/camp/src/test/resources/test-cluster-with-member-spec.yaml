@@ -1,0 +1,14 @@
+name: test-app-with-enricher
+description: Cluster of TestEntitys with member spec
+origin: http://brooklyn.io
+location: localhost
+services:
+- serviceType: brooklyn.entity.group.DynamicCluster
+  id: test-entity-cluster
+  name: TestEntityCluster
+  initialSize: 2
+  memberSpec:
+    $brooklyn:entitySpec:
+      type: brooklyn.test.entity.TestEntity
+      brooklyn.config:
+        test.confName: yamlTest

@@ -8,7 +8,7 @@ import brooklyn.event.basic.BasicConfigKey;
 import com.google.common.reflect.TypeToken;
 
 @ImplementedBy(ReferencingYamlTestEntityImpl.class)
-public interface ReferencingYamlTestEntity {
+public interface ReferencingYamlTestEntity extends Entity {
     @SuppressWarnings("serial")
     public static final ConfigKey<Entity> TEST_REFERENCE_APP = BasicConfigKey.builder(new TypeToken<Entity>(){})
             .name("test.reference.app")
