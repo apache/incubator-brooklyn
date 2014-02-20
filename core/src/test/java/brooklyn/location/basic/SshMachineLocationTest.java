@@ -20,11 +20,11 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.net.Networking;
+import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
 /**
@@ -41,7 +41,7 @@ public class SshMachineLocationTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (host != null) Closeables.closeQuietly(host);
+        if (host != null) Streams.closeQuietly(host);
     }
     
     // Note: requires `ssh localhost` to be setup such that no password is required    

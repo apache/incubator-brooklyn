@@ -15,10 +15,10 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.stream.Streams;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Closeables;
 
 /**
  * Provisions {@link SshMachineLocation}s in a specific location from a list of known machines
@@ -41,8 +41,8 @@ public class FixedListMachineProvisioningLocationTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (provisioner != null) Closeables.closeQuietly(provisioner);
-        if (provisioner2 != null) Closeables.closeQuietly(provisioner2);
+        if (provisioner != null) Streams.closeQuietly(provisioner);
+        if (provisioner2 != null) Streams.closeQuietly(provisioner2);
     }
     
     @Test

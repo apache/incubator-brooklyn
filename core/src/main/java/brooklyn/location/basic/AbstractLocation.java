@@ -36,6 +36,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Objects;
@@ -46,7 +47,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 
 /**
  * A basic implementation of the {@link Location} interface.
@@ -479,7 +479,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         }
         if (removed) {
             if (child instanceof Closeable) {
-                Closeables.closeQuietly((Closeable)child);
+                Streams.closeQuietly((Closeable)child);
             }
             child.setParent(null);
             

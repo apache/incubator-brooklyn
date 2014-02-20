@@ -14,12 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.time.Time;
+import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 
 public class HttpPollValue {
 
@@ -131,7 +131,7 @@ public class HttpPollValue {
                 } catch (IOException e) {
                     throw Throwables.propagate(e);
                 } finally {
-                    Closeables.closeQuietly(in);
+                    Streams.closeQuietly(in);
                 }
             }
         }

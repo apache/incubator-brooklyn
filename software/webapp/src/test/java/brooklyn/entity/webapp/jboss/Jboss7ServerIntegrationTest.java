@@ -10,8 +10,8 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.crypto.FluentKeySigner;
 import brooklyn.util.crypto.SecureKeys;
+import brooklyn.util.stream.Streams;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Closeables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -70,7 +70,7 @@ public class Jboss7ServerIntegrationTest {
             ks.store(fos, "mypass".toCharArray());
             return file;
         } finally {
-            Closeables.closeQuietly(fos);
+            Streams.closeQuietly(fos);
         }
     }
     

@@ -77,7 +77,7 @@
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.4</ant.version>
 
-        <jclouds.version>1.7.0</jclouds.version>
+        <jclouds.version>1.7.1</jclouds.version>
         <guava.version>15.0</guava.version>
         <groovy.version>1.8.6</groovy.version>
         <logback.version>1.0.7</logback.version>
@@ -96,7 +96,7 @@
         <jsr305.version>2.0.1</jsr305.version>
         <ivy.version>2.2.0</ivy.version>
         <mx4j.version>3.0.1</mx4j.version>
-        <bouncycastle.version>1.46</bouncycastle.version>
+        <bouncycastle.version>1.49</bouncycastle.version>
         <sshj.version>0.8.1</sshj.version>
         <reflections.version>0.9.9-RC1</reflections.version>
         <jetty.version>8.1.4.v20120524</jetty.version>

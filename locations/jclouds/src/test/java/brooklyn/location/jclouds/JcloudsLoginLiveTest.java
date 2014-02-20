@@ -19,11 +19,11 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
+import brooklyn.util.stream.Streams;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Closeables;
 
 /**
  * Tests different login options for ssh keys, passwords, etc.
@@ -355,7 +355,7 @@ public class JcloudsLoginLiveTest {
         try {
             assertSshable(machineUsingPassword);
         } finally {
-            Closeables.closeQuietly(machineUsingPassword);
+            Streams.closeQuietly(machineUsingPassword);
         }
     }
     

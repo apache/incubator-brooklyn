@@ -20,6 +20,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Time;
 
@@ -28,7 +29,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -55,7 +55,7 @@ public class SshMachineLocationPerformanceTest {
     @AfterMethod(alwaysRun=true)
     public void afterMethod() throws Exception {
         if (executor != null) executor.shutdownNow();
-        Closeables.closeQuietly(machine);
+        Streams.closeQuietly(machine);
     }
 
     @Test(groups = {"Integration"})

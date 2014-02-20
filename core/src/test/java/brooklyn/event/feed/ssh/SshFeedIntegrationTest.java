@@ -18,11 +18,11 @@ import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Closeables;
 
 public class SshFeedIntegrationTest {
 
@@ -48,7 +48,7 @@ public class SshFeedIntegrationTest {
     public void tearDown() throws Exception {
         if (feed != null) feed.stop();
         if (app != null) Entities.destroyAll(app.getManagementContext());
-        if (loc != null) Closeables.closeQuietly(loc);
+        if (loc != null) Streams.closeQuietly(loc);
     }
     
     @Test(groups="Integration")
