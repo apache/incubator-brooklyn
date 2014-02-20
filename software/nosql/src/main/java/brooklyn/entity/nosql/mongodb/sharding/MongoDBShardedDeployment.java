@@ -2,6 +2,7 @@ package brooklyn.entity.nosql.mongodb.sharding;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
@@ -31,6 +32,10 @@ public interface MongoDBShardedDeployment extends Entity, Startable {
     @SetFromFlag("routerUpTimeout")
     ConfigKey<Duration> ROUTER_UP_TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "mongodb.router.up.timeout", 
             "Maximum time to wait for the routers to become available before adding the shards", Duration.FIVE_MINUTES);
+    
+    @SetFromFlag("coLocatedRouterGroup")
+    ConfigKey<Group> CO_LOCATED_ROUTER_GROUP = ConfigKeys.newConfigKey(Group.class, "mongodb.colocated.router.group", 
+            "Group to be monitored for the addition of new CoLocatedMongoDBRouter entities");
     
     public static AttributeSensor<MongoDBConfigServerCluster> CONFIG_SERVER_CLUSTER = Sensors.newSensor(
             MongoDBConfigServerCluster.class, "mongodbshardeddeployment.configservers", "Config servers");
