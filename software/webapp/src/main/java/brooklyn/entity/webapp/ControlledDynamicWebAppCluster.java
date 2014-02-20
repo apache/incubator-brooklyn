@@ -40,11 +40,11 @@ public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resiz
 
     @SetFromFlag("controller")
     public static BasicAttributeSensorAndConfigKey<LoadBalancer> CONTROLLER = new BasicAttributeSensorAndConfigKey<LoadBalancer>(
-        LoadBalancer.class, "controlleddynamicweballcluster.controller", "Controller for the cluster; if null a default will created (using controllerSpec)");
+        LoadBalancer.class, "controlleddynamicwebappcluster.controller", "Controller for the cluster; if null a default will created (using controllerSpec)");
 
     @SetFromFlag("controllerSpec")
     public static BasicAttributeSensorAndConfigKey<EntitySpec<? extends LoadBalancer>> CONTROLLER_SPEC = new BasicAttributeSensorAndConfigKey(
-            EntitySpec.class, "controlleddynamicweballcluster.controllerSpec", "Spec for creating the controller (if one not supplied explicitly); if null an NGINX instance will be created");
+            EntitySpec.class, "controlleddynamicwebappcluster.controllerSpec", "Spec for creating the controller (if one not supplied explicitly); if null an NGINX instance will be created");
 
     /** factory (or closure) to create the web server, given flags */
     @SetFromFlag("factory")
@@ -58,10 +58,10 @@ public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resiz
 
     @SetFromFlag("webClusterSpec")
     public static BasicAttributeSensorAndConfigKey<EntitySpec<? extends DynamicWebAppCluster>> WEB_CLUSTER_SPEC = new BasicAttributeSensorAndConfigKey(
-            EntitySpec.class, "controlleddynamicweballcluster.webClusterSpec", "Spec for creating the cluster; if null a DynamicWebAppCluster will be created");
+            EntitySpec.class, "controlleddynamicwebappcluster.webClusterSpec", "Spec for creating the cluster; if null a DynamicWebAppCluster will be created");
 
     public static AttributeSensor<DynamicWebAppCluster> CLUSTER = new BasicAttributeSensor<DynamicWebAppCluster>(
-            DynamicWebAppCluster.class, "controlleddynamicweballcluster.cluster", "Underlying web-app cluster");
+            DynamicWebAppCluster.class, "controlleddynamicwebappcluster.cluster", "Underlying web-app cluster");
 
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
 
