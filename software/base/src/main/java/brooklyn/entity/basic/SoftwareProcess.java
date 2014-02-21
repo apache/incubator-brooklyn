@@ -9,6 +9,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.MapConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
@@ -116,5 +117,6 @@ public interface SoftwareProcess extends Entity, Startable {
             MachineProvisioningLocation.class, "softwareservice.provisioningLocation", "Location used to provision a machine where this is running");
         
     public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
-    
+ 
+    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor( "softwareprocess.pid.file", "PID file");
 }

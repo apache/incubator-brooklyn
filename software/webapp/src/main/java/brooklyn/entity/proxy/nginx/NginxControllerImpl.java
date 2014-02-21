@@ -301,4 +301,48 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     public String getShortName() {
         return "Nginx";
     }
+
+    public boolean appendSslConfig(String id,
+            StringBuilder out,
+            String prefix,
+            ProxySslConfig ssl,
+            boolean sslBlock,
+            boolean certificateBlock) {
+        if (ssl == null)
+            return false;
+        if (sslBlock) {
+            out.append(prefix);
+            out.append("ssl on;\n");
+        }
+        if (ssl.getReuseSessions()) {
+            out.append(prefix);
+            out.append("proxy_ssl_session_reuse on;");
+        }
+        if (certificateBlock) {
+            String cert;
+            if (Strings.isEmpty(ssl.getCertificateDestination())) {
+                cert = "" + id + ".crt";
+            } else {
+                cert = ssl.getCertificateDestination();
+            }
+
+            out.append(prefix);
+            out.append("ssl_certificate " + cert + ";\n");
+
+            String key;
+            if (!Strings.isEmpty(ssl.getKeyDestination())) {
+                key = ssl.getKeyDestination();
+            } else if (!Strings.isEmpty(ssl.getKeySourceUrl())) {
+                key = "" + id + ".key";
+            } else {
+                key = null;
+            }
+
+            if (key != null) {
+                out.append(prefix);
+                out.append("ssl_certificate_key " + key + ";\n");
+            }
+        }
+        return true;
+    }
 }

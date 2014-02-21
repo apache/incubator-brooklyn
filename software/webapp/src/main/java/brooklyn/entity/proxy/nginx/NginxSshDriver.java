@@ -104,6 +104,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void postLaunch() {
+        entity.setAttribute(NginxController.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
         entity.setAttribute(Attributes.HTTP_PORT, getHttpPort());
         super.postLaunch();
     }

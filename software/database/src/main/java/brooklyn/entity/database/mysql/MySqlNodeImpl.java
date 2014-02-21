@@ -1,6 +1,7 @@
 package brooklyn.entity.database.mysql;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
+import brooklyn.event.feed.function.FunctionFeed;
+import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
@@ -20,6 +23,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 
 public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
@@ -75,17 +79,12 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
          * So can extract lots of sensors from that.
          */
         Optional<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
-        
+        String cmd = getDriver().getStatusCmd();
         if (machine.isPresent()) {
-            String cmd = getDriver().getStatusCmd();
             feed = SshFeed.builder()
                     .entity(this)
                     .period(Duration.FIVE_SECONDS)
                     .machine(machine.get())
-                    .poll(new SshPollConfig<Boolean>(SERVICE_UP)
-                            .command(cmd)
-                            .setOnSuccess(true)
-                            .setOnFailureOrException(false))
                     .poll(new SshPollConfig<Double>(QUERIES_PER_SECOND_FROM_MYSQL)
                             .command(cmd)
                             .onSuccess(new Function<SshPollValue, Double>() {
@@ -96,16 +95,32 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
                                 }})
                             .setOnFailureOrException(null) )
                     .build();
+            connectServiceUpIsRunning();
         } else {
             LOG.warn("Location(s) {} not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
             setAttribute(SERVICE_UP, true);
         }
     }
-         
+    
+    @Override
+    protected void connectServiceUpIsRunning() {
+        String cmd = getDriver().getStatusCmd();
+        Optional<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
+        SshFeed.builder()
+                .entity(this)
+                .period(Duration.FIVE_SECONDS)
+                .machine(machine.get())
+                .poll(new SshPollConfig<Boolean>(SERVICE_UP)
+                        .command(cmd)
+                        .setOnSuccess(true)
+                        .setOnFailureOrException(false))
+                .build();
+    }
+    
     @Override
     protected void disconnectSensors() {
-        if (feed != null) feed.stop();
         super.disconnectSensors();
+        if (feed != null) feed.stop();
     }
 
     public int getPort() {

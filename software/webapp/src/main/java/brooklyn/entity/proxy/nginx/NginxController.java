@@ -28,7 +28,9 @@ import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.HasShortName;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableMap;
@@ -125,4 +127,7 @@ public interface NginxController extends AbstractController, HasShortName {
 
     Iterable<UrlMapping> getUrlMappings();
 
+    boolean appendSslConfig(String id, StringBuilder out, String prefix, ProxySslConfig ssl, boolean sslBlock, boolean certificateBlock);
+    
+    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor( "nginx.pid.file", "PID file");
 }

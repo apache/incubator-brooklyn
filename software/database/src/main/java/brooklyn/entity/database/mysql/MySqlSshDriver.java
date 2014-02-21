@@ -189,6 +189,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void launch() {
+        entity.setAttribute(MySqlNode.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
         newScript(MutableMap.of("usePidFile", true), LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
             .body.append(format("nohup %s/bin/mysqld --defaults-file=%s --user=`whoami` > %s 2>&1 < /dev/null &", getBaseDir(), getConfigFile(), getLogFile()))

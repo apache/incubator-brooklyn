@@ -199,6 +199,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
 
     @Override
     public void launch() {
+        entity.setAttribute(JBoss7Server.PID_FILE, getRunDir() + "/" + PID_FILENAME);
         Map flags = MutableMap.of("usePidFile", false);
 
         // We wait for evidence of JBoss running because, using

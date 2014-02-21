@@ -675,6 +675,7 @@
                 <module>software/messaging</module>
                 <module>software/nosql</module>
                 <module>software/database</module>
+                <module>software/monitoring</module>
                 <module>systems/whirr/base</module>
                 <module>systems/whirr/hadoop</module>
             </modules>
