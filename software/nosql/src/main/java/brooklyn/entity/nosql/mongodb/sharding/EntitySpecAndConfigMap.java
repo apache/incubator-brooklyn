@@ -2,12 +2,11 @@ package brooklyn.entity.nosql.mongodb.sharding;
 
 import java.util.Map;
 
-import org.testng.collections.Maps;
-
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 public class EntitySpecAndConfigMap<T extends Entity> {
     private EntitySpec<T> spec;

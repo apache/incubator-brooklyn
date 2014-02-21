@@ -34,6 +34,7 @@ import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
@@ -42,9 +43,12 @@ import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BrooklynComponentTemplateResolver {
 
@@ -288,9 +292,48 @@ public class BrooklynComponentTemplateResolver {
     protected Object transformSpecialFlags(Object flag, ManagementContext mgmt) {
         if (flag instanceof EntitySpecConfiguration) {
             EntitySpecConfiguration specConfig = (EntitySpecConfiguration) flag;
-            return Factory.newInstance(mgmt, specConfig.getSpecConfiguration()).resolveSpec();
+            String type = (String) checkNotNull(specConfig.getSpecConfiguration().get("type"), "entitySpec must have key 'type'");
+            Class<? extends Entity> clazz = BrooklynEntityClassResolver.resolveEntity(type, mgmt);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> config = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration(), mgmt);
+            return buildSpec(mgmt, clazz, config);
         }
         return flag;
+    }
+    
+    protected Map<?, ?> transformSpecialFlags(Map<?, ?> flag, final ManagementContext mgmt) {
+        // TODO: Re-usable function
+        return Maps.transformValues(flag, new Function<Object, Object>() {
+            public Object apply(Object input) {
+                if (input instanceof Map)
+                    return transformSpecialFlags((Map<?, ?>)input, mgmt);
+                else if (input instanceof Set<?>)
+                    return MutableSet.of(transformSpecialFlags((Iterable<?>)input, mgmt));
+                else if (input instanceof List<?>)
+                    return MutableList.copyOf(transformSpecialFlags((Iterable<?>)input, mgmt));
+                else if (input instanceof Iterable<?>)
+                    return transformSpecialFlags((Iterable<?>)input, mgmt);
+                else 
+                    return transformSpecialFlags((Object)input, mgmt);
+            }
+        });
+    }
+    
+    protected Iterable<?> transformSpecialFlags(Iterable<?> flag, final ManagementContext mgmt) {
+        return Iterables.transform(flag, new Function<Object, Object>() {
+            public Object apply(Object input) {
+                if (input instanceof Map<?, ?>)
+                    return transformSpecialFlags((Map<?, ?>)input, mgmt);
+                else if (input instanceof Set<?>)
+                    return MutableSet.of(transformSpecialFlags((Iterable<?>)input, mgmt));
+                else if (input instanceof List<?>)
+                    return MutableList.copyOf(transformSpecialFlags((Iterable<?>)input, mgmt));
+                else if (input instanceof Iterable<?>)
+                    return transformSpecialFlags((Iterable<?>)input, mgmt);
+                else 
+                    return transformSpecialFlags((Object)input, mgmt);
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")

@@ -8,13 +8,19 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.Enrichers;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.entity.webapp.DynamicWebAppCluster;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -23,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class MongoDBShardedDeploymentImpl extends AbstractEntity implements MongoDBShardedDeployment {
     
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBShardedDeploymentImpl.class);
     
     @Override
@@ -31,9 +38,13 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
                 .configure(DynamicCluster.INITIAL_SIZE, getConfig(CONFIG_CLUSTER_SIZE))));
         setAttribute(ROUTER_CLUSTER, addChild(EntitySpec.create(MongoDBRouterCluster.class)
                 .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_ROUTER_CLUSTER_SIZE))
-                .configure(MongoDBRouter.CONFIG_SERVERS, attributeWhenReady(getAttribute(CONFIG_SERVER_CLUSTER), MongoDBConfigServerCluster.SERVER_ADDRESSES))));
+                .configure(MongoDBRouter.CONFIG_SERVERS, attributeWhenReady(getAttribute(CONFIG_SERVER_CLUSTER), MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES))));
         setAttribute(SHARD_CLUSTER, addChild(EntitySpec.create(MongoDBShardCluster.class)
                 .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_SHARD_CLUSTER_SIZE))));
+        addEnricher(Enrichers.builder()
+                .propagating(MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES)
+                .from(getAttribute(CONFIG_SERVER_CLUSTER))
+                .build());
     }
 
     @Override
@@ -46,6 +57,24 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
                 .get();
         } catch (Exception e) {
             throw Exceptions.propagate(e);
+        }
+        if (getConfigRaw(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP, true).isPresent()) {
+            DynamicGroup coLocatedRouterGroup = (DynamicGroup)getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP);
+            subscribe(coLocatedRouterGroup, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
+                public void onEvent(SensorEvent<Entity> event) {
+                    routers.addMember(event.getValue());
+                }
+            });
+            subscribe(coLocatedRouterGroup, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
+                public void onEvent(SensorEvent<Entity> event) {
+                    routers.removeMember(event.getValue());
+                }
+            });
+            for (Entity entity : coLocatedRouterGroup.getMembers()) {
+                if (entity instanceof CoLocatedMongoDBRouter) {
+                    routers.addMember(((CoLocatedMongoDBRouter)entity).getAttribute(CoLocatedMongoDBRouter.ROUTER));
+                }
+            }
         }
         // FIXME: Check if service is up, call connectSensors
         setAttribute(SERVICE_UP, true);

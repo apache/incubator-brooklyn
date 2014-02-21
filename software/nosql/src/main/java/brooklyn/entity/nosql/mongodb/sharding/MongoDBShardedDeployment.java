@@ -1,5 +1,7 @@
 package brooklyn.entity.nosql.mongodb.sharding;
 
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -44,6 +46,10 @@ public interface MongoDBShardedDeployment extends Entity, Startable {
     
     public static AttributeSensor<MongoDBShardCluster> SHARD_CLUSTER = Sensors.newSensor(
             MongoDBShardCluster.class, "mongodbshardeddeployment.shards", "Shards");
+    
+    @SuppressWarnings("serial")
+    AttributeSensor<Iterable<String>> CONFIG_SERVER_ADDRESSES = Sensors.newSensor(new TypeToken<Iterable<String>>() {}, 
+            "mongodb.config.server.addresses", "List of config server hostnames and ports");
     
     public MongoDBConfigServerCluster getConfigCluster();
     

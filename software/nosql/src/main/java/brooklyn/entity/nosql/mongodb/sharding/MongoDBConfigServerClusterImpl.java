@@ -28,7 +28,7 @@ public class MongoDBConfigServerClusterImpl extends DynamicClusterImpl implement
                 return entity.getAttribute(MongoDBConfigServer.HOSTNAME) + ":" + entity.getAttribute(MongoDBConfigServer.PORT);
             }
         });
-        setAttribute(MongoDBConfigServerCluster.SERVER_ADDRESSES, memberHostNamesAndPorts);
+        setAttribute(MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES, memberHostNamesAndPorts);
     }
 
 }

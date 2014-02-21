@@ -11,7 +11,7 @@ import com.google.common.reflect.TypeToken;
 public interface MongoDBConfigServerCluster extends DynamicCluster {
 
     @SuppressWarnings("serial")
-    AttributeSensor<Iterable<String>> SERVER_ADDRESSES = Sensors.newSensor(new TypeToken<Iterable<String>>() {}, 
+    AttributeSensor<Iterable<String>> CONFIG_SERVER_ADDRESSES = Sensors.newSensor(new TypeToken<Iterable<String>>() {}, 
             "mongodb.config.server.addresses", "List of config server hostnames and ports");
     
 }
