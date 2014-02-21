@@ -484,5 +484,11 @@ public class TypeCoercions {
                 return ImmutableList.copyOf(Splitter.on(",").trimResults().omitEmptyStrings().split(input));
             }
         });
+        registerAdapter(String.class, Map.class, new Function<String,Map>() {
+            @Override
+            public Map<String, String> apply(final String input) {
+                return ImmutableMap.copyOf(Splitter.on(",").trimResults().omitEmptyStrings().withKeyValueSeparator("=").split(input));
+            }
+        });
     }
 }
