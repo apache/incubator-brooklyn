@@ -673,5 +673,23 @@ public class Strings {
         if (idx==-1) return s;
         return s.substring(0, idx);
     }
+
+    /** looks for first section of text in following the prefix and, if present, before the suffix;
+     * null if the prefix is not present in the string, and everything after the prefix if suffix is not present in the string;
+     * if either prefix or suffix is null, it is treated as the start/end of the string */
+    public static String getFragmentBetween(String input, String prefix, String suffix) {
+        if (input==null) return null;
+        int index;
+        if (prefix!=null) {
+            index = input.indexOf(prefix);
+            if (index==-1) return null;
+            input = input.substring(index + prefix.length());
+        }
+        if (suffix!=null) {
+            index = input.indexOf(suffix);
+            if (index>=0) input = input.substring(0, index);
+        }
+        return input;
+    }
     
 }

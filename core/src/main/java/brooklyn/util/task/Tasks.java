@@ -35,20 +35,22 @@ public class Tasks {
     /** convenience for setting "blocking details" on any task where the current thread is running;
      * typically invoked prior to a wait, for transparency to a user;
      * then invoked with 'null' just after the wait */
-    public static void setBlockingDetails(String description) {
+    public static String setBlockingDetails(String description) {
         Task<?> current = current();
         if (current instanceof TaskInternal)
-            ((TaskInternal<?>)current).setBlockingDetails(description); 
+            return ((TaskInternal<?>)current).setBlockingDetails(description);
+        return null;
     }
     public static void resetBlockingDetails() {
         Task<?> current = current();
         if (current instanceof TaskInternal)
             ((TaskInternal<?>)current).resetBlockingDetails(); 
     }
-    public static void setBlockingTask(Task<?> blocker) {
+    public static Task<?> setBlockingTask(Task<?> blocker) {
         Task<?> current = current();
         if (current instanceof TaskInternal)
-            ((TaskInternal<?>)current).setBlockingTask(blocker); 
+            return ((TaskInternal<?>)current).setBlockingTask(blocker);
+        return null;
     }
     public static void resetBlockingTask() {
         Task<?> current = current();

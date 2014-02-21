@@ -151,6 +151,10 @@ public class Duration implements Comparable<Duration> {
         return new Duration(value, unit);
     }
     
+    public static Duration untilUtc(long millisSinceEpoch) {
+        return millis(millisSinceEpoch - System.currentTimeMillis());
+    }
+    
     public Duration add(Duration other) {
         return nanos(nanos() + other.nanos());
     }

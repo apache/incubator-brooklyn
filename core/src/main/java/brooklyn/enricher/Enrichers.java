@@ -95,6 +95,7 @@ public class Enrichers {
         public AggregatorBuilder(AttributeSensor<S> aggregating) {
             this.aggregating = aggregating;
         }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public <T2 extends T, B2 extends AggregatorBuilder<S, T2, B2>> AggregatorBuilder<S, T2, B2> publishing(AttributeSensor<T2> val) {
             this.publishing = (AttributeSensor) checkNotNull(val);
             return (AggregatorBuilder<S, T2, B2>) self();
@@ -119,6 +120,7 @@ public class Enrichers {
             this.computing = checkNotNull(val);
             return self();
         }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public B computingSum() {
             // relies of TypeCoercion of result from Number to T, and type erasure for us to get away with it!
             Function<Collection<S>, Number> function = new Function<Collection<S>, Number>()  {
@@ -128,6 +130,7 @@ public class Enrichers {
             this.computing((Function)function);
             return self();
         }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public B computingAverage() {
             // relies of TypeCoercion of result from Number to T, and type erasure for us to get away with it!
             Function<Collection<S>, Number> function = new Function<Collection<S>, Number>() {
@@ -220,6 +223,7 @@ public class Enrichers {
             checkArgument(checkNotNull(vals).size() > 0, "combining-sensors must be non-empty");
             this.combining = ImmutableList.<AttributeSensor<? extends S>>copyOf(vals);
         }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public <T2 extends T, B2 extends CombinerBuilder<S, T2, B2>> CombinerBuilder<S, T2, B2> publishing(AttributeSensor<T2> val) {
             this.publishing = (AttributeSensor) checkNotNull(val);
             return (CombinerBuilder<S, T2, B2>) self();
@@ -232,6 +236,7 @@ public class Enrichers {
             this.computing = checkNotNull(val);
             return self();
         }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public B computingSum() {
             Function<Collection<S>, Number> function = new Function<Collection<S>, Number>() {
                 @Override public Number apply(Collection<S> input) {
@@ -240,6 +245,7 @@ public class Enrichers {
             this.computing((Function)function);
             return self();
         }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public B computingAverage() {
             Function<Collection<S>, Number> function = new Function<Collection<S>, Number>() {
                 @Override public Number apply(Collection<S> input) {
@@ -286,6 +292,12 @@ public class Enrichers {
         }
     }
 
+    /** builds an enricher which transforms a given sensor:
+     * <li> applying a function ({@link #computing(Function)}, or {@link #computingAverage()}/{@link #computingSum()}, mandatory);
+     * <li> and publishing it on the entity where the enricher is attached;
+     * <li> optionally taking the sensor from a different source entity ({@link #from(Entity)});
+     * <li> and optionally publishing it as a different sensor ({@link #publishing(AttributeSensor)});
+     * <p> (You should supply at least one of the optional values, of course, otherwise the enricher may loop endlessly!) */
     public abstract static class TransformerBuilder<S, T, B extends TransformerBuilder<S, T, B>> extends Builder<B> {
         protected final AttributeSensor<S> transforming;
         protected AttributeSensor<T> publishing;
@@ -295,6 +307,7 @@ public class Enrichers {
         public TransformerBuilder(AttributeSensor<S> val) {
             this.transforming = checkNotNull(val);
         }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public <T2 extends T, B2 extends TransformerBuilder<S, T2, B2>> TransformerBuilder<S, T2, B2> publishing(AttributeSensor<T2> val) {
             this.publishing = (AttributeSensor) checkNotNull(val);
             return (TransformerBuilder<S, T2, B2>) self();

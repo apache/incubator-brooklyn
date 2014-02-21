@@ -7,10 +7,13 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import brooklyn.util.exceptions.Exceptions;
+
 import com.google.common.collect.ImmutableList;
 
-/** a subclass of Semaphore which requires the same thread to release as created it,
- * and which tracks who created and released the semaphores */
+/** a subclass of {@link Semaphore} 
+ * which tracks who created and released the semaphores,
+ * and which requires the same thread to release as created it. */
 public class SemaphoreWithOwners extends Semaphore {
     public SemaphoreWithOwners(String name) {
         this(name, 1, true);
@@ -22,7 +25,7 @@ public class SemaphoreWithOwners extends Semaphore {
     private static final long serialVersionUID = -5303474637353009454L;
     final private List<Thread> owningThreads = new ArrayList<Thread>();
     final private Set<Thread> requestingThreads = new LinkedHashSet<Thread>();
-
+    
     @Override
     public void acquire() throws InterruptedException {
         try {
@@ -64,6 +67,21 @@ public class SemaphoreWithOwners extends Semaphore {
         }
     }
 
+    public void acquireUnchecked() {
+        try {
+            acquire();
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+    public void acquireUnchecked(int numPermits) {
+        try {
+            acquire(numPermits);
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+    
     @Override
     public boolean tryAcquire() {
         try {
@@ -117,12 +135,17 @@ public class SemaphoreWithOwners extends Semaphore {
         }
     }
 
+    /** invoked when a caller successfully acquires a mutex, before {@link #onRequestFinished()} */
     protected synchronized void onAcquired(int permits) {
         for (int i=0; i<permits; i++) owningThreads.add(Thread.currentThread());
     }
+    /** invoked when a caller is about to request a semaphore (before it might block);
+     * guaranteed to call {@link #onRequestFinished()} after the blocking,
+     * with a call to {@link #onAcquired(int)} beforehand if the acquisition was successful */
     protected synchronized void onRequesting() {
         requestingThreads.add(Thread.currentThread());
     }
+    /** invoked when a caller has completed requesting a mutex, whether successful, aborted, or interrupted */
     protected synchronized void onRequestFinished() {
         requestingThreads.remove(Thread.currentThread());
     }
@@ -138,6 +161,7 @@ public class SemaphoreWithOwners extends Semaphore {
         onReleased(permits);
     }
 
+    /** invoked when a caller has released permits */
     protected synchronized void onReleased(int permits) {
         boolean result = true;
         for (int i=0; i<permits; i++) result = owningThreads.remove(Thread.currentThread()) & result;

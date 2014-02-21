@@ -275,5 +275,15 @@ public class StringsTest {
         Assert.assertEquals(Strings.getFirstWordAfter(null, "x"), null);
     }
 
+    @Test
+    public void testFragmentBetween() {
+        Assert.assertEquals("ooba", Strings.getFragmentBetween("foobar", "f", "r"));
+        Assert.assertEquals("oobar", Strings.getFragmentBetween("foobar", "f", "z"));
+        Assert.assertEquals("oobar", Strings.getFragmentBetween("foobar", "f", null));
+        Assert.assertEquals("oba", Strings.getFragmentBetween("foobar", "o", "r"));
+        Assert.assertEquals("\nba", Strings.getFragmentBetween("foo\nbar", "foo", "r"));
+        Assert.assertEquals("fooba", Strings.getFragmentBetween("foobar", null, "r"));
+        Assert.assertEquals(null, Strings.getFragmentBetween("foobar", "z", "r"));
+    }
     
 }

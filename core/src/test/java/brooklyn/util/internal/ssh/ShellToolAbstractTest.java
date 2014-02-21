@@ -125,7 +125,7 @@ public abstract class ShellToolAbstractTest {
 
     @Test(groups = {"Integration"})
     public void testExecScriptWithSleepThenExit() throws Exception {
-        Stopwatch watch = new Stopwatch().start();
+        Stopwatch watch = Stopwatch.createStarted();
         execScript("sleep 1", "exit 0");
         assertTrue(watch.elapsed(TimeUnit.MILLISECONDS) > 900, "only slept "+Time.makeTimeStringRounded(watch));
     }

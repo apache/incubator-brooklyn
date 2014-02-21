@@ -14,12 +14,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import junit.framework.Assert;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +48,8 @@ import com.google.common.io.Files;
  */
 public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTest {
 
+    private static final Logger log = LoggerFactory.getLogger(SshToolAbstractIntegrationTest.class);
+    
     // FIXME need tests which take properties set in entities and brooklyn.properties;
     // but not in this class because it is lower level than entities, Aled would argue.
 
@@ -245,6 +253,19 @@ public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTe
         } catch (SshException e) {
             if (!e.toString().contains("failed to connect")) throw e;
         }
+    }
+
+    @Test(groups = {"Integration"})
+    public void testOutputAsExpected() throws Exception {
+        final String CONTENTS = "hello world\n"
+            + "bye bye\n";
+        execCommands("cat > "+Os.mergePaths(Os.tmp(), "test1")+" << X\n"
+            + CONTENTS
+            + "X\n");
+        String read = execCommands("echo START_FOO", "cat "+Os.mergePaths(Os.tmp(), "test1"), "echo END_FOO");
+        log.debug("read back data written, as:\n"+read);
+        String contents = Strings.getFragmentBetween(read, "START_FOO", "END_FOO");
+        Assert.assertEquals(CONTENTS.trim(), contents.trim());
     }
 
 }
