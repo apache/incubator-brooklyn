@@ -53,6 +53,7 @@ public class ArchiveUtils {
     public static enum ArchiveType {
         TAR,
         TGZ,
+        TBZ,
         ZIP,
         JAR,
         WAR,
@@ -72,6 +73,10 @@ public class ArchiveUtils {
             } catch (IllegalArgumentException iae) {
                 if (filename.toLowerCase().endsWith(".tar.gz")) {
                     return TGZ;
+                } else if (filename.toLowerCase().endsWith(".tar.bz") ||
+                        filename.toLowerCase().endsWith(".tar.bz2") ||
+                        filename.toLowerCase().endsWith(".tar.xz")) {
+                    return TBZ;
                 } else {
                     return UNKNOWN;
                 }
@@ -96,6 +101,7 @@ public class ArchiveUtils {
         switch (ArchiveType.of(fileName)) {
             case TAR:
             case TGZ:
+            case TBZ:
                 commands.add(BashCommands.INSTALL_TAR);
                 break;
             case ZIP:
@@ -127,6 +133,9 @@ public class ArchiveUtils {
                 break;
             case TGZ:
                 commands.add("tar xvfz " + sourcePath);
+                break;
+            case TBZ:
+                commands.add("tar xvfj " + sourcePath);
                 break;
             case ZIP:
                 commands.add("unzip " + sourcePath);
