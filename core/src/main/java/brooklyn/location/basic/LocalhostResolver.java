@@ -97,6 +97,7 @@ public class LocalhostResolver implements LocationResolver {
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
+                .configure(LocationInternal.SPEC, namedLocation!=null ? namedLocation : spec)
                 .configure(flags));
     }
 

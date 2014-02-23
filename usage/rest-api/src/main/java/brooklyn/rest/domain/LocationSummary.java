@@ -18,7 +18,7 @@ public class LocationSummary extends LocationSpec {
       @JsonProperty("id") String id,
       @JsonProperty("name") String name,
       @JsonProperty("spec") String spec,
-      @JsonProperty("config") Map<String, String> config,
+      @JsonProperty("config") Map<String, ?> config,
       @JsonProperty("links") Map<String, URI> links
   ) {
     super(name, spec, config);

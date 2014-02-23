@@ -2,6 +2,7 @@ package brooklyn.rest.api;
 
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.EntitySummary;
+import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.domain.TaskSummary;
 
 import com.wordnik.swagger.core.ApiError;
@@ -134,4 +135,16 @@ public interface EntityApi {
       @QueryParam("typeRegex") String typeRegex
   );
 
+  @GET
+  @Path("/{entity}/locations")
+  @ApiOperation(value = "List the locations set on the entity")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Application or entity missing")
+  })
+  public Iterable<LocationSummary> getLocations(
+      @ApiParam(value = "Application ID or name", required = true)
+      @PathParam("application") String application,
+      @ApiParam(value = "Entity ID or name", required = true)
+      @PathParam("entity") String entity);
+  
 }

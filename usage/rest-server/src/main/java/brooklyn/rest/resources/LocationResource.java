@@ -74,9 +74,13 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
 
    @Override
   public LocationSummary get(String locationId) {
-      LocationDefinition l = brooklyn().getLocationRegistry().getDefinedLocationById(locationId);
-      if (l==null) throw WebResourceUtils.notFound("No location matching %s", locationId);
-      return resolveLocationDefinition(l);
+      Location l1 = mgmt().getLocationManager().getLocation(locationId);
+      if (l1!=null) 
+          return LocationTransformer.newInstance(l1, false);
+      
+      LocationDefinition l2 = brooklyn().getLocationRegistry().getDefinedLocationById(locationId);
+      if (l2==null) throw WebResourceUtils.notFound("No location matching %s", locationId);
+      return resolveLocationDefinition(l2);
   }
 
     @Override

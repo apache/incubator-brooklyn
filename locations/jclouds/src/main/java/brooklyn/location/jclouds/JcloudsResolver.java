@@ -18,6 +18,7 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.BasicLocationRegistry;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.text.Strings;
 
@@ -168,7 +169,8 @@ public class JcloudsResolver implements LocationResolver {
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(JcloudsLocation.class)
-                .configure(jcloudsProperties));
+                .configure(LocationInternal.SPEC, namedLocation!=null ? namedLocation : spec)
+                .configure(jcloudsProperties) );
     }
 
     private Map getAllProperties(brooklyn.location.LocationRegistry registry, Map<?,?> properties) {

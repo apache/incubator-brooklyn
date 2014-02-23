@@ -1,7 +1,5 @@
 package brooklyn.rest.domain;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -12,12 +10,13 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
-// FIXME change name, due to confusion with brooklyn.location.LocationSpec
+// FIXME change name, due to confusion with brooklyn.location.LocationSpec <- no need, as we can kill the class instead soon!
+/** @deprecated since 0.7.0 location spec objects will not be used from the client, instead pass yaml location spec strings */
 public class LocationSpec {
 
   private final String name;
   private final String spec;
-  private final Map<String, String> config;
+  private final Map<String, ?> config;
 
   public static LocationSpec localhost() {
     return new LocationSpec("localhost", "localhost", null);
@@ -26,10 +25,10 @@ public class LocationSpec {
   public LocationSpec(
       @JsonProperty("name") String name,
       @JsonProperty("spec") String spec,
-      @JsonProperty("config") @Nullable Map<String, String> config
+      @JsonProperty("config") @Nullable Map<String, ?> config
   ) {
     this.name = name;
-    this.spec = checkNotNull(spec, "spec");
+    this.spec = spec;
     this.config = (config == null) ? Collections.<String, String>emptyMap() : ImmutableMap.copyOf(config);
   }
 
@@ -41,7 +40,7 @@ public class LocationSpec {
     return spec;
   }
 
-  public Map<String, String> getConfig() {
+  public Map<String, ?> getConfig() {
     return config;
   }
 
