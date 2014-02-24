@@ -468,37 +468,69 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                 entity.setAttribute(SoftwareProcess.PID_FILE, pidFile);
                 s.footer.prepend("echo $! > "+pidFile);
             } else if (CHECK_RUNNING.equals(phase)) {
-                s.body.append(
-                        "test -f "+pidFile+" || exit 1", //no pid, not running
-
-                        //old method, for supplied service, or entity.id
-                        //"ps aux | grep ${service} | grep \$(cat ${pidFile}) > /dev/null"
-                        //new way, preferred?
-                        "ps -p `cat "+pidFile+"`"
-                        );
+                //old method, for supplied service, or entity.id
+                //"ps aux | grep ${service} | grep \$(cat ${pidFile}) > /dev/null"
+                //new way, preferred?
+                if (processOwner != null) {
+                    s.body.append(
+                            BashCommands.sudoAsUser(processOwner, "test -f "+pidFile) + " || exit 1",
+                            "ps -p $(" + BashCommands.sudoAsUser(processOwner, "cat "+pidFile) + ")"
+                    );
+                } else {
+                    s.body.append(
+                            "test -f "+pidFile+" || exit 1",
+                            "ps -p `cat "+pidFile+"`"
+                    );
+                }
+                // no pid, not running; 1 is not running
                 s.requireResultCode(Predicates.or(Predicates.equalTo(0), Predicates.equalTo(1)));
-                // 1 is not running
             } else if (STOPPING.equals(phase)) {
-                s.body.append(
-                        "export PID=`cat "+pidFile+"`",
-                        "[[ -n \"$PID\" ]] || exit 0",
-                        processOwner != null ? BashCommands.sudoAsUser(processOwner, "kill $PID") : "kill $PID",
-                        processOwner != null ? BashCommands.sudoAsUser(processOwner, "kill -9 $PID") : "kill -9 $PID",
-                        "rm -f "+pidFile
-                        );
+                if (processOwner != null) {
+                    s.body.append(
+                            "export PID=$(" + BashCommands.sudoAsUser(processOwner, "cat "+pidFile) + ")",
+                            "test -n \"$PID\" || exit 0",
+                            BashCommands.sudoAsUser(processOwner, "kill $PID"),
+                            BashCommands.sudoAsUser(processOwner, "kill -9 $PID"),
+                            BashCommands.sudoAsUser(processOwner, "rm -f "+pidFile)
+                    );
+                } else {
+                    s.body.append(
+                            "export PID=$(cat "+pidFile+")",
+                            "test -n \"$PID\" || exit 0",
+                            "kill $PID",
+                            "kill -9 $PID",
+                            "rm -f "+pidFile
+                    );
+                }
             } else if (KILLING.equals(phase)) {
-                s.body.append(
-                        "export PID=`cat "+pidFile+"`",
-                        "[[ -n \"$PID\" ]] || exit 0",
-                        processOwner != null ? BashCommands.sudoAsUser(processOwner, "kill -9 $PID") : "kill -9 $PID",
-                        "rm -f "+pidFile
-                        );
+                if (processOwner != null) {
+                    s.body.append(
+                            "export PID=$(" + BashCommands.sudoAsUser(processOwner, "cat "+pidFile) + ")",
+                            "test -n \"$PID\" || exit 0",
+                            BashCommands.sudoAsUser(processOwner, "kill -9 $PID"),
+                            BashCommands.sudoAsUser(processOwner, "rm -f "+pidFile)
+                    );
+                } else {
+                    s.body.append(
+                            "export PID=$(cat "+pidFile+")",
+                            "test -n \"$PID\" || exit 0",
+                            "kill -9 $PID",
+                            "rm -f "+pidFile
+                    );
+                }
             } else if (RESTARTING.equals(phase)) {
-                s.footer.prepend(
-                        "test -f "+pidFile+" || exit 1", //no pid, not running
-                        "ps -p `cat "+pidFile+"` || exit 1" //no process; can't restart,
-                        );
-                // 1 is not running
+                if (processOwner != null) {
+                    s.footer.prepend(
+                            BashCommands.sudoAsUser(processOwner, "test -f "+pidFile) + " || exit 1",
+                            "ps -p $(" + BashCommands.sudoAsUser(processOwner, "cat "+pidFile) + ") || exit 1"
+                    );
+                } else {
+                    s.footer.prepend(
+                            "test -f "+pidFile+" || exit 1", 
+                            "ps -p $(cat "+pidFile+") || exit 1" 
+                    );
+                }
+                // no pid, not running; no process; can't restart, 1 is not running
             } else {
                 log.warn(USE_PID_FILE+": script option not valid for "+s.summary);
             }
