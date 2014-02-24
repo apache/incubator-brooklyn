@@ -10,18 +10,18 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
-import brooklyn.entity.webapp.DynamicWebAppCluster;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;
@@ -59,22 +59,16 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
             throw Exceptions.propagate(e);
         }
         if (getConfigRaw(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP, true).isPresent()) {
-            DynamicGroup coLocatedRouterGroup = (DynamicGroup)getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP);
-            subscribe(coLocatedRouterGroup, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
-                public void onEvent(SensorEvent<Entity> event) {
-                    routers.addMember(event.getValue());
+            AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Co-located router tracker")) {
+                protected void onEntityAdded(Entity member) {
+                    routers.addMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
                 }
-            });
-            subscribe(coLocatedRouterGroup, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
-                public void onEvent(SensorEvent<Entity> event) {
-                    routers.removeMember(event.getValue());
+                protected void onEntityRemoved(Entity member) {
+                    routers.removeMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
                 }
-            });
-            for (Entity entity : coLocatedRouterGroup.getMembers()) {
-                if (entity instanceof CoLocatedMongoDBRouter) {
-                    routers.addMember(((CoLocatedMongoDBRouter)entity).getAttribute(CoLocatedMongoDBRouter.ROUTER));
-                }
-            }
+            };
+            addPolicy(policy);
+            policy.setGroup((Group)getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP));
         }
         // FIXME: Check if service is up, call connectSensors
         setAttribute(SERVICE_UP, true);

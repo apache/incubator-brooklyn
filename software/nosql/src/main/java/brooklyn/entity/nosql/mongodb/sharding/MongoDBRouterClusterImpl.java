@@ -28,6 +28,10 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
             }
         });
         AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Router cluster membership tracker")) {
+            @Override
+            protected void onEntityAdded(Entity member) {
+                setAnyRouter();
+            }
             protected void onEntityRemoved(Entity member) {
                 setAnyRouter();
             }
