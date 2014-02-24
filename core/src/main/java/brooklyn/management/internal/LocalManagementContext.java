@@ -307,14 +307,13 @@ public class LocalManagementContext extends AbstractManagementContext {
         
         // Notify listeners that properties have been reloaded
         for (PropertiesReloadListener listener : reloadListeners) {
-            if (listener != null)
-                listener.reloaded();
+            listener.reloaded();
         }
     }
 
     @Override
     public void addPropertiesReloadListener(PropertiesReloadListener listener) {
-        reloadListeners.add(listener);
+        reloadListeners.add(checkNotNull(listener, "listener"));
     }
 
     @Override

@@ -17,7 +17,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ManagementContext;
-import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
@@ -60,12 +60,7 @@ public class ReloadBrooklynPropertiesTest {
             final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
             LOG.info("App - " + app);
             Assert.assertEquals(app.getDisplayName(), "test-entity-basic-template");
-            Asserts.succeedsEventually(new Runnable() {
-                @Override
-                public void run() {
-                    Assert.assertTrue(app.getAttribute(Startable.SERVICE_UP));
-                }
-            });
+            EntityTestUtils.assertAttributeEqualsEventually(app, Startable.SERVICE_UP, true);
         } catch (Exception e) {
             LOG.warn("Unable to instantiate " + template + " (rethrowing): " + e);
             throw Exceptions.propagate(e);
