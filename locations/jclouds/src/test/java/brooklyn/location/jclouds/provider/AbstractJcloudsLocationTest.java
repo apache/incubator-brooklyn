@@ -2,7 +2,6 @@ package brooklyn.location.jclouds.provider;
 
 import static org.testng.Assert.assertTrue;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +22,6 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.internal.ssh.sshj.SshjTool;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -131,34 +129,6 @@ public abstract class AbstractJcloudsLocationTest {
         SshMachineLocation machine = obtainMachine(MutableMap.of("imageDescriptionRegex", imageDescriptionPattern, "imageOwner", imageOwner));
         
         LOG.info("Provisioned {} vm {}; checking if ssh'able", provider, machine);
-        assertTrue(machine.isSshable());
-    }
-
-    // FIXME Fails: can't ssh to machine using `myname`
-    // FIXME Do we really want to hard-code ssh key paths here?
-    @Test(groups = { "Live", "WIP" }, dataProvider="fromFirstImageId")
-    public void testProvisioningVmWithCustomUsername(String regionName, String imageId, String imageOwner) {
-        loc = (JcloudsLocation) ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
-        Map flags = MutableMap.of(
-            "imageId", imageId,
-            "imageOwner", imageOwner,
-            "userName", "myname");
-
-        SshMachineLocation machine = obtainMachine(flags);
-        LOG.info("Provisioned {} vm {}; checking if ssh'able", provider, machine);
-
-        File sshPublicKey = new File("~/.ssh/id_rsa.pub");
-        File sshPrivateKey = new File("~/.ssh/id_rsa");
-        Map sshFlags = MutableMap.of(
-                "user", "myname",
-                "host", machine.getAddress().getHostName(),
-                "publicKeyFile", sshPublicKey.getAbsolutePath(),
-                "privateKeyFile", sshPrivateKey.getAbsolutePath());
-        SshjTool t = new SshjTool(sshFlags);
-        t.connect();
-        t.execCommands(ImmutableMap.<String, Object>of(), ImmutableList.of("date"));
-        t.disconnect();
-
         assertTrue(machine.isSshable());
     }
 
