@@ -17,6 +17,7 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
 /**
@@ -153,6 +154,14 @@ public class ConfigBag {
         return putAll(addlConfig.getAllConfig());
     }
     
+    public <T> ConfigBag putIfAbsent(ConfigKey<T> key, T value) {
+        return putIfAbsent(ImmutableMap.of(key, value));
+    }
+
+    public ConfigBag putAsStringKeyIfAbsent(Object key, Object value) {
+        return putIfAbsent(ImmutableMap.of(key, value));
+    }
+
     public ConfigBag putIfAbsent(Map<?, ?> propertiesToSet) {
         for (Map.Entry<?, ?> entry: propertiesToSet.entrySet()) {
             Object key = entry.getKey();
@@ -181,8 +190,14 @@ public class ConfigBag {
         return (T) putStringKey(key.getName(), value);
     }
     
-    public <T> void putIfNotNull(ConfigKey<T> key, T value) {
+    public <T> ConfigBag putIfNotNull(ConfigKey<T> key, T value) {
         if (value!=null) put(key, value);
+        return this;
+    }
+
+    public <T> ConfigBag putIfAbsentAndNotNull(ConfigKey<T> key, T value) {
+        if (value!=null) putIfAbsent(key, value);
+        return this;
     }
 
     /** as {@link #put(ConfigKey, Object)} but returning this ConfigBag for fluent-style coding */

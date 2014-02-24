@@ -19,6 +19,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
+import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
@@ -147,7 +148,8 @@ public class JcloudsByonLocationResolver implements LocationResolver {
         log.debug("Created Jclouds BYON location "+name+": "+machines);
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
-                .configure(flags));
+                .configure(flags)
+                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
     }
     
     @Override

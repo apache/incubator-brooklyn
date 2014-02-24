@@ -27,7 +27,7 @@ public class ApiErrorTest {
         Exception e = new Exception("error");
         e.setStackTrace(Thread.currentThread().getStackTrace());
 
-        ApiError error = ApiError.fromThrowable(e).build();
+        ApiError error = ApiError.builderFromThrowable(e).build();
         ApiError deserialised = fromJson(asJson(error), ApiError.class);
 
         assertFalse(Strings.isNullOrEmpty(deserialised.getDetails()), "Expected details to contain exception stack trace");

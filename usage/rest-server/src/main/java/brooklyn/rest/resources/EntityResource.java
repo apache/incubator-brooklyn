@@ -24,6 +24,7 @@ import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.transform.LocationTransformer;
+import brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
 import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
@@ -109,7 +110,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       Collection<LocationSummary> result = Lists.newArrayList();
       EntityLocal e = brooklyn().getEntity(application, entity);
       for (Location l: e.getLocations()) {
-          result.add(LocationTransformer.newInstance(l, true));
+          result.add(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.NONE));
       }
       return result;
   }

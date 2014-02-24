@@ -24,6 +24,7 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
@@ -288,11 +289,12 @@ public class BasicLocationRegistry implements LocationRegistry {
     }
     
     public Location resolveLocationDefinition(LocationDefinition ld, Map locationFlags, String optionalName) {
-        MutableMap newLocationFlags = new MutableMap().add(locationFlags).add(ld.getConfig());
-        if (optionalName==null && ld.getName()!=null) optionalName = ld.getName();
-        if (optionalName!=null) newLocationFlags.add("named", optionalName);
+        ConfigBag newLocationFlags = ConfigBag.newInstance(ld.getConfig())
+            .putAll(locationFlags)
+            .putIfAbsentAndNotNull(LocationInternal.NAMED_SPEC_NAME, ld.getName())
+            .putIfAbsentAndNotNull(LocationInternal.ORIGINAL_SPEC, ld.getName());
         try {
-            return resolve(ld.getSpec(), newLocationFlags);
+            return resolve(ld.getSpec(), newLocationFlags.getAllConfig());
         } catch (Exception e) {
             throw new IllegalStateException("Cannot instantiate named location '"+optionalName+"' pointing at "+ld.getSpec()+": "+e, e);
         }

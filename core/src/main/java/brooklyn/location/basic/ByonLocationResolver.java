@@ -135,7 +135,8 @@ public class ByonLocationResolver implements LocationResolver {
         log.debug("Created BYON location "+name+": "+machines);
 
         return managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
-                .configure(flags));
+                .configure(flags)
+                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
     }
     
     @Override

@@ -62,7 +62,7 @@ public class LocalhostResolver implements LocationResolver {
     }
     
     protected Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
-        String namedLocation = (String) locationFlags.get("named");
+        String namedLocation = (String) locationFlags.get(LocationInternal.NAMED_SPEC_NAME.getName());
         
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
@@ -82,6 +82,7 @@ public class LocalhostResolver implements LocationResolver {
         }
 
         Map<String, Object> filteredProperties = new LocalhostPropertiesFromBrooklynProperties().getLocationProperties("localhost", namedLocation, properties);
+        // TODO filteredProperties stuff above should not be needed as named location items will already be passed in
         MutableMap<String, Object> flags = MutableMap.<String, Object>builder().putAll(filteredProperties).putAll(locationFlags).build();
         
         if (namePart != null) {
@@ -97,8 +98,8 @@ public class LocalhostResolver implements LocationResolver {
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
-                .configure(LocationInternal.SPEC, namedLocation!=null ? namedLocation : spec)
-                .configure(flags));
+            .configure(flags)
+            .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
     }
 
     @Override

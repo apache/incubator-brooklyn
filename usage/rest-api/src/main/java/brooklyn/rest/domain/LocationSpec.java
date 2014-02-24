@@ -6,6 +6,8 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
@@ -14,8 +16,12 @@ import com.google.common.collect.ImmutableMap;
 /** @deprecated since 0.7.0 location spec objects will not be used from the client, instead pass yaml location spec strings */
 public class LocationSpec {
 
+  @JsonSerialize(include=Inclusion.NON_NULL)
   private final String name;
+  @JsonSerialize(include=Inclusion.NON_NULL)
   private final String spec;
+  
+  @JsonSerialize(include=Inclusion.NON_EMPTY)
   private final Map<String, ?> config;
 
   public static LocationSpec localhost() {

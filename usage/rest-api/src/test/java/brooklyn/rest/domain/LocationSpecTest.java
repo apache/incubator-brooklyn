@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.rest.domain.LocationSpec;
 
+@Deprecated
 public class LocationSpecTest {
 
   final LocationSpec locationSpec = LocationSpec.localhost();

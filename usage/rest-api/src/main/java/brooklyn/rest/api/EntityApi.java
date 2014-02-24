@@ -130,7 +130,7 @@ public interface EntityApi {
       @PathParam("entity") String entity,
       @ApiParam(value = "Sensor name", required = true)
       @PathParam("sensor") String sensor,
-      @ApiParam(value="Regular expression for an entity type which must be matched", required=false)
+      @ApiParam(value="Regular expression applied to filter descendant entities based on their type", required=false)
       @DefaultValue(".*")
       @QueryParam("typeRegex") String typeRegex
   );

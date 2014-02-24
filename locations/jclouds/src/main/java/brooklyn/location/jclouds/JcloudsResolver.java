@@ -18,6 +18,7 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.BasicLocationRegistry;
+import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.text.Strings;
@@ -134,7 +135,7 @@ public class JcloudsResolver implements LocationResolver {
     @SuppressWarnings("unchecked")
     protected JcloudsLocation newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
         JcloudsSpecParser details = JcloudsSpecParser.parse(spec, false);
-        String namedLocation = (String) locationFlags.get("named");
+        String namedLocation = (String) locationFlags.get(LocationInternal.NAMED_SPEC_NAME.getName());
 
         boolean isProvider = details.isProvider();
         String providerOrApi = details.providerOrApi;
@@ -169,7 +170,7 @@ public class JcloudsResolver implements LocationResolver {
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(JcloudsLocation.class)
-                .configure(LocationInternal.SPEC, namedLocation!=null ? namedLocation : spec)
+                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, jcloudsProperties, properties, namedLocation))
                 .configure(jcloudsProperties) );
     }
 

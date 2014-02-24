@@ -51,7 +51,8 @@ public class HostLocationResolver implements LocationResolver {
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(SingleMachineProvisioningLocation.class)
                 .configure("location", target)
-                .configure("locationFlags", flags));
+                .configure("locationFlags", flags)
+                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
     }
     
     @Override
