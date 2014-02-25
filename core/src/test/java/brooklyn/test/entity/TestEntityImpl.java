@@ -1,5 +1,7 @@
 package brooklyn.test.entity;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -138,7 +140,12 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         getEntityManager().manage(child);
         return child;
     }
-    
+
+    @Override
+    public Entity createAndManageChildFromConfig() {
+        return createAndManageChild(checkNotNull(getConfig(CHILD_SPEC), "childSpec"));
+    }
+
 //    @Override
 //    public String toString() {
 //        String id = getId();
