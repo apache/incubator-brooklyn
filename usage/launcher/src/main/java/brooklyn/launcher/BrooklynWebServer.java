@@ -57,6 +57,7 @@ import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
@@ -152,11 +153,11 @@ public class BrooklynWebServer {
         if (!leftovers.isEmpty())
             log.warn("Ignoring unknown flags " + leftovers);
         
-        String brooklynDataDir = Os.tidyPath(checkNotNull(managementContext.getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR)));
-        this.webappTempDir = new File(Os.mergePaths(brooklynDataDir, "planes", managementContext.getManagementPlaneId(), managementContext.getManagementNodeId(), "jetty"));
+        String brooklynBaseDir = Os.tidyPath(checkNotNull(managementContext.getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_WEB_SERVER_BASE_DIR)));
+        this.webappTempDir = new File(Os.mergePaths(brooklynBaseDir, "planes", managementContext.getManagementPlaneId(), managementContext.getManagementNodeId(), "jetty"));
         try {
             FileUtils.forceMkdir(webappTempDir);
-            Os.deleteOnExitRecursivelyAndEmptyParentsUpTo(webappTempDir, new File(brooklynDataDir)); 
+            Os.deleteOnExitRecursivelyAndEmptyParentsUpTo(webappTempDir, new File(brooklynBaseDir)); 
         } catch (Exception e) {
             IllegalStateException e2 = new IllegalStateException("Cannot create working directory "+webappTempDir+" for embedded jetty server: "+e, e);
             log.warn(e2.getMessage()+" (rethrowing)");
@@ -183,6 +184,11 @@ public class BrooklynWebServer {
         return this;
     }
 
+    @VisibleForTesting
+    File getWebappTempDir() {
+        return webappTempDir;
+    }
+    
     public boolean getHttpsEnabled() {
         if (httpsEnabled!=null) return httpsEnabled;
         httpsEnabled = managementContext.getConfig().getConfig(BrooklynWebConfig.HTTPS_REQUIRED);

@@ -32,6 +32,7 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.os.Os;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
@@ -65,6 +66,40 @@ public class BrooklynLauncherTest {
         assertEquals(launcher.getApplications(), ImmutableList.of());
         assertTrue(webServerUri.getPort() >= 10000 && webServerUri.getPort() < 10100, "port="+webServerUri.getPort()+"; uri="+webServerUri);
         HttpTestUtils.assertUrlReachable(webServerUrlStr);
+    }
+    
+    // Integration because takes a few seconds to start web-console
+    @Test(groups="Integration")
+    public void testWebServerTempDirRespectsDataDirConfig() throws Exception {
+        String dataDirName = ".brooklyn-foo"+Strings.makeRandomId(4);
+        String dataDir = "~/"+dataDirName;
+
+        launcher = BrooklynLauncher.newInstance()
+                .brooklynProperties(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName(), dataDir)
+                .start();
+        
+        ManagementContext managementContext = launcher.getServerDetails().getManagementContext();
+        String expectedTempDir = Os.mergePaths(Os.home(), dataDirName, "planes", managementContext.getManagementPlaneId(), managementContext.getManagementNodeId(), "jetty");
+        
+        File webappTempDir = launcher.getServerDetails().getWebServer().getWebappTempDir();
+        assertEquals(webappTempDir.getAbsolutePath(), expectedTempDir);
+    }
+    
+    // Integration because takes a few seconds to start web-console
+    @Test(groups="Integration")
+    public void testWebServerTempDirRespectsWebServerBaseDirConfig() throws Exception {
+        String baseWebDirName = ".brooklyn-foo"+Strings.makeRandomId(4);
+        String baseWebDir = "~/"+baseWebDirName;
+
+        launcher = BrooklynLauncher.newInstance()
+                .brooklynProperties(BrooklynConfigKeys.BROOKLYN_WEB_SERVER_BASE_DIR.getName(), baseWebDir)
+                .start();
+        
+        ManagementContext managementContext = launcher.getServerDetails().getManagementContext();
+        String expectedTempDir = Os.mergePaths(Os.home(), baseWebDirName, "planes", managementContext.getManagementPlaneId(), managementContext.getManagementNodeId(), "jetty");
+        
+        File webappTempDir = launcher.getServerDetails().getWebServer().getWebappTempDir();
+        assertEquals(webappTempDir.getAbsolutePath(), expectedTempDir);
     }
     
     @Test
