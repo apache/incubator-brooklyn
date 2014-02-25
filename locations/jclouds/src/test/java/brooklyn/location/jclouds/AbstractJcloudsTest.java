@@ -1,5 +1,6 @@
 package brooklyn.location.jclouds;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -57,15 +58,17 @@ public class AbstractJcloudsTest {
     public void tearDown() throws Exception {
         List<Exception> exceptions = Lists.newArrayList();
         try {
-            for (JcloudsSshMachineLocation machine : machines) {
-                try {
-                    releaseMachine(machine);
-                } catch (Exception e) {
-                    LOG.warn("Error releasing machine "+machine+"; continuing...", e);
-                    exceptions.add(e);
+            if (machines != null) {
+                for (JcloudsSshMachineLocation machine : machines) {
+                    try {
+                        releaseMachine(machine);
+                    } catch (Exception e) {
+                        LOG.warn("Error releasing machine "+machine+"; continuing...", e);
+                        exceptions.add(e);
+                    }
                 }
+                machines.clear();
             }
-            machines.clear();
         } finally {
             try {
                 if (managementContext != null) Entities.destroyAll(managementContext);
@@ -114,7 +117,7 @@ public class AbstractJcloudsTest {
     protected JcloudsSshMachineLocation obtainMachine(Map<?, ?> conf) throws Exception {
         assertNotNull(jcloudsLocation);
         JcloudsSshMachineLocation result = jcloudsLocation.obtain(conf);
-        machines.add(result);
+        machines.add(checkNotNull(result, "result"));
         return result;
     }
 

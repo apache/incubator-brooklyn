@@ -9,6 +9,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.location.NoMachinesAvailableException;
@@ -26,6 +27,7 @@ public class SimpleJcloudsLocationUserLoginAndConfigLiveTest extends AbstractJcl
     
     private static final Logger log = LoggerFactory.getLogger(SimpleJcloudsLocationUserLoginAndConfigLiveTest.class);
     
+    @BeforeMethod(alwaysRun=true)
     @Override
     public void setUp() throws Exception {
         super.setUp();
