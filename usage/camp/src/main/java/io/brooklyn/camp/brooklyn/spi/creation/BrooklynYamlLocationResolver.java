@@ -34,14 +34,18 @@ public class BrooklynYamlLocationResolver {
         List<Location> locationsFromList = null;
         
         if (location!=null) {
-            if (!(location instanceof String))
-                throw new IllegalStateException("Illegal parameter for 'location' ("+location+"); must be a string");
-            locationFromString = resolveLocationFromString((String)location);
+            if (location instanceof String) {
+                locationFromString = resolveLocationFromString((String)location);
+            } else if (location instanceof Map) {
+                locationFromString = resolveLocationFromMap((Map<?,?>)location);
+            } else {
+                throw new IllegalStateException("Illegal parameter for 'location'; must be a string or map (but got "+location+")");
+            }
         }
         
         if (locations!=null) {
             if (!(locations instanceof Iterable))
-                throw new IllegalStateException("Illegal parameter for 'locations' ("+locations+"); must be an iterable");
+                throw new IllegalStateException("Illegal parameter for 'locations'; must be an iterable (but got "+locations+")");
             locationsFromList = resolveLocations( (Iterable<Object>)locations );
         }
         
@@ -69,10 +73,13 @@ public class BrooklynYamlLocationResolver {
     }
 
     public Location resolveLocation(Object location) {
-        if (location instanceof String)
+        if (location instanceof String) {
             return resolveLocationFromString((String)location);
+        } else if (location instanceof Map) {
+            return resolveLocationFromMap((Map<?,?>)location);
+        }
         // could support e.g. location definition
-        throw new IllegalStateException("Illegal parameter for 'location' ("+location+"); must be a string");
+        throw new IllegalStateException("Illegal parameter for 'location' ("+location+"); must be a string or map");
     }
     
     /** resolves the location from the given spec string, either "Named Location", or "named:Named Location" format;
@@ -97,5 +104,35 @@ public class BrooklynYamlLocationResolver {
         throw new IllegalStateException("Illegal parameter for 'location' ("+location+"); not resolvable");
     }
 
-
+    public Location resolveLocationFromMap(Map<?,?> location) {
+        if (location.size() > 1) {
+            throw new IllegalStateException("Illegal parameter for 'location'; not resolvable ("+location+")");
+        }
+        Object key = Iterables.getOnlyElement(location.keySet());
+        Object value = location.get(key);
+        
+        if (!(key instanceof String)) {
+            throw new IllegalStateException("Illegal parameter for 'location'; expected String key ("+location+")");
+        }
+        if (!(value instanceof Map)) {
+            throw new IllegalStateException("Illegal parameter for 'location'; expected config map ("+location+")");
+        }
+        String spec = (String) key;
+        Map<?,?> flags = (Map<?, ?>) value;
+        
+        LocationDefinition ldef = mgmt.getLocationRegistry().getDefinedLocationByName((String)spec);
+        if (ldef!=null)
+            // found it as a named location
+            return mgmt.getLocationRegistry().resolve(ldef, flags);
+        
+        if (mgmt.getLocationRegistry().canMaybeResolve(spec)) {
+            try {
+                return mgmt.getLocationRegistry().resolve(spec, flags);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                throw new IllegalStateException("Illegal parameter for 'location'; not resolvable ("+location+"): "+e, e);
+            }
+        }
+        throw new IllegalStateException("Illegal parameter for 'location'; not resolvable ("+location+")");
+    }
 }

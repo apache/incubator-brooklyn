@@ -269,7 +269,12 @@ public class BasicLocationRegistry implements LocationRegistry {
     
     @Override
     public Location resolve(LocationDefinition ld) {
-        return resolveLocationDefinition(ld, Collections.emptyMap(), null);
+        return resolve(ld, Collections.emptyMap());
+    }
+    
+    @Override
+    public Location resolve(LocationDefinition ld, Map<?,?> flags) {
+        return resolveLocationDefinition(ld, flags, null);
     }
     
     public Location resolveLocationDefinition(LocationDefinition ld, Map locationFlags, String optionalName) {

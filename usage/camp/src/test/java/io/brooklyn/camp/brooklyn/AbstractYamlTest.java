@@ -58,7 +58,7 @@ public abstract class AbstractYamlTest {
         return createAndStartApplication(Streams.newReaderWithContents(builder.toString()));
     }
 
-    private Entity createAndStartApplication(Reader input) throws Exception {
+    protected Entity createAndStartApplication(Reader input) throws Exception {
         AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
         Assembly assembly;
         try {
