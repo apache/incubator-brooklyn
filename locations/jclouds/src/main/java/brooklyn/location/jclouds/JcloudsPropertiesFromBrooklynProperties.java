@@ -10,6 +10,7 @@ import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.location.basic.DeprecatedKeysMappingBuilder;
 import brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
+import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -83,13 +84,24 @@ public class JcloudsPropertiesFromBrooklynProperties extends LocationPropertiesF
         return jcloudsProperties;
     }
 
-    protected String getProviderName(String providerOrApi, String locationName, Map<String, ?> properties) {
+    protected String getProviderName(String providerOrApi, String namedLocationName, Map<String, ?> properties) {
         String provider = providerOrApi;
-        if (!Strings.isNullOrEmpty(locationName)) {
-            String providerDefinition = (String) properties.get(String.format("brooklyn.location.named.%s", locationName));
-            if (providerDefinition!=null)
-                provider = getProviderFromDefinition(providerDefinition);
-        }
+            if (!Strings.isNullOrEmpty(namedLocationName)) {
+                String providerDefinition = (String) properties.get(String.format("brooklyn.location.named.%s", namedLocationName));
+                if (providerDefinition!=null) {
+                    String provider2 = getProviderFromDefinition(providerDefinition);
+                    if (provider==null) {
+                        // 0.7.0 25 Feb -- is this even needed?
+                        LOG.warn(JavaClassNames.niceClassAndMethod()+" NOT set with provider, inferring from locationName "+namedLocationName+" as "+provider2);
+                        provider = provider2;
+                    } else if (!provider.equals(provider2)) {
+                        if (!Strings.isNullOrEmpty(namedLocationName)) {
+                            // 0.7.0 25 Feb -- this is breaking backwards compatibility, but I think fixing how/when providers are inferred in this way
+                            LOG.warn(JavaClassNames.niceClassAndMethod()+" NOT changing provider from "+provider+" to candidate "+provider2);
+                        }
+                    }
+                }
+            }
         return provider;
     }
     

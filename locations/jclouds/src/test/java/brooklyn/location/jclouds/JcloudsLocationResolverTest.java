@@ -218,6 +218,25 @@ public class JcloudsLocationResolverTest {
 
     }
 
+    @Test
+    public void testResolvesJcloudsFromNamedOfNamedWithPropertiesOverriddenCorrectly() throws Exception {
+        brooklynProperties.put("brooklyn.location.jclouds.softlayer.prop1", "1");
+        brooklynProperties.put("brooklyn.location.jclouds.softlayer.prop2", "1");
+        brooklynProperties.put("brooklyn.location.jclouds.softlayer.prop3", "1");
+        brooklynProperties.put("brooklyn.location.named.foo", "jclouds:softlayer:138124");
+        brooklynProperties.put("brooklyn.location.named.foo.prop2", "2");
+        brooklynProperties.put("brooklyn.location.named.foo.prop3", "2");
+        brooklynProperties.put("brooklyn.location.named.bar", "named:foo");
+        brooklynProperties.put("brooklyn.location.named.bar.prop3", "3");
+        
+        JcloudsLocation l = resolve("named:bar");
+        assertJcloudsEquals(l, "softlayer", "138124");
+        assertEquals(l.getAllConfig(false).get("prop3"), "3");
+        assertEquals(l.getAllConfig(false).get("prop2"), "2");
+        assertEquals(l.getAllConfig(false).get("prop1"), "1");
+    }
+
+
     private void assertJcloudsEquals(JcloudsLocation loc, String expectedProvider, String expectedRegion) {
         assertEquals(loc.getProvider(), expectedProvider);
         assertEquals(loc.getRegion(), expectedRegion);
