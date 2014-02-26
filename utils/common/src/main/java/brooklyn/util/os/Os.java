@@ -198,13 +198,21 @@ public class Os {
      * also the return type might be modified in future to supply more information;
      * thus it is marked beta */
     @Beta
-    public static boolean tryDeleteDirectory(String dir) {
+    public static boolean tryDeleteDirectory(File dir) {
         try {
-            FileUtils.deleteDirectory(new File(dir));
+            FileUtils.deleteDirectory(dir);
             return true;
         } catch (IOException e) {
             return false;
         }
+    }
+    
+    /**
+     * @see {@link #tryDeleteDirectory(File)}
+     */
+    @Beta
+    public static boolean tryDeleteDirectory(String dir) {
+        return tryDeleteDirectory(new File(dir));
     }
 
     private static class FileDeletionHook {
