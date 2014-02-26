@@ -6,10 +6,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,8 @@ public class LocalManagementContext extends AbstractManagementContext {
     private static final Set<LocalManagementContext> INSTANCES = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<LocalManagementContext, Boolean>()));
     
     private final Builder builder;
+    
+    private final List<ManagementContext.PropertiesReloadListener> reloadListeners = new CopyOnWriteArrayList<ManagementContext.PropertiesReloadListener>();
 
     @VisibleForTesting
     static Set<LocalManagementContext> getInstances() {
@@ -300,5 +304,20 @@ public class LocalManagementContext extends AbstractManagementContext {
 
         // Force reload of location registry
         this.locationRegistry = null;
+        
+        // Notify listeners that properties have been reloaded
+        for (PropertiesReloadListener listener : reloadListeners) {
+            listener.reloaded();
+        }
+    }
+
+    @Override
+    public void addPropertiesReloadListener(PropertiesReloadListener listener) {
+        reloadListeners.add(checkNotNull(listener, "listener"));
+    }
+
+    @Override
+    public void removePropertiesReloadListener(PropertiesReloadListener listener) {
+        reloadListeners.remove(listener);
     }
 }

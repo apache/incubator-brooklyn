@@ -1,9 +1,14 @@
 package brooklyn.management.internal;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -12,6 +17,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynProperties.Factory.Builder;
 import brooklyn.location.Location;
+import brooklyn.management.ManagementContext.PropertiesReloadListener;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -75,5 +81,25 @@ public class LocalManagementContextTest {
         assertEquals(properties.get("myname"), "newval");
         // TODO: Should changes in the 'properties' collection be reflected in context.getBrooklynProperties()?
         assertNotEquals(context.getBrooklynProperties().get("myname"), "newval");
+    }
+    
+    @Test
+    public void testAddAndRemoveReloadListener() {
+        final AtomicInteger reloadedCallbackCount = new AtomicInteger(0);
+        BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
+        properties.put("myname", "myval");
+        LocalManagementContext context = new LocalManagementContext(properties);
+        PropertiesReloadListener listener = new PropertiesReloadListener() {
+            public void reloaded() {
+                reloadedCallbackCount.incrementAndGet();
+            }
+        };
+        assertEquals(reloadedCallbackCount.get(), 0);
+        context.addPropertiesReloadListener(listener);
+        context.reloadBrooklynProperties();
+        assertEquals(reloadedCallbackCount.get(), 1);
+        context.removePropertiesReloadListener(listener);
+        context.reloadBrooklynProperties();
+        assertEquals(reloadedCallbackCount.get(), 1);
     }
 }
