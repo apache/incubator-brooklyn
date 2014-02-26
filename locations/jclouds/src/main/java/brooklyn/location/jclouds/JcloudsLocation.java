@@ -87,6 +87,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.internal.ssh.ShellTool;
@@ -159,6 +160,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d*$");
     
     private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
+    
+    @SetFromFlag // so it's persisted
     private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
 
     public JcloudsLocation() {

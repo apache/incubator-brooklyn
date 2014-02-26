@@ -1,4 +1,4 @@
-package brooklyn.location.jclouds;
+package brooklyn.location.jclouds.provider;
 
 import static org.testng.Assert.*
 
@@ -10,6 +10,8 @@ import org.testng.annotations.Test
 
 import brooklyn.config.BrooklynProperties
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.jclouds.JcloudsLocation
+import brooklyn.location.jclouds.JcloudsSshMachineLocation
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.collections.MutableMap
 
@@ -20,7 +22,7 @@ import com.google.common.collect.ImmutableList
  * and one of its private vApp templates). Note that the template is for a Windows 2008 
  * machine with winsshd installed.
  * 
- * TODO Will only work with jclouds 1.5, due to jclouds issues 994 and 995. Therefore it 
+ * TODO Will only work with >= jclouds 1.5, due to jclouds issues 994 and 995. Therefore it 
  * will not work in brooklyn 0.4.0-M2 etc.
  */
 class CarrenzaLocationLiveTest {

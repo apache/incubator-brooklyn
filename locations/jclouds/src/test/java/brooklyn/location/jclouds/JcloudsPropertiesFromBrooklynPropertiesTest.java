@@ -12,9 +12,9 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
     
     protected static Map<String, Object> sampleProviderOrApiProps() {
         Map<String, Object> map = Maps.newHashMap();
-        map.put("brooklyn.jclouds.FooServers.identity", "bob");
-        map.put("brooklyn.jclouds.FooServers.credential", "s3cr3t");
-        map.put("brooklyn.jclouds.FooServers.jclouds.ssh.max-retries", "100");
+        map.put("brooklyn.location.jclouds.FooServers.identity", "bob");
+        map.put("brooklyn.location.jclouds.FooServers.credential", "s3cr3t");
+        map.put("brooklyn.location.jclouds.FooServers.jclouds.ssh.max-retries", "100");
         return map;
     }
 
@@ -30,7 +30,7 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
 
     protected static Map<String, Object> unsupportedSampleProviderOrApiProps() {
         Map<String, Object> map = Maps.newHashMap();
-        map.put("brooklyn.jclouds.FooServers.image-id", "invalid-image-id");
+        map.put("brooklyn.location.jclouds.FooServers.image-id", "invalid-image-id");
         return map;
     }
     

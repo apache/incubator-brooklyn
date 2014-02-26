@@ -1,4 +1,4 @@
-package brooklyn.location.jclouds;
+package brooklyn.location.jclouds.provider;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -8,8 +8,8 @@ public class AwsEc2LocationLiveTest extends AbstractJcloudsLocationTest {
     private static final String PROVIDER = "aws-ec2";
     private static final String EUWEST_REGION_NAME = "eu-west-1";
     private static final String USEAST_REGION_NAME = "us-east-1";
-    private static final String EUWEST_IMAGE_ID = EUWEST_REGION_NAME+"/"+"ami-89def4fd";
-    private static final String USEAST_IMAGE_ID = USEAST_REGION_NAME+"/"+"ami-2342a94a";
+    private static final String EUWEST_IMAGE_ID = EUWEST_REGION_NAME+"/"+"ami-89def4fd"; // RightImage_CentOS_5.4_i386_v5.5.9_EBS
+    private static final String USEAST_IMAGE_ID = USEAST_REGION_NAME+"/"+"ami-2342a94a"; // RightImage_CentOS_5.4_i386_v5.5.9_EBS
     private static final String IMAGE_OWNER = "411009282317";
     private static final String IMAGE_PATTERN = "RightImage_CentOS_5.4_i386_v5.5.9_EBS";
 

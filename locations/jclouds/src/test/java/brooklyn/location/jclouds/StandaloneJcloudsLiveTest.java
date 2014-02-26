@@ -38,20 +38,24 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
-public class StandaloneJcloudsTest {
+public class StandaloneJcloudsLiveTest {
 
     // FIXME Why do this?
     // Were we seeing bugs in jclouds for which this was easier to debug and report
     // Is it because testProvisioningVmWithCustomUsername is disabled and not working?
     
-    public static final Logger LOG = LoggerFactory.getLogger(StandaloneJcloudsTest.class);
+    public static final Logger LOG = LoggerFactory.getLogger(StandaloneJcloudsLiveTest.class);
+    
+    private static final String PROVIDER = AbstractJcloudsTest.AWS_EC2_PROVIDER;
+    private static final String REGION = AbstractJcloudsTest.AWS_EC2_USEAST_REGION_NAME;
+    private static final String PRIVATE_IMAGE_ID = "us-east-1/ami-f95cf390";
     
     static BrooklynProperties globals = BrooklynProperties.Factory.newDefault();
 
-    String identity = globals.getFirst("brooklyn.jclouds.aws-ec2.identity");
-    String credential = globals.getFirst("brooklyn.jclouds.aws-ec2.credential");
+    String identity = globals.getFirst("brooklyn.location.jclouds.aws-ec2.identity");
+    String credential = globals.getFirst("brooklyn.location.jclouds.aws-ec2.credential");
     
-    @Test(groups={"WIP","Live"})
+    @Test(enabled=false, groups={"WIP","Live"})
     public void createVm() {
         String groupId = "mygroup-"+System.getProperty("user.name")+"-"+UUID.randomUUID().toString();
  
@@ -61,7 +65,7 @@ public class StandaloneJcloudsTest {
         // handy to list all images... but very slow!
 //        properties.setProperty(AWSEC2Constants.PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine");
 
-        ComputeServiceContext computeServiceContext = ContextBuilder.newBuilder("aws-ec2").
+        ComputeServiceContext computeServiceContext = ContextBuilder.newBuilder(PROVIDER).
                 modules(Arrays.asList(new SshjSshClientModule(), new SLF4JLoggingModule())).
                 credentials(identity, credential).
                 overrides(properties).
@@ -74,7 +78,7 @@ public class StandaloneJcloudsTest {
             LOG.info("Creating VM for "+identity);
 
             TemplateBuilder templateBuilder = computeService.templateBuilder();
-            templateBuilder.locationId("eu-west-1");
+            templateBuilder.locationId(REGION);
             
             Template template = templateBuilder.build();
             Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupId, 1, template);
@@ -132,7 +136,7 @@ public class StandaloneJcloudsTest {
         
     }
     
-    @Test(groups={"WIP","Live"})
+    @Test(enabled=false, groups={"WIP","Live"})
     public void createVmWithAdminUser() {
         String groupId = "mygroup-"+System.getProperty("user.name")+"-"+UUID.randomUUID().toString();
  
@@ -140,7 +144,7 @@ public class StandaloneJcloudsTest {
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true));
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true));
 
-        ComputeServiceContext computeServiceContext = ContextBuilder.newBuilder("aws-ec2").
+        ComputeServiceContext computeServiceContext = ContextBuilder.newBuilder(PROVIDER).
                 modules(Arrays.asList(new SshjSshClientModule(), new SLF4JLoggingModule())).
                 credentials(identity, credential).
                 overrides(properties).
@@ -155,12 +159,12 @@ public class StandaloneJcloudsTest {
             String myPrivKey = Files.toString(new File(System.getProperty("user.home")+"/.ssh/aws-id_rsa"), Charset.defaultCharset());
 
             TemplateBuilder templateBuilder = computeService.templateBuilder();
-            templateBuilder.locationId("us-east-1");
+            templateBuilder.locationId(REGION);
             TemplateOptions opts = new TemplateOptions();
             
 //            templateBuilder.imageId("us-east-1/ami-2342a94a");  //rightscale
             // either use above, or below
-            templateBuilder.imageId("us-east-1/ami-f95cf390");  //private one (to test when user isn't autodetected)
+            templateBuilder.imageId(PRIVATE_IMAGE_ID);  //private one (to test when user isn't autodetected)
             opts.overrideLoginUser("ec2-user");
             
             AdminAccess.Builder adminBuilder = AdminAccess.builder().

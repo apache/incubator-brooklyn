@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.test.Asserts;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.net.Networking;
@@ -105,10 +106,12 @@ public class NetworkingUtilsTest {
             // repeat until we can get a port
         } while (ss == null && port < 60000);
         Assert.assertNotNull(ss, "could not get a port");
-        for (int i=0; i<100; i++)
-            if (!Networking.isPortAvailable(port))
-                Time.sleep(100);
-        assertTrue(Networking.isPortAvailable(port), "port not made available afterwards");
+        
+        final int portF = port;
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                assertTrue(Networking.isPortAvailable(portF), "port "+portF+" not made available afterwards");
+            }});
     }
     
     //just some system health-checks... localhost may not resolve properly elsewhere

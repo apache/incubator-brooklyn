@@ -21,7 +21,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
-import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
@@ -41,6 +40,9 @@ import com.google.common.reflect.TypeToken;
  */
 public class JcloudsLocationTest implements JcloudsLocationConfig {
 
+    // Don't care which image; not actually provisioning
+    private static final String US_EAST_IMAGE_ID = "us-east-1/ami-7d7bfc14";
+    
     public static final RuntimeException BAIL_OUT_FOR_TESTING = 
             new RuntimeException("early termination for test");
     
@@ -151,12 +153,12 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         String identity = (String) brooklynProperties.get("brooklyn.location.jclouds.aws-ec2.identity");
         if (identity == null) identity = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.identity");
         String credential = (String) brooklynProperties.get("brooklyn.location.jclouds.aws-ec2.credential");
-        if (credential == null) identity = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.credential");
+        if (credential == null) credential = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.credential");
         
         Map<ConfigKey<?>,?> allConfig = MutableMap.<ConfigKey<?>,Object>builder()
-                .put(CLOUD_PROVIDER, "aws-ec2")
-                .put(CLOUD_REGION_ID, "eu-west-1")
-                .put(IMAGE_ID, "us-east-1/ami-7d7bfc14") // so it runs faster, without loading all EC2 images
+                .put(CLOUD_PROVIDER, AbstractJcloudsTest.AWS_EC2_PROVIDER)
+                .put(CLOUD_REGION_ID, AbstractJcloudsTest.AWS_EC2_USEAST_REGION_NAME)
+                .put(IMAGE_ID, US_EAST_IMAGE_ID) // so it runs faster, without loading all EC2 images
                 .put(ACCESS_IDENTITY, identity)
                 .put(ACCESS_CREDENTIAL, credential)
                 .put(USER, "fred")
@@ -189,13 +191,14 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             }
         };
     }
+    
     private BrooklynProperties brooklynProperties;
     private LocalManagementContext managementContext;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        brooklynProperties = BrooklynProperties.Factory.newDefault();
-        managementContext = new LocalManagementContext(brooklynProperties);
+        managementContext = new LocalManagementContext();
+        brooklynProperties = managementContext.getBrooklynProperties();
     }
     
     @AfterMethod(alwaysRun=true)

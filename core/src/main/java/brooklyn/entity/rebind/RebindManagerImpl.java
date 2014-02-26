@@ -36,6 +36,7 @@ import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
+import brooklyn.mementos.TreeNode;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -236,7 +237,7 @@ public class RebindManagerImpl implements RebindManager {
     
             // Reconstruct locations
             LOG.info("RebindManager reconstructing locations");
-            for (LocationMemento locMemento : memento.getLocationMementos().values()) {
+            for (LocationMemento locMemento : sortParentFirst(memento.getLocationMementos()).values()) {
                 Location location = rebindContext.getLocation(locMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", locMemento);
     
@@ -254,7 +255,7 @@ public class RebindManagerImpl implements RebindManager {
     
             // Reconstruct entities
             LOG.info("RebindManager reconstructing entities");
-            for (EntityMemento entityMemento : memento.getEntityMementos().values()) {
+            for (EntityMemento entityMemento : sortParentFirst(memento.getEntityMementos()).values()) {
                 Entity entity = rebindContext.getEntity(entityMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
     
@@ -290,7 +291,36 @@ public class RebindManagerImpl implements RebindManager {
             throw Exceptions.propagate(e);
         }
     }
-        
+    
+    /**
+     * Sorts the map of nodes, so that a node's parent is guaranteed to come before that node
+     * (unless the parent is missing).
+     * 
+     * Relies on ordering guarantees of returned map (i.e. LinkedHashMap, which guarantees insertion order 
+     * even if a key is re-inserted into the map).
+     * 
+     * TODO Inefficient implementation!
+     */
+    @VisibleForTesting
+    <T extends TreeNode> Map<String, T> sortParentFirst(Map<String, T> nodes) {
+        Map<String, T> result = Maps.newLinkedHashMap();
+        for (Map.Entry<String, T> entry : nodes.entrySet()) {
+            String id = entry.getKey();
+            T node = entry.getValue();
+            List<T> tempchain = Lists.newLinkedList();
+            
+            T nodeinchain = node;
+            while (nodeinchain != null) {
+                tempchain.add(0, nodeinchain);
+                nodeinchain = nodes.get(nodeinchain.getParent());
+            }
+            for (T n : tempchain) {
+                result.put(n.getId(), n);
+            }
+        }
+        return result;
+    }
+
     private Entity newEntity(EntityMemento memento, Reflections reflections) {
         String entityId = memento.getId();
         String entityType = checkNotNull(memento.getType(), "entityType of "+entityId);
