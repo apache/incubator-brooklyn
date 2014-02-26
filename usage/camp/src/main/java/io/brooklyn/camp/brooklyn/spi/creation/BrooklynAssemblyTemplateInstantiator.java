@@ -1,7 +1,6 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatform;
@@ -19,7 +18,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -112,7 +110,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         if (Strings.isEmpty(type)) {
             clazz = BasicApplication.class;
         } else {
-            clazz = new BrooklynEntityClassResolver(type).apply(mgmt);
+            clazz = BrooklynEntityClassResolver.resolve(type, mgmt);
         }
         
         try {
@@ -322,7 +320,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                 keyNamesUsed.add(r.getFlagName());
             }
             if (r.getConfigKeyMaybeValue().isPresent()) {
-                spec.configure((ConfigKey<Object>)r.getConfigKey(), r.getConfigKeyMaybeValue().get());
+                Object transformed = transformSpecialFlags(r.getConfigKeyMaybeValue().get(), mgmt);
+                spec.configure((ConfigKey<Object>)r.getConfigKey(), transformed);
                 keyNamesUsed.add(r.getConfigKey().getName());
             }
         }
@@ -333,8 +332,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         for (String key: MutableSet.copyOf(bag.getUnusedConfig().keySet())) {
             // we don't let a flag with the same name as a config key override the config key
             // (that's why we check whether it is used)
-            if (!keyNamesUsed.contains(key))
-                spec.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), bag.getStringKey(key));
+            if (!keyNamesUsed.contains(key)) {
+                Object transformed = transformSpecialFlags(bag.getStringKey(key), mgmt);
+                spec.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), transformed);
+            }
         }
     }
 
@@ -343,10 +344,11 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
      * @return The modified flag, or the flag unchanged.
      */
     protected Object transformSpecialFlags(Object flag, ManagementContext mgmt) {
-        if (flag instanceof BrooklynEntityClassResolver) {
-            BrooklynEntityClassResolver specResolver = (BrooklynEntityClassResolver) flag;
-            Class<? extends Entity> specClass = specResolver.apply(mgmt);
-            return buildSpec(mgmt, specClass, specResolver.getSpecConfiguration());
+        if (flag instanceof EntitySpecConfiguration) {
+            EntitySpecConfiguration specConfig = (EntitySpecConfiguration) flag;
+            String type = (String) checkNotNull(specConfig.getSpecConfiguration().get("type"), "entitySpec must have key 'type'");
+            Class<? extends Entity> clazz = BrooklynEntityClassResolver.resolve(type, mgmt);
+            return buildSpec(mgmt, clazz, specConfig.getSpecConfiguration());
         }
         return flag;
     }
@@ -360,7 +362,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             for (Map<String, Object> childAttrs : childConfig) {
                 MutableMap<String, Object> childAttrsMutable = MutableMap.copyOf(childAttrs);
                 String bTypeName = Strings.removeFromStart((String)childAttrsMutable.remove("serviceType"), "brooklyn:");
-                final Class<? extends Entity> bType = new BrooklynEntityClassResolver(bTypeName).apply(mgmt);
+                final Class<? extends Entity> bType = BrooklynEntityClassResolver.resolve(bTypeName, mgmt);
 
                 final EntitySpec<? extends Entity> spec = buildSpec(mgmt, bType, childAttrsMutable);
                 spec.parent(parent);
@@ -389,7 +391,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             final PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             final String bTypeName = Strings.removeFromStart(appChildComponentTemplate.getType(), "brooklyn:");
-            final Class<? extends Entity> bType = new BrooklynEntityClassResolver(bTypeName).apply(mgmt);
+            final Class<? extends Entity> bType = BrooklynEntityClassResolver.resolve(bTypeName, mgmt);
 
             final EntitySpec<? extends Entity> spec = buildSpec(mgmt, bType, appChildComponentTemplate);
             spec.parent(app);

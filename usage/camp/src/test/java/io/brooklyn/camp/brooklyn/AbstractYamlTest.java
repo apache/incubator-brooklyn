@@ -7,6 +7,7 @@ import java.io.Reader;
 import java.util.Set;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
@@ -19,6 +20,8 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.stream.Streams;
 
 public abstract class AbstractYamlTest {
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractYamlTest.class);
 
     private ManagementContext brooklynMgmt;
     private BrooklynCampPlatform platform;
@@ -70,6 +73,16 @@ public abstract class AbstractYamlTest {
         getLogger().info("Test - created " + assembly);
         final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
         getLogger().info("App - " + app);
+        return app;
+    }
+
+    protected Entity createStartWaitAndLogApplication(Reader input) throws Exception {
+        Entity app = createAndStartApplication(input);
+        waitForApplicationTasks(app);
+
+        getLogger().info("App started:");
+        Entities.dumpInfo(app);
+        
         return app;
     }
 

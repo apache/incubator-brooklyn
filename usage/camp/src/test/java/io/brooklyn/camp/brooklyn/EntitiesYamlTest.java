@@ -3,6 +3,7 @@ package io.brooklyn.camp.brooklyn;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +21,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.internal.EntityManagerInternal;
@@ -461,6 +463,72 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         }
     }
 
+    @Test
+    public void testEntitySpecConfig() throws Exception {
+        String yaml =
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntity\n"+
+                "  brooklyn.config:\n"+
+                "   test.childSpec:\n"+
+                "     $brooklyn:entitySpec:\n"+
+                "       type: brooklyn.test.entity.TestEntity\n"+
+                "       brooklyn.config:\n"+
+                "         test.confName: inchildspec\n";
+        
+        Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
+        TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
+        
+        TestEntity child = (TestEntity) entity.createAndManageChildFromConfig();
+        assertEquals(child.getConfig(TestEntity.CONF_NAME), "inchildspec");
+    }
+    
+    @Test
+    public void testNestedEntitySpecConfigs() throws Exception {
+        String yaml =
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntity\n"+
+                "  brooklyn.config:\n"+
+                "   test.childSpec:\n"+
+                "     $brooklyn:entitySpec:\n"+
+                "       type: brooklyn.test.entity.TestEntity\n"+
+                "       brooklyn.config:\n"+
+                "         test.confName: inchildspec\n"+
+                "         test.childSpec:\n"+
+                "           $brooklyn:entitySpec:\n"+
+                "             type: brooklyn.test.entity.TestEntity\n"+
+                "             brooklyn.config:\n"+
+                "               test.confName: ingrandchildspec\n";
+        
+        Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
+        TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
+        
+        TestEntity child = (TestEntity) entity.createAndManageChildFromConfig();
+        assertEquals(child.getConfig(TestEntity.CONF_NAME), "inchildspec");
+        
+        TestEntity grandchild = (TestEntity) child.createAndManageChildFromConfig();
+        assertEquals(grandchild.getConfig(TestEntity.CONF_NAME), "ingrandchildspec");
+    }
+    
+    @Test
+    public void testEntitySpecInUnmatchedConfig() throws Exception {
+        String yaml =
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntity\n"+
+                "  brooklyn.config:\n"+
+                "   key.does.not.match:\n"+
+                "     $brooklyn:entitySpec:\n"+
+                "       type: brooklyn.test.entity.TestEntity\n"+
+                "       brooklyn.config:\n"+
+                "         test.confName: inchildspec\n";
+        
+        Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
+        TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
+        EntitySpec<?> entitySpec = (EntitySpec<?>) entity.getAllConfigBag().getStringKey("key.does.not.match");
+        assertEquals(entitySpec.getType(), TestEntity.class);
+        assertEquals(entitySpec.getConfig(), ImmutableMap.of(TestEntity.CONF_NAME, "inchildspec"));
+    }
+    
+    @Override
     protected Logger getLogger() {
         return log;
     }

@@ -1,19 +1,17 @@
 package io.brooklyn.camp.brooklyn.spi.dsl.methods;
 
-import java.util.Map;
+import io.brooklyn.camp.brooklyn.spi.creation.EntitySpecConfiguration;
+import io.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
+import io.brooklyn.camp.brooklyn.spi.dsl.DslUtils;
 
-import com.google.common.base.Function;
+import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.util.exceptions.Exceptions;
-import io.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityClassResolver;
-import io.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
-import io.brooklyn.camp.brooklyn.spi.dsl.DslUtils;
 
 /** static import functions which can be used in `$brooklyn:xxx` contexts */
 public class BrooklynDslCommon {
@@ -59,8 +57,7 @@ public class BrooklynDslCommon {
         }
     }
 
-    public static Function<ManagementContext, Class<? extends Entity>> entitySpec(Map<String, Object> arguments) {
-        return new BrooklynEntityClassResolver(arguments);
+    public static EntitySpecConfiguration entitySpec(Map<String, Object> arguments) {
+        return new EntitySpecConfiguration(arguments);
     }
-    
 }
