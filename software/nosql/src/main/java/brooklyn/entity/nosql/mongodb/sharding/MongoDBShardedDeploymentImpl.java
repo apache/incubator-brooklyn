@@ -19,13 +19,15 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
+import brooklyn.location.MachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 public class MongoDBShardedDeploymentImpl extends AbstractEntity implements MongoDBShardedDeployment {
     

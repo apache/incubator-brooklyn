@@ -4,6 +4,7 @@ import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
 
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import brooklyn.entity.Entity;
@@ -17,14 +18,22 @@ import brooklyn.util.task.TaskBuilder;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 
 	private final String componentId;
+	private final Scope scope;
 
 	public DslComponent(String componentId) {
-		this.componentId = componentId;
+		this(Scope.GLOBAL, componentId);
+	}
+	
+	public DslComponent(Scope scope, String componentId) {
+	    this.componentId = componentId;
+	    this.scope = scope;
 	}
 
     @Override
@@ -32,9 +41,24 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
         return TaskBuilder.<Entity>builder().name("component("+componentId+")").body(new Callable<Entity>() {
             @Override
             public Entity call() throws Exception {
-                Iterable<Entity> entitiesInApp = ((EntityManagerInternal)entity().getManagementContext().getEntityManager())
+                if (scope == Scope.THIS)
+                    return entity();
+                if (scope == Scope.PARENT)
+                    return entity().getParent();
+                Iterable<Entity> entitiesToSearch = null;
+                if (scope == Scope.GLOBAL)
+                    entitiesToSearch = ((EntityManagerInternal)entity().getManagementContext().getEntityManager())
                         .getAllEntitiesInApplication( entity().getApplication() );
-                Optional<Entity> result = Iterables.tryFind(entitiesInApp, new Predicate<Entity>() {
+                if (scope == Scope.DESCENDANT) {
+                    entitiesToSearch = Sets.newHashSet();
+                    addDescendants(entity(), (Set<Entity>)entitiesToSearch);
+                }
+                if (scope == Scope.SIBLING) {
+                    entitiesToSearch = entity().getParent().getChildren();
+                }
+                if (scope == Scope.CHILD)
+                    entitiesToSearch = entity().getChildren();
+                Optional<Entity> result = Iterables.tryFind(entitiesToSearch, new Predicate<Entity>() {
                     @Override
                     public boolean apply(Entity input) {
                         return componentId.equals(input.getConfig(BrooklynCampConstants.PLAN_ID));
@@ -47,6 +71,13 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
                 throw new NoSuchElementException("No entity matching id " + componentId);
             }
         }).build();
+    }
+    
+    private void addDescendants(Entity entity, Set<Entity> entities) {
+        entities.add(entity);
+        for (Entity child : entity.getChildren()) {
+            addDescendants(child, entities);
+        }
     }
     
 	public BrooklynDslDeferredSupplier<?> attributeWhenReady(final String sensorName) {
@@ -62,6 +93,37 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 				return (Task<Object>) DependentConfiguration.attributeWhenReady(targetEntity, (AttributeSensor<?>)targetSensor);
 			}
 		};
+	}
+	
+	public static class Scope {
+	    public static final Scope GLOBAL = new Scope("global");
+	    public static final Scope CHILD = new Scope("child");
+	    public static final Scope PARENT = new Scope("parent");
+	    public static final Scope SIBLING = new Scope("sibling");
+	    public static final Scope DESCENDANT = new Scope("descendant");
+	    public static final Scope THIS = new Scope("this");
+	    
+	    public static final Set<Scope> VALUES = ImmutableSet.of(GLOBAL, CHILD, PARENT, SIBLING, DESCENDANT, THIS);
+	    
+	    private final String name;
+	    
+	    private Scope(String name) {
+	        this.name = name;
+	    }
+	    
+	    public static Scope fromString(String name) {
+	        for (Scope scope : VALUES)
+	            if (scope.name.equals(name))
+	                return scope;
+	        throw new IllegalArgumentException(name + " is not a valid scope");
+	    }
+	    
+	    public static boolean isValid(String name) {
+	        for (Scope scope : VALUES)
+	            if (scope.name.equals(name))
+	                return true;
+	        return false;
+	    }
 	}
 
 }

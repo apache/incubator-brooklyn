@@ -1,5 +1,8 @@
 package brooklyn.entity.nosql.mongodb.sharding;
 
+import java.util.List;
+import java.util.Map;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SameServerEntity;
@@ -21,6 +24,11 @@ public interface CoLocatedMongoDBRouter extends SameServerEntity {
     @SetFromFlag("shardedDeployment")
     ConfigKey<MongoDBShardedDeployment> SHARDED_DEPLOYMENT = ConfigKeys.newConfigKey(MongoDBShardedDeployment.class, 
             "mongodb.colocatedrouter.shardeddeployment", "Sharded deployment to which the router should report");
+    
+    @SuppressWarnings("serial")
+    @SetFromFlag("propogatingSensors")
+    ConfigKey<List<Map<String, ?>>> PROPOGATING_SENSORS = ConfigKeys.newConfigKey(new TypeToken<List<Map<String, ?>>>(){}, 
+            "mongodb.colocatedrouter.propogating.sensors", "List of sensors to be propogated from child members");
     
     public static AttributeSensor<MongoDBRouter> ROUTER = Sensors.newSensor(MongoDBRouter.class, "mongodb.colocatedrouter.router",
             "Router");

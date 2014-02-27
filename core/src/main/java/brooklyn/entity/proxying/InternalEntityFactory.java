@@ -158,7 +158,7 @@ public class InternalEntityFactory {
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public <T extends Entity> T initEntity(T entity, EntitySpec<T> spec) {
+    public <T extends Entity> T initEntity(final T entity, final EntitySpec<T> spec) {
         try {
             if (spec.getDisplayName()!=null)
                 ((AbstractEntity)entity).setDisplayName(spec.getDisplayName());
@@ -173,23 +173,28 @@ public class InternalEntityFactory {
             for (EntityInitializer initializer: spec.getInitializers())
                 initializer.apply((EntityInternal)entity);
             
-            for (Enricher enricher : spec.getEnrichers()) {
-                entity.addEnricher(enricher);
-            }
-            
-            for (EnricherSpec<?> enricherSpec : spec.getEnricherSpecs()) {
-                entity.addEnricher(policyFactory.createEnricher(enricherSpec));
-            }
-            
-            for (Policy policy : spec.getPolicies()) {
-                entity.addPolicy((AbstractPolicy)policy);
-            }
-            
-            for (PolicySpec<?> policySpec : spec.getPolicySpecs()) {
-                entity.addPolicy(policyFactory.createPolicy(policySpec));
-            }
-            
-            ((AbstractEntity)entity).addLocations(spec.getLocations());
+            ((EntityInternal)entity).getExecutionContext().submit(MutableMap.of(), new Runnable() {
+                @Override
+                public void run() {
+                    for (Enricher enricher : spec.getEnrichers()) {
+                        entity.addEnricher(enricher);
+                    }
+                    
+                    for (EnricherSpec<?> enricherSpec : spec.getEnricherSpecs()) {
+                        entity.addEnricher(policyFactory.createEnricher(enricherSpec));
+                    }
+                    
+                    for (Policy policy : spec.getPolicies()) {
+                        entity.addPolicy((AbstractPolicy)policy);
+                    }
+                    
+                    for (PolicySpec<?> policySpec : spec.getPolicySpecs()) {
+                        entity.addPolicy(policyFactory.createPolicy(policySpec));
+                    }
+                    
+                    ((AbstractEntity)entity).addLocations(spec.getLocations());
+                }
+            }).get();
             
             Entity parent = spec.getParent();
             if (parent != null) {

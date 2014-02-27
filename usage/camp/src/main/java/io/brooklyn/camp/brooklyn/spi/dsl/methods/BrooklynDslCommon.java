@@ -21,9 +21,16 @@ public class BrooklynDslCommon {
     }
 
 	public static DslComponent component(String id) {
-		return new DslComponent(id);
+		return component("global", id);
 	}
-
+	
+	public static DslComponent component(String scope, String id) {
+	    if (!DslComponent.Scope.isValid(scope)) {
+	        throw new IllegalArgumentException(scope + " is not a vlaid scope");
+	    }
+	    return new DslComponent(DslComponent.Scope.fromString(scope), id);
+	}
+	
 	/** returns a DslParsedObject<String> OR a String if it is fully resolved */
     public static Object formatString(final String pattern, final Object ...args) {
         if (DslUtils.resolved(args)) {
