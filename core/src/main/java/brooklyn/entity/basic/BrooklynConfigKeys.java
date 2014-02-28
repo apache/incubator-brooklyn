@@ -32,6 +32,9 @@ public class BrooklynConfigKeys {
     // TODO Rename to VERSION, instead of SUGGESTED_VERSION? And declare as BasicAttributeSensorAndConfigKey?
     public static final ConfigKey<String> SUGGESTED_VERSION = newStringConfigKey("install.version", "Suggested version");
     
+    public static final BasicAttributeSensorAndConfigKey<String> BROOKLYN_WEB_SERVER_BASE_DIR = new TemplatedStringAttributeSensorAndConfigKey("brooklyn.webserverdir", "Base directory for web-server",
+            "${config['brooklyn.datadir']!'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-webserver")+"'}");
+
     public static final BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = new TemplatedStringAttributeSensorAndConfigKey("install.dir", "Directory for this software to be installed in",
         "${config['brooklyn.datadir']!'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'}/"
             + "installs/${entity.entityType.simpleName}"

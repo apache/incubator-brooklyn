@@ -3,6 +3,7 @@ package brooklyn.event.basic;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
+import brooklyn.management.ManagementContext;
 
 /**
  * A {@link Sensor} describing an attribute that can be configured with a default value.
@@ -29,7 +30,11 @@ public class BasicAttributeSensorAndConfigKey<T> extends AttributeSensorAndConfi
         super(orig, defaultValue);
     }
     
+    @Override
     protected T convertConfigToSensor(T value, Entity entity) { return value; }
+
+    @Override
+    protected T convertConfigToSensor(T value, ManagementContext managementContext) { return value; }
     
     public static class StringAttributeSensorAndConfigKey extends BasicAttributeSensorAndConfigKey<String> {
 

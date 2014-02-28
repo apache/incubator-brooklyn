@@ -16,12 +16,13 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.os.Os;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -72,6 +73,21 @@ public class SoftwareProcessEntityTest {
 
         Assert.assertEquals(entity.getAttribute(SoftwareProcess.INSTALL_DIR), "/tmp/brooklyn-foo/installs/MyService");
         Assert.assertEquals(entity.getAttribute(SoftwareProcess.RUN_DIR), "/tmp/brooklyn-foo/apps/"+entity.getApplicationId()+"/entities/MyService_"+entity.getId());
+    }
+
+    @Test
+    public void testInstallDirAndRunDirUsingTilda() throws Exception {
+        String dataDirName = ".brooklyn-foo"+Strings.makeRandomId(4);
+        String dataDir = "~/"+dataDirName;
+        String resolvedDataDir = Os.mergePaths(Os.home(), dataDirName);
+        
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class)
+            .configure(BrooklynConfigKeys.BROOKLYN_DATA_DIR, dataDir));
+
+        entity.start(ImmutableList.of(loc));
+
+        Assert.assertEquals(entity.getAttribute(SoftwareProcess.INSTALL_DIR), Os.mergePaths(resolvedDataDir, "installs/MyService"));
+        Assert.assertEquals(entity.getAttribute(SoftwareProcess.RUN_DIR), Os.mergePaths(resolvedDataDir, "apps/"+entity.getApplicationId()+"/entities/MyService_"+entity.getId()));
     }
 
     @Test
@@ -183,7 +199,7 @@ public class SoftwareProcessEntityTest {
         }
     }
     
-    public static class SimulatedDriver extends AbstractSoftwareProcessDriver {
+    public static class SimulatedDriver extends AbstractSoftwareProcessSshDriver {
         public List<String> events = new ArrayList<String>();
         private volatile boolean launched = false;
         
