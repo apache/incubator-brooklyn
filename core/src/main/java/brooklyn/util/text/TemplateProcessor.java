@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.EntityDriver;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Charsets;
@@ -71,6 +72,16 @@ public class TemplateProcessor {
                 .put("entity", driver.getEntity())
                 .put("config", ((EntityInternal) driver.getEntity()).getConfigMap().asMapWithStringKeys());
         if (driver.getLocation() != null) builder.put("location", driver.getLocation());
+        builder.putAll(extraSubstitutions);
+
+        return processTemplateContents(templateContents, builder.build());
+    }
+
+    public static String processTemplateContents(String templateContents, ManagementContextInternal managementContext, Map<String,? extends Object> extraSubstitutions) {
+        ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder()
+                .put("javaSysProps", System.getProperties())
+                .putAll(managementContext.getConfig().asMapWithStringKeys())
+                .put("config", managementContext.getConfig().asMapWithStringKeys());
         builder.putAll(extraSubstitutions);
 
         return processTemplateContents(templateContents, builder.build());

@@ -33,6 +33,7 @@ import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.launcher.config.CustomResourceLocator;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -153,7 +154,7 @@ public class BrooklynWebServer {
         if (!leftovers.isEmpty())
             log.warn("Ignoring unknown flags " + leftovers);
         
-        String brooklynBaseDir = Os.tidyPath(checkNotNull(managementContext.getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_WEB_SERVER_BASE_DIR)));
+        String brooklynBaseDir = Os.tidyPath(checkNotNull(ConfigToAttributes.transform(managementContext, BrooklynConfigKeys.BROOKLYN_WEB_SERVER_BASE_DIR)));
         this.webappTempDir = new File(Os.mergePaths(brooklynBaseDir, "planes", managementContext.getManagementPlaneId(), managementContext.getManagementNodeId(), "jetty"));
         try {
             FileUtils.forceMkdir(webappTempDir);

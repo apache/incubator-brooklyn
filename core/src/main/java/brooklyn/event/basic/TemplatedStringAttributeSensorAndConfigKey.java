@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.collect.ImmutableMap;
@@ -39,4 +41,9 @@ public class TemplatedStringAttributeSensorAndConfigKey extends BasicAttributeSe
         return TemplateProcessor.processTemplateContents(value, (EntityInternal)entity, ImmutableMap.<String,Object>of());
     }
     
+    @Override
+    protected String convertConfigToSensor(String value, ManagementContext managementContext) {
+        if (value == null) return null;
+        return TemplateProcessor.processTemplateContents(value, (ManagementContextInternal)managementContext, ImmutableMap.<String,Object>of());
+    }
 }

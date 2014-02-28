@@ -15,6 +15,7 @@ import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.PortRanges;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Optional;
@@ -50,6 +51,7 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
     public PortAttributeSensorAndConfigKey(PortAttributeSensorAndConfigKey orig, Object defaultValue) {
         super(orig, TypeCoercions.coerce(defaultValue, PortRange.class));
     }
+    @Override
     protected Integer convertConfigToSensor(PortRange value, Entity entity) {
         if (value==null) return null;
         Collection<? extends Location> locations = entity.getLocations();
@@ -101,9 +103,14 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
                 LOG.warn(""+entity+" ports not applicable, or not yet applicable, because has multiple locations "+locations+"; ignoring "+getName());
             }
         } else {
-            LOG.warn(""+entity+" ports not applicable, or not yet applicable, bacause has no locations, ignoring "+getName());
+            LOG.warn(""+entity+" ports not applicable, or not yet applicable, bacause has no locations; ignoring "+getName());
         }
         return null;
     }
-
+    
+    @Override
+    protected Integer convertConfigToSensor(PortRange value, ManagementContext managementContext) {
+        LOG.warn("ports not applicable, bacause given managementContext rather than entity; ignoring "+getName());
+        return null;
+    }
 }

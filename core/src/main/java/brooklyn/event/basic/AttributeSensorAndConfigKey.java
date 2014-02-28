@@ -6,10 +6,12 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import brooklyn.event.feed.ConfigToAttributes;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 
@@ -79,7 +81,23 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
             throw new IllegalArgumentException("Cannot convert config value "+v+" for sensor "+this+": "+t, t);
         }
     }
-    
+
+    /**
+     * @see {@link #getAsSensorValue(Entity)}
+     * 
+     * Differs in that the config value is converted based on just the management context, rather
+     * than for a specific entity. For example, useful if using {@link BrooklynConfigKeys} in BrooklynWebServer.
+     * </b> 
+     */
+    public SensorType getAsSensorValue(ManagementContext managementContext) {
+        ConfigType v = managementContext.getConfig().getConfig(this);
+        try {
+            return convertConfigToSensor(v, managementContext);
+        } catch (Throwable t) {
+            throw new IllegalArgumentException("Cannot convert config value "+v+" for sensor "+this+": "+t, t);
+        }
+    }
+
     /** converts the given ConfigType value to the corresponding SensorType value, 
      * with respect to the given entity
      * <p>
@@ -89,4 +107,9 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
      * <p>
      * this message should be allowed to return null if the conversion cannot be completed at this time */
     protected abstract SensorType convertConfigToSensor(ConfigType value, Entity entity);
+
+    /**
+     * @see {@link #convertConfigToSensor(Object, Entity)}
+     */
+    protected abstract SensorType convertConfigToSensor(ConfigType value, ManagementContext entity);
 }
