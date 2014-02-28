@@ -34,7 +34,7 @@ public class SshMachineLocationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        host = new SshMachineLocation(MutableMap.of("address", InetAddress.getLocalHost()));
+        host = new SshMachineLocation(MutableMap.of("address", Networking.getLocalHost()));
     }
 
     @AfterMethod(alwaysRun=true)
@@ -67,7 +67,7 @@ public class SshMachineLocationTest {
     // For issue #230
     @Test(groups = "Integration")
     public void testOverridingPropertyOnExec() throws Exception {
-        SshMachineLocation host = new SshMachineLocation(MutableMap.of("address", InetAddress.getLocalHost(), "sshPrivateKeyData", "wrongdata"));
+        SshMachineLocation host = new SshMachineLocation(MutableMap.of("address", Networking.getLocalHost(), "sshPrivateKeyData", "wrongdata"));
         
         OutputStream outStream = new ByteArrayOutputStream();
         String expectedName = Os.user();
@@ -79,7 +79,7 @@ public class SshMachineLocationTest {
 
     @Test(groups = "Integration", expectedExceptions={IllegalStateException.class, SshException.class})
     public void testSshRunWithInvalidUserFails() throws Exception {
-        SshMachineLocation badHost = new SshMachineLocation(MutableMap.of("user", "doesnotexist", "address", InetAddress.getLocalHost()));
+        SshMachineLocation badHost = new SshMachineLocation(MutableMap.of("user", "doesnotexist", "address", Networking.getLocalHost()));
         badHost.execScript("mysummary", ImmutableList.of("whoami; exit"));
     }
     

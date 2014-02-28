@@ -17,6 +17,7 @@ import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.collections.MutableMap
+import brooklyn.util.net.Networking;
 import brooklyn.util.text.Strings
 
 /**
@@ -48,7 +49,7 @@ public class MySqlIntegrationTest {
     }
 
     // can start in AWS by running this -- or use brooklyn CLI/REST for most clouds, or programmatic/config for set of fixed IP machines
-    static String hostname = java.net.InetAddress.getLocalHost().getHostName()
+    static String hostname = Networking.getLocalHost().getHostName()
 
     //from http://www.vogella.de/articles/MySQLJava/article.html
     public static final String CREATION_SCRIPT = """
