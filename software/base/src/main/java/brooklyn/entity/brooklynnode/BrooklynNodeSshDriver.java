@@ -95,7 +95,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                         // workaround for AMP distribution placing everything in the root of this archive, but
                         // brooklyn distribution placing everything in a subdirectory: check to see if subdirectory
                         // with expect name exists; symlink to same directory if it doesn't
-                        format("[ -d %1$s/brooklyn-%2%s ] || ln -s . %1$s/brooklyn-%2$s", getInstallDir(), getVersion()),
+                        format("[ -d %1$s/brooklyn-%2$s ] || ln -s . %1$s/brooklyn-%2$s", getInstallDir(), getVersion()),
                         format("cp -R %s/brooklyn-%s/{bin,conf} .", getInstallDir(), getVersion()),
                         "mkdir -p ./lib/")
                 .execute();
