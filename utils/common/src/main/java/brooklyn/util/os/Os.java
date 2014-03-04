@@ -385,7 +385,7 @@ public class Os {
      */
     public static String tidyPath(String path) {
         Preconditions.checkNotNull(path, "path");
-        Iterable<String> segments = Splitter.on("/").split( Files.simplifyPath(path));
+        Iterable<String> segments = Splitter.on("/").split(Files.simplifyPath(path));
         if (Iterables.get(segments, 0).equals("~")) { // Always at least one segment after simplifyPath
             segments = Iterables.concat(ImmutableSet.of(Os.home()), Iterables.skip(segments, 1));
         }

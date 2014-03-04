@@ -15,10 +15,6 @@
  */
 package brooklyn.entity.proxy.nginx;
 
-import static java.lang.String.format;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +28,6 @@ import brooklyn.entity.Group;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.java.JarBuilder;
 import brooklyn.entity.proxy.AbstractControllerImpl;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.event.SensorEvent;
@@ -41,17 +36,13 @@ import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpPollValue;
-import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Urls;
-import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -173,46 +164,9 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                         this, getAttribute(NginxController.SERVICE_STATE));
             return;
         }
-        SshMachineLocation machine = driver.getMachine();
 
-        // If a local folder, then jar it up
-        if (new File(archiveUrl).isDirectory()) {
-            try {
-                File jarFile = JarBuilder.buildJar(new File(archiveUrl));
-                archiveUrl = jarFile.getAbsolutePath();
-            } catch (IOException e) {
-                throw new IllegalStateException("Error archiving directory "+archiveUrl, e);
-            }
-        }
-
-        String runDir = getDriver().getRunDir();
-        String destName = archiveUrl;
-        destName = destName.contains("?") ? destName.substring(0, destName.indexOf('?')) : destName;
-        destName = destName.substring(destName.lastIndexOf('/') + 1);
-
-        // Use the location mutex to prevent package manager locking issues
-        try {
-            machine.acquireMutex("installing", "installing static archive "+getId());
-
-            int result = machine.installTo(ResourceUtils.create(this), archiveUrl, Urls.mergePaths(runDir, destName));
-            if (result != 0)
-                throw new IllegalStateException(format("unable to install static content archive %s for %s at %s", archiveUrl, this, machine));
-
-            // if it's a jar, zip or tgz then expand
-            if (destName.toLowerCase().endsWith(".zip") || destName.toLowerCase().endsWith(".jar")) {
-                result = machine.execCommands("unzipping", ImmutableList.of(BashCommands.INSTALL_UNZIP, format("cd %s && unzip %s", runDir, destName)));
-            } else if (destName.toLowerCase().endsWith(".tgz") || destName.toLowerCase().endsWith(".tar.gz")) {
-                result = machine.execCommands("untarring gz", ImmutableList.of(BashCommands.INSTALL_TAR, format("cd %s && tar xvfz %s", runDir, destName)));
-            } else if (destName.toLowerCase().endsWith(".tar")) {
-                result = machine.execCommands("untarring", ImmutableList.of(BashCommands.INSTALL_TAR, format("cd %s && tar xvf %s", runDir, destName)));
-            }
-            if (result != 0)
-                throw new IllegalStateException(format("unable to install static content for %s at %s (failed to expand archive %s)", this, machine, archiveUrl));
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        } finally {
-            machine.releaseMutex("installing");
-        }
+        // Copy to the destination machine and extract contents
+        ArchiveUtils.deploy(archiveUrl, driver.getMachine(), driver.getRunDir());
     }
 
     @Override

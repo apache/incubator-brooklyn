@@ -5,10 +5,6 @@ package brooklyn.entity.nosql.solr;
 
 import static java.lang.String.format;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,19 +15,17 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
-import brooklyn.entity.java.JarBuilder;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.stream.Streams;
 
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 /**
@@ -107,58 +101,14 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
         // Copy the solr.xml configuration file across
         String configFileContents = processTemplate(getSolrConfigTemplateUrl());
         String destinationConfigFile = String.format("%s/solr/solr.xml", getRunDir());
-        getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
+        getMachine().copyTo(Streams.newInputStreamWithContents(configFileContents), destinationConfigFile);
 
         // Copy the core definitions across
         Map<String, String> coreConfig = entity.getConfig(SolrServer.SOLR_CORE_CONFIG);
         for (String core : coreConfig.keySet()) {
             String url = coreConfig.get(core);
-            configure(core, url);
-        }
-    }
-
-    // TODO This should really be a library or parent method
-    public void configure(String core, String url) {
-        URI archive = Urls.toUri(url);
-
-        // If a local folder, then jar it up
-        if (archive.getScheme().equals("file") && new File(archive).isDirectory()) {
-            try {
-                File jarFile = JarBuilder.buildJar(new File(archive));
-                archive = jarFile.toURI();
-            } catch (IOException e) {
-                throw new IllegalStateException("Error archiving directory "+url, e);
-            }
-        }
-
-        // Extract filename and copy to server
-        String file = Iterables.getLast(Splitter.on("/").split(archive.getPath()));
-        String solr = Urls.mergePaths(getRunDir(), "solr");
-        String dest = Urls.mergePaths(solr, file);
-
-        // Use the location mutex to prevent package manager locking issues
-        try {
-            getMachine().acquireMutex("installing", "installing core config "+file);
-
-            // FIXME Duplicate code path at getMachine().installTo(...)
-            int result = copyResource(archive.toASCIIString(), dest);
-            if (result != 0)
-                throw new IllegalStateException(format("unable to copy core %s config file %s", core, file));
-
-            // if it's a jar, zip or tgz then expand
-            if (dest.toLowerCase().endsWith(".zip") || dest.toLowerCase().endsWith(".jar")) {
-                result = getMachine().execCommands("extract", ImmutableList.of(BashCommands.INSTALL_UNZIP, format("cd %s && unzip %s", solr, dest)));
-            } else if (dest.toLowerCase().endsWith(".tgz") || dest.toLowerCase().endsWith(".tar.gz")) {
-                result = getMachine().execCommands("extract", ImmutableList.of(BashCommands.INSTALL_TAR, format("cd %s && tar xvfz %s", solr, dest)));
-            } else if (dest.toLowerCase().endsWith(".tar")) {
-                result = getMachine().execCommands("extract", ImmutableList.of(BashCommands.INSTALL_TAR, format("cd %s && tar xvf %s", solr, dest)));
-            }
-            if (result != 0)
-                throw new IllegalStateException(format("unable to configure core %s (failed to expand archive %s)", core, file));
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        } finally {
-            getMachine().releaseMutex("installing");
+            String solr = Urls.mergePaths(getRunDir(), "solr");
+            ArchiveUtils.deploy(url, getMachine(), solr);
         }
     }
 

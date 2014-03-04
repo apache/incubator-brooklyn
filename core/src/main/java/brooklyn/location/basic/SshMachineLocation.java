@@ -50,6 +50,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.KeyTransformingLoadingCache.KeyTransformingSameTypeLoadingCache;
@@ -100,7 +101,7 @@ import com.google.common.net.HostAndPort;
  * Another (execScript) creates a script on the remote machine, more portable but heavier.
  * <p>
  * Additionally there are routines to copyTo, copyFrom; and installTo (which tries a curl, and falls back to copyTo
- * in event the source is accessible by the caller only). 
+ * in event the source is accessible by the caller only).
  */
 public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier, WithMutexes, Closeable {
 
@@ -112,38 +113,36 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final ConfigKey<Duration> SSH_CACHE_EXPIRY_DURATION = ConfigKeys.newConfigKey(Duration.class, "sshCacheExpiryDuration", "Expirty time for unused cached ssh connections", Duration.FIVE_MINUTES);
 
     @SetFromFlag
-    String user;
+    protected String user;
 
     @SetFromFlag(nullable = false)
-    InetAddress address;
+    protected InetAddress address;
 
     @SetFromFlag
-    transient WithMutexes mutexSupport;
-    
+    protected transient WithMutexes mutexSupport;
+
     @SetFromFlag
     private Set<Integer> usedPorts;
-    
+
     public static final ConfigKey<String> SSH_HOST = BrooklynConfigKeys.SSH_CONFIG_HOST;
     public static final ConfigKey<Integer> SSH_PORT = BrooklynConfigKeys.SSH_CONFIG_PORT;
-    
+
     public static final ConfigKey<String> SSH_EXECUTABLE = ConfigKeys.newStringConfigKey("sshExecutable",
-            "Allows an `ssh` executable file to be specified, to be used in place of the default (programmatic) java ssh client",
-            null);
+            "Allows an `ssh` executable file to be specified, to be used in place of the default (programmatic) java ssh client");
     public static final ConfigKey<String> SCP_EXECUTABLE = ConfigKeys.newStringConfigKey("scpExecutable",
-            "Allows an `scp` executable file to be specified, to be used in place of the default (programmatic) java ssh client",
-            null);
-    
+            "Allows an `scp` executable file to be specified, to be used in place of the default (programmatic) java ssh client");
+
     // TODO remove
     public static final ConfigKey<String> PASSWORD = SshTool.PROP_PASSWORD;
     public static final ConfigKey<String> PRIVATE_KEY_FILE = SshTool.PROP_PRIVATE_KEY_FILE;
     public static final ConfigKey<String> PRIVATE_KEY_DATA = SshTool.PROP_PRIVATE_KEY_DATA;
     public static final ConfigKey<String> PRIVATE_KEY_PASSPHRASE = SshTool.PROP_PRIVATE_KEY_PASSPHRASE;
-    
+
     public static final ConfigKey<String> SCRIPT_DIR = ConfigKeys.newStringConfigKey(
-            "scriptDir", "directory where scripts should be placed and executed on the SSH target machine", null);
+            "scriptDir", "directory where scripts should be placed and executed on the SSH target machine");
     public static final ConfigKey<Map<String,Object>> SSH_ENV_MAP = new MapConfigKey<Object>(
-            Object.class, "env", "environment variables to pass to the remote SSH shell session", null);
-    
+            Object.class, "env", "environment variables to pass to the remote SSH shell session");
+
     public static final ConfigKey<Boolean> ALLOCATE_PTY = SshTool.PROP_ALLOCATE_PTY;
 
     public static final ConfigKey<OutputStream> STDOUT = new BasicConfigKey<OutputStream>(OutputStream.class, "out");
@@ -153,7 +152,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final ConfigKey<Boolean> NO_STDERR_LOGGING = ConfigKeys.newBooleanConfigKey(
             "noStderrLogging", "whether to disable logging of stderr from SSH commands (e.g. for verbose commands)", false);
     public static final ConfigKey<String> LOG_PREFIX = ConfigKeys.newStringConfigKey("logPrefix");
-    
+
     public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
 
     /**
@@ -166,11 +165,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             SshTool.PROP_SCRIPT_HEADER, SshTool.PROP_PERMISSIONS, SshTool.PROP_LAST_MODIFICATION_DATE,
             SshTool.PROP_LAST_ACCESS_DATE, SshTool.PROP_OWNER_UID, SshTool.PROP_SSH_RETRY_DELAY);
 
-    public static final Set<HasConfigKey<?>> ALL_SSH_CONFIG_KEYS = 
+    public static final Set<HasConfigKey<?>> ALL_SSH_CONFIG_KEYS =
             ImmutableSet.<HasConfigKey<?>>builder()
                     .addAll(ConfigUtils.getStaticKeysOnClass(SshMachineLocation.class))
                     .addAll(ConfigUtils.getStaticKeysOnClass(SshTool.class))
                     .build();
+
     public static final Set<String> ALL_SSH_CONFIG_KEY_NAMES =
             ImmutableSet.copyOf(Iterables.transform(ALL_SSH_CONFIG_KEYS, new Function<HasConfigKey<?>,String>() {
                 @Override
@@ -178,11 +178,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                     return input.getConfigKey().getName();
                 }
             }));
-            
-    private transient LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCache;
 
     private Task<?> cleanupTask;
-    
+    private transient LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCache;
+
     public SshMachineLocation() {
         this(MutableMap.of());
     }
@@ -284,7 +283,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                             return null;
                         }})
                 .build();
-
     }
 
     @Override
@@ -293,24 +291,25 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
         // TODO Note that check for addresss!=null is done automatically in super-constructor, in FlagUtils.checkRequiredFields
         // Yikes, dangerous code for accessing fields of sub-class in super-class' constructor! But getting away with it so far!
-        
+
         if (mutexSupport == null) {
-        	mutexSupport = new MutexSupport();
+            mutexSupport = new MutexSupport();
         }
-        
+
         boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
         if (!deferConstructionChecks) {
-	        if (getDisplayName() == null) {
-	        	setDisplayName((truth(user) ? user+"@" : "") + address.getHostName());
-	        }
-        
-	        if (getHostGeoInfo() == null) {
-	            Location parentLocation = getParent();
-	            if ((parentLocation instanceof HasHostGeoInfo) && ((HasHostGeoInfo)parentLocation).getHostGeoInfo()!=null)
-	                setHostGeoInfo( ((HasHostGeoInfo)parentLocation).getHostGeoInfo() );
-	            else
-	                setHostGeoInfo(HostGeoInfo.fromLocation(this));
-	        }
+            if (getDisplayName() == null) {
+                setDisplayName((truth(user) ? user+"@" : "") + address.getHostName());
+            }
+
+            if (getHostGeoInfo() == null) {
+                Location parentLocation = getParent();
+                if ((parentLocation instanceof HasHostGeoInfo) && ((HasHostGeoInfo) parentLocation).getHostGeoInfo() != null) {
+                    setHostGeoInfo(((HasHostGeoInfo) parentLocation).getHostGeoInfo());
+                } else {
+                    setHostGeoInfo(HostGeoInfo.fromLocation(this));
+                }
+            }
         }
     }
 
@@ -383,7 +382,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
         return user;
     }
-    
+
     /** port for SSHing */
     public int getPort() {
         return getConfig(SshTool.PROP_PORT);
@@ -400,7 +399,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     protected SshTool connectSsh() {
         return connectSsh(ImmutableMap.of());
     }
-    
+
     protected boolean previouslyConnected = false;
     protected SshTool connectSsh(Map props) {
         try {
@@ -409,7 +408,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 if (LOG.isTraceEnabled()) LOG.trace("For "+this+", setting user in connectSsh: oldUser="+user+"; newUser="+newUser);
                 user = newUser;
             }
-            
+
             ConfigBag args = new ConfigBag()
                 .configure(SshTool.PROP_USER, user)
                 // default value of host, overridden if SSH_HOST is supplied
@@ -422,7 +421,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                     key = Strings.removeFromStart(key, SshTool.BROOKLYN_CONFIG_KEY_PREFIX);
                 } else if (ALL_SSH_CONFIG_KEY_NAMES.contains(entry.getKey())) {
                     // key should be included, and does not need to be changed
-                    
+
                     // TODO make this config-setting mechanism more universal
                     // currently e.g. it will not admit a tool-specific property.
                     // thinking either we know about the tool here,
@@ -439,14 +438,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 LOG.warn("User mismatch configuring ssh for "+this+": preferring user "+args.get(SshTool.PROP_USER)+" over "+user);
                 user = args.get(SshTool.PROP_USER);
             }
-            
+
             // look up tool class
             String sshToolClass = args.get(SshTool.PROP_TOOL_CLASS);
             if (sshToolClass==null) sshToolClass = SshjTool.class.getName();
             SshTool ssh = (SshTool) Class.forName(sshToolClass).getConstructor(Map.class).newInstance(args.getAllConfig());
-            
+
             if (LOG.isTraceEnabled()) LOG.trace("using ssh-tool {} (of type {}); props ", ssh, sshToolClass);
-            
+
             Tasks.setBlockingDetails("Opening ssh connection");
             try { ssh.connect(); } finally { Tasks.setBlockingDetails(null); }
             previouslyConnected = true;
@@ -470,11 +469,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     // TODO submitCommands and submitScript which submit objects we can subsequently poll (cf JcloudsSshMachineLocation.submitRunScript)
-    
-    /** executes a set of commands, directly on the target machine (no wrapping in script).
-     * joined using ' ; ' by default.
+
+    /**
+     * Executes a set of commands, directly on the target machine (no wrapping in script).
+     * Joined using {@literal ;} by default.
      * <p>
-     * Stdout and stderr will be logged automatically to brooklyn.SSH logger, unless the 
+     * Stdout and stderr will be logged automatically to brooklyn.SSH logger, unless the
      * flags 'noStdoutLogging' and 'noStderrLogging' are set. To set a logging prefix, use
      * the flag 'logPrefix'.
      * <p>
@@ -485,15 +485,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      * </pre>
      * It may be desirable instead, in some situations, to wrap as:
      * <pre>
-     * { line1 ; } && { line2 ; } ... 
+     * { line1 ; } && { line2 ; } ...
      * </pre>
      * and run as a single command (possibly not as an interacitve/login
      * shell) causing the script to exit on the first command which fails.
      * <p>
      * Currently this has to be done by the caller.
      * (If desired we can add a flag {@code exitIfAnyNonZero} to support this mode,
-     * and/or {@code commandPrepend} and {@code commandAppend} similar to 
-     * (currently supported in SshjTool) {@code separator}.) 
+     * and/or {@code commandPrepend} and {@code commandAppend} similar to
+     * (currently supported in SshjTool) {@code separator}.)
      */
     public int execCommands(String summaryForLogging, List<String> commands) {
         return execCommands(MutableMap.<String,Object>of(), summaryForLogging, commands, MutableMap.<String,Object>of());
@@ -508,9 +508,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return newExecWithLoggingHelpers().execCommands(props, summaryForLogging, commands, env);
     }
 
-    /** executes a set of commands, wrapped as a script sent to the remote machine.
+    /**
+     * Executes a set of commands, wrapped as a script sent to the remote machine.
      * <p>
-     * Stdout and stderr will be logged automatically to brooklyn.SSH logger, unless the 
+     * Stdout and stderr will be logged automatically to brooklyn.SSH logger, unless the
      * flags 'noStdoutLogging' and 'noStderrLogging' are set. To set a logging prefix, use
      * the flag 'logPrefix'.
      */
@@ -526,7 +527,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int execScript(Map<String,?> props, String summaryForLogging, List<String> commands, Map<String,?> env) {
         return newExecWithLoggingHelpers().execScript(props, summaryForLogging, commands, env);
     }
-    
+
     protected ExecWithLoggingHelpers newExecWithLoggingHelpers() {
         return new ExecWithLoggingHelpers("SSH") {
             @Override
@@ -540,7 +541,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             @Override
             protected String constructDefaultLoggingPrefix(ConfigBag execFlags) {
                 String hostname = getAddress().getHostName();
-                Integer port = execFlags.peek(SshTool.PROP_PORT); 
+                Integer port = execFlags.peek(SshTool.PROP_PORT);
                 if (port == null) port = getConfig(ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PORT));
                 return (user != null ? user+"@" : "") + hostname + (port != null ? ":"+port : "");
             }
@@ -557,7 +558,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                     return execCommand.call(ssh, flags, cmds, env);
                 }});
     }
-    
+
     public int copyTo(File src, File destination) {
         return copyTo(MutableMap.<String,Object>of(), src, destination);
     }
@@ -580,9 +581,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int copyTo(Reader src, String destination) {
         return copyTo(MutableMap.<String,Object>of(), src, destination);
     }
-	public int copyTo(Map<String,?> props, Reader src, String destination) {
-		return copyTo(props, new ReaderInputStream(src), destination);
-	}
+    public int copyTo(Map<String,?> props, Reader src, String destination) {
+        return copyTo(props, new ReaderInputStream(src), destination);
+    }
     public int copyTo(InputStream src, String destination) {
         return copyTo(MutableMap.<String,Object>of(), src, destination);
     }
@@ -596,8 +597,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         } else {
             return execSsh(props, new Function<ShellTool,Integer>() {
                 public Integer apply(ShellTool ssh) {
-                    return ((SshTool)ssh).copyToServer(props, new KnownSizeInputStream(src, filesize), destination);
-//                    return ssh.createFile(props, destination, src, filesize);
+                    return ((SshTool) ssh).copyToServer(props, new KnownSizeInputStream(src, filesize), destination);
                 }});
         }
     }
@@ -621,44 +621,58 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }});
     }
 
-    /** installs the given URL at the indicated destination.
-     * attempts to curl the sourceUrl on the remote machine,
-     * then if that fails, loads locally (from classpath or file) and transfers.
+    /**
+     * Installs the given URL at the indicated destination path.
      * <p>
-     * accepts either a path (terminated with /) or filename for the destination. 
-     **/
-    public int installTo(ResourceUtils loader, String url, String destination) {
-        if (destination.endsWith("/")) {
-            String destName = url;
-            destName = destName.contains("?") ? destName.substring(0, destName.indexOf("?")) : destName;
-            destName = destName.substring(destName.lastIndexOf('/')+1);
-            destination = destination + destName;            
-        }
-        LOG.debug("installing {} to {} on {}, attempting remote curl", new Object[] {url, destination, this});
+     * Attempts to curl the source URL on the remote machine,
+     * then if that fails, loads locally (from classpath or file) and transfers.
+     *
+     * TODO allow s3://bucket/file URIs for AWS S3 resources
+     * TODO use PAX-URL style URIs for maven artifacts
+     *
+     * @see ArchiveUtils#deploy(String, SshMachineLocation, String, String)
+     * @see ResourceUtils#getResourceFromUrl(String)
+     */
+    public int installTo(Map<String,?> props, String url, String destPath) {
+        LOG.debug("installing {} to {} on {}, attempting remote curl", new Object[] {url, destPath, this});
 
         try {
             PipedInputStream insO = new PipedInputStream(); OutputStream outO = new PipedOutputStream(insO);
             PipedInputStream insE = new PipedInputStream(); OutputStream outE = new PipedOutputStream(insE);
-            new StreamGobbler(insO, null, LOG).setLogPrefix("[curl @ "+address+":stdout] ").start();
-            new StreamGobbler(insE, null, LOG).setLogPrefix("[curl @ "+address+":stdout] ").start();
-            int result = execScript(MutableMap.of("out", outO, "err", outE), "install-to",  ImmutableList.of(
-                    BashCommands.INSTALL_CURL,
-                    "curl "+url+" -L --silent --insecure --show-error --fail --connect-timeout 60 --max-time 600 --retry 5 -o "+destination));
-            
-            if (result!=0 && loader!=null) {
-                LOG.debug("installing {} to {} on {}, curl failed, attempting local fetch and copy", new Object[] {url, destination, this});
-                result = copyTo(loader.getResourceFromUrl(url), destination);
+            StreamGobbler sgsO = new StreamGobbler(insO, null, LOG); sgsO.setLogPrefix("[curl @ "+address+":stdout] ").start();
+            StreamGobbler sgsE = new StreamGobbler(insE, null, LOG); sgsE.setLogPrefix("[curl @ "+address+":stdout] ").start();
+            Map<String, ?> sshProps = MutableMap.<String, Object>builder().putAll(props).put("out", outO).put("err", outE).build();
+            int result = execScript(sshProps, "copying remote resource "+url+" to server",  ImmutableList.of(
+                    BashCommands.INSTALL_CURL, // TODO should hold the 'installing' mutex
+                    "curl "+url+" -L --silent --insecure --show-error --fail --connect-timeout 60 --max-time 600 --retry 5 -o "+destPath));
+            sgsO.close();
+            sgsE.close();
+            if (result != 0) {
+                LOG.debug("installing {} to {} on {}, curl failed, attempting local fetch and copy", new Object[] { url, destPath, this });
+                try {
+                    Tasks.setBlockingDetails("retrieving resource "+url+" for copying across");
+                    InputStream stream = ResourceUtils.create().getResourceFromUrl(url);
+                    Tasks.setBlockingDetails("copying resource "+url+" to server");
+                    result = copyTo(stream, destPath);
+                } finally {
+                    Tasks.setBlockingDetails(null);
+                }
             }
-            if (result==0)
-                LOG.debug("installing {} complete; {} on {}", new Object[] {url, destination, this});
-            else
-                LOG.warn("installing {} failed; {} on {}: {}", new Object[] {url, destination, this, result});
+            if (result == 0) {
+                LOG.debug("installing {} complete; {} on {}", new Object[] { url, destPath, this });
+            } else {
+                LOG.warn("installing {} failed; {} on {}: {}", new Object[] { url, destPath, this, result });
+            }
             return result;
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
     }
-    
+
+    public int installTo(String url, String destination) {
+        return installTo(MutableMap.<String, Object>of(), url, destination);
+    }
+
     @Override
     public String toString() {
         return "SshMachineLocation["+getDisplayName()+":"+address+"]";
@@ -740,12 +754,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }
         }
     }
-    
+
     @Override
     public OsDetails getOsDetails() {
         // TODO ssh and find out what we need to know, or use jclouds...
-        // on many linuxes /etc/issue will tell you the OS; 
-        // also try `uname -a`, looking for Darwin on OS X ... 
+        // on many linuxes /etc/issue will tell you the OS;
+        // also try `uname -a`, looking for Darwin on OS X ...
         return BasicOsDetails.Factory.ANONYMOUS_LINUX;
     }
 
@@ -778,7 +792,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         sshPoolCache = buildSshToolPoolCacheLoader();
     }
 
-    /** returns the un-passphrased key-pair info if a key is being used, or else null */ 
+    /** returns the un-passphrased key-pair info if a key is being used, or else null */
     public KeyPair findKeyPair() {
         String fn = getConfig(SshTool.PROP_PRIVATE_KEY_FILE);
         ResourceUtils r = ResourceUtils.create(this);
@@ -801,5 +815,5 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public String findPassword() {
         return getConfig(SshTool.PROP_PASSWORD);
     }
-    
+
 }

@@ -1,5 +1,6 @@
 package brooklyn.util.net;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -124,7 +125,7 @@ public class Urls {
 
     /** returns the protocol (e.g. http) if one appears to be specified, or else null;
      * 'protocol' here should consist of 2 or more _letters_ only followed by a colon
-     * (2 required to prevent  c``:\xxx being treated as a url)
+     * (2 required to prevent {@code c:\xxx} being treated as a url)
      */
     public static String getProtocol(String url) {
         if (url==null) return null;
@@ -135,10 +136,36 @@ public class Urls {
             char c = url.charAt(i);
             if (Character.isLetter(c)) result.append(c);
             else if (c==':') {
-                if (i>=2) return result.toString();
+                if (i>=2) return result.toString().toLowerCase();
                 return null;
             } else return null;
             i++;
+        }
+    }
+
+    public static boolean isDirectory(String fileUrl) {
+        File file;
+        if (isUrlWithProtocol(fileUrl)) {
+            if (getProtocol(fileUrl).equals("file")) {
+                file = new File(URI.create(fileUrl));
+            } else {
+                return false;
+            }
+        } else {
+            file = new File(fileUrl);
+        }
+        return file.isDirectory();
+    }
+
+    public static File toFile(String fileUrl) {
+        if (isUrlWithProtocol(fileUrl)) {
+            if (getProtocol(fileUrl).equals("file")) {
+                return new File(URI.create(fileUrl));
+            } else {
+                throw new IllegalArgumentException("Not a file protocol URL: " + fileUrl);
+            }
+        } else {
+            return new File(fileUrl);
         }
     }
 

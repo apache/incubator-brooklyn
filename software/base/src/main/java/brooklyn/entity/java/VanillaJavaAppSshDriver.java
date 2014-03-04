@@ -3,7 +3,6 @@ package brooklyn.entity.java;
 import static java.lang.String.format;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -13,11 +12,13 @@ import java.util.Map;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.file.ArchiveBuilder;
+import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.javalang.StackTraceSimplifier;
+import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * The SSH implementation of the {@link VanillaJavaAppDriver}.
@@ -56,67 +57,19 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
 
         SshMachineLocation machine = getMachine();
         VanillaJavaApp entity = getEntity();
-        for (String f : entity.getClasspath()) {
-            // TODO support wildcards
-
-            // If a local folder, then jar it up
-            String toinstall;
-            if (new File(f).isDirectory()) {
-                try {
-                    File jarFile = JarBuilder.buildJar(new File(f));
-                    toinstall = jarFile.getAbsolutePath();
-                } catch (IOException e) {
-                    throw new IllegalStateException("Error jarring classpath entry, for directory "+f, e);
-                }
-            } else {
-                toinstall = f;
+        for (String entry : entity.getClasspath()) {
+            // If a local folder, then create archive from contents first
+            if (Urls.isDirectory(entry)) {
+                File jarFile = ArchiveBuilder.jar().add(entry).create();
+                entry = jarFile.getAbsolutePath();
             }
-            
-            // FIXME define a new SshEffectorTasks.install task which does this
-            // (attempt to curl from the remote machine, then fall back to copying)
-            int result = install(toinstall, getRunDir() + "/" + "lib" + "/", NUM_RETRIES_FOR_COPYING);
-            if (result != 0)
-                throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s",f,entity,machine));
-            
-            // if it's a zip or tgz then expand
-            // FIXME dedup with code in machine.installTo above
-            String destName = f;
-            destName = destName.contains("?") ? destName.substring(0, destName.indexOf('?')) : destName;
-            destName = destName.substring(destName.lastIndexOf('/') + 1);
 
-            if (destName.toLowerCase().endsWith(".zip")) {
-                result = machine.execCommands("unzipping", ImmutableList.of(format("cd %s/lib && unzip %s",getRunDir(),destName)));
-            } else if (destName.toLowerCase().endsWith(".tgz") || destName.toLowerCase().endsWith(".tar.gz")) {
-                result = machine.execCommands("untarring gz", ImmutableList.of(format("cd %s/lib && tar xvfz %s",getRunDir(),destName)));
-            } else if (destName.toLowerCase().endsWith(".tar")) {
-                result = machine.execCommands("untarring", ImmutableList.of(format("cd %s/lib && tar xvf %s",getRunDir(),destName)));
-            }
-            if (result != 0)
-                throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s (failed to expand archive)",f,entity,machine));
+            // Determine filename
+            String destFile = entry.contains("?") ? entry.substring(0, entry.indexOf('?')) : entry;
+            destFile = destFile.substring(destFile.lastIndexOf('/') + 1);
+
+            ArchiveUtils.deploy(MutableMap.<String, Object>of(), entry, machine, getRunDir(), Os.mergePaths(getRunDir(), "lib"), destFile);
         }
-    }
-
-    protected int install(String urlToInstall, String target, int numAttempts) {
-        Exception lastError = null;
-        int retriesRemaining = numAttempts;
-        int attemptNum = 0;
-        do {
-            attemptNum++;
-            try {
-                return getMachine().installTo(resource, urlToInstall, target);
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                lastError = e;
-                String stack = StackTraceSimplifier.toString(e);
-                if (stack.contains("net.schmizz.sshj.sftp.RemoteFile.write")) {
-                    log.warn("Failed to transfer "+urlToInstall+" to "+getMachine()+", retryable error, attempt "+attemptNum+"/"+numAttempts+": "+e);
-                    continue;
-                }
-                log.warn("Failed to transfer "+urlToInstall+" to "+getMachine()+", not a retryable error so failing: "+e);
-                throw Exceptions.propagate(e);
-            }
-        } while (--retriesRemaining > 0);
-        throw Exceptions.propagate(lastError);
     }
 
     @Override
