@@ -1,16 +1,12 @@
 package brooklyn.entity.software;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.Beta;
-import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
-import com.google.common.io.CharStreams;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.OsDetails;
@@ -23,6 +19,10 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.annotations.Beta;
+import com.google.common.base.Optional;
+import com.google.common.io.CharStreams;
+
 /**
  * @since 0.7.0
  */
@@ -30,6 +30,16 @@ import brooklyn.util.task.Tasks;
 public class OsTasks {
 
     private static final Logger LOG = LoggerFactory.getLogger(OsTasks.class);
+
+    /** check that needed resources are on classpath, fail fast if not 
+     * (e.g. IDE hasn't pulled in resources properly, make it easy to fail before provisioning) */
+    public static void checkResourcesValid() {
+        Streams.closeQuietly( getOsDetailsScript() );
+    }
+    
+    private static InputStream getOsDetailsScript() {
+        return new ResourceUtils(OsTasks.class).getResourceFromUrl("classpath://brooklyn/entity/software/os-details.sh");
+    }
 
     /**
      * Delegates to {@link #getOsDetails(SshMachineLocation)} using the given entity's location.
@@ -57,7 +67,7 @@ public class OsTasks {
                     public OsDetails call() throws Exception {
                         // Read os-details script line by line
                         BufferedReader reader = new BufferedReader(Streams.reader(
-                                new ResourceUtils(this).getResourceFromUrl("classpath://brooklyn/entity/software/os-details.sh")));
+                                getOsDetailsScript()));
                         List<String> script = CharStreams.readLines(reader);
                         reader.close();
 
