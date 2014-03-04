@@ -1,6 +1,7 @@
 package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
+import groovy.lang.Closure;
 
 import java.io.Closeable;
 import java.io.File;
@@ -20,30 +21,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-import com.google.common.net.HostAndPort;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
@@ -60,6 +44,7 @@ import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
 import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -81,11 +66,31 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.ReaderInputStream;
 import brooklyn.util.stream.StreamGobbler;
+import brooklyn.util.task.BasicTask;
+import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.system.internal.ExecWithLoggingHelpers;
 import brooklyn.util.task.system.internal.ExecWithLoggingHelpers.ExecRunner;
 import brooklyn.util.text.Strings;
-import groovy.lang.Closure;
+import brooklyn.util.time.Duration;
+
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -103,7 +108,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
     /** @deprecated since 0.7.0 shouldn't be public */
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
-        
+
+    public static final ConfigKey<Duration> SSH_CACHE_EXPIRY_DURATION = ConfigKeys.newConfigKey(Duration.class, "sshCacheExpiryDuration", "Expirty time for unused cached ssh connections", Duration.FIVE_MINUTES);
+
     @SetFromFlag
     String user;
 
@@ -174,7 +181,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             
     private transient LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCache;
 
-
+    private Task<?> cleanupTask;
+    
     public SshMachineLocation() {
         this(MutableMap.of());
     }
@@ -182,16 +190,17 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public SshMachineLocation(Map properties) {
         super(properties);
         usedPorts = (usedPorts != null) ? Sets.newLinkedHashSet(usedPorts) : Sets.<Integer>newLinkedHashSet();
-        sshPoolCache = buildSshToolPoolCacheLoader();
     }
 
     private LoadingCache<Map<String, ?>, Pool<SshTool>> buildSshToolPoolCacheLoader() {
         // TODO: Appropriate numbers for maximum size and expire after access
         // At the moment every SshMachineLocation instance creates its own pool.
         // It might make more sense to create one pool and inject it into all SshMachineLocations.
+        Duration expiryDuration = getConfig(SSH_CACHE_EXPIRY_DURATION);
+        
         LoadingCache<Map<String, ?>, Pool<SshTool>> delegate = CacheBuilder.newBuilder()
                 .maximumSize(10)
-                .expireAfterAccess(5, TimeUnit.MINUTES)
+                .expireAfterAccess(expiryDuration.toMilliseconds(), TimeUnit.MILLISECONDS)
                 .recordStats()
                 .removalListener(new RemovalListener<Map<String, ?>, Pool<SshTool>>() {
                     // TODO: Does it matter that this is synchronous? - Can closing pools cause long delays?
@@ -306,11 +315,42 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     @Override
+    public void init() {
+        super.init();
+        
+        sshPoolCache = buildSshToolPoolCacheLoader();
+
+        Callable<Task<?>> cleanupTaskFactory = new Callable<Task<?>>() {
+            @Override public Task<Void> call() {
+                return new BasicTask<Void>(new Callable<Void>() {
+                    @Override public Void call() {
+                        try {
+                            if (sshPoolCache != null) sshPoolCache.cleanUp();
+                            return null;
+                        } catch (Exception e) {
+                            // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
+                            // if we throw an exception, then our task will never get executed again
+                            LOG.warn("Problem cleaning up ssh-pool-cache", e);
+                            return null;
+                        } catch (Throwable t) {
+                            LOG.warn("Problem cleaning up ssh-pool-cache (rethrowing)", t);
+                            throw Exceptions.propagate(t);
+                        }
+                    }});
+            }
+        };
+        
+        Duration expiryDuration = getConfig(SSH_CACHE_EXPIRY_DURATION);
+        cleanupTask = getManagementContext().getExecutionManager().submit(new ScheduledTask(cleanupTaskFactory).period(expiryDuration));
+    }
+    
+    @Override
     public void close() throws IOException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("{} invalidating all entries in ssh pool cache. Final stats: {}", this, sshPoolCache.stats());
         }
         sshPoolCache.invalidateAll();
+        if (cleanupTask != null) cleanupTask.cancel(false);
     }
 
     @Override

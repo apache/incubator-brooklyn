@@ -1,23 +1,27 @@
 package brooklyn.location.basic;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
-import java.io.ByteArrayOutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
+import brooklyn.entity.basic.Entities;
+import brooklyn.location.LocationSpec;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.time.Duration;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Tests the re-use of SshTools in SshMachineLocation
@@ -26,7 +30,8 @@ public class SshMachineLocationReuseIntegrationTest {
 
     public static class RecordingSshjTool extends SshjTool {
         static int connectionCount = 0;
-
+        static AtomicInteger disconnectionCount = new AtomicInteger();
+        
         public RecordingSshjTool(Map<String, ?> map) {
             super(map);
         }
@@ -37,23 +42,33 @@ public class SshMachineLocationReuseIntegrationTest {
             super.connect();
         }
 
+        @Override
+        public void disconnect() {
+            disconnectionCount.incrementAndGet();
+            super.disconnect();
+        }
+
         public static void reset() {
-            RecordingSshjTool.connectionCount = 0;
+            connectionCount = 0;
+            disconnectionCount.set(0);
         }
     }
 
     private SshMachineLocation host;
+    private LocalManagementContext managementContext;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        host = new SshMachineLocation(MutableMap.of(
-                "address", InetAddress.getLocalHost(),
-                SshTool.PROP_TOOL_CLASS, RecordingSshjTool.class.getName()));
+        managementContext = new LocalManagementContext();
+        host = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                .configure("address", InetAddress.getLocalHost())
+                .configure(SshTool.PROP_TOOL_CLASS, RecordingSshjTool.class.getName()));
     }
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (host != null) Streams.closeQuietly(host);
+        if (managementContext != null) Entities.destroyAll(managementContext);
         RecordingSshjTool.reset();
     }
 
@@ -87,6 +102,22 @@ public class SshMachineLocationReuseIntegrationTest {
         props.put(SshTool.PROP_SCRIPT_HEADER.getName(), "#!/bin/bash -e\n");
         host.execScript(props, "mysummary", ImmutableList.of("exit"));
         assertEquals(RecordingSshjTool.connectionCount, 1, "Expected one SSH connection to have been recorded even though out script header differed.");
+    }
+
+    @Test(groups = "Integration")
+    public void testSshCacheExpiresEvenIfNotUsed() throws Exception {
+        SshMachineLocation host2 = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                .configure("address", InetAddress.getLocalHost())
+                .configure(SshMachineLocation.SSH_CACHE_EXPIRY_DURATION, Duration.ONE_SECOND)
+                .configure(SshTool.PROP_TOOL_CLASS, RecordingSshjTool.class.getName()));
+        
+        Map<String, Object> props = customSshConfigKeys();
+        host2.execScript(props, "mysummary", ImmutableList.of("exit"));
+
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                assertEquals(RecordingSshjTool.disconnectionCount.get(), 1);
+            }});
     }
 
     public Map<String, Object> customSshConfigKeys() throws UnknownHostException {
