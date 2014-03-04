@@ -345,10 +345,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     @Override
     public void close() throws IOException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("{} invalidating all entries in ssh pool cache. Final stats: {}", this, sshPoolCache.stats());
+        if (sshPoolCache != null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("{} invalidating all entries in ssh pool cache. Final stats: {}", this, sshPoolCache.stats());
+            }
+            sshPoolCache.invalidateAll();
         }
-        sshPoolCache.invalidateAll();
         if (cleanupTask != null) cleanupTask.cancel(false);
     }
 
@@ -389,6 +391,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     protected <T> T execSsh(Map<String, ?> props, Function<ShellTool, T> task) {
+        if (sshPoolCache == null) {
+            // required for uses that instantiate SshMachineLocation directly, so init() will not have been called
+            sshPoolCache = buildSshToolPoolCacheLoader();
+        }
         Pool<SshTool> pool = sshPoolCache.getUnchecked(props);
         if (LOG.isTraceEnabled()) {
             LOG.trace("{} execSsh got pool: {}", this, pool);
