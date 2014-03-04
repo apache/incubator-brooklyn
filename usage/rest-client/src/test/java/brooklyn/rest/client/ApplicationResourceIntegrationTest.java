@@ -7,6 +7,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.ws.rs.core.Response;
 
@@ -31,6 +32,7 @@ import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.EntitySummary;
+import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.domain.SensorSummary;
 
 import com.google.common.base.Predicate;

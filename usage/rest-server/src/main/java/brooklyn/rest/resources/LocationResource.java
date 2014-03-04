@@ -57,7 +57,7 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
       return result;
   }
 
-  @Override
+  /** @deprecated since 0.7.0; REST call now handled by below (optional query parameter added) */
   public LocationSummary get(String locationId) {
       return get(locationId, false);
   }
