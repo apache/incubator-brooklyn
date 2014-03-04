@@ -13,6 +13,8 @@ import brooklyn.rest.domain.LocationSpec;
 @Deprecated
 public class LocationSpecTest {
 
+    // TODO when removing the deprecated class this tests, change the tests here to point at LocationSummary
+    
   final LocationSpec locationSpec = LocationSpec.localhost();
 
   @Test

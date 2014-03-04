@@ -51,6 +51,11 @@ public class NamedLocationResolver implements LocationResolver {
         String name = spec;
         ConfigBag lfBag = ConfigBag.newInstance(locationFlags).putIfAbsent(LocationInternal.ORIGINAL_SPEC, name);
         name = Strings.removeFromStart(spec, getPrefix()+":");
+        if (spec.toLowerCase().startsWith(NAMED+":")) {
+            // since 0.7.0
+            log.warn("Deprecated use of 'named:' prefix with wrong case ("+spec+"); support may be removed in future versions");
+            name = spec.substring( (NAMED+":").length() );
+        }
         
         LocationDefinition ld = registry.getDefinedLocationByName(name);
         if (ld==null) throw new NoSuchElementException("No named location defined matching '"+name+"'");

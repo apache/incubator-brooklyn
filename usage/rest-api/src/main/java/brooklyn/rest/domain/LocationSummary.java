@@ -5,6 +5,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.net.URI;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
@@ -26,7 +28,7 @@ public class LocationSummary extends LocationSpec {
       @JsonProperty("name") String name,
       @JsonProperty("spec") String spec,
       @JsonProperty("type") String type,
-      @JsonProperty("config") Map<String, ?> config,
+      @JsonProperty("config") @Nullable Map<String, ?> config,
       @JsonProperty("links") Map<String, URI> links
   ) {
     super(name, spec, config);

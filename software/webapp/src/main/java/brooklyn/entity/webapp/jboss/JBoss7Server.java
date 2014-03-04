@@ -74,10 +74,10 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
             ConfigKeys.newStringConfigKey("webapp.jboss.managementPassword", "Password for MANAGEMENT_USER.");
 
     AttributeSensor<String> MANAGEMENT_URL =
-        Sensors.newStringSensor("webapp.jboss.managementUrl", "URL where management endpoint is available");
+            Sensors.newStringSensor("webapp.jboss.managementUrl", "URL where management endpoint is available");
 
     AttributeSensor<Integer> MANAGEMENT_STATUS =
-        Sensors.newIntegerSensor("webapp.jboss.managementStatus", "HTTP response code for the management server");
+            Sensors.newIntegerSensor("webapp.jboss.managementStatus", "HTTP response code for the management server");
 
     AttributeSensor<Boolean> MANAGEMENT_URL_UP = 
             Sensors.newBooleanSensor("webapp.jboss.managementUp", "Management server is responding with OK");

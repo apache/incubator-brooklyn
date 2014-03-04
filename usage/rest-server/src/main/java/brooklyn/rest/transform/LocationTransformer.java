@@ -87,8 +87,8 @@ public class LocationTransformer {
         String specId = null;
         Location lp = l;
         while (lp!=null && (spec==null || specId==null)) {
-            // walk parent locations (not sure this is the best strategy, or if it's needed,
-            // as the spec config is inherited anyway... 
+            // walk parent locations
+            // TODO not sure this is the best strategy, or if it's needed, as the spec config is inherited anyway... 
             if (spec==null)
                 spec = Strings.toString( lp.getAllConfig(true).get(LocationInternal.ORIGINAL_SPEC.getName()) );
             if (specId==null) {
@@ -111,12 +111,14 @@ public class LocationTransformer {
             if (ll!=null) specId = ll.getId();
         }
         
+        Map<String, ?> config = level!=LocationDetailLevel.NONE ? null : copyConfig(l.getAllConfig(level!=LocationDetailLevel.LOCAL_EXCLUDING_SECRET).entrySet(), level);
+        
         return new LocationSummary(
             l.getId(),
             l.getDisplayName(),
             spec,
             l.getClass().getName(),
-            copyConfig(l.getAllConfig(level!=LocationDetailLevel.LOCAL_EXCLUDING_SECRET).entrySet(), level),
+            config,
             MutableMap.of("self", URI.create("/v1/locations/" + l.getId()))
                 .addIfNotNull("parent", l.getParent()!=null ? URI.create("/v1/locations/"+l.getParent().getId()) : null)
                 .addIfNotNull("spec", specId!=null ? URI.create("/v1/locations/"+specId) : null)

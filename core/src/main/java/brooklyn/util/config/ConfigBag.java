@@ -13,11 +13,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
 /**
@@ -155,11 +155,11 @@ public class ConfigBag {
     }
     
     public <T> ConfigBag putIfAbsent(ConfigKey<T> key, T value) {
-        return putIfAbsent(ImmutableMap.of(key, value));
+        return putIfAbsent(MutableMap.of(key, value));
     }
 
     public ConfigBag putAsStringKeyIfAbsent(Object key, Object value) {
-        return putIfAbsent(ImmutableMap.of(key, value));
+        return putIfAbsent(MutableMap.of(key, value));
     }
 
     public ConfigBag putIfAbsent(Map<?, ?> propertiesToSet) {
