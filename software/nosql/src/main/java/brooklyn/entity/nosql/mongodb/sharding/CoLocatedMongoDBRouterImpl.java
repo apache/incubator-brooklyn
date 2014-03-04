@@ -2,6 +2,7 @@ package brooklyn.entity.nosql.mongodb.sharding;
 
 import java.util.Collection;
 
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.SameServerEntityImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
@@ -19,6 +20,7 @@ public class CoLocatedMongoDBRouterImpl extends SameServerEntityImpl implements 
         setAttribute(ROUTER, addChild(EntitySpec.create(MongoDBRouter.class)
                 .configure(MongoDBRouter.CONFIG_SERVERS,
                         DependentConfiguration.attributeWhenReady(getConfig(CoLocatedMongoDBRouter.SHARDED_DEPLOYMENT), MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES))));
+        addEnricher(Enrichers.builder().propagating(MongoDBRouter.PORT).from(getAttribute(ROUTER)).build());
     }
     
     @Override

@@ -40,8 +40,17 @@ if (hadoop!=null) {
 <li><a href="hadoop-wordcount.jsp">Hadoop wordcount</a> (inevitably!) run over the chats</li>
 <% } %>
 
+
 <%
-if (hadoop==null && url==null) {
+    String mongo=System.getProperty("brooklyn.example.mongodb.port");
+    if (mongo!=null) {
+%>
+<li><a href="mongo.jsp">MongoDB chatroom</a></li>
+<% } %>
+<li><a href="mongo.jsp">MongoDB chatroom - no mongo</a></li>
+
+<%
+if (hadoop==null && url==null && mongo==null) {
 %>
 <li><i>None.</i> Try one of the other Brooklyn examples to see SQL or Hadoop.</li>
 <% } %>

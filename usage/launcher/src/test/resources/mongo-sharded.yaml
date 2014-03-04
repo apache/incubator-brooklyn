@@ -1,0 +1,42 @@
+name: Humongous app
+description: Auto-scaling web app backed by MongoDB
+origin: http://brooklyn.io
+#location: named:ec2-ubuntu12_0
+location: localhost
+services:
+- serviceType: brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment
+  id: shardeddeployment
+  name: Mongo Deploy
+  brooklyn.config:
+    initialRouterClusterSize: 0
+    coLocatedRouterGroup: $brooklyn:component("webappcluster").attributeWhenReady("controlleddynamicwebappcluster.cluster") 
+- serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+  id: webappcluster
+  brooklyn.config:
+    memberSpec:
+      $brooklyn:entitySpec:
+        type: brooklyn.entity.nosql.mongodb.sharding.CoLocatedMongoDBRouter
+        brooklyn.enrichers:
+          - enricherType: brooklyn.enricher.basic.Propagator
+            brooklyn.config:
+              enricher.propagating.sensorMapping:
+                $brooklyn:sensor("brooklyn.entity.webapp.jboss.JBoss7Server", "http.port"): $brooklyn:sensor("brooklyn.entity.webapp.jboss.JBoss7Server", "http.port") 
+              enricher.producer: $brooklyn:component("child", "thewebserver")
+        brooklyn.config:
+          shardedDeployment: $brooklyn:component("shardeddeployment")
+          siblingSpecs:
+          - $brooklyn:entitySpec:
+              id: thewebserver
+              type: brooklyn.entity.webapp.jboss.JBoss7Server
+              brooklyn.config:
+                war: "classpath://brooklyn-example-hello-world-sql-webapp.war"
+                java.sysprops:
+                  brooklyn.example.mongodb.port: $brooklyn:component("parent", "").attributeWhenReady("mongodb.server.port")
+          - $brooklyn:entitySpec:
+              type: brooklyn.entity.java.VanillaJavaApp
+              brooklyn.config:
+                main: brooklyn.entity.java.ExampleVanillaMain
+                classpath: /Users/Martin/Documents/brooklyn/software/base/target/test-classes/
+                args:
+                - bar
+                - baz
