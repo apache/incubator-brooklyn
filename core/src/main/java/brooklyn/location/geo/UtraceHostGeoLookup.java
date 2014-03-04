@@ -71,7 +71,7 @@ Beyond this you get blacklisted and requests may time out, or return none.
                 public void run() {
                     try {
                         log.debug("Looking up external IP of this host in private thread "+Thread.currentThread());
-                        localExternalIp = ResourceUtils.create(HostGeoLookup.class).getResourceAsString("http://api.externalip.net/ip/").trim();
+                        localExternalIp = getLocalhostExternalIpImpl();
                         log.debug("Finished looking up external IP of this host in private thread, result "+localExternalIp);
                     } catch (Throwable t) {
                         log.debug("Not able to look up external IP of this host in private thread, probably offline ("+t+")");
@@ -94,6 +94,18 @@ Beyond this you get blacklisted and requests may time out, or return none.
 
         log.debug("Looked up external IP of this host, result is: "+localExternalIp);
         return localExternalIp;
+    }
+    
+    /**
+     * @return The external IP address of this host
+     * 
+     * @throws RuntimeException if lookup fails
+     */
+    public static String getLocalhostExternalIpImpl() {
+        // Previously used "http://api.externalip.net/ip/", but this now returns:
+        // "This website has been suspended as of March 1st 2014"
+        
+        return ResourceUtils.create(HostGeoLookup.class).getResourceAsString("http://ipecho.net/plain").trim();
     }
     
     public String getLookupUrlForLocalhost() {
