@@ -24,6 +24,7 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
@@ -196,9 +197,19 @@ public class BasicLocationRegistry implements LocationRegistry {
             }
 
             // problem: but let's ensure that classpath is sane to give better errors in common IDE bogus case
-            throw new NoSuchElementException("No resolver found for '"+spec+"': "
-                + "known resolvers are "+resolvers.keySet()+"; if you do not see an expected resolver, "
-                + "ensure your classpath is correct and includes META-INF/services");
+            if (resolvers.get("id")==null || resolvers.get("named")==null) {
+                log.error("Standard location resolvers not installed, location resolution will fail shortly. This usually indicates a classpath problem, "
+                    + "such as when running from an IDE which has not properly copied META-INF/services from src/main/resources."
+                    + "Known resolvers are: "+resolvers.keySet());
+                throw new NoSuchElementException("Unresolvable location '"+spec+"': "
+                    + "Problem detected with location resolver configuration: "+resolvers.keySet()+" are the only available location resolvers. "
+                    + "More information can be found in the logs.");
+            } else {
+                log.warn("Location resolution failed for '"+spec+"' (will fail shortly): known resolvers are: "+resolvers.keySet());
+                throw new NoSuchElementException("Unknown location '"+spec+"': "
+                    + "either this location is not recognised or there is a problem with location resolver configuration.");
+            }
+                
         } finally {
             specsSeen.remove();
         }
@@ -278,11 +289,12 @@ public class BasicLocationRegistry implements LocationRegistry {
     }
     
     public Location resolveLocationDefinition(LocationDefinition ld, Map locationFlags, String optionalName) {
-        MutableMap newLocationFlags = new MutableMap().add(locationFlags).add(ld.getConfig());
-        if (optionalName==null && ld.getName()!=null) optionalName = ld.getName();
-        if (optionalName!=null) newLocationFlags.add("named", optionalName);
+        ConfigBag newLocationFlags = ConfigBag.newInstance(ld.getConfig())
+            .putAll(locationFlags)
+            .putIfAbsentAndNotNull(LocationInternal.NAMED_SPEC_NAME, ld.getName())
+            .putIfAbsentAndNotNull(LocationInternal.ORIGINAL_SPEC, ld.getName());
         try {
-            return resolve(ld.getSpec(), newLocationFlags);
+            return resolve(ld.getSpec(), newLocationFlags.getAllConfig());
         } catch (Exception e) {
             throw new IllegalStateException("Cannot instantiate named location '"+optionalName+"' pointing at "+ld.getSpec()+": "+e, e);
         }

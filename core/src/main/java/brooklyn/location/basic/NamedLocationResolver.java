@@ -13,6 +13,8 @@ import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.management.ManagementContext;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.text.Strings;
 
 /**
  * Allows you to say, in your brooklyn.properties:
@@ -36,6 +38,7 @@ public class NamedLocationResolver implements LocationResolver {
 
     public static final String NAMED = "named";
     
+    @SuppressWarnings("unused")
     private ManagementContext managementContext;
 
     @Override
@@ -46,12 +49,17 @@ public class NamedLocationResolver implements LocationResolver {
     @SuppressWarnings({ "rawtypes" })
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         String name = spec;
+        ConfigBag lfBag = ConfigBag.newInstance(locationFlags).putIfAbsent(LocationInternal.ORIGINAL_SPEC, name);
+        name = Strings.removeFromStart(spec, getPrefix()+":");
         if (spec.toLowerCase().startsWith(NAMED+":")) {
+            // since 0.7.0
+            log.warn("Deprecated use of 'named:' prefix with wrong case ("+spec+"); support may be removed in future versions");
             name = spec.substring( (NAMED+":").length() );
         }
+        
         LocationDefinition ld = registry.getDefinedLocationByName(name);
         if (ld==null) throw new NoSuchElementException("No named location defined matching '"+name+"'");
-        return ((BasicLocationRegistry)registry).resolveLocationDefinition(ld, locationFlags, name);
+        return ((BasicLocationRegistry)registry).resolveLocationDefinition(ld, lfBag.getAllConfig(), name);
     }
 
     @Override

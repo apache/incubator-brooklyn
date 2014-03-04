@@ -8,6 +8,7 @@ import org.testng.annotations.Test
 import brooklyn.location.Location
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.PortRange
+import brooklyn.util.net.Networking;
 
 public class LocalhostMachineProvisioningLocationTest {
     @Test
@@ -15,7 +16,7 @@ public class LocalhostMachineProvisioningLocationTest {
         LocalhostMachineProvisioningLocation provisioner = new LocalhostMachineProvisioningLocation()
         SshMachineLocation machine = provisioner.obtain()
         assertNotNull machine
-        assertEquals machine.address, InetAddress.localHost
+        assertEquals machine.address, Networking.localHost
     }
 
     @Test
@@ -37,12 +38,12 @@ public class LocalhostMachineProvisioningLocationTest {
         // first machine
         SshMachineLocation first = provisioner.obtain()
         assertNotNull first
-        assertEquals first.address, InetAddress.localHost
+        assertEquals first.address, Networking.localHost
 
         // second machine
         SshMachineLocation second = provisioner.obtain()
         assertNotNull second
-        assertEquals second.address, InetAddress.localHost
+        assertEquals second.address, Networking.localHost
 
         // third machine
         SshMachineLocation third = provisioner.obtain()

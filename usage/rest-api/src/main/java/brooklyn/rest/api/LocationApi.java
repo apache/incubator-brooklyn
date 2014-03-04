@@ -3,6 +3,7 @@ package brooklyn.rest.api;
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
+
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
@@ -10,6 +11,7 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +41,15 @@ public interface LocationApi {
       multiValueResponse = true)
   public LocationSummary get(
           @ApiParam(value = "Location id to fetch", required = true)
-          @PathParam("locationId") String locationId) ;
+          @PathParam("locationId") String locationId,
+          @ApiParam(value = "Whether full (inherited) config should be compiled", required = false)
+          @DefaultValue("false")
+          @QueryParam("full") String fullConfig) ;
+
+  // breaks BrooklynApi -- as method needs an annotation
+//  /** @deprecated since 0.7.0; REST call now handled by above (optional query parameter added) */
+//  @Deprecated
+//  public LocationSummary get(String locationId);
 
   @POST
   @ApiOperation(value = "Create a new location", responseClass = "String")

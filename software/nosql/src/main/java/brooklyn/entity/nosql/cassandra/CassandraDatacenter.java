@@ -46,6 +46,7 @@ import com.google.common.reflect.TypeToken;
 @ImplementedBy(CassandraDatacenterImpl.class)
 public interface CassandraDatacenter extends DynamicCluster, DatastoreMixins.HasDatastoreUrl, DatastoreMixins.CanExecuteScript {
 
+    // FIXME datacenter name -- also CASS_CLUSTER_NODES should be CASS_DC_NODES
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "cassandra.cluster.name", "Name of the Cassandra cluster", "BrooklynCluster");
 

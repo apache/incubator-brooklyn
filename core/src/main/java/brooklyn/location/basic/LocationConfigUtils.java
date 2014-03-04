@@ -6,14 +6,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.StringFunctions;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
@@ -178,4 +181,27 @@ public class LocationConfigUtils {
             return configBag.get(preferredKey); // get the default
         }
     }
+
+    public static Map<ConfigKey<String>,String> finalAndOriginalSpecs(String finalSpec, Object ...sourcesForOriginalSpec) {
+        // yuck!: TODO should clean up how these things get passed around
+        Map<ConfigKey<String>,String> result = MutableMap.of();
+        if (finalSpec!=null) 
+            result.put(LocationInternal.FINAL_SPEC, finalSpec);
+        
+        String originalSpec = null;
+        for (Object source: sourcesForOriginalSpec) {
+            if (source instanceof CharSequence) originalSpec = source.toString();
+            else if (source instanceof Map) {
+                if (originalSpec==null) originalSpec = Strings.toString( ((Map)source).get(LocationInternal.ORIGINAL_SPEC) );
+                if (originalSpec==null) originalSpec = Strings.toString( ((Map)source).get(LocationInternal.ORIGINAL_SPEC.getName()) );
+            }
+            if (originalSpec!=null) break; 
+        }
+        if (originalSpec==null) originalSpec = finalSpec;
+        if (originalSpec!=null)
+            result.put(LocationInternal.ORIGINAL_SPEC, originalSpec);
+        
+        return result;
+    }
+
 }

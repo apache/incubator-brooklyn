@@ -18,6 +18,7 @@ import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
+import brooklyn.util.net.Networking;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Duration;
 
@@ -61,7 +62,7 @@ public class SshMachineLocationReuseIntegrationTest {
     public void setUp() throws Exception {
         managementContext = new LocalManagementContext();
         host = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
-                .configure("address", InetAddress.getLocalHost())
+                .configure("address", Networking.getLocalHost())
                 .configure(SshTool.PROP_TOOL_CLASS, RecordingSshjTool.class.getName()));
     }
 
@@ -122,7 +123,7 @@ public class SshMachineLocationReuseIntegrationTest {
 
     public Map<String, Object> customSshConfigKeys() throws UnknownHostException {
         return MutableMap.<String, Object>of(
-                "address", InetAddress.getLocalHost(),
+                "address", Networking.getLocalHost(),
                 SshTool.PROP_SESSION_TIMEOUT.getName(), 20000,
                 SshTool.PROP_CONNECT_TIMEOUT.getName(), 50000,
                 SshTool.PROP_SCRIPT_HEADER.getName(), "#!/bin/bash");

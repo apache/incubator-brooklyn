@@ -4,6 +4,7 @@ import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,16 +16,21 @@ import javax.ws.rs.core.Response.Status;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.rest.api.EntityApi;
 import brooklyn.rest.domain.EntitySummary;
+import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.transform.EntityTransformer;
+import brooklyn.rest.transform.LocationTransformer;
+import brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
 import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
 
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 public class EntityResource extends AbstractBrooklynRestResource implements EntityApi {
@@ -98,5 +104,16 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       Iterable<Entity> descs = brooklyn().descendantsOfType(application, entity, typeRegex);
       return ApplicationResource.getSensorMap(sensor, descs);
   }
+
+  @Override
+  public Iterable<LocationSummary> getLocations(String application, String entity) {
+      Collection<LocationSummary> result = Lists.newArrayList();
+      EntityLocal e = brooklyn().getEntity(application, entity);
+      for (Location l: e.getLocations()) {
+          result.add(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.NONE));
+      }
+      return result;
+  }
+
 
 }

@@ -53,7 +53,7 @@ define([
 
     var Router = Backbone.Router.extend({
         routes:{
-            'v1/home':'homePage',
+            'v1/home/*trail':'homePage',
             'v1/applications/:app/entities/*trail':'applicationsPage',
             'v1/applications/*trail':'applicationsPage',
             'v1/applications':'applicationsPage',
@@ -76,14 +76,14 @@ define([
         },
         
         defaultRoute:function () {
-            this.homePage()
+            this.homePage('auto')
         },
         
         applications:new Application.Collection,
         appTree:new AppTree.Collection,
         locations:new Location.Collection,
         
-        homePage:function () {
+        homePage:function (trail) {
             var that = this;
             // render the page after we fetch the collection -- no rendering on error
             this.applications.fetch({success:function () {
@@ -95,7 +95,8 @@ define([
                 var veryFirstViewLoad = !that.currentView;
                 that.showView("#application-content", homeView);
                 // show add application wizard if none already exist and this is the first page load
-                if (veryFirstViewLoad && that.applications.isEmpty()) {
+                if ( (veryFirstViewLoad && trail=='auto' && that.applications.isEmpty()) ||
+                     (trail=='add_application') ) {
                     homeView.createApplication();
                 }
             }})

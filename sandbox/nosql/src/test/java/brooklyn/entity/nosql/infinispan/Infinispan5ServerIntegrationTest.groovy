@@ -18,6 +18,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
+import brooklyn.util.net.Networking
 
 class Infinispan5ServerIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(Infinispan5ServerIntegrationTest.class)
@@ -45,7 +46,7 @@ class Infinispan5ServerIntegrationTest {
         boolean socketClosed = new Repeater("Checking Infinispan has shut down")
             .repeat {
                     if (shutdownSocket) shutdownSocket.close();
-                    try { shutdownSocket = new Socket(InetAddress.localHost, DEFAULT_PORT); }
+                    try { shutdownSocket = new Socket(Networking.localHost, DEFAULT_PORT); }
                     catch (SocketException e) { gotException = e; return; }
                     gotException = null
                 }
@@ -61,7 +62,7 @@ class Infinispan5ServerIntegrationTest {
     }
 
     public void ensureIsUp() {
-        Socket socket = new Socket(InetAddress.localHost, DEFAULT_PORT);
+        Socket socket = new Socket(Networking.localHost, DEFAULT_PORT);
         socket.close();
     }
 

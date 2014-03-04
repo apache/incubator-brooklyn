@@ -44,8 +44,7 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
   }
 
   @Override
-  public Map<String, Object> batchSensorRead(final String application, final String entityToken
-      ) {
+  public Map<String, Object> batchSensorRead(final String application, final String entityToken) {
     final EntityLocal entity = brooklyn().getEntity(application, entityToken);
     Map<String, Object> sensorMap = Maps.newHashMap();
     List<Sensor<?>> sensors = Lists.newArrayList(filter(entity.getEntityType().getSensors(),

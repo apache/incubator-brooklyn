@@ -2,7 +2,6 @@ package brooklyn.location.basic;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.management.ManagementFactory;
-import java.net.InetAddress;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +19,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.net.Networking;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Time;
@@ -96,7 +96,7 @@ public class SshMachineLocationPerformanceTest {
     public void testConsecutiveSmallCommandsWithDifferentProperties() throws Exception {
         final Map<String, ?> emptyProperties = Collections.emptyMap();
         final Map<String, ?> customProperties = MutableMap.of(
-                "address", InetAddress.getLocalHost(),
+                "address", Networking.getLocalHost(),
                 SshTool.PROP_SESSION_TIMEOUT.getName(), 20000,
                 SshTool.PROP_CONNECT_TIMEOUT.getName(), 50000,
                 SshTool.PROP_SCRIPT_HEADER.getName(), "#!/bin/bash");

@@ -58,7 +58,7 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
 
     @Test
     public void testNamedProperties() {
-        Map<String, Object> map = parser.getJcloudsProperties("FooServers", null, "cloudfirst", sampleNamedProps());
+        Map<String, Object> map = parser.getJcloudsProperties("openstack-nova", null, "cloudfirst", sampleNamedProps());
         Assert.assertEquals(map.get("provider"), "openstack-nova");
         Assert.assertEquals(map.get("identity"), "myId");
         Assert.assertEquals(map.get("credential"), "password");
@@ -71,7 +71,7 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
         Map<String, Object> allProperties = Maps.newHashMap();
         allProperties.putAll(sampleProviderOrApiProps());
         allProperties.putAll(sampleNamedProps());
-        Map<String, Object> map = parser.getJcloudsProperties("FooServers", null, "cloudfirst", allProperties);
+        Map<String, Object> map = parser.getJcloudsProperties("openstack-nova", null, "cloudfirst", allProperties);
         Assert.assertEquals(map.get("provider"), "openstack-nova");
         Assert.assertEquals(map.get("identity"), "myId");
         Assert.assertEquals(map.get("credential"), "password");

@@ -2,7 +2,6 @@ package brooklyn.util.stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -11,7 +10,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 
@@ -24,13 +22,20 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.InputSupplier;
+import com.google.common.io.CharStreams;
 
+/**
+ * Methods to manage byte and character streams.
+ *
+ * @see com.google.common.io.ByteStreams
+ * @see com.google.common.io.CharStreams
+ */
 public class Streams {
 
     private static final Logger log = LoggerFactory.getLogger(Streams.class);
-    
+
     /** drop-in non-deprecated replacement for {@link Closeable}'s deprecated closeQuiety;
      * we may wish to review usages, particularly as we drop support for java 1.6,
      * but until then use this instead of the deprecated method */
@@ -50,11 +55,9 @@ public class Streams {
     }
     
     public static InputStream newInputStreamWithContents(String contents) {
+        byte[] bytes = checkNotNull(contents, "contents").getBytes(Charsets.UTF_8);
         try {
-            byte[] bytes = checkNotNull(contents, "contents").getBytes(Charsets.UTF_8);
-            InputSupplier<ByteArrayInputStream> supplier = ByteStreams.newInputStreamSupplier(bytes);
-            InputStream stream = supplier.getInput();
-            return stream;
+            return ByteSource.wrap(bytes).openStream();
         } catch (IOException ioe) {
             if (log.isDebugEnabled()) log.debug("Error creating InputStream from String: " + ioe.getMessage());
             throw Exceptions.propagate(ioe);
@@ -76,9 +79,11 @@ public class Streams {
     /** reads the input stream fully, returning a byte array; throws unchecked exception on failure;
      *  to get a string, use <code>readFully(reader(is))</code> or <code>readFullyString(is)</code> */
     public static byte[] readFully(InputStream is) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        copy(is, out);
-        return out.toByteArray();
+        try {
+            return ByteStreams.toByteArray(is);
+        } catch (IOException ioe) {
+            throw Exceptions.propagate(ioe);
+        }
     }
 
     public static String readFullyString(InputStream is) {
@@ -86,36 +91,28 @@ public class Streams {
     }
     
     public static String readFully(Reader is) {
-        StringWriter out = new StringWriter();
-        copy(is, out);
-        return out.toString();
+        try {
+            return CharStreams.toString(is);
+        } catch (IOException ioe) {
+            throw Exceptions.propagate(ioe);
+        }
     }
 
     public static void copy(InputStream input, OutputStream output) {
         try {
-            byte[] buf = new byte[1024];
-            int bytesRead = input.read(buf);
-            while (bytesRead != -1) {
-                output.write(buf, 0, bytesRead);
-                bytesRead = input.read(buf);
-            }
+            ByteStreams.copy(input, output);
             output.flush();
-        } catch (Exception e) {
-            Exceptions.propagate(e);
+        } catch (IOException ioe) {
+            throw Exceptions.propagate(ioe);
         }
     }
 
     public static void copy(Reader input, Writer output) {
         try {
-            char[] buf = new char[1024];
-            int bytesRead = input.read(buf);
-            while (bytesRead != -1) {
-                output.write(buf, 0, bytesRead);
-                bytesRead = input.read(buf);
-            }
+            CharStreams.copy(input, output);
             output.flush();
-        } catch (Exception e) {
-            Exceptions.propagate(e);
+        } catch (IOException ioe) {
+            throw Exceptions.propagate(ioe);
         }
     }
 

@@ -15,6 +15,7 @@ import brooklyn.rest.api.LocationApi;
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.transform.LocationTransformer;
+import brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
 import brooklyn.rest.util.EntityLocationUtils;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -32,25 +33,9 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
         new Function<LocationDefinition, LocationSummary>() {
           @Override
           public LocationSummary apply(LocationDefinition l) {
-            return resolveLocationDefinition(l);
+            return LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
           }
         }));
-  }
-
-  protected LocationSummary resolveLocationDefinition(LocationDefinition l) {
-      return LocationTransformer.newInstance(l);
-      
-//      // full config could be nice -- except it's way too much (all of brooklyn.properties and system properties!)
-//      // also, handle non-resolveable errors somewhat gracefully
-//      try {
-//          Location ll = mgmt().getLocationRegistry().resolve(l);
-//          return LocationSummary.newInstance(l, ll);
-//      } catch (Exception e) {
-//          LocationSummary s1 = LocationSummary.newInstance(l);
-//          return new LocationSummary(s1.getId(), s1.getName(), s1.getSpec(), 
-//                  new MutableMap<String,String>(s1.getConfig()).add("WARNING", "Location invalid: "+e),
-//                  s1.getLinks());
-//      }
   }
 
   // this is here to support the web GUI's circles
@@ -72,14 +57,29 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
       return result;
   }
 
-   @Override
+  /** @deprecated since 0.7.0; REST call now handled by below (optional query parameter added) */
   public LocationSummary get(String locationId) {
-      LocationDefinition l = brooklyn().getLocationRegistry().getDefinedLocationById(locationId);
-      if (l==null) throw WebResourceUtils.notFound("No location matching %s", locationId);
-      return resolveLocationDefinition(l);
+      return get(locationId, false);
+  }
+  
+  @Override
+  public LocationSummary get(String locationId, String fullConfig) {
+      return get(locationId, Boolean.valueOf(fullConfig));
+  }
+  
+  public LocationSummary get(String locationId, boolean fullConfig) {
+      LocationDetailLevel configLevel = fullConfig ? LocationDetailLevel.FULL_EXCLUDING_SECRET : LocationDetailLevel.LOCAL_EXCLUDING_SECRET;
+      Location l1 = mgmt().getLocationManager().getLocation(locationId);
+      if (l1!=null) {
+        return LocationTransformer.newInstance(mgmt(), l1, configLevel);
+    }
+      
+      LocationDefinition l2 = brooklyn().getLocationRegistry().getDefinedLocationById(locationId);
+      if (l2==null) throw WebResourceUtils.notFound("No location matching %s", locationId);
+      return LocationTransformer.newInstance(mgmt(), l2, configLevel);
   }
 
-    @Override
+  @Override
   public Response create(LocationSpec locationSpec) {
       String id = Identifiers.makeRandomId(8);
       LocationDefinition l = new BasicLocationDefinition(id, locationSpec.getName(), locationSpec.getSpec(), locationSpec.getConfig());

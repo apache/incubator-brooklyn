@@ -1,7 +1,6 @@
 package brooklyn.location.basic;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -13,8 +12,8 @@ import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -28,15 +27,11 @@ public class SimulatedLocation extends AbstractLocation implements MachineProvis
     
     private static final InetAddress address;
     static {
-        try {
-            address = InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            throw Throwables.propagate(e);
-        }
+        address = Networking.getLocalHost();
     }
 
-    Iterable permittedPorts = PortRanges.fromString("1+");
-    Set usedPorts = Sets.newLinkedHashSet();
+    Iterable<Integer> permittedPorts = PortRanges.fromString("1+");
+    Set<Integer> usedPorts = Sets.newLinkedHashSet();
 
     public SimulatedLocation() {
         this(MutableMap.<String,Object>of());

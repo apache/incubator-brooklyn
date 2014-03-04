@@ -255,6 +255,15 @@ public class BrooklynRestResourceUtils {
     }
     
     public Task<?> start(Application app, ApplicationSpec spec) {
+        return start(app, getLocations(spec));
+    }
+
+    public Task<?> start(Application app, List<? extends Location> locations) {
+        return Entities.invokeEffector((EntityLocal)app, app, Startable.START,
+                MutableMap.of("locations", locations));
+    }
+
+    public List<Location> getLocations(ApplicationSpec spec) {
         // Start all the managed entities by asking the app instance to start in background
         Function<String, Location> buildLocationFromId = new Function<String, Location>() {
             @Override
@@ -265,8 +274,7 @@ public class BrooklynRestResourceUtils {
         };
 
         ArrayList<Location> locations = Lists.newArrayList(transform(spec.getLocations(), buildLocationFromId));
-        return Entities.invokeEffector((EntityLocal)app, app, Startable.START,
-                MutableMap.of("locations", locations));
+        return locations;
     }
 
     @SuppressWarnings("unchecked")

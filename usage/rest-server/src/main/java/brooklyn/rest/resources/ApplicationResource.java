@@ -14,6 +14,7 @@ import java.io.StringReader;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
@@ -35,6 +36,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.Sensors;
+import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.rest.api.ApplicationApi;
 import brooklyn.rest.domain.ApplicationSpec;
@@ -176,8 +178,9 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
       checkApplicationTypesAreValid(applicationSpec);
       checkLocationsAreValid(applicationSpec);
       // TODO duplicate prevention
+      List<Location> locations = brooklyn().getLocations(applicationSpec);
       Application app = brooklyn().create(applicationSpec);
-      Task<?> t = brooklyn().start(app, applicationSpec);
+      Task<?> t = brooklyn().start(app, locations);
       TaskSummary ts = TaskTransformer.FROM_TASK.apply(t);
       URI ref = URI.create(app.getApplicationId());
       return created(ref).entity(ts).build();

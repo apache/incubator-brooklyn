@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 
@@ -153,6 +154,14 @@ public class ConfigBag {
         return putAll(addlConfig.getAllConfig());
     }
     
+    public <T> ConfigBag putIfAbsent(ConfigKey<T> key, T value) {
+        return putIfAbsent(MutableMap.of(key, value));
+    }
+
+    public ConfigBag putAsStringKeyIfAbsent(Object key, Object value) {
+        return putIfAbsent(MutableMap.of(key, value));
+    }
+
     public ConfigBag putIfAbsent(Map<?, ?> propertiesToSet) {
         for (Map.Entry<?, ?> entry: propertiesToSet.entrySet()) {
             Object key = entry.getKey();
@@ -181,8 +190,14 @@ public class ConfigBag {
         return (T) putStringKey(key.getName(), value);
     }
     
-    public <T> void putIfNotNull(ConfigKey<T> key, T value) {
+    public <T> ConfigBag putIfNotNull(ConfigKey<T> key, T value) {
         if (value!=null) put(key, value);
+        return this;
+    }
+
+    public <T> ConfigBag putIfAbsentAndNotNull(ConfigKey<T> key, T value) {
+        if (value!=null) putIfAbsent(key, value);
+        return this;
     }
 
     /** as {@link #put(ConfigKey, Object)} but returning this ConfigBag for fluent-style coding */

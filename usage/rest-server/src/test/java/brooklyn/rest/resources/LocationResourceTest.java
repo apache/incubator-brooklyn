@@ -54,7 +54,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
     log.info(" contents: "+location);
     assertThat(location.getSpec(), is("aws-ec2"));
 
-    assertThat(location.getConfig().get("identity"), is("bob"));
+    assertThat(location.getConfig().get("identity"), is((Object)"bob"));
     assertFalse(location.getConfig().containsKey("CR3dential"));
     Assert.assertTrue(addedLocationUri.toString().startsWith("/v1/locations/"));
     
