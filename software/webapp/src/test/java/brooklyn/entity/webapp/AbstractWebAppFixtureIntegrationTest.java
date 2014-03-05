@@ -6,6 +6,7 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
+import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -30,7 +31,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.rebind.dto.MementosGenerators;
-import brooklyn.entity.rebind.persister.BrooklynMementoPersisterInMemory;
+import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -41,17 +42,18 @@ import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.os.Os;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 /**
  * Test fixture for implementations of JavaWebApp, checking start up and shutdown, 
@@ -181,19 +183,24 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         // Stop the underlying entity, but without our entity instance being told!
         // Previously was calling entity.getDriver().kill(); but now our entity instance is a proxy so can't do that
         ManagementContext newManagementContext = null;
+        File tempDir = Files.createTempDir();
         try {
             ManagementContext managementContext = ((EntityInternal)entity).getManagementContext();
             BrooklynMemento brooklynMemento = MementosGenerators.newBrooklynMemento(managementContext);
-            BrooklynMementoPersister newPersister = new BrooklynMementoPersisterInMemory(getClass().getClassLoader());
-            newPersister.checkpoint(brooklynMemento);
             
+            BrooklynMementoPersisterToMultiFile oldPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
+            oldPersister.checkpoint(brooklynMemento);
+            
+            BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
             newManagementContext = Entities.newManagementContext();
+            newManagementContext.getRebindManager().setPersister(newPersister);
             newManagementContext.getRebindManager().rebind(getClass().getClassLoader());
             newManagementContext.getRebindManager().start();
             SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(entity.getId());
             entity2.stop();
         } finally {
             if (newManagementContext != null) ((ManagementContextInternal)newManagementContext).terminate();
+            Os.tryDeleteDirectory(tempDir.getAbsolutePath());
         }
         log.info("called to stop tomcat in parallel mgmt universe, waiting for service up false in primary mgmt universe");
         
