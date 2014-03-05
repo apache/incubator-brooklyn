@@ -627,20 +627,35 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }});
     }
 
+    public int installTo(String url, String destPath) {
+        return installTo(MutableMap.<String, Object>of(), url, destPath);
+    }
+
+    public int installTo(Map<String,?> props, String url, String destPath) {
+        return installTo(ResourceUtils.create(this), props, url, destPath);
+    }
+
     /**
      * Installs the given URL at the indicated destination path.
      * <p>
      * Attempts to curl the source URL on the remote machine,
      * then if that fails, loads locally (from classpath or file) and transfers.
+     * <p>
+     * Use {@link ArchiveUtils} to handle directories and their contents properly.
      *
      * TODO allow s3://bucket/file URIs for AWS S3 resources
      * TODO use PAX-URL style URIs for maven artifacts
      *
+     * @param utils A {@link ResourceUtils} that can resolve the source URLs
+     * @param url The source URL to be installed
+     * @param destPath The file to be created on the destination
+     *
+     * @see ArchiveUtils#deploy(String, SshMachineLocation, String)
      * @see ArchiveUtils#deploy(String, SshMachineLocation, String, String)
      * @see ResourceUtils#getResourceFromUrl(String)
      */
-    public int installTo(Map<String,?> props, String url, String destPath) {
-        LOG.debug("installing {} to {} on {}, attempting remote curl", new Object[] {url, destPath, this});
+    public int installTo(ResourceUtils utils, Map<String,?> props, String url, String destPath) {
+        LOG.debug("installing {} to {} on {}, attempting remote curl", new Object[] { url, destPath, this });
 
         try {
             PipedInputStream insO = new PipedInputStream(); OutputStream outO = new PipedOutputStream(insO);
@@ -657,9 +672,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 LOG.debug("installing {} to {} on {}, curl failed, attempting local fetch and copy", new Object[] { url, destPath, this });
                 try {
                     Tasks.setBlockingDetails("retrieving resource "+url+" for copying across");
-                    InputStream stream = ResourceUtils.create().getResourceFromUrl(url);
+                    InputStream stream = utils.getResourceFromUrl(url);
                     Tasks.setBlockingDetails("copying resource "+url+" to server");
-                    result = copyTo(stream, destPath);
+                    result = copyTo(props, stream, destPath);
                 } finally {
                     Tasks.setBlockingDetails(null);
                 }
@@ -673,10 +688,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
-    }
-
-    public int installTo(String url, String destination) {
-        return installTo(MutableMap.<String, Object>of(), url, destination);
     }
 
     @Override
