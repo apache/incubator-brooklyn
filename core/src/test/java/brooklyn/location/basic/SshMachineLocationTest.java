@@ -17,6 +17,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.net.Networking;
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
 
@@ -116,7 +117,7 @@ public class SshMachineLocationTest {
         File dest = new File(Os.tmp(), "sssMachineLocationTest_dir/");
         dest.mkdir();
         try {
-            int result = host.installTo("https://raw.github.com/brooklyncentral/brooklyn/master/README.md", dest.getCanonicalPath());
+            int result = host.installTo("https://raw.github.com/brooklyncentral/brooklyn/master/README.md", Urls.mergePaths(dest.getAbsolutePath(), "README.md"));
             assertEquals(result, 0);
             String contents = ArchiveUtils.readFullyString(new File(dest, "README.md"));
             assertTrue(contents.contains("http://brooklyncentral.github.com"), "contents missing expected phrase; contains:\n"+contents);
@@ -130,7 +131,7 @@ public class SshMachineLocationTest {
         File dest = new File(Os.tmp(), "sssMachineLocationTest_dir/");
         dest.mkdir();
         try {
-            int result = host.installTo("classpath://brooklyn/config/sample.properties", dest.getCanonicalPath());
+            int result = host.installTo("classpath://brooklyn/config/sample.properties", Urls.mergePaths(dest.getAbsolutePath(), "sample.properties"));
             assertEquals(result, 0);
             String contents = ArchiveUtils.readFullyString(new File(dest, "sample.properties"));
             assertTrue(contents.contains("Property 1"), "contents missing expected phrase; contains:\n"+contents);

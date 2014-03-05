@@ -640,10 +640,17 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      * <p>
      * Attempts to curl the source URL on the remote machine,
      * then if that fails, loads locally (from classpath or file) and transfers.
+     * <p>
+     * Use {@link ArchiveUtils} to handle directories and their contents properly.
      *
      * TODO allow s3://bucket/file URIs for AWS S3 resources
      * TODO use PAX-URL style URIs for maven artifacts
      *
+     * @param utils A {@link ResourceUtils} that can resolve the source URLs
+     * @param url The source URL to be installed
+     * @param destPath The file to be created on the destination
+     *
+     * @see ArchiveUtils#deploy(String, SshMachineLocation, String)
      * @see ArchiveUtils#deploy(String, SshMachineLocation, String, String)
      * @see ResourceUtils#getResourceFromUrl(String)
      */
