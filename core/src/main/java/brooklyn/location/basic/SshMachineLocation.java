@@ -627,6 +627,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }});
     }
 
+    public int installTo(String url, String destPath) {
+        return installTo(MutableMap.<String, Object>of(), url, destPath);
+    }
+
+    public int installTo(Map<String,?> props, String url, String destPath) {
+        return installTo(ResourceUtils.create(this), props, url, destPath);
+    }
+
     /**
      * Installs the given URL at the indicated destination path.
      * <p>
@@ -639,8 +647,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      * @see ArchiveUtils#deploy(String, SshMachineLocation, String, String)
      * @see ResourceUtils#getResourceFromUrl(String)
      */
-    public int installTo(Map<String,?> props, String url, String destPath) {
-        LOG.debug("installing {} to {} on {}, attempting remote curl", new Object[] {url, destPath, this});
+    public int installTo(ResourceUtils utils, Map<String,?> props, String url, String destPath) {
+        LOG.debug("installing {} to {} on {}, attempting remote curl", new Object[] { url, destPath, this });
 
         try {
             PipedInputStream insO = new PipedInputStream(); OutputStream outO = new PipedOutputStream(insO);
@@ -657,7 +665,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 LOG.debug("installing {} to {} on {}, curl failed, attempting local fetch and copy", new Object[] { url, destPath, this });
                 try {
                     Tasks.setBlockingDetails("retrieving resource "+url+" for copying across");
-                    InputStream stream = ResourceUtils.create().getResourceFromUrl(url);
+                    InputStream stream = utils.getResourceFromUrl(url);
                     Tasks.setBlockingDetails("copying resource "+url+" to server");
                     result = copyTo(stream, destPath);
                 } finally {
@@ -673,10 +681,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
-    }
-
-    public int installTo(String url, String destination) {
-        return installTo(MutableMap.<String, Object>of(), url, destination);
     }
 
     @Override

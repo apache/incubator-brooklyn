@@ -22,9 +22,11 @@ import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Strings;
@@ -35,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 
 /**
  * An abstract SSH implementation of the {@link AbstractSoftwareProcessDriver}.
@@ -330,27 +333,27 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      *                 If the map contains the key {@link #IGNORE_ENTITY_SSH_FLAGS} then only the
      *                 given flags are used. Otherwise, the given flags are combined with (and take
      *                 precendence over) the flags returned by {@link #getSshFlags()}.
-     * @param resource URI of file to copy, e.g. file://.., http://.., classpath://..
+     * @param source URI of file to copy, e.g. file://.., http://.., classpath://..
      * @param target Destination on server. Will be prefixed with the entity's
      *               {@link #getRunDir() run directory} if relative.
      * @return The exit code of the SSH command run
      */
-    public int copyResource(Map sshFlags, String resource, String target) {
+    public int copyResource(Map sshFlags, String source, String target) {
         Map flags = Maps.newLinkedHashMap();
-        if (!sshFlags.containsKey(IGNORE_ENTITY_SSH_FLAGS))
+        if (!sshFlags.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
             flags.putAll(getSshFlags());
+        }
         flags.putAll(sshFlags);
 
         // prefix with runDir if relative target
-        String dest = target;
-        if (!new File(target).isAbsolute()) {
-            dest = getRunDir() + "/" + target;
-        }
+        File file = new File(target);
+        String dest = file.isAbsolute() ? target : Urls.mergePaths(getRunDir(), target);
 
-        int result = getMachine().installTo(flags, resource, dest);
+        int result = getMachine().installTo(resource, flags, source, dest);
         if (result == 0) {
-            if (log.isDebugEnabled())
-                log.debug("Copied file for {}: {} to {} - result {}", new Object[] { entity, resource, dest, result });
+            if (log.isDebugEnabled()) {
+                log.debug("Copied file for {}: {} to {} - result {}", new Object[] { entity, source, dest, result });
+            }
         }
         return result;
     }
