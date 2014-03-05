@@ -168,6 +168,13 @@ public class ArchiveUtils {
 
     /**
      * Deploys an archive file to a remote machine and extracts the contents.
+     */
+    public static void deploy(String archiveUrl, SshMachineLocation machine, String destDir) {
+        deploy(MutableMap.<String, Object>of(), archiveUrl, machine, destDir);
+    }
+
+    /**
+     * Deploys an archive file to a remote machine and extracts the contents.
      * <p>
      * Copies the archive file from the given URL to the destination directory and extracts
      * the contents. If the URL is a local directory, the contents are packaged as a Zip archive first.
@@ -175,7 +182,7 @@ public class ArchiveUtils {
      * @see #deploy(String, SshMachineLocation, String, String)
      * @see #deploy(Map, String, SshMachineLocation, String, String, String)
      */
-    public static void deploy(String archiveUrl, SshMachineLocation machine, String destDir) {
+    public static void deploy(Map<String, ?> props, String archiveUrl, SshMachineLocation machine, String destDir) {
         if (Urls.isDirectory(archiveUrl)) {
             File zipFile = ArchiveBuilder.zip().entry(".", Urls.toFile(archiveUrl)).create();
             archiveUrl = zipFile.getAbsolutePath();
@@ -185,7 +192,7 @@ public class ArchiveUtils {
         String destFile = archiveUrl.contains("?") ? archiveUrl.substring(0, archiveUrl.indexOf('?')) : archiveUrl;
         destFile = destFile.substring(destFile.lastIndexOf('/') + 1);
 
-        deploy(archiveUrl, machine, destDir, destFile);
+        deploy(props, archiveUrl, machine, destDir, destFile);
     }
 
     /**
@@ -200,6 +207,9 @@ public class ArchiveUtils {
     public static void deploy(String archiveUrl, SshMachineLocation machine, String destDir, String destFile) {
         deploy(MutableMap.<String, Object>of(), archiveUrl, machine, destDir, destDir, destFile);
     }
+    public static void deploy(Map<String, ?> props, String archiveUrl, SshMachineLocation machine, String destDir, String destFile) {
+        deploy(props, archiveUrl, machine, destDir, destDir, destFile);
+    }
 
     /**
      * Deploys an archive file to a remote machine and extracts the contents.
@@ -212,17 +222,17 @@ public class ArchiveUtils {
      * @see #deploy(Map, String, SshMachineLocation, String, String, String)
      * @see #install(SshMachineLocation, String, String, int)
      */
-    public static void deploy(Map<String, ?> sshProps, String archiveUrl, SshMachineLocation machine, String tmpDir, String destDir, String destFile) {
+    public static void deploy(Map<String, ?> props, String archiveUrl, SshMachineLocation machine, String tmpDir, String destDir, String destFile) {
         String destPath = Os.mergePaths(tmpDir, destFile);
 
         // Use the location mutex to prevent package manager locking issues
         try {
             machine.acquireMutex("installing", "installing archive");
-            int result = install(sshProps, machine, archiveUrl, destPath, NUM_RETRIES_FOR_COPYING);
+            int result = install(props, machine, archiveUrl, destPath, NUM_RETRIES_FOR_COPYING);
             if (result != 0) {
                 throw new IllegalStateException(format("Unable to install archive %s to %s", archiveUrl, machine));
             }
-            result = machine.execCommands(sshProps, "extracting content", extractCommands(destFile, tmpDir, destDir, false));
+            result = machine.execCommands(props, "extracting content", extractCommands(destFile, tmpDir, destDir, false));
             if (result != 0) {
                 throw new IllegalStateException(format("Failed to expand archive %s on %s", archiveUrl, machine));
             }
@@ -248,14 +258,14 @@ public class ArchiveUtils {
      * @see #install(SshMachineLocation, String, String)
      * @see SshMachineLocation#installTo(Map, String, String)
      */
-    public static int install(Map<String, ?> sshProps, SshMachineLocation machine, String urlToInstall, String target, int numAttempts) {
+    public static int install(Map<String, ?> props, SshMachineLocation machine, String urlToInstall, String target, int numAttempts) {
         Exception lastError = null;
         int retriesRemaining = numAttempts;
         int attemptNum = 0;
         do {
             attemptNum++;
             try {
-                return machine.installTo(urlToInstall, target);
+                return machine.installTo(props, urlToInstall, target);
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
                 lastError = e;
