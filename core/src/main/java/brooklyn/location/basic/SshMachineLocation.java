@@ -667,7 +667,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                     Tasks.setBlockingDetails("retrieving resource "+url+" for copying across");
                     InputStream stream = utils.getResourceFromUrl(url);
                     Tasks.setBlockingDetails("copying resource "+url+" to server");
-                    result = copyTo(stream, destPath);
+                    result = copyTo(props, stream, destPath);
                 } finally {
                     Tasks.setBlockingDetails(null);
                 }
