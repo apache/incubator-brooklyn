@@ -17,6 +17,10 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.Files;
 
+/**
+ * @deprecated since 0.7.0 use BrooklynMementoPersisterToMultiFile instead; the single-file version
+ *             has not been tested recently or kept up-to-date. 
+ */
 public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersister {
 
     // FIXME This is no longer used (instead we use ToMultiFile).
