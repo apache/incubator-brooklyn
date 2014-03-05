@@ -76,9 +76,13 @@ public class RebindTestUtils {
     
     public static void checkMementoSerializable(Application app) throws Exception {
         BrooklynMemento memento = MementosGenerators.newBrooklynMemento(app.getManagementContext());
-        serializeAndDeserialize(memento);
+        checkMementoSerializable(memento);
     }
 
+    public static void checkMementoSerializable(BrooklynMemento memento) throws Exception {
+        serializeAndDeserialize(memento);
+    }
+    
     public static LocalManagementContext newPersistingManagementContext(File mementoDir, ClassLoader classLoader) {
         return newPersistingManagementContext(mementoDir, classLoader, 100);
     }
