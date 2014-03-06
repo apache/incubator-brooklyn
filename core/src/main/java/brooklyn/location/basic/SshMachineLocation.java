@@ -623,6 +623,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return installTo(ResourceUtils.create(this), props, url, destPath);
     }
 
+    public int installTo(ResourceUtils loader, String url, String destPath) {
+        return installTo(loader, MutableMap.<String, Object>of(), url, destPath);
+    }
+
     /**
      * Installs the given URL at the indicated destination path.
      * <p>
