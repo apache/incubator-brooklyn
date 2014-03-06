@@ -22,7 +22,11 @@ public class MavenArtifactTest {
     // note this may vary from machine to machine so version should be aligned with that in parent pom
     final static String MAVEN_JAR_PLUGIN_COORDINATE = "org.apache.maven.plugins:maven-jar-plugin:jar:2.3.2";
     final static String THIS_PROJECT_COORDINATE = "io.brooklyn:brooklyn-utils-common:jar:0.7.0-SNAPSHOT";  // BROOKLYN_VERSION
-    
+
+    // Don't need to be installed, only used as examples
+    final static String RELEASED_SOURCES_COORDINATE = "io.brooklyn:brooklyn-core:jar:sources:0.6.0";
+    final static String EXAMPLE_BZIP_COORDINATE = "com.example:example-artifact:tar.bz2:server-windows:2.0.1";
+
     public void testArtifact() {
         MavenArtifact m = MavenArtifact.fromCoordinate(MAVEN_JAR_PLUGIN_COORDINATE);
         
@@ -38,6 +42,19 @@ public class MavenArtifactTest {
         Assert.assertEquals(m.isSnapshot(), false);
     }
 
+    public void testArtifactWithClassifier() {
+        MavenArtifact m = MavenArtifact.fromCoordinate(RELEASED_SOURCES_COORDINATE);
+
+        Assert.assertEquals(m.getGroupId(), "io.brooklyn");
+        Assert.assertEquals(m.getArtifactId(), "brooklyn-core");
+        Assert.assertEquals(m.getVersion(), "0.6.0");
+        Assert.assertEquals(m.getPackaging(), "jar");
+        Assert.assertEquals(m.getClassifier(), "sources");
+
+        Assert.assertEquals(m.getCoordinate(), RELEASED_SOURCES_COORDINATE);
+
+    }
+
     public void testRetrieval() {
         MavenArtifact m = MavenArtifact.fromCoordinate(MAVEN_JAR_PLUGIN_COORDINATE);
 
@@ -47,6 +64,24 @@ public class MavenArtifactTest {
         String localPath = new MavenRetriever().getLocalPath(m);
         Assert.assertTrue(localPath.endsWith(
                 "/repository/org/apache/maven/plugins/maven-jar-plugin/2.3.2/maven-jar-plugin-2.3.2.jar"), 
+                localPath);
+    }
+
+    public void testRetrievalWithClassifier() {
+        MavenArtifact m = MavenArtifact.fromCoordinate(RELEASED_SOURCES_COORDINATE);
+
+        String localPath = new MavenRetriever().getLocalPath(m);
+        Assert.assertTrue(localPath.endsWith(
+                "/repository/io/brooklyn/brooklyn-core/0.6.0/brooklyn-core-0.6.0-sources.jar"),
+                localPath);
+    }
+
+    public void testRetrievalWithUnusualClassifier() {
+        MavenArtifact m = MavenArtifact.fromCoordinate(EXAMPLE_BZIP_COORDINATE);
+
+        String localPath = new MavenRetriever().getLocalPath(m);
+        Assert.assertTrue(localPath.endsWith(
+                "/repository/com/example/example-artifact/2.0.1/example-artifact-2.0.1-server-windows.tar.bz2"),
                 localPath);
     }
 
