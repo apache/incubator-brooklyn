@@ -42,7 +42,8 @@ public class Streams {
     @Beta
     public static void closeQuietly(Closeable x) {
         try {
-            x.close();
+            if (x!=null)
+                x.close();
         } catch (Exception e) {
             if (log.isDebugEnabled())
                 log.debug("Error closing (ignored) "+x+": "+e);
