@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -247,7 +246,7 @@ public class Asserts {
         succeedsContinually(ImmutableMap.<String,Object>of(), r);
     }
     
-    public static <T> void succeedsContinually(Map<String,?> flags, Runnable r) {
+    public static <T> void succeedsContinually(Map<?,?> flags, Runnable r) {
         succeedsContinually(flags, toCallable(r));
     }
 
@@ -255,7 +254,7 @@ public class Asserts {
         return succeedsContinually(ImmutableMap.<String,Object>of(), c);
     }
     
-    public static <T> T succeedsContinually(Map<String,?> flags, Callable<T> job) {
+    public static <T> T succeedsContinually(Map<?,?> flags, Callable<T> job) {
         Duration duration = toDuration(flags.get("timeout"), Duration.ONE_SECOND);
         Duration period = toDuration(flags.get("period"), Duration.millis(10));
         long periodMs = period.toMilliseconds();
