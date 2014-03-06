@@ -2,6 +2,8 @@ package brooklyn.util.internal;
 
 import static org.testng.Assert.assertEquals;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 
@@ -82,6 +84,17 @@ public class TypeCoercionsTest {
         
     }
     
+    @Test
+    public void testCastToNumericPrimitives() {
+        assertEquals(TypeCoercions.coerce(BigInteger.ONE, Integer.class), (Integer)1);
+        assertEquals(TypeCoercions.coerce(BigInteger.ONE, int.class), (Integer)1);
+        assertEquals(TypeCoercions.coerce(BigInteger.valueOf(Long.MAX_VALUE), Long.class), (Long)Long.MAX_VALUE);
+        assertEquals(TypeCoercions.coerce(BigInteger.valueOf(Long.MAX_VALUE), long.class), (Long)Long.MAX_VALUE);
+        
+        assertEquals(TypeCoercions.coerce(BigDecimal.valueOf(0.5), Double.class), 0.5d, 0.00001d);
+        assertEquals(TypeCoercions.coerce(BigDecimal.valueOf(0.5), double.class), 0.5d, 0.00001d);
+    }
+        
     @Test
     public void testListToSetCoercion() {
         Set<?> s = TypeCoercions.coerce(ImmutableList.of(1), Set.class);

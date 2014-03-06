@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
@@ -464,18 +465,30 @@ public class TypeCoercions {
                 return new AtomicInteger(Integer.parseInt(input));
             }
         });
-        /** This actually produce a {@link Double} for any input, cast to a {@link Number}. */
+        /** This always returns a {@link Double}, cast as a {@link Number}; 
+         * however primitives and boxers get exact typing due to call in #stringToPrimitive */
         registerAdapter(String.class, Number.class, new Function<String,Number>() {
             @Override
             public Number apply(String input) {
                 return Double.valueOf(input);
             }
         });
-        /** This actually produce a {@link Double} for any input, cast to a {@link Number}. */
         registerAdapter(BigDecimal.class, Double.class, new Function<BigDecimal,Double>() {
             @Override
             public Double apply(BigDecimal input) {
                 return input.doubleValue();
+            }
+        });
+        registerAdapter(BigInteger.class, Long.class, new Function<BigInteger,Long>() {
+            @Override
+            public Long apply(BigInteger input) {
+                return input.longValue();
+            }
+        });
+        registerAdapter(BigInteger.class, Integer.class, new Function<BigInteger,Integer>() {
+            @Override
+            public Integer apply(BigInteger input) {
+                return input.intValue();
             }
         });
         registerAdapter(String.class, List.class, new Function<String,List>() {

@@ -7,18 +7,25 @@ import static org.testng.Assert.fail;
 import java.net.ServerSocket;
 
 import org.junit.AfterClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.PortRange;
+import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 
 public class LocalhostMachineProvisioningLocationTest {
+
+    private static final Logger log = LoggerFactory.getLogger(LocalhostMachineProvisioningLocationTest.class);
     
     private LocalManagementContext mgmt;
 
@@ -141,6 +148,20 @@ public class LocalhostMachineProvisioningLocationTest {
             m.releasePort(start);
             m.releasePort(start+1);
         }
+    }
+
+    @Test
+    public void obtainLocationWithGeography() throws Exception {
+        mgmt.getBrooklynProperties().put("brooklyn.location.named.lhx", "localhost");
+        // bogus location so very little chance of it being what maxmind returns!
+        mgmt.getBrooklynProperties().put("brooklyn.location.named.lhx.latitude", 42d);
+        mgmt.getBrooklynProperties().put("brooklyn.location.named.lhx.longitude", -20d);
+        MachineProvisioningLocation<?> p = (MachineProvisioningLocation<?>) mgmt.getLocationRegistry().resolve("named:lhx");
+        SshMachineLocation m = (SshMachineLocation) p.obtain(MutableMap.of());
+        HostGeoInfo geo = HostGeoInfo.fromLocation(m);
+        log.info("Geo info for "+m+" is: "+geo);
+        Assert.assertEquals(geo.latitude, 42d, 0.00001);
+        Assert.assertEquals(geo.longitude, -20d, 0.00001);
     }
 
 }

@@ -42,7 +42,6 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
-import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
@@ -303,11 +302,17 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }
 
             if (getHostGeoInfo() == null) {
+                // inherit host geo info from parent, or else autodetect, if possible
+                // (note that the HostGeoInfo routines also use latitude and longitude config fields so this is probably overkill)
                 Location parentLocation = getParent();
-                if ((parentLocation instanceof HasHostGeoInfo) && ((HasHostGeoInfo) parentLocation).getHostGeoInfo() != null) {
-                    setHostGeoInfo(((HasHostGeoInfo) parentLocation).getHostGeoInfo());
+                HostGeoInfo parentGeo = HostGeoInfo.fromLocation(parentLocation);
+                if (parentGeo!=null) {
+                    LOG.debug("Setting HostGeoInfo of "+this+" from parent: "+parentGeo);
+                    setHostGeoInfo(parentGeo);
                 } else {
-                    setHostGeoInfo(HostGeoInfo.fromLocation(this));
+                    HostGeoInfo myGeo = HostGeoInfo.fromLocation(this);
+                    LOG.debug("Detected HostGeoInfo of "+this+" as: "+myGeo);
+                    setHostGeoInfo(myGeo);
                 }
             }
         }

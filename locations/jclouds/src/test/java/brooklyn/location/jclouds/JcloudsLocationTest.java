@@ -11,6 +11,8 @@ import javax.annotation.Nullable;
 
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Template;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -21,6 +23,9 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
@@ -40,6 +45,8 @@ import com.google.common.reflect.TypeToken;
  */
 public class JcloudsLocationTest implements JcloudsLocationConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(JcloudsLocationTest.class);
+    
     // Don't care which image; not actually provisioning
     private static final String US_EAST_IMAGE_ID = "us-east-1/ami-7d7bfc14";
     
@@ -425,6 +432,73 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
                 }
             });
         }
+    }
+
+    
+    public static class FakeLocalhostWithParentJcloudsLocation extends JcloudsLocation {
+        public static final ConfigKey<Function<ConfigBag,Void>> BUILD_TEMPLATE_INTERCEPTOR = ConfigKeys.newConfigKey(new TypeToken<Function<ConfigBag,Void>>() {}, "buildtemplateinterceptor");
+        
+        ConfigBag lastConfigBag;
+
+        public FakeLocalhostWithParentJcloudsLocation() {
+            super();
+        }
+
+        public FakeLocalhostWithParentJcloudsLocation(Map<?, ?> conf) {
+            super(conf);
+        }
+
+        @Override
+        public JcloudsSshMachineLocation obtain(Map<?, ?> flags) throws NoMachinesAvailableException {
+            return getManagementContext().getLocationManager().createLocation(LocationSpec.create(JcloudsSshMachineLocation.class)
+                .configure("address", "127.0.0.1") 
+                .configure("port", 22) 
+                .configure("user", "bob")
+                .configure("jcloudsParent", this));
+        }
+    }
+
+    @Test
+    public void testInheritsGeo() throws Exception {
+        ConfigBag allConfig = ConfigBag.newInstance()
+            .configure(IMAGE_ID, "bogus")
+            .configure(CLOUD_PROVIDER, "aws-ec2")
+            .configure(CLOUD_REGION_ID, "bogus")
+            .configure(ACCESS_IDENTITY, "bogus")
+            .configure(ACCESS_CREDENTIAL, "bogus")
+            .configure(LocationConfigKeys.LATITUDE, 42d)
+            .configure(LocationConfigKeys.LONGITUDE, -20d)
+            .configure(JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 1);
+        FakeLocalhostWithParentJcloudsLocation ll = managementContext.getLocationManager().createLocation(LocationSpec.create(FakeLocalhostWithParentJcloudsLocation.class).configure(allConfig.getAllConfig()));
+        JcloudsSshMachineLocation l = ll.obtain();
+        log.info("loc:" +l);
+        HostGeoInfo geo = HostGeoInfo.fromLocation(l);
+        log.info("geo: "+geo);
+        Assert.assertEquals(geo.latitude, 42d, 0.00001);
+        Assert.assertEquals(geo.longitude, -20d, 0.00001);
+    }
+
+    @Test
+    public void testInheritsGeoFromLocationMetadataProperties() throws Exception {
+        // in location-metadata.properties:
+//        brooklyn.location.jclouds.softlayer@wdc01.latitude=38.909202
+//        brooklyn.location.jclouds.softlayer@wdc01.longitude=-77.47314
+        ConfigBag allConfig = ConfigBag.newInstance()
+            .configure(IMAGE_ID, "bogus")
+            .configure(CLOUD_PROVIDER, "softlayer")
+            .configure(CLOUD_REGION_ID, "wdc01")
+            .configure(ACCESS_IDENTITY, "bogus")
+            .configure(ACCESS_CREDENTIAL, "bogus")
+            .configure(JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 1);
+        FakeLocalhostWithParentJcloudsLocation ll = managementContext.getLocationManager().createLocation(LocationSpec.create(FakeLocalhostWithParentJcloudsLocation.class)
+            .configure(new JcloudsPropertiesFromBrooklynProperties().getJcloudsProperties("softlayer", "wdc01", null, managementContext.getBrooklynProperties()))
+            .configure(allConfig.getAllConfig()));
+        JcloudsSshMachineLocation l = ll.obtain();
+        log.info("loc:" +l);
+        HostGeoInfo geo = HostGeoInfo.fromLocation(l);
+        log.info("geo: "+geo);
+        Assert.assertEquals(geo.latitude, 38.909202d, 0.00001);
+        Assert.assertEquals(geo.longitude, -77.47314d, 0.00001);
     }
 
     // TODO more tests, where flags come in from resolver, named locations, etc
