@@ -21,7 +21,7 @@ import brooklyn.util.stream.Streams;
 
 public abstract class AbstractYamlTest {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractYamlTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractYamlTest.class);
 
     private ManagementContext brooklynMgmt;
     private BrooklynCampPlatform platform;
@@ -86,5 +86,7 @@ public abstract class AbstractYamlTest {
         return app;
     }
 
-    protected abstract Logger getLogger();
+    protected Logger getLogger() {
+        return LOG;
+    }
 }
