@@ -123,23 +123,7 @@ public class JmxSupport implements UsesJmx {
             if (isSecure()) {
                 jmxAgentMode = JmxAgentModes.JMXMP;
             } else {
-                // attempt to autodetect
-                Optional<SshMachineLocation> m = getMachine();
-                if (m.isPresent()) {
-                    SshMachineLocation ll = m.get();
-                    if (ll instanceof LocalhostMachine) {
-                        if (log.isTraceEnabled())
-                            log.trace("Auto-detecting JMX configuration for "+entity+", set as NOT jmxmp because it is localhost");
-                        jmxAgentMode = JmxAgentModes.JMX_RMI_CUSTOM_AGENT;
-                    } else {
-                        if (log.isTraceEnabled())
-                            log.trace("Auto-detecting JMX configuration for "+entity+", set as JMXMP because it is "+ll);
-                        jmxAgentMode = JmxAgentModes.JMXMP;
-                    }
-                } else {
-                    log.warn("Auto-detecting JMX configuration for "+entity+": cannot identify location so setting JMXMP");
-                    jmxAgentMode = JmxAgentModes.JMXMP;                    
-                }
+                jmxAgentMode = JmxAgentModes.JMXMP_AND_RMI;
                 if (!ResourceUtils.create(this).doesUrlExist(getJmxAgentJarUrl())) {
                     // can happen e.g. if eclipse build
                     log.warn("JMX agent JAR not found ("+getJmxAgentJarUrl()+") when auto-detecting JMX settings for "+entity+"; " +

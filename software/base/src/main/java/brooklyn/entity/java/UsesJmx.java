@@ -73,8 +73,8 @@ public interface UsesJmx extends UsesJava {
     @SetFromFlag("jmxAgentMode")
     public static final ConfigKey<JmxAgentModes> JMX_AGENT_MODE = ConfigKeys.newConfigKey(JmxAgentModes.class,
             "jmx.agent.mode", "What type of JMX agent to use; defaults to null (autodetect) which means " +
-    		"JMXMP most places (for firewall access through a single port) and " +
-    		"JMX_RMI_CUSTOM_AGENT on localhost (for easier access at a specified port, supporting jconsole)", 
+    		"JMXMP_AND_RMI allowing firewall access through a single port as well as local access supporting jconsole " +
+    		"(unless JMX_SSL_ENABLED is set, in which case it is JMXMP only)", 
     		JmxAgentModes.AUTODETECT);
 
     /** Currently only used to connect; not used to set up JMX (so only applies where systems set this up themselves)
