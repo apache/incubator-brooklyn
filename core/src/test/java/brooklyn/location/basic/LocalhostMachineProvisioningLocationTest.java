@@ -6,11 +6,12 @@ import static org.testng.Assert.fail;
 
 import java.net.ServerSocket;
 
-import org.junit.AfterClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
@@ -29,6 +30,12 @@ public class LocalhostMachineProvisioningLocationTest {
     
     private LocalManagementContext mgmt;
 
+    @BeforeMethod
+    @AfterClass
+    protected void clearStatics() {
+        LocalhostMachineProvisioningLocation.clearStaticData();
+    }
+    
     @BeforeClass
     protected void setup() {
         mgmt = new LocalManagementContext();
