@@ -41,6 +41,7 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.CollectionFunctionals;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -202,8 +203,14 @@ public class AbstractGeoDnsServiceTest {
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname) );
         EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         
-        fabric.addRegion("test:north");
-        EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(3));
+        String id3 = fabric.addRegion("test:north");
+        ((EntityInternal)managementContext.getEntityManager().getEntity(id3)).setAttribute(Attributes.SERVICE_UP, true);
+        try {
+            EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(3));
+        } catch (Throwable e) {
+            log.warn("Did not pick up third entity, targets are "+geoDns.getAttribute(AbstractGeoDnsService.TARGETS)+" (rethrowing): "+e);
+            Exceptions.propagate(e);
+        }
         assertTrue(geoDns.getTargetHostsByName().containsKey("North child"), "targets="+geoDns.getTargetHostsByName());
         
         log.info("targets: "+geoDns.getTargetHostsByName());
@@ -250,13 +257,14 @@ public class AbstractGeoDnsServiceTest {
                 return super.addTargetHost(e);
             } else {
                 //ignore geo lookup, override parent menu
-                log.info("TestService adding target host {}", e);
                 if (e.getLocations().isEmpty()) {
+                    log.info("GeoDns TestService ignoring target host {} (no location)", e);
                     return false;
                 }
                 Location l = Iterables.getOnlyElement(e.getLocations());
                 HostGeoInfo geoInfo = new HostGeoInfo("<address-ignored>", l.getDisplayName(), 
                     l.getConfig(LocationConfigKeys.LATITUDE), l.getConfig(LocationConfigKeys.LONGITUDE));
+                log.info("GeoDns TestService adding target host {} {}", e, geoInfo);
                 targetHosts.put(e, geoInfo);
                 return true;
             }

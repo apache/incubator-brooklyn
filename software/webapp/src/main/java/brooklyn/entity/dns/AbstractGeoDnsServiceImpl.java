@@ -260,20 +260,21 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     }
     
     protected void update() {
-        log.debug("Full update of "+this);
         lastUpdate = System.currentTimeMillis();
         
         Map<Entity, HostGeoInfo> m;
         synchronized(targetHosts) { m = ImmutableMap.copyOf(targetHosts); }
+        if (log.isDebugEnabled()) log.debug("Full update of "+this+" ("+m.size()+" target hosts)");
         
-        Map<String,String> entityIdToUrl = Maps.newLinkedHashMap();
+        Map<String,String> entityIdToAddress = Maps.newLinkedHashMap();
         for (Map.Entry<Entity, HostGeoInfo> entry : m.entrySet()) {
-            entityIdToUrl.put(entry.getKey().getId(), entry.getValue().address);
+            entityIdToAddress.put(entry.getKey().getId(), entry.getValue().address);
         }
         
         reconfigureService(new LinkedHashSet<HostGeoInfo>(m.values()));
         
-        setAttribute(TARGETS, entityIdToUrl);
+        if (log.isDebugEnabled()) log.debug("Targets being set as "+entityIdToAddress);
+        setAttribute(TARGETS, entityIdToAddress);
     }
     
     protected String inferHostname(Entity entity) {
