@@ -18,8 +18,8 @@ import com.google.common.annotations.VisibleForTesting;
 public interface BrooklynMementoPersister {
 
     public static interface LookupContext {
-        Entity lookupEntity(String id);
-        Location lookupLocation(String id);
+        Entity lookupEntity(Class<?> type, String id);
+        Location lookupLocation(Class<?> type, String id);
     }
     
     /**

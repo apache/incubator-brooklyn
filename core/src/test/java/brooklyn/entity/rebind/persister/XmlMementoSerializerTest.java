@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -32,6 +34,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class XmlMementoSerializerTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(XmlMementoSerializerTest.class);
 
     private XmlMementoSerializer<Object> serializer;
 
@@ -185,13 +189,25 @@ public class XmlMementoSerializerTest {
             this.entities = entities;
             this.locations = locations;
         }
-        @Override public Entity lookupEntity(String id) {
-            if (entities.containsKey(id)) return entities.get(id);
-            throw new NoSuchElementException("no entity with id "+id); 
+        @Override public Entity lookupEntity(Class<?> type, String id) {
+            if (entities.containsKey(id)) {
+                Entity result = entities.get(id);
+                if (type != null && !type.isInstance(result)) {
+                    throw new IllegalStateException("Entity with id "+id+" does not match type "+type+"; got "+result);
+                }
+                return result;
+            }
+            throw new NoSuchElementException("no entity with id "+id+"; contenders are "+locations.keySet()); 
         }
-        @Override public Location lookupLocation(String id) {
-            if (locations.containsKey(id)) return locations.get(id);
-            throw new NoSuchElementException("no location with id "+id); 
+        @Override public Location lookupLocation(Class<?> type, String id) {
+            if (locations.containsKey(id)) {
+                Location result = locations.get(id);
+                if (type != null && !type.isInstance(result)) {
+                    throw new IllegalStateException("Location with id "+id+" does not match type "+type+"; got "+result);
+                }
+                return result;
+            }
+            throw new NoSuchElementException("no location with id "+id+"; contenders are "+locations.keySet()); 
         }
     };
 }
