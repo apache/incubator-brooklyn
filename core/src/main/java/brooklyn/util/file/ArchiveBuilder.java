@@ -312,7 +312,7 @@ public class ArchiveBuilder {
     /**
      * Generates the archive.
      * <p>
-     * If no name has been specified, the archive will be created as a tenporary file with
+     * If no name has been specified, the archive will be created as a temporary file with
      * a unique name, that is deleted on exit. Otherwise, the given name will be used.
      */
     public File create() {

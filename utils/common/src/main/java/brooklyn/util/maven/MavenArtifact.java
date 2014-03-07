@@ -1,5 +1,7 @@
 package brooklyn.util.maven;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -52,7 +54,7 @@ public class MavenArtifact {
     }
 
     public static MavenArtifact fromCoordinate(String coordinate) {
-        String[] parts = coordinate.split(":");
+        String[] parts = checkNotNull(coordinate, "coordinate").split(":");
         if (parts.length==4)
             return new MavenArtifact(parts[0], parts[1], parts[2], parts[3]);
         if (parts.length==5)
@@ -119,14 +121,14 @@ public class MavenArtifact {
                 (Strings.isNonEmpty(getExtension()) ? "."+getExtension() : "");
     }
     
-    /** returns an extension, if it can be inferred; else null, logging a warning */
+    /** returns an extension, defaulting to {@link #packaging} if one cannot be inferred */
     @Nullable public String getExtension() {
         if ("jar".equalsIgnoreCase(packaging) || "bundle".equalsIgnoreCase(packaging))
             return "jar";
         if ("war".equalsIgnoreCase(packaging))
             return "war";
-        log.warn("Invalid packaging for autodetecting extension, ignoring: "+this);
-        return null;
+        log.debug("Unrecognised packaging for autodetecting extension, defaulting to {} for: {}", packaging, this);
+        return packaging;
     }
 
     @Override
