@@ -57,7 +57,7 @@ public class StartableMethods {
         
         for (Startable entity : entities) {
             try {
-                entity.stop();
+                DynamicTasks.queueIfPossible( Effectors.invocation((Entity)entity, Startable.STOP, Collections.emptyMap()) ).orSubmitAsync((Entity)entity).andWaitForSuccess(); 
             } catch (Exception e) {
                 log.warn("Error stopping "+entity+"; continuing with shutdown", e);
                 exceptions.add(e);

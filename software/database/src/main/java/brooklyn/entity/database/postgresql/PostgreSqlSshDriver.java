@@ -106,7 +106,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
                 "echo 'found pg_ctl in '$PG_DIR' on path so linking PG bin/ to that dir'",
                 "ln -s $PG_DIR bin")))
                 .appendAll(Iterables.transform(pgctlLocations, givenDirIfFileExistsInItLinkToDir("pg_ctl", "bin")))
-                .append(fail(format("WARNING: failed to find postgresql %s binaries for pg_ctl; aborting", majorMinorVersion), 9));
+                .append(fail(format("WARNING: failed to find postgresql %s binaries for pg_ctl, may already have another version installed; aborting", majorMinorVersion), 9));
 
         newScript(INSTALLING)
         .body.append(

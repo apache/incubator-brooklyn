@@ -112,7 +112,8 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     public void onManagementNoLongerMaster() {
         super.onManagementNoLongerMaster(); // TODO remove when deprecated method in parent removed
         isActive = false;
-        serverPoolMemberTrackerPolicy.reset();
+        if (serverPoolMemberTrackerPolicy!=null)
+            serverPoolMemberTrackerPolicy.reset();
     }
 
     private Group getServerPool() {
@@ -248,7 +249,8 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void preStop() {
         super.preStop();
-        serverPoolMemberTrackerPolicy.reset();
+        if (serverPoolMemberTrackerPolicy!=null)
+            serverPoolMemberTrackerPolicy.reset();
     }
 
     /** 
