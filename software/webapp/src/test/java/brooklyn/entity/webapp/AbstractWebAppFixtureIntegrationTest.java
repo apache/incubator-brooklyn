@@ -25,6 +25,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -43,6 +44,7 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
@@ -175,41 +177,44 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         log.info("test=testReportsServiceDownWithKilled; entity="+entity+"; app="+entity.getApplication());
         
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
-        Asserts.succeedsEventually(MutableMap.of("timeout", 120*1000), new Runnable() {
-            public void run() {
-                assertTrue(entity.getAttribute(Startable.SERVICE_UP));
-            }});
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", 120*1000), entity, Startable.SERVICE_UP, true);
 
         // Stop the underlying entity, but without our entity instance being told!
+        killEntityBehindBack(entity);
+        log.info("Killed {} behind mgmt's back, waiting for service up false in mgmt context", entity);
+        
+        EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, false);
+        
+        log.info("success getting service up false in primary mgmt universe");
+    }
+    
+    /**
+     * Stop the given underlying entity, but without our entity instance being told!
+     */
+    protected void killEntityBehindBack(Entity tokill) throws Exception {
         // Previously was calling entity.getDriver().kill(); but now our entity instance is a proxy so can't do that
         ManagementContext newManagementContext = null;
         File tempDir = Files.createTempDir();
         try {
-            ManagementContext managementContext = ((EntityInternal)entity).getManagementContext();
+            ManagementContext managementContext = ((EntityInternal)tokill).getManagementContext();
             BrooklynMemento brooklynMemento = MementosGenerators.newBrooklynMemento(managementContext);
             
             BrooklynMementoPersisterToMultiFile oldPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
             oldPersister.checkpoint(brooklynMemento);
-            
+            oldPersister.waitForWritesCompleted(30*1000, TimeUnit.MILLISECONDS);
+
             BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
             newManagementContext = Entities.newManagementContext();
             newManagementContext.getRebindManager().setPersister(newPersister);
             newManagementContext.getRebindManager().rebind(getClass().getClassLoader());
             newManagementContext.getRebindManager().start();
-            SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(entity.getId());
+            SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(tokill.getId());
             entity2.stop();
         } finally {
             if (newManagementContext != null) ((ManagementContextInternal)newManagementContext).terminate();
             Os.tryDeleteDirectory(tempDir.getAbsolutePath());
         }
-        log.info("called to stop tomcat in parallel mgmt universe, waiting for service up false in primary mgmt universe");
-        
-        Asserts.succeedsEventually(new Runnable() {
-            public void run() {
-                assertFalse(entity.getAttribute(Startable.SERVICE_UP));
-            }});
-        
-        log.info("success getting service up false in primary mgmt universe");
+        log.info("called to stop {} in parallel mgmt universe", entity);
     }
     
     /**

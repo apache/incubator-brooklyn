@@ -201,6 +201,11 @@ public class RebindManagerImpl implements RebindManager {
             // Two-phase deserialization. First we deserialize to find all instances (and their types).
             // Then we deserialize so that inter-entity references can be set. During the first phase,
             // any inter-entity reference will get the dummyEntity/dummyLocation.
+            //
+            // TODO if underlying data-store is changed between first and second phase (e.g. to add an
+            // entity), then second phase might try to reconstitute an entity that has not been put in
+            // the rebindContext. This should not affect normal production usage, because rebind is run
+            // against a data-store that is not being written to by other brooklyn instance(s).
             BrooklynMemento mementoHeaders = persister.loadMemento(dummyLookupContext);
     
             // Instantiate locations
