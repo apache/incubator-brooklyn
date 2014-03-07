@@ -74,10 +74,12 @@ import brooklyn.location.MachineManagementMixins.MachineMetadata;
 import brooklyn.location.MachineManagementMixins.RichMachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.BasicMachineMetadata;
+import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
+import brooklyn.location.cloud.CloudMachineNamer;
 import brooklyn.location.jclouds.JcloudsPredicates.NodeInLocation;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
 import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
@@ -165,14 +167,28 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     
     @SetFromFlag // so it's persisted
     private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
-
+    
     public JcloudsLocation() {
-       super();
+        super();
     }
     
     /** typically wants at least ACCESS_IDENTITY and ACCESS_CREDENTIAL */
     public JcloudsLocation(Map<?,?> conf) {
        super(conf);
+    }
+
+    private CloudMachineNamer getCloudMachineNamer(ConfigBag config) {
+        String namerClass = config.get(LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS);
+        if (namerClass != null) {
+            try {
+                return (CloudMachineNamer) getManagementContext().getCatalog().getRootClassLoader().loadClass(namerClass)
+                        .getDeclaredConstructor(ConfigBag.class).newInstance(config);
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+        } else {
+            return new JcloudsMachineNamer(getAllConfigBag());
+        }
     }
 
     @Override
@@ -483,7 +499,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (usePortForwarding) checkNotNull(portForwarder, "portForwarder, when use-port-forwarding enabled");
 
         final ComputeService computeService = JcloudsUtil.findComputeService(setup);
-        String groupId = elvis(setup.get(GROUP_ID), new JcloudsMachineNamer(setup).generateNewGroupId());
+        String groupId = elvis(setup.get(GROUP_ID), getCloudMachineNamer(setup).generateNewGroupId());
         NodeMetadata node = null;
         JcloudsSshMachineLocation sshMachineLocation = null;
         
@@ -526,6 +542,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             setup.getUnusedConfig());
                 
                 templateTimestamp = Duration.of(provisioningStopwatch);
+                template.getOptions().getUserMetadata().put("Name", getCloudMachineNamer(setup).generateNewMachineUniqueName());
                 
                 nodes = computeService.createNodesInGroup(groupId, 1, template);
                 provisionTimestamp = Duration.of(provisioningStopwatch);
