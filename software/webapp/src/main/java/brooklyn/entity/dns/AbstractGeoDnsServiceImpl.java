@@ -108,7 +108,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
         log.debug("Initializing tracker for "+this+", following "+targetEntityProvider);
         tracker = new AbstractMembershipTrackingPolicy(MutableMap.of(
                 "name", "GeoDNS targets tracker",
-                "sensorsToTrack", ImmutableSet.of(HOSTNAME, ADDRESS)) ) {
+                "sensorsToTrack", ImmutableSet.of(HOSTNAME, ADDRESS, WebAppService.ROOT_URL)) ) {
             @Override
             protected void onEntityEvent(EventType type, Entity entity) { refreshGroupMembership(); }
         };
@@ -181,17 +181,25 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             String hostname = inferHostname(entity);
             String ip = inferIp(entity);
             String addr = (getConfig(USE_HOSTNAMES) || ip == null) ? hostname : ip;
-            HostGeoInfo geoE = HostGeoInfo.fromEntity(entity);
-            HostGeoInfo geoH = inferHostGeoInfo(hostname, ip);
             
+            if (addr==null) addr = ip;
             if (addr == null) {
                 if (entitiesWithoutHostname.add(entity)) {
-                    log.debug("GeoDns ignoring {}, will continue scanning (no hostname or URL available)", entity);
+                    log.debug("GeoDns ignoring {} (no hostname/ip/URL info yet available)", entity);
                 }
                 return false;
             }
             
-            // FIXME prefer geoE always
+            // prefer the geo from the entity (or location parent), but fall back to inferring
+            // e.g. if it supplies a URL
+            HostGeoInfo geo = HostGeoInfo.fromEntity(entity);
+            if (geo==null) geo = inferHostGeoInfo(hostname, ip);
+            
+            if (Networking.isPrivateSubnet(addr) && ip!=null && !Networking.isPrivateSubnet(ip)) {
+                // fix for #1216
+                log.debug("GeoDns using IP "+ip+" for "+entity+" as addr "+addr+" resolves to private subnet");
+                addr = ip;
+            }
             if (Networking.isPrivateSubnet(addr)) {
                 if (getConfig(INCLUDE_HOMELESS_ENTITIES)) {
                     if (entitiesWithoutGeoInfo.add(entity)) {
@@ -205,12 +213,12 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 }
             }
 
-            if (geoH == null) {
+            if (geo == null) {
                 if (getConfig(INCLUDE_HOMELESS_ENTITIES)) {
                     if (entitiesWithoutGeoInfo.add(entity)) {
                         log.info("GeoDns including {}, even though no geography info available for {})", entity, addr);
                     }
-                    geoH = (geoE != null) ? geoE : HostGeoInfo.create(addr, "unknownLocation("+addr+")", 0, 0);
+                    geo = HostGeoInfo.create(addr, "unknownLocation("+addr+")", 0, 0);
                 } else {
                     if (entitiesWithoutGeoInfo.add(entity)) {
                         log.warn("GeoDns ignoring {} (no geography info available for {})", entity, addr);
@@ -218,28 +226,25 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                     return false;
                 }
             }
-            
-            // If we already knew about it, and it hasn't changed, then nothing to do
-            if (oldGeo != null && geoH.getAddress().equals(oldGeo.getAddress())) {
-                return false;
+
+            if (!addr.equals(geo.getAddress())) {
+                // if the location provider did not have an address, create a new one with it
+                geo = HostGeoInfo.create(addr, geo.displayName, geo.latitude, geo.longitude);
             }
             
-            // Check if location has lat/lon explicitly set; use geo-dns but warn if dramatically different
-            if (geoE != null) {
-                if ((Math.abs(geoH.latitude-geoE.latitude)>3) ||
-                        (Math.abs(geoH.longitude-geoE.longitude)>3) ) {
-                    log.warn("GeoDns mismatch, {} is in {} but hosts URL in {}", new Object[] {entity, geoE, geoH});
-                }
+            // If we already knew about it, and it hasn't changed, then nothing to do
+            if (oldGeo != null && geo.getAddress().equals(oldGeo.getAddress())) {
+                return false;
             }
             
             entitiesWithoutHostname.remove(entity);
             entitiesWithoutGeoInfo.remove(entity);
-            log.info("GeoDns adding "+entity+" at "+geoH+(oldGeo != null ? " (previously "+oldGeo+")" : ""));
-            targetHosts.put(entity, geoH);
+            log.info("GeoDns adding "+entity+" at "+geo+(oldGeo != null ? " (previously "+oldGeo+")" : ""));
+            targetHosts.put(entity, geo);
             return true;
 
         } catch (Exception ee) {
-            log.warn("GeoDns ignoring {} (error analysing location, {}", entity, ee);
+            log.warn("GeoDns ignoring "+entity+" (error analysing location): "+ee, ee);
             return false;
         }
     }
@@ -311,7 +316,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             InetAddress addr = (hostname == null) ? null : InetAddress.getByName(hostname);
             geoH = (addr == null) ? null : HostGeoInfo.fromIpAddress(addr);
         } catch (UnknownHostException e) {
-            if (getConfig(USE_HOSTNAMES) || ip == null) {
+            if (ip == null) {
                 throw e;
             } else {
                 if (log.isTraceEnabled()) log.trace("GeoDns failed to infer GeoInfo from hostname {}; will try with IP {} ({})", new Object[] {hostname, ip, e});
@@ -319,8 +324,8 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             }
         }
 
-        // Switch to IP address if that's what we're configured to use, and it's available
-        if (!getConfig(USE_HOSTNAMES) && ip != null) {
+        // Try IP address (prior to Mar 2014 we did not do this if USE_HOSTNAME was set but don't think that is desirable due to #1216)
+        if (ip != null) {
             if (geoH == null) {
                 InetAddress addr = Networking.getInetAddressWithFixedName(ip);
                 geoH = HostGeoInfo.fromIpAddress(addr);

@@ -1,14 +1,10 @@
 package brooklyn.location.geo;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.Serializable;
 import java.net.InetAddress;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Objects;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.AddressableLocation;
@@ -18,6 +14,8 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.BrooklynSystemProperties;
+
+import com.google.common.base.Objects;
 
 /**
  * Encapsulates geo-IP information for a given host.

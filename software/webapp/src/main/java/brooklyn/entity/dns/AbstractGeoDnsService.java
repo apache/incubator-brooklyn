@@ -13,6 +13,8 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.geo.HostGeoInfo;
 
+import com.google.common.reflect.TypeToken;
+
 public interface AbstractGeoDnsService extends Entity {
     
     public static final ConfigKey<Boolean> INCLUDE_HOMELESS_ENTITIES = ConfigKeys.newBooleanConfigKey("geodns.includeHomeless", "Whether to include entities whose geo-coordinates cannot be inferred", false);
@@ -22,8 +24,9 @@ public interface AbstractGeoDnsService extends Entity {
     public static final AttributeSensor<Boolean> SERVICE_UP = Startable.SERVICE_UP;
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
     public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
-    public static final AttributeSensor<Map<String,String>> TARGETS = new BasicAttributeSensor(
-            Map.class, "geodns.targets", "Map of targets currently being managed (entity ID to URL)");
+    @SuppressWarnings("serial")
+    public static final AttributeSensor<Map<String,String>> TARGETS = new BasicAttributeSensor<Map<String,String>>(
+            new TypeToken<Map<String,String>>() {}, "geodns.targets", "Map of targets currently being managed (entity ID to URL)");
 
     public void setServiceState(Lifecycle state);
     

@@ -275,10 +275,6 @@ public class Asserts {
         return result;
     }
     
-    private static Duration toDuration(Object duration) {
-        return Duration.of(duration);
-    }
-            
     private static Duration toDuration(Object duration, Duration defaultVal) {
         if (duration == null)
             return defaultVal;
@@ -303,7 +299,7 @@ public class Asserts {
     }
     
     public static void assertFailsWith(Runnable c, final Class<? extends Throwable> validException, final Class<? extends Throwable> ...otherValidExceptions) {
-        final List<Class> validExceptions = ImmutableList.<Class>builder()
+        final List<Class<?>> validExceptions = ImmutableList.<Class<?>>builder()
                 .add(validException)
                 .addAll(ImmutableList.copyOf(otherValidExceptions))
                 .build();
@@ -338,6 +334,7 @@ public class Asserts {
         if (!failed) fail("Test code should have thrown exception but did not");
     }
 
+    @SuppressWarnings("rawtypes")
     private static boolean groovyTruth(Object o) {
         // TODO Doesn't handle matchers (see http://docs.codehaus.org/display/GROOVY/Groovy+Truth)
         if (o == null) {
@@ -359,6 +356,7 @@ public class Asserts {
         }
     }
     
+    @SuppressWarnings("unchecked")
     private static <T> T get(Map<String,?> map, String key, T defaultVal) {
         Object val = map.get(key);
         return (T) ((val == null) ? defaultVal : val);

@@ -18,7 +18,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.EntityManager;
-import brooklyn.test.TestUtils;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
@@ -88,11 +88,11 @@ public class MembershipTrackingPolicyTest {
     public void testNotNotifiedWhenPolicySuspended() throws Exception {
         policy.suspend();
 
-        TestEntity e1 = createAndManageChildOf(group);
-
+        createAndManageChildOf(group);
         assertRecordsContinually(new Record[0]);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testNotifiedOfEverythingWhenPolicyResumed() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
@@ -137,12 +137,13 @@ public class MembershipTrackingPolicyTest {
         assertRecordsEventually(policy, expected);
     }
 
+    @SuppressWarnings("unchecked")
     private void assertRecordsEventually(final RecordingMembershipTrackingPolicy policy, final Record... expected) {
         assertRecordsEventually(policy, ImmutableList.copyOf(expected));
     }
 
     private void assertRecordsEventually(final RecordingMembershipTrackingPolicy policy, final List<Record>... validExpecteds) {
-        TestUtils.assertEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 for (List<Record> validExpected : validExpecteds) {
                     if (policy.records.equals(validExpected)) return;
@@ -152,7 +153,7 @@ public class MembershipTrackingPolicyTest {
     }
 
     private void assertRecordsContinually(final Record... expected) {
-        TestUtils.assertSucceedsContinually(ImmutableMap.of("timeout", 100), new Runnable() {
+        Asserts.succeedsContinually(ImmutableMap.of("timeout", 100), new Runnable() {
             public void run() {
                 assertEquals(policy.records, ImmutableList.copyOf(expected), "actual="+policy.records);
             }});

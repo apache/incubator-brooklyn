@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.LoadBalancer;
@@ -27,7 +28,6 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implements ControlledDynamicWebAppCluster {
@@ -185,7 +185,8 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
                 .from(getCluster())
                 .build());
         addEnricher(Enrichers.builder()
-                .propagating(LoadBalancer.HOSTNAME, SERVICE_UP, ROOT_URL)
+                // include hostname and address of controller (need both in case hostname only resolves to internal/private ip)
+                .propagating(LoadBalancer.HOSTNAME, Attributes.ADDRESS, SERVICE_UP, ROOT_URL)
                 .from(getController())
                 .build());
     }
