@@ -1,5 +1,7 @@
 package brooklyn.entity.basic;
 
+import groovy.time.TimeDuration;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,8 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -56,11 +60,13 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.internal.Repeater;
 import brooklyn.util.javalang.Threads;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -789,11 +795,28 @@ public class Entities {
         executionContext.submit(task.asTask());
         return task;
     }
-    
+
     /** logs a warning if an entity has a value for a config key */
     public static void warnOnIgnoringConfig(Entity entity, ConfigKey<?> key) {
         if (entity.getConfigRaw(key, true).isPresentAndNonNull())
             log.warn("Ignoring "+key+" set on "+entity+" ("+entity.getConfig(key)+")");
+    }
+
+    /** waits until {@link Startable#SERVICE_UP} returns true */
+    public static <E extends Entity & Startable> void waitForServiceUp(final E entity, long duration, TimeUnit units) {
+        String description = "Waiting for SERVICE_UP on "+entity;
+        Tasks.setBlockingDetails(description);
+        if (!Repeater.create(ImmutableMap.of("timeout", units.toMillis(duration), "description", description))
+                .rethrowException().repeat().every(1, TimeUnit.SECONDS)
+                .until(new Callable<Boolean>() {
+                    public Boolean call() {
+                        return entity.getAttribute(Startable.SERVICE_UP);
+                    }})
+                .run()) {
+            throw new IllegalStateException("Timeout waiting for SERVICE_UP from "+entity);
+        }
+        Tasks.resetBlockingDetails();
+        log.debug("Detected SERVICE_UP for software {}", entity);
     }
     
 }

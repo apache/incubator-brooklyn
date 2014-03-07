@@ -241,19 +241,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         waitForServiceUp(duration.toMilliseconds(), TimeUnit.MILLISECONDS);
     }
     public void waitForServiceUp(long duration, TimeUnit units) {
-        String description = "Waiting for SERVICE_UP on "+this;
-        Tasks.setBlockingDetails(description);
-        if (!Repeater.create(ImmutableMap.of("timeout", units.toMillis(duration), "description", description))
-                .rethrowException().repeat().every(1, TimeUnit.SECONDS)
-                .until(new Callable<Boolean>() {
-                    public Boolean call() {
-                        return getAttribute(SERVICE_UP);
-                    }})
-                .run()) {
-            throw new IllegalStateException("Timeout waiting for SERVICE_UP from "+this);
-        }
-        Tasks.resetBlockingDetails();
-        log.debug("Detected SERVICE_UP for software {}", this);
+        Entities.waitForServiceUp(this, duration, units);
     }
 
     public void checkModifiable() {
