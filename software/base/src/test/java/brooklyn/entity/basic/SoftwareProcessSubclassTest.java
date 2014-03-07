@@ -18,6 +18,7 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
@@ -79,7 +80,7 @@ public class SoftwareProcessSubclassTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext();
+        managementContext = new LocalManagementContextForTests();
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         loc = managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
         locs = ImmutableList.of(loc);
