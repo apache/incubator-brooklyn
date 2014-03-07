@@ -10,27 +10,39 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.group.DynamicFabric;
+import brooklyn.entity.group.DynamicRegionsFabric;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
+import brooklyn.location.LocationRegistry;
+import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.internal.Repeater;
 
 import com.google.common.base.Predicates;
@@ -46,6 +58,9 @@ public class AbstractGeoDnsServiceTest {
     private static final double WEST_LATITUDE = 37.43472, WEST_LONGITUDE = -121.89500;
     private static final double EAST_LATITUDE = 41.10361, EAST_LONGITUDE = -73.79583;
     
+    private static final String NORTH_IP = "10.0.0.1";
+    private static final double NORTH_LATITUDE = 60, NORTH_LONGITUDE = -100;
+    
     private ManagementContext managementContext;
     
     private Location westParent;
@@ -54,9 +69,12 @@ public class AbstractGeoDnsServiceTest {
     private Location eastParent;
     private Location eastChild; 
     private Location eastChildWithLocation; 
-    
+
+    private Location northParent;
+    private Location northChildWithLocation; 
+
     private TestApplication app;
-    private DynamicFabric fabric;
+    private DynamicRegionsFabric fabric;
     private DynamicGroup testEntities;
     private GeoDnsTestService geoDns;
     
@@ -68,23 +86,44 @@ public class AbstractGeoDnsServiceTest {
         westParent = newSimulatedLocation("West parent", WEST_LATITUDE, WEST_LONGITUDE);
         
         westChild = newSshMachineLocation("West child", WEST_IP, westParent);
-        westChildWithLocation = newSshMachineLocation("West child with location", WEST_IP, westParent, WEST_LATITUDE, WEST_LONGITUDE); 
+        westChildWithLocation = newSshMachineLocation("West child with location", WEST_IP, WEST_IP, westParent, WEST_LATITUDE, WEST_LONGITUDE); 
         
         eastParent = newSimulatedLocation("East parent", EAST_LATITUDE, EAST_LONGITUDE);
         eastChild = newSshMachineLocation("East child", EAST_IP, eastParent); 
-        eastChildWithLocation = newSshMachineLocation("East child with location", EAST_IP, eastParent, EAST_LATITUDE, EAST_LONGITUDE); 
+        eastChildWithLocation = newSshMachineLocation("East child with location", EAST_IP, EAST_IP, eastParent, EAST_LATITUDE, EAST_LONGITUDE); 
+
+        northParent = newSimulatedLocation("North parent", NORTH_LATITUDE, NORTH_LONGITUDE);
+        northChildWithLocation = newSshMachineLocation("North child", "localhost", NORTH_IP, northParent, NORTH_LATITUDE, NORTH_LONGITUDE);
+        ((BasicLocationRegistry)managementContext.getLocationRegistry()).registerResolver(new LocationResolver() {
+            @Override
+            public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
+                if (!spec.equals("test:north")) throw new IllegalStateException("unsupported");
+                return northChildWithLocation;
+            }
+            @Override
+            public void init(ManagementContext managementContext) {
+            }
+            @Override
+            public String getPrefix() {
+                return "test";
+            }
+            @Override
+            public boolean accepts(String spec, LocationRegistry registry) {
+                return spec.startsWith(getPrefix());
+            }
+        });
 
         Entities.manage(westParent, managementContext);
         Entities.manage(eastParent, managementContext);
+        Entities.manage(northParent, managementContext);
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
-        fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
+        fabric = app.createAndManageChild(EntitySpec.create(DynamicRegionsFabric.class)
             .configure(DynamicFabric.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
         
         testEntities = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
             .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class)));
-        geoDns = app.createAndManageChild(EntitySpec.create(GeoDnsTestService.class)
-                .configure(GeoDnsTestService.POLL_PERIOD, 10L));
+        geoDns = app.createAndManageChild(EntitySpec.create(GeoDnsTestService.class));
         geoDns.setTargetEntityProvider(testEntities);
     }
 
@@ -107,10 +146,11 @@ public class AbstractGeoDnsServiceTest {
                 .configure("address", address));
     }
     
-    private Location newSshMachineLocation(String name, String address, Location parent, double lat, double lon) {
+    private Location newSshMachineLocation(String name, String hostname, String address, Location parent, double lat, double lon) {
         return managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .parent(parent)
                 .displayName(name)
+                .configure("hostname", hostname)
                 .configure("address", address)
                 .configure("latitude", lat)
                 .configure("longitude", lon));
@@ -120,7 +160,7 @@ public class AbstractGeoDnsServiceTest {
     public void testGeoInfoOnLocation() {
         app.start( ImmutableList.of(westChildWithLocation, eastChildWithLocation) );
         
-        waitForTargetHosts(geoDns);
+        EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         assertTrue(geoDns.getTargetHostsByName().containsKey("West child with location"), "targets="+geoDns.getTargetHostsByName());
         assertTrue(geoDns.getTargetHostsByName().containsKey("East child with location"), "targets="+geoDns.getTargetHostsByName());
     }
@@ -129,11 +169,36 @@ public class AbstractGeoDnsServiceTest {
     public void testGeoInfoOnParentLocation() {
         app.start( ImmutableList.of(westChild, eastChild) );
         
-        waitForTargetHosts(geoDns);
+        EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         assertTrue(geoDns.getTargetHostsByName().containsKey("West child"), "targets="+geoDns.getTargetHostsByName());
         assertTrue(geoDns.getTargetHostsByName().containsKey("East child"), "targets="+geoDns.getTargetHostsByName());
     }
+
+//    @Test
+//    public void testDontLikeSubnetFolksGeoInfoOnParentLocation() {
+//        ((EntityInternal)geoDns).setConfig(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
+//        app.start( ImmutableList.of(westChild, eastChild) );
+//        for (Entity e: testEntities.getMembers()) {
+//            ((EntityInternal)e).setAttribute(Attributes.HOSTNAME, Machines.findUniqueSshMachineLocation(e.getLocations()).get().getAddress().getHostName());
+//        }
+//        
+//        EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+//        assertTrue(geoDns.getTargetHostsByName().containsKey("West child"), "targets="+geoDns.getTargetHostsByName());
+//        assertTrue(geoDns.getTargetHostsByName().containsKey("East child"), "targets="+geoDns.getTargetHostsByName());
+//    }
     
+    @Test
+    public void testChildAddedLate() {
+        app.start( ImmutableList.of(westChild, eastChild) );
+        EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+        
+        fabric.addRegion("test:north");
+        EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(3));
+        assertTrue(geoDns.getTargetHostsByName().containsKey("North child"), "targets="+geoDns.getTargetHostsByName());
+        
+        log.info("targets: "+geoDns.getTargetHostsByName());
+    }    
+
     //TODO
 //    @Test
 //    public void testMissingGeoInfo() {
@@ -143,18 +208,6 @@ public class AbstractGeoDnsServiceTest {
 //    public void testEmptyGroup() {
 //    }
     
-    private static void waitForTargetHosts(final GeoDnsTestService service) {
-        new Repeater("Wait for target hosts")
-            .repeat()
-            .every(500, TimeUnit.MILLISECONDS)
-            .until(new Callable<Boolean>() {
-                public Boolean call() {
-                    return service.getTargetHostsByName().size() == 2;
-                }})
-            .limitIterationsTo(20)
-            .run();
-    }
-    
     @ImplementedBy(GeoDnsTestServiceImpl.class)
     public static interface GeoDnsTestService extends AbstractGeoDnsService {
         public Map<String, HostGeoInfo> getTargetHostsByName();
@@ -163,6 +216,8 @@ public class AbstractGeoDnsServiceTest {
     public static class GeoDnsTestServiceImpl extends AbstractGeoDnsServiceImpl implements GeoDnsTestService {
         public Map<String, HostGeoInfo> targetHostsByName = new LinkedHashMap<String, HostGeoInfo>();
 
+        public static final ConfigKey<Boolean> ADD_ANYTHING = ConfigKeys.newBooleanConfigKey("test.add.always", "", true);
+        
         public GeoDnsTestServiceImpl() {
         }
 
@@ -175,16 +230,20 @@ public class AbstractGeoDnsServiceTest {
         
         @Override
         protected boolean addTargetHost(Entity e) {
-            //ignore geo lookup, override parent menu
-            log.info("TestService adding target host {}", e);
-            if (e.getLocations().isEmpty()) {
-                return false;
+            if (!getConfig(ADD_ANYTHING)) {
+                return super.addTargetHost(e);
+            } else {
+                //ignore geo lookup, override parent menu
+                log.info("TestService adding target host {}", e);
+                if (e.getLocations().isEmpty()) {
+                    return false;
+                }
+                Location l = Iterables.getOnlyElement(e.getLocations());
+                HostGeoInfo geoInfo = new HostGeoInfo("127.0.0.1", l.getDisplayName(), 
+                    l.getConfig(LocationConfigKeys.LATITUDE), l.getConfig(LocationConfigKeys.LONGITUDE));
+                targetHosts.put(e, geoInfo);
+                return true;
             }
-            Location l = Iterables.getOnlyElement(e.getLocations());
-            HostGeoInfo geoInfo = new HostGeoInfo("127.0.0.1", l.getDisplayName(), 
-                l.getConfig(LocationConfigKeys.LATITUDE), l.getConfig(LocationConfigKeys.LONGITUDE));
-            targetHosts.put(e, geoInfo);
-            return true;
         }
         
         @Override

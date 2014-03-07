@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.location.Location;
@@ -39,15 +38,7 @@ public class LoadBalancerClusterImpl extends DynamicClusterImpl implements LoadB
         // this could still be executing setAttribute(true) and hence incorrectly leave
         // the cluster in a service_up==true state after stop() returns?
         AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy() {
-            @Override protected void onEntityChange(Entity member) {
-                setAttribute(SERVICE_UP, calculateServiceUp());
-            }
-            @Override protected void onEntityAdded(Entity member) {
-                setAttribute(SERVICE_UP, calculateServiceUp());
-            }
-            @Override protected void onEntityRemoved(Entity member) {
-                setAttribute(SERVICE_UP, calculateServiceUp());
-            }
+            @Override protected void onEntityEvent(EventType type, Entity entity) { setAttribute(SERVICE_UP, calculateServiceUp()); }
         };
         addPolicy(policy);
         policy.setGroup(this);

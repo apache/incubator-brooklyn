@@ -1,11 +1,15 @@
 package brooklyn.util.collections;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -31,7 +35,20 @@ public class CollectionFunctionals {
             }
         };
     }
-    
+
+    public static <K> Function<Map<K,?>,Set<K>> keys() {
+        return new Function<Map<K,?>, Set<K>>() {
+            @Override
+            public Set<K> apply(Map<K, ?> input) {
+                return input.keySet();
+            }
+        };
+    }
+
+    public static <K> Function<Map<K, ?>, Integer> mapSize() {
+        return Functions.compose(CollectionFunctionals.sizeFunction(), CollectionFunctionals.<K>keys());
+    }
+
     /** default guava Equals predicate will reflect order of target, and will fail when matching against a list;
      * this treats them both as sets */
     public static Predicate<Iterable<?>> equalsSetOf(Object... target) {
@@ -46,5 +63,13 @@ public class CollectionFunctionals {
             }
         };
     }
-    
+
+    public static Predicate<Iterable<?>> sizeEquals(int targetSize) {
+        return Predicates.compose(Predicates.equalTo(targetSize), CollectionFunctionals.sizeFunction());
+    }
+
+    public static <K> Predicate<Map<K,?>> mapSizeEquals(int targetSize) {
+        return Predicates.compose(Predicates.equalTo(targetSize), CollectionFunctionals.<K>mapSize());
+    }
+
 }

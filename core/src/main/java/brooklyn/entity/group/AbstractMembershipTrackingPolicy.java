@@ -85,13 +85,13 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         
         subscribe(group, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
-                onEntityAdded(event.getValue());
+                onEntityEvent(EventType.ENTITY_ADDED, event.getValue());
             }
         });
         subscribe(group, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 lastKnownServiceUpCache.remove(event.getSource());
-                onEntityRemoved(event.getValue());
+                onEntityEvent(EventType.ENTITY_REMOVED, event.getValue());
             }
         });
         subscribeToMembers(group, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
@@ -99,18 +99,18 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
                 if (event.getValue() == lastKnownServiceUpCache.put(event.getSource().getId(), event.getValue()))
                     // ignore if value has not changed
                     return;
-                onEntityChange(event.getSource());
+                onEntityEvent(EventType.ENTITY_CHANGE, event.getSource());
             }
         });
         for (Sensor<?> sensor : sensorsToTrack) {
             subscribeToMembers(group, sensor, new SensorEventListener<Object>() {
                 @Override public void onEvent(SensorEvent<Object> event) {
-                    onEntityChange(event.getSource());
+                    onEntityEvent(EventType.ENTITY_CHANGE, event.getSource());
                 }
             });
         }
         
-        for (Entity it : group.getMembers()) { onEntityAdded(it); }
+        for (Entity it : group.getMembers()) { onEntityEvent(EventType.ENTITY_ADDED, it); }
         
         // FIXME cluster may be remote, we need to make this retrieve the remote values, or store members in local mgmt node, or use children
     }
@@ -119,20 +119,33 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         if (getSubscriptionTracker()!=null && group != null) unsubscribe(group);
     }
 
+    public enum EventType { ENTITY_CHANGE, ENTITY_ADDED, ENTITY_REMOVED }
+    
+    /** All entity events pass through this method. Default impl delegates to onEntityXxxx methods, whose default behaviours are no-op.
+     * Callers may override this to intercept all entity events in a single place, and to suppress subsequent processing if desired. 
+     */
+    protected void onEntityEvent(EventType type, Entity entity) {
+        switch (type) {
+        case ENTITY_CHANGE: onEntityChange(entity); break;
+        case ENTITY_ADDED: onEntityAdded(entity); break;
+        case ENTITY_REMOVED: onEntityRemoved(entity); break;
+        }
+    }
+    
     /**
-     * Called when a member's "up" sensor changes
+     * Called when a member's "up" sensor changes.
      */
     protected void onEntityChange(Entity member) {}
 
-    //TODO - don't need/want members below ?, if we have the above
-    
     /**
      * Called when a member is added.
+     * Note that the change event may arrive before this event; implementations here should typically look at the last value.
      */
     protected void onEntityAdded(Entity member) {}
 
     /**
      * Called when a member is removed.
+     * Note that entity change events may arrive after this event; they should typically be ignored. 
      */
     protected void onEntityRemoved(Entity member) {}
 }

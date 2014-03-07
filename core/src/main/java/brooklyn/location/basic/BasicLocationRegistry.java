@@ -62,13 +62,17 @@ public class BasicLocationRegistry implements LocationRegistry {
     protected void findServices() {
         ServiceLoader<LocationResolver> loader = ServiceLoader.load(LocationResolver.class);
         for (LocationResolver r: loader) {
-            r.init(mgmt);
-            resolvers.put(r.getPrefix(), r);
+            registerResolver(r);
         }
         if (log.isDebugEnabled()) log.debug("Location resolvers are: "+resolvers);
         if (resolvers.isEmpty()) log.warn("No location resolvers detected: is src/main/resources correctly included?");
     }
 
+    public void registerResolver(LocationResolver r) {
+        r.init(mgmt);
+        resolvers.put(r.getPrefix(), r);
+    }
+    
     @Override
     public Map<String,LocationDefinition> getDefinedLocations() {
         synchronized (definedLocations) {
