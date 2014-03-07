@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -39,6 +40,7 @@ import brooklyn.mementos.PolicyMemento;
 import brooklyn.mementos.TreeNode;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
@@ -148,33 +150,31 @@ public class RebindManagerImpl implements RebindManager {
             final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
     
             LookupContext dummyLookupContext = new LookupContext() {
-                private final Entity dummyEntity = (Entity) java.lang.reflect.Proxy.newProxyInstance(
-                        classLoader,
-                        new Class[] {Entity.class, EntityInternal.class, EntityProxy.class},
-                        new InvocationHandler() {
-                            @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
-                                return m.invoke(this, args);
-                            }
-                        });
-                private final Location dummyLocation = (Location) java.lang.reflect.Proxy.newProxyInstance(
-                        classLoader,
-                        new Class[] {Location.class, LocationInternal.class},
-                        new InvocationHandler() {
-                            @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
-                                return m.invoke(this, args);
-                            }
-                        });
-                @Override public Entity lookupEntity(String id) {
-                    return dummyEntity;
+                @Override public Entity lookupEntity(Class<?> type, String id) {
+                    Set<Class<?>> types = MutableSet.<Class<?>>of(Entity.class, EntityInternal.class, EntityProxy.class);
+                    if (type != null) types.add(type);
+                    return (Entity) newDummy(types);
                 }
-                @Override public Location lookupLocation(String id) {
-                    return dummyLocation;
+                @Override public Location lookupLocation(Class<?> type, String id) {
+                    Set<Class<?>> types = MutableSet.<Class<?>>of(Location.class, LocationInternal.class);
+                    if (type != null) types.add(type);
+                    return (Location) newDummy(types);
+                }
+                private Object newDummy(Collection<Class<?>> types) {
+                    return java.lang.reflect.Proxy.newProxyInstance(
+                        classLoader,
+                        types.toArray(new Class<?>[types.size()]),
+                        new InvocationHandler() {
+                            @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
+                                return m.invoke(this, args);
+                            }
+                        });
                 }
             };
             
             LookupContext realLookupContext = new LookupContext() {
                 private final boolean removeDanglingRefs = true;
-                @Override public Entity lookupEntity(String id) {
+                @Override public Entity lookupEntity(Class<?> type, String id) {
                     Entity result = rebindContext.getEntity(id);
                     if (result == null) {
                         if (removeDanglingRefs) {
@@ -182,10 +182,12 @@ public class RebindManagerImpl implements RebindManager {
                         } else {
                             throw new IllegalStateException("No entity found with id "+id);
                         }
+                    } else if (type != null && !type.isInstance(result)) {
+                        LOG.warn("Entity with id "+id+" does not match type "+type+"; returning "+result);
                     }
                     return result;
                 }
-                @Override public Location lookupLocation(String id) {
+                @Override public Location lookupLocation(Class<?> type, String id) {
                     Location result = rebindContext.getLocation(id);
                     if (result == null) {
                         if (removeDanglingRefs) {
@@ -193,6 +195,8 @@ public class RebindManagerImpl implements RebindManager {
                         } else {
                             throw new IllegalStateException("No location found with id "+id);
                         }
+                    } else if (type != null && !type.isInstance(result)) {
+                        LOG.warn("Location with id "+id+" does not match type "+type+"; returning "+result);
                     }
                     return result;
                 }

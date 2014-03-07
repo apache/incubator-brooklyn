@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -26,11 +28,14 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class XmlMementoSerializerTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(XmlMementoSerializerTest.class);
 
     private XmlMementoSerializer<Object> serializer;
 
@@ -121,11 +126,59 @@ public class XmlMementoSerializerTest {
         }
     }
     
-    private void assertSerializeAndDeserialize(Object obj) throws Exception {
+    @Test
+    public void testFieldReffingEntity() throws Exception {
+        final TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        ReffingEntity reffer = new ReffingEntity(app);
+        ManagementContext managementContext = app.getManagementContext();
+        try {
+            serializer.setLookupContext(new LookupContextImpl(ImmutableMap.of(app.getId(), app), ImmutableMap.<String,Location>of()));
+            ReffingEntity reffer2 = assertSerializeAndDeserialize(reffer);
+            assertEquals(reffer2.entity, app);
+        } finally {
+            Entities.destroyAll(managementContext);
+        }
+    }
+    
+    @Test
+    public void testUntypedFieldReffingEntity() throws Exception {
+        final TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        ReffingEntity reffer = new ReffingEntity((Object)app);
+        ManagementContext managementContext = app.getManagementContext();
+        try {
+            serializer.setLookupContext(new LookupContextImpl(ImmutableMap.of(app.getId(), app), ImmutableMap.<String,Location>of()));
+            ReffingEntity reffer2 = assertSerializeAndDeserialize(reffer);
+            assertEquals(reffer2.obj, app);
+        } finally {
+            Entities.destroyAll(managementContext);
+        }
+    }
+    
+    public static class ReffingEntity {
+        public Entity entity;
+        public Object obj;
+        public ReffingEntity(Entity entity) {
+            this.entity = entity;
+        }
+        public ReffingEntity(Object obj) {
+            this.obj = obj;
+        }
+        @Override
+        public boolean equals(Object o) {
+            return (o instanceof ReffingEntity) && Objects.equal(entity, ((ReffingEntity)o).entity) && Objects.equal(obj, ((ReffingEntity)o).obj);
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(entity, obj);
+        }
+    }
+    
+    private <T> T assertSerializeAndDeserialize(T obj) throws Exception {
         String serializedForm = serializer.toString(obj);
         System.out.println("serializedForm="+serializedForm);
         Object deserialized = serializer.fromString(serializedForm);
         assertEquals(deserialized, obj, "serializedForm="+serializedForm);
+        return (T) deserialized;
     }
     
     static class LookupContextImpl implements LookupContext {
@@ -136,13 +189,25 @@ public class XmlMementoSerializerTest {
             this.entities = entities;
             this.locations = locations;
         }
-        @Override public Entity lookupEntity(String id) {
-            if (entities.containsKey(id)) return entities.get(id);
-            throw new NoSuchElementException("no entity with id "+id); 
+        @Override public Entity lookupEntity(Class<?> type, String id) {
+            if (entities.containsKey(id)) {
+                Entity result = entities.get(id);
+                if (type != null && !type.isInstance(result)) {
+                    throw new IllegalStateException("Entity with id "+id+" does not match type "+type+"; got "+result);
+                }
+                return result;
+            }
+            throw new NoSuchElementException("no entity with id "+id+"; contenders are "+locations.keySet()); 
         }
-        @Override public Location lookupLocation(String id) {
-            if (locations.containsKey(id)) return locations.get(id);
-            throw new NoSuchElementException("no location with id "+id); 
+        @Override public Location lookupLocation(Class<?> type, String id) {
+            if (locations.containsKey(id)) {
+                Location result = locations.get(id);
+                if (type != null && !type.isInstance(result)) {
+                    throw new IllegalStateException("Location with id "+id+" does not match type "+type+"; got "+result);
+                }
+                return result;
+            }
+            throw new NoSuchElementException("no location with id "+id+"; contenders are "+locations.keySet()); 
         }
     };
 }

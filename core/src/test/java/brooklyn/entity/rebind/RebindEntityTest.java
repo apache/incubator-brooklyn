@@ -54,6 +54,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
@@ -233,6 +234,38 @@ public class RebindEntityTest {
         assertConfigEquals(newE, MyEntityReffingOthers.ENTITY_REF_CONFIG, newOtherE);
     }
     
+    @Test
+    public void testHandlesReferencingOtherEntitiesInPojoField() throws Exception {
+        MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
+        ReffingEntity reffer = new ReffingEntity();
+        reffer.obj = origE;
+        reffer.entity = origE;
+        reffer.myEntity = origE;
+        origApp.setConfig(TestEntity.CONF_OBJECT, reffer);
+
+        newApp = rebind(false);
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
+        ReffingEntity reffer2 = (ReffingEntity)newApp.getConfig(TestEntity.CONF_OBJECT);
+        
+        assertEquals(reffer2.myEntity, newE);
+        assertEquals(reffer2.entity, newE);
+        assertEquals(reffer2.obj, newE);
+    }
+    
+    public static class ReffingEntity {
+        public MyEntity myEntity;
+        public Entity entity;
+        public Object obj;
+        @Override
+        public boolean equals(Object o) {
+            return (o instanceof ReffingEntity) && Objects.equal(entity, ((ReffingEntity)o).entity) && Objects.equal(obj, ((ReffingEntity)o).obj);
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(entity, obj);
+        }
+    }
+
     @Test
     public void testHandlesReferencingOtherLocations() throws Exception {
         MyLocation origLoc = new MyLocation();

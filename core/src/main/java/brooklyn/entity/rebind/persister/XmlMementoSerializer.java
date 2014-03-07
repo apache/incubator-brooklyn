@@ -127,15 +127,25 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
     }
 
-    public static abstract class IdentifiableConverter<T extends Identifiable> implements SingleValueConverter {
+    public abstract class IdentifiableConverter<T extends Identifiable> implements SingleValueConverter {
         private final Class<T> clazz;
+        
+        /*
+         * Ugly hack so we know what type to deserialize the string as. Remember the last call to canConvert!
+         * This is needed for RebindManager's two-phase approach, where in the first phase we create a 
+         * dynamic proxy to represent the Entity/Location (can't return null as ImmutableList etc won't accept
+         * null values).
+         */
+        private Class<?> toClazz;
         
         IdentifiableConverter(Class<T> clazz) {
             this.clazz = clazz;
         }
         @Override
         public boolean canConvert(Class type) {
-            return clazz.isAssignableFrom(type);
+            boolean result = clazz.isAssignableFrom(type);
+            toClazz = (result) ? type : null;
+            return result;
         }
 
         @Override
@@ -144,14 +154,15 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
         @Override
         public Object fromString(String str) {
-            T result = lookup(str);
-            if (result == null) {
-                LOG.warn("Cannot unmarshall from persisted xml {} {}; not found in management context!", clazz.getSimpleName(), str);
+            if (lookupContext == null) {
+                LOG.warn("Cannot unmarshall from persisted xml {} {}; no lookup context supplied!", clazz.getSimpleName(), str);
+                return null;
+            } else {
+                return lookup(toClazz, str);
             }
-            return result;
         }
         
-        protected abstract T lookup(String id);
+        protected abstract T lookup(Class<?> type, String id);
     }
 
     public class LocationConverter extends IdentifiableConverter<Location> {
@@ -159,8 +170,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             super(Location.class);
         }
         @Override
-        protected Location lookup(String id) {
-            return (lookupContext != null) ? lookupContext.lookupLocation(id) : null;
+        protected Location lookup(Class<?> type, String id) {
+            return lookupContext.lookupLocation(type, id);
         }
     }
     
@@ -169,8 +180,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             super(Entity.class);
         }
         @Override
-        protected Entity lookup(String id) {
-            return (lookupContext != null) ? lookupContext.lookupEntity(id) : null;
+        protected Entity lookup(Class<?> type, String id) {
+            return lookupContext.lookupEntity(type, id);
         }
     }
 
