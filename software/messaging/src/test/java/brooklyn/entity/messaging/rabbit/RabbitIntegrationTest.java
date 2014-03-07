@@ -3,6 +3,8 @@ package brooklyn.entity.messaging.rabbit;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -100,8 +102,59 @@ public class RabbitIntegrationTest {
             QueueingConsumer.Delivery delivery = queueConsumer.nextDelivery(60 * 1000l); // one minute timeout
             assertEquals(delivery.getBody(), content);
         } finally {
-            if (producer != null) producer.close();
-            if (consumer != null) consumer.close();
+            closeSafely(producer, 10*1000);
+            closeSafely(consumer, 10*1000);
+        }
+    }
+
+    /**
+     * Closes the channel, guaranteeing the call won't hang this thread forever!
+     * 
+     * Saw this during jenkins testing:
+     * "main" prio=10 tid=0x00007f69c8008000 nid=0x5d70 in Object.wait() [0x00007f69d1318000]
+     *         java.lang.Thread.State: WAITING (on object monitor)
+     *         at java.lang.Object.wait(Native Method)
+     *         - waiting on <0x00000000e0947cf8> (a com.rabbitmq.utility.BlockingValueOrException)
+     *         at java.lang.Object.wait(Object.java:502)
+     *         at com.rabbitmq.utility.BlockingCell.get(BlockingCell.java:50)
+     *         - locked <0x00000000e0947cf8> (a com.rabbitmq.utility.BlockingValueOrException)
+     *         at com.rabbitmq.utility.BlockingCell.get(BlockingCell.java:65)
+     *         - locked <0x00000000e0947cf8> (a com.rabbitmq.utility.BlockingValueOrException)
+     *         at com.rabbitmq.utility.BlockingCell.uninterruptibleGet(BlockingCell.java:111)
+     *         - locked <0x00000000e0947cf8> (a com.rabbitmq.utility.BlockingValueOrException)
+     *         at com.rabbitmq.utility.BlockingValueOrException.uninterruptibleGetValue(BlockingValueOrException.java:37)
+     *         at com.rabbitmq.client.impl.AMQChannel$BlockingRpcContinuation.getReply(AMQChannel.java:349)
+     *         at com.rabbitmq.client.impl.ChannelN.close(ChannelN.java:543)
+     *         at com.rabbitmq.client.impl.ChannelN.close(ChannelN.java:480)
+     *         at com.rabbitmq.client.impl.ChannelN.close(ChannelN.java:473)
+     *         at com.rabbitmq.client.Channel$close.call(Unknown Source)
+     *         at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCall(CallSiteArray.java:42)
+     *         at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:108)
+     *         at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:112)
+     *         at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callSafe(AbstractCallSite.java:75)
+     *         at brooklyn.entity.messaging.rabbit.RabbitIntegrationTest.testClientConnection(RabbitIntegrationTest.groovy:107)
+     */
+    private void closeSafely(final Channel channel, int timeoutMs) throws InterruptedException {
+        if (channel == null) return;
+        Thread t = new Thread(new Runnable() {
+                @Override public void run() {
+                    try {
+                        channel.close();
+                    } catch (IOException e) {
+                        log.error("Error closing RabbitMQ Channel; continuing", e);
+                    }
+                }});
+        try {
+            t.start();
+            t.join(timeoutMs);
+            
+            if (t.isAlive()) {
+                log.error("Timeout when closing RabbitMQ Channel "+channel+"; aborting close and continuing");
+            }
+        } finally {
+            t.interrupt();
+            t.join(1*1000);
+            if (t.isAlive()) t.destroy();
         }
     }
     
