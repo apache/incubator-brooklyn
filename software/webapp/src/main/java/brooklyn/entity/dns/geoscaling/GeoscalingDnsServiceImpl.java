@@ -48,7 +48,13 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
     // and invokes the configure() method automatically?
     @Override
     public void onManagementBecomingMaster() {
-        applyConfig();
+        try {
+            applyConfig();
+        } catch (Exception e) {
+            // don't prevent management coming up
+            log.error("Geoscaling did not come up correctly: "+e, e);
+            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+        }
         super.onManagementBecomingMaster();
     }
 
