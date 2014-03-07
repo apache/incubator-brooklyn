@@ -618,9 +618,19 @@ public class Strings {
         return false;
     }
 
-    /** returns a size string using defaults from {@link ByteSizeStrings}, e.g. 23.5mb */
+    /** Returns a size string using metric suffixes from {@link ByteSizeStrings#metric()}, e.g. 23.5MB */
     public static String makeSizeString(long sizeInBytes) {
-        return new ByteSizeStrings().makeSizeString(sizeInBytes);
+        return ByteSizeStrings.metric().makeSizeString(sizeInBytes);
+    }
+
+    /** Returns a size string using ISO suffixes from {@link ByteSizeStrings#iso()}, e.g. 23.5MiB */
+    public static String makeISOSizeString(long sizeInBytes) {
+        return ByteSizeStrings.iso().makeSizeString(sizeInBytes);
+    }
+
+    /** Returns a size string using Java suffixes from {@link ByteSizeStrings#java()}, e.g. 23m */
+    public static String makeJavaSizeString(long sizeInBytes) {
+        return ByteSizeStrings.java().makeSizeString(sizeInBytes);
     }
 
     /** returns a configurable shortener */
