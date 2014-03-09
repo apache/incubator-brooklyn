@@ -154,7 +154,7 @@ public class RabbitIntegrationTest {
         } finally {
             t.interrupt();
             t.join(1*1000);
-            if (t.isAlive()) t.destroy();
+            if (t.isAlive()) t.stop();
         }
     }
     
