@@ -66,7 +66,7 @@ public class RabbitIntegrationTest {
     /**
      * Test that the broker starts up and sets SERVICE_UP correctly.
      */
-    @Test(groups = "Integration")
+    @Test(groups = {"Integration", "WIP"})
     public void canStartupAndShutdown() throws Exception {
         rabbit = app.createAndManageChild(EntitySpec.create(RabbitBroker.class));
         rabbit.start(ImmutableList.of(testLocation));
@@ -78,7 +78,7 @@ public class RabbitIntegrationTest {
     /**
      * Test that an AMQP client can connect to and use the broker.
      */
-    @Test(groups = "Integration")
+    @Test(groups = {"Integration", "WIP"})
     public void testClientConnection() throws Exception {
         rabbit = app.createAndManageChild(EntitySpec.create(RabbitBroker.class));
         rabbit.start(ImmutableList.of(testLocation));
