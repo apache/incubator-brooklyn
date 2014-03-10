@@ -189,11 +189,15 @@ define([
             } else {
                 log("ERROR submitting application: "+data.responseText)
                 var response, summary;
-                if (data.responseText) {
-                    response = JSON.parse(data.responseText)
-                    if (response) {
-                        summary = response.message;
-                    } 
+                try {
+                    if (data.responseText) {
+                        response = JSON.parse(data.responseText)
+                        if (response) {
+                            summary = response.message;
+                        } 
+                    }
+                } catch (e) {
+                    summary = data.responseText;
                 }
                 that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
                 that.steps[that.currentStep].view.showFailure(summary)
@@ -437,6 +441,7 @@ define([
             var that = this
             var tabName = $('#app-add-wizard-create-tab li[class="active"] a').attr('href')
             if (tabName=='#entitiesTab') {
+                delete this.model.spec.attributes["id"]
                 var allokay = true
                 $($.find('.editable-entity-group')).each(
                     function (i,$entityGroup) {
@@ -448,11 +453,13 @@ define([
                     return true;
                 }
             } else if (tabName=='#templateTab') {
+                delete this.model.spec.attributes["id"]
                 if (this.saveTemplate()) {
                     this.model.spec.set("entities", []);
                     return true
                 }
             } else if (tabName=='#appClassTab') {
+                delete this.model.spec.attributes["id"]
                 if (this.saveAppClass()) {
                     this.model.spec.set("entities", []);
                     return true

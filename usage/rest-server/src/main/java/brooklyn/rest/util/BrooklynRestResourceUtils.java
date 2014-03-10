@@ -220,7 +220,7 @@ public class BrooklynRestResourceUtils {
                     instance.addChild(mgmt.getEntityManager().createEntity(toCoreEntitySpec(entitySpec)));
                 }
                 
-                log.info("REST placing '{}' under management", spec.getName());
+                log.info("REST placing '{}' under management", spec.getName()!=null ? spec.getName() : spec);
                 Entities.startManagement(instance, mgmt);
                 
             } else if (Entity.class.isAssignableFrom(clazz)) {
