@@ -38,16 +38,15 @@ import com.google.common.reflect.TypeToken;
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
- *
+ * <p>
  * When quarantine is enabled:
- * <ul
- *   <li> The DynamicCluster will have a child entity named "quarantine", which is a group for nodes that failed to start correctly.
- *   <li> The DynamicCluster's other children will be all nodes in the cluster (that have not been unmanaged/deleted).
- *   <li> The DynamicCluster's members will be all live nodes in the cluster.
- *   <li> The Quarantine group's members will be all problem nodes (all nodes that failed to start correctly)
+ * <ul>
+ *   <li> The cluster will have a child entity named <em>quarantine</em>, which is a {@link Group} for nodes that failed to start correctly.
+ *   <li> The cluster's other children will be all nodes in the cluster (that have not been unmanaged/deleted).
+ *   <li> The cluster's members will be all live nodes in the cluster.
+ *   <li> The <em>quarantine</em> group's members will be any problem nodes (all nodes that failed to start correctly)
  * </ul>
- *
- * When quarantine is disabled, the DynamicCluster will not have a "quarantine" child. Nodes that fail to start will be
+ * When quarantine is disabled, the cluster will not have a <em>quarantine</em> child. Nodes that fail to start will be
  * removed from the cluster (i.e. stopped and deleted).
  */
 @ImplementedBy(DynamicClusterImpl.class)
@@ -72,6 +71,12 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
 
     MethodEffector<Entity> ADD_NODE = new MethodEffector<Entity>(DynamicCluster.class, "addNode");
 
+    MethodEffector<Collection<Entity>> GROW = new MethodEffector<Collection<Entity>>(DynamicCluster.class, "grow");
+
+    MethodEffector<Optional<Entity>> GROW_BY_ONE = new MethodEffector<Optional<Entity>>(DynamicCluster.class, "growByOne");
+
+    MethodEffector<Void> SHRINK = new MethodEffector<Void>(DynamicCluster.class, "shrink");
+
     @SetFromFlag("quarantineFailedEntities")
     ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = ConfigKeys.newBooleanConfigKey(
             "dynamiccluster.quarantineFailedEntities", "If true, will quarantine entities that fail to start; if false, will get rid of them (i.e. delete them)", true);
@@ -90,9 +95,11 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
 
     @SetFromFlag("memberSpec")
     ConfigKey<EntitySpec<?>> MEMBER_SPEC = ConfigKeys.newConfigKey(
-            new TypeToken<EntitySpec<?>>() {
-            }, "dynamiccluster.memberspec", "entity spec for creating new cluster members", null);
+            new TypeToken<EntitySpec<?>>() { },
+            "dynamiccluster.memberspec", "entity spec for creating new cluster members", null);
 
+    /** @deprecated since 0.7.0; use {@link #MEMBER_SPEC} instead. */
+    @Deprecated
     @SetFromFlag("factory")
     ConfigKey<EntityFactory> FACTORY = ConfigKeys.newConfigKey(
             EntityFactory.class, "dynamiccluster.factory", "factory for creating new cluster members", null);
@@ -151,11 +158,25 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
     Entity addNode(@EffectorParam(name="location", description="The location the node will be created in") Location location,
             @EffectorParam(name="extraFlags", description="Extra flags to use when creating the node") Map<?,?> extraFlags);
 
-    Collection<Entity> grow(int delta);
+    /**
+     * @param delta
+     */
+    @Effector(description="Increases the size of the cluster. Resturns the added entities.")
+    Collection<Entity> grow(@EffectorParam(name="delta", description="The number of nodes to add") int delta);
 
-    Optional<Entity> growByOne(Location loc, Map<?,?> extraFlags);
+    /**
+     * @param loc
+     * @param extraFlags
+     */
+    @Effector(description="Tries to increase the size of the cluster in the given location. Returns the added entity, if created.")
+    Optional<Entity> growByOne(@EffectorParam(name="location", description="The location the node will be created in") Location loc,
+            @EffectorParam(name="extraFlags", description="Extra flags to use when creating the node") Map<?,?> extraFlags);
 
-    void shrink(int delta);
+    /**
+     * @param delta
+     */
+    @Effector(description="Reduces the size of the cluster.")
+    void shrink(@EffectorParam(name="delta", description="The number of nodes to remove") int delta);
 
     void setRemovalStrategy(Function<Collection<Entity>, Entity> val);
 
@@ -165,5 +186,7 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
 
     void setMemberSpec(EntitySpec<?> memberSpec);
 
+    /** @deprecated since 0.7.0; use {@link #setMemberSpec(EntitySpec)} */
+    @Deprecated
     void setFactory(EntityFactory<?> factory);
 }

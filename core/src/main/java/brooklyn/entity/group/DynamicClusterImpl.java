@@ -124,6 +124,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getConfig(MEMBER_SPEC);
     }
 
+    /** @deprecated since 0.7.0; use {@link #getMemberSpec()} */
+    @Deprecated
     protected EntityFactory<?> getFactory() {
         return getConfig(FACTORY);
     }
@@ -133,6 +135,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         setConfigEvenIfOwned(MEMBER_SPEC, memberSpec);
     }
 
+    /** @deprecated since 0.7.0; use {@link #setMemberSpec(EntitySpec)} */
+    @Deprecated
     @Override
     public void setFactory(EntityFactory<?> factory) {
         setConfigEvenIfOwned(FACTORY, factory);
