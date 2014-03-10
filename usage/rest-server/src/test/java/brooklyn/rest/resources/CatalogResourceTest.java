@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.testng.reporters.Files;
 
@@ -30,6 +31,13 @@ import com.sun.jersey.api.client.GenericType;
 public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogResourceTest.class);
+
+    @BeforeClass(alwaysRun=true)
+    @Override
+    public void setUp() throws Exception {
+        useLocalScannedCatalog();
+        super.setUp();
+    }
     
   @Override
   protected void setUpResources() throws Exception {

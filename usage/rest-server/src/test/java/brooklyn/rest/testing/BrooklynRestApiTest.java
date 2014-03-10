@@ -16,6 +16,7 @@ import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.DefaultExceptionMapper;
 import brooklyn.rest.util.NullHttpServletRequestProvider;
 import brooklyn.rest.util.NullServletConfigProvider;
+import brooklyn.test.entity.LocalManagementContextForTests;
 
 import com.yammer.dropwizard.testing.ResourceTest;
 
@@ -23,10 +24,22 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
 
     private ManagementContext manager;
     
+    protected boolean useLocalScannedCatalog = false;
+    
+    protected synchronized void useLocalScannedCatalog() {
+        if (manager!=null && !useLocalScannedCatalog)
+            throw new IllegalStateException("useLocalScannedCatalog must be specified before manager is accessed/created");
+        useLocalScannedCatalog = true;
+    }
+    
     protected synchronized ManagementContext getManagementContext() {
         if (manager==null) {
-            manager = new LocalManagementContext();
-            BrooklynRestApiLauncherTest.forceUseOfDefaultCatalogWithJavaClassPath(manager);
+            if (useLocalScannedCatalog) {
+                manager = new LocalManagementContext();
+                BrooklynRestApiLauncherTest.forceUseOfDefaultCatalogWithJavaClassPath(manager);
+            } else {
+                manager = new LocalManagementContextForTests();
+            }
             BasicLocationRegistry.setupLocationRegistryForTesting(manager);
             
             new BrooklynCampPlatformLauncherNoServer()
