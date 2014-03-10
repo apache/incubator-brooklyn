@@ -91,17 +91,17 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.jclouds.driver</groupId>
+            <groupId>${jclouds.groupId}.driver</groupId>
             <artifactId>jclouds-joda</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.jclouds.driver</groupId>
+            <groupId>${jclouds.groupId}.driver</groupId>
             <artifactId>jclouds-netty</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.jclouds.driver</groupId>
+            <groupId>${jclouds.groupId}.driver</groupId>
             <artifactId>jclouds-enterprise</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
