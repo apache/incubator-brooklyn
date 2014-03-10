@@ -132,7 +132,7 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
 
     @SetFromFlag("numAvailabilityZones")
     ConfigKey<Integer> NUM_AVAILABILITY_ZONES = ConfigKeys.newIntegerConfigKey(
-            "dynamiccluster.numAvailabilityZones", "number of availability zones to use (will attempt to auto-discover this number)", 3);
+            "dynamiccluster.numAvailabilityZones", "number of availability zones to use (will attempt to auto-discover this number)");
 
     AttributeSensor<List<Location>> SUB_LOCATIONS = new BasicAttributeSensor<List<Location>>(
             new TypeToken<List<Location>>() {},

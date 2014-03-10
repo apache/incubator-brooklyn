@@ -235,37 +235,37 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
 
     protected List<Location> findSubLocations(Location loc) {
+        if (!loc.hasExtension(AvailabilityZoneExtension.class)) {
+            throw new IllegalStateException("Availability zone extension not supported for location " + loc);
+        }
+
+        AvailabilityZoneExtension zoneExtension = loc.getExtension(AvailabilityZoneExtension.class);
+
         Collection<String> zoneNames = getConfig(AVAILABILITY_ZONE_NAMES);
         Integer numZones = getConfig(NUM_AVAILABILITY_ZONES);
 
-        if (loc.hasExtension(AvailabilityZoneExtension.class)) {
-            AvailabilityZoneExtension zoneExtension = loc.getExtension(AvailabilityZoneExtension.class);
-            List<Location> subLocations;
+        List<Location> subLocations;
+        if (zoneNames == null || zoneNames.isEmpty()) {
+            subLocations = zoneExtension.getSubLocations(numZones);
 
-            if (zoneNames == null || zoneNames.isEmpty()) {
+            if (numZones != null) {
                 checkArgument(numZones > 0, "numZones must be greater than zero: %s", numZones);
-                subLocations = zoneExtension.getSubLocations(numZones);
-
                 if (numZones > subLocations.size()) {
                     throw new IllegalStateException("Number of required zones (" + numZones + ") not satisfied in " + loc
                             + "; only " + subLocations.size() + " available: " + subLocations);
                 }
-            } else {
-                // TODO check that these are valid region / availabilityZones?
-                subLocations = zoneExtension.getSubLocationsByName(StringPredicates.equalToAny(zoneNames), zoneNames.size());
-
-                if (zoneNames.size() > subLocations.size()) {
-                    throw new IllegalStateException("Number of required zones (" + zoneNames.size() + " - " + zoneNames
-                            + ") not satisfied in " + loc + "; only " + subLocations.size() + " available: " + subLocations);
-                }
             }
-
-            return subLocations;
-
         } else {
-            throw new IllegalStateException("Availability zones (extension " + AvailabilityZoneExtension.class
-                    + ") not supported for location " + loc);
+            // TODO check that these are valid region / availabilityZones?
+            subLocations = zoneExtension.getSubLocationsByName(StringPredicates.equalToAny(zoneNames), zoneNames.size());
+
+            if (zoneNames.size() > subLocations.size()) {
+                throw new IllegalStateException("Number of required zones (" + zoneNames.size() + " - " + zoneNames
+                        + ") not satisfied in " + loc + "; only " + subLocations.size() + " available: " + subLocations);
+            }
         }
+
+        return subLocations;
     }
 
     @Override
