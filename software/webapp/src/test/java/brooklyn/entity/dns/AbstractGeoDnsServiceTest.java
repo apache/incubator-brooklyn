@@ -160,6 +160,7 @@ public class AbstractGeoDnsServiceTest {
     @Test
     public void testGeoInfoOnLocation() {
         app.start( ImmutableList.of(westChildWithLocation, eastChildWithLocationAndWithPrivateHostname) );
+        publishSensors(true, true, true);
         
         EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         assertTrue(geoDns.getTargetHostsByName().containsKey("West child with location"), "targets="+geoDns.getTargetHostsByName());
@@ -169,6 +170,7 @@ public class AbstractGeoDnsServiceTest {
     @Test
     public void testGeoInfoOnParentLocation() {
         app.start( ImmutableList.of(westChild, eastChild) );
+        publishSensors(true, false, false);
         
         EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         assertTrue(geoDns.getTargetHostsByName().containsKey("West child"), "targets="+geoDns.getTargetHostsByName());
@@ -180,7 +182,7 @@ public class AbstractGeoDnsServiceTest {
         ((EntityInternal)geoDns).setConfig(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname) );
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 0);
-        publishHostnameAndAttributeSensors();
+        publishSensors(true, true, true);
         
         EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 2);
@@ -188,23 +190,29 @@ public class AbstractGeoDnsServiceTest {
         assertTrue(geoDns.getTargetHostsByName().containsKey("East child with location"), "targets="+geoDns.getTargetHostsByName());
     }
 
-    protected void publishHostnameAndAttributeSensors() {
+    protected void publishSensors(boolean includeServiceUp, boolean includeHostname, boolean includeAddress) {
         for (Entity e: testEntities.getMembers()) {
+            if (includeServiceUp)
+                ((EntityInternal)e).setAttribute(Attributes.SERVICE_UP, true);
+            
             SshMachineLocation l = Machines.findUniqueSshMachineLocation(e.getLocations()).get();
-            ((EntityInternal)e).setAttribute(Attributes.ADDRESS, l.getAddress().getHostAddress());
+            if (includeAddress)
+                ((EntityInternal)e).setAttribute(Attributes.ADDRESS, l.getAddress().getHostAddress());
             String h = (String) l.getAllConfigBag().getStringKey("hostname");
             if (h==null) h = l.getAddress().getHostName();
-            ((EntityInternal)e).setAttribute(Attributes.HOSTNAME, h);
+            if (includeHostname)
+                ((EntityInternal)e).setAttribute(Attributes.HOSTNAME, h);
         }
     }
     
     @Test
     public void testChildAddedLate() {
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname) );
+        publishSensors(true, false, false);
         EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         
         String id3 = fabric.addRegion("test:north");
-        ((EntityInternal)managementContext.getEntityManager().getEntity(id3)).setAttribute(Attributes.SERVICE_UP, true);
+        publishSensors(true, false, false);
         try {
             EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(3));
         } catch (Throwable e) {
@@ -222,7 +230,7 @@ public class AbstractGeoDnsServiceTest {
         ((EntityInternal)geoDns).setConfig(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname, northChildWithLocation) );
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 0);
-        publishHostnameAndAttributeSensors();
+        publishSensors(true, true, true);
         
         EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 2);
