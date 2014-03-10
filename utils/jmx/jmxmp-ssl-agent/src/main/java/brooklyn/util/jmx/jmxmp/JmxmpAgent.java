@@ -98,7 +98,21 @@ public class JmxmpAgent {
         doMain(agentArgs);
     }
     
-    public static void doMain(String agentArgs) {
+    public static void doMain(final String agentArgs) {
+        // do the work in a daemon thread so that if the main class terminates abnormally,
+        // such that shutdown hooks aren't called, we don't keep the application running
+        // (e.g. if the app is compiled with java7 then run with java6, with a java6 agent here;
+        // that causes the agent to launch, the main to fail, but the process to keep going)
+        Thread t = new Thread() {
+            public void run() {
+                doMainForeground(agentArgs);
+            }
+        };
+        t.setDaemon(true);
+        t.start();
+    }
+
+    public static void doMainForeground(String agentArgs) {
         final List<JMXConnectorServer> connectors = new JmxmpAgent().startConnectors(System.getProperties());
         if (!connectors.isEmpty()) {
             Runtime.getRuntime().addShutdownHook(new Thread("jmxmp-agent-shutdownHookThread") {
@@ -113,7 +127,7 @@ public class JmxmpAgent {
                 }});
         }
     }
-    
+
     public List<JMXConnectorServer> startConnectors(Properties properties) {
         List<JMXConnectorServer> connectors = new ArrayList<JMXConnectorServer>();
         addIfNotNull(startJmxmpConnector(properties), connectors);
