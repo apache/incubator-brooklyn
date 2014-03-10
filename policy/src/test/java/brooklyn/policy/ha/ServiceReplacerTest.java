@@ -33,7 +33,6 @@ import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Predicate;
@@ -226,7 +225,7 @@ public class ServiceReplacerTest {
             EntityInternal entity = (EntityInternal) Iterables.get(initialMembers, i);
             entity.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(entity, "simulate failure"));
             if (i <= 3) {
-                Asserts.succeedsEventually(MutableMap.of("timeout", 3000), new Runnable() {
+                Asserts.succeedsEventually(new Runnable() {
                     @Override public void run() {
                         Set<FailingEntity> all = ImmutableSet.copyOf(Iterables.filter(managementContext.getEntityManager().getEntities(), FailingEntity.class));
                         Set<FailingEntity> replacements = Sets.difference(all, initialMembers);
