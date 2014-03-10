@@ -67,7 +67,7 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
                         return status == Status.RUNNING;
                     }
                 })
-                .every(10, TimeUnit.SECONDS)
+                .every(100, TimeUnit.MILLISECONDS)
                 .limitTimeTo(3, TimeUnit.MINUTES)
                 .run();
         assertTrue(started);
