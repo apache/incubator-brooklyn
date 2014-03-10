@@ -1,6 +1,5 @@
 package brooklyn.entity.rebind.persister;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
@@ -60,19 +59,19 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
 //        this.serializer = new JsonMementoSerializer(classLoader);
         this.serializer = new RetryingMementoSerializer<Object>(rawSerializer, MAX_SERIALIZATION_ATTEMPTS);
         
-        checkArgument(dir.isDirectory() && dir.canWrite(), "dir "+dir+" is not a writable directory");
+        checkDirIsAccessible(dir);
         
         entitiesDir = new File(dir, "entities");
         entitiesDir.mkdir();
-        checkArgument(entitiesDir.isDirectory() && entitiesDir.canWrite(), "dir "+entitiesDir+" is not a writable directory");
+        checkDirIsAccessible(entitiesDir);
         
         locationsDir = new File(dir, "locations");
         locationsDir.mkdir();
-        checkArgument(locationsDir.isDirectory() && locationsDir.canWrite(), "dir "+locationsDir+" is not a writable directory");
+        checkDirIsAccessible(locationsDir);
         
         policiesDir = new File(dir, "policies");
         policiesDir.mkdir();
-        checkArgument(policiesDir.isDirectory() && policiesDir.canWrite(), "dir "+policiesDir+" is not a writable directory");
+        checkDirIsAccessible(policiesDir);
         
         this.executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
         
@@ -200,6 +199,16 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         }
         for (MementoFileWriter<?> writer : policyWriters.values()) {
             writer.waitForWriteCompleted(timeout, unit);
+        }
+    }
+
+    protected void checkDirIsAccessible(File dir) {
+        if (!(dir.exists() && dir.isDirectory() && dir.canRead() && dir.canWrite())) {
+            throw new IllegalStateException("Invalid directory "+dir+" because "+
+                    (!dir.exists() ? "does not exist" :
+                        (!dir.isDirectory() ? "not a directory" :
+                            (!dir.canRead() ? "not readable" :
+                                (!dir.canWrite() ? "not writable" : "unknown reason")))));
         }
     }
 
