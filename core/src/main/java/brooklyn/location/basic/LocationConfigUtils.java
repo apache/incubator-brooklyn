@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.os.Os;
@@ -135,6 +137,7 @@ public class LocationConfigUtils {
         return value1;
     }
     
+    @SuppressWarnings("unchecked")
     private static <T> T getConfigCheckingDeprecatedAlternativesInternal(ConfigBag configBag, ConfigKey<T> preferredKey,
             ConfigKey<?> ...deprecatedKeys) {
         ConfigKey<?> keyProvidingValue = null;
@@ -192,8 +195,8 @@ public class LocationConfigUtils {
         for (Object source: sourcesForOriginalSpec) {
             if (source instanceof CharSequence) originalSpec = source.toString();
             else if (source instanceof Map) {
-                if (originalSpec==null) originalSpec = Strings.toString( ((Map)source).get(LocationInternal.ORIGINAL_SPEC) );
-                if (originalSpec==null) originalSpec = Strings.toString( ((Map)source).get(LocationInternal.ORIGINAL_SPEC.getName()) );
+                if (originalSpec==null) originalSpec = Strings.toString( ((Map<?,?>)source).get(LocationInternal.ORIGINAL_SPEC) );
+                if (originalSpec==null) originalSpec = Strings.toString( ((Map<?,?>)source).get(LocationInternal.ORIGINAL_SPEC.getName()) );
             }
             if (originalSpec!=null) break; 
         }
@@ -203,5 +206,13 @@ public class LocationConfigUtils {
         
         return result;
     }
+
+    public static boolean isEnabled(ManagementContext mgmt, String prefix) {
+        ConfigKey<Boolean> key = ConfigKeys.newConfigKeyWithPrefix(prefix+".", LocationConfigKeys.ENABLED);
+        Boolean enabled = mgmt.getConfig().getConfig(key);
+        if (enabled!=null) return enabled.booleanValue();
+        return true;
+    }
+    
 
 }

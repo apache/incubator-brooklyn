@@ -22,6 +22,7 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
+import brooklyn.location.LocationResolver.EnableableLocationResolver;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -68,9 +69,17 @@ public class BasicLocationRegistry implements LocationRegistry {
         if (resolvers.isEmpty()) log.warn("No location resolvers detected: is src/main/resources correctly included?");
     }
 
-    public void registerResolver(LocationResolver r) {
+    /** Registers the given resolver, invoking {@link LocationResolver#init(ManagementContext)} on the argument
+     * and returning true, unless the argument indicates false for {@link EnableableLocationResolver#isEnabled()} */
+    public boolean registerResolver(LocationResolver r) {
         r.init(mgmt);
+        if (r instanceof EnableableLocationResolver) {
+            if (!((EnableableLocationResolver)r).isEnabled()) {
+                return false;
+            }
+        }
         resolvers.put(r.getPrefix(), r);
+        return true;
     }
     
     @Override
@@ -132,7 +141,8 @@ public class BasicLocationRegistry implements LocationRegistry {
             }
             if (log.isDebugEnabled())
                 log.debug("Found "+count+" defined locations from properties (*.named.* syntax): "+definedLocations.values());
-            if (getDefinedLocationByName("localhost")==null && !BasicOsDetails.Factory.newLocalhostInstance().isWindows()) {
+            if (getDefinedLocationByName("localhost")==null && !BasicOsDetails.Factory.newLocalhostInstance().isWindows()
+                    && LocationConfigUtils.isEnabled(mgmt, "brooklyn.location.localhost")) {
                 log.debug("Adding a defined location for localhost");
                 // add 'localhost' *first*
                 ImmutableMap<String, LocationDefinition> oldDefined = ImmutableMap.copyOf(definedLocations);
