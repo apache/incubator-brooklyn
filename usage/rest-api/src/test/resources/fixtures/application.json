@@ -1,4 +1,5 @@
 {
+    "id":"myapp_id",
     "spec":{
         "name":"myapp",
         "entities":[

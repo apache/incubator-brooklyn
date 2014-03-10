@@ -10,6 +10,7 @@ define([
     Application.Spec = Backbone.Model.extend({
         defaults:function () {
             return {
+                id:null,
                 name:"",
                 type:null,
                 entities:null,
@@ -99,13 +100,14 @@ define([
     Application.Model = Backbone.Model.extend({
         defaults:function () {
             return{
+                id:null,
                 spec:{},
                 status:"UNKNOWN",
                 links:{}
             }
         },
         initialize:function () {
-            this.id = this.get("spec")["name"]
+            this.id = this.get("id")
         },
         getSpec:function () {
             return new Application.Spec(this.get('spec'))
