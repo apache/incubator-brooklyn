@@ -310,7 +310,8 @@ public class BasicLocationRegistry implements LocationRegistry {
         try {
             return resolve(ld.getSpec(), newLocationFlags.getAllConfig());
         } catch (Exception e) {
-            throw new IllegalStateException("Cannot instantiate named location '"+optionalName+"' pointing at "+ld.getSpec()+": "+e, e);
+            throw new IllegalStateException("Cannot instantiate location '"+
+                (optionalName!=null ? optionalName : ld)+"' pointing at "+ld.getSpec()+": "+e, e);
         }
     }
 
