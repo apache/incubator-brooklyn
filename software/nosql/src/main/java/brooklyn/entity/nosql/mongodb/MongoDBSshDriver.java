@@ -117,7 +117,7 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     @Override
     public boolean isRunning() {
-        Map<?,?> flags = ImmutableMap.of("usePidFile", getPidFile());
+        Map<String, ?> flags = ImmutableMap.of("usePidFile", getPidFile());
         return newScript(flags, CHECK_RUNNING).execute() == 0;
     }
 

@@ -16,28 +16,28 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
-
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 
 /**
  * An abstract SSH implementation of the {@link AbstractSoftwareProcessDriver}.
@@ -358,40 +358,92 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return result;
     }
 
-    protected final static String INSTALLING = "installing";
-    protected final static String CUSTOMIZING = "customizing";
-    protected final static String LAUNCHING = "launching";
-    protected final static String CHECK_RUNNING = "check-running";
-    protected final static String STOPPING = "stopping";
-    protected final static String KILLING = "killing";
-    protected final static String RESTARTING = "restarting";
-    
-    /* flags */
-    
-    /** specify as a flag to use a PID file, creating for 'start', and reading it for 'status', 'start';
-     * value can be true, or a path to a pid file to use (either relative to RUN_DIR, or an absolute path) */
-    protected final static String USE_PID_FILE = "usePidFile";
-    
-    public final static String PID_FILENAME = "pid.txt";
+    public static final String INSTALLING = "installing";
+    public static final String CUSTOMIZING = "customizing";
+    public static final String LAUNCHING = "launching";
+    public static final String CHECK_RUNNING = "check-running";
+    public static final String STOPPING = "stopping";
+    public static final String KILLING = "killing";
+    public static final String RESTARTING = "restarting";
 
-    /** specify as a flag to define the process owner if not the same as the brooklyn user; 'stop' and
-     * 'kill' will sudo to this user before issuing the 'kill' command (only valid if USE_PID_FILE set) */
-    protected final static String PROCESS_OWNER = "processOwner";
+    public static final String PID_FILENAME = "pid.txt";
 
-    /** sets up a script for the given phase, including default wrapper commands
-     * (e.g. INSTALLING, LAUNCHING, etc)
-     * <p>
-     * flags supported include:
-     * - usePidFile: true, or a filename, meaning to create (for launching) that pid
-     * - processOwner: the user that owns the running process
-     * @param phase
+    /* Flags */
+
+    /**
+     * Use a PID file, created by <em>launching</em>, and reading it for <em>check-running</em>,
+     * <em>stopping</em> and <em>killing</em>. The value can be <em>true</em> or a path to a file to
+     * use; either relative to <em>RUN_DIR</em> or an absolute path.
      */
+    public static final String USE_PID_FILE = "usePidFile";
+
+    /**
+     * Define the process owner if not the same as the brooklyn user. Both <em>stopping</em> and
+     * <em>killing</em> will sudo to this user before issuing the <code>kill</code> command. Only valid
+     * if <em>USE_PID_FILE</em> is also set.
+     */
+    public static final String PROCESS_OWNER = "processOwner";
+
+    /**
+     * Marks the script as having a customised setup, to prevent the default headers and footers being
+     * added to the list of commands.
+     */
+    public static final String NON_STANDARD_LAYOUT = "nonStandardLayout";
+
+    /**
+     * Prevents creation of the <code>$INSTALL_DIR/BROOKLYN</code> marker file after <em>installing</em>
+     * phase finishes, to allow further installation phases to execute.
+     */
+    public static final String INSTALL_INCOMPLETE = "installIncomplete";
+
+    /**
+     * Enable shell debugging output via <code>set -x</code> prepended to the command header.
+     */
+    public static final String DEBUG = "debug";
+
+    /** Permitted flags for {@link #newScript(Map, String)}. */
+    public static final List<String> VALID_FLAGS =
+            ImmutableList.of(USE_PID_FILE, PROCESS_OWNER, NON_STANDARD_LAYOUT, INSTALL_INCOMPLETE, DEBUG);
+
+    /** @see #newScript(Map, String) */
     protected ScriptHelper newScript(String phase) {
-        return newScript(Maps.newLinkedHashMap(), phase);
+        return newScript(Maps.<String, Object>newLinkedHashMap(), phase);
     }
-    protected ScriptHelper newScript(Map<?,?> flags, String phase) {
+
+    /**
+     * Sets up a {@link ScriptHelper} to generate a script that controls the given phase
+     * (<em>check-running</em>, <em>launching</em> etc.) including default header and
+     * footer commands.
+     * <p>
+     * Supported flags:
+     * <ul>
+     * <li><strong>usePidFile</strong> - <em>true</em> or <em>filename</em> to save and retrieve the PID
+     * <li><strong>processOwner</strong> - <em>username</em> that owns the running process
+     * <li><strong>nonStandardLayout</strong> - <em>true</em> to omit all default commands
+     * <li><strong>installIncomplete</strong> - <em>true</em> to prevent marking complete
+     * <li><strong>debug</strong> - <em>true</em> to enable shell debug output
+     * </li>
+     *
+     * @param flags a {@link Map} of flags to control script generation
+     * @param phase the phase to create the ScriptHelper for
+     *
+     * @see #newScript(String)
+     * @see #USE_PID_FILE
+     * @see #PROCESS_OWNER
+     * @see #NON_STANDARD_LAYOUT
+     * @see #INSTALL_INCOMPLETE
+     * @see #DEBUG
+     */
+    protected ScriptHelper newScript(Map<String, ?> flags, String phase) {
+        if (!Iterables.all(flags.keySet(), StringPredicates.equalToAny(VALID_FLAGS))) {
+            throw new IllegalArgumentException("Invalid flags passed: " + flags);
+        }
+
         ScriptHelper s = new ScriptHelper(this, phase+" "+elvis(entity,this));
-        if (!truth(flags.get("nonStandardLayout"))) {
+        if (!truth(flags.get(NON_STANDARD_LAYOUT))) {
+            if (truth(flags.get(DEBUG))) {
+                s.header.prepend("set -x");
+            }
             if (INSTALLING.equals(phase)) {
                 // mutexId should be global because otherwise package managers will contend with each other 
                 s.useMutex(getLocation(), "installing", "installing "+elvis(entity,this));
@@ -402,7 +454,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                         "test -f BROOKLYN && exit 0"
                         );
 
-                if (!truth(flags.get("installIncomplete"))) {
+                if (!truth(flags.get(INSTALL_INCOMPLETE))) {
                     s.footer.append("date > $INSTALL_DIR/BROOKLYN");
                 }
             }
@@ -416,7 +468,6 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
 
         if (ImmutableSet.of(LAUNCHING, RESTARTING).contains(phase)) {
-            // stopping and killing allowed to have empty body if pid file set
             s.failIfBodyEmpty();
         }
         if (ImmutableSet.of(STOPPING, KILLING).contains(phase)) {
@@ -435,15 +486,16 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
 
         if (truth(flags.get(USE_PID_FILE))) {
-            String pidFile = (flags.get(USE_PID_FILE) instanceof CharSequence ? flags.get(USE_PID_FILE) : getRunDir()+"/"+PID_FILENAME).toString();
+            Object usePidFile = flags.get(USE_PID_FILE);
+            String pidFile = (usePidFile instanceof CharSequence ? usePidFile : Os.mergePaths(getRunDir(), PID_FILENAME)).toString();
             String processOwner = (String) flags.get(PROCESS_OWNER);
             if (LAUNCHING.equals(phase)) {
                 entity.setAttribute(SoftwareProcess.PID_FILE, pidFile);
                 s.footer.prepend("echo $! > "+pidFile);
             } else if (CHECK_RUNNING.equals(phase)) {
-                //old method, for supplied service, or entity.id
-                //"ps aux | grep ${service} | grep \$(cat ${pidFile}) > /dev/null"
-                //new way, preferred?
+                // old method, for supplied service, or entity.id
+                // "ps aux | grep ${service} | grep \$(cat ${pidFile}) > /dev/null"
+                // new way, preferred?
                 if (processOwner != null) {
                     s.body.append(
                             BashCommands.sudoAsUser(processOwner, "test -f "+pidFile) + " || exit 1",
@@ -505,7 +557,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                 }
                 // no pid, not running; no process; can't restart, 1 is not running
             } else {
-                log.warn(USE_PID_FILE+": script option not valid for "+s.summary);
+                log.warn(USE_PID_FILE + ": script option not valid for " + s.summary);
             }
         }
 
