@@ -153,6 +153,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
 
+    public static final ConfigKey<Boolean> CLOSE_CONNECTION = ConfigKeys.newBooleanConfigKey("close", "Close the SSH connection after use", false);
+    public static final ConfigKey<String> UNIQUE_ID = ConfigKeys.newStringConfigKey("unique", "Unique ID for the SSH connection");
+
     /**
      * Specifies config keys where a change in the value does not require a new SshTool instance,
      * i.e. they can be specified per command on the tool
@@ -379,16 +382,34 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return getConfig(SshTool.PROP_PORT);
     }
 
-    protected <T> T execSsh(Map<String, ?> props, Function<ShellTool, T> task) {
+    protected <T> T execSsh(Map<String, ?> props, final Function<ShellTool, T> task) {
         if (sshPoolCache == null) {
             // required for uses that instantiate SshMachineLocation directly, so init() will not have been called
             sshPoolCache = buildSshToolPoolCacheLoader();
         }
-        Pool<SshTool> pool = sshPoolCache.getUnchecked(props);
+        final Pool<SshTool> pool = sshPoolCache.getUnchecked(props);
         if (LOG.isTraceEnabled()) {
             LOG.trace("{} execSsh got pool: {}", this, pool);
         }
-        return pool.exec(task);
+
+        if (truth(props.get(CLOSE_CONNECTION.getName()))) {
+            LOG.info("{} invalidating SSH connection cache entries for: {}", new Object[] { SshMachineLocation.this, props });
+            Function<SshTool, T> close = new Function<SshTool, T>() {
+                @Override
+                public T apply(SshTool input) {
+                    T result = task.apply(input);
+                    LOG.info("{} closing SSH connection {} from pool: {}", new Object[] { SshMachineLocation.this, input, pool });
+                    input.disconnect();
+                    return result;
+                }
+            };
+            T result = pool.exec(close);
+            sshPoolCache.invalidate(props);
+            sshPoolCache.cleanUp();
+            return result;
+        } else {
+            return pool.exec(task);
+        }
     }
 
     protected SshTool connectSsh() {

@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
@@ -29,6 +30,7 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
@@ -51,6 +53,7 @@ public class ScriptHelper {
     protected Predicate<? super ScriptHelper> executionCheck = Predicates.alwaysTrue();
     
     protected boolean isTransient = false;
+    protected boolean closeSshConnection = false;
     protected boolean gatherOutput = false;
     protected ByteArrayOutputStream stdout, stderr;
     protected Task<Integer> task;
@@ -206,6 +209,18 @@ public class ScriptHelper {
         return this;
     }
     
+    /** The connection should be closed and disconnected once the commands have executed. */
+    public ScriptHelper closeSshConnection() {
+        closeSshConnection = true;
+        return this;
+    }
+    
+    /** Unique ID for the command execution; ensures new SSH connection from the pool. */
+    public ScriptHelper uniqueSshConnection() {
+        setFlag("unique", Identifiers.makeRandomBase64Id(32));
+        return this;
+    }
+    
     /** indicates explicitly that the task can be safely forgotten about after it runs; useful for things like
      * check_running which run repeatedly */
     public void setTransient() {
@@ -277,6 +292,9 @@ public class ScriptHelper {
         try {
             mutexAcquire.run();
             Map flags = getFlags();
+            if (closeSshConnection) {
+                flags.put("close", true);
+            }
             if (gatherOutput) {
                 if (stdout==null) stdout = new ByteArrayOutputStream();
                 if (stderr==null) stderr = new ByteArrayOutputStream();
