@@ -265,6 +265,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             }
         }
 
+        LOG.info("Returning {} sub-locations: {}", subLocations.size(), Iterables.toString(subLocations));
         return subLocations;
     }
 
@@ -313,6 +314,11 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getCurrentSize();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}.
+     */
     @Override
     public String replaceMember(String memberId) {
         Entity member = getEntityManager().getEntity(memberId);
@@ -414,9 +420,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
 
     /**
-     * Increases the cluster size by the given number.
+     * {@inheritDoc}
      *
-     * @return successfully added nodes
+     * <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}.
      */
     @Override
     public Collection<Entity> grow(int delta) {
@@ -478,9 +484,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
 
     /**
-     * Increases the cluster size by one.
+     * {@inheritDoc}
      *
-     * @return successfully added node.
+     * <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}.
      */
     @Override
     public Optional<Entity> growByOne(Location loc, Map<?,?> extraFlags) {
@@ -519,7 +525,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
 
     /**
-     * Decreases the cluster size by the given number.
+     * {@inheritDoc}
+     *
+     * <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}.
      */
     @Override
     public void shrink(int delta) {
@@ -598,6 +606,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getConfig(CUSTOM_CHILD_FLAGS);
     }
 
+    /** {@inheritDoc} */
     @Override
     public Entity addNode(Location loc, Map<?,?> extraFlags) {
         Map<?,?> creation = MutableMap.builder().putAll(getCustomChildFlags()).putAll(extraFlags).build();
