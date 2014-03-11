@@ -42,8 +42,9 @@ public abstract class AbstractAvailabilityZoneExtension implements AvailabilityZ
         }
         return Collections.<Location>unmodifiableList(result);
     }
-    
-    protected List<Location> getAllSubLocations() {
+
+    @Override
+    public List<Location> getAllSubLocations() {
         synchronized (mutex) {
             if (subLocations.get() == null) {
                 List<Location> result = doGetAllSubLocations();
@@ -52,11 +53,11 @@ public abstract class AbstractAvailabilityZoneExtension implements AvailabilityZ
         }
         return subLocations.get();
     }
-    
+
     /**
-     * Note called while holding mutex, so do not call code that will result in deadlock!
-     * TODO: bad pattern, as this will likely call alien code (such as asking cloud provider?!)
+     * <strong>Note</strong> this method can be called while synchronized on {@link #mutex}.
      */
+    // TODO bad pattern, as this will likely call alien code (such as asking cloud provider?!)
     protected abstract List<Location> doGetAllSubLocations();
 
     protected abstract boolean isNameMatch(Location loc, Predicate<? super String> namePredicate);

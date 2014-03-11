@@ -246,14 +246,16 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
         List<Location> subLocations;
         if (zoneNames == null || zoneNames.isEmpty()) {
-            subLocations = zoneExtension.getSubLocations(numZones);
-
             if (numZones != null) {
+                subLocations = zoneExtension.getSubLocations(numZones);
+
                 checkArgument(numZones > 0, "numZones must be greater than zero: %s", numZones);
                 if (numZones > subLocations.size()) {
                     throw new IllegalStateException("Number of required zones (" + numZones + ") not satisfied in " + loc
                             + "; only " + subLocations.size() + " available: " + subLocations);
                 }
+            } else {
+                subLocations = zoneExtension.getAllSubLocations();
             }
         } else {
             // TODO check that these are valid region / availabilityZones?
