@@ -19,6 +19,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
@@ -41,7 +42,7 @@ public class SoftwareProcessEntityTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext();
+        managementContext = new LocalManagementContextForTests();
         machine = new SshMachineLocation(MutableMap.of("address", "localhost"));
         loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(MutableMap.of("machines", ImmutableList.of(machine)));
         Entities.manage(loc, managementContext);

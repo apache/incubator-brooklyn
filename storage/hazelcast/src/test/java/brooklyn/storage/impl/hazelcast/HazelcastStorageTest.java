@@ -22,6 +22,7 @@ import brooklyn.util.collections.MutableList;
 
 import com.hazelcast.core.Hazelcast;
 
+@Test(groups="Integration")
 public class HazelcastStorageTest {
 
     private LocalManagementContext managementContext;
