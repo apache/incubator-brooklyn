@@ -27,7 +27,7 @@ public interface MongoDBShardedDeployment extends Entity, Startable {
     
     @SetFromFlag("shardReplicaSetSize")
     ConfigKey<Integer> SHARD_REPLICASET_SIZE = ConfigKeys.newIntegerConfigKey("mongodb.shard.replicaset.size", 
-            "Number of servers (mongod) in each shard (replicaset)", 2);
+            "Number of servers (mongod) in each shard (replicaset)", 3);
     
     @SetFromFlag("routerUpTimeout")
     ConfigKey<Duration> ROUTER_UP_TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "mongodb.router.up.timeout", 
