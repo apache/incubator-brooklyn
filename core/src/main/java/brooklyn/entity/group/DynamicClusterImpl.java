@@ -609,33 +609,31 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     /** {@inheritDoc} */
     @Override
     public Entity addNode(Location loc, Map<?,?> extraFlags) {
-        Map<?,?> creation = MutableMap.builder().putAll(getCustomChildFlags()).putAll(extraFlags).build();
-        if (LOG.isDebugEnabled()) LOG.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] {this, getId(), creation});
+        Map<?,?> createFlags = MutableMap.builder()
+                .putAll(getCustomChildFlags())
+                .putAll(extraFlags)
+                .build();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] { this, getId(), createFlags });
+        }
 
-        Entity entity = createNode(loc, creation);
+        Entity entity = createNode(loc, createFlags);
         Entities.manage(entity);
         addMember(entity);
         return entity;
     }
 
     protected Entity createNode(@Nullable Location loc, Map<?,?> flags) {
-        return createNode(flags);
-    }
-
-    /**
-     * @deprecated since 0.6; use {@link #createNode(Location, Map)}, so can take that location into account when configuring node
-     */
-    protected Entity createNode(Map<?,?> flags) {
         EntitySpec<?> memberSpec = getMemberSpec();
         if (memberSpec != null) {
-            return addChild(EntitySpec.create(memberSpec).configure(flags));
+            return addChild(EntitySpec.create(memberSpec).configure(flags).location(loc));
         }
 
         EntityFactory<?> factory = getFactory();
         if (factory == null) {
             throw new IllegalStateException("No member spec nor entity factory supplied for dynamic cluster "+this);
         }
-        EntityFactory<?> factoryToUse = (factory instanceof EntityFactoryForLocation) ? ((EntityFactoryForLocation<?>)factory).newFactoryForLocation(getLocation()) : factory;
+        EntityFactory<?> factoryToUse = (factory instanceof EntityFactoryForLocation) ? ((EntityFactoryForLocation<?>) factory).newFactoryForLocation(loc) : factory;
         Entity entity = factoryToUse.newEntity(flags, this);
         if (entity==null) {
             throw new IllegalStateException("EntityFactory factory routine returned null entity, in "+this);
@@ -643,6 +641,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         if (entity.getParent()==null) entity.setParent(this);
 
         return entity;
+    }
+
+    /** @deprecated since 0.6; use {@link #createNode(Location, Map)}, so can take that location into account when configuring node */
+    @Deprecated
+    protected Entity createNode(Map<?,?> flags) {
+        return createNode(getLocation(), flags);
     }
 
     protected List<Entity> pickAndRemoveMembers(int delta) {

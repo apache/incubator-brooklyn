@@ -38,18 +38,29 @@ import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
 
 /**
- * A cluster of entities that can dynamically increase or decrease the number of entities.
+ * A {@link Cluster} of entities that can dynamically increase or decrease the number of members.
  * <p>
  * When quarantine is enabled:
  * <ul>
- *   <li> The cluster will have a child entity named <em>quarantine</em>, which is a {@link Group} for nodes that failed to start correctly.
- *   <li> The cluster's other children will be all nodes in the cluster (that have not been unmanaged/deleted).
- *   <li> The cluster's members will be all live nodes in the cluster.
- *   <li> The <em>quarantine</em> group's members will be any problem nodes (all nodes that failed to start correctly)
+ *   <li>The cluster will have a child entity named <em>quarantine</em>, which is a {@link Group}
+ *       for nodes that failed to start correctly.
+ *   <li>The cluster's other children will be all nodes in the cluster (that have not been
+ *       unmanaged/deleted).
+ *   <li>The cluster's members will be all live nodes in the cluster.
+ *   <li>The <em>quarantine</em> group's members will be any problem nodes (all nodes that failed
+ *       to start correctly)
  * </ul>
- * When quarantine is disabled, the cluster will not have a <em>quarantine</em> child. Nodes that fail to start will be
- * removed from the cluster (i.e. stopped and deleted).
+ * When quarantine is disabled, the cluster will not have a <em>quarantine</em> child. Nodes that
+ * fail to start will be removed from the cluster (i.e. stopped and deleted).
+ * <p>
+ * Advanced users will wish to examine the configuration for the {@link NodePlacementStrategy} and
+ * {@link ZoneFailureDetector} interfaces and their implementations, which are used here to control
+ * the placement of nodes in particular availability zones and locations when the cluster is resized.
+ * 
+ * @see DynamicGroup
+ * @see DynamicFabric
  */
+// TODO document use of advanced availability zone configuration and features
 @ImplementedBy(DynamicClusterImpl.class)
 public interface DynamicCluster extends AbstractGroup, Cluster {
 
