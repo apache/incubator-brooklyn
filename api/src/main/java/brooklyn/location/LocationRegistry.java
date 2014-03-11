@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import com.google.common.annotations.Beta;
+
 /**
  * The registry of the sorts of locations that brooklyn knows about. Given a
  * {@LocationDefinition} or a {@link String} representation of a spec, this can
@@ -29,9 +31,14 @@ public interface LocationRegistry {
     /** removes the defined location from the registry (applications running there are unaffected) */
     public void removeDefinedLocation(String id);
 
-    /** returns fully populated (config etc) location from the given definition */
+    /** returns fully populated (config etc) location from the given definition, 
+     * currently by creating it but TODO creation can be a leak so all current 'resolve' methods should be carefully used! */
     public Location resolve(LocationDefinition l);
-    
+
+    /** returns fully populated (config etc) location from the given definition, by looking it up */
+    @Beta
+    public Location lookup(LocationDefinition l);
+
     /** returns fully populated (config etc) location from the given definition */
     public Location resolve(LocationDefinition l, Map<?,?> locationFlags);
     

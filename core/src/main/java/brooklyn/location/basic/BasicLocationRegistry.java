@@ -296,7 +296,15 @@ public class BasicLocationRegistry implements LocationRegistry {
     public Location resolve(LocationDefinition ld) {
         return resolve(ld, Collections.emptyMap());
     }
-    
+
+    @Override
+    public Location lookup(LocationDefinition ld) {
+        // TODO actually look it up
+        Location l = resolve(ld, Collections.emptyMap());
+        mgmt.getLocationManager().unmanage(l);
+        return l;
+    }
+
     @Override
     public Location resolve(LocationDefinition ld, Map<?,?> flags) {
         return resolveLocationDefinition(ld, flags, null);
