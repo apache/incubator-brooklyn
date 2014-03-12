@@ -18,7 +18,10 @@ import com.google.common.base.Predicate;
 @Beta
 public interface AvailabilityZoneExtension {
 
-    public List<Location> getSubLocations(int max);
+    List<Location> getAllSubLocations();
 
-    public List<Location> getSubLocationsByName(Predicate<? super String> namePredicate, int max);
+    List<Location> getSubLocations(int max);
+
+    List<Location> getSubLocationsByName(Predicate<? super String> namePredicate, int max);
+
 }

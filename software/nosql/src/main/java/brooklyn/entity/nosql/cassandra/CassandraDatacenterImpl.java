@@ -266,7 +266,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
     }
 
     @Override
-    protected Collection<Entity> grow(int delta) {
+    public Collection<Entity> grow(int delta) {
         if (getCurrentSize() == 0) {
             getTokenGenerator().growingCluster(delta);
         }
@@ -293,15 +293,15 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
         BigInteger newToken = (oldToken != null) ? getTokenGenerator().getTokenForReplacementNode(oldToken) : null;
         ImmutableMap<BasicAttributeSensorAndConfigKey<BigInteger>, BigInteger> extraFlags = ImmutableMap.of(CassandraNode.TOKEN, newToken);
         
-        Collection<Entity> addedEntities = growByOne(memberLoc, extraFlags);
-        if (addedEntities.size() < 1) {
+        Optional<Entity> added = growByOne(memberLoc, extraFlags);
+        if (!added.isPresent()) {
             String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
             throw new IllegalStateException(msg);
         }
         
         stopAndRemoveNode(member);
         
-        return Iterables.get(addedEntities, 0);
+        return added.get();
     }
 
     @Override
