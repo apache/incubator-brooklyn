@@ -49,8 +49,8 @@ define([
 
         it("must properly extract parameters from table", function () {
             var params = modalView.extractParamsFromTable()
-            expect(params["locations"]).toBe("localhost")
-            expect(params).toEqual({"locations": "localhost"})
+            expect(params["locations"]).toBe("123")
+            expect(params).toEqual({"locations": "123"})
         })
     })
 })

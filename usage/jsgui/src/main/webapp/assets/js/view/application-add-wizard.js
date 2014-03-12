@@ -520,6 +520,7 @@ define([
             var $selectLocations = container.find('#select-location')
             this.locations.each(function(aLocation) {
                     var $option = that.locationOptionTemplate({
+                        id:aLocation.id,
                         url:aLocation.getLinkByName("self"),
                         name:aLocation.getPrettyName()
                     })

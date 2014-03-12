@@ -45,26 +45,30 @@ define([
                         description:param.description?param.description:"",
                     }))
                 })
-                this.locations.fetch({async:false})
                 var container = this.$("#selector-container")
-                container.empty()
-                var chosenLocation = this.locations[0];
-                container.append(that.locationRowTemplate({
-                                    initialValue : chosenLocation,
-                                    rowId : 0
-                                }))
-                var $selectLocations = container.find('#select-location')
-                this.locations.each(function(aLocation) {
+                if (container.length) {                    
+                    this.locations.fetch({async:false})
+                    container.empty()
+                    var chosenLocation = this.locations[0];
+                    container.append(that.locationRowTemplate({
+                        initialValue : chosenLocation,
+                        rowId : 0
+                    }))
+                    var $selectLocations = container.find('#select-location')
+                    this.locations.each(function(aLocation) {
+                        log(aLocation)
                         var $option = that.locationOptionTemplate({
+                            id:aLocation.id,
                             url:aLocation.getLinkByName("self"),
                             name:aLocation.getPrettyName()
                         })
                         $selectLocations.append($option)
                     })
-                $selectLocations.each(function(i) {
-                    var url = $($selectLocations[i]).parent().attr('initialValue');
-                    $($selectLocations[i]).val(url)
-                })
+                    $selectLocations.each(function(i) {
+                        var url = $($selectLocations[i]).parent().attr('initialValue');
+                        $($selectLocations[i]).val(url)
+                    })
+                }
             }
             this.$(".modal-body").find('*[rel="tooltip"]').tooltip()
             return this
@@ -80,7 +84,7 @@ define([
             this.$(".effector-param").each(function (index) {
                 var key = $(this).find(".param-name").text();
                 var value = $(this).find(".param-value").attr('id') == 'selector-container' ? 
-                        $(this).find(".param-value :selected").text().trim() : 
+                        $(this).find(".param-value option:selected").attr("value") : 
                         $(this).find(".param-value").val();
                 parameters[key] = value;
             })
