@@ -68,7 +68,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
                     return type;
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                log.debug("Item "+serviceType+" not known in classpath: "+e);
+                log.debug("Item "+serviceType+" not known in classpath ("+mgmt.getCatalog().getRootClassLoader()+"): "+e);
             }
             
             if (mustBeBrooklyn)
