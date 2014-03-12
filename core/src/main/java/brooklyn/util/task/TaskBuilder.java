@@ -16,6 +16,7 @@ import brooklyn.util.collections.MutableMap;
 public class TaskBuilder<T> {
 
     String name = null;
+    String description = null;
     Callable<T> body = null;
     List<Task<?>> children = new ArrayList<Task<?>>();
     Set<Object> tags = new LinkedHashSet<Object>();
@@ -28,6 +29,11 @@ public class TaskBuilder<T> {
     
     public TaskBuilder<T> name(String name) {
         this.name = name;
+        return this;
+    }
+    
+    public TaskBuilder<T> description(String description) {
+        this.description = description;
         return this;
     }
     
@@ -72,6 +78,7 @@ public class TaskBuilder<T> {
     public Task<T> build() {
         MutableMap<String, Object> flags = MutableMap.of();
         if (name!=null) flags.add("displayName", name);
+        if (description!=null) flags.add("description", description);
         if (!tags.isEmpty()) flags.add("tags", tags);
         
         if (Boolean.FALSE.equals(dynamic) && children.isEmpty())
