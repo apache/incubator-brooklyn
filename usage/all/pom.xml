@@ -95,7 +95,7 @@
 
         <!-- bring in all jclouds-supported cloud providers -->
         <dependency>
-            <groupId>org.apache.jclouds</groupId>
+            <groupId>${jclouds.groupId}</groupId>
             <artifactId>jclouds-allcompute</artifactId>
         </dependency>
     </dependencies>

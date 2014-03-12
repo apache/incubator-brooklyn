@@ -77,7 +77,8 @@
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.4</ant.version>
 
-        <jclouds.version>1.7.1</jclouds.version>
+        <jclouds.groupId>io.cloudsoft.jclouds</jclouds.groupId>
+        <jclouds.version>1.7.2-ea-brooklyn.1</jclouds.version>
         <guava.version>15.0</guava.version>
         <groovy.version>1.8.6</groovy.version>
         <logback.version>1.0.7</logback.version>
@@ -196,13 +197,13 @@
                 <version>${testng.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.jclouds</groupId>
+                <groupId>${jclouds.groupId}</groupId>
                 <artifactId>jclouds-allcompute</artifactId>
                 <version>${jclouds.version}</version>
                 <type>jar</type>
             </dependency>
             <dependency>
-                <groupId>org.apache.jclouds.driver</groupId>
+                <groupId>${jclouds.groupId}.driver</groupId>
                 <artifactId>jclouds-sshj</artifactId>
                 <version>${jclouds.version}</version>
                 <type>jar</type>

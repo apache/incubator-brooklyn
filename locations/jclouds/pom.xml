@@ -22,31 +22,31 @@
         </dependency>
         
         <dependency>
-            <groupId>org.apache.jclouds.driver</groupId>
+            <groupId>${jclouds.groupId}.driver</groupId>
             <artifactId>jclouds-slf4j</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.jclouds.driver</groupId>
+            <groupId>${jclouds.groupId}.driver</groupId>
             <artifactId>jclouds-bouncycastle</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.jclouds.driver</groupId>
+            <groupId>${jclouds.groupId}.driver</groupId>
             <artifactId>jclouds-sshj</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.jclouds</groupId>
+            <groupId>${jclouds.groupId}</groupId>
             <artifactId>jclouds-allcompute</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.jclouds.labs</groupId>
+            <groupId>${jclouds.groupId}.labs</groupId>
             <artifactId>abiquo</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.jclouds.labs</groupId>
+            <groupId>${jclouds.groupId}.labs</groupId>
             <artifactId>google-compute-engine</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
