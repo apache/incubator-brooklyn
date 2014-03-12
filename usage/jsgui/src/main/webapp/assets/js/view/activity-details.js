@@ -205,9 +205,12 @@ define([
                     // need to rewire collection to point to the right ExecutionContext
                     that.collection = new TaskSummary.Collection()
                     that.collection.url = entity.links.activities
-                    that.collection.on("reset", this.renderSubtasks, this)
+                    that.collection.on("reset", that.renderSubtasks, that)
                     ViewUtils.fetchRepeatedlyWithDelay(that, that.collection, { 
-                        fetchOptions: { reset: true }, doitnow: true, fadeTarget: this.$('.tasks-submitted') });
+                        fetchOptions: { reset: true }, doitnow: true, fadeTarget: that.$('.tasks-submitted') });
+                } else {
+                    that.collection.on("reset", that.renderSubtasks, that)
+                    that.collection.fetch({reset: true});
                 }
             });
         },
