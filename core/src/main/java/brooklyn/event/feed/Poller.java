@@ -13,9 +13,9 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.DynamicSequentialTask;
 import brooklyn.util.task.ScheduledTask;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
@@ -71,6 +71,7 @@ public class Poller<V> {
         this.entity = entity;
     }
     
+    /** Submits a one-off poll job; recommended that callers supply to-String so that task has a decent description */
     public void submit(Callable<?> job) {
         if (running) {
             throw new IllegalStateException("Cannot submit additional tasks after poller has started");
@@ -89,7 +90,7 @@ public class Poller<V> {
         pollJobs.add(foo);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     public void start() {
         // TODO Previous incarnation of this logged this logged polledSensors.keySet(), but we don't know that anymore
         // Is that ok, are can we do better?
@@ -103,7 +104,7 @@ public class Poller<V> {
         running = true;
         
         for (final Callable<?> oneOffJob : oneOffJobs) {
-            BasicTask<?> task = new BasicTask(oneOffJob);
+            Task<?> task = Tasks.builder().dynamic(false).body((Callable<Object>) oneOffJob).name("Poll").description("One-time poll job "+oneOffJob).build();
             oneOffTasks.add(((EntityInternal)entity).getExecutionContext().submit(task));
         }
         

@@ -203,7 +203,9 @@ public class JmxFeed extends AbstractFeed {
                public Void call() {
                    helper.connect(jmxConnectionTimeout);
                    return null;
-               }});
+               }
+               @Override public String toString() { return "Connect JMX "+helper.getUrl(); }
+           });
         
         for (final NotificationFilter filter : notificationSubscriptions.keySet()) {
             getPoller().submit(new Callable<Void>() {
@@ -214,7 +216,9 @@ public class JmxFeed extends AbstractFeed {
                     ObjectName objectName = Iterables.get(configs, 0).getObjectName();
                     notificationListeners.put(objectName, listener);
                     return null;
-                }});
+                }
+                @Override public String toString() { return "Register JMX notifications: "+notificationSubscriptions.get(filter); }
+            });
         }
         
         // Setup polling of sensors
