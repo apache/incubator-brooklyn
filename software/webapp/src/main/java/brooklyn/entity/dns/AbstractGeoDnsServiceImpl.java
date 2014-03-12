@@ -100,7 +100,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     protected abstract void reconfigureService(Collection<HostGeoInfo> targetHosts);
     
     protected synchronized void startTracker() {
-        if (targetEntityProvider==null || !getManagementContext().isRunning()) {
+        if (targetEntityProvider==null || !getManagementSupport().isDeployed()) {
             log.debug("Tracker for "+this+" not yet active: "+targetEntityProvider+" / "+getManagementContext());
             return;
         }
@@ -150,8 +150,8 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 removeTargetHost(e, false);
             }
             
-            // do a periodic full update hourly (probably not needed)
-            if (changed || Time.hasElapsedSince(lastUpdate, Duration.ONE_HOUR))
+            // do a periodic full update hourly once we are actie (the latter is probably not needed)
+            if (changed || (lastUpdate>0 && Time.hasElapsedSince(lastUpdate, Duration.ONE_HOUR)))
                 update();
             
         } catch (Exception e) {
