@@ -16,6 +16,8 @@ import brooklyn.entity.basic.BrooklynTasks;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.stream.Streams;
 
@@ -33,7 +35,12 @@ public abstract class AbstractYamlTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setup() {
-        launcher = new BrooklynCampPlatformLauncherNoServer();
+        launcher = new BrooklynCampPlatformLauncherNoServer() {
+            @Override
+            protected LocalManagementContext newMgmtContext() {
+                return new LocalManagementContextForTests();
+            }
+        };
         launcher.launch();
         brooklynMgmt = launcher.getBrooklynMgmt();
         platform = launcher.getCampPlatform();
