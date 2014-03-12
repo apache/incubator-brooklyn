@@ -225,6 +225,9 @@ public class BashCommands {
         return format(pattern, arg);
     }
     
+    public static String installPackage(String packageDefaultName) {
+        return installPackage(MutableMap.of(), packageDefaultName);
+    }
     /**
      * Returns a command for installing the given package.
      * <p>
@@ -319,10 +322,6 @@ public class BashCommands {
     /** fails with nice error if the given file does not exist */
     public static String requireExecutable(String command) {
         return require("which "+BashStringEscapes.wrapBash(command), "The required executable \""+command+"\" does not exist");
-    }
-
-    public static String installPackage(String packageDefaultName) {
-        return installPackage(MutableMap.of(), packageDefaultName);
     }
 
     public static final String INSTALL_TAR = installExecutable("tar");

@@ -110,7 +110,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     /** @deprecated since 0.7.0 shouldn't be public */
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
 
-    public static final ConfigKey<Duration> SSH_CACHE_EXPIRY_DURATION = ConfigKeys.newConfigKey(Duration.class, "sshCacheExpiryDuration", "Expirty time for unused cached ssh connections", Duration.FIVE_MINUTES);
+    public static final ConfigKey<Duration> SSH_CACHE_EXPIRY_DURATION = ConfigKeys.newConfigKey(Duration.class,
+            "sshCacheExpiryDuration", "Expiry time for unused cached ssh connections", Duration.FIVE_MINUTES);
 
     @SetFromFlag
     protected String user;
