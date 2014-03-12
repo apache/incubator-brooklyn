@@ -182,7 +182,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     
     protected void callRebindHooks() {
         connectSensors();
-        waitForServiceUp();
+        // don't wait here - it may be long-running, e.g. if remote entity has died, and we don't want to block rebind waiting or cause it to fail
+        // the service will subsequently show service not up and thus failure
+//        waitForServiceUp();
     }
 
     @Override 
