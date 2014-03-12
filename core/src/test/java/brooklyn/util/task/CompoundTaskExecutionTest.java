@@ -62,6 +62,62 @@ public class CompoundTaskExecutionTest {
     }
 
     @Test
+    public void testSequentialTaskFailsWhenIntermediateTaskThrowsException() throws Exception {
+        BasicTask<String> t1 = taskReturning("a");
+        BasicTask<String> t2 = new BasicTask<String>(new Callable<String>() {
+                @Override public String call() throws Exception {
+                    throw new IllegalArgumentException("forced exception");
+                }
+            });
+        BasicTask<String> t3 = taskReturning("c");
+        SequentialTask<String> task = new SequentialTask<String>(t1, t2, t3);
+        Task<List<String>> tSequence = ec.submit(task);
+
+        try {
+            tSequence.get();
+            fail("t2 should have thrown an exception");
+        } catch (Exception e) {}
+
+        assertTrue(task.isDone());
+        assertTrue(task.isError());
+        assertTrue(t1.isDone());
+        assertFalse(t1.isError());
+        assertTrue(t2.isDone());
+        assertTrue(t2.isError());
+        // t3 not run because of t2 exception
+        assertFalse(t3.isDone());
+        assertFalse(t3.isBegun());
+    }
+
+    @Test
+    public void testParallelTaskFailsWhenIntermediateTaskThrowsException() throws Exception {
+        BasicTask<String> t1 = taskReturning("a");
+        BasicTask<String> t2 = new BasicTask<String>(new Callable<String>() {
+                @Override public String call() throws Exception {
+                    throw new IllegalArgumentException("forced exception");
+                }
+            });
+        BasicTask<String> t3 = taskReturning("c");
+        ParallelTask<String> task = new ParallelTask<String>(t1, t2, t3);
+        Task<List<String>> tSequence = ec.submit(task);
+
+        try {
+            tSequence.get();
+            fail("t2 should have thrown an exception");
+        } catch (Exception e) {}
+
+        assertTrue(task.isDone());
+        assertTrue(task.isError());
+        assertTrue(t1.isDone());
+        assertFalse(t1.isError());
+        assertTrue(t2.isDone());
+        assertTrue(t2.isError());
+        // differs from test above
+        assertTrue(t3.isDone());
+        assertFalse(t3.isError());
+    }
+
+    @Test
     public void runParallelTask() throws Exception {
         BasicTask<String> t1 = taskReturning("a");
         BasicTask<String> t2 = taskReturning("b");
