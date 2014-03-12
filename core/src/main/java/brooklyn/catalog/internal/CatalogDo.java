@@ -38,6 +38,11 @@ public class CatalogDo {
         this.dto = Preconditions.checkNotNull(dto);
     }
     
+    public CatalogDo(ManagementContext mgmt, CatalogDto dto) {
+        this(dto);
+        this.mgmt = mgmt;
+    }
+
     boolean isLoaded() {
         return isLoaded;
     }
@@ -56,7 +61,11 @@ public class CatalogDo {
     
     protected synchronized void loadThisCatalog(ManagementContext mgmt, CatalogDo parent) {
         if (isLoaded()) return;
+        if (this.parent!=null && !this.parent.equals(parent))
+            log.warn("Catalog "+this+" being initialised with different parent "+parent+" when already parented by "+this.parent, new Throwable("source of reparented "+this));
         this.parent = parent;
+        if (this.mgmt!=null && !this.mgmt.equals(mgmt))
+            log.warn("Catalog "+this+" being initialised with different mgmt "+mgmt+" when already managed by "+this.mgmt, new Throwable("source of reparented "+this));
         this.mgmt = mgmt;
         try {
             if (dto.url!=null)
@@ -217,7 +226,7 @@ public class CatalogDo {
         if (local!=null) cl.addFirst(local);
         if (parent==null) {
             // we are root.  include the mgmt base classloader and/or standard class loaders 
-            ClassLoader base = ((ManagementContextInternal)mgmt).getBaseClassLoader();
+            ClassLoader base = mgmt!=null ? ((ManagementContextInternal)mgmt).getBaseClassLoader() : null;
             if (base!=null) cl.addFirst(base);
             else {
                 cl.addFirst(getClass().getClassLoader());

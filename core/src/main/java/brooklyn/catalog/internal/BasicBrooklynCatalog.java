@@ -37,7 +37,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     
     public BasicBrooklynCatalog(final ManagementContext mgmt, final CatalogDto dto) {
         this.mgmt = Preconditions.checkNotNull(mgmt, "managementContext");
-        this.catalog = new CatalogDo(dto);
+        this.catalog = new CatalogDo(mgmt, dto);
         
         mgmt.getExecutionManager().submit(MutableMap.of("name", "loading catalog"), new Runnable() {
             public void run() {
