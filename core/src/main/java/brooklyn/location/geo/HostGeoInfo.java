@@ -64,9 +64,10 @@ public class HostGeoInfo implements Serializable {
             }
             la = la.getParent();
         }
-        if (resultFromLocation!=null && l==la)
+        if (resultFromLocation!=null && l==la) {
             // from the location
             return resultFromLocation;
+        }
         // resultFromLocation may be inherited, in which case we will copy it later
         
         InetAddress address = findIpAddress(l);

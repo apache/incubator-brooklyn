@@ -29,7 +29,7 @@ public interface LocationResolver {
     @SuppressWarnings("rawtypes")
     Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry);
 
-    /** Since 0.7.0 exploring this as a mechanism to disable locations */
+    /** @since 0.7.0 exploring this as a mechanism to disable locations */
     @Beta
     public interface EnableableLocationResolver extends LocationResolver {
         /** whether the location is enabled */
