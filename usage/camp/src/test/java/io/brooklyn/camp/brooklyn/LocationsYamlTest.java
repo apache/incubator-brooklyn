@@ -168,13 +168,4 @@ public class LocationsYamlTest extends AbstractYamlTest {
         return log;
     }
     
-    protected Entity createStartWaitAndLogApplication(Reader input) throws Exception {
-        Entity app = createAndStartApplication(input);
-        waitForApplicationTasks(app);
-
-        log.info("App started:");
-        Entities.dumpInfo(app);
-        
-        return app;
-    }
 }

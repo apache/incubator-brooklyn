@@ -64,7 +64,7 @@ public class BasicTaskExecutionPerformanceTest {
             }};
         ScheduledTask t = new ScheduledTask(taskFactory).delay(delay);
 
-        Stopwatch stopwatch = new Stopwatch().start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         em.submit(t);
         
         assertTrue(latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
@@ -80,7 +80,7 @@ public class BasicTaskExecutionPerformanceTest {
         final int numTimestamps = 4;
         final CountDownLatch latch = new CountDownLatch(1);
         final List<Long> timestamps = Collections.synchronizedList(Lists.<Long>newArrayList());
-        final Stopwatch stopwatch = new Stopwatch().start();
+        final Stopwatch stopwatch = Stopwatch.createStarted();
         
         Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
             @Override public Task<?> call() {
