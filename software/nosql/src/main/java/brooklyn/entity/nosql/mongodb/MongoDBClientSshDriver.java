@@ -2,6 +2,8 @@ package brooklyn.entity.nosql.mongodb;
 
 import java.util.Map;
 
+import com.google.common.base.Predicate;
+
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.nosql.mongodb.sharding.MongoDBRouter;
 import brooklyn.entity.nosql.mongodb.sharding.MongoDBRouterCluster;
@@ -63,13 +65,20 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
     }
     
     private AbstractMongoDBServer getServer() {
+        MongoDBRouter router;
         MongoDBShardedDeployment deployment = entity.getConfig(MongoDBClient.SHARDED_DEPLOYMENT);
         Task<MongoDBRouter> task = DependentConfiguration.attributeWhenReady(deployment.getRouterCluster(), MongoDBRouterCluster.ANY_ROUTER);
         try {
-            return DependentConfiguration.waitForTask(task, entity, "any available router");
+            router = DependentConfiguration.waitForTask(task, entity, "any available router");
         } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         }
+        DependentConfiguration.waitInTaskForAttributeReady(router, MongoDBRouter.SHARD_COUNT, new Predicate<Integer>() {
+            public boolean apply(Integer input) {
+                return input > 0;
+            };
+        });
+        return router;
     }
 
 }

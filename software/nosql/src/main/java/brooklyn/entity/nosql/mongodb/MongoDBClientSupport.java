@@ -71,7 +71,7 @@ public class MongoDBClientSupport {
         return HostAndPort.fromParts(address.getHost(), address.getPort());
     }
 
-    private Optional<CommandResult> runDBCommand(String database, String command) {
+    public Optional<CommandResult> runDBCommand(String database, String command) {
         return runDBCommand(database, new BasicDBObject(command, Boolean.TRUE));
     }
 
@@ -91,6 +91,15 @@ public class MongoDBClientSupport {
                         new Object[] { command, getServerAddress(), status.getErrorMessage() });
             }
             return Optional.of(status);
+        } finally {
+            client.close();
+        }
+    }
+    
+    public long getShardCount() {
+        MongoClient client = client();
+        try {
+            return client.getDB("config").getCollection("shards").getCount();
         } finally {
             client.close();
         }
