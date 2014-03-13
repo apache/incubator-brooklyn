@@ -111,9 +111,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
 
             // Listen to url-mappings being added and removed
             AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy() {
-                @Override protected void onEntityChange(Entity member) { updateNeeded(); }
-                @Override protected void onEntityAdded(Entity member) { updateNeeded(); }
-                @Override protected void onEntityRemoved(Entity member) { updateNeeded(); }
+                @Override protected void onEntityEvent(EventType type, Entity entity) { updateNeeded(); }
             };
             addPolicy(policy);
             policy.setGroup(urlMappings);

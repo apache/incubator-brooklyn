@@ -100,7 +100,7 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
     }
 
     /** as {@link #putAll(Map)} but fluent style (and accepting null, ignoring it) */
-    public MutableMap<K,V> add(@Nullable Map<? extends K,V> m) {
+    public MutableMap<K,V> add(@Nullable Map<? extends K,? extends V> m) {
         if (m!=null) putAll(m);
         return this;
     }
@@ -148,7 +148,7 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         }
 
         public Builder<K, V> putAll(Map<? extends K, ? extends V> map) {
-            result.putAll(map);
+            result.add(map);
             return this;
         }
 

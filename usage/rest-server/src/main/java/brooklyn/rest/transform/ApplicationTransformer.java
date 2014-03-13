@@ -91,6 +91,6 @@ public class ApplicationTransformer {
                     "entities", URI.create("/v1/applications/" + application.getId() + "/entities"));
         }
 
-        return new ApplicationSummary(specFromApplication(application), statusFromApplication(application), links, application.getId());
+        return new ApplicationSummary(application.getId(), specFromApplication(application), statusFromApplication(application), links);
     }
 }

@@ -33,11 +33,11 @@ public class ApplicationTest {
           locations(ImmutableSet.of("/v1/locations/1")).
           build();
 
-  final ApplicationSummary application = new ApplicationSummary(applicationSpec, Status.STARTING, null, null);
+  final ApplicationSummary application = new ApplicationSummary(null, applicationSpec, Status.STARTING, null);
 
   @Test
   public void testSerializeToJSON() throws IOException {
-    ApplicationSummary application1 = new ApplicationSummary(applicationSpec, Status.STARTING, null, null) {
+    ApplicationSummary application1 = new ApplicationSummary("myapp_id", applicationSpec, Status.STARTING, null) {
       @Override
       public Map<String, URI> getLinks() {
         return ImmutableMap.of(

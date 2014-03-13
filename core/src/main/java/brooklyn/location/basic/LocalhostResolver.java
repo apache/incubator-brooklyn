@@ -17,6 +17,7 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.LocationResolver.EnableableLocationResolver;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.KeyValueParser;
@@ -35,7 +36,7 @@ import com.google.common.collect.Sets;
  * 
  * @author alex, aled
  */
-public class LocalhostResolver implements LocationResolver {
+public class LocalhostResolver implements LocationResolver, EnableableLocationResolver {
 
     private static final Logger log = LoggerFactory.getLogger(LocalhostResolver.class);
     
@@ -56,6 +57,11 @@ public class LocalhostResolver implements LocationResolver {
         return LOCALHOST;
     }
 
+    @Override
+    public boolean isEnabled() {
+        return LocationConfigUtils.isEnabled(managementContext, "brooklyn.location.localhost");
+    }
+    
     @Override
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);

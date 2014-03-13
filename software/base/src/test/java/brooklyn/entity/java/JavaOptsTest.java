@@ -25,6 +25,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
@@ -120,8 +121,8 @@ public class JavaOptsTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         RecordingSshTool.execScriptCmds.clear();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        managementContext = app.getManagementContext();
+        managementContext = new LocalManagementContextForTests();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", "localhost")
                 .configure(SshTool.PROP_TOOL_CLASS, RecordingSshTool.class.getName()));

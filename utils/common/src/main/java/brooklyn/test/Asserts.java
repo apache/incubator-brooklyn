@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -247,7 +246,7 @@ public class Asserts {
         succeedsContinually(ImmutableMap.<String,Object>of(), r);
     }
     
-    public static <T> void succeedsContinually(Map<String,?> flags, Runnable r) {
+    public static <T> void succeedsContinually(Map<?,?> flags, Runnable r) {
         succeedsContinually(flags, toCallable(r));
     }
 
@@ -255,7 +254,7 @@ public class Asserts {
         return succeedsContinually(ImmutableMap.<String,Object>of(), c);
     }
     
-    public static <T> T succeedsContinually(Map<String,?> flags, Callable<T> job) {
+    public static <T> T succeedsContinually(Map<?,?> flags, Callable<T> job) {
         Duration duration = toDuration(flags.get("timeout"), Duration.ONE_SECOND);
         Duration period = toDuration(flags.get("period"), Duration.millis(10));
         long periodMs = period.toMilliseconds();
@@ -276,10 +275,6 @@ public class Asserts {
         return result;
     }
     
-    private static Duration toDuration(Object duration) {
-        return Duration.of(duration);
-    }
-            
     private static Duration toDuration(Object duration, Duration defaultVal) {
         if (duration == null)
             return defaultVal;
@@ -304,7 +299,7 @@ public class Asserts {
     }
     
     public static void assertFailsWith(Runnable c, final Class<? extends Throwable> validException, final Class<? extends Throwable> ...otherValidExceptions) {
-        final List<Class> validExceptions = ImmutableList.<Class>builder()
+        final List<Class<?>> validExceptions = ImmutableList.<Class<?>>builder()
                 .add(validException)
                 .addAll(ImmutableList.copyOf(otherValidExceptions))
                 .build();
@@ -339,6 +334,7 @@ public class Asserts {
         if (!failed) fail("Test code should have thrown exception but did not");
     }
 
+    @SuppressWarnings("rawtypes")
     private static boolean groovyTruth(Object o) {
         // TODO Doesn't handle matchers (see http://docs.codehaus.org/display/GROOVY/Groovy+Truth)
         if (o == null) {
@@ -360,6 +356,7 @@ public class Asserts {
         }
     }
     
+    @SuppressWarnings("unchecked")
     private static <T> T get(Map<String,?> map, String key, T defaultVal) {
         Object val = map.get(key);
         return (T) ((val == null) ? defaultVal : val);

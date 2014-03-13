@@ -111,5 +111,30 @@ public class LocationRegistryTest {
             // probably won't happen, if test fails will loop endlessly above
             Assert.fail("Circular reference resolved location");
     }
+
+    protected boolean findLocationMatching(String regex) {
+        for (LocationDefinition d: mgmt.getLocationRegistry().getDefinedLocations().values()) {
+            if (d.getName()!=null && d.getName().matches(regex)) return true;
+        }
+        return false;
+    }
+    
+    @Test
+    public void testLocalhostEnabled() {
+        BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
+        properties.put("brooklyn.location.localhost.enabled", true);
+        mgmt = new LocalManagementContext(properties);
+        Assert.assertTrue( findLocationMatching("localhost") );
+    }
+
+    @Test
+    public void testLocalhostDisabled() {
+        BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
+        properties.put("brooklyn.location.localhost.enabled", false);
+        mgmt = new LocalManagementContext(properties);
+        log.info("RESOLVERS: "+mgmt.getLocationRegistry().getDefinedLocations());
+        log.info("DEFINED LOCATIONS: "+mgmt.getLocationRegistry().getDefinedLocations());
+        Assert.assertFalse( findLocationMatching("localhost") );
+    }
     
 }

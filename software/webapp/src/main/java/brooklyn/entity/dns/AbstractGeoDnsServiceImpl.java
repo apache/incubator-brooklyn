@@ -13,10 +13,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,25 +23,27 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.net.Networking;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implements AbstractGeoDnsService {
     private static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
 
     @SetFromFlag
-    protected Entity targetEntityProvider;
-
+    protected Group targetEntityProvider;
+    protected AbstractMembershipTrackingPolicy tracker;
+    
     protected Map<Entity, HostGeoInfo> targetHosts = Collections.synchronizedMap(new LinkedHashMap<Entity, HostGeoInfo>());
     
     // We complain (at debug) when we encounter a target entity for whom we can't derive hostname/ip information; 
@@ -71,11 +69,11 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     @Override
     public void onManagementBecomingMaster() {
         super.onManagementBecomingMaster();
-        beginPoll();
+        startTracker();
     }
     @Override
     public void onManagementNoLongerMaster() {
-        endPoll();
+        endTracker();
         super.onManagementNoLongerMaster();
     }
 
@@ -93,50 +91,36 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     }
     
     @Override
-    public void setTargetEntityProvider(final Entity entityProvider) {
+    public void setTargetEntityProvider(final Group entityProvider) {
         this.targetEntityProvider = checkNotNull(entityProvider, "targetEntityProvider");
+        startTracker();
     }
     
-    // TODO: remove polling once locations can be determined via subscriptions
-    ScheduledFuture poll;
-    protected void beginPoll() {
-        if (log.isDebugEnabled()) log.debug("GeoDns {} starting poll", this);
-        if (poll!=null) {
-            log.warn("GeoDns duplicate call to beginPoll, ignoring");
-            return;
-        }
-        if (targetEntityProvider==null) {
-            log.warn("GeoDns {} has no targetEntityProvider; polling will have no-effect until it is set", this);
-        }
-        
-        // TODO Should re-use the execution manager's thread pool, somehow
-        ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat("brooklyn-geodnsservice-%d")
-                .build();
-        poll = Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
-            new Runnable() {
-                public void run() {
-                    try {
-                        refreshGroupMembership();
-                    } catch (Throwable t) {
-                        log.warn("Error refreshing group membership", t);
-                        Exceptions.propagate(t);
-                    }
-                }
-            }, 0, getConfig(POLL_PERIOD), TimeUnit.MILLISECONDS
-        );
-    }
-    
-    protected void endPoll() {
-        if (poll!=null) {
-            if (log.isDebugEnabled()) log.debug("GeoDns {} ending poll", this);
-            poll.cancel(true);
-            poll = null;
-        }
-    }
-
     /** should set up so these hosts are targeted, and setServiceState appropriately */
     protected abstract void reconfigureService(Collection<HostGeoInfo> targetHosts);
+    
+    protected synchronized void startTracker() {
+        if (targetEntityProvider==null || !getManagementSupport().isDeployed()) {
+            log.debug("Tracker for "+this+" not yet active: "+targetEntityProvider+" / "+getManagementContext());
+            return;
+        }
+        endTracker();
+        log.debug("Initializing tracker for "+this+", following "+targetEntityProvider);
+        tracker = new AbstractMembershipTrackingPolicy(MutableMap.of(
+                "name", "GeoDNS targets tracker",
+                "sensorsToTrack", ImmutableSet.of(HOSTNAME, ADDRESS, WebAppService.ROOT_URL)) ) {
+            @Override
+            protected void onEntityEvent(EventType type, Entity entity) { refreshGroupMembership(); }
+        };
+        addPolicy(tracker);
+        tracker.setGroup(targetEntityProvider);
+        refreshGroupMembership();
+    }
+    protected synchronized void endTracker() {
+        if (tracker == null || targetEntityProvider==null) return;
+        removePolicy(tracker);
+        tracker = null;
+    }
     
     @Override
     public abstract String getHostname();
@@ -166,8 +150,8 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 removeTargetHost(e, false);
             }
             
-            // do a periodic full update hourly (probably not needed)
-            if (changed || Time.hasElapsedSince(lastUpdate, Duration.ONE_HOUR))
+            // do a periodic full update hourly once we are active (the latter is probably not needed)
+            if (changed || (lastUpdate>0 && Time.hasElapsedSince(lastUpdate, Duration.ONE_HOUR)))
                 update();
             
         } catch (Exception e) {
@@ -177,15 +161,11 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     
     /**
      * Adds this host, if it is absent or if its hostname has changed.
-     * 
+     * <p>
      * For whether to use hostname or ip, see config and attributes {@link AbstractGeoDnsService#USE_HOSTNAMES}, 
      * {@link Attributes#HOSTNAME} and {@link Attributes#ADDRESS} (via {@link #inferHostname(Entity)} and {@link #inferIp(Entity)}.
-     * Note that the "hostname" could infact be an IP address, if {@link #inferHostname(Entity)} returns an IP!
+     * Note that the "hostname" could in fact be an IP address, if {@link #inferHostname(Entity)} returns an IP!
      * <p>
-     * The "hostname" is always preferred for inferring the geo info, if it is available. The {@code USE_HOSTNAMES==false} 
-     * is just used to say whether to fall back to IP if that is not available (and whether to switch the the geo-info so it
-     * refs the IP instead of the hostname).
-     * 
      * TODO in a future release, we may change this to explicitly set the sensor(s) to look at on the entity, and 
      * be stricter about using them in order.
      * 
@@ -197,16 +177,25 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             String hostname = inferHostname(entity);
             String ip = inferIp(entity);
             String addr = (getConfig(USE_HOSTNAMES) || ip == null) ? hostname : ip;
-            HostGeoInfo geoE = HostGeoInfo.fromEntity(entity);
-            HostGeoInfo geoH = inferHostGeoInfo(hostname, ip);
             
+            if (addr==null) addr = ip;
             if (addr == null) {
                 if (entitiesWithoutHostname.add(entity)) {
-                    log.debug("GeoDns ignoring {}, will continue scanning (no hostname or URL available)", entity);
+                    log.debug("GeoDns ignoring {} (no hostname/ip/URL info yet available)", entity);
                 }
                 return false;
             }
             
+            // prefer the geo from the entity (or location parent), but fall back to inferring
+            // e.g. if it supplies a URL
+            HostGeoInfo geo = HostGeoInfo.fromEntity(entity);
+            if (geo==null) geo = inferHostGeoInfo(hostname, ip);
+            
+            if (Networking.isPrivateSubnet(addr) && ip!=null && !Networking.isPrivateSubnet(ip)) {
+                // fix for #1216
+                log.debug("GeoDns using IP "+ip+" for "+entity+" as addr "+addr+" resolves to private subnet");
+                addr = ip;
+            }
             if (Networking.isPrivateSubnet(addr)) {
                 if (getConfig(INCLUDE_HOMELESS_ENTITIES)) {
                     if (entitiesWithoutGeoInfo.add(entity)) {
@@ -219,13 +208,13 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                     return false;
                 }
             }
-            
-            if (geoH == null) {
+
+            if (geo == null) {
                 if (getConfig(INCLUDE_HOMELESS_ENTITIES)) {
                     if (entitiesWithoutGeoInfo.add(entity)) {
                         log.info("GeoDns including {}, even though no geography info available for {})", entity, addr);
                     }
-                    geoH = (geoE != null) ? geoE : HostGeoInfo.create(addr, "unknownLocation("+addr+")", 0, 0);
+                    geo = HostGeoInfo.create(addr, "unknownLocation("+addr+")", 0, 0);
                 } else {
                     if (entitiesWithoutGeoInfo.add(entity)) {
                         log.warn("GeoDns ignoring {} (no geography info available for {})", entity, addr);
@@ -233,28 +222,25 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                     return false;
                 }
             }
-            
-            // If we already knew about it, and it hasn't changed, then nothing to do
-            if (oldGeo != null && geoH.getAddress().equals(oldGeo.getAddress())) {
-                return false;
+
+            if (!addr.equals(geo.getAddress())) {
+                // if the location provider did not have an address, create a new one with it
+                geo = HostGeoInfo.create(addr, geo.displayName, geo.latitude, geo.longitude);
             }
             
-            // Check if location has lat/lon explicitly set; use geo-dns but warn if dramatically different
-            if (geoE != null) {
-                if ((Math.abs(geoH.latitude-geoE.latitude)>3) ||
-                        (Math.abs(geoH.longitude-geoE.longitude)>3) ) {
-                    log.warn("GeoDns mismatch, {} is in {} but hosts URL in {}", new Object[] {entity, geoE, geoH});
-                }
+            // If we already knew about it, and it hasn't changed, then nothing to do
+            if (oldGeo != null && geo.getAddress().equals(oldGeo.getAddress())) {
+                return false;
             }
             
             entitiesWithoutHostname.remove(entity);
             entitiesWithoutGeoInfo.remove(entity);
-            log.info("GeoDns adding "+entity+" at "+geoH+(oldGeo != null ? " (previously "+oldGeo+")" : ""));
-            targetHosts.put(entity, geoH);
+            log.info("GeoDns adding "+entity+" at "+geo+(oldGeo != null ? " (previously "+oldGeo+")" : ""));
+            targetHosts.put(entity, geo);
             return true;
 
         } catch (Exception ee) {
-            log.warn("GeoDns ignoring {} (error analysing location, {}", entity, ee);
+            log.warn("GeoDns ignoring "+entity+" (error analysing location): "+ee, ee);
             return false;
         }
     }
@@ -270,20 +256,21 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     }
     
     protected void update() {
-        log.debug("Full update of "+this);
         lastUpdate = System.currentTimeMillis();
         
         Map<Entity, HostGeoInfo> m;
         synchronized(targetHosts) { m = ImmutableMap.copyOf(targetHosts); }
+        if (log.isDebugEnabled()) log.debug("Full update of "+this+" ("+m.size()+" target hosts)");
         
-        Map<String,String> entityIdToUrl = Maps.newLinkedHashMap();
+        Map<String,String> entityIdToAddress = Maps.newLinkedHashMap();
         for (Map.Entry<Entity, HostGeoInfo> entry : m.entrySet()) {
-            entityIdToUrl.put(entry.getKey().getId(), entry.getValue().address);
+            entityIdToAddress.put(entry.getKey().getId(), entry.getValue().address);
         }
         
         reconfigureService(new LinkedHashSet<HostGeoInfo>(m.values()));
         
-        setAttribute(TARGETS, entityIdToUrl);
+        if (log.isDebugEnabled()) log.debug("Targets being set as "+entityIdToAddress);
+        setAttribute(TARGETS, entityIdToAddress);
     }
     
     protected String inferHostname(Entity entity) {
@@ -293,15 +280,19 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             try {
                 URL u = new URL(url);
                 
+                String hostname2 = u.getHost(); 
                 if (hostname==null) {
                     if (!entitiesWithoutGeoInfo.contains(entity))  //don't log repeatedly
-                        log.warn("GeoDns using URL {} to redirect to {} (HOSTNAME attribute is preferred, but not available)", url, entity);
-                    hostname = u.getHost(); 
+                        log.warn("GeoDns "+this+" using URL {} to redirect to {} (HOSTNAME attribute is preferred, but not available)", url, entity);
+                    hostname = hostname2;
+                } else if (!hostname.equals(hostname2)) {
+                    if (!entitiesWithoutGeoInfo.contains(entity))  //don't log repeatedly
+                        log.warn("GeoDns "+this+" URL {} of "+entity+" does not match advertised HOSTNAME {}; using hostname, not URL", url, hostname);
                 }
                 
                 if (u.getPort() > 0 && u.getPort() != 80 && u.getPort() != 443) {
                     if (!entitiesWithoutGeoInfo.contains(entity))  //don't log repeatedly
-                        log.warn("GeoDns detected non-standard port in URL {} for {}; forwarding may not work", url, entity);
+                        log.warn("GeoDns "+this+" detected non-standard port in URL {} for {}; forwarding may not work", url, entity);
                 }
                 
             } catch (MalformedURLException e) {
@@ -322,7 +313,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             InetAddress addr = (hostname == null) ? null : InetAddress.getByName(hostname);
             geoH = (addr == null) ? null : HostGeoInfo.fromIpAddress(addr);
         } catch (UnknownHostException e) {
-            if (getConfig(USE_HOSTNAMES) || ip == null) {
+            if (ip == null) {
                 throw e;
             } else {
                 if (log.isTraceEnabled()) log.trace("GeoDns failed to infer GeoInfo from hostname {}; will try with IP {} ({})", new Object[] {hostname, ip, e});
@@ -330,8 +321,8 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             }
         }
 
-        // Switch to IP address if that's what we're configured to use, and it's available
-        if (!getConfig(USE_HOSTNAMES) && ip != null) {
+        // Try IP address (prior to Mar 2014 we did not do this if USE_HOSTNAME was set but don't think that is desirable due to #1216)
+        if (ip != null) {
             if (geoH == null) {
                 InetAddress addr = Networking.getInetAddressWithFixedName(ip);
                 geoH = HostGeoInfo.fromIpAddress(addr);

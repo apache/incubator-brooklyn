@@ -13,6 +13,8 @@ public class LocationConfigKeys {
 
     public static final ConfigKey<String> LOCATION_ID = ConfigKeys.newStringConfigKey("id");
     public static final ConfigKey<String> DISPLAY_NAME = ConfigKeys.newStringConfigKey("displayName");
+    public static final ConfigKey<Boolean> ENABLED = ConfigKeys.newBooleanConfigKey("enabled", "Whether the location is enabled for listing and use "
+        + "(only supported for selected locations)", true);
     
     public static final ConfigKey<String> ACCESS_IDENTITY = ConfigKeys.newStringConfigKey("identity"); 
     public static final ConfigKey<String> ACCESS_CREDENTIAL = ConfigKeys.newStringConfigKey("credential"); 

@@ -79,30 +79,22 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     public void init() {
         super.init();
-        
-        Map<?, ?> policyFlags = MutableMap.of("name", "Controller targets tracker",
-                "sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR), getConfig(PORT_NUMBER_SENSOR)));
-        
-        serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(policyFlags) {
-            protected void onEntityChange(Entity member) { onServerPoolMemberChanged(member); }
-            protected void onEntityAdded(Entity member) { onServerPoolMemberChanged(member); }
-            protected void onEntityRemoved(Entity member) { onServerPoolMemberChanged(member); }
-        };
+        initServerPoolMemberTrackingPolicy();
     }
-    
     @Override
+    // TODO When persists policies, then can delete this code
     protected void rebind() {
-        // TODO When persists policies, then can delete this code
-        Map<?, ?> policyFlags = MutableMap.of("name", "Controller targets tracker",
-                "sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR), getConfig(PORT_NUMBER_SENSOR)));
-        
-        serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(policyFlags) {
-            protected void onEntityChange(Entity member) { onServerPoolMemberChanged(member); }
-            protected void onEntityAdded(Entity member) { onServerPoolMemberChanged(member); }
-            protected void onEntityRemoved(Entity member) { onServerPoolMemberChanged(member); }
-        };
+        initServerPoolMemberTrackingPolicy();
         
         super.rebind();
+    }
+    
+    protected void initServerPoolMemberTrackingPolicy() {
+        Map<?, ?> policyFlags = MutableMap.of("name", "Controller targets tracker",
+            "sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR), getConfig(PORT_NUMBER_SENSOR)));
+        serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(policyFlags) {
+            @Override protected void onEntityEvent(EventType type, Entity entity) { onServerPoolMemberChanged(entity); }
+        };
     }
     
     /**
@@ -120,7 +112,8 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     public void onManagementNoLongerMaster() {
         super.onManagementNoLongerMaster(); // TODO remove when deprecated method in parent removed
         isActive = false;
-        serverPoolMemberTrackerPolicy.reset();
+        if (serverPoolMemberTrackerPolicy!=null)
+            serverPoolMemberTrackerPolicy.reset();
     }
 
     private Group getServerPool() {
@@ -256,7 +249,8 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void preStop() {
         super.preStop();
-        serverPoolMemberTrackerPolicy.reset();
+        if (serverPoolMemberTrackerPolicy!=null)
+            serverPoolMemberTrackerPolicy.reset();
     }
 
     /** 

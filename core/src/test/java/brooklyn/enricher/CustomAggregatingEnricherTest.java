@@ -64,7 +64,7 @@ public class CustomAggregatingEnricherTest {
                 .computingSum()
                 .fromChildren()
                 .build());
-        EntityTestUtils.assertAttributeEqualsContinually(entity, target, null);
+        EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 50), entity, target, null);
     }
 
     @Test
@@ -101,7 +101,7 @@ public class CustomAggregatingEnricherTest {
                 .computingSum()
                 .fromHardcodedProducers(ImmutableList.of(entity))
                 .build());
-        EntityTestUtils.assertAttributeEqualsContinually(entity, target, null);
+        EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 50), entity, target, null);
     }
 
     @Test
@@ -249,7 +249,7 @@ public class CustomAggregatingEnricherTest {
                 .fromChildren()
                 .build());
 
-        EntityTestUtils.assertAttributeEqualsContinually(entity, doubleSensor, null);
+        EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 50), entity, doubleSensor, null);
     }
 
     @Test

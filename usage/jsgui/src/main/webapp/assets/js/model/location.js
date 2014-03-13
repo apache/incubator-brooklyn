@@ -48,7 +48,11 @@ define(["underscore", "backbone"], function (_, Backbone) {
             return (this.getLinkByName("self") === url)
         },
         getPrettyName: function() {
-            var name = this.get('name')
+            var name = null;
+            if (this.get('config') && this.get('config')['displayName'])
+                name = this.get('config')['displayName'];
+            if (name!=null && name.length>0) return name
+            name = this.get('name')
             if (name!=null && name.length>0) return name
             return this.get('spec')
         }

@@ -390,7 +390,7 @@ public class Os {
             segments = Iterables.concat(ImmutableSet.of(Os.home()), Iterables.skip(segments, 1));
         }
         String result = Joiner.on("/").join(segments);
-        if (log.isDebugEnabled()) log.debug("Quietly changing '{}' to '{}'", path, result);
+        if (log.isDebugEnabled() && !result.equals(path)) log.debug("Quietly changing '{}' to '{}'", path, result);
         return result;
     }
 

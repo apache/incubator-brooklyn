@@ -1,19 +1,27 @@
 package brooklyn.rest.api;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.validation.Valid;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
 
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
-
-import javax.validation.Valid;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import java.util.List;
-import java.util.Map;
 
 @Path("/v1/locations")
 @Apidoc("Locations")

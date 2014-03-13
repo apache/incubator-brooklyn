@@ -425,6 +425,9 @@ input[type="color"]:focus,.uneditable-input:focus {
 #reload-brooklyn-properties-resource {
 	text-align: right;
 }
+#reload-brooklyn-properties-indicator {
+    text-align: right;
+}
 
 /* general pages */
 .sidebar_at_right {

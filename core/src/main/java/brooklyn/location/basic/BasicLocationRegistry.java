@@ -22,6 +22,7 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
+import brooklyn.location.LocationResolver.EnableableLocationResolver;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -62,13 +63,25 @@ public class BasicLocationRegistry implements LocationRegistry {
     protected void findServices() {
         ServiceLoader<LocationResolver> loader = ServiceLoader.load(LocationResolver.class);
         for (LocationResolver r: loader) {
-            r.init(mgmt);
-            resolvers.put(r.getPrefix(), r);
+            registerResolver(r);
         }
         if (log.isDebugEnabled()) log.debug("Location resolvers are: "+resolvers);
         if (resolvers.isEmpty()) log.warn("No location resolvers detected: is src/main/resources correctly included?");
     }
 
+    /** Registers the given resolver, invoking {@link LocationResolver#init(ManagementContext)} on the argument
+     * and returning true, unless the argument indicates false for {@link EnableableLocationResolver#isEnabled()} */
+    public boolean registerResolver(LocationResolver r) {
+        r.init(mgmt);
+        if (r instanceof EnableableLocationResolver) {
+            if (!((EnableableLocationResolver)r).isEnabled()) {
+                return false;
+            }
+        }
+        resolvers.put(r.getPrefix(), r);
+        return true;
+    }
+    
     @Override
     public Map<String,LocationDefinition> getDefinedLocations() {
         synchronized (definedLocations) {
@@ -128,7 +141,8 @@ public class BasicLocationRegistry implements LocationRegistry {
             }
             if (log.isDebugEnabled())
                 log.debug("Found "+count+" defined locations from properties (*.named.* syntax): "+definedLocations.values());
-            if (getDefinedLocationByName("localhost")==null && !BasicOsDetails.Factory.newLocalhostInstance().isWindows()) {
+            if (getDefinedLocationByName("localhost")==null && !BasicOsDetails.Factory.newLocalhostInstance().isWindows()
+                    && LocationConfigUtils.isEnabled(mgmt, "brooklyn.location.localhost")) {
                 log.debug("Adding a defined location for localhost");
                 // add 'localhost' *first*
                 ImmutableMap<String, LocationDefinition> oldDefined = ImmutableMap.copyOf(definedLocations);
@@ -282,7 +296,15 @@ public class BasicLocationRegistry implements LocationRegistry {
     public Location resolve(LocationDefinition ld) {
         return resolve(ld, Collections.emptyMap());
     }
-    
+
+    @Override
+    public Location resolveForPeeking(LocationDefinition ld) {
+        // TODO actually look it up
+        Location l = resolve(ld, Collections.emptyMap());
+        mgmt.getLocationManager().unmanage(l);
+        return l;
+    }
+
     @Override
     public Location resolve(LocationDefinition ld, Map<?,?> flags) {
         return resolveLocationDefinition(ld, flags, null);
@@ -296,7 +318,8 @@ public class BasicLocationRegistry implements LocationRegistry {
         try {
             return resolve(ld.getSpec(), newLocationFlags.getAllConfig());
         } catch (Exception e) {
-            throw new IllegalStateException("Cannot instantiate named location '"+optionalName+"' pointing at "+ld.getSpec()+": "+e, e);
+            throw new IllegalStateException("Cannot instantiate location '"+
+                (optionalName!=null ? optionalName : ld)+"' pointing at "+ld.getSpec()+": "+e, e);
         }
     }
 

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
+import brooklyn.entity.software.OsTasks;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.location.basic.Locations;
@@ -40,6 +41,7 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
     @Override
     public void init() {
         super.init();
+        OsTasks.checkResourcesValid();
         getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
             @Override
             public String call(ConfigBag parameters) {

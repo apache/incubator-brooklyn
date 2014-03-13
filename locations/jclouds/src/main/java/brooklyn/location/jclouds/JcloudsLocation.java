@@ -12,6 +12,7 @@ import static org.jclouds.scriptbuilder.domain.Statements.exec;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -93,6 +94,7 @@ import brooklyn.util.internal.Repeater;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Cidr;
+import brooklyn.util.net.Networking;
 import brooklyn.util.net.Protocol;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
@@ -537,9 +539,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 throw new IllegalStateException("No nodes returned by jclouds create-nodes in " + setup.getDescription());
 
             // Setup port-forwarding, if required
-            Optional<HostAndPort> sshHostAndPort;
+            Optional<HostAndPort> sshHostAndPortOverride;
             if (usePortForwarding) {
-                sshHostAndPort = Optional.of(portForwarder.openPortForwarding(
+                sshHostAndPortOverride = Optional.of(portForwarder.openPortForwarding(
                         node,
                         node.getLoginPort(),
                         Optional.<Integer>absent(), 
@@ -548,11 +550,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 
                 if (waitForSshable) {
                     // once that host:port is definitely reachable, we can create the user
-                    waitForReachable(computeService, node, sshHostAndPort, node.getCredentials(), setup);
-                    initialCredentials = createUser(computeService, node, sshHostAndPort, setup);
+                    waitForReachable(computeService, node, sshHostAndPortOverride, node.getCredentials(), setup);
+                    initialCredentials = createUser(computeService, node, sshHostAndPortOverride, setup);
                 }
             } else {
-                sshHostAndPort = Optional.absent();
+                sshHostAndPortOverride = Optional.absent();
             }
             
             // Figure out which login-credentials to use
@@ -577,14 +579,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             
             // Wait for the VM to be reachable over SSH
             if (waitForSshable) {
-                waitForReachable(computeService, node, sshHostAndPort, initialCredentials, setup);
+                waitForReachable(computeService, node, sshHostAndPortOverride, initialCredentials, setup);
             } else {
                 LOG.debug("Skipping ssh check for {} ({}) due to config waitForSshable=false", node, setup.getDescription());
             }
             usableTimestamp = Duration.of(provisioningStopwatch);
             
             // Create a JcloudsSshMachineLocation, and register it
-            sshMachineLocation = registerJcloudsSshMachineLocation(computeService, node, initialCredentials, sshHostAndPort, setup);
+            sshMachineLocation = registerJcloudsSshMachineLocation(computeService, node, initialCredentials, sshHostAndPortOverride, setup);
             if (template!=null && sshMachineLocation.getTemplate()==null) {
                 sshMachineLocation.template = template;
             }
@@ -1354,13 +1356,19 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         
         String vmHostname = getPublicHostname(node, sshHostAndPort, setup);
         
-        JcloudsSshMachineLocation machine = createJcloudsSshMachineLocation(node, vmHostname, sshHostAndPort, setup);
+        JcloudsSshMachineLocation machine = createJcloudsSshMachineLocation(computeService, node, vmHostname, sshHostAndPort, setup);
         machine.setParent(this);
         vmInstanceIds.put(machine, node.getId());
         return machine;
     }
 
-    protected JcloudsSshMachineLocation createJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
+    /** @deprecated since 0.7.0 use variant which takes compute service; no longer called internally,
+     * so marked final to force any overrides to switch to new syntax */
+    @Deprecated
+    protected final JcloudsSshMachineLocation createJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
+        return createJcloudsSshMachineLocation(null, node, vmHostname, sshHostAndPort, setup);
+    }
+    protected JcloudsSshMachineLocation createJcloudsSshMachineLocation(ComputeService computeService, NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
         Map<?,?> sshConfig = extractSshConfig(setup, node);
         String nodeAvailabilityZone = extractAvailabilityZone(setup, node);
         String nodeRegion = extractRegion(setup, node);
@@ -1368,20 +1376,37 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // e.g. rackspace doesn't have "region", so rackspace-uk is best we can say (but zone="LON")
             nodeRegion = extractProvider(setup, node);
         }
+
+        String address = sshHostAndPort.isPresent() ? sshHostAndPort.get().getHostText() : vmHostname;
+        try {
+            Networking.getInetAddressWithFixedName(address);
+            // fine, it resolves
+        } catch (Exception e) {
+            // occurs if an unresolvable hostname is given as vmHostname, and the machine only has private IP addresses but they are reachable
+            // TODO cleanup use of getPublicHostname so its semantics are clearer, returning reachable hostname or ip, and 
+            // do this check/fix there instead of here!
+            Exceptions.propagateIfFatal(e);
+            LOG.debug("Could not resolve reported address '"+address+"' for "+vmHostname+" ("+setup.getDescription()+"/"+node+"), requesting reachable address");
+            if (computeService==null) throw Exceptions.propagate(e);
+            // this has sometimes already been done in waitForReachable (unless skipped) but easy enough to do again
+            address = JcloudsUtil.getFirstReachableAddress(computeService.getContext(), node);
+        }
         
         if (LOG.isDebugEnabled())
-            LOG.debug("creating JcloudsSshMachineLocation representation for {}@{} for {} with {}", 
+            LOG.debug("creating JcloudsSshMachineLocation representation for {}@{} ({}/{}) for {}/{}", 
                     new Object[] {
                             getUser(setup), 
-                            vmHostname, 
+                            address, 
+                            Entities.sanitize(sshConfig),
+                            sshHostAndPort,
                             setup.getDescription(), 
-                            Entities.sanitize(sshConfig)
+                            node
                     });
         
         if (isManaged()) {
             return getManagementContext().getLocationManager().createLocation(LocationSpec.create(JcloudsSshMachineLocation.class)
                     .configure("displayName", vmHostname)
-                    .configure("address", sshHostAndPort.isPresent() ? sshHostAndPort.get().getHostText() : vmHostname) 
+                    .configure("address", address) 
                     .configure("port", sshHostAndPort.isPresent() ? sshHostAndPort.get().getPort() : node.getLoginPort()) 
                     .configure("user", getUser(setup))
                     // don't think "config" does anything
@@ -1397,9 +1422,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             LOG.warn("Using deprecated JcloudsSshMachineLocation constructor because "+this+" is not managed");
             return new JcloudsSshMachineLocation(MutableMap.builder()
                     .put("displayName", vmHostname)
-                    .put("address", sshHostAndPort.isPresent() ? sshHostAndPort.get().getHostText() : vmHostname) 
+                    .put("address", address) 
                     .put("port", sshHostAndPort.isPresent() ? sshHostAndPort.get().getPort() : node.getLoginPort()) 
-                    .put("address", vmHostname) 
                     .put("user", getUser(setup))
                     // don't think "config" does anything
                     .putAll(sshConfig)
@@ -1582,7 +1606,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             checker = new Callable<Boolean>() {
                 public Boolean call() {
                     Statement statement = Statements.newStatementList(exec("hostname"));
-                    // NB this assumes passwordless sudo !
                     ExecResponse response = computeService.runScriptOnNode(node.getId(), statement, 
                             overrideLoginCredentials(expectedCredentials).runAsRoot(false));
                     return response.getExitStatus() == 0;
@@ -1699,7 +1722,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     private String getPublicHostnameGeneric(NodeMetadata node, @Nullable ConfigBag setup) {
         //prefer the public address to the hostname because hostname is sometimes wrong/abbreviated
         //(see that javadoc; also e.g. on rackspace, the hostname lacks the domain)
-        //TODO would it be better to prefer hostname, but first check that it is resolvable? 
         if (truth(node.getPublicAddresses())) {
             return node.getPublicAddresses().iterator().next();
         } else if (truth(node.getHostname())) {

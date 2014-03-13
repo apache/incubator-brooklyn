@@ -37,13 +37,10 @@ import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
-import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
-import brooklyn.location.geo.HasHostGeoInfo;
-import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -301,15 +298,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         if (!deferConstructionChecks) {
             if (getDisplayName() == null) {
                 setDisplayName((truth(user) ? user+"@" : "") + address.getHostName());
-            }
-
-            if (getHostGeoInfo() == null) {
-                Location parentLocation = getParent();
-                if ((parentLocation instanceof HasHostGeoInfo) && ((HasHostGeoInfo) parentLocation).getHostGeoInfo() != null) {
-                    setHostGeoInfo(((HasHostGeoInfo) parentLocation).getHostGeoInfo());
-                } else {
-                    setHostGeoInfo(HostGeoInfo.fromLocation(this));
-                }
             }
         }
     }
@@ -634,6 +622,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     public int installTo(Map<String,?> props, String url, String destPath) {
         return installTo(ResourceUtils.create(this), props, url, destPath);
+    }
+
+    public int installTo(ResourceUtils loader, String url, String destPath) {
+        return installTo(loader, MutableMap.<String, Object>of(), url, destPath);
     }
 
     /**

@@ -29,11 +29,11 @@ public class JmxSupportTest {
     }
     
     // defaults to JMXMP for most locations (or, in this case, if it does not yet know the location)
-    public void testJmxrmiAutodetect() {
+    public void testJmxAutodetect() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         JmxSupport support = new JmxSupport(app, null);
         
-        Assert.assertEquals(support.getJmxAgentMode(), JmxAgentModes.JMXMP);
+        Assert.assertEquals(support.getJmxAgentMode(), JmxAgentModes.JMXMP_AND_RMI);
     }
 
     public void testJmxmpJarExistence() {

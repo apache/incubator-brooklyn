@@ -16,6 +16,7 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
@@ -203,6 +204,11 @@ public class ConfigBag {
     /** as {@link #put(ConfigKey, Object)} but returning this ConfigBag for fluent-style coding */
     public <T> ConfigBag configure(ConfigKey<T> key, T value) {
         putStringKey(key.getName(), value);
+        return this;
+    }
+    
+    public <T> ConfigBag configureStringKey(String key, T value) {
+        putStringKey(key, value);
         return this;
     }
     
@@ -455,5 +461,10 @@ public class ConfigBag {
 
     public Map<String, Object> getAllConfigRaw() {
         return getAllConfigMutable();
+    }
+    
+    @Override
+    public String toString() {
+        return JavaClassNames.simpleClassName(this)+"["+getAllConfigRaw()+"]";
     }
 }

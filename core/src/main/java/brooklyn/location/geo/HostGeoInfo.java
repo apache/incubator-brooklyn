@@ -1,9 +1,6 @@
 package brooklyn.location.geo;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.net.InetAddress;
 
 import org.slf4j.Logger;
@@ -14,7 +11,11 @@ import brooklyn.location.AddressableLocation;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.BrooklynSystemProperties;
+
+import com.google.common.base.Objects;
 
 /**
  * Encapsulates geo-IP information for a given host.
@@ -50,33 +51,57 @@ public class HostGeoInfo implements Serializable {
         return null;
     }
     
+    /** returns null if cannot be set */
     public static HostGeoInfo fromLocation(Location l) {
-        if (l instanceof HasHostGeoInfo) {
-            HostGeoInfo result = ((HasHostGeoInfo)l).getHostGeoInfo();
-            if (result!=null) return result;
+        if (l==null) return null;
+        
+        Location la = l;
+        HostGeoInfo resultFromLocation = null;
+        while (la!=null) {
+            if (la instanceof HasHostGeoInfo) {
+                resultFromLocation = ((HasHostGeoInfo)l).getHostGeoInfo();
+                if (resultFromLocation!=null) break;
+            }
+            la = la.getParent();
         }
+        if (resultFromLocation!=null && l==la) {
+            // from the location
+            return resultFromLocation;
+        }
+        // resultFromLocation may be inherited, in which case we will copy it later
+        
         InetAddress address = findIpAddress(l);
         Object latitude = l.getConfig(LocationConfigKeys.LATITUDE);
         Object longitude = l.getConfig(LocationConfigKeys.LONGITUDE);
 
-        if (address == null) return null;
-        if (latitude == null || longitude == null) {
+        if (resultFromLocation!=null && (latitude == null || longitude == null)) {
+            latitude = resultFromLocation.latitude;
+            longitude = resultFromLocation.longitude;            
+        }
+        if (address!=null && (latitude == null || longitude == null)) {
             HostGeoInfo geo = fromIpAddress(address);
             if (geo==null) return null;
             latitude = geo.latitude;
             longitude = geo.longitude;
         }
-        if (latitude instanceof BigDecimal) latitude = ((BigDecimal) latitude).doubleValue();
-        if (latitude instanceof String) latitude = Double.parseDouble((String)latitude);
-        if (longitude instanceof BigDecimal) longitude = ((BigDecimal) longitude).doubleValue();
-        if (longitude instanceof String) longitude = Double.parseDouble((String)longitude);
         
-        if (!(latitude instanceof Double) || !(longitude instanceof Double))
+        if (latitude==null || longitude==null)
+            return null;
+        
+        Exception error=null;
+        try {
+            latitude = TypeCoercions.castPrimitive(latitude, Double.class);
+            longitude = TypeCoercions.castPrimitive(longitude, Double.class);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            error = e;
+        }
+        if (error!=null || !(latitude instanceof Double) || !(longitude instanceof Double))
             throw new IllegalArgumentException("Location "+l+" specifies invalid type of lat/long: " +
                     "lat="+latitude+" (type "+(latitude==null ? null : latitude.getClass())+"); " +
-                    "lon="+longitude+" (type "+(longitude==null ? null : longitude.getClass())+")");
+                    "lon="+longitude+" (type "+(longitude==null ? null : longitude.getClass())+")", error);
         
-        HostGeoInfo result = new HostGeoInfo(address.getHostAddress(), l.getDisplayName(), (Double) latitude, (Double) longitude);
+        HostGeoInfo result = new HostGeoInfo(address!=null ? address.getHostAddress() : null, l.getDisplayName(), (Double) latitude, (Double) longitude);
         if (l instanceof AbstractLocation) {
             ((AbstractLocation)l).setHostGeoInfo(result);
         }
@@ -109,9 +134,8 @@ public class HostGeoInfo implements Serializable {
         return findIpAddress(l.getParent());
     }
     
-    
     public HostGeoInfo(String address, String displayName, double latitude, double longitude) {
-        this.address = checkNotNull(address, "address");
+        this.address = address;
         this.displayName = displayName==null ? "" : displayName;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -123,20 +147,20 @@ public class HostGeoInfo implements Serializable {
     
     @Override
     public String toString() {
-        return "HostGeoInfo["+displayName+": "+address+" at ("+latitude+","+longitude+")]";
+        return "HostGeoInfo["+displayName+": "+(address!=null ? address : "(no-address)")+" at ("+latitude+","+longitude+")]";
     }
     
     @Override
     public boolean equals(Object o) {
         // Slight cheat: only includes the address + displayName field (displayName to allow overloading localhost etc)
-        return (o instanceof HostGeoInfo) && address.equals(((HostGeoInfo) o).address)
-                && displayName.equals(((HostGeoInfo) o).displayName);
+        return (o instanceof HostGeoInfo) && Objects.equal(address, ((HostGeoInfo) o).address)
+                && Objects.equal(displayName, ((HostGeoInfo) o).displayName);
     }
     
     @Override
     public int hashCode() {
         // Slight cheat: only includes the address + displayName field (displayName to allow overloading localhost etc)
-        return address.hashCode() * 31 + displayName.hashCode();
+        return Objects.hashCode(address, displayName);
     }
     
 }

@@ -28,6 +28,7 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -54,6 +55,12 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     private static Set<Integer> portsInUse = Sets.newLinkedHashSet();
 
     private static HostGeoInfo cachedHostGeoInfo;
+    
+    @VisibleForTesting
+    public static void clearStaticData() {
+        portsInUse.clear();
+        cachedHostGeoInfo = null;
+    }
         
     /**
      * Construct a new instance.

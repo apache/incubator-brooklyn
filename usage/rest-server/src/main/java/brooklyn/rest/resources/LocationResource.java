@@ -7,6 +7,9 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.basic.BasicLocationDefinition;
@@ -19,6 +22,7 @@ import brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
 import brooklyn.rest.util.EntityLocationUtils;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Function;
@@ -27,15 +31,24 @@ import com.google.common.collect.Lists;
 
 public class LocationResource extends AbstractBrooklynRestResource implements LocationApi {
 
+    private static final Logger log = LoggerFactory.getLogger(LocationResource.class);
+    
     @Override
   public List<LocationSummary> list() {
-    return Lists.newArrayList(Iterables.transform(brooklyn().getLocationRegistry().getDefinedLocations().values(),
+    return Lists.newArrayList(Iterables.filter(Iterables.transform(brooklyn().getLocationRegistry().getDefinedLocations().values(),
         new Function<LocationDefinition, LocationSummary>() {
           @Override
           public LocationSummary apply(LocationDefinition l) {
-            return LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
+              try {
+                  return LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
+              } catch (Exception e) {
+                  Exceptions.propagateIfFatal(e);
+                  log.warn("Unable to find details of location "+l+" in REST call to list (ignoring location): "+e);
+                  log.debug("Error details for location "+l, e);
+                  return null;
+              }
           }
-        }));
+        }), LocationSummary.class));
   }
 
   // this is here to support the web GUI's circles

@@ -49,9 +49,12 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     private static final Logger log = LoggerFactory.getLogger(AbstractEntityAdjunct.class);
 
     private volatile ManagementContext managementContext;
-    protected Map leftoverProperties = Maps.newLinkedHashMap();
+    protected Map<String,Object> leftoverProperties = Maps.newLinkedHashMap();
 
     private boolean _legacyConstruction;
+    
+    // TODO not sure if we need this -- never read
+    @SuppressWarnings("unused")
     private boolean inConstruction;
 
     protected transient ExecutionContext execution;
@@ -81,7 +84,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
         this(Collections.emptyMap());
     }
     
-    public AbstractEntityAdjunct(Map flags) {
+    public AbstractEntityAdjunct(@SuppressWarnings("rawtypes") Map flags) {
         inConstruction = true;
         _legacyConstruction = !InternalPolicyFactory.FactoryConstructionTracker.isConstructing();
         if (!_legacyConstruction && flags!=null && !flags.isEmpty()) {
@@ -114,7 +117,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
         configure(Collections.emptyMap());
     }
     
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void configure(Map flags) {
         // TODO only set on first time through
         boolean isFirstTime = true;
@@ -255,28 +258,40 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     
     /** @see SubscriptionContext#subscribe(Entity, Sensor, SensorEventListener) */
     protected <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        if (!check(entity)) return null;
+        if (!checkCanSubscribe()) return null;
         return getSubscriptionTracker().subscribe(producer, sensor, listener);
     }
 
     /** @see SubscriptionContext#subscribe(Entity, Sensor, SensorEventListener) */
     protected <T> SubscriptionHandle subscribeToMembers(Group producerGroup, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        if (!check(producerGroup)) return null;
+        if (!checkCanSubscribe(producerGroup)) return null;
         return getSubscriptionTracker().subscribeToMembers(producerGroup, sensor, listener);
     }
 
     /** @see SubscriptionContext#subscribe(Entity, Sensor, SensorEventListener) */
     protected <T> SubscriptionHandle subscribeToChildren(Entity producerParent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        if (!check(producerParent)) return null;
+        if (!checkCanSubscribe(producerParent)) return null;
         return getSubscriptionTracker().subscribeToChildren(producerParent, sensor, listener);
     }
 
+    /** @deprecated since 0.7.0 use {@link #checkCanSubscribe(Entity)} */
+    @Deprecated
+    protected boolean check(Entity requiredEntity) {
+        return checkCanSubscribe(requiredEntity);
+    }
     /** returns false if deleted, throws exception if invalid state, otherwise true.
-     * okay if entity is not yet managed. */
-    protected boolean check(Entity producer) {
+     * okay if entity is not yet managed (but not if entity is no longer managed). */
+    protected boolean checkCanSubscribe(Entity producer) {
         if (destroyed.get()) return false;
+        if (producer==null) throw new IllegalStateException(this+" given a null target for subscription");
         if (entity==null) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because it is not associated to an entity");
         if (((EntityInternal)entity).getManagementSupport().isNoLongerManaged()) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because the associated entity "+entity+" is no longer managed");
+        return true;
+    }
+    protected boolean checkCanSubscribe() {
+        if (destroyed.get()) return false;
+        if (entity==null) throw new IllegalStateException(this+" cannot subscribe because it is not associated to an entity");
+        if (((EntityInternal)entity).getManagementSupport().isNoLongerManaged()) throw new IllegalStateException(this+" cannot subscribe because the associated entity "+entity+" is no longer managed");
         return true;
     }
         
