@@ -107,6 +107,7 @@ public class Duration implements Comparable<Duration> {
 
     /** see {@link #of(Object)} and {@link Time#parseTimeString(String)} */
     public static Duration parse(String textualDescription) {
+        if ("null".equalsIgnoreCase(textualDescription)) return null;
         return new Duration(Time.parseTimeString(textualDescription), TimeUnit.MILLISECONDS);
     }
 
