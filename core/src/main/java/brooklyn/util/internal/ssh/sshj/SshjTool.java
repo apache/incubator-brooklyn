@@ -178,7 +178,9 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     public void disconnect() {
         if (LOG.isTraceEnabled()) LOG.trace("Disconnecting SshjTool {} ({})", this, System.identityHashCode(this));
         try {
+            Stopwatch perfStopwatch = Stopwatch.createStarted();
             sshClientConnection.clear();
+            if (LOG.isTraceEnabled()) LOG.trace("SSH Performance: {} disconnect took {}", sshClientConnection.getHostAndPort(), Time.makeTimeStringRounded(perfStopwatch));
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
@@ -339,8 +341,13 @@ public class SshjTool extends SshAbstractTool implements SshTool {
             try {
                 action.clear();
                 if (LOG.isTraceEnabled()) LOG.trace(">> ({}) acquiring {}", toString(), action);
+                Stopwatch perfStopwatch = Stopwatch.createStarted();
                 T returnVal = action.create();
                 if (LOG.isTraceEnabled()) LOG.trace("<< ({}) acquired {}", toString(), returnVal);
+                if (LOG.isTraceEnabled()) LOG.trace("SSH Performance: {} {} took {}", new Object[] {
+                        sshClientConnection.getHostAndPort(), 
+                        action.getClass().getSimpleName() != null ? action.getClass().getSimpleName() : action, 
+                        Time.makeTimeStringRounded(perfStopwatch)});
                 return returnVal;
             } catch (Exception e) {
                 // uninformative net.schmizz.sshj.connection.ConnectionException: 
