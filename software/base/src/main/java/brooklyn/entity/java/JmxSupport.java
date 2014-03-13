@@ -2,7 +2,6 @@ package brooklyn.entity.java;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -19,9 +18,9 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.location.Location;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
+import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.ResourceUtils;
@@ -79,12 +78,17 @@ public class JmxSupport implements UsesJmx {
     }
     
     public Optional<SshMachineLocation> getMachine() {
-        Collection<Location> l = entity.getLocations();
-        if (l.size()==1) {
-            Location ll = l.iterator().next();
-            if (ll instanceof SshMachineLocation) return Optional.of((SshMachineLocation) ll);
+        // TODO could return Maybe rather than Optional, to include a decent error message
+        return Machines.findUniqueSshMachineLocation(entity.getLocations());
+    }
+
+    public SshMachineLocation checkMachine() {
+        Optional<SshMachineLocation> result = getMachine();
+        if (result.isPresent()) {
+            return result.get();
+        } else {
+            throw new IllegalStateException("No unique ssh-machine found for "+entity+"; locations are "+entity.getLocations());
         }
-        return Optional.absent();
     }
 
     public boolean isJmx() {
@@ -262,7 +266,7 @@ public class JmxSupport implements UsesJmx {
         
         Integer jmxRemotePort;
         String hostName = getEntity().getAttribute(Attributes.HOSTNAME);
-        if (hostName==null) hostName = checkNotNull(getMachine().get().getAddress().getHostName(), "hostname for entity " + entity);
+        if (hostName==null) hostName = checkNotNull(checkMachine().getAddress().getHostName(), "hostname for entity " + entity);
         
         result.put("com.sun.management.jmxremote", null);
 
@@ -311,7 +315,7 @@ public class JmxSupport implements UsesJmx {
     /** installs files needed for JMX, to the runDir given in constructor, assuming the runDir has been created */ 
     public void install() {
         if (getJmxAgentMode()!=JmxAgentModes.NONE) {
-            getMachine().get().copyTo(ResourceUtils.create(this).getResourceFromUrl(
+            checkMachine().copyTo(ResourceUtils.create(this).getResourceFromUrl(
                 getJmxAgentJarUrl()), getJmxAgentJarDestinationFilePath());
         }
         if (isSecure()) {
