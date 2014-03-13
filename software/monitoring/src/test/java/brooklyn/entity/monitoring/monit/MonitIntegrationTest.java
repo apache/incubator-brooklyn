@@ -78,7 +78,7 @@ public class MonitIntegrationTest {
         LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
         MySqlNode mySqlNode = sameServerEntity.addChild(EntitySpec.create(MySqlNode.class));
         Entities.manage(mySqlNode);
-        Function controlFileSubstitutionsFunction = new Function<String, Map<String, Object>>() {
+        Function<String, Map<String, Object>> controlFileSubstitutionsFunction = new Function<String, Map<String, Object>>() {
             public Map<String, Object> apply(String input) {
                 return ImmutableMap.<String, Object>of("targetPidFile", input);
             }
@@ -126,20 +126,22 @@ public class MonitIntegrationTest {
         final String mySqlInstallDir = tempDir.getAbsolutePath() + "/install";
         final String mySqlRunDir = tempDir.getAbsolutePath() + "/run";
         final String mySqlDataDir = tempDir.getAbsolutePath() + "/data";
+        final String mySqlVersion = MySqlNode.SUGGESTED_VERSION.getDefaultValue();
         
         SameServerEntity sameServerEntity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class));
         LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
         final MySqlNode mySqlNode = sameServerEntity.addChild(EntitySpec.create(MySqlNode.class)
-            .configure(MySqlNode.SUGGESTED_INSTALL_DIR, mySqlInstallDir)
-            .configure(MySqlNode.SUGGESTED_RUN_DIR, mySqlRunDir)
+            .configure(MySqlNode.INSTALL_DIR, mySqlInstallDir)
+            .configure(MySqlNode.RUN_DIR, mySqlRunDir)
             .configure(MySqlNode.DATA_DIR, mySqlDataDir));
         Entities.manage(mySqlNode);
-        Function controlFileSubstitutionsFunction = new Function<String, Map<String, Object>>() {
+        Function<String, Map<String, Object>> controlFileSubstitutionsFunction = new Function<String, Map<String, Object>>() {
             public Map<String, Object> apply(String input) {
                 return ImmutableMap.<String, Object>of(
                     "targetPidFile", input,
                     "mySqlInstallDir", mySqlInstallDir,
-                    "mySqlRunDir", mySqlRunDir
+                    "mySqlRunDir", mySqlRunDir,
+                    "mySqlVersion", mySqlVersion
                 );
             }
         };
