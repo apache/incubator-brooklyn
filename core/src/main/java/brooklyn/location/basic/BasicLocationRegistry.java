@@ -298,7 +298,7 @@ public class BasicLocationRegistry implements LocationRegistry {
     }
 
     @Override
-    public Location lookup(LocationDefinition ld) {
+    public Location resolveForPeeking(LocationDefinition ld) {
         // TODO actually look it up
         Location l = resolve(ld, Collections.emptyMap());
         mgmt.getLocationManager().unmanage(l);

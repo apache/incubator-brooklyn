@@ -150,7 +150,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 removeTargetHost(e, false);
             }
             
-            // do a periodic full update hourly once we are actie (the latter is probably not needed)
+            // do a periodic full update hourly once we are active (the latter is probably not needed)
             if (changed || (lastUpdate>0 && Time.hasElapsedSince(lastUpdate, Duration.ONE_HOUR)))
                 update();
             
@@ -161,15 +161,11 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     
     /**
      * Adds this host, if it is absent or if its hostname has changed.
-     * 
+     * <p>
      * For whether to use hostname or ip, see config and attributes {@link AbstractGeoDnsService#USE_HOSTNAMES}, 
      * {@link Attributes#HOSTNAME} and {@link Attributes#ADDRESS} (via {@link #inferHostname(Entity)} and {@link #inferIp(Entity)}.
-     * Note that the "hostname" could infact be an IP address, if {@link #inferHostname(Entity)} returns an IP!
+     * Note that the "hostname" could in fact be an IP address, if {@link #inferHostname(Entity)} returns an IP!
      * <p>
-     * The "hostname" is always preferred for inferring the geo info, if it is available. The {@code USE_HOSTNAMES==false} 
-     * is just used to say whether to fall back to IP if that is not available (and whether to switch the the geo-info so it
-     * refs the IP instead of the hostname).
-     * 
      * TODO in a future release, we may change this to explicitly set the sensor(s) to look at on the entity, and 
      * be stricter about using them in order.
      * 
@@ -287,16 +283,16 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 String hostname2 = u.getHost(); 
                 if (hostname==null) {
                     if (!entitiesWithoutGeoInfo.contains(entity))  //don't log repeatedly
-                        log.warn("GeoDns using URL {} to redirect to {} (HOSTNAME attribute is preferred, but not available)", url, entity);
+                        log.warn("GeoDns "+this+" using URL {} to redirect to {} (HOSTNAME attribute is preferred, but not available)", url, entity);
                     hostname = hostname2;
                 } else if (!hostname.equals(hostname2)) {
                     if (!entitiesWithoutGeoInfo.contains(entity))  //don't log repeatedly
-                        log.warn("GeoDns URL {} of {} does not match advertised HOSTNAME {}; using hostname, not URL", url, hostname);
+                        log.warn("GeoDns "+this+" URL {} of "+entity+" does not match advertised HOSTNAME {}; using hostname, not URL", url, hostname);
                 }
                 
                 if (u.getPort() > 0 && u.getPort() != 80 && u.getPort() != 443) {
                     if (!entitiesWithoutGeoInfo.contains(entity))  //don't log repeatedly
-                        log.warn("GeoDns detected non-standard port in URL {} for {}; forwarding may not work", url, entity);
+                        log.warn("GeoDns "+this+" detected non-standard port in URL {} for {}; forwarding may not work", url, entity);
                 }
                 
             } catch (MalformedURLException e) {

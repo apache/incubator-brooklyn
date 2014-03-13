@@ -35,9 +35,13 @@ public interface LocationRegistry {
      * currently by creating it but TODO creation can be a leak so all current 'resolve' methods should be carefully used! */
     public Location resolve(LocationDefinition l);
 
-    /** returns fully populated (config etc) location from the given definition, by looking it up */
+    /** efficiently returns for inspection only a fully populated (config etc) location from the given definition; 
+     * the value might be unmanaged so it is not meant for any use other than inspection,
+     * but callers should prefer this when they don't wish to create a new location which will be managed in perpetuity!
+     * 
+     * @since 0.7.0, but beta and likely to change as the semantics of this class are tuned */
     @Beta
-    public Location lookup(LocationDefinition l);
+    public Location resolveForPeeking(LocationDefinition l);
 
     /** returns fully populated (config etc) location from the given definition */
     public Location resolve(LocationDefinition l, Map<?,?> locationFlags);

@@ -18,7 +18,7 @@ import com.google.common.reflect.TypeToken;
 public interface AbstractGeoDnsService extends Entity {
     
     public static final ConfigKey<Boolean> INCLUDE_HOMELESS_ENTITIES = ConfigKeys.newBooleanConfigKey("geodns.includeHomeless", "Whether to include entities whose geo-coordinates cannot be inferred", false);
-    public static final ConfigKey<Boolean> USE_HOSTNAMES = ConfigKeys.newBooleanConfigKey("geodns.useHostnames", "Whether to use the hostname for the returned value, for routing (rather than IP address)", true);
+    public static final ConfigKey<Boolean> USE_HOSTNAMES = ConfigKeys.newBooleanConfigKey("geodns.useHostnames", "Whether to use the hostname for the returned value for routing, rather than IP address (defaults to true)", true);
     
     public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
     public static final AttributeSensor<Boolean> SERVICE_UP = Startable.SERVICE_UP;
@@ -30,7 +30,8 @@ public interface AbstractGeoDnsService extends Entity {
 
     public void setServiceState(Lifecycle state);
     
-    /** if target is a group, its members are searched; otherwise its children are searched */
+    /** sets target to be a group whose *members* will be searched (non-Group items not supported) */
+    // prior to 0.7.0 the API accepted non-group items, but did not handle them correctly
     public void setTargetEntityProvider(final Group entityProvider);
     
     /** should return the hostname which this DNS service is configuring */

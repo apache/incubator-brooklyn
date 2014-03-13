@@ -1362,9 +1362,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return machine;
     }
 
-    /** @deprecated since 0.7.0 use variant which takes compute service */
+    /** @deprecated since 0.7.0 use variant which takes compute service; no longer called internally,
+     * so marked final to force any overrides to switch to new syntax */
     @Deprecated
-    protected JcloudsSshMachineLocation createJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
+    protected final JcloudsSshMachineLocation createJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
         return createJcloudsSshMachineLocation(null, node, vmHostname, sshHostAndPort, setup);
     }
     protected JcloudsSshMachineLocation createJcloudsSshMachineLocation(ComputeService computeService, NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
@@ -1392,14 +1393,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         
         if (LOG.isDebugEnabled())
-            LOG.debug("creating JcloudsSshMachineLocation representation for {}@{} for {}/{} with {}/{}", 
+            LOG.debug("creating JcloudsSshMachineLocation representation for {}@{} ({}/{}) for {}/{}", 
                     new Object[] {
                             getUser(setup), 
                             address, 
-                            setup.getDescription(), 
-                            node,
                             Entities.sanitize(sshConfig),
-                            sshHostAndPort
+                            sshHostAndPort,
+                            setup.getDescription(), 
+                            node
                     });
         
         if (isManaged()) {

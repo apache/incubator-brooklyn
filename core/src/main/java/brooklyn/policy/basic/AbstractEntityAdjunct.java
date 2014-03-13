@@ -53,7 +53,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
 
     private boolean _legacyConstruction;
     
-    // not sure if we need this -- never read
+    // TODO not sure if we need this -- never read
     @SuppressWarnings("unused")
     private boolean inConstruction;
 
