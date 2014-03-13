@@ -25,28 +25,13 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        cassandra = app.createAndManageChild(EntitySpec.create(CassandraNode.class));
-        app.start(ImmutableList.of(testLocation));
-
-        EntityTestUtils.assertAttributeEqualsEventually(cassandra, Startable.SERVICE_UP, true);
-        Entities.dumpInfo(app);
-
-        cassandra.stop();
-
-        EntityTestUtils.assertAttributeEqualsEventually(cassandra, Startable.SERVICE_UP, false);
-    }
-
-    /**
-     * Test that a node starts and sets SERVICE_UP correctly when a jmx port is supplied.
-     */
-    @Test(groups = "Integration")
-    public void canStartupAndShutdownWithCustomJmx() {
         cassandra = app.createAndManageChild(EntitySpec.create(CassandraNode.class)
                 .configure("jmxPort", "11099+")
                 .configure("rmiRegistryPort", "19001+"));
         app.start(ImmutableList.of(testLocation));
 
         EntityTestUtils.assertAttributeEqualsEventually(cassandra, Startable.SERVICE_UP, true);
+        Entities.dumpInfo(app);
 
         cassandra.stop();
 
@@ -59,6 +44,8 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
     @Test(groups = "Integration")
     public void testConnection() throws Exception {
         cassandra = app.createAndManageChild(EntitySpec.create(CassandraNode.class)
+                .configure("jmxPort", "11099+")
+                .configure("rmiRegistryPort", "19001+")
                 .configure("thriftPort", "9876+"));
         app.start(ImmutableList.of(testLocation));
 
