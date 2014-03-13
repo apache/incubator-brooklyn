@@ -1,6 +1,7 @@
 package brooklyn.entity.basic;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.Task;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
@@ -150,14 +152,18 @@ public class SoftwareProcessEntityTest {
         Entities.manage(entity);
         
         entity.start(ImmutableList.of(loc));
-        try {
-            entity.stop();
-            Assert.fail();
-        } catch (Exception e) {
-            Assert.assertEquals(loc.getAvailable(), ImmutableSet.of(machine));
-            IllegalStateException cause = Throwables2.getFirstThrowableOfType(e, IllegalStateException.class);
-            if (cause == null || !cause.toString().contains("Simulating stop error")) throw e;
-        }
+        Task<Void> t = entity.invoke(Startable.STOP);
+        t.blockUntilEnded();
+        
+        Iterator<Task<?>> failures = Tasks.failed(Tasks.descendants(t, true)).iterator();
+        Assert.assertFalse(t.isError(), "Expected parent to succeed, not fail with "+Tasks.getError(t));
+        Assert.assertTrue(failures.hasNext(), "Expected error in child");
+        Throwable e = Tasks.getError(failures.next());
+        if (e == null || !e.toString().contains("Simulating stop error")) 
+            Assert.fail("Wrong error", e);
+
+        Assert.assertEquals(loc.getAvailable(), ImmutableSet.of(machine), "Expected location to be available again");
+
         Entities.unmanage(entity);
     }
 
@@ -171,14 +177,18 @@ public class SoftwareProcessEntityTest {
         Entities.manage(entity);
         
         entity.start(ImmutableList.of(loc));
-        try {
-            entity.stop();
-            Assert.fail();
-        } catch (Exception e) {
-            Assert.assertEquals(loc.getAvailable(), ImmutableSet.of(machine));
-            if (!e.toString().contains("Simulating stop error")) 
-                throw new IllegalStateException("Wrong error", e);
-        }
+        Task<Void> t = entity.invoke(Startable.STOP);
+        t.blockUntilEnded();
+        
+        Iterator<Task<?>> failures = Tasks.failed(Tasks.descendants(t, true)).iterator();
+        Assert.assertFalse(t.isError(), "Expected parent to succeed, not fail with "+Tasks.getError(t));
+        Assert.assertTrue(failures.hasNext(), "Expected error in child");
+        Throwable e = Tasks.getError(failures.next());
+        if (e == null || !e.toString().contains("Simulating stop error")) 
+            Assert.fail("Wrong error", e);
+        
+        Assert.assertEquals(loc.getAvailable(), ImmutableSet.of(machine), "Expected location to be available again");
+
         Entities.unmanage(entity);
     }
 

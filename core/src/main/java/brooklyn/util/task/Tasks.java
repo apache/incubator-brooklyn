@@ -23,6 +23,7 @@ import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
@@ -296,6 +297,22 @@ public class Tasks {
             }
         });
     }
+    
+    /** returns the task, its children, and all its children, and so on;
+     * @param root task whose descendants should be iterated
+     * @param parentFirst whether to put parents before children or after
+     */
+    public static Iterable<Task<?>> descendants(Task<?> root, final boolean parentFirst) {
+        Iterable<Task<?>> descs = Iterables.concat(Iterables.transform(Tasks.children(root), new Function<Task<?>,Iterable<Task<?>>>() {
+            @Override
+            public Iterable<Task<?>> apply(Task<?> input) {
+                // TODO Auto-generated method stub
+                return descendants(input, parentFirst);
+            }
+        }));
+        if (parentFirst) return Iterables.concat(Collections.singleton(root), descs);
+        else return Iterables.concat(descs, Collections.singleton(root));
+    }
 
     /** returns the error thrown by the task if {@link Task#isError()}, or null if no error or not done */
     public static Throwable getError(Task<?> t) {
@@ -316,5 +333,4 @@ public class Tasks {
             if (optionalError!=null) throw Exceptions.propagate(optionalError); else throw new RuntimeException("Failed: "+name);
         } }).build();
     }
-
 }

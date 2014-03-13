@@ -1,5 +1,6 @@
 package brooklyn.entity.software;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +17,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EffectorStartableImpl.StartParameters;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -41,6 +43,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
@@ -72,6 +75,9 @@ public abstract class MachineLifecycleEffectorTasks {
     private static final Logger log = LoggerFactory.getLogger(MachineLifecycleEffectorTasks.class);
     
     public static final ConfigKey<Collection<? extends Location>> LOCATIONS = StartParameters.LOCATIONS;
+    public static final ConfigKey<Duration> STOP_PROCESS_TIMEOUT = 
+        ConfigKeys.newConfigKey(Duration.class, "process.stop.timeout", "How long to wait for the processes to be stopped; "
+            + "use null to mean forever", Duration.TWO_MINUTES);
 
     /** attaches lifecycle effectors (start, restart, stop) to the given entity (post-creation) */ 
     public void attachLifecycleEffectors(Entity entity) {
@@ -358,32 +364,50 @@ public abstract class MachineLifecycleEffectorTasks {
         Task<Object> stoppingProcess = DynamicTasks.queueSwallowingChildrenFailures("stopping (process)", new Callable<Object>() { public Object call() {
             try {
                 stopProcessesAtMachine();
-                DynamicTasks.waitForLast();
             } catch (Throwable error) {
                 String msg = "Error stopping "+entity()+" (process): "+error;
                 log.warn(msg);
+                DynamicTasks.queue(Tasks.fail("Primary job failed", error));
                 return error;
             }
             return "Stop at machine completed with no errors.";
         }});
         
         // Release this machine (even if error trying to stop process - we rethrow that after)
-        DynamicTasks.queue("stopping (machine)", new Callable<String>() { public String call() {
+        Task<ObjectWithMessage<Integer>> stoppingMachine = DynamicTasks.queue("stopping (machine)", new Callable<ObjectWithMessage<Integer>>() { public ObjectWithMessage<Integer> call() {
             if (entity().getAttribute(SoftwareProcess.SERVICE_STATE)==Lifecycle.STOPPED) {
                 log.debug("Skipping stop of entity "+entity()+" when already stopped");
-                return "Already stopped";
+                return new ObjectWithMessage<Integer>("Already stopped", 0);
             }
             return stopAnyProvisionedMachines();
         }});
-        
-        DynamicTasks.waitForLast();
-        
-        if (stoppingProcess.getUnchecked() instanceof Throwable)
-            throw Exceptions.propagate((Throwable)stoppingProcess.getUnchecked());
-        
-        entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
-        entity().setAttribute(SoftwareProcess.SERVICE_STATE, Lifecycle.STOPPED);
 
+        // TODO
+//        DynamicTasks.waitForLast(entity().getConfig(STOP_PROCESS_TIMEOUT), false);
+//        
+//        // shutdown the machine if stopping process fails or takes too long
+//        if (stoppingProcess.isError()) {
+//            // try to resubmit the stoppingMachine task
+//            Entities.submit(entity(), stoppingMachine);
+//        }
+        
+        try {
+            if (stoppingMachine.get().value==0) {
+                // throw early errors *only if* we have not stopped the machine
+                //TODO
+//                DynamicTasks.waitForLast();
+                // instead:
+                Object o = stoppingProcess.get();
+                if (o instanceof Throwable) throw (Throwable)o;
+            }
+            
+            entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
+            entity().setAttribute(SoftwareProcess.SERVICE_STATE, Lifecycle.STOPPED);
+        } catch (Throwable e) {
+            entity().setAttribute(SoftwareProcess.SERVICE_STATE, Lifecycle.ON_FIRE);
+            Exceptions.propagate(e);
+        }
+        
         if (log.isDebugEnabled()) log.debug("Stopped software process entity "+entity());
     }
     
@@ -391,9 +415,23 @@ public abstract class MachineLifecycleEffectorTasks {
         // nothing needed here
     }
     
+    public static class ObjectWithMessage<T> implements Serializable {
+        private static final long serialVersionUID = 3256747214315895431L;
+        final String message;
+        final T value;
+        public ObjectWithMessage(String message, T value) {
+            this.message = message;
+            this.value = value;
+        }
+        @Override
+        public String toString() {
+            return message;
+        }
+    }
+    
     /** can run synchronously (or not) -- caller will submit/queue as needed, and will block on any submitted tasks. 
-     * @return string message of result */
-    protected String stopAnyProvisionedMachines() {
+     * @return true if machines are deprovisioned */
+    protected ObjectWithMessage<Integer> stopAnyProvisionedMachines() {
         @SuppressWarnings("unchecked")
         MachineProvisioningLocation<MachineLocation> provisioner = entity().getAttribute(SoftwareProcess.PROVISIONING_LOCATION);
 
@@ -402,19 +440,19 @@ public abstract class MachineLifecycleEffectorTasks {
         
         if (Iterables.isEmpty(entity().getLocations())) {
             log.debug("No machine decommissioning necessary for "+entity()+" - no locations");
-            return "No machine decommissioning necessary for - no locations";
+            return new ObjectWithMessage<Integer>("No machine decommissioning necessary for - no locations", 0);
         }
         
         // Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
         if (provisioner==null) {
             log.debug("No machine decommissioning necessary for "+entity()+" - did not provision");
-            return "No machine decommissioning necessary for - did not provision";
+            return new ObjectWithMessage<Integer>("No machine decommissioning necessary for - did not provision", 0);
         }
 
         Location machine = getLocation(null);
         if (!(machine instanceof MachineLocation)) {
             log.debug("No decommissioning necessary for "+entity()+" - not a machine location ("+machine+")");
-            return "No machine decommissioning necessary for - not a machine ("+machine+")";
+            return new ObjectWithMessage<Integer>("No machine decommissioning necessary for - not a machine ("+machine+")", 0);
         }
         
         try {
@@ -427,7 +465,7 @@ public abstract class MachineLifecycleEffectorTasks {
         } catch (Throwable t) {
             throw Exceptions.propagate(t);
         }
-        return "Decommissioned "+machine;
+        return new ObjectWithMessage<Integer>("Decommissioned "+machine, 1);
     }
 
     /** can run synchronously (or not) -- caller will submit/queue as needed, and will block on any submitted tasks. 
