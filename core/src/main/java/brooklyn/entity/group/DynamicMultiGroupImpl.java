@@ -83,7 +83,7 @@ public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMult
 
             Group bucket = bucketsByName.get(bucketName);
             if (bucket == null) {
-                bucket = addChild(groupSpec.displayName(bucketName));
+                bucket = addChild(EntitySpec.create(groupSpec).displayName(bucketName));
                 Entities.manage(bucket);
                 bucketsByName.put(bucketName, bucket);
             }

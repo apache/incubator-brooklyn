@@ -22,24 +22,34 @@ public interface DynamicMultiGroup extends Entity {
      * @see DynamicMultiGroupImpl#iterableForMembers(Entity)
      */
     @SetFromFlag("entityProvider")
-    public static final ConfigKey<Iterable<Entity>> ENTITY_PROVIDER =
-        ConfigKeys.newConfigKey(new TypeToken<Iterable<Entity>>(){}, "brooklyn.multigroup.entityProvider");
+    public static final ConfigKey<Iterable<Entity>> ENTITY_PROVIDER = ConfigKeys.newConfigKey(
+            new TypeToken<Iterable<Entity>>(){},
+            "brooklyn.multigroup.entityProvider",
+            "Identifies which entities should be considered for 'bucketising'"
+    );
 
     /**
-     * Implementation of the mapping from entity to bucket (name).
+     * Implements the mapping from entity to bucket (name).
      * @see DynamicMultiGroupImpl#bucketFromAttribute(brooklyn.event.AttributeSensor)
      * @see DynamicMultiGroupImpl#bucketFromAttribute(brooklyn.event.AttributeSensor, String)
      */
     @SetFromFlag("bucketFunction")
-    public static final ConfigKey<Function<Entity, String>> BUCKET_FUNCTION =
-        ConfigKeys.newConfigKey(new TypeToken<Function<Entity, String>>(){}, "brooklyn.multigroup.bucketFunction");
+    public static final ConfigKey<Function<Entity, String>> BUCKET_FUNCTION = ConfigKeys.newConfigKey(
+            new TypeToken<Function<Entity, String>>(){},
+            "brooklyn.multigroup.bucketFunction",
+            "Implements the mapping from entity to bucket (name)"
+    );
 
     /**
      * Determines the entity type used for the "bucket" groups.
      */
     @SetFromFlag("groupSpec")
-    public static final ConfigKey<EntitySpec<? extends Group>> GROUP_SPEC =
-        ConfigKeys.newConfigKey(new TypeToken<EntitySpec<? extends Group>>() {}, "brooklyn.multigroup.groupSpec", null, EntitySpec.create(BasicGroup.class));
+    public static final ConfigKey<EntitySpec<? extends Group>> GROUP_SPEC = ConfigKeys.newConfigKey(
+            new TypeToken<EntitySpec<? extends Group>>(){},
+            "brooklyn.multigroup.groupSpec",
+            "Determines the entity type used for the 'bucket' groups",
+            EntitySpec.create(BasicGroup.class)
+    );
 
 
     /**
