@@ -6,6 +6,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.net.URLParamEncoder;
 
 import com.google.common.base.Throwables;
@@ -264,6 +265,62 @@ public class StringEscapes {
             
             assert quoted;
             throw new IllegalArgumentException("String '"+s+"' is not a valid Java string (unterminated string)");
+        }
+        
+        /** converts a comma separated list in a single string to a list of strings, 
+         * doing what would be expected if given java or json style string as input,
+         * and falling back to returning the input.
+         * <p>
+         * this method does <b>not</b> throw exceptions on invalid input,
+         * but just returns that input
+         * <p>
+         * specifically, uses the following rules (executed once in sequence:
+         * <li> 1) if of form <code>[ X ]</code> (in brackets after trim), 
+         *      then removes brackets and applies following rules to X (for any X including quoted or with commas)
+         * <li> 2) if of form <code>"X"</code> 
+         *      (in double quotes after trim, 
+         *      where X contains no internal double quotes unless escaped with backslash) 
+         *      then returns list containing X unescaped (\x replaced by x)
+         * <li> 3) if of form <code>X</code> or <code>X, Y, ...</code> 
+         *      (where X, Y, ... each satisfy the constraint given in 2, or have no double quotes or commas in them)
+         *      then returns the concatenation of rule 2 applied to non-empty X, Y, ...
+         *      (if you want an empty string in a list, you must double quote it)
+         * <li> 4) for any other form X returns [ X ], including empty list for empty string
+         * <p>
+         * @see #unwrapOptionallyQuotedJavaStringList(String)
+         **/
+        public static List<String> unwrapJsonishListIfPossible(String input) {
+            try {
+                return unwrapOptionallyQuotedJavaStringList(input);
+            } catch (Exception e) {
+                return MutableList.of(input);
+            }
+        }
+        
+        /** as {@link #unwrapJsonishListIfPossible(String)} but throwing errors 
+         * if something which looks like a string or set of brackets is not well-formed
+         * (this does the work for that method) */
+        public static List<String> unwrapOptionallyQuotedJavaStringList(String input) {
+            if (input==null) return null;
+            MutableList<String> result = MutableList.of();
+            String i1 = input.trim();
+            
+            boolean inBrackets = (i1.startsWith("[") && i1.endsWith("]"));
+            if (inBrackets) i1 = i1.substring(1, i1.length()-2).trim();
+                
+            QuotedStringTokenizer qst = new QuotedStringTokenizer(i1, "\"", true, ",", false);
+            while (qst.hasMoreTokens()) {
+                String t = qst.nextToken().trim();
+                if (isWrappedInDoubleQuotes(t))
+                    result.add(unwrapJavaString(t));
+                else {
+                    if (inBrackets && (t.indexOf('[')>=0 || t.indexOf(']')>=0))
+                        throw new IllegalStateException("Literal square brackets must be quoted, in element '"+t+"'");
+                    result.add(t.trim());
+                }
+            }
+            
+            return result;
         }
     }
     

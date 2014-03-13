@@ -26,7 +26,6 @@ import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**

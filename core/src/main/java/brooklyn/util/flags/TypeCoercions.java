@@ -31,13 +31,13 @@ import brooklyn.entity.basic.EntityFactory;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.net.Networking;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
@@ -494,12 +494,13 @@ public class TypeCoercions {
         registerAdapter(String.class, List.class, new Function<String,List>() {
             @Override
             public List<String> apply(final String input) {
-                return ImmutableList.copyOf(Splitter.on(",").trimResults().omitEmptyStrings().split(input));
+                return JavaStringEscapes.unwrapJsonishListIfPossible(input);
             }
         });
         registerAdapter(String.class, Map.class, new Function<String,Map>() {
             @Override
             public Map<String, String> apply(final String input) {
+                // TODO we should respect quoted strings etc
                 return ImmutableMap.copyOf(Splitter.on(",").trimResults().omitEmptyStrings().withKeyValueSeparator("=").split(input));
             }
         });

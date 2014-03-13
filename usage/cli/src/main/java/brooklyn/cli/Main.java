@@ -47,6 +47,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.Strings;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -199,7 +200,8 @@ public class Main {
 
         @Option(name = { "-l", "--location", "--locations" }, title = "location list",
                 description = "Specifies the locations where the application will be launched. " +
-                        "You can specify more than one location like this: \"loc1,loc2,loc3\"")
+                        "You can specify more than one location as a comma-separated list of values " +
+                        "(or as a JSON array, if the values are complex)")
         public String locations;
 
         @Option(name = { "-p", "--port" }, title = "port number",
@@ -381,7 +383,7 @@ public class Main {
                     .webconsolePort(port)
                     .webconsole(!noConsole)
                     .shutdownOnExit(!noShutdownOnExit)
-                    .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : ImmutableList.of(locations));
+                    .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : JavaStringEscapes.unwrapJsonishListIfPossible(locations));
             if (noConsoleSecurity) {
                 launcher.installSecurityFilter(false);
             }

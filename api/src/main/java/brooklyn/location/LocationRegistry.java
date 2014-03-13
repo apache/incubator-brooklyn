@@ -63,15 +63,20 @@ public interface LocationRegistry {
     public Location resolveIfPossible(String spec);
 
     /**
-     * As {@link #resolve(String)} but works with a collection of location specs.
+     * As {@link #resolve(String)} but takes collections (of strings or locations)
      * <p>
-     * Usually given a collection of string specs.
-     * Also supports comma-separated lists as a single spec.
+     * Expects a collection of elements being individual location spec strings or locations, 
+     * and returns a list of resolved (newly created and managed) locations.
      * <p>
-     * For legacy compatibility this also accepts nested lists, but that is deprecated
-     * (and triggers a warning).
+     * From 0.7.0 this no longer flattens lists (nested lists are disallowed) 
+     * or parses comma-separated elements (they are resolved as-is)
      */
     public List<Location> resolve(Iterable<?> spec);
+    
+    /** Takes a string, interpreted as a comma-separated (or JSON style, when you need internal double quotes or commas) list;
+     * or a list, passed to {@link #resolve(Iterable)}; or null/empty (empty list),
+     * and returns a list of resolved (created and managed) locations */
+    public List<Location> resolveList(Object specList);
     
     public Map getProperties();
     

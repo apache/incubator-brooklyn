@@ -2,6 +2,7 @@ package brooklyn.entity.software;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -28,6 +29,7 @@ import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.Machines;
@@ -40,6 +42,7 @@ import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -228,6 +231,26 @@ public abstract class MachineLifecycleEffectorTasks {
         DynamicTasks.queue("pre-start", new Runnable() { public void run() {
             MachineLocation machine = machineS.get();
             log.info("Starting {} on machine {}", entity(), machine);
+            Collection<Location> oldLocs = entity().getLocations();
+            if (!oldLocs.isEmpty()) {
+                List<MachineLocation> oldSshLocs = ImmutableList.copyOf(Iterables.filter(oldLocs, MachineLocation.class));
+                if (!oldSshLocs.isEmpty()) {
+                    // check if existing locations are compatible
+                    log.debug("Entity "+entity()+" had machine locations "+oldSshLocs+" when starting at "+machine+"; checking if they are compatible");
+                    for (MachineLocation oldLoc: oldSshLocs) {
+                        // machines are deemed compatible if hostname and address are the same, or they are localhost
+                        // this allows a machine create by jclouds to then be defined with an ip-based spec
+                        if (machine.getConfig(AbstractLocation.ORIGINAL_SPEC)!="localhost") {
+                            checkLocationParametersCompatible(machine, oldLoc, "hostname", 
+                                oldLoc.getAddress().getHostName(), machine.getAddress().getHostName());
+                            checkLocationParametersCompatible(machine, oldLoc, "address", 
+                                oldLoc.getAddress().getHostAddress(), machine.getAddress().getHostAddress());
+                        }
+                    }
+                    log.debug("Entity "+entity()+" old machine locations "+oldSshLocs+" were compatible, removing them to start at "+machine);
+                    entity().removeLocations(oldSshLocs);
+                }
+            }
             entity().addLocations(ImmutableList.of((Location)machine));
 
             // elsewhere we rely on (public) hostname being set _after_ subnet_hostname
@@ -244,6 +267,14 @@ public abstract class MachineLifecycleEffectorTasks {
         }});
     }
         
+    protected void checkLocationParametersCompatible(MachineLocation oldLoc, MachineLocation newLoc, String paramSummary,
+        Object oldParam, Object newParam) {
+        if (oldParam==null || newParam==null || !oldParam.equals(newParam))
+            throw new IllegalStateException("Cannot start "+entity()+" in "+newLoc+" as it has already been started with incompatible location "+oldLoc+" "
+                + "("+paramSummary+" not compatible: "+oldParam+" / "+newParam+"); "
+                + newLoc+" may require manual removal.");
+    }
+
     /** default pre-start hooks, can be extended by subclasses if needed*/
     protected void preStartCustom(MachineLocation machine) {
         ConfigToAttributes.apply(entity());
