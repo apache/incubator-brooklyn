@@ -363,7 +363,7 @@ public class BrooklynLauncherTest {
     public void testRebindRespectsDefaultPersistenceDir() throws Exception {
         launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
-                .persistMode(PersistMode.AUTO)
+                .persistMode(PersistMode.CLEAN)
                 .start();
         
         ManagementContext managementContext = launcher.getServerDetails().getManagementContext();
