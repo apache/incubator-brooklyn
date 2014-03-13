@@ -15,9 +15,11 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
+import brooklyn.management.ManagementContext;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
@@ -38,11 +40,14 @@ public class TomcatAutoScalerPolicyTest {
 
     private LocalhostMachineProvisioningLocation loc;
     private TestApplication app;
+    private ManagementContext managementContext;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        loc = new LocalhostMachineProvisioningLocation(MutableMap.of("name", "london"));
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        managementContext = app.getManagementContext();
+        loc = managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
+                .configure("name", "london"));
     }
     
     @AfterMethod(alwaysRun=true)
