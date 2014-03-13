@@ -15,6 +15,7 @@ import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.management.TaskWrapper;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
@@ -237,23 +238,34 @@ public class DynamicTasks {
         return queueIfNeeded(t).asTask().getUnchecked();
     }
 
+    /** as {@link #waitForLast(Duration, boolean)} waiting forever and throwing the first error */
+    public static Task<?> waitForLast() {
+        waitForLast(null, true);
+        return DynamicTasks.getTaskQueuingContext().last();
+    }
+    
     /** Waits for the last task queued in this context to complete;
+     * with second argument true,
      * it throws if there is a problem, but happily returns null if there is no last task.
      * <p>
      * Preferred over {@link #last()}.get() because this waits on all tasks, 
      * in sequentially (so that blocking information is always accurate) */
-    public static Task<?> waitForLast() {
+    public static void waitForLast(Duration optionalTimeout, boolean throwFirstError) {
         TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
         Preconditions.checkNotNull(qc, "Cannot wait when their is no queueing context");
         List<Task<?>> q = qc.getQueue();
         Task<?> last = null;
+        Throwable firstError = null;
         do {
             for (Task<?> t: q) {
                 last = t;
-                last.getUnchecked();
+                last.blockUntilEnded();
+                if (last.isError() && firstError==null)
+                    firstError = Tasks.getError(last);
             }
         } while (last!=qc.last());
-        return last;
+        if (firstError!=null && throwFirstError)
+            Exceptions.propagate(firstError);
     }
 
 }
