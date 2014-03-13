@@ -32,8 +32,12 @@ public class EntityTestUtils {
         assertAttributeEqualsEventually(Maps.newLinkedHashMap(), entity, attribute, expected);
     }
 
-    public static <T> void assertAttributeEqualsEventually(Map<?,?> flags, Entity entity, AttributeSensor<T> attribute, T expected) {
-        assertAttributeEventually(flags, entity, attribute, Predicates.equalTo(expected));
+    public static <T> void assertAttributeEqualsEventually(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute, final T expected) {
+        // Not using assertAttributeEventually(predicate) so get nicer error message
+        Asserts.succeedsEventually((Map)flags, new Runnable() {
+            @Override public void run() {
+                assertAttributeEquals(entity, attribute, expected);
+            }});
     }
 
     public static <T> void assertAttributeEventuallyNonNull(final Entity entity, final AttributeSensor<T> attribute) {
