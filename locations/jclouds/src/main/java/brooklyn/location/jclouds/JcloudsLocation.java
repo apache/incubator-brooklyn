@@ -187,7 +187,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 throw Exceptions.propagate(e);
             }
         } else {
-            return new JcloudsMachineNamer(getAllConfigBag());
+            return new JcloudsMachineNamer(config);
         }
     }
 
@@ -499,7 +499,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (usePortForwarding) checkNotNull(portForwarder, "portForwarder, when use-port-forwarding enabled");
 
         final ComputeService computeService = JcloudsUtil.findComputeService(setup);
-        String groupId = elvis(setup.get(GROUP_ID), getCloudMachineNamer(setup).generateNewGroupId());
+        CloudMachineNamer cloudMachineNamer = getCloudMachineNamer(setup);
+        String groupId = elvis(setup.get(GROUP_ID), cloudMachineNamer.generateNewGroupId());
         NodeMetadata node = null;
         JcloudsSshMachineLocation sshMachineLocation = null;
         
@@ -542,7 +543,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             setup.getUnusedConfig());
                 
                 templateTimestamp = Duration.of(provisioningStopwatch);
-                template.getOptions().getUserMetadata().put("Name", getCloudMachineNamer(setup).generateNewMachineUniqueName());
+                template.getOptions().getUserMetadata().put("Name", cloudMachineNamer.generateNewMachineUniqueNameFromGroupId(groupId));
                 
                 nodes = computeService.createNodesInGroup(groupId, 1, template);
                 provisionTimestamp = Duration.of(provisioningStopwatch);

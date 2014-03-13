@@ -398,6 +398,32 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             executor.shutdownNow();
         }
     }
+    
+    @Test
+    public void testCreateWithCustomMachineNamer() {
+        final String machineNamerClass = "brooklyn.location.cloud.CustomMachineNamer";
+        BailOutJcloudsLocation jcloudsLocation = newSampleBailOutJcloudsLocationForTesting(ImmutableMap.of(
+                LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS, machineNamerClass));
+        jcloudsLocation.tryObtainAndCheck(ImmutableMap.of(), new Predicate<ConfigBag>() {
+            public boolean apply(ConfigBag input) {
+                Assert.assertEquals(input.get(LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS), machineNamerClass);
+                return true;
+            }
+        });
+    }
+    
+    @Test
+    public void testCreateWithCustomMachineNamerOnObtain() {
+        final String machineNamerClass = "brooklyn.location.cloud.CustomMachineNamer";
+        BailOutJcloudsLocation jcloudsLocation = newSampleBailOutJcloudsLocationForTesting();
+        jcloudsLocation.tryObtainAndCheck(ImmutableMap.of(
+                LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS, machineNamerClass), new Predicate<ConfigBag>() {
+            public boolean apply(ConfigBag input) {
+                Assert.assertEquals(input.get(LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS), machineNamerClass);
+                return true;
+            }
+        });
+    }
 
     public static class ConcurrencyTracker implements Function<ConfigBag,Void> {
         final AtomicInteger concurrentCallsCounter = new AtomicInteger();

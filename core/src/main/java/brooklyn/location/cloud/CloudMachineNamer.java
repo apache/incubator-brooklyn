@@ -22,6 +22,15 @@ public class CloudMachineNamer {
         return generateNewIdReservingLength(0);
     }
     
+    public String generateNewMachineUniqueNameFromGroupId(String groupId) {
+        int suffixLength = getMaxNameLength() - (groupId.length() + 1); // +1 for the hyphen
+        if (suffixLength <= 0) {
+            return groupId;
+        }
+            
+        return groupId + "-" + Identifiers.makeRandomId(Math.min(4, suffixLength));
+    }
+    
     public String generateNewGroupId() {
         return generateNewIdReservingLength(nameInGroupReservedLength);
     }
@@ -137,4 +146,5 @@ public class CloudMachineNamer {
     public static String sanitize(String s) {
         return s.replaceAll("[^_A-Za-z0-9]+", "-");
     }
+
 }

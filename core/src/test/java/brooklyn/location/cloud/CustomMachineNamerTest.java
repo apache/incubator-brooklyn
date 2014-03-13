@@ -36,7 +36,7 @@ public class CustomMachineNamerTest {
     @Test
     public void testMachineNameNoConfig() {
         config.configure(CloudLocationConfig.CALLER_CONTEXT, child);
-        Assert.assertEquals(new CustomMachineNamer(config).generateNewMachineUniqueName(), "testent");
+        Assert.assertEquals(new CustomMachineNamer(config).generateNewMachineUniqueName(), "TestEnt");
     }
     
     @Test
