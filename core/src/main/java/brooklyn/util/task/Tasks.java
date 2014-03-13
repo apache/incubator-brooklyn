@@ -20,6 +20,7 @@ import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Predicate;
@@ -309,6 +310,11 @@ public class Tasks {
             // thread which originally threw the error
             return error;
         }
+    }
+    public static Task<Void> fail(final String name, final Throwable optionalError) {
+        return Tasks.<Void>builder().dynamic(false).name(name).body(new Runnable() { public void run() { 
+            if (optionalError!=null) throw Exceptions.propagate(optionalError); else throw new RuntimeException("Failed: "+name);
+        } }).build();
     }
 
 }

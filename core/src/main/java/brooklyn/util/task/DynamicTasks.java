@@ -220,9 +220,15 @@ public class DynamicTasks {
     public static <T> Task<T> queue(String name, Callable<T> job) {
         return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
     }
+    public static <T> Task<T> queueSwallowingChildrenFailures(String name, Callable<T> job) {
+        return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).swallowChildrenFailures(true).build());
+    }
 
     public static <T> Task<T> queue(String name, Runnable job) {
         return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
+    }
+    public static <T> Task<T> queueSwallowingChildrenFailures(String name, Runnable job) {
+        return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).swallowChildrenFailures(true).build());
     }
 
     public static <T extends TaskAdaptable<?>> T queueIfNeeded(T task) {

@@ -23,6 +23,8 @@ import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
@@ -159,6 +161,27 @@ public class SoftwareProcessEntityTest {
         Entities.unmanage(entity);
     }
 
+    @Test
+    public void testReleaseEvenIfChildErrorDuringStop() throws Exception {
+        MyServiceImpl entity = new MyServiceImpl(app) {
+            @Override public Class getDriverInterface() {
+                return SimulatedFailInChildOnStopDriver.class;
+            }
+        };
+        Entities.manage(entity);
+        
+        entity.start(ImmutableList.of(loc));
+        try {
+            entity.stop();
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertEquals(loc.getAvailable(), ImmutableSet.of(machine));
+            if (!e.toString().contains("Simulating stop error")) 
+                throw new IllegalStateException("Wrong error", e);
+        }
+        Entities.unmanage(entity);
+    }
+
     @ImplementedBy(MyServiceImpl.class)
     public interface MyService extends SoftwareProcess {
         public SoftwareProcessDriver getDriver();
@@ -197,6 +220,17 @@ public class SoftwareProcessEntityTest {
         @Override
         public void stop() {
             throw new IllegalStateException("Simulating stop error");
+        }
+    }
+    
+    public static class SimulatedFailInChildOnStopDriver extends SimulatedDriver {
+        public SimulatedFailInChildOnStopDriver(EntityLocal entity, SshMachineLocation machine) {
+            super(entity, machine);
+        }
+        
+        @Override
+        public void stop() {
+            DynamicTasks.queue(Tasks.fail("Simulating stop error in child", null));
         }
     }
     

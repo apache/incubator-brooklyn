@@ -20,7 +20,6 @@ import brooklyn.management.TaskQueueingContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
 
 import com.google.common.collect.ImmutableList;
 
@@ -36,7 +35,9 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     protected final Object jobTransitionLock = new Object();
     protected volatile boolean primaryStarted = false;
     protected volatile boolean primaryFinished = false;
+    protected Boolean swallowChildrenFailures;
     protected Thread primaryThread;
+
     
     /**
      * Constructs a new compound task containing the specified units of work.
@@ -163,11 +164,16 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             submitBackgroundInheritingContext(secondaryJobMaster);
             
             T result = null;
+            Throwable error=null;
+            boolean errorIsFromChild=false;
             try {
+                log.trace("calling primary job for {}", this);
+                if (primaryJob!=null) result = primaryJob.call();
+            } catch (Throwable selfException) {
+                error = selfException;
+                errorIsFromChild = false;
+            } finally {
                 try {
-                    log.trace("calling primary job for {}", this);
-                    if (primaryJob!=null) result = primaryJob.call();
-                } finally {
                     log.trace("cleaning up for {}", this);
                     synchronized (jobTransitionLock) {
                         // semaphore might be nicer here (aled notes as it is this is a little hard to read)
@@ -184,10 +190,17 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                             if (primaryJob==null) result = (T)result2;
                         } catch (ClassCastException e) { /* ignore class cast exception; leave the result as null */ }
                     }
+                } catch (Throwable childException) {
+                    if (error==null) {
+                        error = childException;
+                        errorIsFromChild = true;
+                    } else {
+                        log.debug("Parent task "+this+" ignoring child error ("+childException+") in presence of our own error ("+error+")");
+                    }
                 }
-            } catch (Throwable t) {
-                handleException(t);
             }
+            if (error!=null)
+                handleException(error, errorIsFromChild);
             return result;
         }
         
@@ -202,11 +215,17 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         return ImmutableList.copyOf(secondaryJobsAll);
     }
 
-    public void handleException(Throwable throwable) throws Exception {
-        // allow checked exceptions to be passed through
+    public void handleException(Throwable throwable, boolean fromChild) throws Exception {
+        if (fromChild && swallowChildrenFailures!=null && swallowChildrenFailures.booleanValue()) {
+            log.debug("Parent task "+this+" swallowing child error: "+throwable);
+            return;
+        }
+        handleException(throwable);
+    }
+    public void handleException(Throwable throwable) throws Exception { 
+        Exceptions.propagateIfFatal(throwable);
         if (throwable instanceof Exception) {
-            if (throwable instanceof InterruptedException)
-                throw new RuntimeInterruptedException((InterruptedException) throwable);
+            // allow checked exceptions to be passed through
             throw (Exception)throwable;
         }
         throw Exceptions.propagate(throwable);

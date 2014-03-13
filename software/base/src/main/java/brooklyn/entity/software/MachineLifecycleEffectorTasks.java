@@ -309,7 +309,7 @@ public abstract class MachineLifecycleEffectorTasks {
     /** default restart impl, stops processes if possible, then starts the entity again */
     public void restart() {
         entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
-        DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
+        DynamicTasks.queueSwallowingChildrenFailures("stopping (process)", new Callable<String>() { public String call() {
             try {
                 stopProcessesAtMachine();
                 DynamicTasks.waitForLast();
@@ -340,7 +340,7 @@ public abstract class MachineLifecycleEffectorTasks {
     public void stop() {
         log.info("Stopping {} in {}", entity(), entity().getLocations());
         
-        DynamicTasks.queue("pre-stop", new Callable<String>() { public String call() {
+        DynamicTasks.queueSwallowingChildrenFailures("pre-stop", new Callable<String>() { public String call() {
             if (entity().getAttribute(SoftwareProcess.SERVICE_STATE)==Lifecycle.STOPPED) {
                 log.debug("Skipping stop of entity "+entity()+" when already stopped");
                 return "Already stopped";
@@ -355,7 +355,7 @@ public abstract class MachineLifecycleEffectorTasks {
             return;
         }
                 
-        Task<Object> stoppingProcess = DynamicTasks.queue("stopping (process)", new Callable<Object>() { public Object call() {
+        Task<Object> stoppingProcess = DynamicTasks.queueSwallowingChildrenFailures("stopping (process)", new Callable<Object>() { public Object call() {
             try {
                 stopProcessesAtMachine();
                 DynamicTasks.waitForLast();
