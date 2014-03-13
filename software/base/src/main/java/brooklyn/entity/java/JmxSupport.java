@@ -19,7 +19,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.location.access.BrooklynAccessUtils;
-import brooklyn.location.basic.Machines;
+import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.ResourceUtils;
@@ -32,7 +32,6 @@ import brooklyn.util.maven.MavenArtifact;
 import brooklyn.util.maven.MavenRetriever;
 import brooklyn.util.net.Urls;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.net.HostAndPort;
 
@@ -76,18 +75,8 @@ public class JmxSupport implements UsesJmx {
         ((EntityLocal)getEntity()).setConfig(key, value);
     }
     
-    public Optional<SshMachineLocation> getMachine() {
-        // TODO could return Maybe rather than Optional, to include a decent error message
-        return Machines.findUniqueSshMachineLocation(entity.getLocations());
-    }
-
-    public SshMachineLocation checkMachine() {
-        Optional<SshMachineLocation> result = getMachine();
-        if (result.isPresent()) {
-            return result.get();
-        } else {
-            throw new IllegalStateException("No unique ssh-machine found for "+entity+"; locations are "+entity.getLocations());
-        }
+    public Maybe<SshMachineLocation> getMachine() {
+        return Locations.findUniqueSshMachineLocation(entity.getLocations());
     }
 
     public boolean isJmx() {
@@ -265,7 +254,7 @@ public class JmxSupport implements UsesJmx {
         
         Integer jmxRemotePort;
         String hostName = getEntity().getAttribute(Attributes.HOSTNAME);
-        if (hostName==null) hostName = checkNotNull(checkMachine().getAddress().getHostName(), "hostname for entity " + entity);
+        if (hostName==null) hostName = checkNotNull(getMachine().get().getAddress().getHostName(), "hostname for entity " + entity);
         
         result.put("com.sun.management.jmxremote", null);
 
@@ -314,7 +303,7 @@ public class JmxSupport implements UsesJmx {
     /** installs files needed for JMX, to the runDir given in constructor, assuming the runDir has been created */ 
     public void install() {
         if (getJmxAgentMode()!=JmxAgentModes.NONE) {
-            checkMachine().copyTo(ResourceUtils.create(this).getResourceFromUrl(
+            getMachine().get().copyTo(ResourceUtils.create(this).getResourceFromUrl(
                 getJmxAgentJarUrl()), getJmxAgentJarDestinationFilePath());
         }
         if (isSecure()) {

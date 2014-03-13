@@ -7,8 +7,8 @@ import java.util.List;
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
+import brooklyn.util.guava.Maybe;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class Locations {
@@ -28,12 +28,12 @@ public class Locations {
     }
     
     /** as {@link Machines#findUniqueMachineLocation(Iterable)} */
-    public static Optional<MachineLocation> findUniqueMachineLocation(Iterable<? extends Location> locations) {
+    public static Maybe<MachineLocation> findUniqueMachineLocation(Iterable<? extends Location> locations) {
         return Machines.findUniqueMachineLocation(locations);
     }
     
     /** as {@link Machines#findUniqueSshMachineLocation(Iterable)} */
-    public static Optional<SshMachineLocation> findUniqueSshMachineLocation(Iterable<? extends Location> locations) {
+    public static Maybe<SshMachineLocation> findUniqueSshMachineLocation(Iterable<? extends Location> locations) {
         return Machines.findUniqueSshMachineLocation(locations);
     }
 

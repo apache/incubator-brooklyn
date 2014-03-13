@@ -43,12 +43,12 @@ import brooklyn.location.basic.Machines;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
@@ -216,7 +216,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 if (Strings.isNonBlank(sensorName)) {
                     seedsHostnames.add(entity.getAttribute(Sensors.newStringSensor(sensorName)));
                 } else {
-                    Optional<String> optionalSeedHostname = Machines.findSubnetOrPublicHostname(entity);
+                    Maybe<String> optionalSeedHostname = Machines.findSubnetOrPublicHostname(entity);
                     if (optionalSeedHostname.isPresent()) {
                         String seedHostname = optionalSeedHostname.get();
                         seedsHostnames.add(seedHostname);

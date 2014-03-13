@@ -13,9 +13,9 @@ import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SupportsPortForwarding;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Cidr;
 
-import com.google.common.base.Optional;
 import com.google.common.net.HostAndPort;
 
 public class BrooklynAccessUtils {
@@ -36,7 +36,7 @@ public class BrooklynAccessUtils {
         PortForwardManager pfw = entity.getConfig(PORT_FORWARDING_MANAGER);
         if (pfw!=null) {
             Collection<Location> ll = entity.getLocations();
-            Optional<SupportsPortForwarding> machine = Machines.findUniqueElement(ll, SupportsPortForwarding.class);
+            Maybe<SupportsPortForwarding> machine = Machines.findUniqueElement(ll, SupportsPortForwarding.class);
             if (machine.isPresent()) {
                 synchronized (BrooklynAccessUtils.class) {
                     // TODO finer-grained synchronization

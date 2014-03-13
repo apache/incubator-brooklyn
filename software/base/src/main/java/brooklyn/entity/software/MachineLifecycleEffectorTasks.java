@@ -38,12 +38,11 @@ import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -146,7 +145,7 @@ public abstract class MachineLifecycleEffectorTasks {
         }
         locations = Locations.getLocationsCheckingAncestors(locations, entity());
 
-        Optional<MachineLocation> ml = Locations.findUniqueMachineLocation(locations);
+        Maybe<MachineLocation> ml = Locations.findUniqueMachineLocation(locations);
         if (ml.isPresent()) return ml.get();
         
         if (locations.size() != 1 || Iterables.getOnlyElement(locations)==null)
@@ -256,8 +255,8 @@ public abstract class MachineLifecycleEffectorTasks {
             // elsewhere we rely on (public) hostname being set _after_ subnet_hostname
             // (to prevent the tiny possibility of races resulting in hostname being returned
             // simply because subnet is still being looked up)
-            Optional<String> lh = Machines.getSubnetHostname(machine);
-            Optional<String> la = Machines.getSubnetIp(machine);
+            Maybe<String> lh = Machines.getSubnetHostname(machine);
+            Maybe<String> la = Machines.getSubnetIp(machine);
             if (lh.isPresent()) entity().setAttribute(Attributes.SUBNET_HOSTNAME, lh.get());
             if (la.isPresent()) entity().setAttribute(Attributes.SUBNET_ADDRESS, la.get());
             entity().setAttribute(Attributes.HOSTNAME, machine.getAddress().getHostName());

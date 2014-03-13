@@ -11,12 +11,12 @@ import brooklyn.event.feed.ssh.SshPollValue;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 
 public class MariaDbNodeImpl extends SoftwareProcessImpl implements MariaDbNode {
 
@@ -55,7 +55,7 @@ public class MariaDbNodeImpl extends SoftwareProcessImpl implements MariaDbNode 
          *   Uptime: 2427  Threads: 1  Questions: 581  Slow queries: 0  Opens: 53  Flush tables: 1  Open tables: 35  Queries per second avg: 0.239
          * So can extract lots of sensors from that.
          */
-        Optional<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
+        Maybe<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
 
         if (machine.isPresent()) {
             String cmd = getDriver().getStatusCmd();
