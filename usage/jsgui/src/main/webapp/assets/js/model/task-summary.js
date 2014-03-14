@@ -23,6 +23,8 @@ define([
                 isCancelled:null,
                 children:[],
                 detailedStatus:"",
+                blockingTask:null,
+                blockingDetails:null,
                 // missing some from TaskSummary (e.g. streams, isError), 
                 // but that's fine, worst case they come back null / undefined
             };
@@ -39,6 +41,18 @@ define([
             return (submitter==null ||
                     (submitter.metadata && submitter.metadata.id != this.id)); 
         },
+        
+        // added from https://github.com/jashkenas/backbone/issues/1069#issuecomment-17511573
+        // to clear attributes locally if they aren't in the server-side function
+        parse: function(resp) {
+            _.keys(this.attributes).forEach(function(key) {
+              if (resp[key] === undefined) {
+                resp[key] = undefined;
+              }
+            });
+
+            return resp;
+        }
     });
 
     TaskSummary.Collection = Backbone.Collection.extend({
