@@ -168,8 +168,25 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         } else if (!getDriver().isClustered()) {
             return getListenAddress();
         } else {
-            // In other situations, prefer the hostname so other regions can see it
-            return getAttribute(CassandraNode.HOSTNAME);
+            // In other situations, prefer the hostname, so other regions can see it
+            // *Unless* hostname resolves at the target to a local-only interface which is different to ADDRESS
+            // (workaround for issue deploying to localhost)
+            String hostname = getAttribute(CassandraNode.HOSTNAME);
+            try {
+                String resolvedAddress = getDriver().getResolvedAddress(hostname);
+                if (resolvedAddress==null) {
+                    log.debug("Cassandra using broadcast address "+getListenAddress()+" for "+this+" because hostname "+hostname+" could not be resolved at remote machine");
+                    return getListenAddress();
+                }
+                if (resolvedAddress.equals("127.0.0.1")) {
+                    log.debug("Cassandra using broadcast address "+getListenAddress()+" for "+this+" because hostname "+hostname+" resolves to 127.0.0.1");
+                    return getListenAddress();                    
+                }
+                return hostname;
+            } catch (Exception e) {
+                log.warn("Error resolving hostname "+hostname+" for "+this+": "+e, e);
+                return hostname;
+            }
         }
     }
     /** not always the private IP, if public IP has been insisted on for broadcast, e.g. setting up a rack topology */

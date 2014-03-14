@@ -37,5 +37,4 @@ public class PosNegTokenGeneratorTest {
         assertEquals(generator.newToken(), generator.min());
         assertEquals(generator.newToken(), generator.min().add(generator.range().divide(BigInteger.valueOf(4))));
     }
-    
 }

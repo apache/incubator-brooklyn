@@ -6,6 +6,8 @@ package brooklyn.entity.nosql.cassandra;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 
+import java.math.BigInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -52,7 +54,7 @@ public class CassandraDatacenterIntegrationTest extends BrooklynMgmtContextTestS
     @Test(groups = "Integration")
     public void testStartAndShutdownClusterSizeOne() throws Exception {
         cluster = app.createAndManageChild(EntitySpec.create(CassandraDatacenter.class)
-                .configure("initialSize", 1));
+                .configure("initialSize", 1).configure("tokenShift", 42));
         assertEquals(cluster.getCurrentSize().intValue(), 0);
 
         app.start(ImmutableList.of(testLocation));
@@ -64,7 +66,9 @@ public class CassandraDatacenterIntegrationTest extends BrooklynMgmtContextTestS
         EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraDatacenter.CASSANDRA_CLUSTER_NODES, ImmutableList.of(nodeAddr));
 
         EntityTestUtils.assertAttributeEqualsEventually(node, Startable.SERVICE_UP, true);
-        EntityTestUtils.assertAttributeEqualsEventually(node, CassandraNode.TOKEN, PosNeg63TokenGenerator.MIN_TOKEN);
+        PosNeg63TokenGenerator tg = new PosNeg63TokenGenerator();
+        tg.growingCluster(1);
+        EntityTestUtils.assertAttributeEqualsEventually(node, CassandraNode.TOKEN, tg.newToken().add(BigInteger.valueOf(42)));
 
         // may take some time to be consistent (with new thrift_latency checks on the node,
         // contactability should not be an issue, but consistency still might be)

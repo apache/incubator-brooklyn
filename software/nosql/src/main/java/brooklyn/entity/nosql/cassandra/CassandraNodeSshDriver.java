@@ -31,6 +31,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
@@ -155,6 +156,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
         newScript(CUSTOMIZING)
                 .body.append(commands.build())
+                .failOnNonZeroResultCode()
                 .execute();
 
         // Copy the cassandra.yaml configuration file across
@@ -365,4 +367,37 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
             + " --file "+fileToRun;
     }
 
+    protected Maybe<String> _resolvedAddress = Maybe.<String>absent();
+    
+    /** returns null if it definitively can't be resolved;  
+     * or best-effort parse of IP address, balling back to blank we could not make sense of the output */
+    @Override
+    public String getResolvedAddress(String hostname) {
+        if (_resolvedAddress.isPresent()) return _resolvedAddress.get();
+        
+        ProcessTaskWrapper<Integer> task = SshEffectorTasks.ssh("ping -c 1 -t 1 "+hostname).machine(getMachine())
+            .summary("checking resolution of "+hostname).allowingNonZeroExitCode().newTask();
+        DynamicTasks.queueIfPossible(task).orSubmitAndBlock(getEntity()).asTask().blockUntilEnded();
+        if (task.asTask().isError()) {
+            log.warn("ping could not be run, at "+getEntity()+" / "+getMachine()+": "+Tasks.getError(task.asTask()));
+            return "";
+        }
+        if (task.getExitCode()==null || task.getExitCode()!=0) {
+            if (task.getExitCode()!=null && task.getExitCode()<10)
+                // small number means ping failed to resolve or ping the hostname
+                return (_resolvedAddress = Maybe.of((String)null)).get();
+            // large number means ping probably did not run
+            log.warn("ping not run as expected, at "+getEntity()+" / "+getMachine()+" (code "+task.getExitCode()+"):\n"+task.getStdout().trim()+" --- "+task.getStderr().trim());
+            return (_resolvedAddress = Maybe.of("")).get();
+        }
+        String out = task.getStdout();
+        try {
+            String line1 = Strings.getFirstLine(out);
+            String ip = Strings.getFragmentBetween(line1, "(", ")");
+            if (Strings.isNonBlank(ip)) 
+                return (_resolvedAddress = Maybe.of(ip)).get();
+        } catch (Exception e) { /* ignore non-parseable output */ }
+        if (out.contains("127.0.0.1")) return (_resolvedAddress = Maybe.of("127.0.0.1")).get();
+        return (_resolvedAddress = Maybe.of("")).get();
+    }
 }

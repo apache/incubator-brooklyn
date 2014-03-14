@@ -491,6 +491,24 @@ public class TypeCoercions {
                 return input.intValue();
             }
         });
+        registerAdapter(Double.class, BigDecimal.class, new Function<Double,BigDecimal>() {
+            @Override
+            public BigDecimal apply(Double input) {
+                return BigDecimal.valueOf(input);
+            }
+        });
+        registerAdapter(Long.class, BigInteger.class, new Function<Long,BigInteger>() {
+            @Override
+            public BigInteger apply(Long input) {
+                return BigInteger.valueOf(input);
+            }
+        });
+        registerAdapter(Integer.class, BigInteger.class, new Function<Integer,BigInteger>() {
+            @Override
+            public BigInteger apply(Integer input) {
+                return BigInteger.valueOf(input);
+            }
+        });
         registerAdapter(String.class, List.class, new Function<String,List>() {
             @Override
             public List<String> apply(final String input) {
