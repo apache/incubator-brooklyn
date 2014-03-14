@@ -35,11 +35,23 @@ public class BrooklynConfigKeys {
     public static final BasicAttributeSensorAndConfigKey<String> BROOKLYN_WEB_SERVER_BASE_DIR = new TemplatedStringAttributeSensorAndConfigKey("brooklyn.webserverdir", "Base directory for web-server",
             "${config['brooklyn.datadir']!'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-webserver")+"'}");
 
+    public static final ConfigKey<String> INSTALL_UNIQUE_LABEL = ConfigKeys.newStringConfigKey("install.unique_label",
+        "Provides a label which uniquely identifies an installation, used in the computation of the install dir; "
+        + "this should include something readable, and must include a hash of all data which differentiates an installation "
+        + "(e.g. version, plugins, etc), but should be the same where install dirs can be shared to allow for re-use");
+        
     public static final BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = new TemplatedStringAttributeSensorAndConfigKey("install.dir", "Directory for this software to be installed in",
         "${config['brooklyn.datadir']!'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'}/"
-            + "installs/${entity.entityType.simpleName}"
-            + "${(config['install.version']??)?string('_'+(config['install.version']!'0'),'')}" // '0' not used but required by freemarker
-            );
+            + "installs/"
+            // the  var??  tests if it exists, passing value to ?string(if_present,if_absent)
+            // the ! provides a default value afterwards, which is never used, but is required for parsing
+            // when the config key is not available;
+            // thus the below prefers the install.unique_label, but falls back to simple name
+            // plus a version identifier *if* the version is explicitly set
+            + "${(config['install.unique_label']??)?string(config['install.unique_label']!'X',"
+            + "(entity.entityType.simpleName)+"
+            + "((config['install.version']??)?string('_'+(config['install.version']!'X'),''))"
+            + ")}");
     
     public static final BasicAttributeSensorAndConfigKey<String> RUN_DIR = new TemplatedStringAttributeSensorAndConfigKey("run.dir", "Directory for this software to be run from",
         "${config['brooklyn.datadir']!'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'}/"

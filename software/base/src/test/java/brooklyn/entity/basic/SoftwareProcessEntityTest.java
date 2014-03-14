@@ -13,6 +13,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -24,6 +25,7 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.os.Os;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
@@ -93,6 +95,44 @@ public class SoftwareProcessEntityTest {
 
         Assert.assertEquals(entity.getAttribute(SoftwareProcess.INSTALL_DIR), Os.mergePaths(resolvedDataDir, "installs/MyService"));
         Assert.assertEquals(entity.getAttribute(SoftwareProcess.RUN_DIR), Os.mergePaths(resolvedDataDir, "apps/"+entity.getApplicationId()+"/entities/MyService_"+entity.getId()));
+    }
+
+    protected <T extends MyService> void doStartAndCheckVersion(Class<T> type, String expectedLabel, ConfigBag config) {
+        MyService entity = app.createAndManageChild(EntitySpec.create(type)
+            .configure(BrooklynConfigKeys.BROOKLYN_DATA_DIR, "/tmp/brooklyn-foo")
+            .configure(config.getAllConfigAsConfigKeyMap()));
+        entity.start(ImmutableList.of(loc));
+        Assert.assertEquals(entity.getAttribute(SoftwareProcess.INSTALL_DIR), "/tmp/brooklyn-foo/installs/"
+            + expectedLabel);
+    }
+    
+    @Test
+    public void testCustomInstallDir0() throws Exception {
+        doStartAndCheckVersion(MyService.class, "MyService", ConfigBag.newInstance());
+    }
+    @Test
+    public void testCustomInstallDir1() throws Exception {
+        doStartAndCheckVersion(MyService.class, "MyService_9.9.8", ConfigBag.newInstance()
+            .configure(SoftwareProcess.SUGGESTED_VERSION, "9.9.8"));
+    }
+    @Test
+    public void testCustomInstallDir2() throws Exception {
+        doStartAndCheckVersion(MyService.class, "MySvc_998", ConfigBag.newInstance()
+            .configure(SoftwareProcess.INSTALL_UNIQUE_LABEL, "MySvc_998"));
+    }
+    @Test
+    public void testCustomInstallDir3() throws Exception {
+        doStartAndCheckVersion(MyServiceWithVersion.class, "MyServiceWithVersion_9.9.9", ConfigBag.newInstance());
+    }
+    @Test
+    public void testCustomInstallDir4() throws Exception {
+        doStartAndCheckVersion(MyServiceWithVersion.class, "MyServiceWithVersion_9.9.7", ConfigBag.newInstance()
+            .configure(SoftwareProcess.SUGGESTED_VERSION, "9.9.7"));
+    }
+    @Test
+    public void testCustomInstallDir5() throws Exception {
+        doStartAndCheckVersion(MyServiceWithVersion.class, "MyServiceWithVersion_9.9.9_NaCl", ConfigBag.newInstance()
+            .configure(ConfigKeys.newStringConfigKey("salt"), "NaCl"));
     }
 
     @Test
@@ -184,19 +224,23 @@ public class SoftwareProcessEntityTest {
     public interface MyService extends SoftwareProcess {
         public SoftwareProcessDriver getDriver();
     }
-    
-    public static class MyServiceImpl extends SoftwareProcessImpl implements MyService {
-        public MyServiceImpl() {
-        }
 
-        public MyServiceImpl(Entity parent) {
-            super(parent);
-        }
+    public static class MyServiceImpl extends SoftwareProcessImpl implements MyService {
+        public MyServiceImpl() {}
+        public MyServiceImpl(Entity parent) { super(parent); }
 
         @Override
-        public Class getDriverInterface() {
-            return SimulatedDriver.class;
-        }
+        public Class getDriverInterface() { return SimulatedDriver.class; }
+    }
+
+    @ImplementedBy(MyServiceWithVersionImpl.class)
+    public interface MyServiceWithVersion extends MyService {
+        public static ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "9.9.9");
+    }
+
+    public static class MyServiceWithVersionImpl extends MyServiceImpl implements MyServiceWithVersion {
+        public MyServiceWithVersionImpl() {}
+        public MyServiceWithVersionImpl(Entity parent) { super(parent); }
     }
 
     public static class SimulatedFailOnStartDriver extends SimulatedDriver {
@@ -274,6 +318,11 @@ public class SoftwareProcessEntityTest {
             events.add("launch");
             launched = true;
             entity.setAttribute(Startable.SERVICE_UP, true);
+        }
+        
+        @Override
+        protected String getInstallLabelExtraSalt() {
+            return (String)getEntity().getConfigRaw(ConfigKeys.newStringConfigKey("salt"), true).or((String)null);
         }
     }
 }

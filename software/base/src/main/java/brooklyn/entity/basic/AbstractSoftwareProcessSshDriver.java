@@ -132,6 +132,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             return installDir;
         }
         
+        setInstallLabel();
+        
         // deprecated in 0.7.0
         Maybe<Object> minstallDir = getEntity().getConfigRaw(SoftwareProcess.INSTALL_DIR, true);
         if (!minstallDir.isPresent() || minstallDir.get()==null) {
@@ -150,6 +152,21 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return installDir;
     }
     
+    protected void setInstallLabel() {
+        if (getEntity().getConfigRaw(SoftwareProcess.INSTALL_UNIQUE_LABEL, true).isPresent()) return; 
+        getEntity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, 
+            getEntity().getEntityType().getSimpleName()+
+            (Strings.isNonBlank(getVersion()) ? "_"+getVersion() : "")+
+            (Strings.isNonBlank(getInstallLabelExtraSalt()) ? "_"+getInstallLabelExtraSalt() : "") );
+    }
+
+    /** allows subclasses to return extra salt (ie unique hash) 
+     * for cases where install dirs need to be distinct e.g. based on extra plugins being placed in the install dir;
+     * {@link #setInstallLabel()} uses entity-type simple name and version already */
+    protected String getInstallLabelExtraSalt() {
+        return null;
+    }
+
     public String getRunDir() {
         if (runDir != null) return runDir;
         
@@ -338,6 +355,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      *               {@link #getRunDir() run directory} if relative.
      * @return The exit code of the SSH command run
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public int copyResource(Map sshFlags, String source, String target) {
         Map flags = Maps.newLinkedHashMap();
         if (!sshFlags.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
