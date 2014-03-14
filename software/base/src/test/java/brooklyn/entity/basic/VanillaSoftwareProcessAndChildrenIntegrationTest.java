@@ -36,8 +36,8 @@ public class VanillaSoftwareProcessAndChildrenIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(VanillaSoftwareProcessAndChildrenIntegrationTest.class);
 
     private static final int PARENT_TASK_SLEEP_LENGTH_SECS = 10;
-    private static final int CHILD_TASK_SLEEP_LENGTH_SECS = 8;
-    private static final int CONCURRENT_MAX_ACCEPTABLE_DIFF_SECS = 6;
+    private static final int CHILD_TASK_SLEEP_LENGTH_SECS = 10;
+    private static final int CONCURRENT_MAX_ACCEPTABLE_DIFF_SECS = PARENT_TASK_SLEEP_LENGTH_SECS - 1;
     private static final int SEQUENCTIAL_MIN_ACCEPTABLE_DIFF_SECS = PARENT_TASK_SLEEP_LENGTH_SECS - 1;
     private static final int EARLY_RETURN_GRACE_MS = 20;
     
