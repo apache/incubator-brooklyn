@@ -3,12 +3,18 @@ package brooklyn.rest.resources;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import brooklyn.test.Asserts;
+import brooklyn.util.collections.MutableMap;
+import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -46,7 +52,7 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
 
     @Test(groups="Integration")
     public void testDeployRedisApplication() throws InterruptedException, TimeoutException {
-        ClientResponse response = client().resource("/v1/applications")
+        ClientResponse response = client().resource("/v1/applications/createLegacy")
                 .post(ClientResponse.class, redisSpec);
 
         assertEquals(response.getStatus(), 201);
@@ -95,11 +101,15 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
 
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
-        URI stateSensor = URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/service.state");
-        while (!client().resource(stateSensor).get(String.class).equals(Lifecycle.STOPPED.toString())) {
-            Thread.sleep(5000);
-        }
+        final URI stateSensor = URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/service.state");
+        final String expectedStatus = String.format("\"%s\"", Lifecycle.STOPPED.toString());
+        Asserts.succeedsEventually(MutableMap.of("timeout", 60 * 1000), new Runnable() {
+            public void run() {
+                assertEquals(client().resource(stateSensor).get(String.class), expectedStatus);
+            }
+        });
     }
+
     @Test(groups="Integration", dependsOnMethods = "testTriggerRedisStopEffector" )
     public void testDeleteRedisApplication() throws TimeoutException, InterruptedException {
         int size = getManagementContext().getApplications().size();

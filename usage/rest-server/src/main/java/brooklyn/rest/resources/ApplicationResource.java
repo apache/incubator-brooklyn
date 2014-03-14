@@ -17,8 +17,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -61,6 +64,9 @@ import com.google.common.collect.Iterables;
 public class ApplicationResource extends AbstractBrooklynRestResource implements ApplicationApi {
 
   private static final Logger log = LoggerFactory.getLogger(ApplicationResource.class);
+  
+  @Context
+  private UriInfo uriInfo;
   
   /** @deprecated since 0.6.0 use {@link #fetch(String)} (with slightly different, but better semantics) */
   @Deprecated
@@ -182,7 +188,10 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
       Application app = brooklyn().create(applicationSpec);
       Task<?> t = brooklyn().start(app, locations);
       TaskSummary ts = TaskTransformer.FROM_TASK.apply(t);
-      URI ref = URI.create(app.getApplicationId());
+      URI ref = uriInfo.getBaseUriBuilder()
+              .path(ApplicationApi.class)
+              .path(ApplicationApi.class, "get")
+              .build(app.getApplicationId());
       return created(ref).entity(ts).build();
   }
   
