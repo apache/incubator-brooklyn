@@ -153,7 +153,10 @@ public class Networking {
     /** As {@link #isLocalOnly(InetAddress)} but taking a string; 
      * does not require the string to be resolvable, and generally treats non-resolvable hostnames as NOT local-only
      * (although they are treated as private by {@link #isPrivateSubnet(String)}),
-     * although certain well-known hostnames are recognised as local-only */
+     * although certain well-known hostnames are recognised as local-only
+     * <p>
+     * note however {@link InetAddress#getByName(String)} can ignore settings in /etc/hosts, on OS X at least, 
+     * and give different values than the system */
     public static boolean isLocalOnly(String hostnameOrIp) {
         Preconditions.checkNotNull(hostnameOrIp, "hostnameOrIp");
         if ("127.0.0.1".equals(hostnameOrIp)) return true;
