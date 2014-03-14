@@ -34,11 +34,13 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Test the operation of the {@link ActiveMQBroker} class.
@@ -70,13 +72,7 @@ public class KafkaIntegrationTest {
         final KafkaZooKeeper zookeeper = app.createAndManageChild(EntitySpec.create(KafkaZooKeeper.class));
 
         zookeeper.start(ImmutableList.of(testLocation));
-        Asserts.succeedsEventually(MutableMap.of("timeout", 60000l), new Callable<Void>() {
-            @Override
-            public Void call() {
-                assertTrue(zookeeper.getAttribute(Startable.SERVICE_UP));
-                return null;
-            }
-        });
+        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 60*1000), zookeeper, Startable.SERVICE_UP, true);
 
         zookeeper.stop();
         assertFalse(zookeeper.getAttribute(Startable.SERVICE_UP));
@@ -91,22 +87,10 @@ public class KafkaIntegrationTest {
         final KafkaBroker broker = app.createAndManageChild(EntitySpec.create(KafkaBroker.class).configure(KafkaBroker.ZOOKEEPER, zookeeper));
 
         zookeeper.start(ImmutableList.of(testLocation));
-        Asserts.succeedsEventually(MutableMap.of("timeout", 60000l), new Callable<Void>() {
-            @Override
-            public Void call() {
-                assertTrue(zookeeper.getAttribute(Startable.SERVICE_UP));
-                return null;
-            }
-        });
+        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 60*1000), zookeeper, Startable.SERVICE_UP, true);
 
         broker.start(ImmutableList.of(testLocation));
-        Asserts.succeedsEventually(MutableMap.of("timeout", 60000l), new Callable<Void>() {
-            @Override
-            public Void call() {
-                assertTrue(broker.getAttribute(Startable.SERVICE_UP));
-                return null;
-            }
-        });
+        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 60*1000), broker, Startable.SERVICE_UP, true);
 
         zookeeper.stop();
         assertFalse(zookeeper.getAttribute(Startable.SERVICE_UP));
