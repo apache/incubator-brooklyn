@@ -142,11 +142,11 @@ public class SoftwareProcessEntityTest {
         Entities.unmanage(entity);
     }
 
-    @Test
-    public void testReleaseEvenIfErrorDuringStop() throws Exception {
+    @SuppressWarnings("rawtypes")
+    public void doTestReleaseEvenIfErrorDuringStop(final Class driver) throws Exception {
         MyServiceImpl entity = new MyServiceImpl(app) {
             @Override public Class getDriverInterface() {
-                return SimulatedFailOnStopDriver.class;
+                return driver;
             }
         };
         Entities.manage(entity);
@@ -155,9 +155,13 @@ public class SoftwareProcessEntityTest {
         Task<Void> t = entity.invoke(Startable.STOP);
         t.blockUntilEnded();
         
-        Iterator<Task<?>> failures = Tasks.failed(Tasks.descendants(t, true)).iterator();
-        Assert.assertTrue(t.isError(), "Expect parent to fail (he doesn't swallow exceptions)");
-        Assert.assertTrue(failures.hasNext(), "Expected error in child");
+        Assert.assertFalse(t.isError(), "Expected parent to succeed, not fail with "+Tasks.getError(t));
+        Iterator<Task<?>> failures;
+        failures = Tasks.failed(Tasks.descendants(t, true)).iterator();
+        Assert.assertTrue(failures.hasNext(), "Expected error in descendants");
+        // TODO what we really want to be able to do is let individual nominated children fail, without failing the parent
+//        failures = Tasks.failed(Tasks.children(t)).iterator();
+//        Assert.assertTrue(failures.hasNext(), "Expected error in child");
         Throwable e = Tasks.getError(failures.next());
         if (e == null || !e.toString().contains("Simulating stop error")) 
             Assert.fail("Wrong error", e);
@@ -167,35 +171,14 @@ public class SoftwareProcessEntityTest {
         Entities.unmanage(entity);
     }
 
-    // TODO asymmetry between above and below --
-    // where if stop-process fails the stop task fails,
-    // but if stop-process-child fails the stop task does not fail,
-    // is due to stop-process swallowing failures, but stop not swallowing failures;
-    // but that is not desired
+    @Test
+    public void testReleaseEvenIfErrorDuringStop() throws Exception {
+        doTestReleaseEvenIfErrorDuringStop(SimulatedFailOnStopDriver.class);
+    }
     
     @Test
     public void testReleaseEvenIfChildErrorDuringStop() throws Exception {
-        MyServiceImpl entity = new MyServiceImpl(app) {
-            @Override public Class getDriverInterface() {
-                return SimulatedFailInChildOnStopDriver.class;
-            }
-        };
-        Entities.manage(entity);
-        
-        entity.start(ImmutableList.of(loc));
-        Task<Void> t = entity.invoke(Startable.STOP);
-        t.blockUntilEnded();
-        
-        Iterator<Task<?>> failures = Tasks.failed(Tasks.descendants(t, true)).iterator();
-        Assert.assertFalse(t.isError(), "Expected parent to succeed, not fail with "+Tasks.getError(t));
-        Assert.assertTrue(failures.hasNext(), "Expected error in child");
-        Throwable e = Tasks.getError(failures.next());
-        if (e == null || !e.toString().contains("Simulating stop error")) 
-            Assert.fail("Wrong error", e);
-        
-        Assert.assertEquals(loc.getAvailable(), ImmutableSet.of(machine), "Expected location to be available again");
-
-        Entities.unmanage(entity);
+        doTestReleaseEvenIfErrorDuringStop(SimulatedFailInChildOnStopDriver.class);
     }
 
     @ImplementedBy(MyServiceImpl.class)

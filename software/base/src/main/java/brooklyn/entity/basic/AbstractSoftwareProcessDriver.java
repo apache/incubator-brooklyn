@@ -98,20 +98,22 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     
 	@Override
 	public void restart() {
-	    DynamicTasks.queueSwallowingChildrenFailures("stop (if running)", new Runnable() { public void run() {
+	    DynamicTasks.queue("stop (best effort)", new Runnable() { public void run() {
+	        DynamicTasks.swallowChildrenFailures();
 	        boolean previouslyRunning = isRunning();
 	        try {
 	            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
 	            stop();
 	        } catch (Exception e) {
-	            if (previouslyRunning) {
-	                log.warn(getEntity() + " restart: stop failed, when was previously running (ignoring)", e);
-	            } else {
-	                log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
-	            }
 	            // queue a failed task so that there is visual indication that this task had a failure,
 	            // without interrupting the parent
-	            DynamicTasks.queue(Tasks.fail("Primary job failure", e));
+	            if (previouslyRunning) {
+	                log.warn(getEntity() + " restart: stop failed, when was previously running (ignoring)", e);
+	                DynamicTasks.queue(Tasks.fail("Primary job failure (when previously running)", e));
+	            } else {
+	                log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
+	                DynamicTasks.queue(Tasks.fail("Primary job failure (when not previously running)", e));
+	            }
 	        }
 	    }});
 

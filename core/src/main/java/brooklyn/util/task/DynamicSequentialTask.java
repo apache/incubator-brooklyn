@@ -125,6 +125,11 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         }
     }
 
+    @Override
+    public void swallowChildrenFailures() {
+        this.swallowChildrenFailures = true;
+    }
+    
     protected class DstJob implements Callable<T> {
         protected Callable<T> primaryJob;
         /** currently executing (or just completed) secondary task, or null if none;

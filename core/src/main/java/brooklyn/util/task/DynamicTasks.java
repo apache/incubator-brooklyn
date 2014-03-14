@@ -221,15 +221,9 @@ public class DynamicTasks {
     public static <T> Task<T> queue(String name, Callable<T> job) {
         return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
     }
-    public static <T> Task<T> queueSwallowingChildrenFailures(String name, Callable<T> job) {
-        return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).swallowChildrenFailures(true).build());
-    }
 
     public static <T> Task<T> queue(String name, Runnable job) {
         return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
-    }
-    public static <T> Task<T> queueSwallowingChildrenFailures(String name, Runnable job) {
-        return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).swallowChildrenFailures(true).build());
     }
 
     public static <T extends TaskAdaptable<?>> T queueIfNeeded(T task) {
@@ -259,9 +253,15 @@ public class DynamicTasks {
     /** Calls {@link TaskQueueingContext#drain(Duration, boolean)} on the current task context */
     public static TaskQueueingContext drain(Duration optionalTimeout, boolean throwFirstError) {
         TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
-        Preconditions.checkNotNull(qc, "Cannot wait when their is no queueing context");
+        Preconditions.checkNotNull(qc, "Cannot drain when there is no queueing context");
         qc.drain(optionalTimeout, false, throwFirstError);
         return qc;
+    }
+
+    public static void swallowChildrenFailures() {
+        TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
+        Preconditions.checkNotNull(qc, "Cannot drain when there is no queueing context");
+        qc.swallowChildrenFailures();
     }
 
 }

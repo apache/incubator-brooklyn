@@ -38,5 +38,8 @@ public interface TaskQueueingContext {
 
     /** Returns the task which is this queueing context */
     public Task<?> asTask();
+
+    /** causes subsequent children failures not to fail the parent */
+    public void swallowChildrenFailures();
     
 }

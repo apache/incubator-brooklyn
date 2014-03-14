@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
@@ -315,7 +316,8 @@ public abstract class MachineLifecycleEffectorTasks {
     /** default restart impl, stops processes if possible, then starts the entity again */
     public void restart() {
         entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
-        DynamicTasks.queueSwallowingChildrenFailures("stopping (process)", new Callable<String>() { public String call() {
+        DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
+            DynamicTasks.swallowChildrenFailures();
             try {
                 stopProcessesAtMachine();
                 DynamicTasks.waitForLast();
@@ -346,7 +348,7 @@ public abstract class MachineLifecycleEffectorTasks {
     public void stop() {
         log.info("Stopping {} in {}", entity(), entity().getLocations());
         
-        DynamicTasks.queueSwallowingChildrenFailures("pre-stop", new Callable<String>() { public String call() {
+        DynamicTasks.queue("pre-stop", new Callable<String>() { public String call() {
             if (entity().getAttribute(SoftwareProcess.SERVICE_STATE)==Lifecycle.STOPPED) {
                 log.debug("Skipping stop of entity "+entity()+" when already stopped");
                 return "Already stopped";
@@ -360,10 +362,18 @@ public abstract class MachineLifecycleEffectorTasks {
         if (entity().getAttribute(SoftwareProcess.SERVICE_STATE)==Lifecycle.STOPPED) {
             return;
         }
-                
-        Task<String> stoppingProcess = DynamicTasks.queueSwallowingChildrenFailures("stopping (process)", new Callable<String>() { public String call() {
-            stopProcessesAtMachine();
-            return "Stop at machine completed with no errors.";
+               
+        final AtomicReference<Throwable> problem = new AtomicReference<Throwable>();
+        Task<String> stoppingProcess = DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
+            DynamicTasks.swallowChildrenFailures();
+            try {
+                stopProcessesAtMachine();
+                return "Stop at machine completed with no errors.";
+            } catch (Throwable e) {
+                problem.set(e);
+                DynamicTasks.queue(Tasks.fail("Primary job failure", e));
+                return "Stop at machine completed, but with errors: "+e;
+            }
         }});
         
         // Release this machine (even if error trying to stop process - we rethrow that after)
@@ -390,8 +400,10 @@ public abstract class MachineLifecycleEffectorTasks {
         try {
             if (stoppingMachine.get().value==0) {
                 // throw early errors *only if* we have not destroyed the machine
-                // TODO we should test for destruction, not merely successful "stop", as things like localhost and ssh won't be destroyed
+                // TODO we should test for destruction above, not merely successful "stop", as things like localhost and ssh won't be destroyed
+                
                 DynamicTasks.waitForLast();
+                if (problem.get()!=null) throw Exceptions.propagate(problem.get());
             }
             
             entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
