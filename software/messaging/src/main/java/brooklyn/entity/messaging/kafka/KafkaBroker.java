@@ -26,6 +26,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -51,6 +52,9 @@ public interface KafkaBroker extends SoftwareProcess, MessageBroker, UsesJmx, Ka
 
     @SetFromFlag("zookeeper")
     ConfigKey<ZooKeeperNode> ZOOKEEPER = new BasicConfigKey<ZooKeeperNode>(ZooKeeperNode.class, "kafka.broker.zookeeper", "Kafka zookeeper entity");
+
+    public static final PortAttributeSensorAndConfigKey INTERNAL_JMX_PORT = new PortAttributeSensorAndConfigKey(
+            "internal.jmx.direct.port", "JMX internal port (started by Kafka broker, if using UsesJmx.JMX_AGENT_MODE is not null)", PortRanges.fromString("9999+"));
 
     AttributeSensor<Integer> BROKER_ID = Sensors.newIntegerSensor("kafka.broker.id", "Kafka unique broker ID");
 
