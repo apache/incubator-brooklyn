@@ -63,7 +63,9 @@ define([
             this._modal = new EffectorInvokeView({
                 el:"#effector-modal",
                 model:effectorModel,
-                entity:this.model
+                entity:this.model,
+                tabView:this.options.tabView,
+                openTask:true
             })
             this._modal.render().$el.modal('show')
         }

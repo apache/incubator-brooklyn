@@ -147,7 +147,7 @@ define([
                 // trying to open in a new tab, do not act on it here!
                 return;
             var tab = $(event.currentTarget).attr('tab-target');
-            this.options.tabView.openTab(this.model.id, tab);
+            this.options.tabView.openTab(tab);
             // and prevent the a from firing
             event.preventDefault();
             return false;
