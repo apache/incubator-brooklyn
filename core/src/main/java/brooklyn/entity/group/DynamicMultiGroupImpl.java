@@ -1,7 +1,7 @@
 package brooklyn.entity.group;
 
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -11,6 +11,8 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 
 public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMultiGroup {
 
@@ -39,9 +41,11 @@ public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMult
      * Convenience factory method for the common use-case of providing entities from another entity's children.
      * @see DynamicMultiGroup#ENTITY_PROVIDER
      */
-    public static Iterable<Entity> iterableForChildren(final Entity parent) {
+    public static Iterable<Entity> childrenOf(final Entity parent) {
         return new Iterable<Entity>() {
-            public Iterator<Entity> iterator() { return parent.getChildren().iterator(); }
+            public Iterator<Entity> iterator() {
+                return ImmutableSet.copyOf(parent.getChildren()).iterator();
+            }
         };
     }
 
@@ -49,13 +53,15 @@ public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMult
      * Convenience factory method for the common use-case of providing entities from a group's members.
      * @see DynamicMultiGroup#ENTITY_PROVIDER
      */
-    public static Iterable<Entity> iterableForMembers(final Group group) {
+    public static Iterable<Entity> membersOf(final Group group) {
         return new Iterable<Entity>() {
-            public Iterator<Entity> iterator() { return group.getMembers().iterator(); }
+            public Iterator<Entity> iterator() {
+                return ImmutableSet.copyOf(group.getMembers()).iterator();
+            }
         };
     }
 
-    private ConcurrentHashMap<String, Group> bucketsByName = new ConcurrentHashMap<String, Group>();
+    private ConcurrentMap<String, Group> bucketsByName = Maps.newConcurrentMap();
 
 
     @Override

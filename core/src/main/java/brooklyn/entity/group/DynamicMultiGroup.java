@@ -18,8 +18,8 @@ public interface DynamicMultiGroup extends Entity {
 
     /**
      * Identifies the entities that are to be considered for "bucketising".
-     * @see DynamicMultiGroupImpl#iterableForChildren(Entity)
-     * @see DynamicMultiGroupImpl#iterableForMembers(Entity)
+     * @see DynamicMultiGroupImpl#childrenOf(Entity)
+     * @see DynamicMultiGroupImpl#membersOf(Entity)
      */
     @SetFromFlag("entityProvider")
     public static final ConfigKey<Iterable<Entity>> ENTITY_PROVIDER = ConfigKeys.newConfigKey(

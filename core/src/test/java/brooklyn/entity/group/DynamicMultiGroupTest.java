@@ -4,7 +4,7 @@ import static brooklyn.entity.basic.EntityPredicates.displayNameEqualTo;
 import static brooklyn.entity.group.DynamicMultiGroup.BUCKET_FUNCTION;
 import static brooklyn.entity.group.DynamicMultiGroup.ENTITY_PROVIDER;
 import static brooklyn.entity.group.DynamicMultiGroupImpl.bucketFromAttribute;
-import static brooklyn.entity.group.DynamicMultiGroupImpl.iterableForChildren;
+import static brooklyn.entity.group.DynamicMultiGroupImpl.childrenOf;
 import static com.google.common.collect.Iterables.find;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -57,7 +57,7 @@ public class DynamicMultiGroupTest {
         final DynamicMultiGroup dmg = app.createAndManageChild(
                 EntitySpec.create(DynamicMultiGroup.class)
                 .configure(BUCKET_FUNCTION, bucketFromAttribute(SENSOR))
-                .configure(ENTITY_PROVIDER, iterableForChildren(source))
+                .configure(ENTITY_PROVIDER, childrenOf(source))
         );
         app.subscribeToChildren(source, SENSOR, new SensorEventListener<String>() {
             public void onEvent(SensorEvent<String> event) { dmg.distributeEntities(); }
