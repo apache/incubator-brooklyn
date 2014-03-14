@@ -217,7 +217,7 @@ public class ScriptHelper {
     
     /** Unique ID for the command execution; ensures new SSH connection from the pool. */
     public ScriptHelper uniqueSshConnection() {
-        setFlag("unique", Identifiers.makeRandomBase64Id(32));
+        setFlag(SshMachineLocation.UNIQUE_ID, Identifiers.makeRandomBase64Id(32));
         return this;
     }
     
