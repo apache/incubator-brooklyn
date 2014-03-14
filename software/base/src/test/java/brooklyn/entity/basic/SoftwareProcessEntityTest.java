@@ -156,7 +156,7 @@ public class SoftwareProcessEntityTest {
         t.blockUntilEnded();
         
         Iterator<Task<?>> failures = Tasks.failed(Tasks.descendants(t, true)).iterator();
-        Assert.assertFalse(t.isError(), "Expected parent to succeed, not fail with "+Tasks.getError(t));
+        Assert.assertTrue(t.isError(), "Expect parent to fail (he doesn't swallow exceptions)");
         Assert.assertTrue(failures.hasNext(), "Expected error in child");
         Throwable e = Tasks.getError(failures.next());
         if (e == null || !e.toString().contains("Simulating stop error")) 
@@ -167,6 +167,12 @@ public class SoftwareProcessEntityTest {
         Entities.unmanage(entity);
     }
 
+    // TODO asymmetry between above and below --
+    // where if stop-process fails the stop task fails,
+    // but if stop-process-child fails the stop task does not fail,
+    // is due to stop-process swallowing failures, but stop not swallowing failures;
+    // but that is not desired
+    
     @Test
     public void testReleaseEvenIfChildErrorDuringStop() throws Exception {
         MyServiceImpl entity = new MyServiceImpl(app) {

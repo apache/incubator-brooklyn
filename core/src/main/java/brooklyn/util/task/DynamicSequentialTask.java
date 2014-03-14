@@ -130,7 +130,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         /** currently executing (or just completed) secondary task, or null if none;
          * with jobTransitionLock notified on change and completion */
         protected volatile Task<?> currentSecondary = null;
-        protected volatile boolean finished = false;
+        protected volatile boolean finishedSecondaries = false;
         
         public DstJob(Callable<T> mainJob) {
             this.primaryJob = mainJob;
@@ -188,7 +188,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                     } finally {
                         synchronized (jobTransitionLock) {
                             currentSecondary = null;
-                            finished = true;
+                            finishedSecondaries = true;
                             jobTransitionLock.notifyAll();
                         }
                     }
@@ -215,7 +215,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                         primaryFinished = true;
                         jobTransitionLock.notifyAll();
                     }
-                    if (!isCancelled() && !secondaryJobMaster.isDone()) {
+                    if (!isCancelled()) {
                         log.trace("waiting for secondaries for {}", this);
                         // wait on tasks sequentially so that blocking information is more interesting
                         DynamicTasks.waitForLast();
@@ -251,7 +251,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                 Duration remaining;
                 synchronized (jobTransitionLock) {
                     cs = currentSecondary;
-                    if (finished) return;
+                    if (finishedSecondaries) return;
                     remaining = timeLeft==null ? Duration.ONE_SECOND : timeLeft.getDurationRemaining();
                     if (!remaining.isPositive()) return;
                     if (cs==null) {

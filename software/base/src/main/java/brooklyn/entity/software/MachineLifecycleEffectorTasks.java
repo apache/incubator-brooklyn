@@ -367,10 +367,10 @@ public abstract class MachineLifecycleEffectorTasks {
         }});
         
         // Release this machine (even if error trying to stop process - we rethrow that after)
-        Task<ObjectWithMessage<Integer>> stoppingMachine = DynamicTasks.queue("stopping (machine)", new Callable<ObjectWithMessage<Integer>>() { public ObjectWithMessage<Integer> call() {
+        Task<StopMachineDetails<Integer>> stoppingMachine = DynamicTasks.queue("stopping (machine)", new Callable<StopMachineDetails<Integer>>() { public StopMachineDetails<Integer> call() {
             if (entity().getAttribute(SoftwareProcess.SERVICE_STATE)==Lifecycle.STOPPED) {
                 log.debug("Skipping stop of entity "+entity()+" when already stopped");
-                return new ObjectWithMessage<Integer>("Already stopped", 0);
+                return new StopMachineDetails<Integer>("Already stopped", 0);
             }
             return stopAnyProvisionedMachines();
         }});
@@ -389,7 +389,8 @@ public abstract class MachineLifecycleEffectorTasks {
         
         try {
             if (stoppingMachine.get().value==0) {
-                // throw early errors *only if* we have not stopped the machine
+                // throw early errors *only if* we have not destroyed the machine
+                // TODO we should test for destruction, not merely successful "stop", as things like localhost and ssh won't be destroyed
                 DynamicTasks.waitForLast();
             }
             
@@ -407,11 +408,11 @@ public abstract class MachineLifecycleEffectorTasks {
         // nothing needed here
     }
     
-    public static class ObjectWithMessage<T> implements Serializable {
+    public static class StopMachineDetails<T> implements Serializable {
         private static final long serialVersionUID = 3256747214315895431L;
         final String message;
         final T value;
-        public ObjectWithMessage(String message, T value) {
+        protected StopMachineDetails(String message, T value) {
             this.message = message;
             this.value = value;
         }
@@ -423,7 +424,7 @@ public abstract class MachineLifecycleEffectorTasks {
     
     /** can run synchronously (or not) -- caller will submit/queue as needed, and will block on any submitted tasks. 
      * @return true if machines are deprovisioned */
-    protected ObjectWithMessage<Integer> stopAnyProvisionedMachines() {
+    protected StopMachineDetails<Integer> stopAnyProvisionedMachines() {
         @SuppressWarnings("unchecked")
         MachineProvisioningLocation<MachineLocation> provisioner = entity().getAttribute(SoftwareProcess.PROVISIONING_LOCATION);
 
@@ -432,19 +433,19 @@ public abstract class MachineLifecycleEffectorTasks {
         
         if (Iterables.isEmpty(entity().getLocations())) {
             log.debug("No machine decommissioning necessary for "+entity()+" - no locations");
-            return new ObjectWithMessage<Integer>("No machine decommissioning necessary for - no locations", 0);
+            return new StopMachineDetails<Integer>("No machine decommissioning necessary for - no locations", 0);
         }
         
         // Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
         if (provisioner==null) {
             log.debug("No machine decommissioning necessary for "+entity()+" - did not provision");
-            return new ObjectWithMessage<Integer>("No machine decommissioning necessary for - did not provision", 0);
+            return new StopMachineDetails<Integer>("No machine decommissioning necessary for - did not provision", 0);
         }
 
         Location machine = getLocation(null);
         if (!(machine instanceof MachineLocation)) {
             log.debug("No decommissioning necessary for "+entity()+" - not a machine location ("+machine+")");
-            return new ObjectWithMessage<Integer>("No machine decommissioning necessary for - not a machine ("+machine+")", 0);
+            return new StopMachineDetails<Integer>("No machine decommissioning necessary for - not a machine ("+machine+")", 0);
         }
         
         try {
@@ -457,7 +458,7 @@ public abstract class MachineLifecycleEffectorTasks {
         } catch (Throwable t) {
             throw Exceptions.propagate(t);
         }
-        return new ObjectWithMessage<Integer>("Decommissioned "+machine, 1);
+        return new StopMachineDetails<Integer>("Decommissioned "+machine, 1);
     }
 
     /** can run synchronously (or not) -- caller will submit/queue as needed, and will block on any submitted tasks. 
