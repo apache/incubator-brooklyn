@@ -104,32 +104,32 @@ public class ActiveMQIntegrationTest {
     @Test(groups = "Integration")
     public void testCreatingQueuesDefault() throws Exception {
         String url = testCreatingQueuesInternal(null);
-        // localhost default is rmi
-        Assert.assertTrue(url.contains("rmi"));
+        // localhost default is jmxmp
+        Assert.assertTrue(url.contains("jmxmp"), "url="+url);
     }
 
     @Test(groups = "Integration")
     public void testCreatingQueuesRmi() throws Exception {
         String url = testCreatingQueuesInternal(JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
-        Assert.assertTrue(url.contains("rmi://"));
-        Assert.assertFalse(url.contains("rmi:///jndi"));
-        Assert.assertFalse(url.contains("jmxmp"));
+        Assert.assertTrue(url.contains("rmi://"), "url="+url);
+        Assert.assertFalse(url.contains("rmi:///jndi"), "url="+url);
+        Assert.assertFalse(url.contains("jmxmp"), "url="+url);
     }
 
     @Test(groups = "Integration")
     public void testCreatingQueuesJmxmp() throws Exception {
         String url = testCreatingQueuesInternal(JmxAgentModes.JMXMP);
         // localhost default is rmi
-        Assert.assertTrue(url.contains("jmxmp"));
-        Assert.assertFalse(url.contains("rmi"));
+        Assert.assertTrue(url.contains("jmxmp"), "url="+url);
+        Assert.assertFalse(url.contains("rmi"), "url="+url);
     }
 
     @Test(groups = "Integration")
     public void testCreatingQueuesNoAgent() throws Exception {
         String url = testCreatingQueuesInternal(JmxAgentModes.NONE);
         // localhost default is rmi
-        Assert.assertTrue(url.contains("rmi:///jndi"));
-        Assert.assertFalse(url.contains("jmxmp"));
+        Assert.assertTrue(url.contains("rmi:///jndi"), "url="+url);
+        Assert.assertFalse(url.contains("jmxmp"), "url="+url);
     }
 
     public String testCreatingQueuesInternal(JmxAgentModes mode) throws Exception {
