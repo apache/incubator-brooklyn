@@ -31,7 +31,12 @@ import brooklyn.util.flags.SetFromFlag;
 public interface CassandraNode extends DatastoreMixins.DatastoreCommon, SoftwareProcess, UsesJmx, UsesJavaMXBeans, DatastoreMixins.HasDatastoreUrl, DatastoreMixins.CanExecuteScript {
 
     @SetFromFlag("version")
-    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.15");
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.14");
+    // latest version 1.2.15 fails integration test due to this problem: https://issues.apache.org/jira/browse/CASSANDRA-6685
+    // (should be fixed when 1.2.16 comes out)
+    // TODO put MIRROR_URL back to mirrorservice when using version available there
+    // and remember to put a copy under releng2:/var/www/developer/brooklyn/repository/
+    // TODO experiment with supporting 2.0.x
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
@@ -39,7 +44,11 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
 
     /** download mirror, if desired */
     @SetFromFlag("mirrorUrl")
-    ConfigKey<String> MIRROR_URL = new BasicConfigKey<String>(String.class, "cassandra.install.mirror.url", "URL of mirror", "http://www.mirrorservice.org/sites/ftp.apache.org/cassandra");
+    ConfigKey<String> MIRROR_URL = new BasicConfigKey<String>(String.class, "cassandra.install.mirror.url", "URL of mirror", 
+//        "http://www.mirrorservice.org/sites/ftp.apache.org/cassandra"
+        // for 1.2.14:
+        "http://archive.apache.org/dist/cassandra/"
+        );
 
     @SetFromFlag("tgzUrl")
     ConfigKey<String> TGZ_URL = new BasicConfigKey<String>(String.class, "cassandra.install.tgzUrl", "URL of TGZ download file");
