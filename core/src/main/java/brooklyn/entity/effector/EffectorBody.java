@@ -1,6 +1,6 @@
 package brooklyn.entity.effector;
 
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
@@ -39,7 +39,7 @@ public abstract class EffectorBody<T> {
     // ---- convenience method(s) for implementers of main -- see subclasses and *Tasks statics for more
     
     protected EntityInternal entity() {
-        return (EntityInternal) BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+        return (EntityInternal) BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
     }
     
     protected <V extends TaskAdaptable<?>> V queue(V task) {

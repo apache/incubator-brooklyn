@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.internal.ssh.process.ProcessTool;
 import brooklyn.util.task.Tasks;
@@ -133,7 +133,7 @@ public class KnifeTaskFactory<RET> extends SystemProcessTaskFactory<KnifeTaskFac
     
     @Nullable /** callers should allow this to be null so task can be used outside of an entity */
     protected Entity entity() {
-        return BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+        return BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
     }
     protected <T> T entityConfig(ConfigKey<T> key) {
         Entity entity = entity();

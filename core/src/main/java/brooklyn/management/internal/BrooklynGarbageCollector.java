@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
@@ -143,9 +143,9 @@ public class BrooklynGarbageCollector {
     public void onUnmanaged(Entity entity) {
         // remove all references to this entity from tasks
         executionManager.deleteTag(entity);
-        executionManager.deleteTag(BrooklynTasks.tagForContextEntity(entity));
-        executionManager.deleteTag(BrooklynTasks.tagForCallerEntity(entity));
-        executionManager.deleteTag(BrooklynTasks.tagForTargetEntity(entity));
+        executionManager.deleteTag(BrooklynTaskTags.tagForContextEntity(entity));
+        executionManager.deleteTag(BrooklynTaskTags.tagForCallerEntity(entity));
+        executionManager.deleteTag(BrooklynTaskTags.tagForTargetEntity(entity));
     }
     
     public void onUnmanaged(Location loc) {

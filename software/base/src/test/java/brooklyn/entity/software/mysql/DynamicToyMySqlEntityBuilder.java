@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicStartable;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;
@@ -122,9 +122,9 @@ public class DynamicToyMySqlEntityBuilder {
                             "cat err.log > /dev/stderr")).block();
                     log.info("STDOUT:\n"+info.getStdout());
                     log.info("STDERR:\n"+info.getStderr());
-                    BrooklynTasks.addTagsDynamically(Tasks.current(), 
-                        BrooklynTasks.tagForStream("console (nohup stdout)", Suppliers.ofInstance(info.getStdout()), null),
-                        BrooklynTasks.tagForStream("console (nohup stderr)", Suppliers.ofInstance(info.getStderr()), null));
+                    BrooklynTaskTags.addTagsDynamically(Tasks.current(), 
+                        BrooklynTaskTags.tagForStream("console (nohup stdout)", Suppliers.ofInstance(info.getStdout()), null),
+                        BrooklynTaskTags.tagForStream("console (nohup stderr)", Suppliers.ofInstance(info.getStderr()), null));
                     throw new IllegalStateException("MySQL appears not to be running");
                 }
 

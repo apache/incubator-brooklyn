@@ -17,7 +17,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.MethodEffector;
@@ -95,7 +95,7 @@ public class EffectorSayHiTest {
         e.sayHi1("Bob", "hi");
 
         Set<Task<?>> tasks = managementContext.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
-                BrooklynTasks.tagForContextEntity(e),ManagementContextInternal.EFFECTOR_TAG));
+                BrooklynTaskTags.tagForContextEntity(e),ManagementContextInternal.EFFECTOR_TAG));
         assertEquals(tasks.size(), 1);
         assertTrue(tasks.iterator().next().getDescription().contains("sayHi1"));
     }
@@ -105,7 +105,7 @@ public class EffectorSayHiTest {
         e.delegateSayHi1("Bob", "hi");
 
         Set<Task<?>> tasks = managementContext.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
-                BrooklynTasks.tagForContextEntity(e),ManagementContextInternal.EFFECTOR_TAG));
+                BrooklynTaskTags.tagForContextEntity(e),ManagementContextInternal.EFFECTOR_TAG));
         assertEquals(tasks.size(), 1);
         assertTrue(tasks.iterator().next().getDescription().contains("delegateSayHi1"));
         assertFalse(tasks.iterator().next().getDescription().contains("sayHi1"));
@@ -117,7 +117,7 @@ public class EffectorSayHiTest {
         executionContext.submit(new BasicTask<Void>(new Runnable() { public void run() {} }));
 
         Set<Task<?>> effectTasks = managementContext.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
-                BrooklynTasks.tagForContextEntity(e),ManagementContextInternal.EFFECTOR_TAG));
+                BrooklynTaskTags.tagForContextEntity(e),ManagementContextInternal.EFFECTOR_TAG));
         assertEquals(effectTasks.size(), 0);
     }
 

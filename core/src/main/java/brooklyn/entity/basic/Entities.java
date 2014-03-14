@@ -131,7 +131,7 @@ public class Entities {
                 MutableMap.of(
                         "displayName", effector.getName()+" (parallel)",
                         "description", "Invoking effector \""+effector.getName()+"\" on "+tasks.size()+(tasks.size() == 1 ? " entity" : " entities"),
-                        "tag", BrooklynTasks.tagForCallerEntity(callingEntity)),
+                        "tag", BrooklynTaskTags.tagForCallerEntity(callingEntity)),
                 tasks);
         
         return DynamicTasks.queueIfPossible(invoke).orSubmitAsync(callingEntity).asTask();
@@ -159,7 +159,7 @@ public class Entities {
         // we pass to callingEntity for consistency above, but in exec-context it should be
         // re-dispatched to targetEntity
         ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(
-                MutableMap.of("tag", BrooklynTasks.tagForCallerEntity(callingEntity)), t);
+                MutableMap.of("tag", BrooklynTaskTags.tagForCallerEntity(callingEntity)), t);
         return t;
     }
     @SuppressWarnings("unchecked")
@@ -764,7 +764,7 @@ public class Entities {
     }
     
     /** submits a task factory to construct its task at the entity (in a precursor task) and then to submit it;
-     * important if e.g. task construction relies on an entity being in scope (in tags, via {@link BrooklynTasks}) */
+     * important if e.g. task construction relies on an entity being in scope (in tags, via {@link BrooklynTaskTags}) */
     public static <T extends TaskAdaptable<?>> T submit(final Entity entity, final TaskFactory<T> taskFactory) {
         // TODO it is messy to have to do this, but not sure there is a cleaner way :(
         final Semaphore s = new Semaphore(0);

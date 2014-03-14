@@ -6,7 +6,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.management.Task;
 import brooklyn.management.TaskWrapper;
 import brooklyn.util.config.ConfigBag;
@@ -37,8 +37,8 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
     protected ProcessTaskWrapper(AbstractProcessTaskFactory<?,RET> constructor) {
         super(constructor);
         TaskBuilder<Object> tb = constructor.constructCustomizedTaskBuilder();
-        if (stdout!=null) tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDOUT, stdout));
-        if (stderr!=null) tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDERR, stderr));
+        if (stdout!=null) tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDOUT, stdout));
+        if (stderr!=null) tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDERR, stderr));
         task = (Task<RET>) tb.body(new ProcessTaskInternalJob()).build();
     }
     

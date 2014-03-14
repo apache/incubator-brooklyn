@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
@@ -17,7 +16,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EffectorStartableImpl.StartParameters;
 import brooklyn.entity.basic.Entities;
@@ -141,7 +140,7 @@ public abstract class MachineLifecycleEffectorTasks {
     }
         
     protected EntityInternal entity() {
-        return (EntityInternal) BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+        return (EntityInternal) BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
     }
 
     protected Location getLocation(@Nullable Collection<? extends Location> locations) {
@@ -317,15 +316,9 @@ public abstract class MachineLifecycleEffectorTasks {
     public void restart() {
         entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
         DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
-            DynamicTasks.swallowChildrenFailures();
-            try {
-                stopProcessesAtMachine();
-                DynamicTasks.waitForLast();
-            } catch (Exception e) {
-                String msg = "Could not stop "+entity()+" (process) when restarting: "+e;
-                log.debug(msg);
-                return msg;
-            }
+            DynamicTasks.markInessential();
+            stopProcessesAtMachine();
+            DynamicTasks.waitForLast();
             return "Stop of process completed with no errors.";
         }});
         
@@ -363,17 +356,11 @@ public abstract class MachineLifecycleEffectorTasks {
             return;
         }
                
-        final AtomicReference<Throwable> problem = new AtomicReference<Throwable>();
         Task<String> stoppingProcess = DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
-            DynamicTasks.swallowChildrenFailures();
-            try {
-                stopProcessesAtMachine();
-                return "Stop at machine completed with no errors.";
-            } catch (Throwable e) {
-                problem.set(e);
-                DynamicTasks.queue(Tasks.fail("Primary job failure", e));
-                return "Stop at machine completed, but with errors: "+e;
-            }
+            DynamicTasks.markInessential();
+            stopProcessesAtMachine();
+            DynamicTasks.waitForLast();
+            return "Stop at machine completed with no errors.";
         }});
         
         // Release this machine (even if error trying to stop process - we rethrow that after)
@@ -401,9 +388,8 @@ public abstract class MachineLifecycleEffectorTasks {
             if (stoppingMachine.get().value==0) {
                 // throw early errors *only if* we have not destroyed the machine
                 // TODO we should test for destruction above, not merely successful "stop", as things like localhost and ssh won't be destroyed
-                
                 DynamicTasks.waitForLast();
-                if (problem.get()!=null) throw Exceptions.propagate(problem.get());
+                stoppingProcess.get();
             }
             
             entity().setAttribute(SoftwareProcess.SERVICE_UP, false);

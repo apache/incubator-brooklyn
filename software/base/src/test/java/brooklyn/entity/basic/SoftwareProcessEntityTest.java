@@ -159,9 +159,8 @@ public class SoftwareProcessEntityTest {
         Iterator<Task<?>> failures;
         failures = Tasks.failed(Tasks.descendants(t, true)).iterator();
         Assert.assertTrue(failures.hasNext(), "Expected error in descendants");
-        // TODO what we really want to be able to do is let individual nominated children fail, without failing the parent
-//        failures = Tasks.failed(Tasks.children(t)).iterator();
-//        Assert.assertTrue(failures.hasNext(), "Expected error in child");
+        failures = Tasks.failed(Tasks.children(t)).iterator();
+        Assert.assertTrue(failures.hasNext(), "Expected error in child");
         Throwable e = Tasks.getError(failures.next());
         if (e == null || !e.toString().contains("Simulating stop error")) 
             Assert.fail("Wrong error", e);

@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.management.TaskQueueingContext;
@@ -74,7 +74,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                 throw new IllegalStateException("Cannot add a task to "+this+" when it is already finished (trying to add "+t+")");
             secondaryJobsAll.add(t);
             secondaryJobsRemaining.add(t);
-            BrooklynTasks.addTagsDynamically(t, ManagementContextInternal.SUB_TASK_TAG);
+            BrooklynTaskTags.addTagsDynamically(t, ManagementContextInternal.SUB_TASK_TAG);
             ((TaskInternal<?>)t).markQueued();
             jobTransitionLock.notifyAll();
         }
@@ -179,14 +179,19 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                                 try {
                                     result.add(secondaryJob.get());
                                 } catch (Exception e) {
-                                    // secondary job queue aborts on error
-                                    if (log.isDebugEnabled())
-                                        log.debug("Aborting secondary job queue for "+DynamicSequentialTask.this+" due to error in task "+secondaryJob+" ("+e+", being rethrown)");
-                                    if (cancelRemainingJobsOnFailure) {
-                                        for (Task<?> t: secondaryJobsRemaining)
-                                            t.cancel(false);
+                                    if (TaskTags.isInessential(secondaryJob)) {
+                                        result.add(Tasks.getError(secondaryJob));
+                                        log.debug("Secondary job queue for "+DynamicSequentialTask.this+" ignoring error in inessential task "+secondaryJob);
+                                    } else {
+                                        // abort on error
+                                        if (log.isDebugEnabled())
+                                            log.debug("Aborting secondary job queue for "+DynamicSequentialTask.this+" due to error in task "+secondaryJob+" ("+e+", being rethrown)");
+                                        if (cancelRemainingJobsOnFailure) {
+                                            for (Task<?> t: secondaryJobsRemaining)
+                                                t.cancel(false);
+                                        }
+                                        throw e;
                                     }
-                                    throw e;
                                 }
                             }
                         }
@@ -315,7 +320,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             if (isError()) 
                 getUnchecked();
             for (Task<?> t: getQueue())
-                if (t.isError())
+                if (t.isError() && !TaskTags.isInessential(t))
                     t.getUnchecked();
         }
     }

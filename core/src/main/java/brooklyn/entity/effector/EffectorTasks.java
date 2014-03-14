@@ -11,7 +11,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
@@ -130,7 +130,7 @@ public class EffectorTasks {
     /** Finds the entity where this task is running
      * @throws NullPointerException if there is none (no task, or no context entity for that task) */
     public static Entity findEntity() {
-        return Preconditions.checkNotNull(BrooklynTasks.getTargetOrContextEntity(Tasks.current()),
+        return Preconditions.checkNotNull(BrooklynTaskTags.getTargetOrContextEntity(Tasks.current()),
                 "This must be executed in a task whose execution context has a target or context entity " +
                 "(i.e. it must be run from within an effector)");
     }

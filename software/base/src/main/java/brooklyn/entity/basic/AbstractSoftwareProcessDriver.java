@@ -99,7 +99,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 	@Override
 	public void restart() {
 	    DynamicTasks.queue("stop (best effort)", new Runnable() { public void run() {
-	        DynamicTasks.swallowChildrenFailures();
+	        DynamicTasks.markInessential();
 	        boolean previouslyRunning = isRunning();
 	        try {
 	            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
@@ -114,6 +114,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 	                log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
 	                DynamicTasks.queue(Tasks.fail("Primary job failure (when not previously running)", e));
 	            }
+	            // the above queued tasks will cause this task to be indicated as failed, with an indication of severity
 	        }
 	    }});
 

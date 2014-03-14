@@ -239,7 +239,8 @@ public class DynamicTasks {
         return queueIfNeeded(t).asTask().getUnchecked();
     }
 
-    /** As {@link #drain(Duration, boolean)} waiting forever and throwing the first error,
+    /** As {@link #drain(Duration, boolean)} waiting forever and throwing the first error 
+     * (excluding errors in inessential tasks),
      * then returning the last task in the queue (which is guaranteed to have finished without error,
      * if this method returns without throwing) */
     public static Task<?> waitForLast() {
@@ -258,10 +259,21 @@ public class DynamicTasks {
         return qc;
     }
 
+    /** causes failures in children of the current task not to fail the parent */
+    /* TODO tests for this and for markInessential; 
+     * the latter is now tested by SoftwareProcessEntityTest;
+     * this used to be, so have confidence it once worked, but it no longer is. */
     public static void swallowChildrenFailures() {
         TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
         Preconditions.checkNotNull(qc, "Cannot drain when there is no queueing context");
         qc.swallowChildrenFailures();
     }
 
+    /** marks the current task inessential */
+    public static void markInessential() {
+        TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
+        Preconditions.checkNotNull(qc, "Cannot drain when there is no queueing context");
+        TaskTags.markInessential(qc.asTask());
+    }
+    
 }

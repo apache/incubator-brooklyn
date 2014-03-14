@@ -14,7 +14,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
@@ -53,7 +53,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   @Override
   public Iterable<TaskSummary> listTasks(String applicationId, String entityId) {
       Entity entity = brooklyn().getEntity(applicationId, entityId);
-      Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(mgmt().getExecutionManager(), entity);
+      Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(mgmt().getExecutionManager(), entity);
       return Collections2.transform(tasks, TaskTransformer.FROM_TASK);
   }
 

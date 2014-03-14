@@ -22,7 +22,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.BasicEntityDriverManager;
 import brooklyn.entity.drivers.EntityDriverManager;
@@ -171,7 +171,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     @Override
     public ExecutionContext getExecutionContext(Entity e) {
         // BEC is a thin wrapper around EM so fine to create a new one here
-        return new BasicExecutionContext(MutableMap.of("tag", BrooklynTasks.tagForContextEntity(e)), getExecutionManager());
+        return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.tagForContextEntity(e)), getExecutionManager());
     }
     
     @Override
@@ -213,7 +213,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException {
         try {
             Task<?> current = Tasks.current();
-            if (current == null || !entity.equals(BrooklynTasks.getContextEntity(current)) || !isManagedLocally(entity)) {
+            if (current == null || !entity.equals(BrooklynTaskTags.getContextEntity(current)) || !isManagedLocally(entity)) {
                 manageIfNecessary(entity, eff.getName());
                 // Wrap in a task if we aren't already in a task that is tagged with this entity
                 Task<T> task = runAtEntity( EffectorUtils.getTaskFlagsForEffectorInvocation(entity, eff),

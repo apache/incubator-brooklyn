@@ -12,8 +12,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.BrooklynTasks;
-import brooklyn.entity.basic.BrooklynTasks.WrappedStream;
+import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.Task;
@@ -160,9 +160,9 @@ public class NaiveScriptRunnerTest {
                 gatherOutput();
         Assert.assertNull(script.peekTask());
         Task<Integer> task = script.newTask();
-        Assert.assertTrue(BrooklynTasks.streams(task).size() >= 3, "Expected at least 3 streams: "+BrooklynTasks.streams(task));
+        Assert.assertTrue(BrooklynTaskTags.streams(task).size() >= 3, "Expected at least 3 streams: "+BrooklynTaskTags.streams(task));
         Assert.assertFalse(Tasks.isQueuedOrSubmitted(task));
-        WrappedStream in = BrooklynTasks.stream(task, BrooklynTasks.STREAM_STDIN);
+        WrappedStream in = BrooklynTaskTags.stream(task, BrooklynTaskTags.STREAM_STDIN);
         Assert.assertNotNull(in);
         Assert.assertTrue(in.streamContents.get().contains("echo foo"), "Expected 'echo foo' but had: "+in.streamContents.get());
         Assert.assertTrue(in.streamSize.get() > 0);
@@ -192,16 +192,16 @@ public class NaiveScriptRunnerTest {
                 }
             }).run());
             Task<Integer> task = script.peekTask();
-            Assert.assertTrue(BrooklynTasks.streams(task).size() >= 3, "Expected at least 3 streams: "+BrooklynTasks.streams(task));
+            Assert.assertTrue(BrooklynTaskTags.streams(task).size() >= 3, "Expected at least 3 streams: "+BrooklynTaskTags.streams(task));
             // stdin should be populated
-            WrappedStream in = BrooklynTasks.stream(task, BrooklynTasks.STREAM_STDIN);
+            WrappedStream in = BrooklynTaskTags.stream(task, BrooklynTaskTags.STREAM_STDIN);
             Assert.assertNotNull(in);
             Assert.assertTrue(in.streamContents.get().contains("echo foo"), "Expected 'echo foo' but had: "+in.streamContents.get());
             Assert.assertTrue(in.streamSize.get() > 0);
             
             // out and err should exist
-            WrappedStream out = BrooklynTasks.stream(task, BrooklynTasks.STREAM_STDOUT);
-            WrappedStream err = BrooklynTasks.stream(task, BrooklynTasks.STREAM_STDERR);
+            WrappedStream out = BrooklynTaskTags.stream(task, BrooklynTaskTags.STREAM_STDOUT);
+            WrappedStream err = BrooklynTaskTags.stream(task, BrooklynTaskTags.STREAM_STDERR);
             Assert.assertNotNull(out);
             Assert.assertNotNull(err);
             

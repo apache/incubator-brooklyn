@@ -17,7 +17,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.ApplicationBuilder
-import brooklyn.entity.basic.BrooklynTasks
+import brooklyn.entity.basic.BrooklynTaskTags
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.trait.Changeable
@@ -435,7 +435,7 @@ class DynamicClusterTest {
         cluster.resize(1)
 
         Set<Task> tasks = app.getManagementContext().getExecutionManager().getTasksWithAllTags([
-            BrooklynTasks.tagForContextEntity(cluster),"EFFECTOR"])
+            BrooklynTaskTags.tagForContextEntity(cluster),"EFFECTOR"])
         assertEquals(tasks.size(), 2)
         assertTrue(Iterables.get(tasks, 0).getDescription().contains("start"))
         assertTrue(Iterables.get(tasks, 1).getDescription().contains("resize"))

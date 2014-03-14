@@ -7,7 +7,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
@@ -115,7 +115,7 @@ public class Poller<V> {
                     public Task<?> call() {
                         DynamicSequentialTask<Void> task = new DynamicSequentialTask<Void>(MutableMap.of("displayName", scheduleName, "entity", entity), 
                             new Callable<Void>() { public Void call() { pollJob.wrappedJob.run(); return null; } } );
-                        BrooklynTasks.setTransient(task);
+                        BrooklynTaskTags.setTransient(task);
                         return task;
                     }
                 };
