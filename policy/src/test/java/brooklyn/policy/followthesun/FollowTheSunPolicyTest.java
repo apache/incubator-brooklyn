@@ -2,6 +2,7 @@ package brooklyn.policy.followthesun;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +45,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         ((EntityLocal)item2).setAttribute(TEST_METRIC, ImmutableMap.<Entity,Double>of(item1, 11d));
         
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
-            public void run() {
+            @Override public void run() {
                 assertEquals(ImmutableSet.of(item1, item2), model.getItems());
                 assertEquals(model.getItemContainer(item1), containerA);
                 assertEquals(model.getItemLocation(item1), loc1);
@@ -58,7 +59,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         pool.removePolicy(policy);
         
         Function<Entity, Location> customLocationFinder = new Function<Entity, Location>() {
-            public Location apply(Entity input) {
+            @Override public Location apply(Entity input) {
                 return new SimulatedLocation(MutableMap.of("name", "custom location for "+input));
             }};
         
@@ -73,7 +74,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         final MockContainerEntity containerA = newContainer(app, loc1, "A");
         
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
-            public void run() {
+            @Override public void run() {
                 assertEquals(model.getContainerLocation(containerA).getDisplayName(), "custom location for "+containerA);
             }});
     }
@@ -208,11 +209,6 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         assertItemDistributionEventually(ImmutableMap.of(containerA, ImmutableList.of(item1, item2), containerB, ImmutableList.<MockItemEntity>of()));
     }
 
-    // FIXME Failed in jenkins once with event times [2647, 2655]
-    // My guess is that there was a delay notifying the listener the first time
-    // (which happens async), causing the listener to be notified in rapid 
-    // succession. The policy execs probably happened with a 1000ms separation.
-    // 
     // Marked as "Acceptance" due to time-sensitive nature :-(
     @Test(groups={"Integration", "Acceptance"}, invocationCount=20)
     public void testRepeatedRespectsMinPeriodBetweenExecs() throws Exception {
@@ -221,8 +217,18 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
     
     @Test(groups="Integration")
     public void testRespectsMinPeriodBetweenExecs() throws Exception {
-        long minPeriodBetweenExecs = 1000;
-        long timePrecision = 250;
+        // Failed in jenkins several times, e.g. with event times [2647, 2655] and [1387, 2001].
+        // Aled's guess is that there was a delay notifying the listener the first time
+        // (which happens async), causing the listener to be notified in rapid 
+        // succession. The policy execs probably did happen with a 1000ms separation.
+        // 
+        // Therefore try up to three times to see if we get the desired separation. If the 
+        // minPeriodBetweenExecs wasn't being respected, we'd expect the default 100ms; this 
+        // test would therefore hardly ever pass.
+        final int MAX_ATTEMPTS = 3;
+
+        final long minPeriodBetweenExecs = 1000;
+        final long timePrecision = 250;
         
         pool.removePolicy(policy);
         
@@ -241,10 +247,9 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         pool.addPolicy(customPolicy);
         
         // Record times that things are moved, by lisening to the container sensor being set
-        final Stopwatch stopwatch = new Stopwatch();
-        stopwatch.start();
+        final Stopwatch stopwatch = Stopwatch.createStarted();
         
-        final List<Long> eventTimes = Lists.newArrayList();
+        final List<Long> eventTimes = Lists.newCopyOnWriteArrayList();
         final Semaphore semaphore = new Semaphore(0);
         
         app.subscribe(item1, Movable.CONTAINER, new SensorEventListener<Entity>() {
@@ -255,17 +260,28 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
                 semaphore.release();
             }});
 
-        // Set the workrate, causing the policy to move item1 to item2's location, and wait for it to happen
-        ((EntityLocal)item1).setAttribute(TEST_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d));
-        assertTrue(semaphore.tryAcquire(TIMEOUT_MS, TimeUnit.MILLISECONDS));
-        assertEquals(item1.getAttribute(Movable.CONTAINER), containerB);
+        String errmsg = "";
+        for (int i = 0; i < MAX_ATTEMPTS; i++) {
+            // Set the workrate, causing the policy to move item1 to item2's location, and wait for it to happen
+            ((EntityLocal)item1).setAttribute(TEST_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d));
+            assertTrue(semaphore.tryAcquire(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            assertEquals(item1.getAttribute(Movable.CONTAINER), containerB);
+            
+            // now cause item1 to be moved to item3's location, and wait for it to happen
+            ((EntityLocal)item1).setAttribute(TEST_METRIC, ImmutableMap.<Entity,Double>of(item3, 100d));
+            assertTrue(semaphore.tryAcquire(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            assertEquals(item1.getAttribute(Movable.CONTAINER), containerA);
+            
+            LOG.info("testRepeatedRespectsMinPeriodBetweenExecs event times: "+eventTimes);
+            assertEquals(eventTimes.size(), 2);
+            if (eventTimes.get(1) - eventTimes.get(0) > (minPeriodBetweenExecs-timePrecision)) {
+                return; // success
+            } else {
+                errmsg += eventTimes;
+                eventTimes.clear();
+            }
+        }
         
-        // now cause item1 to be moved to item3's location, and wait for it to happen
-        ((EntityLocal)item1).setAttribute(TEST_METRIC, ImmutableMap.<Entity,Double>of(item3, 100d));
-        assertTrue(semaphore.tryAcquire(TIMEOUT_MS, TimeUnit.MILLISECONDS));
-        assertEquals(item1.getAttribute(Movable.CONTAINER), containerA);
-        
-        assertEquals(eventTimes.size(), 2);
-        assertTrue(eventTimes.get(1) - eventTimes.get(0) > (minPeriodBetweenExecs-timePrecision), ""+eventTimes);
+        fail("Event times never had sufficient gap: "+errmsg);
     }
 }

@@ -11,16 +11,12 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.util.collections.MutableList;
 
 
 public class MockItemEntityImpl extends AbstractEntity implements MockItemEntity {
 
     private static final Logger LOG = LoggerFactory.getLogger(MockItemEntityImpl.class);
-    
-    public static final AttributeSensor<Integer> TEST_METRIC = new BasicAttributeSensor<Integer>(
-            Integer.class, "test.metric", "Dummy workrate for test entities");
     
     public static AtomicInteger totalMoveCount = new AtomicInteger(0);
     
