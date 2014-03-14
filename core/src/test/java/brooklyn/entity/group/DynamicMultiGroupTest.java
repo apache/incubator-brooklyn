@@ -1,10 +1,10 @@
 package brooklyn.entity.group;
 
 import static brooklyn.entity.basic.EntityPredicates.displayNameEqualTo;
+import static brooklyn.entity.basic.EntityPredicates.isChildOf;
 import static brooklyn.entity.group.DynamicMultiGroup.BUCKET_FUNCTION;
-import static brooklyn.entity.group.DynamicMultiGroup.ENTITY_PROVIDER;
+import static brooklyn.entity.group.DynamicMultiGroup.ENTITY_FILTER;
 import static brooklyn.entity.group.DynamicMultiGroupImpl.bucketFromAttribute;
-import static brooklyn.entity.group.DynamicMultiGroupImpl.childrenOf;
 import static com.google.common.collect.Iterables.find;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -22,7 +22,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
@@ -34,7 +34,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class DynamicMultiGroupTest {
 
-    private static final AttributeSensor<String> SENSOR = new BasicAttributeSensor<String>(String.class, "multigroup.test");
+    private static final AttributeSensor<String> SENSOR = Sensors.newSensor(String.class, "multigroup.test");
 
     private TestApplication app;
 
@@ -56,8 +56,8 @@ public class DynamicMultiGroupTest {
         final Group source = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         final DynamicMultiGroup dmg = app.createAndManageChild(
                 EntitySpec.create(DynamicMultiGroup.class)
+                .configure(ENTITY_FILTER, isChildOf(source))
                 .configure(BUCKET_FUNCTION, bucketFromAttribute(SENSOR))
-                .configure(ENTITY_PROVIDER, childrenOf(source))
         );
         app.subscribeToChildren(source, SENSOR, new SensorEventListener<String>() {
             public void onEvent(SensorEvent<String> event) { dmg.distributeEntities(); }

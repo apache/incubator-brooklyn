@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import javax.annotation.Nullable;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 
@@ -46,7 +47,25 @@ public class EntityPredicates {
             }
         };
     }
-    
+
+    public static <T> Predicate<Entity> isChildOf(final Entity parent) {
+        return new Predicate<Entity>() {
+            @Override
+            public boolean apply(@Nullable Entity input) {
+                return Objects.equal(input.getParent(), parent);
+            }
+        };
+    }
+
+    public static <T> Predicate<Entity> isMemberOf(final Group group) {
+        return new Predicate<Entity>() {
+            @Override
+            public boolean apply(@Nullable Entity input) {
+                return group.hasMember(input);
+            }
+        };
+    }
+
     /**
      * Create a predicate that matches any entity who has an exact match for the given location
      * (i.e. {@code entity.getLocations().contains(location)}).

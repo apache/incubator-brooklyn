@@ -5,27 +5,33 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.reflect.TypeToken;
 
-@SuppressWarnings({ "serial" })
+@Beta
 @ImplementedBy(DynamicMultiGroupImpl.class)
+@SuppressWarnings({ "serial" })
 public interface DynamicMultiGroup extends Entity {
 
     /**
      * Identifies the entities that are to be considered for "bucketising".
-     * @see DynamicMultiGroupImpl#childrenOf(Entity)
-     * @see DynamicMultiGroupImpl#membersOf(Entity)
+     * @see EntityPredicates#isChildOf(Entity)
+     * @see EntityPredicates#isMemberOf(Group)
      */
-    @SetFromFlag("entityProvider")
-    public static final ConfigKey<Iterable<Entity>> ENTITY_PROVIDER = ConfigKeys.newConfigKey(
-            new TypeToken<Iterable<Entity>>(){},
-            "brooklyn.multigroup.entityProvider",
-            "Identifies which entities should be considered for 'bucketising'"
+    @SetFromFlag("entityFilter")
+    public static final ConfigKey<Predicate<Entity>> ENTITY_FILTER = ConfigKeys.newConfigKey(
+            new TypeToken<Predicate<Entity>>(){},
+            "brooklyn.multigroup.entityFilter",
+            "Identifies which entities should be considered for 'bucketising'",
+            Predicates.<Entity>alwaysTrue()
     );
 
     /**
@@ -41,10 +47,10 @@ public interface DynamicMultiGroup extends Entity {
     );
 
     /**
-     * Determines the entity type used for the "bucket" groups.
+     * Determines the {@link Group} type used for the "bucket" groups.
      */
-    @SetFromFlag("groupSpec")
-    public static final ConfigKey<EntitySpec<? extends Group>> GROUP_SPEC = ConfigKeys.newConfigKey(
+    @SetFromFlag("bucketSpec")
+    public static final ConfigKey<EntitySpec<? extends Group>> BUCKET_SPEC = ConfigKeys.newConfigKey(
             new TypeToken<EntitySpec<? extends Group>>(){},
             "brooklyn.multigroup.groupSpec",
             "Determines the entity type used for the 'bucket' groups",
@@ -60,7 +66,7 @@ public interface DynamicMultiGroup extends Entity {
      * this component. Entities for a given bucket are added as members of the corresponding group.
      * By default, {@link BasicGroup} instances will be created for the buckets, however any group
      * entity can be used instead (e.g. with custom effectors) by specifying the relevant entity
-     * spec via the {@link #GROUP_SPEC} config key.
+     * spec via the {@link #BUCKET_SPEC} config key.
      *
      * <p>Entities for which the bucket function returns <tt>null</tt> are not allocated to any
      * bucket and are thus effectively excluded. Buckets that become empty following re-evaluation

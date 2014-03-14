@@ -1,6 +1,5 @@
 package brooklyn.entity.group;
 
-import java.util.Iterator;
 import java.util.concurrent.ConcurrentMap;
 
 import brooklyn.entity.Entity;
@@ -11,7 +10,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 
 public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMultiGroup {
@@ -37,29 +36,6 @@ public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMult
         return bucketFromAttribute(sensor, null);
     }
 
-    /**
-     * Convenience factory method for the common use-case of providing entities from another entity's children.
-     * @see DynamicMultiGroup#ENTITY_PROVIDER
-     */
-    public static Iterable<Entity> childrenOf(final Entity parent) {
-        return new Iterable<Entity>() {
-            public Iterator<Entity> iterator() {
-                return ImmutableSet.copyOf(parent.getChildren()).iterator();
-            }
-        };
-    }
-
-    /**
-     * Convenience factory method for the common use-case of providing entities from a group's members.
-     * @see DynamicMultiGroup#ENTITY_PROVIDER
-     */
-    public static Iterable<Entity> membersOf(final Group group) {
-        return new Iterable<Entity>() {
-            public Iterator<Entity> iterator() {
-                return ImmutableSet.copyOf(group.getMembers()).iterator();
-            }
-        };
-    }
 
     private ConcurrentMap<String, Group> bucketsByName = Maps.newConcurrentMap();
 
@@ -72,14 +48,17 @@ public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMult
 
     @Override
     public void distributeEntities() {
-        Iterable<Entity> entityProvider = getConfig(ENTITY_PROVIDER);
+        Predicate<Entity> entityFilter = getConfig(ENTITY_FILTER);
         Function<Entity, String> bucketFunction = getConfig(BUCKET_FUNCTION);
-        EntitySpec<? extends Group> groupSpec = getConfig(GROUP_SPEC);
-        if (entityProvider == null) return;
+        EntitySpec<? extends Group> groupSpec = getConfig(BUCKET_SPEC);
+        if (entityFilter == null) return;
         if (bucketFunction == null) return;
         if (groupSpec == null) return;
 
-        for (Entity e : entityProvider) {
+        for (Entity e : getManagementContext().getEntityManager().getEntities()) {
+            if (!entityFilter.apply(e))
+                continue;
+
             for (Group g : bucketsByName.values())
                 g.removeMember(e);
 
