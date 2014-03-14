@@ -17,14 +17,16 @@ import com.google.common.collect.Maps;
 
 /** A config key which represents a map, where contents can be accessed directly via subkeys.
  * Items added directly to the map must be of type map, and can be updated by:
- * <li>putting individual subkeys ({@link SubElementConfigKey})
- * <li>passing an an appropriate {@link MapModification} from {@link MapModifications}
+ * <ul>
+ * <li>Putting individual subkeys ({@link SubElementConfigKey})
+ * <li>Passing an an appropriate {@link MapModification} from {@link MapModifications}
  *      to clear, clear-and-set, or update
- * <li>setting a value against a dot-extension of the key 
+ * <li>Setting a value against a dot-extension of the key
  *     (e.g. setting <code>a.map.subkey=1</code> will cause getConfig(a.map[type=MapConfigKey])
  *     to return {subkey=1}; but note the above are preferred where possible)  
- * <li>setting a map directly against the MapConfigKey (but note that the above are preferred where possible) 
- **/
+ * <li>Setting a map directly against the MapConfigKey (but note that the above are preferred where possible)
+ * </ul>
+ */
 //TODO Create interface
 public class MapConfigKey<V> extends AbstractStructuredConfigKey<Map<String,V>,Map<String,Object>,V> {
     

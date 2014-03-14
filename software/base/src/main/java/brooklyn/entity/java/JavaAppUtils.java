@@ -195,7 +195,7 @@ public class JavaAppUtils {
         return builder;
     }
 
-    /** @deprecated Since 0.0.7. Use {@link brooklyn.util.math.MathFunctions#times(double)} instead */
+    /** @deprecated Since 0.7.0. Use {@link brooklyn.util.math.MathFunctions#times(double)} instead */
     @Deprecated
     public static Function<Number, Double> times(final double x) {
         return MathFunctions.times(x);

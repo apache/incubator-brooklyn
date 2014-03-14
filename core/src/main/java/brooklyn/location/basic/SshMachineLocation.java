@@ -94,8 +94,8 @@ import com.google.common.net.HostAndPort;
  * Operations on a machine that is accessible via ssh.
  * <p>
  * We expose two ways of running scripts.
- * One (execCommands) passes lines to bash, that is lightweight but fragile.
- * Another (execScript) creates a script on the remote machine, more portable but heavier.
+ * The execCommands method passes lines to bash and is lightweight but fragile.
+ * The execScript method creates a script on the remote machine. It is portable but heavier.
  * <p>
  * Additionally there are routines to copyTo, copyFrom; and installTo (which tries a curl, and falls back to copyTo
  * in event the source is accessible by the caller only).
