@@ -125,13 +125,12 @@ public class BasicExecutionContext extends AbstractExecutionContext {
                 submit(Tasks.<T>builder().name("Cross-context execution").dynamic(true).body(new Callable<T>() {
                     public T call() {
                         if (task instanceof Callable) {
-                            DynamicTasks.queue( Tasks.<T>builder().dynamic(false).body((Callable<T>)task).build() );
+                            return DynamicTasks.queue( Tasks.<T>builder().dynamic(false).body((Callable<T>)task).build() ).getUnchecked();
                         } else if (task instanceof Runnable) {
-                            DynamicTasks.queue( Tasks.builder().dynamic(false).body((Runnable)task).build() );
+                            return DynamicTasks.queue( Tasks.<T>builder().dynamic(false).body((Runnable)task).build() ).getUnchecked();
                         } else {
                             throw new IllegalArgumentException("Unhandled task type: "+task+"; type="+(task!=null ? task.getClass() : "null"));
                         }
-                        return (T)DynamicTasks.getTaskQueuingContext().last();
                     }
                 }).build());
             }

@@ -20,7 +20,10 @@ import brooklyn.management.TaskQueueingContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.CountdownTimer;
+import brooklyn.util.time.Duration;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /** Represents a task whose run() method can create other tasks
@@ -35,8 +38,14 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     protected final Object jobTransitionLock = new Object();
     protected volatile boolean primaryStarted = false;
     protected volatile boolean primaryFinished = false;
-    protected Boolean swallowChildrenFailures;
     protected Thread primaryThread;
+    protected DstJob dstJob;
+
+    /** typically this task fails if any children do; set true to prevent parent from failing just because a child does */
+    protected boolean swallowChildrenFailures = false;
+    
+    // not sure why this would be needed (previously we did it, but probably no to effect):
+    protected boolean cancelRemainingJobsOnFailure = false;
 
     
     /**
@@ -55,7 +64,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     
     public DynamicSequentialTask(Map<?,?> flags, Callable<T> mainJob) {
         super(flags);
-        this.job = new DstJob(mainJob);
+        this.job = dstJob = new DstJob(mainJob);
     }
     
     @Override
@@ -108,11 +117,20 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             log.warn(message+" (rethrowing)");
             throw new IllegalStateException(message);
         }
-        ec.submit(task);
+        synchronized (task) {
+            if (task.isSubmitted() && !task.isDone())
+                log.debug("DST "+this+" skipping submission of child "+task+" because it is already submitted");
+            else
+                ec.submit(task);
+        }
     }
 
     protected class DstJob implements Callable<T> {
         protected Callable<T> primaryJob;
+        /** currently executing (or just completed) secondary task, or null if none;
+         * with jobTransitionLock notified on change and completion */
+        protected volatile Task<?> currentSecondary = null;
+        protected volatile boolean finished = false;
         
         public DstJob(Callable<T> mainJob) {
             this.primaryJob = mainJob;
@@ -133,29 +151,45 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             Task<List<Object>> secondaryJobMaster = Tasks.<List<Object>>builder().dynamic(false)
                     .name("DST manager (internal)")
                     .body(new Callable<List<Object>>() {
+
                 @Override
                 public List<Object> call() throws Exception {
                     List<Object> result = new ArrayList<Object>();
-                    while (!primaryFinished || !secondaryJobsRemaining.isEmpty()) {
-                        synchronized (jobTransitionLock) {
-                            if (!primaryFinished && secondaryJobsRemaining.isEmpty()) {
-                                jobTransitionLock.wait(1000);
+                    try { 
+                        while (!primaryFinished || !secondaryJobsRemaining.isEmpty()) {
+                            synchronized (jobTransitionLock) {
+                                if (!primaryFinished && secondaryJobsRemaining.isEmpty()) {
+                                    currentSecondary = null;
+                                    jobTransitionLock.wait(1000);
+                                }
+                            }
+                            @SuppressWarnings("rawtypes")
+                            Task secondaryJob = secondaryJobsRemaining.poll();
+                            if (secondaryJob != null) {
+                                synchronized (jobTransitionLock) {
+                                    currentSecondary = secondaryJob;
+                                    submitBackgroundInheritingContext(secondaryJob);
+                                    jobTransitionLock.notifyAll();
+                                }
+                                try {
+                                    result.add(secondaryJob.get());
+                                } catch (Exception e) {
+                                    // secondary job queue aborts on error
+                                    if (log.isDebugEnabled())
+                                        log.debug("Aborting secondary job queue for "+DynamicSequentialTask.this+" due to error in task "+secondaryJob+" ("+e+", being rethrown)");
+                                    if (cancelRemainingJobsOnFailure) {
+                                        for (Task<?> t: secondaryJobsRemaining)
+                                            t.cancel(false);
+                                    }
+                                    throw e;
+                                }
                             }
                         }
-                        @SuppressWarnings("rawtypes")
-                        Task secondaryJob = secondaryJobsRemaining.poll();
-                        if (secondaryJob != null) {
-                            submitBackgroundInheritingContext(secondaryJob);
-                            try {
-                                result.add(secondaryJob.get());
-                            } catch (Exception e) {
-                                // secondary job queue aborts on error
-                                if (log.isDebugEnabled())
-                                    log.debug("Aborting secondary job queue for "+DynamicSequentialTask.this+" due to error in task "+secondaryJob+" ("+e+", being rethrown)");
-                                for (Task<?> t: secondaryJobsRemaining)
-                                    t.cancel(false);
-                                throw e;
-                            }
+                    } finally {
+                        synchronized (jobTransitionLock) {
+                            currentSecondary = null;
+                            finished = true;
+                            jobTransitionLock.notifyAll();
                         }
                     }
                     return result;
@@ -208,6 +242,33 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         public String toString() {
             return "DstJob:"+DynamicSequentialTask.this;
         }
+
+        /** waits for this job to complete, or the given time to elapse */
+        public void join(boolean includePrimary, Duration optionalTimeout) throws InterruptedException {
+            CountdownTimer timeLeft = optionalTimeout!=null ? CountdownTimer.newInstanceStarted(optionalTimeout) : null;
+            while (true) {
+                Task<?> cs;
+                Duration remaining;
+                synchronized (jobTransitionLock) {
+                    cs = currentSecondary;
+                    if (finished) return;
+                    remaining = timeLeft==null ? Duration.ONE_SECOND : timeLeft.getDurationRemaining();
+                    if (!remaining.isPositive()) return;
+                    if (cs==null) {
+                        if (!includePrimary && secondaryJobsRemaining.isEmpty()) return;
+                        // parent still running, no children though
+                        Tasks.setBlockingTask(DynamicSequentialTask.this);
+                        jobTransitionLock.wait(remaining.toMilliseconds());
+                        Tasks.resetBlockingDetails();
+                    }
+                }
+                if (cs!=null) {
+                    Tasks.setBlockingTask(cs);
+                    cs.blockUntilEnded(remaining);
+                    Tasks.resetBlockingDetails();
+                }
+            }
+        }
     }
 
     @Override
@@ -216,7 +277,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     }
 
     public void handleException(Throwable throwable, boolean fromChild) throws Exception {
-        if (fromChild && swallowChildrenFailures!=null && swallowChildrenFailures.booleanValue()) {
+        if (fromChild && swallowChildrenFailures) {
             log.debug("Parent task "+this+" swallowing child error: "+throwable);
             return;
         }
@@ -231,12 +292,27 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         throw Exceptions.propagate(throwable);
     }
 
-    @Override
+    @Override @Deprecated
     public Task<?> last() {
-        // TODO this is inefficient
         List<Task<?>> l = getQueue();
         if (l.isEmpty()) return null;
         return l.get(l.size()-1);
     }
-    
+
+    @Override
+    public void drain(Duration optionalTimeout, boolean includePrimary, boolean throwFirstError) {
+        try {
+            dstJob.join(includePrimary, optionalTimeout);
+        } catch (InterruptedException e) {
+            Throwables.propagate(e);
+        }
+        if (throwFirstError) {
+            if (isError()) 
+                getUnchecked();
+            for (Task<?> t: getQueue())
+                if (t.isError())
+                    t.getUnchecked();
+        }
+    }
+
 }

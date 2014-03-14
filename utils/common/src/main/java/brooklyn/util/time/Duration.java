@@ -190,4 +190,8 @@ public class Duration implements Comparable<Duration> {
         return CountdownTimer.newInstanceStarted(this);
     }
 
+    public boolean isPositive() {
+        return nanos()>0;
+    }
+
 }

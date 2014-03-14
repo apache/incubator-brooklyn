@@ -361,15 +361,8 @@ public abstract class MachineLifecycleEffectorTasks {
             return;
         }
                 
-        Task<Object> stoppingProcess = DynamicTasks.queueSwallowingChildrenFailures("stopping (process)", new Callable<Object>() { public Object call() {
-            try {
-                stopProcessesAtMachine();
-            } catch (Throwable error) {
-                String msg = "Error stopping "+entity()+" (process): "+error;
-                log.warn(msg);
-                DynamicTasks.queue(Tasks.fail("Primary job failed", error));
-                return error;
-            }
+        Task<String> stoppingProcess = DynamicTasks.queueSwallowingChildrenFailures("stopping (process)", new Callable<String>() { public String call() {
+            stopProcessesAtMachine();
             return "Stop at machine completed with no errors.";
         }});
         
@@ -382,23 +375,22 @@ public abstract class MachineLifecycleEffectorTasks {
             return stopAnyProvisionedMachines();
         }});
 
-        // TODO
-//        DynamicTasks.waitForLast(entity().getConfig(STOP_PROCESS_TIMEOUT), false);
-//        
-//        // shutdown the machine if stopping process fails or takes too long
-//        if (stoppingProcess.isError()) {
-//            // try to resubmit the stoppingMachine task
-//            Entities.submit(entity(), stoppingMachine);
-//        }
+        DynamicTasks.drain(entity().getConfig(STOP_PROCESS_TIMEOUT), false);
+        
+        // shutdown the machine if stopping process fails or takes too long
+        synchronized (stoppingMachine) {
+            if (!stoppingMachine.isSubmitted()) {
+                // force the stoppingMachine task to run by submitting it here
+                log.warn("Submitting machine stop early in background for "+entity()+" because process stop has "+
+                    (stoppingProcess.isDone() ? "finished abnormally" : "not finished"));
+                Entities.submit(entity(), stoppingMachine);
+            }
+        }
         
         try {
             if (stoppingMachine.get().value==0) {
                 // throw early errors *only if* we have not stopped the machine
-                //TODO
-//                DynamicTasks.waitForLast();
-                // instead:
-                Object o = stoppingProcess.get();
-                if (o instanceof Throwable) throw (Throwable)o;
+                DynamicTasks.waitForLast();
             }
             
             entity().setAttribute(SoftwareProcess.SERVICE_UP, false);

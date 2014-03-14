@@ -19,6 +19,7 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 
 /** 
  * Contains static methods which detect and use the current {@link TaskQueueingContext} to execute tasks.
@@ -244,34 +245,23 @@ public class DynamicTasks {
         return queueIfNeeded(t).asTask().getUnchecked();
     }
 
-    /** as {@link #waitForLast(Duration, boolean)} waiting forever and throwing the first error */
+    /** As {@link #drain(Duration, boolean)} waiting forever and throwing the first error,
+     * then returning the last task in the queue (which is guaranteed to have finished without error,
+     * if this method returns without throwing) */
     public static Task<?> waitForLast() {
-        waitForLast(null, true);
-        return DynamicTasks.getTaskQueuingContext().last();
+        drain(null, true);
+        // this call to last is safe, as the above guarantees everything will have run
+        // (on errors the above will throw so we won't come here)
+        List<Task<?>> q = DynamicTasks.getTaskQueuingContext().getQueue();
+        return q.isEmpty() ? null : Iterables.getLast(q);
     }
     
-    /** Waits for the last task queued in this context to complete;
-     * with second argument true,
-     * it throws if there is a problem, but happily returns null if there is no last task.
-     * <p>
-     * Preferred over {@link #last()}.get() because this waits on all tasks, 
-     * in sequentially (so that blocking information is always accurate) */
-    public static void waitForLast(Duration optionalTimeout, boolean throwFirstError) {
+    /** Calls {@link TaskQueueingContext#drain(Duration, boolean)} on the current task context */
+    public static TaskQueueingContext drain(Duration optionalTimeout, boolean throwFirstError) {
         TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
         Preconditions.checkNotNull(qc, "Cannot wait when their is no queueing context");
-        List<Task<?>> q = qc.getQueue();
-        Task<?> last = null;
-        Throwable firstError = null;
-        do {
-            for (Task<?> t: q) {
-                last = t;
-                last.blockUntilEnded();
-                if (last.isError() && firstError==null)
-                    firstError = Tasks.getError(last);
-            }
-        } while (last!=qc.last());
-        if (firstError!=null && throwFirstError)
-            Exceptions.propagate(firstError);
+        qc.drain(optionalTimeout, false, throwFirstError);
+        return qc;
     }
 
 }

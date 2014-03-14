@@ -239,6 +239,12 @@ public class BasicTask<T> implements TaskInternal<T> {
     @Override
     public synchronized boolean cancel() { return cancel(true); }
     
+    public synchronized boolean uncancel() {
+        boolean wasCancelled = cancelled;
+        cancelled = false; 
+        return wasCancelled;
+    }
+    
     @Override
     public synchronized boolean cancel(boolean mayInterruptIfRunning) {
         if (isDone()) return false;
