@@ -34,15 +34,21 @@ public class JavaAppUtils {
      */
     @Nullable
     public static JmxFeed connectMXBeanSensors(EntityLocal entity) {
-        if (isEntityMxBeanStatsEnabled(entity)) return null;
-        return getMxBeanSensorsBuilder(entity).build();
+        if (isEntityMxBeanStatsEnabled(entity)) {
+            return getMxBeanSensorsBuilder(entity).build();
+        } else {
+            return null;
+        }
     }
 
     /** @see #connectJavaAppServerPolicies(EntityLocal, Duration) */
     @Nullable
     public static JmxFeed connectMXBeanSensors(EntityLocal entity, long jmxPollPeriodMs) {
-        if (isEntityMxBeanStatsEnabled(entity)) return null;
-        return getMxBeanSensorsBuilder(entity, jmxPollPeriodMs).build();
+        if (isEntityMxBeanStatsEnabled(entity)) {
+            return getMxBeanSensorsBuilder(entity, jmxPollPeriodMs).build();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -54,8 +60,11 @@ public class JavaAppUtils {
      */
     @Nullable
     public static JmxFeed connectMXBeanSensors(EntityLocal entity, Duration jmxPollPeriod) {
-        if (isEntityMxBeanStatsEnabled(entity)) return null;
-        return getMxBeanSensorsBuilder(entity, jmxPollPeriod).build();
+        if (isEntityMxBeanStatsEnabled(entity)) {
+            return getMxBeanSensorsBuilder(entity, jmxPollPeriod).build();
+        } else {
+            return null;
+        }
     }
     
     public static void connectJavaAppServerPolicies(EntityLocal entity) {
