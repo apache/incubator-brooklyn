@@ -153,13 +153,16 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
 
+    public static final ConfigKey<Boolean> CLOSE_CONNECTION = ConfigKeys.newBooleanConfigKey("close", "Close the SSH connection after use", false);
+    public static final ConfigKey<String> UNIQUE_ID = ConfigKeys.newStringConfigKey("unique", "Unique ID for the SSH connection");
+
     /**
      * Specifies config keys where a change in the value does not require a new SshTool instance,
      * i.e. they can be specified per command on the tool
      */
     // TODO: Fully specify.
     public static final Set<ConfigKey<?>> REUSABLE_SSH_PROPS = ImmutableSet.of(
-            STDOUT, STDERR, SCRIPT_DIR,
+            STDOUT, STDERR, SCRIPT_DIR, CLOSE_CONNECTION,
             SshTool.PROP_SCRIPT_HEADER, SshTool.PROP_PERMISSIONS, SshTool.PROP_LAST_MODIFICATION_DATE,
             SshTool.PROP_LAST_ACCESS_DATE, SshTool.PROP_OWNER_UID, SshTool.PROP_SSH_RETRY_DELAY);
 
@@ -379,16 +382,34 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return getConfig(SshTool.PROP_PORT);
     }
 
-    protected <T> T execSsh(Map<String, ?> props, Function<ShellTool, T> task) {
+    protected <T> T execSsh(final Map<String, ?> props, final Function<ShellTool, T> task) {
         if (sshPoolCache == null) {
             // required for uses that instantiate SshMachineLocation directly, so init() will not have been called
             sshPoolCache = buildSshToolPoolCacheLoader();
         }
-        Pool<SshTool> pool = sshPoolCache.getUnchecked(props);
+        final Pool<SshTool> pool = sshPoolCache.getUnchecked(props);
         if (LOG.isTraceEnabled()) {
             LOG.trace("{} execSsh got pool: {}", this, pool);
         }
-        return pool.exec(task);
+
+        if (truth(props.get(CLOSE_CONNECTION.getName()))) {
+            Function<SshTool, T> close = new Function<SshTool, T>() {
+                @Override
+                public T apply(SshTool input) {
+                    T result = task.apply(input);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("{} invalidating SSH connection cache entries for: {}",
+                                new Object[] { SshMachineLocation.this, props });
+                    }
+                    sshPoolCache.refresh(props);
+                    sshPoolCache.cleanUp();
+                    return result;
+                }
+            };
+            return pool.exec(close);
+        } else {
+            return pool.exec(task);
+        }
     }
 
     protected SshTool connectSsh() {
