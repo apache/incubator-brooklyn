@@ -80,9 +80,9 @@ public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMult
         // remove any now-empty buckets
         for (Group g : ImmutableSet.copyOf(bucketsByName.values())) {
             if (g.getMembers().isEmpty()) {
+                bucketsByName.remove(g.getDisplayName());
                 removeChild(g);
                 Entities.unmanage(g);
-                bucketsByName.remove(g.getDisplayName());
             }
         }
     }
