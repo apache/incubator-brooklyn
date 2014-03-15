@@ -2,57 +2,58 @@ package brooklyn.entity.java;
 
 import java.util.Map;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 public interface UsesJavaMXBeans {
 
     @SetFromFlag("mxbeanStatsEnabled")
-    public static final BasicConfigKey<Boolean> MXBEAN_STATS_ENABLED =
-            new BasicConfigKey<Boolean>(Boolean.class, "java.metrics.mxbeanStatsEnabled", "Enables collection of JVM stats from the MXBeans, such as memory and thread usage (default is true)", true);
+    ConfigKey<Boolean> MXBEAN_STATS_ENABLED =
+            ConfigKeys.newBooleanConfigKey("java.metrics.mxbeanStatsEnabled", "Enables collection of JVM stats from the MXBeans, such as memory and thread usage (default is true)", true);
 
-    public static final AttributeSensor<Long> USED_HEAP_MEMORY =
+    AttributeSensor<Long> USED_HEAP_MEMORY =
             Sensors.newLongSensor("java.metrics.heap.used", "Current heap size (bytes)");
-    public static final AttributeSensor<Long> INIT_HEAP_MEMORY =
+    AttributeSensor<Long> INIT_HEAP_MEMORY =
             Sensors.newLongSensor("java.metrics.heap.init", "Initial heap size (bytes)");
-    public static final AttributeSensor<Long> COMMITTED_HEAP_MEMORY =
+    AttributeSensor<Long> COMMITTED_HEAP_MEMORY =
             Sensors.newLongSensor("java.metrics.heap.committed", "Commited heap size (bytes)");
-    public static final AttributeSensor<Long> MAX_HEAP_MEMORY =
+    AttributeSensor<Long> MAX_HEAP_MEMORY =
             Sensors.newLongSensor("java.metrics.heap.max", "Max heap size (bytes)");
-    public static final AttributeSensor<Long> NON_HEAP_MEMORY_USAGE =
+    AttributeSensor<Long> NON_HEAP_MEMORY_USAGE =
             Sensors.newLongSensor("java.metrics.nonheap.used", "Current non-heap size (bytes)");
-    public static final AttributeSensor<Integer> CURRENT_THREAD_COUNT =
+    AttributeSensor<Integer> CURRENT_THREAD_COUNT =
             Sensors.newIntegerSensor( "java.metrics.threads.current", "Current number of threads");
-    public static final AttributeSensor<Integer> PEAK_THREAD_COUNT =
+    AttributeSensor<Integer> PEAK_THREAD_COUNT =
             Sensors.newIntegerSensor("java.metrics.threads.max", "Peak number of threads");
 
     // runtime system attributes
-    public static final AttributeSensor<Long> START_TIME =
+    AttributeSensor<Long> START_TIME =
             Sensors.newLongSensor("java.metrics.starttime", "Start time of Java process (UTC)");
-    public static final AttributeSensor<Long> UP_TIME =
+    AttributeSensor<Long> UP_TIME =
             Sensors.newLongSensor("java.metrics.uptime", "Uptime of Java process (millis, elapsed since start)");
     
     //operating system attributes
-    public static final AttributeSensor<Double> PROCESS_CPU_TIME = Sensors.newDoubleSensor( 
+    AttributeSensor<Double> PROCESS_CPU_TIME = Sensors.newDoubleSensor( 
             "java.metrics.processCpuTime.total", "Process CPU time (total millis since start)");
-    public static final AttributeSensor<Double> PROCESS_CPU_TIME_FRACTION_LAST = Sensors.newDoubleSensor( 
+    AttributeSensor<Double> PROCESS_CPU_TIME_FRACTION_LAST = Sensors.newDoubleSensor( 
             "java.metrics.processCpuTime.fraction.last", "Fraction of CPU time used, reported by JVM (percentage, last datapoint)");
-    public static final AttributeSensor<Double> PROCESS_CPU_TIME_FRACTION_IN_WINDOW = Sensors.newDoubleSensor( 
+    AttributeSensor<Double> PROCESS_CPU_TIME_FRACTION_IN_WINDOW = Sensors.newDoubleSensor( 
             "java.metrics.processCpuTime.fraction.windowed", "Fraction of CPU time used, reported by JVM (percentage, over time window)");
     
-    public static final AttributeSensor<Integer> AVAILABLE_PROCESSORS =
+    AttributeSensor<Integer> AVAILABLE_PROCESSORS =
             Sensors.newIntegerSensor("java.metrics.processors.available", "number of processors available to the Java virtual machine");
-    public static final AttributeSensor<Double> SYSTEM_LOAD_AVERAGE
+    AttributeSensor<Double> SYSTEM_LOAD_AVERAGE
             = Sensors.newDoubleSensor("java.metrics.systemload.average", "average system load");
-    public static final AttributeSensor<Long> TOTAL_PHYSICAL_MEMORY_SIZE =
+    AttributeSensor<Long> TOTAL_PHYSICAL_MEMORY_SIZE =
             Sensors.newLongSensor("java.metrics.physicalmemory.total", "The physical memory available to the operating system");
-    public static final AttributeSensor<Long> FREE_PHYSICAL_MEMORY_SIZE =
+    AttributeSensor<Long> FREE_PHYSICAL_MEMORY_SIZE =
             Sensors.newLongSensor("java.metrics.physicalmemory.free", "The free memory available to the operating system");
 
     // GC attributes
-    public static final AttributeSensor<Map> GARBAGE_COLLECTION_TIME = new BasicAttributeSensor<Map>(Map.class, "java.metrics.gc.time", "garbage collection time");
+    AttributeSensor<Map> GARBAGE_COLLECTION_TIME = new BasicAttributeSensor<Map>(Map.class, "java.metrics.gc.time", "garbage collection time");
 
 }

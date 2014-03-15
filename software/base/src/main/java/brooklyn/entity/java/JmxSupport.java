@@ -19,7 +19,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.location.access.BrooklynAccessUtils;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.BrooklynMavenArtifacts;

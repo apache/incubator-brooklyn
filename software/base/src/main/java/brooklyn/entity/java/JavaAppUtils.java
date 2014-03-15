@@ -1,5 +1,7 @@
 package brooklyn.entity.java;
 
+import static brooklyn.util.GroovyJavaMethods.truth;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.util.concurrent.TimeUnit;
@@ -22,8 +24,8 @@ import com.google.common.base.Function;
 
 public class JavaAppUtils {
 
-    private static boolean isEntityMxBeanStatsEnabled(Entity entity) {
-        return Boolean.TRUE.equals(entity.getConfig(UsesJavaMXBeans.MXBEAN_STATS_ENABLED));
+    public static boolean isEntityMxBeanStatsEnabled(Entity entity) {
+        return truth(entity.getConfig(UsesJavaMXBeans.MXBEAN_STATS_ENABLED));
     }
 
     /**
@@ -32,15 +34,21 @@ public class JavaAppUtils {
      */
     @Nullable
     public static JmxFeed connectMXBeanSensors(EntityLocal entity) {
-        if (isEntityMxBeanStatsEnabled(entity)) return null;
-        return getMxBeanSensorsBuilder(entity).build();
+        if (isEntityMxBeanStatsEnabled(entity)) {
+            return getMxBeanSensorsBuilder(entity).build();
+        } else {
+            return null;
+        }
     }
 
     /** @see #connectJavaAppServerPolicies(EntityLocal, Duration) */
     @Nullable
     public static JmxFeed connectMXBeanSensors(EntityLocal entity, long jmxPollPeriodMs) {
-        if (isEntityMxBeanStatsEnabled(entity)) return null;
-        return getMxBeanSensorsBuilder(entity, jmxPollPeriodMs).build();
+        if (isEntityMxBeanStatsEnabled(entity)) {
+            return getMxBeanSensorsBuilder(entity, jmxPollPeriodMs).build();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -52,8 +60,11 @@ public class JavaAppUtils {
      */
     @Nullable
     public static JmxFeed connectMXBeanSensors(EntityLocal entity, Duration jmxPollPeriod) {
-        if (isEntityMxBeanStatsEnabled(entity)) return null;
-        return getMxBeanSensorsBuilder(entity, jmxPollPeriod).build();
+        if (isEntityMxBeanStatsEnabled(entity)) {
+            return getMxBeanSensorsBuilder(entity, jmxPollPeriod).build();
+        } else {
+            return null;
+        }
     }
     
     public static void connectJavaAppServerPolicies(EntityLocal entity) {
@@ -195,7 +206,6 @@ public class JavaAppUtils {
             @Override public MemoryUsage apply(CompositeData input) {
                 return (input == null) ? null : MemoryUsage.from(input);
             }
-            
         };
     }
 }

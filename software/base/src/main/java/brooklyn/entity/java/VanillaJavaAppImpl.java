@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -57,7 +56,7 @@ public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJa
     protected void connectSensors() {
         super.connectSensors();
         
-        if ( ((VanillaJavaAppDriver)getDriver()).isJmxEnabled() ) {
+        if (((VanillaJavaAppDriver) getDriver()).isJmxEnabled()) {
             jmxPollPeriod = (jmxPollPeriod > 0) ? jmxPollPeriod : 500;
             jmxFeed = JavaAppUtils.connectMXBeanSensors(this, jmxPollPeriod);
         }
