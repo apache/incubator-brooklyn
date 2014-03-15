@@ -1,5 +1,7 @@
 package brooklyn.entity.java;
 
+import static brooklyn.util.GroovyJavaMethods.truth;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.util.concurrent.TimeUnit;
@@ -22,8 +24,8 @@ import com.google.common.base.Function;
 
 public class JavaAppUtils {
 
-    private static boolean isEntityMxBeanStatsEnabled(Entity entity) {
-        return Boolean.TRUE.equals(entity.getConfig(UsesJavaMXBeans.MXBEAN_STATS_ENABLED));
+    public static boolean isEntityMxBeanStatsEnabled(Entity entity) {
+        return truth(entity.getConfig(UsesJavaMXBeans.MXBEAN_STATS_ENABLED));
     }
 
     /**
@@ -195,7 +197,6 @@ public class JavaAppUtils {
             @Override public MemoryUsage apply(CompositeData input) {
                 return (input == null) ? null : MemoryUsage.from(input);
             }
-            
         };
     }
 }

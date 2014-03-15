@@ -14,7 +14,6 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveBuilder;
 import brooklyn.util.file.ArchiveUtils;
-import brooklyn.util.javalang.StackTraceSimplifier;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.task.Tasks;
