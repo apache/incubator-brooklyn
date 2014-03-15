@@ -131,6 +131,16 @@ public class DynamicMultiGroupTest {
                 assertEquals(ImmutableSet.copyOf(bucketB.getMembers()), ImmutableSet.of(child1, child2));
             }
         });
+
+        // Add child 3 back to bucket C -- this should result in a new group entity
+        child3.setAttribute(SENSOR, "bucketC");
+        Asserts.succeedsEventually(new Runnable() {
+            public void run() {
+                Group bucketC = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketC"), null);
+                assertNotNull(bucketC);
+                assertEquals(ImmutableSet.copyOf(bucketC.getMembers()), ImmutableSet.of(child3));
+            }
+        });
     }
 
 }

@@ -11,6 +11,7 @@ import brooklyn.event.AttributeSensor;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMultiGroup {
@@ -77,9 +78,12 @@ public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMult
         }
 
         // remove any now-empty buckets
-        for (Group g : bucketsByName.values()) {
-            if (g.getMembers().isEmpty())
+        for (Group g : ImmutableSet.copyOf(bucketsByName.values())) {
+            if (g.getMembers().isEmpty()) {
                 removeChild(g);
+                Entities.unmanage(g);
+                bucketsByName.remove(g.getDisplayName());
+            }
         }
     }
 
