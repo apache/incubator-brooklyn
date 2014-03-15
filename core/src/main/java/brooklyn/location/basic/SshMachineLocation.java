@@ -387,7 +387,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             // required for uses that instantiate SshMachineLocation directly, so init() will not have been called
             sshPoolCache = buildSshToolPoolCacheLoader();
         }
-        final Pool<SshTool> pool = sshPoolCache.getUnchecked(props);
+        Pool<SshTool> pool = sshPoolCache.getUnchecked(props);
         if (LOG.isTraceEnabled()) {
             LOG.trace("{} execSsh got pool: {}", this, pool);
         }
@@ -398,10 +398,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 public T apply(SshTool input) {
                     T result = task.apply(input);
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("{} invalidating SSH connection cache entries for: {}",
-                                new Object[] { SshMachineLocation.this, props });
+                        LOG.debug("{} invalidating all sshPoolCache entries: {}", SshMachineLocation.this, sshPoolCache.stats().toString());
                     }
-                    sshPoolCache.refresh(props);
+                    sshPoolCache.invalidateAll();
                     sshPoolCache.cleanUp();
                     return result;
                 }
