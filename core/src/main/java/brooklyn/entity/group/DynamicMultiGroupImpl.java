@@ -20,7 +20,7 @@ public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMult
      * Convenience factory method for the common use-case of deriving the bucket directly from a sensor value.
      * @see DynamicMultiGroup#BUCKET_FUNCTION
      */
-    public static Function<Entity, String> bucketFromAttribute(final AttributeSensor<String> sensor, final String defaultValue) {
+    public static Function<Entity, String> bucketFromAttribute(final AttributeSensor<?> sensor, final String defaultValue) {
         return new Function<Entity, String>() {
             public String apply(Entity e) {
                 Object value = e.getAttribute(sensor);
