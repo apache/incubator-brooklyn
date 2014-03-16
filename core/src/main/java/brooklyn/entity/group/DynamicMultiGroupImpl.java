@@ -1,6 +1,8 @@
 package brooklyn.entity.group;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -8,6 +10,8 @@ import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.feed.function.FunctionFeed;
+import brooklyn.event.feed.function.FunctionPollConfig;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
@@ -37,6 +41,31 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
     }
 
     private ConcurrentMap<String, Group> bucketsByName = Maps.newConcurrentMap();
+    private FunctionFeed rescan;
+
+    public void init() {
+        super.init();
+
+        Long interval = getConfig(RESCAN_INTERVAL);
+        if (interval != null && interval > 0L) {
+            rescan = FunctionFeed.builder()
+                    .entity(this)
+                    .poll(new FunctionPollConfig<Object, Void>(RESCAN)
+                            .period(interval, TimeUnit.SECONDS)
+                            .callable(new Callable<Void>() {
+                                public Void call() throws Exception {
+                                    rescanEntities();
+                                    return null;
+                                }
+                            }))
+                    .build();
+        }
+    }
+
+    public void stop() {
+        super.stop();
+        if (rescan != null) rescan.stop();
+    }
 
     @Override
     protected void onEntityAdded(Entity item) {
@@ -50,6 +79,22 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
     protected void onEntityRemoved(Entity item) {
         synchronized (memberChangeMutex) {
             super.onEntityRemoved(item);
+            distributeEntities();
+        }
+    }
+    
+    @Override
+    protected void onEntityChanged(Entity item) {
+        synchronized (memberChangeMutex) {
+            super.onEntityChanged(item);
+            distributeEntities();
+        }
+    }
+
+    @Override
+    public void rescanEntities() {
+        synchronized (memberChangeMutex) {
+            super.rescanEntities();
             distributeEntities();
         }
     }

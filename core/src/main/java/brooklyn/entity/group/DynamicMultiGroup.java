@@ -8,6 +8,8 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.annotations.Beta;
@@ -42,6 +44,16 @@ public interface DynamicMultiGroup extends DynamicGroup {
             EntitySpec.create(BasicGroup.class)
     );
 
+
+    /**
+     * Configure interval (in seconds) to recan all entities for membership.
+     */
+    @SetFromFlag("bucketSpec")
+    ConfigKey<Long> RESCAN_INTERVAL = ConfigKeys.newLongConfigKey(
+            "brooklyn.multigroup.rescanInterval",
+            "Interval in seconds between scans of all entities for membership. Default zero or unset todisable.", 0L);
+
+    AttributeSensor<Void> RESCAN = Sensors.newSensor(Void.class, "brooklyn.multigroup.rescan", "Notification of entity rescan");
 
     /**
      * Distribute entities accepted by the {@link #ENTITY_FILTER} into uniquely-named "buckets"
