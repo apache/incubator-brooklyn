@@ -5,34 +5,19 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityPredicates;
+import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.reflect.TypeToken;
 
 @Beta
 @ImplementedBy(DynamicMultiGroupImpl.class)
-@SuppressWarnings({ "serial" })
-public interface DynamicMultiGroup extends Entity {
-
-    /**
-     * Identifies the entities that are to be considered for "bucketising".
-     * @see EntityPredicates#isChildOf(Entity)
-     * @see EntityPredicates#isMemberOf(Group)
-     */
-    @SetFromFlag("entityFilter")
-    ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = ConfigKeys.newConfigKey(
-            new TypeToken<Predicate<? super Entity>>(){},
-            "brooklyn.multigroup.entityFilter",
-            "Identifies which entities should be considered for 'bucketising'",
-            Predicates.<Entity>alwaysTrue()
-    );
+@SuppressWarnings("serial")
+public interface DynamicMultiGroup extends DynamicGroup {
 
     /**
      * Implements the mapping from entity to bucket (name).
@@ -59,16 +44,16 @@ public interface DynamicMultiGroup extends Entity {
 
 
     /**
-     * <p>Distribute entities accepted by the {@link #ENTITY_FILTER} into uniquely-named "buckets"
+     * Distribute entities accepted by the {@link #ENTITY_FILTER} into uniquely-named "buckets"
      * according to the {@link #BUCKET_FUNCTION}.
-     *
-     * <p>A {@link Group} entity is created for each required bucket and added as a managed child of
+     * <p>
+     * A {@link Group} entity is created for each required bucket and added as a managed child of
      * this component. Entities for a given bucket are added as members of the corresponding group.
      * By default, {@link BasicGroup} instances will be created for the buckets, however any group
      * entity can be used instead (e.g. with custom effectors) by specifying the relevant entity
      * spec via the {@link #BUCKET_SPEC} config key.
-     *
-     * <p>Entities for which the bucket function returns <tt>null</tt> are not allocated to any
+     * <p>
+     * Entities for which the bucket function returns {@code null} are not allocated to any
      * bucket and are thus effectively excluded. Buckets that become empty following re-evaluation
      * are removed.
      *

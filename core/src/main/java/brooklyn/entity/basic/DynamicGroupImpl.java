@@ -22,7 +22,7 @@ import com.google.common.base.Predicates;
 public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup {
     public static final Logger log = LoggerFactory.getLogger(DynamicGroupImpl.class);
     
-    private final Object memberChangeMutex = new Object();
+    protected final Object memberChangeMutex = new Object();
     
     private volatile MyEntitySetChangeListener setChangeListener = null;
 

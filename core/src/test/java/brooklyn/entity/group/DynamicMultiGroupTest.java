@@ -60,7 +60,7 @@ public class DynamicMultiGroupTest {
                 .configure(BUCKET_FUNCTION, bucketFromAttribute(SENSOR))
         );
         app.subscribeToChildren(group, SENSOR, new SensorEventListener<String>() {
-            public void onEvent(SensorEvent<String> event) { dmg.distributeEntities(); }
+            public void onEvent(SensorEvent<String> event) { dmg.rescanEntities(); }
         });
 
         final EntitySpec<TestEntity> childSpec = EntitySpec.create(TestEntity.class);
