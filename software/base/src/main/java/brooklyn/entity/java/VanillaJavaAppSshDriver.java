@@ -9,6 +9,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -18,11 +21,21 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
+import brooklyn.util.text.Strings;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * The SSH implementation of the {@link VanillaJavaAppDriver}.
  */
 public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implements VanillaJavaAppDriver {
+
+    private String classpath;
 
     // FIXME this should be a config, either on the entity or -- probably better -- 
     // an alternative / override timeout on the SshTool for file copy commands
@@ -32,10 +45,12 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
         super(entity, machine);
     }
 
+    @Override
     public VanillaJavaAppImpl getEntity() {
         return (VanillaJavaAppImpl) super.getEntity();
     }
 
+    @Override
     protected String getLogFileLocation() {
         return format("%s/console", getRunDir());
     }
@@ -49,10 +64,10 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
 
     @Override
     public void customize() {
-        newScript(CUSTOMIZING).
-                failOnNonZeroResultCode().
-                body.append(format("mkdir -p %s/lib", getRunDir())).
-                execute();
+        newScript(CUSTOMIZING)
+                .body.append(format("mkdir -p %s/lib", getRunDir()))
+                .failOnNonZeroResultCode()
+                .execute();
 
         SshMachineLocation machine = getMachine();
         VanillaJavaApp entity = getEntity();
@@ -69,6 +84,34 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
 
             ArchiveUtils.deploy(MutableMap.<String, Object>of(), entry, machine, getRunDir(), Os.mergePaths(getRunDir(), "lib"), destFile);
         }
+
+        ScriptHelper helper = newScript(CUSTOMIZING+" classpath")
+            .body.append(
+                    "echo --begin--",
+                    format("ls -1 %s/lib", getRunDir()),
+                    "echo --end--"
+                )
+            .gatherOutput(true);
+        int result = helper.execute();
+        if (result != 0) {
+            throw new IllegalStateException("Error listing classpath files: " + helper.getResultStderr());
+        }
+
+        // Transform stdout into list of files in classpath
+        String stdout = Strings.getFragmentBetween(helper.getResultStdout(), "--begin--", "--end--");
+        if (Strings.isBlank(stdout)) {
+            classpath = Os.mergePaths(getRunDir(), "lib"); // Safe default
+        } else {
+            Iterable<String> lines = Splitter.on(CharMatcher.BREAKING_WHITESPACE).omitEmptyStrings().trimResults().split(stdout);
+            Iterable<String> files = Iterables.transform(lines, new Function<String, String>() {
+                        @Override
+                        public String apply(@Nullable String input) {
+                            return Os.mergePaths(getRunDir(), "lib", input);
+                        }
+                    });
+            getEntity().setAttribute(VanillaJavaApp.CLASSPATH_FILES, ImmutableList.copyOf(files));
+            classpath = Joiner.on(":").join(files);
+        }
     }
 
     @Override
@@ -81,11 +124,12 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
         Map flags = new HashMap();
         flags.put("usePidFile", true);
 
-        newScript(flags, LAUNCHING).
-            body.append(
-                format("echo \"launching: java $JAVA_OPTS -cp \'lib/*\' %s %s\"",clazz,args),
-                format("java $JAVA_OPTS -cp \"lib/*\" %s %s >> %s/console 2>&1 </dev/null &",clazz, args, getRunDir())
-        ).execute();
+        newScript(flags, LAUNCHING)
+            .body.append(
+                    format("echo \"launching: java $JAVA_OPTS -cp \'%s\' %s %s\"", classpath, clazz, args),
+                    format("java $JAVA_OPTS -cp \"%s\" %s %s >> %s/console 2>&1 </dev/null &", classpath, clazz, args, getRunDir())
+                )
+            .execute();
     }
 
     public String getArgs(){
