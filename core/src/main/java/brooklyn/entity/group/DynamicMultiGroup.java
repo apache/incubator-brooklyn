@@ -27,8 +27,8 @@ public interface DynamicMultiGroup extends Entity {
      * @see EntityPredicates#isMemberOf(Group)
      */
     @SetFromFlag("entityFilter")
-    public static final ConfigKey<Predicate<Entity>> ENTITY_FILTER = ConfigKeys.newConfigKey(
-            new TypeToken<Predicate<Entity>>(){},
+    ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = ConfigKeys.newConfigKey(
+            new TypeToken<Predicate<? super Entity>>(){},
             "brooklyn.multigroup.entityFilter",
             "Identifies which entities should be considered for 'bucketising'",
             Predicates.<Entity>alwaysTrue()
@@ -40,7 +40,7 @@ public interface DynamicMultiGroup extends Entity {
      * @see DynamicMultiGroupImpl#bucketFromAttribute(brooklyn.event.AttributeSensor, String)
      */
     @SetFromFlag("bucketFunction")
-    public static final ConfigKey<Function<Entity, String>> BUCKET_FUNCTION = ConfigKeys.newConfigKey(
+    ConfigKey<Function<Entity, String>> BUCKET_FUNCTION = ConfigKeys.newConfigKey(
             new TypeToken<Function<Entity, String>>(){},
             "brooklyn.multigroup.bucketFunction",
             "Implements the mapping from entity to bucket (name)"
@@ -50,7 +50,7 @@ public interface DynamicMultiGroup extends Entity {
      * Determines the {@link Group} type used for the "bucket" groups.
      */
     @SetFromFlag("bucketSpec")
-    public static final ConfigKey<EntitySpec<? extends Group>> BUCKET_SPEC = ConfigKeys.newConfigKey(
+    ConfigKey<EntitySpec<? extends Group>> BUCKET_SPEC = ConfigKeys.newConfigKey(
             new TypeToken<EntitySpec<? extends Group>>(){},
             "brooklyn.multigroup.groupSpec",
             "Determines the entity type used for the 'bucket' groups",
@@ -59,7 +59,7 @@ public interface DynamicMultiGroup extends Entity {
 
 
     /**
-     * <p>Distribute entities provided by the {@link #ENTITY_PROVIDER} into uniquely-named "buckets"
+     * <p>Distribute entities accepted by the {@link #ENTITY_FILTER} into uniquely-named "buckets"
      * according to the {@link #BUCKET_FUNCTION}.
      *
      * <p>A {@link Group} entity is created for each required bucket and added as a managed child of
@@ -72,9 +72,9 @@ public interface DynamicMultiGroup extends Entity {
      * bucket and are thus effectively excluded. Buckets that become empty following re-evaluation
      * are removed.
      *
-     * @see ENTITY_PROVIDER
-     * @see BUCKET_FUNCTION
-     * @see GROUP_SPEC
+     * @see #ENTITY_FILTER
+     * @see #BUCKET_FUNCTION
+     * @see #GROUP_SPEC
      */
     public void distributeEntities();
 

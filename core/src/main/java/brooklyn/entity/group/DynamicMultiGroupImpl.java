@@ -49,7 +49,7 @@ public class DynamicMultiGroupImpl extends AbstractEntity implements DynamicMult
 
     @Override
     public void distributeEntities() {
-        Predicate<Entity> entityFilter = getConfig(ENTITY_FILTER);
+        Predicate<? super Entity> entityFilter = getConfig(ENTITY_FILTER);
         Function<Entity, String> bucketFunction = getConfig(BUCKET_FUNCTION);
         EntitySpec<? extends Group> groupSpec = getConfig(BUCKET_SPEC);
         if (entityFilter == null) return;

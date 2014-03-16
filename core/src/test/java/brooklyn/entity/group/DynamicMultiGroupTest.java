@@ -1,10 +1,10 @@
 package brooklyn.entity.group;
 
 import static brooklyn.entity.basic.EntityPredicates.displayNameEqualTo;
-import static brooklyn.entity.basic.EntityPredicates.isChildOf;
 import static brooklyn.entity.group.DynamicMultiGroup.BUCKET_FUNCTION;
 import static brooklyn.entity.group.DynamicMultiGroup.ENTITY_FILTER;
 import static brooklyn.entity.group.DynamicMultiGroupImpl.bucketFromAttribute;
+import static com.google.common.base.Predicates.instanceOf;
 import static com.google.common.collect.Iterables.find;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -52,20 +52,20 @@ public class DynamicMultiGroupTest {
     }
 
     @Test
-    public void testDistributionBySensor() {
-        final Group source = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
+    public void testBucketDistribution() {
+        final Group group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         final DynamicMultiGroup dmg = app.createAndManageChild(
                 EntitySpec.create(DynamicMultiGroup.class)
-                .configure(ENTITY_FILTER, isChildOf(source))
+                .configure(ENTITY_FILTER, instanceOf(TestEntity.class))
                 .configure(BUCKET_FUNCTION, bucketFromAttribute(SENSOR))
         );
-        app.subscribeToChildren(source, SENSOR, new SensorEventListener<String>() {
+        app.subscribeToChildren(group, SENSOR, new SensorEventListener<String>() {
             public void onEvent(SensorEvent<String> event) { dmg.distributeEntities(); }
         });
 
         final EntitySpec<TestEntity> childSpec = EntitySpec.create(TestEntity.class);
-        final TestEntity child1 = source.addChild(EntitySpec.create(childSpec).displayName("child1"));
-        final TestEntity child2 = source.addChild(EntitySpec.create(childSpec).displayName("child2"));
+        final TestEntity child1 = group.addChild(EntitySpec.create(childSpec).displayName("child1"));
+        final TestEntity child2 = group.addChild(EntitySpec.create(childSpec).displayName("child2"));
         Entities.manage(child1);
         Entities.manage(child2);
 
@@ -108,7 +108,7 @@ public class DynamicMultiGroupTest {
         });
 
         // Add new child 3, associated with new bucket C
-        final TestEntity child3 = source.addChild(EntitySpec.create(childSpec).displayName("child3"));
+        final TestEntity child3 = group.addChild(EntitySpec.create(childSpec).displayName("child3"));
         Entities.manage(child3);
         child3.setAttribute(SENSOR, "bucketC");
         Asserts.succeedsEventually(new Runnable() {
