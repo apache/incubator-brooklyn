@@ -39,6 +39,7 @@ import brooklyn.rest.domain.SensorSummary;
 import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.CapitalizePolicy;
+import brooklyn.rest.testing.mocks.EverythingGroup;
 import brooklyn.rest.testing.mocks.RestMockApp;
 import brooklyn.rest.testing.mocks.RestMockAppBuilder;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
@@ -60,9 +61,31 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceTest.class);
     
   private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").
-          entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
+          entities(ImmutableSet.of(
+                  new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()),
+                  new EntitySpec("simple-group", EverythingGroup.class.getName())
+          )).
           locations(ImmutableSet.of("localhost")).
           build();
+
+  // Convenience for finding an EntitySummary within a collection, based on its name
+  private static Predicate<EntitySummary> withName(final String name) {
+    return new Predicate<EntitySummary>() {
+      public boolean apply(EntitySummary input) {
+        return name.equals(input.getName());
+      }
+    };
+  }
+
+  // Convenience for finding a Map within a collection, based on the value of one of its keys
+  private static Predicate<? super Map<?,?>> withValueForKey(final Object key, final Object value) {
+      return new Predicate<Object>() {
+          public boolean apply(Object input) {
+              if (!(input instanceof Map)) return false;
+              return value.equals(((Map<?, ?>) input).get(key));
+          }
+      };
+  }
 
   @Override
   protected void setUpResources() throws Exception {
@@ -211,19 +234,20 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   @Test(dependsOnMethods = "testDeployApplication")
   public void testListEntities() {
     Set<EntitySummary> entities = client().resource("/v1/applications/simple-app/entities")
-        .get(new GenericType<Set<EntitySummary>>() {
-        });
+        .get(new GenericType<Set<EntitySummary>>() {});
 
-    assertEquals(entities.size(), 1);
-    
-    for (EntitySummary entity : entities) {
-      client().resource(entity.getLinks().get("self")).get(ClientResponse.class);
+    assertEquals(entities.size(), 2);
 
-      Set<EntitySummary> children = client().resource(entity.getLinks().get("children"))
-          .get(new GenericType<Set<EntitySummary>>() {
-          });
-      assertEquals(children.size(), 0);
-    }
+    EntitySummary entity = Iterables.find(entities, withName("simple-ent"), null);
+    EntitySummary group = Iterables.find(entities, withName("simple-group"), null);
+    Assert.assertNotNull(entity);
+    Assert.assertNotNull(group);
+
+    client().resource(entity.getLinks().get("self")).get(ClientResponse.class);
+
+    Set<EntitySummary> children = client().resource(entity.getLinks().get("children"))
+        .get(new GenericType<Set<EntitySummary>>() {});
+    assertEquals(children.size(), 0);
   }
 
   @Test(dependsOnMethods = "testDeployApplication")
@@ -237,7 +261,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     Assert.fail("simple-app not found in list of applications: "+applications);
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test(dependsOnMethods = "testDeployApplication")
   public void testFetchApplicationsAndEntity() {
     Collection apps = client().resource("/v1/applications/fetch").get(Collection.class);
@@ -249,23 +273,53 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         if ("simple-app".equals( name )) {
             app = (Map) appI;
         }
-        if ("simple-ent".equals(name))
-            Assert.fail("simple-ent should not be listed at high level: "+apps);
+        if (ImmutableSet.of("simple-ent", "simple-group").contains(name))
+            Assert.fail(name+" should not be listed at high level: "+apps);
     }
     
     Assert.assertNotNull(app);
     Collection children = (Collection) app.get("children");
-    Assert.assertEquals(children.size(), 1);
-    Map child = (Map) children.iterator().next();
-    String entityId = (String) child.get("id");
-    String name = (String) child.get("name");
-    Assert.assertEquals(name, "simple-ent");
-
-    Collection entities = client().resource("/v1/applications/fetch?items="+app.get("id")+","+entityId).
-            get(Collection.class);
-    log.info("Applications+Entity fetched are: "+entities);
+    Assert.assertEquals(children.size(), 2);
     
-    Assert.assertEquals(entities.size(), apps.size()+1);
+    Map entitySummary = (Map) Iterables.find(children, withValueForKey("name", "simple-ent"), null);
+    Map groupSummary = (Map) Iterables.find(children, withValueForKey("name", "simple-group"), null);
+    Assert.assertNotNull(entitySummary);
+    Assert.assertNotNull(groupSummary);
+    
+    String itemIds = app.get("id")+","+entitySummary.get("id")+","+groupSummary.get("id");
+    Collection entities = client().resource("/v1/applications/fetch?items="+itemIds).
+            get(Collection.class);
+    log.info("Applications+Entities fetched are: "+entities);
+    
+    Assert.assertEquals(entities.size(), apps.size()+2);
+    Map entityDetails = (Map) Iterables.find(entities, withValueForKey("name", "simple-ent"), null);
+    Map groupDetails = (Map) Iterables.find(entities, withValueForKey("name", "simple-group"), null);
+    Assert.assertNotNull(entityDetails);
+    Assert.assertNotNull(groupDetails);
+    
+    Assert.assertEquals(entityDetails.get("parentId"), app.get("id"));
+    Assert.assertNull(entityDetails.get("children"));
+    Assert.assertEquals(groupDetails.get("parentId"), app.get("id"));
+    Assert.assertNull(groupDetails.get("children"));
+    
+    Collection entityGroupIds = (Collection) entityDetails.get("groupIds");
+    Collection groupGroupIds = (Collection) groupDetails.get("groupIds");
+    Assert.assertNotNull(entityGroupIds);
+    Assert.assertNotNull(groupGroupIds);
+    Assert.assertEquals(entityGroupIds.size(), 1);
+    Assert.assertEquals(entityGroupIds.iterator().next(), groupDetails.get("id"));
+    Assert.assertEquals(groupGroupIds.size(), 1);
+    Assert.assertEquals(groupGroupIds.iterator().next(), groupDetails.get("id"));
+    
+    Collection groupMembers = (Collection) groupDetails.get("members");
+    Assert.assertNotNull(groupMembers);
+    Assert.assertEquals(groupMembers.size(), 3); // includes the app too?!
+    Map entityMemberDetails = (Map) Iterables.find(groupMembers, withValueForKey("name", "simple-ent"), null);
+    Map groupMemberDetails = (Map) Iterables.find(groupMembers, withValueForKey("name", "simple-group"), null);
+    Assert.assertNotNull(entityMemberDetails);
+    Assert.assertNotNull(groupMemberDetails);
+    Assert.assertEquals(entityMemberDetails.get("id"), entityDetails.get("id"));
+    Assert.assertEquals(groupMemberDetails.get("id"), groupDetails.get("id"));
   }
 
   @Test(dependsOnMethods = "testDeployApplication")
@@ -402,7 +456,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
       }
       
       policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
-      assertEquals(0, policies.size());      
+      assertEquals(0, policies.size());
   }
 
   @SuppressWarnings({ "rawtypes" })
@@ -421,7 +475,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     log.info("LOCATIONS: "+result);
     Assert.assertEquals(result.size(), 1);
     Map details = (Map) result.values().iterator().next();
-    assertEquals(details.get("leafEntityCount"), 1);
+    assertEquals(details.get("leafEntityCount"), 2);
   }
 
   @Test(dependsOnMethods = {"testListEffectors", "testFetchApplicationsAndEntity", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes","testLocatedLocation"})

@@ -12,6 +12,7 @@ import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
@@ -120,8 +122,14 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         aRoot.put("parentId", entity.getParent().getId());
     }
 
+    if (!entity.getGroups().isEmpty())
+        aRoot.put("groupIds", entitiesIdAsArray(entity.getGroups()));
+
     if (!entity.getChildren().isEmpty())
-        aRoot.put("children", childEntitiesIdAndNameAsArray(entity));
+        aRoot.put("children", entitiesIdAndNameAsArray(entity.getChildren()));
+
+    if ((entity instanceof Group) && !((Group) entity).getMembers().isEmpty())
+        aRoot.put("members", entitiesIdAndNameAsArray(((Group) entity).getMembers()));
 
     return aRoot;
   }
@@ -134,9 +142,9 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     return node;
   }
 
-  private ArrayNode childEntitiesIdAndNameAsArray(Entity entity) {
+  private ArrayNode entitiesIdAndNameAsArray(Collection<? extends Entity> entities) {
       ArrayNode node = mapper().createArrayNode();
-      for (Entity e : entity.getChildren()) {
+      for (Entity e : entities) {
           ObjectNode holder = mapper().createObjectNode();
           holder.put("id", e.getId());
           holder.put("name", e.getDisplayName());
@@ -144,7 +152,15 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
       }
       return node;
   }
-
+  
+  private ArrayNode entitiesIdAsArray(Collection<? extends Entity> entities) {
+      ArrayNode node = mapper().createArrayNode();
+      for (Entity e : entities) {
+          node.add(e.getId());
+      }
+      return node;
+  }
+  
   @Override
   public JsonNode fetch(String entityIds) {
       Map<String, JsonNode> jsonEntitiesById = MutableMap.of();
