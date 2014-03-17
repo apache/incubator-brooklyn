@@ -17,12 +17,20 @@ package brooklyn.entity.messaging.kafka;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.java.UsesJmx;
+import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 
+import com.google.common.collect.ImmutableMap;
+
 public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements KafkaBrokerDriver {
+
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaBrokerSshDriver.class);
 
     public KafkaBrokerSshDriver(KafkaBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -60,14 +68,24 @@ public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements Kaf
 
     @Override
     public Map<String, String> getShellEnvironment() {
-        // kafka script sets JMX_PORT if it isn't set
+        JmxAgentModes jmxAgentMode = getEntity().getConfig(KafkaBroker.JMX_AGENT_MODE);
+        String jmxPort;
+        if (jmxAgentMode == JmxAgentModes.NONE) {
+            // seems odd to pass RMI port here, as it gets assigned to com.sun.mgmt.jmx.port in kafka-run-class.sh
+            // but RMI server/registry port works, whereas JMX port does not
+            jmxPort = String.valueOf(entity.getAttribute(UsesJmx.JMX_PORT));
+        } else {
+            /*
+             * See ./bin/kafka-server-start.sh  and ./bin/kafka-run-class.sh
+             * Really hard to turn off jmxremote on kafka! And can't use default because
+             * uses 9999, which means could only run one kafka broker per server.
+             */
+            jmxPort = String.valueOf(entity.getAttribute(KafkaBroker.INTERNAL_JMX_PORT));
+        }
+        
         return MutableMap.<String, String> builder()
                 .putAll(super.getShellEnvironment())
-                // seems odd to pass RMI port here, as it gets assigned to com.sun.mgmt.jmx.port in kafka-run-class.sh
-                // but RMI server/registry port works, whereas JMX port does not
-                // TODO tie in with the brooklyn UsesJmx configuration ? 
-                .put("JMX_PORT", String.valueOf(entity.getAttribute(UsesJmx.JMX_PORT)))
+                .putAll(ImmutableMap.of("JMX_PORT", jmxPort))
                 .build();
     }
-
 }

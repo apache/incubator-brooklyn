@@ -20,9 +20,11 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.management.ManagementContext;
 import brooklyn.policy.loadbalancing.MockContainerEntity;
 import brooklyn.policy.loadbalancing.MockItemEntity;
 import brooklyn.policy.loadbalancing.MockItemEntityImpl;
@@ -36,6 +38,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeToken;
 
 public class AbstractFollowTheSunPolicyTest {
     
@@ -46,10 +49,11 @@ public class AbstractFollowTheSunPolicyTest {
     
     protected static final long CONTAINER_STARTUP_DELAY_MS = 100;
     
-    public static final AttributeSensor<Map<Entity, Double>> TEST_METRIC =
-        new BasicAttributeSensor(Map.class, "test.metric", "Dummy workrate for test entities");
+    public static final AttributeSensor<Map<Entity, Double>> TEST_METRIC = Sensors.newSensor(
+        new TypeToken<Map<Entity, Double>>() {}, "test.metric", "Dummy workrate for test entities");
 
     protected TestApplication app;
+    protected ManagementContext managementContext;
     protected SimulatedLocation loc1;
     protected SimulatedLocation loc2;
     protected FollowTheSunPool pool;
@@ -60,16 +64,17 @@ public class AbstractFollowTheSunPolicyTest {
     protected Random random = new Random();
     
     @BeforeMethod(alwaysRun=true)
-    public void before() throws Exception {
-        LOG.debug("In AbstractFollowTheSunPolicyTest.before()");
+    public void setUp() throws Exception {
+        LOG.debug("In AbstractFollowTheSunPolicyTest.setUp()");
 
         MockItemEntityImpl.totalMoveCount.set(0);
-        
-        loc1 = new SimulatedLocation(MutableMap.of("name", "loc1"));
-        loc2 = new SimulatedLocation(MutableMap.of("name", "loc2"));
-        
-        
+
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        managementContext = app.getManagementContext();
+        
+        loc1 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class).configure("name", "loc1"));
+        loc2 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class).configure("name", "loc2"));
+        
         containerGroup = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .displayName("containerGroup")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(MockContainerEntity.class)));
@@ -86,7 +91,7 @@ public class AbstractFollowTheSunPolicyTest {
     }
     
     @AfterMethod(alwaysRun=true)
-    public void after() {
+    public void tearDown() {
         if (pool != null && policy != null) pool.removePolicy(policy);
         if (app != null) Entities.destroyAll(app.getManagementContext());
         MockItemEntityImpl.totalMoveCount.set(0);
