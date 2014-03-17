@@ -8,7 +8,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.flags.SetFromFlag;
@@ -19,11 +18,9 @@ import com.google.common.collect.Maps;
 @ImplementedBy(VanillaJavaAppImpl.class)
 public interface VanillaJavaApp extends SoftwareProcess, UsesJava, UsesJmx, UsesJavaMXBeans {
 
-    // FIXME classpath values: need these to be downloaded and installed?
-    
     // TODO Make jmxPollPeriod @SetFromFlag easier to use: currently a confusion over long and TimeDuration, and 
     // no ability to set default value (can't just set field because config vals read/set in super-constructor :-(
-         
+
     @SetFromFlag("args")
     ConfigKey<List> ARGS = ConfigKeys.newConfigKey(List.class,
             "vanillaJavaApp.args", "Arguments for launching the java app", Lists.newArrayList());
@@ -34,7 +31,7 @@ public interface VanillaJavaApp extends SoftwareProcess, UsesJava, UsesJmx, Uses
     @SetFromFlag("classpath")
     ConfigKey<List> CLASSPATH = ConfigKeys.newConfigKey(List.class,
             "vanillaJavaApp.classpath", "classpath to use, as list of URL entries; " +
-            "these URLs are copied to lib/ (expanded in the case of tar/tgz/zip), with 'lib/*' used at runtime",
+            "these URLs are copied to lib/ and expanded in the case of tar/tgz/zip",
             Lists.newArrayList());
 
     AttributeSensor<List> CLASSPATH_FILES = Sensors.newSensor(List.class,
@@ -58,5 +55,5 @@ public interface VanillaJavaApp extends SoftwareProcess, UsesJava, UsesJmx, Uses
     public String getRunDir();
 
     public void kill();
-    
+
 }
