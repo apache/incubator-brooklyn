@@ -187,8 +187,8 @@ define([
                 $modal.fadeTo(500,1);
                 if (that.options.callback) that.options.callback();             
             } else {
-                log("ERROR submitting application: "+data.responseText)
-                var response, summary;
+                log("ERROR submitting application: "+data.responseText);
+                var response, summary="Server responded with an error";
                 try {
                     if (data.responseText) {
                         response = JSON.parse(data.responseText)
@@ -213,6 +213,8 @@ define([
                 if (this.currentView.validate()) {
                     this.currentStep += 1
                     this.renderCurrentStep()
+                } else {
+                    // call to validate should showFailure
                 }
             } else {
                 this.finishStep()
@@ -225,6 +227,8 @@ define([
         finishStep:function () {
             if (this.currentView.validate()) {
                 this.submitApplication()
+            } else {
+                // call to validate should showFailure
             }
         }
     })
@@ -367,7 +371,7 @@ define([
             var name = $('#entity-name',$entityGroup).val()
             var type = $('#entity-type',$entityGroup).val()
             if (type=="" || !_.contains(that.catalogEntityIds, type)) {
-                that.showFailure("Missing or invalid type")
+                that.showFailure("Missing or invalid type");
                 return false
             }
             var saveTarget = this.model.spec.get("entities")[$entityGroup.index()];
@@ -480,8 +484,8 @@ define([
         
         showFailure: function(text) {
             if (!text) text = "Failure performing the specified action";
-            this.$('div.error-message .error-message-text').html(_.escape(text))
-            this.$('div.error-message').slideDown(250).delay(10000).slideUp(500)
+            this.$('div.error-message .error-message-text').html(_.escape(text));
+            this.$('div.error-message').slideDown(250).delay(10000).slideUp(500);
         }
 
     })
@@ -524,18 +528,22 @@ define([
                         rowId: li
                     }))
             }
-            var $selectLocations = container.find('#select-location')
+            var $locationOptions = container.find('#select-location')
             this.locations.each(function(aLocation) {
-                    var $option = that.locationOptionTemplate({
-                        id:aLocation.id,
-                        url:aLocation.getLinkByName("self"),
-                        name:aLocation.getPrettyName()
-                    })
-                    $selectLocations.append($option)
+                    if (!aLocation.id) {
+                        log("missing id for location:");
+                        log(aLocation);
+                    } else {
+                        var $option = that.locationOptionTemplate({
+                            id:aLocation.id,
+                            name:aLocation.getPrettyName()
+                        })
+                        $locationOptions.append($option)
+                    }
                 })
-            $selectLocations.each(function(i) {
-                var url = $($selectLocations[i]).parent().attr('initialValue');
-                $($selectLocations[i]).val(url)
+            $locationOptions.each(function(i) {
+                var w = $($locationOptions[i]);
+                w.val( w.parent().attr('initialValue') );
             })
         },
         render:function () {
@@ -544,6 +552,8 @@ define([
         },
         updateForState: function () {
             var that = this
+            // clear any error message (we are being displayed fresh; if there are errors in the update, we'll show them in code below)
+            this.$('div.error-message').hide();
             this.renderName()
             this.locations.fetch({
                 success:function () {
@@ -567,7 +577,7 @@ define([
         },
         addLocation:function () {
             if (this.locations.models.length>0) {
-                this.model.spec.addLocation(this.locations.models[0].getLinkByName("self"))
+                this.model.spec.addLocation(this.locations.models[0].get("id"))
                 this.renderAddedLocations()
             } else {
                 this.$('div.info-nolocs-message').show('slow').delay(2000).hide('slow')
@@ -619,31 +629,40 @@ define([
             return map;
         },
         selection:function (event) {
-            var url = $(event.currentTarget).val();
+            var loc_id = $(event.currentTarget).val();
             var loc = this.locations.find(function (candidate) {
-                return candidate.getLinkByName("self")==url
+                return candidate.get("id")==loc_id;
             })
-            this.model.spec.setLocationAtIndex($(event.currentTarget).parent().attr('rowId'), 
-                    loc.getLinkByName("self"))
+            if (!loc) {
+                log("invalid location "+loc_id);
+                this.showFailure("Invalid location "+loc_id);
+                this.model.spec.set("locations",[]);
+            } else {
+                this.model.spec.setLocationAtIndex($(event.currentTarget).parent().attr('rowId'), loc_id); 
+            }
         },
         updateName:function () {
-            var name = this.$('#application-name').val()
+            var name = this.$('#application-name').val();
             if (name)
-                this.model.spec.set("name", name)
+                this.model.spec.set("name", name);
             else
-                this.model.spec.set("name", "")
+                this.model.spec.set("name", "");
         },
         validate:function () {
             this.model.spec.set("config", this.getConfigMap())
             if (this.model.spec.get("locations").length !== 0) {
                 return true
+            } else {
+                this.showFailure("A location is required");
+                return false;
             }
-            return false
         },
         showFailure: function(text) {
             if (!text) text = "Failure performing the specified action";
-            this.$('div.error-message .error-message-text').html(_.escape(text))
-            this.$('div.error-message').slideDown(250).delay(10000).slideUp(500)
+            log("showing error: "+text);
+            this.$('div.error-message .error-message-text').html(_.escape(text));
+            // flash the error, but make sure it goes away (we do not currently have any other logic for hiding this error message)
+            this.$('div.error-message').slideDown(250).delay(10000).slideUp(500);
         }
     })
 
