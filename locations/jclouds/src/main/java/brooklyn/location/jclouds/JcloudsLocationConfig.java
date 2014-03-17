@@ -12,6 +12,8 @@ import org.jclouds.domain.LoginCredentials;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.location.access.BrooklynAccessUtils;
+import brooklyn.location.access.PortForwardManager;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
@@ -160,6 +162,8 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "portforwarding.enabled", "Whether to setup port-forwarding to subsequently access the VM (over the ssh port)", false);
     public static final ConfigKey<JcloudsPortForwarderExtension> PORT_FORWARDER = ConfigKeys.newConfigKey(
             JcloudsPortForwarderExtension.class, "portforwarding.forwarder", "The port-forwarder to use");
+    public static final ConfigKey<PortForwardManager> PORT_FORWARDING_MANAGER = BrooklynAccessUtils
+            .PORT_FORWARDING_MANAGER;
 
     public static final ConfigKey<Integer> MACHINE_CREATE_ATTEMPTS = ConfigKeys.newIntegerConfigKey(
             "machineCreateAttempts", "Number of times to retry if jclouds fails to create a VM", 1);
