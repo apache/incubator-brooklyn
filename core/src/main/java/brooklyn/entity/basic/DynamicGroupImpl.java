@@ -44,7 +44,16 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
     public void setEntityFilter(Closure<Boolean> filter) {
         setEntityFilter(filter != null ? GroovyJavaMethods.<Entity>predicateFromClosure(filter) : null);
     }
-    
+
+    protected Predicate<? super Entity> entityFilter() {
+        Predicate<? super Entity> entityFilter = getConfig(ENTITY_FILTER);
+        if (entityFilter == null) {
+            return Predicates.alwaysFalse();
+        } else {
+            return entityFilter;
+        }
+    }
+
     private boolean isRunning() {
         return getAttribute(RUNNING);
     }

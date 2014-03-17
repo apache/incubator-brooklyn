@@ -37,8 +37,8 @@ public interface DynamicMultiGroup extends DynamicGroup {
      * Determines the {@link Group} type used for the "bucket" groups.
      */
     @SetFromFlag("bucketSpec")
-    ConfigKey<EntitySpec<? extends Group>> BUCKET_SPEC = ConfigKeys.newConfigKey(
-            new TypeToken<EntitySpec<? extends Group>>(){},
+    ConfigKey<EntitySpec<? extends BasicGroup>> BUCKET_SPEC = ConfigKeys.newConfigKey(
+            new TypeToken<EntitySpec<? extends BasicGroup>>(){},
             "brooklyn.multigroup.groupSpec",
             "Determines the entity type used for the 'bucket' groups",
             EntitySpec.create(BasicGroup.class)
@@ -48,7 +48,7 @@ public interface DynamicMultiGroup extends DynamicGroup {
     /**
      * Configure interval (in seconds) to recan all entities for membership.
      */
-    @SetFromFlag("bucketSpec")
+    @SetFromFlag("rescanInterval")
     ConfigKey<Long> RESCAN_INTERVAL = ConfigKeys.newLongConfigKey(
             "brooklyn.multigroup.rescanInterval",
             "Interval in seconds between scans of all entities for membership. Default zero or unset todisable.", 0L);
