@@ -178,13 +178,11 @@ public abstract class MachineLifecycleEffectorTasks {
         if (location instanceof MachineProvisioningLocation) {
             Task<MachineLocation> machineTask = provisionAsync((MachineProvisioningLocation<?>)location);
             locationS = Tasks.supplier(machineTask);
-        }
-        if (location instanceof MachineLocation) {
+        } else if (location instanceof MachineLocation) {
             locationS = Suppliers.ofInstance((MachineLocation)location);
         }
-        if (locationS==null)
-            throw new IllegalArgumentException("Unsupported location "+location+", when starting "+entity());
-        
+        Preconditions.checkState(locationS != null, "Unsupported location "+location+", when starting "+entity());
+
         final Supplier<MachineLocation> locationSF = locationS;
         preStartAtMachineAsync(locationSF);
         DynamicTasks.queue("start (processes)", new Runnable() { public void run() {
