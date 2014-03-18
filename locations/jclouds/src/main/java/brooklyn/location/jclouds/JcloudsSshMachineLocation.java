@@ -19,6 +19,7 @@ import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.OperatingSystem;
+import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Processor;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.options.RunScriptOptions;
@@ -28,12 +29,17 @@ import org.jclouds.scriptbuilder.domain.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.location.HardwareDetails;
+import brooklyn.location.MachineDetails;
 import brooklyn.location.OsDetails;
+import brooklyn.location.basic.BasicHardwareDetails;
+import brooklyn.location.basic.BasicMachineDetails;
 import brooklyn.location.basic.BasicOsDetails;
 import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.net.Networking;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -224,24 +230,43 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
     }
 
     @Override
-    public OsDetails getOsDetails() {
+    public MachineDetails getMachineDetails() {
+        Optional<String> name = Optional.absent();
+        Optional<String> version = Optional.absent();
+        Optional<String> architecture = Optional.absent();
+
         OperatingSystem os = node.getOperatingSystem();
-        if (os==null && getTemplate()!=null && getTemplate().getImage()!=null)
+        if (os == null && getTemplate() != null && getTemplate().getImage() != null)
             // some nodes (eg cloudstack, gce) might not get OS available on the node,
             // so also try taking it from the template if available
             os = getTemplate().getImage().getOperatingSystem();
-        
+
         if (os != null) {
-            // TODO os family, os description (name is often null)
-            return new BasicOsDetails(os.getName() != null ? os.getName() : "linux",
-                    os.getArch() != null ? os.getArch() : os.is64Bit() ? BasicOsDetails.OsArchs.X_86_64 : BasicOsDetails.OsArchs.I386,
-                    os.getVersion() != null ? os.getVersion() : "unknown",
-                    os.is64Bit());
+            // Note using family rather than name. Name is often unset.
+            name = Optional.fromNullable(os.getFamily() != null && !OsFamily.UNRECOGNIZED.equals(os.getFamily()) ? os.getFamily().toString() : null);
+            version = Optional.fromNullable(!Strings.isBlank(os.getVersion()) ? os.getVersion() : null);
+            // Using is64Bit rather then getArch because getArch often returns "paravirtual"
+            architecture = Optional.fromNullable(os.is64Bit() ? BasicOsDetails.OsArchs.X_86_64 : BasicOsDetails.OsArchs.I386);
         }
-        
-        return super.getOsDetails();
+
+        Hardware hardware = node.getHardware();
+        Optional<Integer> ram = Optional.fromNullable(hardware.getRam());
+        Optional<Integer> cpus = Optional.fromNullable(hardware.getProcessors() != null ? hardware.getProcessors().size() : null);
+
+        // Skip superclass' SSH to machine if all data is present, otherwise defer to super
+        if (name.isPresent() && version.isPresent() && architecture.isPresent() && ram.isPresent() && cpus.isPresent()) {
+            LOG.debug("Gathered machine details from Jclouds, skipping SSH test on {}", this);
+            OsDetails osD = new BasicOsDetails(name.get(), architecture.get(), version.get());
+            HardwareDetails hwD = new BasicHardwareDetails(cpus.get(), ram.get());
+            return new BasicMachineDetails(hwD, osD);
+        } else {
+            LOG.debug("Machine details for {} missing from Jclouds, using SSH test instead. name={}, version={}, " +
+                    "arch={}, ram={}, #cpus={}",
+                    new Object[]{this, name, version, architecture, ram, cpus});
+            return super.getMachineDetails();
+        }
     }
-    
+
     @Override
     public Map<String, String> toMetadataRecord() {
         Hardware hardware = node.getHardware();

@@ -49,7 +49,9 @@ if exists sw_vers; then
     CPU_COUNT=$(sysctl -n hw.ncpu)
 else
     # e.g. "MemTotal:        1019352 kB" -> "1019352"
-    kilobytes=$(grep MemTotal /proc/meminfo | grep -o '[0-9]*')
+    # grep -o '[0-9]*' would be simpler than the sed command but I've observed it match
+    # nothing on Centos 5.6 instances.
+    kilobytes=$(grep MemTotal /proc/meminfo | sed 's/^MemTotal:[ ]*\([0-9]*\) kB/\1/')
     RAM=$((kilobytes/1024))
     CPU_COUNT=$(grep processor /proc/cpuinfo | wc -l)
 fi

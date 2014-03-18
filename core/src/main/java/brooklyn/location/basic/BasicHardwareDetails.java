@@ -29,7 +29,7 @@ public class BasicHardwareDetails implements HardwareDetails {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper("hardware")
+        return Objects.toStringHelper(HardwareDetails.class)
                 .omitNullValues()
                 .add("cpuCount", cpuCount)
                 .add("ram", ram)

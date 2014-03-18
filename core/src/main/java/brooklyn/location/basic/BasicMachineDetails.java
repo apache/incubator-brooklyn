@@ -58,7 +58,7 @@ public class BasicMachineDetails implements MachineDetails {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return Objects.toStringHelper(MachineDetails.class)
                 .add("os", osDetails)
                 .add("hardware", hardwareDetails)
                 .toString();
@@ -103,6 +103,12 @@ public class BasicMachineDetails implements MachineDetails {
         return new Function<ProcessTaskWrapper<?>, BasicMachineDetails>() {
             @Override
             public BasicMachineDetails apply(ProcessTaskWrapper<?> input) {
+                if (input.getExitCode() != 0) {
+                    LOG.warn("Non-zero exit code when fetching machine details for {}; guessing anonymous linux", location);
+                    return new BasicMachineDetails(new BasicHardwareDetails(null, null),
+                            BasicOsDetails.Factory.ANONYMOUS_LINUX);
+                }
+
                 String stdout = input.getStdout();
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("OsTasks found following details at {}: {}", location, stdout);

@@ -64,7 +64,7 @@ public class BasicOsDetails implements OsDetails {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper("os")
+        return Objects.toStringHelper(OsDetails.class)
                 .omitNullValues()
                 .add("name", name)
                 .add("version", version)

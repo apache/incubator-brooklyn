@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-import brooklyn.entity.AbstractEc2LiveTest;
+import brooklyn.entity.AbstractGoogleComputeLiveTest;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
@@ -19,9 +19,9 @@ import brooklyn.location.OsDetails;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.util.collections.MutableMap;
 
-public class MachineTasksEc2LiveTest extends AbstractEc2LiveTest {
+public class MachineTasksGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MachineTasksEc2LiveTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MachineTasksGoogleComputeLiveTest.class);
     private static final int TIMEOUT_MS = 1000 * 60 * 10; // ten minutes
 
     @Override
