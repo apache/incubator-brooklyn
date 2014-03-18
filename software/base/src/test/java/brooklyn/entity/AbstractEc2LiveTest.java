@@ -59,8 +59,7 @@ public abstract class AbstractEc2LiveTest extends BrooklynAppLiveTestSupport {
     @Test(groups = {"Live"})
     public void test_Debian_6() throws Exception {
         // release codename "squeeze"
-        // Image: {id=us-east-1/ami-7ce17315, providerId=ami-7ce17315, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=debian, arch=paravirtual, version=6.0, description=Debian 6.0.7 (Squeeze),  is64Bit=true}, description=Debian 6.0.7 (Squeeze), version=20091011, status=AVAILABLE[available], loginUser=ubuntu, userMetadata={owner=379101102735, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
-        runTest(ImmutableMap.of("imageId", "us-east-1/ami-7ce17315", "loginUser", "admin", "hardwareId", SMALL_HARDWARE_ID));
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-0740476e", "loginUser", "admin", "hardwareId", SMALL_HARDWARE_ID));
     }
 
     @Test(groups = {"Live"})
