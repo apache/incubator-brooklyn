@@ -5,16 +5,18 @@ import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterables;
-import com.google.common.net.HostAndPort;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
+import brooklyn.location.MachineLocation;
+import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SupportsPortForwarding;
 import brooklyn.util.net.Cidr;
+
+import com.google.common.base.Optional;
+import com.google.common.net.HostAndPort;
 
 public class BrooklynAccessUtils {
 
@@ -34,14 +36,15 @@ public class BrooklynAccessUtils {
         PortForwardManager pfw = entity.getConfig(PORT_FORWARDING_MANAGER);
         if (pfw!=null) {
             Collection<Location> ll = entity.getLocations();
-            if (ll.size()==1) {
+            Optional<SupportsPortForwarding> machine = Machines.findUniqueElement(ll, SupportsPortForwarding.class);
+            if (machine.isPresent()) {
                 synchronized (BrooklynAccessUtils.class) {
                     // TODO finer-grained synchronization
                     
-                    HostAndPort hp = pfw.lookup(Iterables.getOnlyElement(ll), port);
+                    HostAndPort hp = pfw.lookup((MachineLocation)machine.get(), port);
                     if (hp!=null) return hp;
                     
-                    Location l = Iterables.getOnlyElement(ll);
+                    Location l = (Location) machine.get();
                     if (l instanceof SupportsPortForwarding) {
                         Cidr source = entity.getConfig(MANAGEMENT_ACCESS_CIDR);
                         if (source!=null) {
