@@ -1,5 +1,8 @@
 package brooklyn.entity.chef;
 
+import java.util.Collection;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +13,10 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.MachineLocation;
+import brooklyn.util.collections.Jsonya;
+import brooklyn.util.collections.Jsonya.Navigator;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
@@ -22,6 +29,7 @@ import brooklyn.util.time.Time;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 
 /** 
  * Creates effectors to start, restart, and stop processes using Chef.
@@ -37,27 +45,42 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
 
     private static final Logger log = LoggerFactory.getLogger(ChefLifecycleEffectorTasks.class);
     
-    protected String pidFile, serviceName, windowsServiceName;
+    protected String _pidFile, _serviceName, _windowsServiceName;
     
     public ChefLifecycleEffectorTasks() {
     }
     
     public ChefLifecycleEffectorTasks usePidFile(String pidFile) {
-        this.pidFile = pidFile;
+        this._pidFile = pidFile;
         return this;
     }
     public ChefLifecycleEffectorTasks useService(String serviceName) {
-        this.serviceName = serviceName;
+        this._serviceName = serviceName;
         return this;
     }
     public ChefLifecycleEffectorTasks useWindowsService(String serviceName) {
-        this.windowsServiceName = serviceName;
+        this._windowsServiceName = serviceName;
         return this;
+    }
+    
+    public String getPidFile() {
+        if (_pidFile!=null) return _pidFile;
+        return _pidFile = entity().getConfig(ChefConfig.PID_FILE);
+    }
+
+    public String getServiceName() {
+        if (_serviceName!=null) return _serviceName;
+        return _serviceName = entity().getConfig(ChefConfig.SERVICE_NAME);
+    }
+
+    public String getWindowsServiceName() {
+        if (_windowsServiceName!=null) return _windowsServiceName;
+        return _windowsServiceName = entity().getConfig(ChefConfig.WINDOWS_SERVICE_NAME);
     }
 
     @Override
     public void attachLifecycleEffectors(Entity entity) {
-        if (pidFile==null && serviceName==null && getClass().equals(ChefLifecycleEffectorTasks.class)) {
+        if (getPidFile()==null && getServiceName()==null && getClass().equals(ChefLifecycleEffectorTasks.class)) {
             // warn on incorrect usage
             log.warn("Uses of "+getClass()+" must define a PID file or a service name (or subclass and override {start,stop} methods as per javadoc) " +
             		"in order for check-running and stop to work");
@@ -65,17 +88,23 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
             
         super.attachLifecycleEffectors(entity);
     }
-    
-    @Override
-    protected String startProcessesAtMachine(Supplier<MachineLocation> machineS) {
-        ChefModes mode = entity().getConfig(ChefConfig.CHEF_MODE);
+
+    public static ChefModes detectChefMode(Entity entity) {
+        ChefModes mode = entity.getConfig(ChefConfig.CHEF_MODE);
         if (mode == ChefModes.AUTODETECT) {
+            // TODO server via API
             ProcessTaskWrapper<Boolean> installCheck = DynamicTasks.queue(
                     ChefServerTasks.isKnifeInstalled());
             mode = installCheck.get() ? ChefModes.KNIFE : ChefModes.SOLO;
             log.debug("Using Chef in "+mode+" mode due to autodetect exit code "+installCheck.getExitCode());
         }
-        
+        Preconditions.checkNotNull(mode, "Non-null "+ChefConfig.CHEF_MODE+" required for "+entity);
+        return mode;
+    }
+    
+    @Override
+    protected String startProcessesAtMachine(Supplier<MachineLocation> machineS) {
+        ChefModes mode = detectChefMode(entity());
         switch (mode) {
         case KNIFE:
             startWithKnifeAsync();
@@ -92,29 +121,79 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         return "chef start tasks submitted ("+mode+")";
     }
 
+    protected String getPrimaryCookbook() {
+        return entity().getConfig(CHEF_COOKBOOK_PRIMARY_NAME);
+    }
+    
+    @SuppressWarnings({ "unchecked", "deprecation" })
     protected void startWithChefSoloAsync() {
         // TODO make directories more configurable (both for ssh-drivers and for this)
         String installDir = Urls.mergePaths(entity().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR), "installs/chef");
-        String runDir = Urls.mergePaths(entity().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR),  
-                "apps/"+entity().getApplicationId()+"/chef/entities/"+entity().getEntityType().getSimpleName()+"_"+entity().getId());
-        
+        @SuppressWarnings("rawtypes")
+        Map<String, String> cookbooks = (Map) 
+            ConfigBag.newInstance( entity().getConfig(CHEF_COOKBOOK_URLS) )
+            .putIfAbsent( entity().getConfig(CHEF_COOKBOOKS) )
+            .getAllConfig();
+        if (cookbooks.isEmpty())
+            log.warn("No cookbook_urls set for "+entity()+"; launch will likely fail subsequently");
         DynamicTasks.queue(
                 ChefSoloTasks.installChef(installDir, false), 
-                ChefSoloTasks.installCookbooks(installDir, ChefConfigs.getRequiredConfig(entity(), CHEF_COOKBOOKS), false));
+                ChefSoloTasks.installCookbooks(installDir, cookbooks, false));
+
+        // TODO chef for and run a prestart recipe if necessary
+        // TODO open ports
+
+        String primary = getPrimaryCookbook();
+        
+        // put all config under brooklyn/cookbook/config
+        Navigator<MutableMap<Object, Object>> attrs = Jsonya.newInstancePrimitive().at("brooklyn");
+        if (Strings.isNonBlank(primary)) attrs.at(primary);
+        attrs.at("config");
+        attrs.put( entity().getAllConfigBag().getAllConfig() );
+        // and put launch attrs at root
+        attrs.root().put(entity().getConfig(CHEF_LAUNCH_ATTRIBUTES));
+        
+        Collection<? extends String> runList = entity().getConfig(CHEF_LAUNCH_RUN_LIST);
+        if (runList==null) runList = entity().getConfig(CHEF_RUN_LIST);
+        if (runList==null) {
+            if (Strings.isNonBlank(primary)) runList = ImmutableList.of(primary+"::"+"start");
+            else throw new IllegalStateException("Require a primary cookbook or a run_list to effect "+"start"+" on "+entity());
+        }
+        
+        String runDir = Urls.mergePaths(entity().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR),  
+            "apps/"+entity().getApplicationId()+"/chef/entities/"+entity().getEntityType().getSimpleName()+"_"+entity().getId());
         
         DynamicTasks.queue(ChefSoloTasks.buildChefFile(runDir, installDir, "launch", 
-                ChefConfigs.getRequiredConfig(entity(), CHEF_RUN_LIST),
-                entity().getConfig(CHEF_LAUNCH_ATTRIBUTES)));
+                runList, (Map<String, Object>) attrs.root().get()));
         
         DynamicTasks.queue(ChefSoloTasks.runChef(runDir, "launch", entity().getConfig(CHEF_RUN_CONVERGE_TWICE)));
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes", "deprecation" })
     protected void startWithKnifeAsync() {
+        // TODO prestart, ports (as above); also, note, some aspects of this are untested as we need a chef server
+        
+        String primary = getPrimaryCookbook();
+
+        // put all config under brooklyn/cookbook/config
+        Navigator<MutableMap<Object, Object>> attrs = Jsonya.newInstancePrimitive().at("brooklyn");
+        if (Strings.isNonBlank(primary)) attrs.at(primary);
+        attrs.at("config");
+        attrs.put( entity().getAllConfigBag().getAllConfig() );
+        // and put launch attrs at root
+        attrs.root().put(entity().getConfig(CHEF_LAUNCH_ATTRIBUTES));
+
+        Collection<? extends String> runList = entity().getConfig(CHEF_LAUNCH_RUN_LIST);
+        if (runList==null) runList = entity().getConfig(CHEF_RUN_LIST);
+        if (runList==null) {
+            if (Strings.isNonBlank(primary)) runList = ImmutableList.of(primary+"::"+"start");
+            else throw new IllegalStateException("Require a primary cookbook or a run_list to effect "+"start"+" on "+entity());
+        }
+
         DynamicTasks.queue(
                 ChefServerTasks.knifeConvergeTask()
-                    .knifeRunList(Strings.join(Preconditions.checkNotNull(entity().getConfig(ChefConfig.CHEF_RUN_LIST), 
-                                "%s must be supplied for %s", ChefConfig.CHEF_RUN_LIST, entity()), ","))
-                    .knifeAddAttributes(entity().getConfig(CHEF_LAUNCH_ATTRIBUTES))
+                    .knifeRunList(Strings.join(runList, ","))
+                    .knifeAddAttributes((Map<? extends Object, ? extends Object>)(Map) attrs.root().get())
                     .knifeRunTwice(entity().getConfig(CHEF_RUN_CONVERGE_TWICE)) );
     }
 
@@ -124,44 +203,44 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         result |= tryCheckStartService();
         result |= tryCheckStartWindowsService();
         if (!result) {
-            throw new IllegalStateException("The process for "+entity()+" appears not to be running (no way to check!)");
+            log.warn("No way to check whether "+entity()+" is running; assuming yes");
         }
     }
     
     protected boolean tryCheckStartPid() {
-        if (pidFile==null) return false;
+        if (getPidFile()==null) return false;
         
         // if it's still up after 5s assume we are good (default behaviour)
         Time.sleep(Duration.FIVE_SECONDS);
-        if (!DynamicTasks.queue(SshEffectorTasks.isPidFromFileRunning(pidFile).runAsRoot()).get()) {
-            throw new IllegalStateException("The process for "+entity()+" appears not to be running (pid file "+pidFile+")");
+        if (!DynamicTasks.queue(SshEffectorTasks.isPidFromFileRunning(getPidFile()).runAsRoot()).get()) {
+            throw new IllegalStateException("The process for "+entity()+" appears not to be running (pid file "+getPidFile()+")");
         }
 
         // and set the PID
         entity().setAttribute(Attributes.PID, 
-                Integer.parseInt(DynamicTasks.queue(SshEffectorTasks.ssh("cat "+pidFile).runAsRoot()).block().getStdout().trim()));
+                Integer.parseInt(DynamicTasks.queue(SshEffectorTasks.ssh("cat "+getPidFile()).runAsRoot()).block().getStdout().trim()));
         return true;
     }
 
     protected boolean tryCheckStartService() {
-        if (serviceName==null) return false;
+        if (getServiceName()==null) return false;
         
         // if it's still up after 5s assume we are good (default behaviour)
         Time.sleep(Duration.FIVE_SECONDS);
-        if (!((Integer)0).equals(DynamicTasks.queue(SshEffectorTasks.ssh("/etc/init.d/"+serviceName+" status").runAsRoot()).get())) {
-            throw new IllegalStateException("The process for "+entity()+" appears not to be running (service "+serviceName+")");
+        if (!((Integer)0).equals(DynamicTasks.queue(SshEffectorTasks.ssh("/etc/init.d/"+getServiceName()+" status").runAsRoot()).get())) {
+            throw new IllegalStateException("The process for "+entity()+" appears not to be running (service "+getServiceName()+")");
         }
 
         return true;
     }
 
     protected boolean tryCheckStartWindowsService() {
-        if (windowsServiceName==null) return false;
+        if (getWindowsServiceName()==null) return false;
         
         // if it's still up after 5s assume we are good (default behaviour)
         Time.sleep(Duration.FIVE_SECONDS);
-        if (!((Integer)0).equals(DynamicTasks.queue(SshEffectorTasks.ssh("sc query \""+windowsServiceName+"\" | find \"RUNNING\"").runAsCommand()).get())) {
-            throw new IllegalStateException("The process for "+entity()+" appears not to be running (windowsService "+windowsServiceName+")");
+        if (!((Integer)0).equals(DynamicTasks.queue(SshEffectorTasks.ssh("sc query \""+getWindowsServiceName()+"\" | find \"RUNNING\"").runAsCommand()).get())) {
+            throw new IllegalStateException("The process for "+entity()+" appears not to be running (windowsService "+getWindowsServiceName()+")");
         }
 
         return true;
@@ -180,8 +259,8 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
     }
     
     protected boolean tryStopService() {
-        if (serviceName==null) return false;
-        int result = DynamicTasks.queue(SshEffectorTasks.ssh("/etc/init.d/"+serviceName+" stop").runAsRoot()).get();
+        if (getServiceName()==null) return false;
+        int result = DynamicTasks.queue(SshEffectorTasks.ssh("/etc/init.d/"+getServiceName()+" stop").runAsRoot()).get();
         if (0==result) return true;
         if (entity().getAttribute(Attributes.SERVICE_STATE)!=Lifecycle.RUNNING)
             return true;
@@ -190,8 +269,8 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
     }
 
     protected boolean tryStopWindowsService() {
-        if (windowsServiceName==null) return false;
-                int result = DynamicTasks.queue(SshEffectorTasks.ssh("sc query \""+windowsServiceName+"\"").runAsCommand()).get();
+        if (getWindowsServiceName()==null) return false;
+                int result = DynamicTasks.queue(SshEffectorTasks.ssh("sc query \""+getWindowsServiceName()+"\"").runAsCommand()).get();
         if (0==result) return true;
         if (entity().getAttribute(Attributes.SERVICE_STATE)!=Lifecycle.RUNNING)
             return true;
@@ -202,11 +281,11 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
     protected boolean tryStopPid() {
         Integer pid = entity().getAttribute(Attributes.PID);
         if (pid==null) {
-            if (entity().getAttribute(Attributes.SERVICE_STATE)==Lifecycle.RUNNING && pidFile==null)
-                log.warn("No PID recorded for "+entity()+" when running, with PID file "+pidFile+"; skipping kill in "+Tasks.current());
+            if (entity().getAttribute(Attributes.SERVICE_STATE)==Lifecycle.RUNNING && getPidFile()==null)
+                log.warn("No PID recorded for "+entity()+" when running, with PID file "+getPidFile()+"; skipping kill in "+Tasks.current());
             else 
                 if (log.isDebugEnabled())
-                    log.debug("No PID recorded for "+entity()+"; skipping ("+entity().getAttribute(Attributes.SERVICE_STATE)+" / "+pidFile+")");
+                    log.debug("No PID recorded for "+entity()+"; skipping ("+entity().getAttribute(Attributes.SERVICE_STATE)+" / "+getPidFile()+")");
             return false;
         }
         

@@ -25,9 +25,9 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 
-public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements PostgreSqlNode {
+public class PostgreSqlNodeChefImplFromScratch extends EffectorStartableImpl implements PostgreSqlNode {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PostgreSqlNodeChefImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PostgreSqlNodeChefImplFromScratch.class);
 
     public static final Effector<String> EXECUTE_SCRIPT = Effectors.effector(String.class, "executeScript")
             .description("invokes a script")
@@ -61,7 +61,7 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
             useService("postgresql");
         }
         protected void startWithKnifeAsync() {
-            Entities.warnOnIgnoringConfig(entity(), ChefConfig.CHEF_RUN_LIST);
+            Entities.warnOnIgnoringConfig(entity(), ChefConfig.CHEF_LAUNCH_RUN_LIST);
             Entities.warnOnIgnoringConfig(entity(), ChefConfig.CHEF_LAUNCH_ATTRIBUTES);
             
             DynamicTasks.queue(
@@ -98,8 +98,8 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
             entity().disconnectSensors();
             super.preStopCustom();
         }
-        protected PostgreSqlNodeChefImpl entity() {
-            return (PostgreSqlNodeChefImpl) super.entity();
+        protected PostgreSqlNodeChefImplFromScratch entity() {
+            return (PostgreSqlNodeChefImplFromScratch) super.entity();
         }
     }
     

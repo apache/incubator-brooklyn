@@ -63,6 +63,7 @@ public class BrooklynComponentTemplateResolver {
             String type = getDeclaredType(knownServiceType, optionalTemplate, attrs);
             if (type!=null) {
                 if (type.startsWith("brooklyn:") || type.startsWith("java:")) return BrooklynComponentTemplateResolver.class;
+                if (type.equalsIgnoreCase("chef") || type.startsWith("chef:")) return ChefComponentTemplateResolver.class;
                 // TODO other BrooklynComponentTemplateResolver subclasses detected here 
                 // (perhaps use regexes mapping to subclass name, defined in mgmt?)
             }

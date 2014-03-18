@@ -15,7 +15,7 @@ public class PostgreSqlSpecs {
     
     /** requires knife */
     public static EntitySpec<PostgreSqlNode> specChef() {
-        EntitySpec<PostgreSqlNode> spec = EntitySpec.create(PostgreSqlNode.class, PostgreSqlNodeChefImpl.class);
+        EntitySpec<PostgreSqlNode> spec = EntitySpec.create(PostgreSqlNode.class, PostgreSqlNodeChefImplFromScratch.class);
         spec.configure(ChefConfig.CHEF_MODE, ChefModes.KNIFE);
         return spec;
     }

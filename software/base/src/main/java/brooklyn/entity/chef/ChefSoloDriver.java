@@ -14,6 +14,7 @@ import com.google.common.reflect.TypeToken;
 
 /** Driver class to facilitate use of Chef */
 @Beta
+@Deprecated /** @deprecated since 0.7.0 use ChefEntity or ChefLifecycleEffectorTasks */
 public class ChefSoloDriver extends AbstractSoftwareProcessSshDriver implements ChefConfig {
 
     @SuppressWarnings("serial")
