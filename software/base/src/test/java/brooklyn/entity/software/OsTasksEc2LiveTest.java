@@ -30,7 +30,7 @@ public class OsTasksEc2LiveTest extends AbstractEc2LiveTest {
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS),
                 testEntity, Startable.SERVICE_UP, true);
 
-        OsDetails details = app.getExecutionContext().submit(OsTasks.getOsDetails(testEntity)).getUnchecked();
+        OsDetails details = app.getExecutionContext().submit(OsTasks.getOsDetailsTask(testEntity)).getUnchecked();
         LOG.info("OsTasks live test found the following at {}: name={}, version={}, arch={}, is64bit={}",
                 new Object[] {loc, details.getName(), details.getVersion(),
                         details.getArch(), details.is64bit()});

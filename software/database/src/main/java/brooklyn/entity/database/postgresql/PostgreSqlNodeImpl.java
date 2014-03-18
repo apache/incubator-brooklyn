@@ -40,7 +40,6 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
     @Override
     public void init() {
         super.init();
-        OsTasks.checkResourcesValid();
         getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
             @Override
             public String call(ConfigBag parameters) {

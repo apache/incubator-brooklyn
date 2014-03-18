@@ -48,7 +48,7 @@ public class OsTasksTest {
 
     @Test(groups="Integration")
     public void testGetOsDetails() {
-        Task<OsDetails> detailsTask = app.getExecutionContext().submit(OsTasks.getOsDetails(app));
+        Task<OsDetails> detailsTask = app.getExecutionContext().submit(OsTasks.getOsDetailsTask(app));
         OsDetails details = detailsTask.getUnchecked();
         LOG.info("testGetOsDetails found the following on localhost: name={}, version={}, arch={}, is64bit={}",
                 new Object[] {details.getName(), details.getVersion(), details.getArch(), details.is64bit()});

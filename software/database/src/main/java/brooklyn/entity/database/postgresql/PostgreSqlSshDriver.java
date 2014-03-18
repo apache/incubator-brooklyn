@@ -125,7 +125,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         // http://yum.postgresql.org/9.3/redhat/rhel-6-i386/pgdg-centos93-9.3-1.noarch.rpm
         // fedora, rhel, sl, and centos supported for RPM's
 
-        OsDetails osDetails = Entities.submit(entity, OsTasks.getOsDetails(entity)).getUnchecked();
+        OsDetails osDetails = Entities.submit(entity, OsTasks.getOsDetailsTask(entity)).getUnchecked();
         String arch = osDetails.getArch();
         String osMajorVersion = osDetails.getVersion();
         String osName = osDetails.getName();
