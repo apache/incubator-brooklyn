@@ -27,9 +27,62 @@ if (port==null) {
 %>
 <p>(There is no database included as part of this example.)</p>
 <% } else { %>
-<p>The port is: <%= port %></p>
+<br/>
+<p>Visitors:</p>
+<ul>
+
 <%
 /* begin database-enabled block */ }
+MongoClient client = new MongoClient("localhost", new Integer(port));
+DB database = client.getDB("visitors");
+DBCollection messages =  database.getCollection("messages");
+int i=0;
+
+if (request.getParameter("name") != null) {
+    // add a message
+    DBObject newMessage = new BasicDBObject();
+    newMessage.put("name", request.getParameter("name"));
+    newMessage.put("message", request.getParameter("message"));
+    messages.save(newMessage);
+}
+
+DBCursor messageCursor = messages.find();
+
+try {
+    while (messageCursor.hasNext()) {
+        DBObject message = messageCursor.next();
+        i++;
+        %>
+            <li><b><%=message.get("name")%></b>: <%=message.get("message")%></li>
+        <%
+    }
+} finally {
+    messageCursor.close();
+}
+
+if (i==0) {
+%>
+    <li><i>None</i></li>
+<%
+}
+
 %>
 
+</ul>
 
+<br/>
+
+<p>Please enter a message:</p>
+
+<form action="mongo.jsp" method="GET">
+    <table>
+        <tr><td>Name: </td><td><input type="text" name="name"></td></tr>
+        <tr><td>Message: </td><td><input type="text" name="message"></td></tr>
+    </table>
+    <input type="submit" value="Submit"/>
+</form>
+
+<br/>
+<p>Click <a href="index.html">here</a> to go back to the main page.</p>
+</body>
+</html>

@@ -46,10 +46,7 @@ if (hadoop!=null) {
     if (mongo!=null) {
 %>
 <li><a href="mongo.jsp">MongoDB chatroom</a></li>
-<% } %>
-<li><a href="mongo.jsp">MongoDB chatroom - no mongo</a></li>
-
-<%
+<% }
 if (hadoop==null && url==null && mongo==null) {
 %>
 <li><i>None.</i> Try one of the other Brooklyn examples to see SQL or Hadoop.</li>
