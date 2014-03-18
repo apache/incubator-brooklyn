@@ -39,14 +39,18 @@ if [ -z $VERSION_ID ] && [ -f /etc/debian_version ]; then
 fi
 
 # Hardware info
+# Is the loss of precision converting bytes and kilobytes to megabytes acceptable?
+# We can do floating point calculations with precision with the bc program, but it
+# isn't available by default on all systems.
 if exists sw_vers; then
     # sysctl outputs total in bytes, linux meminfo uses kilobytes
     bytes=$(sysctl -n hw.memsize)
-    RAM=$((bytes/1024))
+    RAM=$((bytes/1048576))
     CPU_COUNT=$(sysctl -n hw.ncpu)
 else
     # e.g. "MemTotal:        1019352 kB" -> "1019352"
-    RAM=$(grep MemTotal /proc/meminfo | grep -o '[0-9]*')
+    kilobytes=$(grep MemTotal /proc/meminfo | grep -o '[0-9]*')
+    RAM=$((kilobytes/1024))
     CPU_COUNT=$(grep processor /proc/cpuinfo | wc -l)
 fi
 

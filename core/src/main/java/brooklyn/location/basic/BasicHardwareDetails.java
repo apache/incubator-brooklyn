@@ -1,6 +1,5 @@
 package brooklyn.location.basic;
 
-import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 import com.google.common.base.Objects;

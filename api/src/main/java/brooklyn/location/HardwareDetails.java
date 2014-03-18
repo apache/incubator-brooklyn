@@ -14,7 +14,7 @@ public interface HardwareDetails {
     Integer getCpuCount();
 
     /**
-     * Amount of RAM in kilobytes
+     * Amount of RAM in megabytes
      */
     @Nullable
     Integer getRam();
