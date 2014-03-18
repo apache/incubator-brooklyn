@@ -12,6 +12,7 @@ import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.Sensors;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -102,6 +103,21 @@ public class EnrichersTest {
         
         entity.setAttribute(NUM1, 123);
         EntityTestUtils.assertAttributeEqualsEventually(entity, LONG1, Long.valueOf(1));
+    }
+
+    @Test
+    public void testTransformingFromEvent() {
+        entity.addEnricher(Enrichers.builder()
+                .transforming(STR1)
+                .publishing(STR2)
+                .computingFromEvent(new Function<SensorEvent<String>, String>() {
+                    @Override public String apply(SensorEvent<String> input) {
+                        return input.getValue() + "mysuffix";
+                    }})
+                .build());
+        
+        entity.setAttribute(STR1, "myval");
+        EntityTestUtils.assertAttributeEqualsEventually(entity, STR2, "myvalmysuffix");
     }
 
     @Test

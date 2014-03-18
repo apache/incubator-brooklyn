@@ -15,6 +15,7 @@ import brooklyn.enricher.basic.Transformer;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
+import brooklyn.event.SensorEvent;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
@@ -303,6 +304,7 @@ public class Enrichers {
         protected AttributeSensor<T> publishing;
         protected Entity fromEntity;
         protected Function<? super S, ?> computing;
+        protected Function<? super SensorEvent<S>, ?> computingFromEvent;
 
         public TransformerBuilder(AttributeSensor<S> val) {
             this.transforming = checkNotNull(val);
@@ -320,13 +322,18 @@ public class Enrichers {
             this.computing = checkNotNull(val);
             return self();
         }
+        public B computingFromEvent(Function<? super SensorEvent<S>, ? extends T> val) {
+            this.computingFromEvent = checkNotNull(val);
+            return self();
+        }
         public EnricherSpec<?> build() {
             return EnricherSpec.create(Transformer.class)
                     .configure(MutableMap.builder()
                             .putIfNotNull(Transformer.PRODUCER, fromEntity)
                             .put(Transformer.TARGET_SENSOR, publishing)
                             .put(Transformer.SOURCE_SENSOR, transforming)
-                            .putIfNotNull(Transformer.TRANSFORMATION, computing)
+                            .putIfNotNull(Transformer.TRANSFORMATION_FROM_VALUE, computing)
+                            .putIfNotNull(Transformer.TRANSFORMATION_FROM_EVENT, computingFromEvent)
                             .build());
         }
         
