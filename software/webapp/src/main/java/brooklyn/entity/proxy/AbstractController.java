@@ -45,5 +45,7 @@ public interface AbstractController extends SoftwareProcess, LoadBalancer {
 
     AttributeSensor<String> getHostnameSensor();
 
+    AttributeSensor<String> getHostAndPortSensor();
+    
     Set<String> getServerPoolAddresses();
 }
