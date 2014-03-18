@@ -13,7 +13,9 @@ public interface MachineLocation extends AddressableLocation {
      * @return the machine's network address.
      */
     InetAddress getAddress();
-    
+
     OsDetails getOsDetails();
-    
+
+    MachineDetails getMachineDetails();
+
 }

@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
-import brooklyn.entity.software.OsTasks;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.location.basic.Locations;

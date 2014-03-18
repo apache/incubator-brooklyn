@@ -1,5 +1,7 @@
 package brooklyn.util.task.ssh.internal;
 
+import java.util.List;
+
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.system.ProcessTaskWrapper;
@@ -17,6 +19,16 @@ public class PlainSshExecTaskFactory<RET> extends AbstractSshExecTaskFactory<Pla
     public PlainSshExecTaskFactory(SshMachineLocation machine, String ...commands) {
         this(commands);
         machine(machine);
+    }
+
+    /** Constructor where machine will be added later */
+    public PlainSshExecTaskFactory(List<String> commands) {
+        this(commands.toArray(new String[commands.size()]));
+    }
+
+    /** Convenience constructor to supply machine immediately */
+    public PlainSshExecTaskFactory(SshMachineLocation machine, List<String> commands) {
+        this(machine, commands.toArray(new String[commands.size()]));
     }
 
     @Override

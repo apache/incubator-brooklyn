@@ -25,7 +25,7 @@ import java.io.InputStream;
 import javax.annotation.Nullable;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.software.OsTasks;
+import brooklyn.entity.software.MachineTasks;
 import brooklyn.location.OsDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,7 +125,9 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         // http://yum.postgresql.org/9.3/redhat/rhel-6-i386/pgdg-centos93-9.3-1.noarch.rpm
         // fedora, rhel, sl, and centos supported for RPM's
 
-        OsDetails osDetails = Entities.submit(entity, OsTasks.getOsDetailsTask(entity)).getUnchecked();
+        OsDetails osDetails = Entities.submit(entity, MachineTasks.getMachineDetailsTask(entity))
+                .getUnchecked()
+                .getOsDetails();
         String arch = osDetails.getArch();
         String osMajorVersion = osDetails.getVersion();
         String osName = osDetails.getName();

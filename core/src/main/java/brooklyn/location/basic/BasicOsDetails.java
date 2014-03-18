@@ -1,11 +1,13 @@
 package brooklyn.location.basic;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
 import com.google.common.base.Objects;
 
 import brooklyn.location.OsDetails;
 
+@Immutable
 public class BasicOsDetails implements OsDetails {
 
     final String name, arch, version;
@@ -62,7 +64,7 @@ public class BasicOsDetails implements OsDetails {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return Objects.toStringHelper("os")
                 .omitNullValues()
                 .add("name", name)
                 .add("version", version)

@@ -1,7 +1,6 @@
 package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
-import groovy.lang.Closure;
 
 import java.io.Closeable;
 import java.io.File;
@@ -23,11 +22,28 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
@@ -37,6 +53,7 @@ import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
+import brooklyn.location.MachineDetails;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
@@ -71,24 +88,7 @@ import brooklyn.util.task.system.internal.ExecWithLoggingHelpers;
 import brooklyn.util.task.system.internal.ExecWithLoggingHelpers.ExecRunner;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
-
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-import com.google.common.net.HostAndPort;
+import groovy.lang.Closure;
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -121,6 +121,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @SetFromFlag
     private Set<Integer> usedPorts;
+
+    private volatile MachineDetails machineDetails;
+    private final Object machineDetailsLock = new Object();
 
     public static final ConfigKey<String> SSH_HOST = BrooklynConfigKeys.SSH_CONFIG_HOST;
     public static final ConfigKey<Integer> SSH_PORT = BrooklynConfigKeys.SSH_CONFIG_PORT;
@@ -787,10 +790,22 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @Override
     public OsDetails getOsDetails() {
-        // TODO ssh and find out what we need to know, or use jclouds...
-        // on many linuxes /etc/issue will tell you the OS;
-        // also try `uname -a`, looking for Darwin on OS X ...
-        return BasicOsDetails.Factory.ANONYMOUS_LINUX;
+        return getMachineDetails().getOsDetails();
+    }
+
+    @Override
+    public MachineDetails getMachineDetails() {
+        MachineDetails details = machineDetails;
+        if (details == null) {
+            // Or could just load and store several times
+            synchronized (machineDetailsLock) {
+                details = machineDetails;
+                if (details == null) {
+                    machineDetails = details = BasicMachineDetails.forSshMachineLocation(this);
+                }
+            }
+        }
+        return details;
     }
 
     @Override
@@ -813,7 +828,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return mutexSupport.hasMutex(mutexId);
     }
 
-    //We want want the SshMachineLocation to be serializable and therefor the pool needs to be dealt with correctly.
+    //We want want the SshMachineLocation to be serializable and therefore the pool needs to be dealt with correctly.
     //In this case we are not serializing the pool (we made the field transient) and create a new pool when deserialized.
     //This fix is currently needed for experiments, but isn't used in normal Brooklyn usage.
     private void readObject(java.io.ObjectInputStream in)

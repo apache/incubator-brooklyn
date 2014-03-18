@@ -5,7 +5,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.location.HardwareDetails;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineDetails;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.OsDetails;
@@ -87,7 +89,13 @@ public class SimulatedLocation extends AbstractLocation implements MachineProvis
 
     @Override
     public OsDetails getOsDetails() {
-        return BasicOsDetails.Factory.ANONYMOUS_LINUX;
+        return getMachineDetails().getOsDetails();
     }
 
+    @Override
+    public MachineDetails getMachineDetails() {
+        HardwareDetails hardwareDetails = new BasicHardwareDetails(null, null);
+        OsDetails osDetails = BasicOsDetails.Factory.ANONYMOUS_LINUX;
+        return new BasicMachineDetails(hardwareDetails, osDetails);
+    }
 }
