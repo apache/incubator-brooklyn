@@ -111,7 +111,7 @@ public class BasicMachineDetails implements MachineDetails {
 
                 String stdout = input.getStdout();
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("OsTasks found following details at {}: {}", location, stdout);
+                    LOG.debug("Found following details at {}: {}", location, stdout);
                 }
 
                 List<String> details = Lists.newArrayList(stdout.split("\\r?\\n"));
