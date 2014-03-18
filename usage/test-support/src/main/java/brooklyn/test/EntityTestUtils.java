@@ -3,6 +3,7 @@ package brooklyn.test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
@@ -53,11 +54,11 @@ public class EntityTestUtils {
     }
     
     public static <T> void assertAttributeEventually(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute, final Predicate<? super T> predicate) {
-        assertPredicateEventuallyTrue(flags, entity, new Predicate<Entity>() {
-            @Override public boolean apply(Entity input) {
-                return predicate.apply(entity.getAttribute(attribute));
-            }
-        });
+        Asserts.succeedsEventually((Map)flags, new Runnable() {
+            @Override public void run() {
+                T val = entity.getAttribute(attribute);
+                assertTrue(predicate.apply(val), "val="+val);
+            }});
     }
 
     public static <T extends Entity> void assertPredicateEventuallyTrue(final T entity, final Predicate<? super T> predicate) {
@@ -87,10 +88,10 @@ public class EntityTestUtils {
     }
     
     public static void assertGroupSizeEqualsEventually(Map<?,?> flags, final Group group, final int expected) {
-        assertPredicateEventuallyTrue(flags, group, new Predicate<Group>() {
-            @Override public boolean apply(Group input) {
-                return group.getMembers().size() == expected;
-            }
-        });
+        Asserts.succeedsEventually((Map)flags, new Runnable() {
+            @Override public void run() {
+                Collection<Entity> members = group.getMembers();
+                assertEquals(members.size(), expected, "members="+members);
+            }});
     }
 }
