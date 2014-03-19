@@ -1,19 +1,5 @@
 package brooklyn.location.jclouds;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
-import org.jclouds.apis.ApiMetadata;
-import org.jclouds.apis.Apis;
-import org.jclouds.providers.ProviderMetadata;
-import org.jclouds.providers.Providers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
@@ -22,9 +8,21 @@ import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.text.Strings;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.jclouds.apis.ApiMetadata;
+import org.jclouds.apis.Apis;
+import org.jclouds.providers.ProviderMetadata;
+import org.jclouds.providers.Providers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @SuppressWarnings("rawtypes")
 public class JcloudsResolver implements LocationResolver {
@@ -109,7 +107,8 @@ public class JcloudsResolver implements LocationResolver {
                 result.parameter = result.providerOrApi;
                 result.providerOrApi = "aws-ec2";
                 if (!dryrun)
-                    log.warn("Use of deprecated location '"+result.parameter+"'; in future refer to with explicit provider '"+result.providerOrApi+":"+result.parameter+"'");
+                    log.warn("Use of deprecated location '"+result.parameter+"'; in future refer to with explicit " +
+                            "provider '"+result.providerOrApi+":"+result.parameter+"'");
             }
             
             return result;

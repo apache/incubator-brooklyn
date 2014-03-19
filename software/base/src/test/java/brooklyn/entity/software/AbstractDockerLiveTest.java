@@ -1,4 +1,4 @@
-package brooklyn.entity;
+package brooklyn.entity.software;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
@@ -21,9 +21,9 @@ import java.util.Map;
 /**
  * Runs a test with many different distros and versions.
  */
-public abstract class AbstractSoftlayerLiveTest {
+public abstract class AbstractDockerLiveTest {
     
-    public static final String PROVIDER = "softlayer";
+    public static final String PROVIDER = "docker";
 
     protected BrooklynProperties brooklynProperties;
     protected ManagementContext ctx;
@@ -33,9 +33,10 @@ public abstract class AbstractSoftlayerLiveTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        List<String> propsToRemove = ImmutableList.of("imageId", "imageDescriptionRegex", "imageNameRegex", "inboundPorts", "hardwareId", "minRam");
-
-        // Don't let any defaults from brooklyn.properties (except credentials) interfere with test
+        List<String> propsToRemove = ImmutableList.of("imageDescriptionRegex", "imageNameRegex", "inboundPorts",
+                "hardwareId", "minRam");
+        
+     // Don't let any defaults from brooklyn.properties (except credentials) interfere with test
         brooklynProperties = BrooklynProperties.Factory.newDefault();
         for (String propToRemove : propsToRemove) {
             for (String propVariant : ImmutableList.of(propToRemove, CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_HYPHEN, propToRemove))) {
@@ -55,36 +56,25 @@ public abstract class AbstractSoftlayerLiveTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        if (app != null) Entities.destroyAllCatching(app.getManagementContext());
     }
 
-    @Test(groups = {"Live"})
-    public void test_Default() throws Exception {
-        runTest(ImmutableMap.<String,Object>of());
-    }
+    @Test(groups={"Live", "WIP"})
+    public void test_Ubuntu_13_10() throws Exception {
+          runTest(ImmutableMap.of("imageId", "7fe2ec2ff748c411cf0d6833120741778c00e1b07a83c4104296b6258b5331c4",
+              "loginUser", "root",
+              "loginUser.password", "password"));
+     }
 
-    @Test(groups = {"Live"})
-    public void test_Ubuntu_12_0_4() throws Exception {
-        // Image: {id=UBUNTU_12_64, providerId=UBUNTU_12_64, os={family=ubuntu, version=12.04, description=Ubuntu / Ubuntu / 12.04.0-64 Minimal, is64Bit=true}, description=UBUNTU_12_64, status=AVAILABLE, loginUser=root}
-        runTest(ImmutableMap.<String,Object>of("imageId", "UBUNTU_12_64"));
-    }
-
-    @Test(groups = {"Live"})
-    public void test_Centos_6_0() throws Exception {
-      // Image: {id=CENTOS_6_64, providerId=CENTOS_6_64, os={family=centos, version=6.5, description=CentOS / CentOS / 6.5-64 LAMP for Bare Metal, is64Bit=true}, description=CENTOS_6_64, status=AVAILABLE, loginUser=root}
-        runTest(ImmutableMap.<String,Object>of("imageId", "CENTOS_^_64"));
-    }
-    
     protected void runTest(Map<String,?> flags) throws Exception {
+        String tag = getClass().getSimpleName().toLowerCase();
         Map<String,?> allFlags = MutableMap.<String,Object>builder()
-                .put("tags", ImmutableList.of(getClass().getName()))
-                .put("vmNameMaxLength", 30)
+                .put("tags", ImmutableList.of(tag))
                 .putAll(flags)
                 .build();
         jcloudsLocation = ctx.getLocationRegistry().resolve(PROVIDER, allFlags);
-
         doTest(jcloudsLocation);
     }
-    
+
     protected abstract void doTest(Location loc) throws Exception;
 }

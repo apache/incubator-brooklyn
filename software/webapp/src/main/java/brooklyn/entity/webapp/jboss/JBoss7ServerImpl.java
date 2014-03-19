@@ -1,11 +1,5 @@
 package brooklyn.entity.webapp.jboss;
 
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.webapp.HttpsSslConfig;
@@ -16,10 +10,14 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.policy.Enricher;
-
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
 
 public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements JBoss7Server {
 
@@ -54,7 +52,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     protected void connectSensors() {
         super.connectSensors();
 
-        HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, 
+        HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this,
                 getAttribute(MANAGEMENT_HTTP_PORT) + getConfig(PORT_INCREMENT));
         
         String managementUri = String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource",
