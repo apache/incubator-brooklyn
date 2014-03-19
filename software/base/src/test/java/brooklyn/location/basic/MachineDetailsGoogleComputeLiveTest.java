@@ -1,4 +1,4 @@
-package brooklyn.entity.software;
+package brooklyn.location.basic;
 
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-import brooklyn.entity.AbstractEc2LiveTest;
+import brooklyn.entity.AbstractGoogleComputeLiveTest;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
@@ -19,9 +19,10 @@ import brooklyn.location.OsDetails;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.util.collections.MutableMap;
 
-public class MachineTasksEc2LiveTest extends AbstractEc2LiveTest {
+// This test really belongs in brooklyn-location but depends on AbstractGoogleComputeLiveTest in brooklyn-software-base
+public class MachineDetailsGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MachineTasksEc2LiveTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MachineDetailsGoogleComputeLiveTest.class);
     private static final int TIMEOUT_MS = 1000 * 60 * 10; // ten minutes
 
     @Override
@@ -31,9 +32,11 @@ public class MachineTasksEc2LiveTest extends AbstractEc2LiveTest {
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS),
                 testEntity, Startable.SERVICE_UP, true);
 
-        MachineDetails machine = app.getExecutionContext().submit(MachineTasks.getMachineDetailsTask(testEntity))
+        SshMachineLocation sshLoc = Locations.findUniqueSshMachineLocation(testEntity.getLocations()).get();
+        MachineDetails machine = app.getExecutionContext()
+                .submit(BasicMachineDetails.taskForSshMachineLocation(sshLoc))
                 .getUnchecked();
-        LOG.info("MachineTasks live test found the following at {}: {}", loc, machine);
+        LOG.info("Found the following at {}: {}", loc, machine);
         assertNotNull(machine);
         OsDetails details = machine.getOsDetails();
         assertNotNull(details);

@@ -32,8 +32,6 @@ public class MachineDetailsTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() throws Exception {
-        DynamicSequentialTask<Object> t = new DynamicSequentialTask<Object>();
-        DynamicTasks.setTaskQueueingContext(t);
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         mgmt = app.getManagementContext();
 
