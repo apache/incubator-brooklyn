@@ -37,7 +37,8 @@ import com.google.common.reflect.TypeToken;
 public interface DynamicMultiGroup extends DynamicGroup {
 
     /**
-     * Implements the mapping from entity to bucket (name).
+     * Implements the mapping from {@link Entity} to bucket name.
+     *
      * @see DynamicMultiGroupImpl#bucketFromAttribute(brooklyn.event.AttributeSensor)
      * @see DynamicMultiGroupImpl#bucketFromAttribute(brooklyn.event.AttributeSensor, String)
      */
@@ -49,7 +50,9 @@ public interface DynamicMultiGroup extends DynamicGroup {
     );
 
     /**
-     * Determines the {@link Group} type used for the "bucket" groups.
+     * Determines the type of {@link Group} used for the buckets.
+     *
+     * @see BasicGroup
      */
     @SetFromFlag("bucketSpec")
     ConfigKey<EntitySpec<? extends BasicGroup>> BUCKET_SPEC = ConfigKeys.newConfigKey(
@@ -61,22 +64,23 @@ public interface DynamicMultiGroup extends DynamicGroup {
 
 
     /**
-     * Configure interval (in seconds) to recan all entities for membership.
+     * Interval (in seconds) between scans of all entities for membership and distribution into buckets.
      */
     @SetFromFlag("rescanInterval")
     ConfigKey<Long> RESCAN_INTERVAL = ConfigKeys.newLongConfigKey(
             "brooklyn.multigroup.rescanInterval",
-            "Interval in seconds between scans of all entities for membership. Default zero or unset todisable.", 0L);
+            "Interval (in seconds) between scans of all entities for membership. Set to null (default) or zero to disable.");
 
+    /** Notification that a rescan has taken place. */
     AttributeSensor<Void> RESCAN = Sensors.newSensor(Void.class, "brooklyn.multigroup.rescan", "Notification of entity rescan");
 
     /**
-     * Distribute entities accepted by the {@link #ENTITY_FILTER} into uniquely-named "buckets"
-     * according to the {@link #BUCKET_FUNCTION}.
+     * Distribute entities accepted by the {@link DynamicGroup#ENTITY_FILTER} into uniquely-named
+     * buckets according to the {@link #BUCKET_FUNCTION}.
      * <p>
      * A {@link Group} entity is created for each required bucket and added as a managed child of
      * this component. Entities for a given bucket are added as members of the corresponding group.
-     * By default, {@link BasicGroup} instances will be created for the buckets, however any group
+     * By default {@link BasicGroup} instances will be created for the buckets, however any group
      * entity can be used instead (e.g. with custom effectors) by specifying the relevant entity
      * spec via the {@link #BUCKET_SPEC} config key.
      * <p>
@@ -88,6 +92,6 @@ public interface DynamicMultiGroup extends DynamicGroup {
      * @see #BUCKET_FUNCTION
      * @see #GROUP_SPEC
      */
-    public void distributeEntities();
+    void distributeEntities();
 
 }
