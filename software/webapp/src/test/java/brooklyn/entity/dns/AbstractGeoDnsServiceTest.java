@@ -160,7 +160,7 @@ public class AbstractGeoDnsServiceTest {
     @Test
     public void testGeoInfoOnLocation() {
         app.start( ImmutableList.of(westChildWithLocation, eastChildWithLocationAndWithPrivateHostname) );
-        publishSensors(true, true, true);
+        publishSensors(2, true, true, true);
         
         EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         assertTrue(geoDns.getTargetHostsByName().containsKey("West child with location"), "targets="+geoDns.getTargetHostsByName());
@@ -170,7 +170,7 @@ public class AbstractGeoDnsServiceTest {
     @Test
     public void testGeoInfoOnParentLocation() {
         app.start( ImmutableList.of(westChild, eastChild) );
-        publishSensors(true, false, false);
+        publishSensors(2, true, false, false);
         
         EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         assertTrue(geoDns.getTargetHostsByName().containsKey("West child"), "targets="+geoDns.getTargetHostsByName());
@@ -182,7 +182,7 @@ public class AbstractGeoDnsServiceTest {
         ((EntityInternal)geoDns).setConfig(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname) );
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 0);
-        publishSensors(true, true, true);
+        publishSensors(2, true, true, true);
         
         EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 2);
@@ -190,7 +190,11 @@ public class AbstractGeoDnsServiceTest {
         assertTrue(geoDns.getTargetHostsByName().containsKey("East child with location"), "targets="+geoDns.getTargetHostsByName());
     }
 
-    protected void publishSensors(boolean includeServiceUp, boolean includeHostname, boolean includeAddress) {
+    protected void publishSensors(int expectedSize, boolean includeServiceUp, boolean includeHostname, boolean includeAddress) {
+        // First wait for the right size of group; the dynamic group gets notified asynchronously
+        // of nodes added/removed, so if we don't wait then might not set value for all members.
+        EntityTestUtils.assertGroupSizeEqualsEventually(testEntities, expectedSize);
+        
         for (Entity e: testEntities.getMembers()) {
             if (includeServiceUp)
                 ((EntityInternal)e).setAttribute(Attributes.SERVICE_UP, true);
@@ -208,11 +212,11 @@ public class AbstractGeoDnsServiceTest {
     @Test
     public void testChildAddedLate() {
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname) );
-        publishSensors(true, false, false);
+        publishSensors(2, true, false, false);
         EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         
         String id3 = fabric.addRegion("test:north");
-        publishSensors(true, false, false);
+        publishSensors(3, true, false, false);
         try {
             EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(3));
         } catch (Throwable e) {
@@ -230,7 +234,7 @@ public class AbstractGeoDnsServiceTest {
         ((EntityInternal)geoDns).setConfig(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname, northChildWithLocation) );
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 0);
-        publishSensors(true, true, true);
+        publishSensors(3, true, true, true);
         
         EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 2);

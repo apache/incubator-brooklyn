@@ -2,6 +2,7 @@ package brooklyn.entity.proxy;
 
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
 import java.util.Map;
@@ -28,6 +29,7 @@ import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.management.Task;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Function;
@@ -90,8 +92,17 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
     
     protected void initServerPoolMemberTrackingPolicy() {
+        AttributeSensor<?> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
+        AttributeSensor<?> hostnameSensor = getConfig(HOSTNAME_SENSOR);
+        AttributeSensor<?> portSensor = getConfig(PORT_NUMBER_SENSOR);
+        Set<AttributeSensor<?>> sensorsToTrack;
+        if (hostAndPortSensor != null) {
+            sensorsToTrack = ImmutableSet.<AttributeSensor<?>>of(hostAndPortSensor);
+        } else {
+            sensorsToTrack = ImmutableSet.<AttributeSensor<?>>of(hostnameSensor, portSensor);
+        }
         Map<?, ?> policyFlags = MutableMap.of("name", "Controller targets tracker",
-            "sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR), getConfig(PORT_NUMBER_SENSOR)));
+            "sensorsToTrack", sensorsToTrack);
         serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(policyFlags) {
             @Override protected void onEntityEvent(EventType type, Entity entity) { onServerPoolMemberChanged(entity); }
         };
@@ -168,6 +179,11 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
 
     @Override
+    public AttributeSensor<String> getHostAndPortSensor() {
+        return getAttribute(HOST_AND_PORT_SENSOR);
+    }
+    
+    @Override
     public Set<String> getServerPoolAddresses() {
         return serverPoolAddresses;
     }
@@ -213,6 +229,14 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void preStart() {
         super.preStart();
+
+        AttributeSensor<?> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
+        Maybe<Object> hostnameSensor = getConfigRaw(HOSTNAME_SENSOR, true);
+        Maybe<Object> portSensor = getConfigRaw(PORT_NUMBER_SENSOR, true);
+        if (hostAndPortSensor != null) {
+            checkState(!hostnameSensor.isPresent() && !portSensor.isPresent(), 
+                    "Must not set %s and either of %s or %s", HOST_AND_PORT_SENSOR, HOSTNAME_SENSOR, PORT_NUMBER_SENSOR);
+        }
 
         ConfigToAttributes.apply(this);
 
@@ -396,14 +420,26 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
     
     protected String getAddressOfEntity(Entity member) {
-        String ip = member.getAttribute(getHostnameSensor());
-        Integer port = member.getAttribute(getPortNumberSensor());
-        if (ip!=null && port!=null) {
-            return ip+":"+port;
+        AttributeSensor<String> hostAndPortSensor = getHostAndPortSensor();
+        if (hostAndPortSensor != null) {
+            String result = member.getAttribute(hostAndPortSensor);
+            if (result != null) {
+                return result;
+            } else {
+                LOG.error("No host:port set for {} (using attribute {}); skipping in {}", 
+                        new Object[] {member, hostAndPortSensor, this});
+                return null;
+            }
+        } else {
+            String ip = member.getAttribute(getHostnameSensor());
+            Integer port = member.getAttribute(getPortNumberSensor());
+            if (ip!=null && port!=null) {
+                return ip+":"+port;
+            }
+            LOG.error("Unable to construct hostname:port representation for {} ({}:{}); skipping in {}", 
+                    new Object[] {member, ip, port, this});
+            return null;
         }
-        LOG.error("Unable to construct hostname:port representation for {} ({}:{}); skipping in {}", 
-                new Object[] {member, ip, port, this});
-        return null;
     }
 
     @Override

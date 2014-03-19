@@ -54,6 +54,11 @@ public interface LoadBalancer extends Entity, Startable {
     public static final BasicAttributeSensorAndConfigKey<AttributeSensor> HOSTNAME_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor>(
             AttributeSensor.class, "member.sensor.hostname", "Hostname/IP sensor on members (defaults to host.name; not supported in all implementations)", Attributes.HOSTNAME);
 
+    /** sensor for hostname to forward to on target entities */
+    @SetFromFlag("hostAndPortSensor")
+    public static final BasicAttributeSensorAndConfigKey<AttributeSensor> HOST_AND_PORT_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor>(
+            AttributeSensor.class, "member.sensor.hostandport", "host:port sensor on members (invalid to configure this and the portNumber or hostname sensors)", null);
+    
     @SetFromFlag("port")
     /** port where this controller should live */
     public static final PortAttributeSensorAndConfigKey PROXY_HTTP_PORT = new PortAttributeSensorAndConfigKey(

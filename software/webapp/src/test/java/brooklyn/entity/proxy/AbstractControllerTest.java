@@ -229,6 +229,65 @@ public class AbstractControllerTest {
         assertEventuallyAddressesMatch(ImmutableList.<Entity>of());
     }
 
+    @Test
+    public void testUsesHostAndPortSensor() throws Exception {
+        controller = app.createAndManageChild(EntitySpec.create(TrackingAbstractController.class)
+                .configure("serverPool", cluster) 
+                .configure("hostAndPortSensor", ClusteredEntity.HOST_AND_PORT)
+                .configure("domain", "mydomain"));
+        controller.start(Arrays.asList(loc));
+        
+        TestEntity child = cluster.addChild(EntitySpec.create(TestEntity.class));
+        Entities.manage(child);
+        cluster.addMember(child);
+
+        List<Collection<String>> u = Lists.newArrayList(controller.getUpdates());
+        assertTrue(u.isEmpty(), "expected no updates, but got "+u);
+        
+        child.setAttribute(Startable.SERVICE_UP, true);
+        
+        // TODO Ugly sleep to allow AbstractController to detect node having been added
+        Thread.sleep(100);
+        
+        child.setAttribute(ClusteredEntity.HOST_AND_PORT, "mymachine:1234");
+        assertEventuallyExplicitAddressesMatch(ImmutableList.of("mymachine:1234"));
+    }
+
+    @Test
+    public void testFailsIfSetHostAndPortAndHostnameOrPortNumberSensor() throws Exception {
+        try {
+            TrackingAbstractController controller2 = app.createAndManageChild(EntitySpec.create(TrackingAbstractController.class)
+                    .configure("serverPool", cluster) 
+                    .configure("hostAndPortSensor", ClusteredEntity.HOST_AND_PORT)
+                    .configure("hostnameSensor", ClusteredEntity.HOSTNAME)
+                    .configure("domain", "mydomain"));
+            controller2.start(Arrays.asList(loc));
+        } catch (Exception e) {
+            IllegalStateException unwrapped = Exceptions.getFirstThrowableOfType(e, IllegalStateException.class);
+            if (unwrapped != null && unwrapped.toString().contains("Must not set Sensor")) {
+                // success
+            } else {
+                throw e;
+            }
+        }
+
+        try {
+            TrackingAbstractController controller3 = app.createAndManageChild(EntitySpec.create(TrackingAbstractController.class)
+                    .configure("serverPool", cluster) 
+                    .configure("hostAndPortSensor", ClusteredEntity.HOST_AND_PORT)
+                    .configure("portNumberSensor", ClusteredEntity.HTTP_PORT)
+                    .configure("domain", "mydomain"));
+            controller3.start(Arrays.asList(loc));
+        } catch (Exception e) {
+            IllegalStateException unwrapped = Exceptions.getFirstThrowableOfType(e, IllegalStateException.class);
+            if (unwrapped != null && unwrapped.toString().contains("Must not set Sensor")) {
+                // success
+            } else {
+                throw e;
+            }
+        }
+    }
+
     private void assertEventuallyAddressesMatchCluster() {
         assertEventuallyAddressesMatch(cluster.getMembers());
     }
@@ -281,6 +340,9 @@ public class AbstractControllerTest {
         
         @SetFromFlag("port")
         public static final AttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT;
+        
+        @SetFromFlag("hostAndPort")
+        public static final AttributeSensor<String> HOST_AND_PORT = Attributes.HOST_AND_PORT;
         
         MachineProvisioningLocation provisioner;
         

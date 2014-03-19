@@ -60,7 +60,9 @@ public interface Attributes {
     		"the subnet where it is running (if different to host.name)");
     AttributeSensor<String> SUBNET_ADDRESS = Sensors.newStringSensor( "host.subnet.address", "Host address as known internally in " +
             "the subnet where it is running (if different to host.name)");
-	
+
+    AttributeSensor<String> HOST_AND_PORT = Sensors.newStringSensor( "hostandport", "host:port" );
+
     /*
      * Lifecycle attributes
      */

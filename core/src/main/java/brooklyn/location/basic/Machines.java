@@ -50,7 +50,7 @@ public class Machines {
     }
 
     @SuppressWarnings("unchecked")
-    protected static <T> Optional<T> findUniqueElement(Iterable<?> items, Class<T> type) {
+    public static <T> Optional<T> findUniqueElement(Iterable<?> items, Class<T> type) {
         if (items==null) return null;
         Iterator<?> i = items.iterator();
         T result = null;

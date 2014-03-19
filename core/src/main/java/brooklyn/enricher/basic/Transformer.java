@@ -1,5 +1,7 @@
 package brooklyn.enricher.basic;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,15 +24,17 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
 
     private static final Logger LOG = LoggerFactory.getLogger(Transformer.class);
 
-    public static ConfigKey<Function<?, ?>> TRANSFORMATION = ConfigKeys.newConfigKey(new TypeToken<Function<?, ?>>() {}, "enricher.transformation");
-
+    public static ConfigKey<Function<?, ?>> TRANSFORMATION_FROM_VALUE = ConfigKeys.newConfigKey(new TypeToken<Function<?, ?>>() {}, "enricher.transformation");
+    
+    public static ConfigKey<Function<?, ?>> TRANSFORMATION_FROM_EVENT = ConfigKeys.newConfigKey(new TypeToken<Function<?, ?>>() {}, "enricher.transformation.fromevent");
+    
     public static ConfigKey<Entity> PRODUCER = ConfigKeys.newConfigKey(Entity.class, "enricher.producer");
 
     public static ConfigKey<Sensor<?>> SOURCE_SENSOR = ConfigKeys.newConfigKey(new TypeToken<Sensor<?>>() {}, "enricher.sourceSensor");
 
     public static ConfigKey<Sensor<?>> TARGET_SENSOR = ConfigKeys.newConfigKey(new TypeToken<Sensor<?>>() {}, "enricher.targetSensor");
 
-    protected Function<? super T, ? extends U> transformation;
+    protected Function<? super SensorEvent<T>, ? extends U> transformation;
     protected Entity producer;
     protected Sensor<T> sourceSensor;
     protected Sensor<U> targetSensor;
@@ -42,7 +46,18 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
     @Override
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
-        this.transformation = (Function<? super T, ? extends U>) getRequiredConfig(TRANSFORMATION);
+        final Function<? super T, ? extends U> transformationFromValue = (Function<? super T, ? extends U>) getConfig(TRANSFORMATION_FROM_VALUE);
+        final Function<? super SensorEvent<T>, ? extends U> transformationFromEvent = (Function<? super SensorEvent<T>, ? extends U>) getConfig(TRANSFORMATION_FROM_EVENT);
+        checkArgument(transformationFromEvent != null ^ transformationFromValue != null, "must set exactly one of %s or %s", TRANSFORMATION_FROM_VALUE.getName(), TRANSFORMATION_FROM_EVENT.getName());
+        if (transformationFromEvent != null) {
+            transformation = transformationFromEvent;
+        } else {
+            transformation = new Function<SensorEvent<T>, U>() {
+                @Override public U apply(SensorEvent<T> input) {
+                    return transformationFromValue.apply(input.getValue());
+                }
+            };
+        }
         this.producer = getConfig(PRODUCER) == null ? entity: getConfig(PRODUCER);
         this.sourceSensor = (Sensor<T>) getRequiredConfig(SOURCE_SENSOR);
         Sensor<?> targetSensorSpecified = getConfig(TARGET_SENSOR);
@@ -69,11 +84,11 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
 
     @Override
     public void onEvent(SensorEvent<T> event) {
-        emit(targetSensor, compute(event.getValue()));
+        emit(targetSensor, compute(event));
     }
 
-    protected U compute(T value) {
-        Object result = transformation.apply(value);
+    protected U compute(SensorEvent<T> event) {
+        Object result = transformation.apply(event);
         return TypeCoercions.coerce(result, targetSensor.getTypeToken());
     }
 }

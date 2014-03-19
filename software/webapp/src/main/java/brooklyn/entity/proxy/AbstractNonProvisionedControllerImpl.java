@@ -1,6 +1,7 @@
 package brooklyn.entity.proxy;
 
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
 import java.util.Map;
@@ -19,6 +20,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -79,6 +81,14 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
     }
 
     protected void preStart() {
+        AttributeSensor<?> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
+        Maybe<Object> hostnameSensor = getConfigRaw(HOSTNAME_SENSOR, true);
+        Maybe<Object> portSensor = getConfigRaw(PORT_NUMBER_SENSOR, true);
+        if (hostAndPortSensor != null) {
+            checkState(!hostnameSensor.isPresent() && !portSensor.isPresent(), 
+                    "Must not set %s and either of %s or %s", HOST_AND_PORT_SENSOR, HOSTNAME_SENSOR, PORT_NUMBER_SENSOR);
+        }
+        
         ConfigToAttributes.apply(this);
         LOG.info("Adding policy {} to {}, during start", serverPoolMemberTrackerPolicy, this);
         addPolicy(serverPoolMemberTrackerPolicy);
@@ -167,6 +177,10 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
         return getAttribute(HOSTNAME_SENSOR);
     }
 
+    protected AttributeSensor<String> getHostAndPortSensor() {
+        return getAttribute(HOST_AND_PORT_SENSOR);
+    }
+
     protected synchronized void addServerPoolMember(Entity member) {
         if (serverPoolTargets.containsKey(member)) {
             if (LOG.isTraceEnabled()) LOG.trace("For {}, not adding as already have member {}", new Object[] {this, member});
@@ -202,13 +216,25 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
     }
     
     protected String getAddressOfEntity(Entity member) {
-        String ip = member.getAttribute(getHostnameSensor());
-        Integer port = member.getAttribute(getPortNumberSensor());
-        if (ip!=null && port!=null) {
-            return ip+":"+port;
+        AttributeSensor<String> hostAndPortSensor = getHostAndPortSensor();
+        if (hostAndPortSensor != null) {
+            String result = member.getAttribute(hostAndPortSensor);
+            if (result != null) {
+                return result;
+            } else {
+                LOG.error("No host:port set for {} (using attribute {}); skipping in {}", 
+                        new Object[] {member, hostAndPortSensor, this});
+                return null;
+            }
+        } else {
+            String ip = member.getAttribute(getHostnameSensor());
+            Integer port = member.getAttribute(getPortNumberSensor());
+            if (ip!=null && port!=null) {
+                return ip+":"+port;
+            }
+            LOG.error("Unable to construct hostname:port representation for {} ({}:{}); skipping in {}", 
+                    new Object[] {member, ip, port, this});
+            return null;
         }
-        LOG.error("Unable to construct hostname:port representation for {} ({}:{}); skipping in {}", 
-                new Object[] {member, ip, port, this});
-        return null;
     }
 }
