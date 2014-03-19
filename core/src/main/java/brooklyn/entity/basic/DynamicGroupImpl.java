@@ -1,9 +1,23 @@
+/*
+ * Copyright 2009-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.basic;
 
 import groovy.lang.Closure;
 
 import java.util.Collection;
-import java.util.LinkedHashSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,34 +32,40 @@ import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup {
-    public static final Logger log = LoggerFactory.getLogger(DynamicGroupImpl.class);
-    
+
+    private static final Logger log = LoggerFactory.getLogger(DynamicGroupImpl.class);
+
     protected final Object memberChangeMutex = new Object();
-    
+
     private volatile MyEntitySetChangeListener setChangeListener = null;
 
-    public DynamicGroupImpl() {
-    }
-    
+    public DynamicGroupImpl() { }
+
     @Override
     public void init() {
         super.init();
         setAttribute(RUNNING, true);
     }
-    
+
+    @Override
     public void setEntityFilter(Predicate<? super Entity> filter) {
         // TODO Sould this be "evenIfOwned"?
         setConfigEvenIfOwned(ENTITY_FILTER, filter);
         rescanEntities();
     }
-    
+
+    @Deprecated
+    @Override
     public void setEntityFilter(Closure<Boolean> filter) {
         setEntityFilter(filter != null ? GroovyJavaMethods.<Entity>predicateFromClosure(filter) : null);
     }
 
-    protected Predicate<? super Entity> entityFilter() {
+    @Override
+    public Predicate<? super Entity> entityFilter() {
         Predicate<? super Entity> entityFilter = getConfig(ENTITY_FILTER);
         if (entityFilter == null) {
             return Predicates.alwaysFalse();
@@ -57,37 +77,35 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
     private boolean isRunning() {
         return getAttribute(RUNNING);
     }
-    
-    /**
-     * Stops this group (but does not stop any of its members). De-activates the filter and unsubscribes to
-     * entity-updates, so the membership of the group will not change.
-     */
+
     @Override
     public void stop() {
         setAttribute(RUNNING, false);
         if (setChangeListener != null) {
-            ((ManagementContextInternal)getManagementContext()).removeEntitySetListener(setChangeListener);
+            ((ManagementContextInternal) getManagementContext()).removeEntitySetListener(setChangeListener);
         }
     }
-    
+
+    @Override
     public <T> void addSubscription(Entity producer, Sensor<T> sensor, final Predicate<? super SensorEvent<? super T>> filter) {
         SensorEventListener<T> listener = new SensorEventListener<T>() {
-            @Override public void onEvent(SensorEvent<T> event) {
-                if (filter.apply(event)) onEntityChanged(event.getSource());
-            }
-        };
+                @Override
+                public void onEvent(SensorEvent<T> event) {
+                    if (filter.apply(event)) onEntityChanged(event.getSource());
+                }
+            };
         subscribe(producer, sensor, listener);
     }
 
+    @Override
     public <T> void addSubscription(Entity producer, Sensor<T> sensor) {
         addSubscription(producer, sensor, Predicates.<SensorEvent<? super T>>alwaysTrue());
     }
-    
+
     protected boolean acceptsEntity(Entity e) {
-        Predicate<? super Entity> entityFilter = getConfig(ENTITY_FILTER);
-        return (entityFilter != null && entityFilter.apply(e));
+        return entityFilter().apply(e);
     }
-    
+
     protected void onEntityAdded(Entity item) {
         synchronized (memberChangeMutex) {
             if (acceptsEntity(item)) {
@@ -96,14 +114,14 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
             }
         }
     }
-    
+
     protected void onEntityRemoved(Entity item) {
         synchronized (memberChangeMutex) {
             if (removeMember(item))
                 if (log.isDebugEnabled()) log.debug("{} detected item removal {}", this, item);
         }
     }
-    
+
     protected void onEntityChanged(Entity item) {
         synchronized (memberChangeMutex) {
             boolean accepts = acceptsEntity(item);
@@ -117,9 +135,11 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
             }
         }
     }
-    
-    class MyEntitySetChangeListener implements CollectionChangeListener<Entity> {
+
+    private class MyEntitySetChangeListener implements CollectionChangeListener<Entity> {
+        @Override
         public void onItemAdded(Entity item) { onEntityAdded(item); }
+        @Override
         public void onItemRemoved(Entity item) { onEntityRemoved(item); }
     }
 
@@ -130,7 +150,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
             return;
         }
         setChangeListener = new MyEntitySetChangeListener();
-        ((ManagementContextInternal)getManagementContext()).addEntitySetListener(setChangeListener);
+        ((ManagementContextInternal) getManagementContext()).addEntitySetListener(setChangeListener);
         rescanEntities();
     }
 
@@ -143,7 +163,8 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
         ((ManagementContextInternal) getManagementContext()).removeEntitySetListener(setChangeListener);
         setChangeListener = null;
     }
-    
+
+    @Override
     public void rescanEntities() {
         synchronized (memberChangeMutex) {
             if (!isRunning() || !getManagementSupport().isDeployed()) {
@@ -159,26 +180,24 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
                 return;
             }
             boolean changed = false;
-            Collection<Entity> currentMembers = super.getMembers();
-            Collection<Entity> toRemove = new LinkedHashSet<Entity>(currentMembers);
-            
-            for (Entity it : getManagementContext().getEntityManager().getEntities()) {
-                if (acceptsEntity(it)) {
-                    toRemove.remove(it);
-                    if (!currentMembers.contains(it)) {
-                        if (log.isDebugEnabled()) log.debug("{} rescan detected new item {}", this, it);
-                        addMember(it);
-                        changed = true;
-                    }
+            Collection<Entity> currentMembers = getMembers();
+            Collection<Entity> toRemove = Sets.newLinkedHashSet(currentMembers);
+
+            for (Entity it : Iterables.filter(getManagementContext().getEntityManager().getEntities(), entityFilter())) {
+                toRemove.remove(it);
+                if (!currentMembers.contains(it)) {
+                    if (log.isDebugEnabled()) log.debug("{} rescan detected new item {}", this, it);
+                    addMember(it);
+                    changed = true;
                 }
             }
-            for (Entity it: toRemove) { 
+            for (Entity it : toRemove) {
                 if (log.isDebugEnabled()) log.debug("{} rescan detected vanished item {}", this, it);
                 removeMember(it);
                 changed = true;
             }
-            if (changed)
-                if (log.isDebugEnabled()) log.debug("{} rescan complete, members now {}", this, getMembers());
+            if (changed && log.isDebugEnabled())
+                log.debug("{} rescan complete, members now {}", this, getMembers());
         }
     }
 }
