@@ -23,8 +23,8 @@ public class MongoDBClientImpl extends SoftwareProcessImpl implements MongoDBCli
     }
 
     @Override
-    public void runScript(String scriptName) {
-        ((MongoDBClientDriver)getDriver()).runScript(scriptName);
+    public void runScript(String preStart, String scriptName) {
+        ((MongoDBClientDriver)getDriver()).runScript(preStart, scriptName);
     }
 
 }

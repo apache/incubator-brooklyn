@@ -36,5 +36,6 @@ public interface MongoDBClient extends AbstractMongoDBServer {
             "mongodb.colocatedrouter.shardeddeployment", "Sharded deployment that the client will use to run scripts");
     
     @Effector(description="Runs one of the scripts defined in mongodb.client.scripts")
-    void runScript(@EffectorParam(name="script name", description="Name of the script as defined in mongodb.client.scripts") String scriptName);
+    void runScript(@EffectorParam(name="pre-start", description="use this to create parameters that can be used by the script, e.g.:<p><code>var loopCount = 10</code>") String preStart,
+            @EffectorParam(name="script name", description="Name of the script as defined in mongodb.client.scripts") String scriptName);
 }

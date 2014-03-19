@@ -39,7 +39,7 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
         String host = server.getAttribute(AbstractMongoDBServer.HOSTNAME);
         Integer port = server.getAttribute(AbstractMongoDBServer.PORT);
         for (String scriptName : entity.getConfig(MongoDBClient.DEFAULT_SCRIPTS)) {
-            runScript(scriptName, host, port);
+            runScript("", scriptName, host, port);
         }
         isRunning = true;
     }
@@ -49,16 +49,16 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
         return isRunning;
     }
     
-    public void runScript(String scriptName) {
+    public void runScript(String preStart, String scriptName) {
         AbstractMongoDBServer server = getServer();
         String host = server.getAttribute(AbstractMongoDBServer.HOSTNAME);
         Integer port = server.getAttribute(AbstractMongoDBServer.PORT);
-        runScript(scriptName, host, port);
+        runScript(preStart, scriptName, host, port);
     }
     
-    private void runScript(String scriptName, String host, Integer port) {
-        String command = String.format("%s/bin/mongo %s:%s %s/%s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), 
-                host, port, getRunDir(), scriptName + ".js");
+    private void runScript(String preStart, String scriptName, String host, Integer port) {
+        String command = String.format("%s/bin/mongo %s:%s --eval \"%s\" %s/%s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), 
+                host, port, preStart, getRunDir(), scriptName + ".js");
         newScript(LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
             .body.append(command).execute();
