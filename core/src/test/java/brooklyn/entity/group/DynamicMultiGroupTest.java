@@ -1,14 +1,13 @@
 package brooklyn.entity.group;
 
+import static brooklyn.entity.basic.DynamicGroup.ENTITY_FILTER;
 import static brooklyn.entity.basic.EntityPredicates.displayNameEqualTo;
 import static brooklyn.entity.group.DynamicMultiGroup.BUCKET_FUNCTION;
-import static brooklyn.entity.group.DynamicMultiGroup.ENTITY_FILTER;
+import static brooklyn.entity.group.DynamicMultiGroup.RESCAN_INTERVAL;
 import static brooklyn.entity.group.DynamicMultiGroupImpl.bucketFromAttribute;
 import static com.google.common.base.Predicates.instanceOf;
 import static com.google.common.collect.Iterables.find;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
+import static org.testng.Assert.*;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -31,7 +30,6 @@ import brooklyn.test.entity.TestEntity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-
 public class DynamicMultiGroupTest {
 
     private static final AttributeSensor<String> SENSOR = Sensors.newSensor(String.class, "multigroup.test");
@@ -52,23 +50,46 @@ public class DynamicMultiGroupTest {
     }
 
     @Test
-    public void testBucketDistribution() {
-        final Group group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
+    public void testBucketDistributionFromSubscription() {
+        Group group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         final DynamicMultiGroup dmg = app.createAndManageChild(
                 EntitySpec.create(DynamicMultiGroup.class)
-                .configure(ENTITY_FILTER, instanceOf(TestEntity.class))
-                .configure(BUCKET_FUNCTION, bucketFromAttribute(SENSOR))
+                        .configure(ENTITY_FILTER, instanceOf(TestEntity.class))
+                        .configure(BUCKET_FUNCTION, bucketFromAttribute(SENSOR))
         );
         app.subscribeToChildren(group, SENSOR, new SensorEventListener<String>() {
-            public void onEvent(SensorEvent<String> event) { dmg.distributeEntities(); }
+            public void onEvent(SensorEvent<String> event) { dmg.rescanEntities(); }
         });
 
-        final EntitySpec<TestEntity> childSpec = EntitySpec.create(TestEntity.class);
-        final TestEntity child1 = group.addChild(EntitySpec.create(childSpec).displayName("child1"));
-        final TestEntity child2 = group.addChild(EntitySpec.create(childSpec).displayName("child2"));
+        EntitySpec<TestEntity> childSpec = EntitySpec.create(TestEntity.class);
+        TestEntity child1 = group.addChild(EntitySpec.create(childSpec).displayName("child1"));
+        TestEntity child2 = group.addChild(EntitySpec.create(childSpec).displayName("child2"));
         Entities.manage(child1);
         Entities.manage(child2);
 
+        checkDistribution(group, dmg, childSpec, child1, child2);
+    }
+
+    @Test
+    public void testBucketDistributionWithRescan() {
+        Group group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
+        final DynamicMultiGroup dmg = app.createAndManageChild(
+                EntitySpec.create(DynamicMultiGroup.class)
+                        .configure(ENTITY_FILTER, instanceOf(TestEntity.class))
+                        .configure(BUCKET_FUNCTION, bucketFromAttribute(SENSOR))
+                        .configure(RESCAN_INTERVAL, 1L)
+        );
+
+        EntitySpec<TestEntity> childSpec = EntitySpec.create(TestEntity.class);
+        TestEntity child1 = group.addChild(EntitySpec.create(childSpec).displayName("child1"));
+        TestEntity child2 = group.addChild(EntitySpec.create(childSpec).displayName("child2"));
+        Entities.manage(child1);
+        Entities.manage(child2);
+        
+        checkDistribution(group, dmg, childSpec, child1, child2);
+    }
+
+    private void checkDistribution(final Group group, final DynamicMultiGroup dmg, final EntitySpec<TestEntity> childSpec, final TestEntity child1, final TestEntity child2) {
         // Start with both children in bucket A; there is no bucket B
         child1.setAttribute(SENSOR, "bucketA");
         child2.setAttribute(SENSOR, "bucketA");

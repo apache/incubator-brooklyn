@@ -37,18 +37,18 @@ public interface Group extends Entity {
      */
     Integer getCurrentSize();
     
-    /** as {@link #addChild(EntitySpec)} followed by {@link #addMember(Entity)} */
-    public <T extends Entity> T addMemberChild(EntitySpec<T> spec);
+    /** As {@link #addChild(EntitySpec)} followed by {@link #addMember(Entity)} */
+    <T extends Entity> T addMemberChild(EntitySpec<T> spec);
     
-    /** as {@link #addChild(Entity)} followed by {@link #addMember(Entity)} */
-    public <T extends Entity> T addMemberChild(T child);
+    /** As {@link #addChild(Entity)} followed by {@link #addMember(Entity)} */
+    <T extends Entity> T addMemberChild(T child);
     
+    /** As in super, but note this does NOT by default add it as a member; see {@link #addMemberChild(EntitySpec)} */
     @Override
-    /** as in super, but note this does NOT by default add it as a member; see {@link #addMemberChild(EntitySpec)} */
-    public <T extends Entity> T addChild(EntitySpec<T> spec);
+    <T extends Entity> T addChild(EntitySpec<T> spec);
     
+    /** As in super, but note this does NOT by default add it as a member; see {@link #addMemberChild(Entity)} */
     @Override
-    /** as in super, but note this does NOT by default add it as a member; see {@link #addMemberChild(Entity)} */
-    public <T extends Entity> T addChild(T child);
+    <T extends Entity> T addChild(T child);
 
 }
