@@ -1,7 +1,5 @@
 package brooklyn.entity.basic;
 
-import groovy.time.TimeDuration;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -66,7 +64,6 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.Tasks;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;

@@ -66,10 +66,14 @@ public class BasicMachineDetails implements MachineDetails {
 
     /**
      * Creates a MachineDetails for the given location by SSHing to the machine and
-     * running a Bash script to gather data.
+     * running a Bash script to gather data. Should only be called from within a
+     * task context. If this might not be the case then use {@link
+     * #taskForSshMachineLocation(SshMachineLocation)} instead.
      */
     static BasicMachineDetails forSshMachineLocation(SshMachineLocation location) {
-        return DynamicTasks.queue(taskForSshMachineLocation(location))
+        return DynamicTasks.queueIfPossible(taskForSshMachineLocation(location))
+                .orSubmitAsync()
+                .asTask()
                 .getUnchecked();
     }
 

@@ -259,8 +259,10 @@ public class Tasks {
         return ((TaskInternal<?>)task.asTask()).isQueuedOrSubmitted();
     }
     
-    /** tries to add the given task in the given addition context,
-     * returns true if it could, false if it could not (doesn't throw anything) */
+    /**
+     * Adds the given task to the given context. Does not throw an exception if the addition fails.
+     * @return true if the task was added, false otherwise.
+     */
     public static boolean tryQueueing(TaskQueueingContext adder, TaskAdaptable<?> task) {
         if (task==null || isQueuedOrSubmitted(task))
             return false;

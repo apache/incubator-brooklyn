@@ -798,12 +798,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         MachineDetails details = machineDetails;
         if (details == null) {
             // Or could just load and store several times
+            Tasks.setBlockingDetails("Waiting for machine details");
             synchronized (machineDetailsLock) {
                 details = machineDetails;
                 if (details == null) {
                     machineDetails = details = BasicMachineDetails.forSshMachineLocation(this);
                 }
             }
+            Tasks.resetBlockingDetails();
         }
         return details;
     }
@@ -828,7 +830,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return mutexSupport.hasMutex(mutexId);
     }
 
-    //We want want the SshMachineLocation to be serializable and therefore the pool needs to be dealt with correctly.
+    //We want the SshMachineLocation to be serializable and therefore the pool needs to be dealt with correctly.
     //In this case we are not serializing the pool (we made the field transient) and create a new pool when deserialized.
     //This fix is currently needed for experiments, but isn't used in normal Brooklyn usage.
     private void readObject(java.io.ObjectInputStream in)
