@@ -259,21 +259,25 @@ public class DynamicTasks {
         return qc;
     }
 
-    /** causes failures in children of the current task not to fail the parent */
+    /** causes failures in subtasks of the current task not to fail the parent;
+     * no-op if not in a {@link TaskQueueingContext}.
+     * <p>
+     * essentially like a {@link #markInessential()} on all tasks in the current 
+     * {@link TaskQueueingContext}, including tasks queued subsequently */
     /* TODO tests for this and for markInessential; 
      * the latter is now tested by SoftwareProcessEntityTest;
-     * this used to be, so have confidence it once worked, but it no longer is. */
+     * this used to be, so have confidence it once worked, but it no longer is used */
     public static void swallowChildrenFailures() {
         TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
-        Preconditions.checkNotNull(qc, "Cannot drain when there is no queueing context");
-        qc.swallowChildrenFailures();
+        if (qc!=null) {
+            qc.swallowChildrenFailures();
+        }
     }
 
-    /** marks the current task inessential */
+    /** same as {@link Tasks#markInessential()}
+     * (but included here for convenience as it is often used in conjunction with {@link DynamicTasks}) */
     public static void markInessential() {
-        TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
-        Preconditions.checkNotNull(qc, "Cannot drain when there is no queueing context");
-        TaskTags.markInessential(qc.asTask());
+        Tasks.markInessential();
     }
     
 }

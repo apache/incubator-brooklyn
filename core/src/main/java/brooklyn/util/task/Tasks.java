@@ -333,5 +333,20 @@ public class Tasks {
             if (optionalError!=null) throw Exceptions.propagate(optionalError); else throw new RuntimeException("Failed: "+name);
         } }).build();
     }
+
+    /** marks the current task inessential; this mainly matters if the task is running in a parent
+     * {@link TaskQueueingContext} and we don't want the parent to fail if this task fails
+     * <p>
+     * no-op (silently ignored) if not in a task */
+    public static void markInessential() {
+        Task<?> task = Tasks.current();
+        if (task==null) {
+            TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
+            if (qc!=null) task = qc.asTask();
+        }
+        if (task!=null) {
+            TaskTags.markInessential(task);
+        }
+    }
     
 }
