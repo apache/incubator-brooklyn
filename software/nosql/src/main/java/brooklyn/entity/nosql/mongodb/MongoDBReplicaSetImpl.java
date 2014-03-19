@@ -2,23 +2,6 @@ package brooklyn.entity.nosql.mongodb;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Lifecycle;
@@ -34,13 +17,26 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.text.Strings;
-
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Implementation of {@link MongoDBReplicaSet}.
@@ -296,7 +292,6 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 .publishing(MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT)
                 .fromMembers()
                 .valueToReportIfNoSensors(null)
-                /*
                 .computing(new Function<Collection<String>,String>() {
                         @Override
                         public String apply(Collection<String> input) {
@@ -309,7 +304,6 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                                 LOG.warn("Mongo replica set "+MongoDBReplicaSetImpl.this+" detetcted multiple masters (transitioning?): "+distinct);
                             return input.iterator().next();
                         }})
-                */
                 .build());
 
         addEnricher(Enrichers.builder()
@@ -317,7 +311,6 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 .publishing(REPLICA_SET_ENDPOINTS)
                 .fromMembers()
                 .valueToReportIfNoSensors(null)
-                /*
                 .computing(new Function<Collection<String>,List<String>>() {
                         @Override
                         public List<String> apply(Collection<String> input) {
@@ -329,7 +322,6 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                             }
                             return MutableList.copyOf(endpoints);
                         }})
-                        */
                 .build());
 
         subscribeToMembers(this, MongoDBServer.IS_PRIMARY_FOR_REPLICA_SET, new SensorEventListener<Boolean>() {

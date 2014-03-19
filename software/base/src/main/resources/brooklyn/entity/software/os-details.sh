@@ -28,7 +28,6 @@ elif [ -f /etc/lsb-release ]; then
     #          DISTRIB_CODENAME=precise
     #          DISTRIB_DESCRIPTION="Ubuntu 12.04 LTS"
     NAME=$(cat /etc/lsb-release| grep DISTRIB_ID= | sed 's/DISTRIB_ID=//')
-    # Match everything between 'release ' and the next space
     VERSION_ID=$(cat /etc/lsb-release| grep DISTRIB_RELEASE= | sed 's/DISTRIB_RELEASE=//')
 
 # Try OSX

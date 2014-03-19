@@ -24,9 +24,7 @@ import java.util.Map;
 public abstract class AbstractSoftlayerLiveTest {
     
     public static final String PROVIDER = "softlayer";
-    //public static final String LOCATION_SPEC = PROVIDER + (REGION_NAME == null ? "" : ":" + REGION_NAME);
-    public static final String SMALL_RAM = "3";
-    
+
     protected BrooklynProperties brooklynProperties;
     protected ManagementContext ctx;
     
@@ -67,14 +65,14 @@ public abstract class AbstractSoftlayerLiveTest {
 
     @Test(groups = {"Live"})
     public void test_Ubuntu_12_0_4() throws Exception {
-        // Image: {id=17446, providerId=17446, os={family=ubuntu, version=12.04, description=Ubuntu Linux 12.04 LTS Precise Pangolin - Minimal Install (64 bit), is64Bit=true}, description=Ubuntu Linux 12.04 LTS Precise Pangolin - Minimal Install (64 bit), status=AVAILABLE, loginUser=root}
-        runTest(ImmutableMap.<String,Object>of("locationId", "dal06"));
+        // Image: {id=UBUNTU_12_64, providerId=UBUNTU_12_64, os={family=ubuntu, version=12.04, description=Ubuntu / Ubuntu / 12.04.0-64 Minimal, is64Bit=true}, description=UBUNTU_12_64, status=AVAILABLE, loginUser=root}
+        runTest(ImmutableMap.<String,Object>of("imageId", "UBUNTU_12_64"));
     }
 
     @Test(groups = {"Live"})
     public void test_Centos_6_0() throws Exception {
-        // Image: {id=13945, providerId=13945, os={family=centos, version=6.0, description=CentOS 6.0 - Minimal Install (64 bit), is64Bit=true}, description=CentOS 6.0 - Minimal Install (64 bit), status=AVAILABLE, loginUser=root}
-        runTest(ImmutableMap.<String,Object>of("imageId", "13945"));
+      // Image: {id=CENTOS_6_64, providerId=CENTOS_6_64, os={family=centos, version=6.5, description=CentOS / CentOS / 6.5-64 LAMP for Bare Metal, is64Bit=true}, description=CENTOS_6_64, status=AVAILABLE, loginUser=root}
+        runTest(ImmutableMap.<String,Object>of("imageId", "CENTOS_^_64"));
     }
     
     protected void runTest(Map<String,?> flags) throws Exception {

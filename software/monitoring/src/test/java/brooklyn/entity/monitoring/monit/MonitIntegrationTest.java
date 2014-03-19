@@ -4,17 +4,6 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
@@ -28,11 +17,19 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
-
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Map;
 
 public class MonitIntegrationTest {
     
@@ -83,11 +80,11 @@ public class MonitIntegrationTest {
                 return ImmutableMap.<String, Object>of("targetPidFile", input);
             }
         };
-        EntitySpec<MonitNode> configure = EntitySpec.create(MonitNode.class)
+        EntitySpec<MonitNode> monitSpec = EntitySpec.create(MonitNode.class)
                 .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monitmysql.monitrc")
                 .configure(MonitNode.CONTROL_FILE_SUBSTITUTIONS, DependentConfiguration.valueWhenAttributeReady(mySqlNode,
                         SoftwareProcess.PID_FILE, controlFileSubstitutionsFunction));
-        final MonitNode monitNode = sameServerEntity.addChild(configure);
+        final MonitNode monitNode = sameServerEntity.addChild(monitSpec);
         Entities.manage(monitNode);
         app.start(ImmutableSet.of(location));
         LOG.info("Monit and MySQL started");
@@ -146,11 +143,11 @@ public class MonitIntegrationTest {
                 );
             }
         };
-        EntitySpec<MonitNode> configure = EntitySpec.create(MonitNode.class)
+        EntitySpec<MonitNode> monitSpec = EntitySpec.create(MonitNode.class)
                 .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monitmysqlwithrestart.monitrc")
                 .configure(MonitNode.CONTROL_FILE_SUBSTITUTIONS, DependentConfiguration.valueWhenAttributeReady(mySqlNode,
                         SoftwareProcess.PID_FILE, controlFileSubstitutionsFunction));
-        final MonitNode monitNode = sameServerEntity.addChild(configure);
+        final MonitNode monitNode = sameServerEntity.addChild(monitSpec);
         Entities.manage(monitNode);
         app.start(ImmutableSet.of(location));
         LOG.info("Monit and MySQL started");

@@ -59,15 +59,7 @@ public abstract class AbstractDockerLiveTest {
         if (app != null) Entities.destroyAllCatching(app.getManagementContext());
     }
 
-    /*
-    @Test(groups = {"Live"})
-    public void test_Ubuntu_12_04() throws Exception {
-        runTest(ImmutableMap.of("imageId", "ubuntu-10-04-v20120912", "loginUser", "root", "loginUser.password",
-        "password"));
-    }
-    */
-
-    @Test(groups = {"Live"})
+    @Test(groups={"Live", "WIP"})
     public void test_Ubuntu_13_10() throws Exception {
           runTest(ImmutableMap.of("imageId", "7fe2ec2ff748c411cf0d6833120741778c00e1b07a83c4104296b6258b5331c4",
               "loginUser", "root",

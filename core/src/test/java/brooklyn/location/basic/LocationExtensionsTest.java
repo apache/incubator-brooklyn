@@ -1,5 +1,10 @@
 package brooklyn.location.basic;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
@@ -7,11 +12,6 @@ import brooklyn.management.ManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 public class LocationExtensionsTest {
 
@@ -47,6 +47,7 @@ public class LocationExtensionsTest {
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private ConcreteLocation createConcrete(Class<?> extensionType, Object extension) {
+        // this cast is needed to make IntelliJ happy
         return (ConcreteLocation) mgmt.getLocationManager().createLocation(LocationSpec.create(ConcreteLocation.class).extension((Class)extensionType, extension));
     }
     

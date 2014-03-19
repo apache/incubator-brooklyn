@@ -521,7 +521,7 @@
                                 </pluginExecution>
                                 <pluginExecution>
                                   <pluginExecutionFilter>
-                                    <groupId>coodule.github.mcheely</groupId>
+                                    <groupId>com.github.mcheely</groupId>
                                     <artifactId>requirejs-maven-plugin</artifactId>
                                     <versionRange>[2.0.0,)</versionRange>
                                     <goals>
@@ -670,7 +670,6 @@
                 <module>utils/jmx/jmxmp-ssl-agent</module>
                 <module>utils/jmx/jmxrmi-agent</module>
                 <module>software/base</module>
-                <module>software/container</module>
                 <module>software/network</module>
                 <module>software/osgi</module>
                 <module>software/webapp</module>
