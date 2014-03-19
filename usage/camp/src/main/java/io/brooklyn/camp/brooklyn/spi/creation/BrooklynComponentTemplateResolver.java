@@ -57,6 +57,19 @@ public class BrooklynComponentTemplateResolver {
     AtomicBoolean alreadyBuilt = new AtomicBoolean(false);
 
     public static class Factory {
+
+        /** returns resolver type based on the service type, inspecting the arguments in order to determine the service type */
+        private static Class<? extends BrooklynComponentTemplateResolver> computeResolverType(String knownServiceType, AbstractResource optionalTemplate, ConfigBag attrs) {
+            String type = getDeclaredType(knownServiceType, optionalTemplate, attrs);
+            if (type!=null) {
+                if (type.startsWith("brooklyn:") || type.startsWith("java:")) return BrooklynComponentTemplateResolver.class;
+                // TODO other BrooklynComponentTemplateResolver subclasses detected here 
+                // (perhaps use regexes mapping to subclass name, defined in mgmt?)
+            }
+            
+            return null;
+        }
+
         public static BrooklynComponentTemplateResolver newInstance(ManagementContext mgmt, Map<String, Object> childAttrs) {
             return newInstance(mgmt, ConfigBag.newInstance(childAttrs), null);
         }
@@ -79,8 +92,7 @@ public class BrooklynComponentTemplateResolver {
             } catch (Exception e) { throw Exceptions.propagate(e); }
         }
 
-        /** returns resolver type based on the service type, inspecting the arguments in order to determine the service type */
-        private static Class<? extends BrooklynComponentTemplateResolver> computeResolverType(String knownServiceType, AbstractResource optionalTemplate, ConfigBag attrs) {
+        private static String getDeclaredType(String knownServiceType, AbstractResource optionalTemplate, ConfigBag attrs) {
             String type = knownServiceType;
             if (type==null && optionalTemplate!=null) {
                 type = optionalTemplate.getType();
@@ -89,14 +101,7 @@ public class BrooklynComponentTemplateResolver {
                     type = null;
             }
             if (type==null) type = extractServiceTypeAttribute(attrs);
-
-            if (type!=null) {
-                if (type.startsWith("brooklyn:") || type.startsWith("java:")) return BrooklynComponentTemplateResolver.class;
-                // TODO other BrooklynComponentTemplateResolver subclasses detected here 
-                // (perhaps use regexes mapping to subclass name, defined in mgmt?)
-            }
-            
-            return null;
+            return type;
         }
         
         private static String extractServiceTypeAttribute(ConfigBag attrs) {
@@ -127,12 +132,12 @@ public class BrooklynComponentTemplateResolver {
         this.template = Maybe.fromNullable(optionalTemplate);
     }
     
+    protected String getDeclaredType() {
+        return Factory.getDeclaredType(null, template.orNull(), attrs);
+    }
+    
     protected String getJavaType() {
-        String type;
-        if (template.isPresent()) type = template.get().getType();
-        else type = Factory.extractServiceTypeAttribute(attrs);
-        if (type==null)
-            throw new IllegalStateException("Spec does not declare type: "+this);
+        String type = getDeclaredType();
         type = Strings.removeFromStart(type, "brooklyn:", "java:");
         
         // TODO currently a hardcoded list of aliases; would like that to come from mgmt somehow
@@ -143,17 +148,17 @@ public class BrooklynComponentTemplateResolver {
         
         return type;
     }
-
-    public <T extends Entity> EntitySpec<T> buildSpec() {
-        return buildSpec(this.<T>loadEntityClass(), null);
-    }
-
+    
     @SuppressWarnings("unchecked")
     public <T extends Entity> Class<T> loadEntityClass() {
         return (Class<T>)this.<Entity>loadClass(Entity.class, getJavaType());
     }
 
-    public <T extends Entity> EntitySpec<T> buildSpec(Class<T> type, Class<? extends T> optionalImpl) {
+    public <T extends Entity> EntitySpec<T> resolveSpec() {
+        return resolveSpec(this.<T>loadEntityClass(), null);
+    }
+
+    public <T extends Entity> EntitySpec<T> resolveSpec(Class<T> type, Class<? extends T> optionalImpl) {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
         
@@ -281,7 +286,7 @@ public class BrooklynComponentTemplateResolver {
     protected Object transformSpecialFlags(Object flag, ManagementContext mgmt) {
         if (flag instanceof EntitySpecConfiguration) {
             EntitySpecConfiguration specConfig = (EntitySpecConfiguration) flag;
-            return Factory.newInstance(mgmt, specConfig.getSpecConfiguration()).buildSpec();
+            return Factory.newInstance(mgmt, specConfig.getSpecConfiguration()).resolveSpec();
         }
         return flag;
     }
@@ -310,10 +315,10 @@ public class BrooklynComponentTemplateResolver {
     }
     
     private List<PolicySpec<?>> extractPolicySpecs() {
-        return buildPolicySpecs(attrs.getStringKey("brooklyn.policies"));
+        return resolvePolicySpecs(attrs.getStringKey("brooklyn.policies"));
     }
 
-    private List<PolicySpec<?>> buildPolicySpecs(Object policies) {
+    private List<PolicySpec<?>> resolvePolicySpecs(Object policies) {
         List<PolicySpec<?>> policySpecs = new ArrayList<PolicySpec<?>>();
         if (policies instanceof Iterable) {
             for (Object policy : (Iterable<?>)policies) {
@@ -333,10 +338,10 @@ public class BrooklynComponentTemplateResolver {
     }
     
     private List<EnricherSpec<?>> extractEnricherSpecs() {
-        return buildEnricherSpecs(attrs.getStringKey("brooklyn.enrichers"));
+        return resolveEnricherSpecs(attrs.getStringKey("brooklyn.enrichers"));
     }    
 
-    private List<EnricherSpec<?>> buildEnricherSpecs(Object enrichers) {
+    private List<EnricherSpec<?>> resolveEnricherSpecs(Object enrichers) {
         List<EnricherSpec<?>> enricherSpecs = Lists.newArrayList();
         if (enrichers instanceof Iterable) {
             for (Object enricher : (Iterable<?>)enrichers) {

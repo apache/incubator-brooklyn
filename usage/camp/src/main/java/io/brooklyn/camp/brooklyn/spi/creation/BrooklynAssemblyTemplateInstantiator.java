@@ -196,7 +196,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         if (childConfig != null) {
             for (Map<String, Object> childAttrs : childConfig) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, childAttrs);
-                EntitySpec<? extends Entity> spec = entityResolver.buildSpec();
+                EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
 
                 spec.parent(parent);
                 Entity entity = entityResolver.newEntity(spec);
@@ -214,14 +214,14 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         Map<Entity, EntitySpec<?>> entitySpecs = Maps.newLinkedHashMap();
 
         BrooklynComponentTemplateResolver appResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, template);
-        EntitySpec<StartableApplication> appSpec = appResolver.buildSpec(StartableApplication.class, BasicApplicationImpl.class);
+        EntitySpec<StartableApplication> appSpec = appResolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
         Application app = appResolver.newEntity(appSpec);
         entitySpecs.put(app, appSpec);
         
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
-            EntitySpec<? extends Entity> spec = entityResolver.buildSpec();
+            EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
 
             spec.parent(app);
             Entity entity = entityResolver.newEntity(spec);
