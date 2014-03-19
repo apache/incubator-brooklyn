@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.test.Asserts;
@@ -18,6 +19,7 @@ import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest {
 
@@ -157,19 +159,34 @@ public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest
 
             // Assert that the items become balanced again
             Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
-                public void run() {
+                @Override public void run() {
                     Iterable<Double> containerRates = Iterables.transform(containers, new Function<MockContainerEntity, Double>() {
-                        public Double apply(MockContainerEntity input) {
+                        @Override public Double apply(MockContainerEntity input) {
                             return (double) input.getWorkrate();
                         }});
                     
                     String errMsg;
                     if (verbose) {
-                        errMsg = verboseDumpToString(containers)+"; itemRates="+itemRates;
+                        errMsg = verboseDumpToString(containers, items)+"; itemRates="+itemRates;
                     } else {
                         errMsg = containerRates+"; totalMoves="+MockItemEntityImpl.totalMoveCount;
                     }
-                                    
+                    
+                    // Check that haven't lost any items
+                    // (as observed in one jenkins build failure: 2014-03-18; but that could also be 
+                    // explained by errMsg generated in the middle of a move)
+                    List<Entity> itemsFromModel = Lists.newArrayList();
+                    List<Entity> itemsFromContainers = Lists.newArrayList();
+                    for (Entity container : model.getPoolContents()) {
+                        itemsFromModel.addAll(model.getItemsForContainer(container));
+                    }
+                    for (MockContainerEntity container : containers) {
+                        itemsFromContainers.addAll(container.getBalanceableItems());
+                    }
+                    Asserts.assertEqualsIgnoringOrder(itemsFromModel, items, true, errMsg);
+                    Asserts.assertEqualsIgnoringOrder(itemsFromContainers, items, true, errMsg);
+                    
+                    // Check overall container rates are balanced
                     assertEquals(sum(containerRates), sum(itemRates), errMsg);
                     for (double containerRate : containerRates) {
                         assertTrue(containerRate >= lowThreshold, errMsg);

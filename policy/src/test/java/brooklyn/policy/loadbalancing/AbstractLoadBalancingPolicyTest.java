@@ -4,6 +4,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -27,6 +28,7 @@ import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -34,6 +36,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class AbstractLoadBalancingPolicyTest {
     
@@ -64,6 +67,7 @@ public class AbstractLoadBalancingPolicyTest {
         LOG.debug("In AbstractLoadBalancingPolicyTest.before()");
         
         MockItemEntityImpl.totalMoveCount.set(0);
+        MockItemEntityImpl.lastMoveTime.set(0);
         
         loc = new SimulatedLocation(MutableMap.of("name", "loc"));
         
@@ -78,7 +82,7 @@ public class AbstractLoadBalancingPolicyTest {
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(MockItemEntity.class)));
         pool = app.createAndManageChild(EntitySpec.create(BalanceableWorkerPool.class));
         pool.setContents(containerGroup, itemGroup);
-        policy = new LoadBalancingPolicy(MutableMap.of(), TEST_METRIC, model);
+        policy = new LoadBalancingPolicy(MutableMap.of("minPeriodBetweenExecs", 1), TEST_METRIC, model);
         pool.addPolicy(policy);
         app.start(ImmutableList.of(loc));
     }
@@ -104,29 +108,29 @@ public class AbstractLoadBalancingPolicyTest {
         }
     }
     
-    protected void assertWorkratesEventually(Collection<MockContainerEntity> containers, Collection<Double> expected) {
-        assertWorkratesEventually(containers, expected, 0d);
+    protected void assertWorkratesEventually(Collection<MockContainerEntity> containers, Iterable<? extends Movable> items, Collection<Double> expected) {
+        assertWorkratesEventually(containers, items, expected, 0d);
     }
 
     /**
      * Asserts that the given container have the given expected workrates (by querying the containers directly).
      * Accepts an accuracy of "precision" for each container's workrate.
      */
-    protected void assertWorkratesEventually(final Collection<MockContainerEntity> containers, final Collection<Double> expected, final double precision) {
+    protected void assertWorkratesEventually(final Collection<MockContainerEntity> containers, final Iterable<? extends Movable> items, final Collection<Double> expected, final double precision) {
         try {
             Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
                 public void run() {
                     assertWorkrates(containers, expected, precision);
                 }});
         } catch (AssertionError e) {
-            String errMsg = e.getMessage()+"; "+verboseDumpToString(containers);
+            String errMsg = e.getMessage()+"; "+verboseDumpToString(containers, items);
             throw new RuntimeException(errMsg, e);
         }
     }
 
     // Using this utility, as it gives more info about the workrates of all containers rather than just the one that differs    
-    protected void assertWorkratesContinually(List<MockContainerEntity> containers, List<Double> expected) {
-        assertWorkratesContinually(containers, expected, 0d);
+    protected void assertWorkratesContinually(List<MockContainerEntity> containers, Iterable<? extends Movable> items, List<Double> expected) {
+        assertWorkratesContinually(containers, items, expected, 0d);
     }
 
     /**
@@ -134,31 +138,41 @@ public class AbstractLoadBalancingPolicyTest {
      * continuously for SHORT_WAIT_MS.
      * Accepts an accuracy of "precision" for each container's workrate.
      */
-    protected void assertWorkratesContinually(final List<MockContainerEntity> containers, final List<Double> expected, final double precision) {
+    protected void assertWorkratesContinually(final List<MockContainerEntity> containers, Iterable<? extends Movable> items, final List<Double> expected, final double precision) {
         try {
             Asserts.succeedsContinually(MutableMap.of("timeout", SHORT_WAIT_MS), new Runnable() {
                 public void run() {
                     assertWorkrates(containers, expected, precision);
                 }});
         } catch (AssertionError e) {
-            String errMsg = e.getMessage()+"; "+verboseDumpToString(containers);
+            String errMsg = e.getMessage()+"; "+verboseDumpToString(containers, items);
             throw new RuntimeException(errMsg, e);
         }
     }
 
-    protected String verboseDumpToString(Iterable<MockContainerEntity> containers) {
+    protected String verboseDumpToString(Iterable<MockContainerEntity> containers, Iterable<? extends Movable> items) {
         Iterable<Double> containerRates = Iterables.transform(containers, new Function<MockContainerEntity, Double>() {
-            public Double apply(MockContainerEntity input) {
+            @Override public Double apply(MockContainerEntity input) {
                 return (double) input.getWorkrate();
             }});
         
-        Iterable<Set<Movable>> itemDistribution = Iterables.transform(containers, new Function<MockContainerEntity, Set<Movable>>() {
-            public Set<Movable> apply(MockContainerEntity input) {
-                return input.getBalanceableItems();
-            }});
+        Map<MockContainerEntity, Set<Movable>> itemDistributionByContainer = Maps.newLinkedHashMap();
+        for (MockContainerEntity container : containers) {
+            itemDistributionByContainer.put(container, container.getBalanceableItems());
+        }
+        
+        Map<Movable, BalanceableContainer<?>> itemDistributionByItem = Maps.newLinkedHashMap();
+        for (Movable item : items) {
+            itemDistributionByItem.put(item, item.getAttribute(Movable.CONTAINER));
+        }
+
         String modelItemDistribution = model.itemDistributionToString();
-        return "containers="+containers+"; containerRates="+containerRates+"; itemDistribution="+itemDistribution+"; model="+modelItemDistribution+"; "+
-                "totalMoves="+MockItemEntityImpl.totalMoveCount;
+        return "containers="+containers+"; containerRates="+containerRates
+                +"; itemDistributionByContainer="+itemDistributionByContainer
+                +"; itemDistributionByItem="+itemDistributionByItem
+                +"; model="+modelItemDistribution
+                +"; totalMoves="+MockItemEntityImpl.totalMoveCount
+                +"; lastMoveTime="+Time.makeDateString(MockItemEntityImpl.lastMoveTime.get());
     }
     
     protected MockContainerEntity newContainer(TestApplication app, String name, double lowThreshold, double highThreshold) {
@@ -183,7 +197,6 @@ public class AbstractLoadBalancingPolicyTest {
         MockItemEntity item = app.createAndManageChild(EntitySpec.create(MockItemEntity.class)
                 .displayName(name));
         LOG.debug("Managing new item {} on container {}", item, container);
-        Entities.manage(item);
         item.move(container);
         ((EntityLocal)item).setAttribute(TEST_METRIC, (int)workrate);
         return item;

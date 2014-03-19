@@ -1,5 +1,7 @@
 package brooklyn.policy.loadbalancing;
 
+import java.util.Map;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -23,12 +25,13 @@ public interface MockContainerEntity extends AbstractGroup, BalanceableContainer
 
     public static final Effector OFFLOAD_AND_STOP = new MethodEffector(MockContainerEntity.class, "offloadAndStop");
 
-
     public void lock();
 
     public void unlock();
 
     public int getWorkrate();
+
+    public Map<Entity, Double> getItemUsage();
 
     public void addItem(Entity item);
 
