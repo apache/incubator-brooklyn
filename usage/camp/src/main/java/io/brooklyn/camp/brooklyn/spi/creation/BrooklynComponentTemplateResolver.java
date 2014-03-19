@@ -2,6 +2,9 @@ package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.spi.AbstractResource;
+import io.brooklyn.camp.spi.ApplicationComponentTemplate;
+import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.PlatformComponentTemplate;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -19,8 +22,12 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.VanillaSoftwareProcess;
+import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.group.DynamicRegionsFabric;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
+import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -51,46 +58,99 @@ public class BrooklynComponentTemplateResolver {
 
     public static class Factory {
         public static BrooklynComponentTemplateResolver newInstance(ManagementContext mgmt, Map<String, Object> childAttrs) {
-            return new BrooklynComponentTemplateResolver(mgmt, childAttrs);
+            return newInstance(mgmt, ConfigBag.newInstance(childAttrs), null);
         }
 
         public static BrooklynComponentTemplateResolver newInstance(ManagementContext mgmt, AbstractResource template) {
-            return new BrooklynComponentTemplateResolver(mgmt, template);
+            return newInstance(mgmt, ConfigBag.newInstance(template.getCustomAttributes()), template);
         }
         
-        private static String extractType(ConfigBag attrs) {
+        public static BrooklynComponentTemplateResolver newInstance(ManagementContext mgmt, String serviceType) {
+            return newInstance(mgmt, ConfigBag.newInstance().configureStringKey("serviceType", serviceType), null);
+        }
+        
+        private static BrooklynComponentTemplateResolver newInstance(ManagementContext mgmt, ConfigBag attrs, AbstractResource optionalTemplate) {
+            Class<? extends BrooklynComponentTemplateResolver> rt = computeResolverType(null, optionalTemplate, attrs);
+            if (rt==null) // use default 
+                rt = BrooklynComponentTemplateResolver.class;
+            
+            try {
+                return (BrooklynComponentTemplateResolver) rt.getConstructors()[0].newInstance(mgmt, attrs, optionalTemplate);
+            } catch (Exception e) { throw Exceptions.propagate(e); }
+        }
+
+        /** returns resolver type based on the service type, inspecting the arguments in order to determine the service type */
+        private static Class<? extends BrooklynComponentTemplateResolver> computeResolverType(String knownServiceType, AbstractResource optionalTemplate, ConfigBag attrs) {
+            String type = knownServiceType;
+            if (type==null && optionalTemplate!=null) {
+                type = optionalTemplate.getType();
+                if (type.equals(AssemblyTemplate.CAMP_TYPE) || type.equals(PlatformComponentTemplate.CAMP_TYPE) || type.equals(ApplicationComponentTemplate.CAMP_TYPE))
+                    // ignore these values for the type; only subclasses are interesting
+                    type = null;
+            }
+            if (type==null) type = extractServiceTypeAttribute(attrs);
+
+            if (type!=null) {
+                if (type.startsWith("brooklyn:") || type.startsWith("java:")) return BrooklynComponentTemplateResolver.class;
+                // TODO other BrooklynComponentTemplateResolver subclasses detected here 
+                // (perhaps use regexes mapping to subclass name, defined in mgmt?)
+            }
+            
+            return null;
+        }
+        
+        private static String extractServiceTypeAttribute(ConfigBag attrs) {
             String type;
             type = (String)attrs.getStringKey("serviceType");
             if (type==null) type = (String)attrs.getStringKey("service_type");
             if (type==null) type = (String)attrs.getStringKey("type");
             return type;
         }
+
+        public static boolean supportsType(ManagementContext mgmt, String serviceType) {
+            Class<? extends BrooklynComponentTemplateResolver> type = computeResolverType(serviceType, null, null);
+            if (type!=null) return true;
+            // can't tell by a prefix; try looking it up
+            try {
+                newInstance(mgmt, serviceType).loadEntityClass();
+                return true;
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                return false;
+            }
+        }
     }
 
-    public BrooklynComponentTemplateResolver(ManagementContext mgmt, AbstractResource template) {
+    public BrooklynComponentTemplateResolver(ManagementContext mgmt, ConfigBag attrs, AbstractResource optionalTemplate) {
         this.mgmt = mgmt;
-        this.attrs = ConfigBag.newInstance( template.getCustomAttributes() );
-        this.template = Maybe.of(template);
-    }
-    
-    public BrooklynComponentTemplateResolver(ManagementContext mgmt, Map<String, Object> attrs) {
-        this.mgmt = mgmt;
-        this.attrs = ConfigBag.newInstance( attrs );
-        this.template = Maybe.absent();
+        this.attrs = ConfigBag.newInstanceCopying(attrs);
+        this.template = Maybe.fromNullable(optionalTemplate);
     }
     
     protected String getJavaType() {
         String type;
         if (template.isPresent()) type = template.get().getType();
-        else type = Factory.extractType(attrs);
+        else type = Factory.extractServiceTypeAttribute(attrs);
         if (type==null)
             throw new IllegalStateException("Spec does not declare type: "+this);
-        return Strings.removeFromStart(type, "brooklyn:", "java:");
+        type = Strings.removeFromStart(type, "brooklyn:", "java:");
+        
+        // TODO currently a hardcoded list of aliases; would like that to come from mgmt somehow
+        if (type.equals("cluster") || type.equals("Cluster")) return DynamicCluster.class.getName();
+        if (type.equals("fabric") || type.equals("Fabric")) return DynamicRegionsFabric.class.getName();
+        if (type.equals("vanilla") || type.equals("Vanilla")) return VanillaSoftwareProcess.class.getName();
+        if (type.equals("web-app-cluster") || type.equals("WebAppCluster")) return ControlledDynamicWebAppCluster.class.getName();
+        
+        return type;
+    }
+
+    public <T extends Entity> EntitySpec<T> buildSpec() {
+        return buildSpec(this.<T>loadEntityClass(), null);
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Entity> EntitySpec<T> buildSpec() {
-        return buildSpec((Class<T>)this.<Entity>loadClass(Entity.class, getJavaType()), null);
+    public <T extends Entity> Class<T> loadEntityClass() {
+        return (Class<T>)this.<Entity>loadClass(Entity.class, getJavaType());
     }
 
     public <T extends Entity> EntitySpec<T> buildSpec(Class<T> type, Class<? extends T> optionalImpl) {
