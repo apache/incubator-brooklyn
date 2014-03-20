@@ -27,7 +27,6 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.group.DynamicRegionsFabric;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
-import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -145,7 +144,9 @@ public class BrooklynComponentTemplateResolver {
         if (type.equals("cluster") || type.equals("Cluster")) return DynamicCluster.class.getName();
         if (type.equals("fabric") || type.equals("Fabric")) return DynamicRegionsFabric.class.getName();
         if (type.equals("vanilla") || type.equals("Vanilla")) return VanillaSoftwareProcess.class.getName();
-        if (type.equals("web-app-cluster") || type.equals("WebAppCluster")) return ControlledDynamicWebAppCluster.class.getName();
+        if (type.equals("web-app-cluster") || type.equals("WebAppCluster"))
+            // TODO use service discovery; currently included as string to avoid needing a reference to it
+            return "brooklyn.entity.webapp.ControlledDynamicWebAppCluster";
         
         return type;
     }
