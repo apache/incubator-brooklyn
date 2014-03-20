@@ -16,7 +16,6 @@ define([
             return this;
         },
         invokeExpunge: function() {
-            console.log("Expunge invoked on " + this.model.name);
             var self = this;
             var release = this.$("#release").is(":checked");
             var url = this.model.links.expunge + "?release=" + release + "&timeout=0:";
@@ -32,8 +31,8 @@ define([
                     // TODO render the error better than poor-man's flashing
                     // (would just be connection error -- with timeout=0 we get a task even for invalid input)
 
-                    console.error("ERROR invoking effector");
-                    console.debug(data)
+                    log("ERROR invoking effector");
+                    log(data)
                 }
             });
             this.$el.fadeTo(500, 0.5);
