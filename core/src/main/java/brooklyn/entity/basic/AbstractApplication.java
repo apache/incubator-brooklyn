@@ -125,7 +125,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         recordApplicationEvent(Lifecycle.STARTING);
         try {
             preStart(locations);
-            StartableMethods.start(this, locations);
+            doStart(locations);
             postStart(locations);
         } catch (Exception e) {
             setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
@@ -141,6 +141,10 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         recordApplicationEvent(Lifecycle.RUNNING);
 
         log.info("Started application " + this);
+    }
+
+    protected void doStart(Collection<? extends Location> locations) {
+        StartableMethods.start(this, locations);        
     }
 
     /**
