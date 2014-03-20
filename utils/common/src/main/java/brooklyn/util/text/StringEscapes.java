@@ -6,13 +6,17 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.net.URLParamEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.net.URLParamEncoder;
 
 public class StringEscapes {
 
+    private static final Logger log = LoggerFactory.getLogger(StringEscapes.class);
+    
     /** if s is wrapped in double quotes containing no unescaped double quotes */
     public static boolean isWrappedInDoubleQuotes(String s) {
         if (Strings.isEmpty(s)) return false;
@@ -53,7 +57,7 @@ public class StringEscapes {
         try {
             return URLEncoder.encode(url, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
     }
 
@@ -76,7 +80,7 @@ public class StringEscapes {
                 wrapBash(value, out);
             } catch (IOException e) {
                 //shouldn't happen for string buffer
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             }
             return out.toString();
         }
@@ -109,7 +113,7 @@ public class StringEscapes {
                 escapeLiteralForDoubleQuotedBash(unquotedInputToBeEscaped, out);
             } catch (IOException e) {
                 // shouldn't happen for StringBuilder
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             }
             return out.toString();
         }
@@ -169,7 +173,7 @@ public class StringEscapes {
                 escapeJavaString(value, out);
             } catch (IOException e) {
                 //shouldn't happen for string builder
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             }
             return out.toString();
         }
@@ -180,7 +184,7 @@ public class StringEscapes {
                 wrapJavaString(value, out);
             } catch (IOException e) {
                 //shouldn't happen for string builder
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             }
             return out.toString();
         }
@@ -293,13 +297,21 @@ public class StringEscapes {
             try {
                 return unwrapOptionallyQuotedJavaStringList(input);
             } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                if (e instanceof IllegalArgumentException) {
+                    if (log.isDebugEnabled()) 
+                        log.debug("Unable to parse JSON list '"+input+"' ("+e+"); treating as single-element string list");
+                } else {
+                    log.warn("Unable to parse JSON list '"+input+"' ("+e+"); treating as single-element string list", e);
+                }
                 return MutableList.of(input);
             }
         }
         
         /** as {@link #unwrapJsonishListIfPossible(String)} but throwing errors 
          * if something which looks like a string or set of brackets is not well-formed
-         * (this does the work for that method) */
+         * (this does the work for that method) 
+         * @throws IllegalArgumentException if looks to have quoted list or surrounding brackets but they are not syntactically valid */
         public static List<String> unwrapOptionallyQuotedJavaStringList(String input) {
             if (input==null) return null;
             MutableList<String> result = MutableList.of();
@@ -315,7 +327,7 @@ public class StringEscapes {
                     result.add(unwrapJavaString(t));
                 else {
                     if (inBrackets && (t.indexOf('[')>=0 || t.indexOf(']')>=0))
-                        throw new IllegalStateException("Literal square brackets must be quoted, in element '"+t+"'");
+                        throw new IllegalArgumentException("Literal square brackets must be quoted, in element '"+t+"'");
                     result.add(t.trim());
                 }
             }

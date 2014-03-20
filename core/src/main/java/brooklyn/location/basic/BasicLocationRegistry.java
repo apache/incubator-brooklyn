@@ -26,6 +26,7 @@ import brooklyn.location.LocationResolver.EnableableLocationResolver;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
@@ -283,7 +284,8 @@ public class BasicLocationRegistry implements LocationRegistry {
         if (l==null) l = Collections.emptyList();
         if (l instanceof String) l = JavaStringEscapes.unwrapJsonishListIfPossible((String)l);
         if (l instanceof Iterable) return resolve((Iterable<?>)l);
-        throw new IllegalArgumentException("Location list must be supplied as a collection or a string, not "+l);
+        throw new IllegalArgumentException("Location list must be supplied as a collection or a string, not "+
+            JavaClassNames.simpleClassName(l)+"/"+l);
     }
     
     @Override
