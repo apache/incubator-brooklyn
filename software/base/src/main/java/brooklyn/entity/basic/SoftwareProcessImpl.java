@@ -26,7 +26,6 @@ import brooklyn.location.basic.Machines;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.internal.Repeater;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -35,7 +34,6 @@ import brooklyn.util.time.Time;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
@@ -254,19 +252,19 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         throw new IllegalStateException("Cannot configure entity "+this+" in state "+state);
     }
 
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverLifecycleEffectorTasks} */
     protected final void startInLocation(Collection<? extends Location> locations) {}
 
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverLifecycleEffectorTasks} */
     protected final void startInLocation(Location location) {}
 
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverLifecycleEffectorTasks} */
 	protected final void startInLocation(final MachineProvisioningLocation<?> location) {}
 	
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverLifecycleEffectorTasks} */
     protected final void startInLocation(MachineLocation machine) {}
 
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverStartEffectorTask} */
+    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverLifecycleEffectorTasks} */
     protected final void callStartHooks() {}
     
     protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {
@@ -295,7 +293,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         return ports;
     }
 
-    /** @deprecated since 0.6.0 use {@link Machines#findSubnetHostname(this)} */ @Deprecated
+    /** @deprecated since 0.6.0 use {@link Machines#findSubnetHostname(Entity)} */ @Deprecated
     public String getLocalHostname() {
         return Machines.findSubnetHostname(this).get();
 	}
@@ -356,7 +354,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 
     /**
-     * If custom behaviour is required by sub-classes, consider overriding {@link #doStart()}.
+     * If custom behaviour is required by sub-classes, consider overriding {@link #doStart(Collection)})}.
      */
     @Override
     public final void start(final Collection<? extends Location> locations) {
@@ -403,7 +401,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
     
     /**
-     * To be overridden instead of {@link #start()}; sub-classes should call {@code super.doStart(locations)} and should
+     * To be overridden instead of {@link #start(Collection)}; sub-classes should call {@code super.doStart(locations)} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
      */
     protected void doStart(Collection<? extends Location> locations) {
@@ -419,7 +417,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 	
     /**
-     * To be overridden instead of {@link #doRestart()}; sub-classes should call {@code super.doRestart()} and should
+     * To be overridden instead of {@link #restart()}; sub-classes should call {@code super.doRestart()} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
      */
     public void doRestart() {
