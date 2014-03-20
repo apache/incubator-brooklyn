@@ -2,6 +2,7 @@ package brooklyn.management.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 
 /**
  * Encapsulates management activities at an entity.
@@ -206,10 +208,16 @@ public class EntityManagementSupport {
             if (managementContext != info.getManagementContext()) {
                 throw new IllegalStateException("Has different management context: "+managementContext+"; expected "+info.getManagementContext());
             }
+            Stopwatch startTime = Stopwatch.createStarted();
             while (!managementFailed.get() && nonDeploymentManagementContext!=null && 
                     nonDeploymentManagementContext.getMode()==NonDeploymentManagementContextMode.MANAGEMENT_STARTING) {
                 // still becoming managed
                 try {
+                    if (startTime.elapsed(TimeUnit.SECONDS) > 30) {
+                        // emergency fix, 30s timeout for management starting
+                        log.error("Management stopping event "+info+" in "+this+" timed out waiting for start; proceeding to stopping");
+                        break;
+                    }
                     wait(100);
                 } catch (InterruptedException e) {
                     Exceptions.propagate(e);
