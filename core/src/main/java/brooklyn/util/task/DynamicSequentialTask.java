@@ -27,7 +27,20 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /** Represents a task whose run() method can create other tasks
- * which are run sequentially, but that sequence runs in parallel to this task 
+ * which are run sequentially, but that sequence runs in parallel to this task
+ * <p>
+ * There is an optional primary job run with this task, along with multiple secondary children.
+ * If any secondary task fails (assuming it isn't {@link Tasks#markInessential()} then by default
+ * subsequent tasks are not submitted and the primary task fails (but no tasks are cancelled or interrupted).
+ * You can change the behavior of this task with fields in {@link FailureHandlingConfig},
+ * or the convenience {@link TaskQueueingContext#swallowChildrenFailures()}
+ * (and {@link DynamicTasks#swallowChildrenFailures()} if you are inside the task).
+ * <p>
+ * Improvements which would be nice to have:
+ * <li> unqueued tasks not visible in api; would like that
+ * <li> uses an extra thread (submitted as background task) to monitor the secondary jobs; would be nice to remove this,
+ *      and rely on {@link BasicExecutionManager} to run the jobs sequentially (combined with fix to item above)
+ * <li> would be nice to have cancel, resume, and possibly skipQueue available as operations (ideally in the REST API and GUI)   
  **/
 public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChildren, TaskQueueingContext {
 
@@ -38,15 +51,37 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     protected final Object jobTransitionLock = new Object();
     protected volatile boolean primaryStarted = false;
     protected volatile boolean primaryFinished = false;
+    protected volatile boolean secondaryQueueAborted = false;
     protected Thread primaryThread;
     protected DstJob dstJob;
+    protected FailureHandlingConfig failureHandlingConfig = FailureHandlingConfig.DEFAULT;
 
-    /** typically this task fails if any children do; set true to prevent parent from failing just because a child does */
-    protected boolean swallowChildrenFailures = false;
+    // default values for how to handle the various failures
+    public static class FailureHandlingConfig {
+        public final boolean abortSecondaryQueueOnPrimaryFailure;
+        public final boolean cancelSecondariesOnPrimaryFailure;
+        public final boolean abortSecondaryQueueOnSecondaryFailure;
+        public final boolean cancelSecondariesOnSecondaryFailure;
+        public final boolean cancelPrimaryOnSecondaryFailure;
+        public final boolean failParentOnSecondaryFailure;
+        
+        public FailureHandlingConfig(
+                boolean abortSecondaryQueueOnPrimaryFailure, boolean cancelSecondariesOnPrimaryFailure,
+                boolean abortSecondaryQueueOnSecondaryFailure, boolean cancelSecondariesOnSecondaryFailure,
+                boolean cancelPrimaryOnSecondaryFailure, boolean failParentOnSecondaryFailure) {
+            this.abortSecondaryQueueOnPrimaryFailure = abortSecondaryQueueOnPrimaryFailure;
+            this.cancelSecondariesOnPrimaryFailure = cancelSecondariesOnPrimaryFailure;
+            this.abortSecondaryQueueOnSecondaryFailure = abortSecondaryQueueOnSecondaryFailure;
+            this.cancelSecondariesOnSecondaryFailure = cancelSecondariesOnSecondaryFailure;
+            this.cancelPrimaryOnSecondaryFailure = cancelPrimaryOnSecondaryFailure;
+            this.failParentOnSecondaryFailure = failParentOnSecondaryFailure;
+        }
+        
+        public static final FailureHandlingConfig DEFAULT = new FailureHandlingConfig(false, false, true, false, false, true);
+        public static final FailureHandlingConfig SWALLOWING_CHILDREN_FAILURES = 
+            new FailureHandlingConfig(false, false, false, false, false, false);
+    }
     
-    // not sure why this would be needed (previously we did it, but probably no to effect):
-    protected boolean cancelRemainingJobsOnFailure = false;
-
     
     /**
      * Constructs a new compound task containing the specified units of work.
@@ -82,21 +117,34 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
+        return cancel(mayInterruptIfRunning, mayInterruptIfRunning, true);
+    }
+    public boolean cancel(boolean mayInterruptTask, boolean interruptPrimaryThread, boolean alsoCancelChildren) {
         if (isDone()) return false;
         log.trace("cancelling {}", this);
-        boolean cancel = super.cancel(mayInterruptIfRunning);
-        for (Task<?> t: secondaryJobsAll)
-            cancel |= t.cancel(mayInterruptIfRunning);
+        boolean cancel = super.cancel(mayInterruptTask);
+        if (alsoCancelChildren) {
+            for (Task<?> t: secondaryJobsAll)
+                cancel |= t.cancel(mayInterruptTask);
+        }
         synchronized (jobTransitionLock) {
             if (primaryThread!=null) {
-                log.trace("cancelling {} - interrupting", this);
-                primaryThread.interrupt();
+                if (interruptPrimaryThread) {
+                    log.trace("cancelling {} - interrupting", this);
+                    primaryThread.interrupt();
+                }
                 cancel = true;
             }
         }
         return cancel;
     }
     
+    @Override
+    public synchronized boolean uncancel() {
+        secondaryQueueAborted = false;
+        return super.uncancel();
+    }
+
     @Override
     public Iterable<Task<?>> getChildren() {
         return Collections.unmodifiableCollection(secondaryJobsAll);
@@ -125,9 +173,12 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         }
     }
 
+    public void setFailureHandlingConfig(FailureHandlingConfig failureHandlingConfig) {
+        this.failureHandlingConfig = failureHandlingConfig;
+    }
     @Override
     public void swallowChildrenFailures() {
-        this.swallowChildrenFailures = true;
+        setFailureHandlingConfig(FailureHandlingConfig.SWALLOWING_CHILDREN_FAILURES);
     }
     
     protected class DstJob implements Callable<T> {
@@ -161,7 +212,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                 public List<Object> call() throws Exception {
                     List<Object> result = new ArrayList<Object>();
                     try { 
-                        while (!primaryFinished || !secondaryJobsRemaining.isEmpty()) {
+                        while (!secondaryQueueAborted && (!primaryFinished || !secondaryJobsRemaining.isEmpty())) {
                             synchronized (jobTransitionLock) {
                                 if (!primaryFinished && secondaryJobsRemaining.isEmpty()) {
                                     currentSecondary = null;
@@ -181,16 +232,33 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                                 } catch (Exception e) {
                                     if (TaskTags.isInessential(secondaryJob)) {
                                         result.add(Tasks.getError(secondaryJob));
-                                        log.debug("Secondary job queue for "+DynamicSequentialTask.this+" ignoring error in inessential task "+secondaryJob);
-                                    } else {
-                                        // abort on error
                                         if (log.isDebugEnabled())
-                                            log.debug("Aborting secondary job queue for "+DynamicSequentialTask.this+" due to error in task "+secondaryJob+" ("+e+", being rethrown)");
-                                        if (cancelRemainingJobsOnFailure) {
-                                            for (Task<?> t: secondaryJobsRemaining)
-                                                t.cancel(false);
+                                            log.debug("Secondary job queue for "+DynamicSequentialTask.this+" ignoring error in inessential task "+secondaryJob+": "+e);
+                                    } else {
+                                        if (failureHandlingConfig.cancelSecondariesOnSecondaryFailure) {
+                                            if (log.isDebugEnabled())
+                                                log.debug("Secondary job queue for "+DynamicSequentialTask.this+" cancelling "+secondaryJobsRemaining.size()+" remaining, due to error in task "+secondaryJob+": "+e);
+                                            synchronized (jobTransitionLock) {
+                                                for (Task<?> t: secondaryJobsRemaining)
+                                                    t.cancel(true);
+                                                jobTransitionLock.notifyAll();
+                                            }
                                         }
-                                        throw e;
+                                        
+                                        if (failureHandlingConfig.abortSecondaryQueueOnSecondaryFailure) {
+                                            if (log.isDebugEnabled())
+                                                log.debug("Aborting secondary job queue for "+DynamicSequentialTask.this+" due to error in child task "+secondaryJob+" ("+e+", being rethrown)");
+                                            secondaryQueueAborted = true;
+                                            throw e;
+                                        }
+
+                                        if (!primaryFinished && failureHandlingConfig.cancelPrimaryOnSecondaryFailure) {
+                                            cancel(true, false, false);
+                                        }
+                                        
+                                        result.add(Tasks.getError(secondaryJob));
+                                        if (log.isDebugEnabled())
+                                            log.debug("Secondary job queue for "+DynamicSequentialTask.this+" ignoring error in child task "+secondaryJob+" ("+e+", being remembered)");
                                     }
                                 }
                             }
@@ -216,6 +284,20 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             } catch (Throwable selfException) {
                 error = selfException;
                 errorIsFromChild = false;
+                if (failureHandlingConfig.abortSecondaryQueueOnPrimaryFailure) {
+                    if (log.isDebugEnabled())
+                        log.debug("Secondary job queue for "+DynamicSequentialTask.this+" aborting with "+secondaryJobsRemaining.size()+" remaining, due to error in primary task: "+selfException);
+                    secondaryQueueAborted = true;
+                }
+                if (failureHandlingConfig.cancelSecondariesOnPrimaryFailure) {
+                    if (log.isDebugEnabled())
+                        log.debug(DynamicSequentialTask.this+" cancelling "+secondaryJobsRemaining.size()+" remaining, due to error in primary task: "+selfException);
+                    synchronized (jobTransitionLock) {
+                        for (Task<?> t: secondaryJobsRemaining)
+                            t.cancel(true);
+                        jobTransitionLock.notifyAll();
+                    }
+                }
             } finally {
                 try {
                     log.trace("cleaning up for {}", this);
@@ -225,7 +307,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                         primaryFinished = true;
                         jobTransitionLock.notifyAll();
                     }
-                    if (!isCancelled()) {
+                    if (!isCancelled() && !Thread.currentThread().isInterrupted()) {
                         log.trace("waiting for secondaries for {}", this);
                         // wait on tasks sequentially so that blocking information is more interesting
                         DynamicTasks.waitForLast();
@@ -287,7 +369,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     }
 
     public void handleException(Throwable throwable, boolean fromChild) throws Exception {
-        if (fromChild && swallowChildrenFailures) {
+        if (fromChild && !failureHandlingConfig.failParentOnSecondaryFailure) {
             log.debug("Parent task "+this+" swallowing child error: "+throwable);
             return;
         }

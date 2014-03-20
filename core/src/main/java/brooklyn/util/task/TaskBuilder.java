@@ -101,7 +101,7 @@ public class TaskBuilder<T> {
             if (parallel)
                 throw new UnsupportedOperationException("No implementation of parallel dynamic aggregate task available");
             DynamicSequentialTask<T> result = new DynamicSequentialTask<T>(flags, body);
-            result.swallowChildrenFailures = swallowChildrenFailures==null ? false : swallowChildrenFailures.booleanValue();
+            if (swallowChildrenFailures!=null && swallowChildrenFailures.booleanValue()) result.swallowChildrenFailures();
             for (Task t: children)
                 result.queue(t);
             return result;

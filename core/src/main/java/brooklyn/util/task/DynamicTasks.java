@@ -264,9 +264,6 @@ public class DynamicTasks {
      * <p>
      * essentially like a {@link #markInessential()} on all tasks in the current 
      * {@link TaskQueueingContext}, including tasks queued subsequently */
-    /* TODO tests for this and for markInessential; 
-     * the latter is now tested by SoftwareProcessEntityTest;
-     * this used to be, so have confidence it once worked, but it no longer is used */
     public static void swallowChildrenFailures() {
         TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
         if (qc!=null) {
