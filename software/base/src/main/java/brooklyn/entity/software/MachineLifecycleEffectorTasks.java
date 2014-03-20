@@ -16,6 +16,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EffectorStartableImpl.StartParameters;
@@ -41,8 +42,12 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.os.Os;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
@@ -73,6 +78,11 @@ import com.google.common.collect.Iterables;
 public abstract class MachineLifecycleEffectorTasks {
 
     private static final Logger log = LoggerFactory.getLogger(MachineLifecycleEffectorTasks.class);
+    
+    public static final ConfigKey<Boolean> SKIP_ON_BOX_BASE_DIR_RESOLUTION = ConfigKeys.newBooleanConfigKey("onbox.base.dir.skipResolution",
+        "Whether to skip on-box directory resolution, and just assume the directory exists; can be set on machine or on entity", false);
+    public static final ConfigKey<Boolean> ON_BOX_BASE_DIR_RESOLVED = ConfigKeys.newBooleanConfigKey("onbox.base.dir.resolved",
+        "Whether the on-box base directory has been resolved (for internal use)");
     
     public static final ConfigKey<Collection<? extends Location>> LOCATIONS = StartParameters.LOCATIONS;
     public static final ConfigKey<Duration> STOP_PROCESS_TIMEOUT = 
@@ -268,10 +278,57 @@ public abstract class MachineLifecycleEffectorTasks {
             entity().setAttribute(Attributes.HOSTNAME, machine.getAddress().getHostName());
             entity().setAttribute(Attributes.ADDRESS, machine.getAddress().getHostAddress());
             
+            resolveOnBoxDir(entity(), machine);            
             preStartCustom(machine);
         }});
     }
+
+    /** resolves the on-box dir; logs a warning if not */
+    // initialize and pre-create the right onbox working dir, if an ssh machine location
+    @SuppressWarnings("deprecation")
+    public static String resolveOnBoxDir(EntityInternal entity, MachineLocation machine) {
+        String base = entity.getConfig(BrooklynConfigKeys.ONBOX_BASE_DIR); 
+        if (base==null) base = machine.getConfig(BrooklynConfigKeys.ONBOX_BASE_DIR);
+        if (base!=null && Boolean.TRUE.equals(entity.getConfig(ON_BOX_BASE_DIR_RESOLVED))) return base;
+        if (base==null) base = entity.getManagementContext().getConfig().getConfig(BrooklynConfigKeys.ONBOX_BASE_DIR);
+        if (base==null) base = entity.getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR); 
+        if (base==null) base = machine.getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR);
+        if (base==null) base = entity.getManagementContext().getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR);
+        if (base==null) base = "~/brooklyn-managed-processes";
+        if (base=="~") base=".";
+        if (base.startsWith("~/")) base = "."+base.substring(1);
         
+        String resolvedBase = null;
+        if (entity.getConfig(SKIP_ON_BOX_BASE_DIR_RESOLUTION) || machine.getConfig(SKIP_ON_BOX_BASE_DIR_RESOLUTION)) {
+            if (log.isDebugEnabled()) log.debug("Skipping on-box base dir resolution for "+entity+" at "+machine);
+            if (!Os.isAbsolute(base)) base = "~/"+base;
+            resolvedBase = Os.tidyPath(base);
+        } else if (machine instanceof SshMachineLocation) {
+            SshMachineLocation ms = (SshMachineLocation)machine;
+            ProcessTaskWrapper<Integer> baseTask = SshEffectorTasks.ssh(
+                BashCommands.alternatives("mkdir -p \"${BASE_DIR}\"",
+                    BashCommands.sudo(BashCommands.chain(
+                        "mkdir -p \"${BASE_DIR}\"",
+                        "chown "+ms.getUser()+" \"${BASE_DIR}\""))),
+                "cd ~",
+                "cd ${BASE_DIR}",
+                "echo BASE_DIR_RESULT':'`pwd`:BASE_DIR_RESULT")
+                .environmentVariable("BASE_DIR", base)
+                .requiringExitCodeZero()
+                .summary("initializing on-box base dir "+base).newTask();
+            DynamicTasks.queueIfPossible(baseTask).orSubmitAsync(entity);
+            resolvedBase = Strings.getFragmentBetween(baseTask.block().getStdout(), "BASE_DIR_RESULT:", ":BASE_DIR_RESULT");
+        }
+        if (resolvedBase==null) {
+            if (!Os.isAbsolute(base)) base = "~/"+base;
+            resolvedBase = Os.tidyPath(base);
+            log.warn("Could not resolve on-box directory for "+entity+" at "+machine+"; using "+resolvedBase+", though this may not be accurate at the target (and may fail shortly)");
+        }
+        entity.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, resolvedBase);
+        entity.setConfig(ON_BOX_BASE_DIR_RESOLVED, true);
+        return resolvedBase;
+    }
+    
     protected void checkLocationParametersCompatible(MachineLocation oldLoc, MachineLocation newLoc, String paramSummary,
         Object oldParam, Object newParam) {
         if (oldParam==null || newParam==null || !oldParam.equals(newParam))

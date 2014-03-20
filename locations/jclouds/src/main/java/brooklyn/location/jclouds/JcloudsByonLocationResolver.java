@@ -2,7 +2,6 @@ package brooklyn.location.jclouds;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,18 +11,20 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
+import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.Strings;
 import brooklyn.util.text.WildcardGlobs;
@@ -31,7 +32,6 @@ import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -133,22 +133,19 @@ public class JcloudsByonLocationResolver implements LocationResolver {
             }
         }
         
-        Map<String,Object> flags = Maps.newLinkedHashMap();
-        flags.putAll(locationFlags);
-        flags.put("machines", machines);
-        if (user != null) flags.put("user", user);
-        if (name != null) flags.put("name", name);
-        if (registry != null) {
-            String brooklynDataDir = (String) registry.getProperties().get(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName());
-            if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
-                flags.put("localTempDir", new File(brooklynDataDir));
-            }
-        }
+        ConfigBag flags = ConfigBag.newInstance(locationFlags);
+
+        flags.putStringKey("machines", machines);
+        flags.putIfNotNull(LocationConfigKeys.USER, user);
+        flags.putStringKeyIfNotNull("name", name);
+        
+        if (registry != null) 
+            LocationPropertiesFromBrooklynProperties.setLocalTempDir(registry.getProperties(), flags);
 
         log.debug("Created Jclouds BYON location "+name+": "+machines);
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
-                .configure(flags)
+                .configure(flags.getAllConfig())
                 .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
     }
     

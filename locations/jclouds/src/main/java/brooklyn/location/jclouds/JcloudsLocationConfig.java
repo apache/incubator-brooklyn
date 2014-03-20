@@ -60,10 +60,6 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "userName", "Equivalent to 'user'; provided for jclouds compatibility", null);
     public static final ConfigKey<String> JCLOUDS_KEY_ENDPOINT = ConfigKeys.newStringConfigKey(
             Constants.PROPERTY_ENDPOINT, "Equivalent to 'endpoint'; provided for jclouds compatibility", null);
-
-    public static final ConfigKey<String> WAIT_FOR_SSHABLE = new BasicConfigKey<String>(String.class, "waitForSshable", 
-            "Whether and how long to wait for a newly provisioned VM to be accessible via ssh; " +
-            "if 'false', won't check; if 'true' uses default duration; otherwise accepts a time string e.g. '5m' (the default) or a number of milliseconds", "5m");
     
     // note causing problems on centos due to use of `sudo -n`; but required for default RHEL VM
     public static final ConfigKey<Boolean> OPEN_IPTABLES = ConfigKeys.newBooleanConfigKey("openIptables", 

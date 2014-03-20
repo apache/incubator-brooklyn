@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.location.AddressableLocation;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.OsDetails;
@@ -24,6 +25,7 @@ import brooklyn.util.internal.ssh.process.ProcessTool;
 import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -111,6 +113,10 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         }
         if (initialCount > getMachines().size()) {
             provisionMore(initialCount - getMachines().size());
+        }
+        
+        if (getConfig(BrooklynConfigKeys.ONBOX_BASE_DIR)==null && (getManagementContext()==null || getManagementContext().getConfig().getConfig(BrooklynConfigKeys.ONBOX_BASE_DIR)==null)) {
+            setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, "/tmp/brooklyn-"+Os.user());
         }
     }
     
@@ -237,6 +243,13 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         @Override
         public OsDetails getOsDetails() {
             return BasicOsDetails.Factory.newLocalhostInstance();
+        }
+        
+        @Override
+        public void configure(Map properties) {
+            if (address==null || !properties.containsKey("address"))
+                address = Networking.getLocalHost();
+            super.configure(properties);
         }
     }
 

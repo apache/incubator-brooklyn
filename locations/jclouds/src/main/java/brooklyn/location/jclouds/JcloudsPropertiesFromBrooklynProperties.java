@@ -1,15 +1,15 @@
 package brooklyn.location.jclouds;
 
-import java.io.File;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigUtils;
-import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.location.basic.DeprecatedKeysMappingBuilder;
+import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Splitter;
@@ -65,23 +65,19 @@ public class JcloudsPropertiesFromBrooklynProperties extends LocationPropertiesF
             throw new IllegalArgumentException("Neither cloud provider/API nor location name have been specified correctly");
         }
 
-        Map<String, Object> jcloudsProperties = Maps.newHashMap();
+        ConfigBag jcloudsProperties = ConfigBag.newInstance();
         String provider = getProviderName(providerOrApi, namedLocation, properties);
         
         // named properties are preferred over providerOrApi properties
-        jcloudsProperties.put("provider", provider);
+        jcloudsProperties.put(LocationConfigKeys.CLOUD_PROVIDER, provider);
         jcloudsProperties.putAll(transformDeprecated(getGenericLocationSingleWordProperties(properties)));
         jcloudsProperties.putAll(transformDeprecated(getGenericJcloudsSingleWordProperties(providerOrApi, properties)));
         jcloudsProperties.putAll(transformDeprecated(getProviderOrApiJcloudsProperties(providerOrApi, properties)));
         jcloudsProperties.putAll(transformDeprecated(getRegionJcloudsProperties(providerOrApi, regionName, properties)));
         if (!Strings.isNullOrEmpty(namedLocation)) jcloudsProperties.putAll(transformDeprecated(getNamedJcloudsProperties(namedLocation, properties)));
-        String brooklynDataDir = (String) properties.get(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName());
-        if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
-            jcloudsProperties.put("localTempDir", new File(brooklynDataDir));
-        }
-        
+        setLocalTempDir(properties, jcloudsProperties);
 
-        return jcloudsProperties;
+        return jcloudsProperties.getAllConfigRaw();
     }
 
     protected String getProviderName(String providerOrApi, String namedLocationName, Map<String, ?> properties) {

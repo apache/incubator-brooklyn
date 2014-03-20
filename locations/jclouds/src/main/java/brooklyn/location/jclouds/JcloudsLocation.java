@@ -29,10 +29,11 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-import brooklyn.location.basic.AggregatingMachineProvisioningLocation;
+import org.jclouds.ContextBuilder;
 import org.jclouds.abiquo.compute.options.AbiquoTemplateOptions;
 import org.jclouds.cloudstack.compute.options.CloudStackTemplateOptions;
 import org.jclouds.compute.ComputeService;
+import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.config.AdminAccessConfiguration;
 import org.jclouds.compute.domain.ComputeMetadata;
@@ -47,11 +48,14 @@ import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
 import org.jclouds.compute.functions.Sha512Crypt;
 import org.jclouds.compute.options.TemplateOptions;
+import org.jclouds.docker.DockerApi;
+import org.jclouds.docker.domain.Container;
 import org.jclouds.domain.Credentials;
 import org.jclouds.domain.LocationScope;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.jclouds.googlecomputeengine.compute.options.GoogleComputeEngineTemplateOptions;
+import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
 import org.jclouds.rest.AuthorizationException;
 import org.jclouds.scriptbuilder.domain.Statement;
@@ -61,6 +65,7 @@ import org.jclouds.scriptbuilder.functions.InitAdminAccess;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 import org.jclouds.scriptbuilder.statements.login.ReplaceShadowPasswordEntry;
 import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
+import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +73,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineManagementMixins.MachineMetadata;
@@ -112,6 +116,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -135,14 +140,6 @@ import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.Ints;
 import com.google.inject.Module;
-import org.jclouds.ContextBuilder;
-import org.jclouds.compute.ComputeServiceContext;
-import org.jclouds.docker.DockerApi;
-import org.jclouds.docker.domain.Container;
-import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
-import org.jclouds.sshj.config.SshjSshClientModule;
-
-import java.net.URI;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.

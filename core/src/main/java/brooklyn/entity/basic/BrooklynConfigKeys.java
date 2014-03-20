@@ -7,6 +7,7 @@ import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
 
 import java.io.File;
 
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
@@ -16,32 +17,35 @@ import brooklyn.util.os.Os;
 
 import com.google.common.base.Preconditions;
 
+/** Commonly used config keys, for use in entities. Similar to {@link Attributes}.
+ * See also {@link BrooklynServerConfig} for config keys for controlling the server. */
 public class BrooklynConfigKeys {
 
-    public static final ConfigKey<String> BROOKLYN_PERSISTENCE_DIR = newStringConfigKey(
-            "brooklyn.persistence.dir", "Directory for writing all brooklyn state", 
-            Os.mergePaths("~", ".brooklyn", "brooklyn-persisted-state", "data"));
+    @Deprecated /** @deprecated since 0.7.0 see BrooklynServerConfig#getPeristenceDir() and BrooklynServerConfigKeys#PERSISTENCE_DIR */
+    public static final ConfigKey<String> BROOKLYN_PERSISTENCE_DIR = BrooklynServerConfig.PERSISTENCE_DIR;
 
-    public static final ConfigKey<String> BROOKLYN_DATA_DIR = newStringConfigKey(
-            "brooklyn.datadir", "Directory for writing all brooklyn data", 
-            Os.mergePaths(Os.tmp(), "brooklyn-"+Os.user())
-            // TODO remove trailing separator and confirm all calls to this work
-            // (also confirm all calls do a ResourceUtils.tidyPath to replace ~ with home dir!)
-            +File.separator);
+    @Deprecated /** @deprecated since 0.7.0 use BrooklynServerConfig routines */
+    public static final ConfigKey<String> BROOKLYN_DATA_DIR = BrooklynServerConfig.BROOKLYN_DATA_DIR;
+
+    public static final ConfigKey<String> ONBOX_BASE_DIR = newStringConfigKey(
+        "onbox.base.dir", "Default base directory on target machines where Brooklyn config data is stored; "
+        + "default depends on the location, either ~/brooklyn-managed-processes or /tmp/brooklyn-${username} on localhost");
 
     // TODO Rename to VERSION, instead of SUGGESTED_VERSION? And declare as BasicAttributeSensorAndConfigKey?
     public static final ConfigKey<String> SUGGESTED_VERSION = newStringConfigKey("install.version", "Suggested version");
     
-    public static final BasicAttributeSensorAndConfigKey<String> BROOKLYN_WEB_SERVER_BASE_DIR = new TemplatedStringAttributeSensorAndConfigKey("brooklyn.webserverdir", "Base directory for web-server",
-            "${config['brooklyn.datadir']!'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-webserver")+"'}");
-
     public static final ConfigKey<String> INSTALL_UNIQUE_LABEL = ConfigKeys.newStringConfigKey("install.unique_label",
         "Provides a label which uniquely identifies an installation, used in the computation of the install dir; "
         + "this should include something readable, and must include a hash of all data which differentiates an installation "
         + "(e.g. version, plugins, etc), but should be the same where install dirs can be shared to allow for re-use");
         
     public static final BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = new TemplatedStringAttributeSensorAndConfigKey("install.dir", "Directory for this software to be installed in",
-        "${config['brooklyn.datadir']!'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'}/"
+        "${"
+        + "config['"+ONBOX_BASE_DIR.getName()+"']!"
+        + "config['"+BROOKLYN_DATA_DIR.getName()+"']!"
+        + "'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'"
+        + "}"
+            + "/"
             + "installs/"
             // the  var??  tests if it exists, passing value to ?string(if_present,if_absent)
             // the ! provides a default value afterwards, which is never used, but is required for parsing
@@ -54,7 +58,12 @@ public class BrooklynConfigKeys {
             + ")}");
     
     public static final BasicAttributeSensorAndConfigKey<String> RUN_DIR = new TemplatedStringAttributeSensorAndConfigKey("run.dir", "Directory for this software to be run from",
-        "${config['brooklyn.datadir']!'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'}/"
+        "${"
+        + "config['"+ONBOX_BASE_DIR.getName()+"']!"
+        + "config['"+BROOKLYN_DATA_DIR.getName()+"']!"
+        + "'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'"
+        + "}"
+            + "/"
             + "apps/${entity.applicationId}/"
             + "entities/${entity.entityType.simpleName}_"
             + "${entity.id}");

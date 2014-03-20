@@ -20,6 +20,8 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.LocationResolver.EnableableLocationResolver;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.KeyValueParser;
 
 import com.google.common.collect.ImmutableSet;
@@ -89,22 +91,15 @@ public class LocalhostResolver implements LocationResolver, EnableableLocationRe
 
         Map<String, Object> filteredProperties = new LocalhostPropertiesFromBrooklynProperties().getLocationProperties("localhost", namedLocation, properties);
         // TODO filteredProperties stuff above should not be needed as named location items will already be passed in
-        MutableMap<String, Object> flags = MutableMap.<String, Object>builder().putAll(filteredProperties).putAll(locationFlags).build();
+        ConfigBag flags = ConfigBag.newInstance(locationFlags).putIfAbsent(filteredProperties);
         
-        if (namePart != null) {
-            flags.put("name", namePart);
-        } else {
-            flags.put("name", "localhost");
-        }
-        if (registry != null) {
-            String brooklynDataDir = (String) registry.getProperties().get(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName());
-            if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
-                flags.put("localTempDir", new File(brooklynDataDir));
-            }
-        }
+        flags.putStringKey("name", Maybe.fromNullable(namePart).or("localhost"));
+        
+        if (registry != null) 
+            LocationPropertiesFromBrooklynProperties.setLocalTempDir(registry.getProperties(), flags);
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
-            .configure(flags)
+            .configure(flags.getAllConfig())
             .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
     }
 

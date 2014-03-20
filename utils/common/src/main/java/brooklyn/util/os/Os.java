@@ -397,4 +397,21 @@ public class Os {
         return result;
     }
 
+    public static boolean isAbsolute(String path) {
+        if (path.startsWith(File.separator)) return true;
+        if (Os.isMicrosoftWindows()) {
+            if (path.length()>=3 && path.substring(1).startsWith(":\\"))
+                return true;
+        } else {
+            if (path.equals("~") || path.startsWith("~/")) return true;
+        }
+        return false;
+    }
+
+    public static boolean isMicrosoftWindows() {
+        if (System.getProperty("os.name").toLowerCase().indexOf("microsoft")>=0)
+            return true;
+        return false;
+    }
+
 }

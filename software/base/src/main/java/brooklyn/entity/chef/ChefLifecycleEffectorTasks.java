@@ -5,11 +5,15 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.MachineLocation;
+import brooklyn.location.basic.Machines;
+import brooklyn.util.collections.Jsonya;
+import brooklyn.util.collections.Jsonya.Navigator;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
@@ -93,14 +97,42 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
     }
 
     protected void startWithChefSoloAsync() {
-        // TODO make directories more configurable (both for ssh-drivers and for this)
-        String installDir = Urls.mergePaths(entity().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR), "installs/chef");
-        String runDir = Urls.mergePaths(entity().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR),  
-                "apps/"+entity().getApplicationId()+"/chef/entities/"+entity().getEntityType().getSimpleName()+"_"+entity().getId());
+        String baseDir = MachineLifecycleEffectorTasks.resolveOnBoxDir(entity(), Machines.findUniqueSshMachineLocation(entity().getLocations()).get());
+        String installDir = Urls.mergePaths(baseDir, "installs/chef");
         
+        @SuppressWarnings("rawtypes")
+        Map<String, String> cookbooks = (Map) 
+            ConfigBag.newInstance( entity().getConfig(CHEF_COOKBOOK_URLS) )
+            .putIfAbsent( entity().getConfig(CHEF_COOKBOOKS) )
+            .getAllConfig();
+        if (cookbooks.isEmpty())
+            log.warn("No cookbook_urls set for "+entity()+"; launch will likely fail subsequently");
         DynamicTasks.queue(
                 ChefSoloTasks.installChef(installDir, false), 
-                ChefSoloTasks.installCookbooks(installDir, ChefConfigs.getRequiredConfig(entity(), CHEF_COOKBOOKS), false));
+                ChefSoloTasks.installCookbooks(installDir, cookbooks, false));
+
+        // TODO chef for and run a prestart recipe if necessary
+        // TODO open ports
+
+        String primary = getPrimaryCookbook();
+        
+        // put all config under brooklyn/cookbook/config
+        Navigator<MutableMap<Object, Object>> attrs = Jsonya.newInstancePrimitive().at("brooklyn");
+        if (Strings.isNonBlank(primary)) attrs.at(primary);
+        attrs.at("config");
+        attrs.put( entity().getAllConfigBag().getAllConfig() );
+        // and put launch attrs at root
+        attrs.root().put(entity().getConfig(CHEF_LAUNCH_ATTRIBUTES));
+        
+        Collection<? extends String> runList = entity().getConfig(CHEF_LAUNCH_RUN_LIST);
+        if (runList==null) runList = entity().getConfig(CHEF_RUN_LIST);
+        if (runList==null) {
+            if (Strings.isNonBlank(primary)) runList = ImmutableList.of(primary+"::"+"start");
+            else throw new IllegalStateException("Require a primary cookbook or a run_list to effect "+"start"+" on "+entity());
+        }
+        
+        String runDir = Urls.mergePaths(baseDir,  
+            "apps/"+entity().getApplicationId()+"/chef/entities/"+entity().getEntityType().getSimpleName()+"_"+entity().getId());
         
         DynamicTasks.queue(ChefSoloTasks.buildChefFile(runDir, installDir, "launch", 
                 ChefConfigs.getRequiredConfig(entity(), CHEF_RUN_LIST),

@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.StartableMethods;
@@ -97,20 +98,6 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public AbstractApplication setParent(Entity parent) {
         super.setParent(parent);
         return this;
-    }
-    
-    @Override
-    public void onManagementStarted() {
-        super.onManagementStarted();
-        
-        // ensure the data dir is transferred and available on this application hierarchy
-        // TODO not sure this is the best way/place - most apps will typically do this in init for the properties they need,
-        // but here the plan is for init() to become abstract or no-op
-        // (alternatively we could *always* look at the mgmt context when looking up config, 
-        // but that seems a slightly radical and relatively expensive change)
-        Maybe<Object> dataDir = getManagementContext().getConfig().getConfigRaw(BrooklynConfigKeys.BROOKLYN_DATA_DIR, true);
-        if (dataDir.isPresent())
-            setConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR, TypeCoercions.coerce(dataDir.get(), String.class));
     }
     
     /**

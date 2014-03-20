@@ -26,10 +26,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynProperties.Factory.Builder;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
@@ -50,9 +51,7 @@ import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -244,6 +243,9 @@ public class BrooklynLauncher {
         brooklynAdditionalProperties.put(checkNotNull(field, "field"), value);
         return this;
     }
+    public <T> BrooklynLauncher brooklynProperties(ConfigKey<T> key, T value) {
+        return brooklynProperties(key.getName(), value);
+    }
 
     /** 
      * Specifies whether the launcher will start the Brooklyn web console 
@@ -414,11 +416,7 @@ public class BrooklynLauncher {
                 
             } else {
                 if (persistenceDir == null) {
-                    String untidyDir = brooklynProperties.getConfig(BrooklynConfigKeys.BROOKLYN_PERSISTENCE_DIR);
-                    if (Strings.isBlank(untidyDir)) {
-                        throw new FatalConfigurationRuntimeException("Persistence directory must not be blank with persistence mode "+persistMode);
-                    }
-                    persistenceDir = new File(Os.tidyPath(untidyDir));
+                    persistenceDir = new File( BrooklynServerConfig.getPersistenceDir(brooklynProperties) );
                 }
                 String persistencePath = persistenceDir.getAbsolutePath();
                 
