@@ -172,7 +172,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
         recordApplicationEvent(Lifecycle.STOPPING);
         try {
-            StartableMethods.stop(this);
+            doStop();
         } catch (Exception e) {
             setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
             recordApplicationEvent(Lifecycle.ON_FIRE);
@@ -194,6 +194,10 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         }
 
         log.info("Stopped application " + this);
+    }
+
+    protected void doStop() {
+        StartableMethods.stop(this);
     }
 
     @Override
