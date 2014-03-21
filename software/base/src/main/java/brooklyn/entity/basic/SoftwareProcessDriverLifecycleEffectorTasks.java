@@ -29,7 +29,7 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
     public void restart() {
         // children are ignored during restart currently - see ChildStartableMode
         
-        if (((SoftwareProcessImpl)entity()).getDriver() == null) { 
+        if (entity().getDriver() == null) {
             log.debug("restart of "+entity()+" has no driver - doing machine-level restart");
             super.restart();
             return;
@@ -42,7 +42,7 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
         }
         
         log.debug("restart of "+entity()+" appears to have driver and hostname - doing driver-level restart");
-        ((SoftwareProcessImpl)entity()).getDriver().restart();
+        entity().getDriver().restart();
         DynamicTasks.queue("post-restart", new Runnable() { public void run() {
             postStartCustom();
             if (entity().getAttribute(Attributes.SERVICE_STATE) == Lifecycle.STARTING) 
@@ -68,7 +68,7 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
         // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
         super.preStartCustom(machine);
         
-        ((SoftwareProcessImpl)entity()).preStart(); 
+        entity().preStart();
     }
 
     /** returns how children startables should be handled (reporting none for efficiency if there are no children) */
@@ -129,7 +129,7 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
     protected void preStopCustom() {
         super.preStopCustom();
         
-        ((SoftwareProcessImpl)entity()).preStop(); 
+        entity().preStop();
     }
 
     @Override
