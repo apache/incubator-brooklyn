@@ -33,6 +33,7 @@ import brooklyn.util.collections.MutableList;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -702,5 +703,28 @@ public class Reflections {
         }
         return true;
     }
-    
+
+    /**
+     * Gets all the interfaces implemented by the given type, including its parent classes.
+     *
+     * @param type the class to look up
+     * @return an immutable list of the interface classes
+     */
+    public static List<Class<?>> getAllInterfaces(@Nullable Class<?> type) {
+        Set<Class<?>> found = Sets.newLinkedHashSet();
+        findAllInterfaces(type, found);
+        return ImmutableList.copyOf(found);
+    }
+
+    /** Recurse through the class hierarchies of the type and its interfaces. */
+    private static void findAllInterfaces(@Nullable Class<?> type, Set<Class<?>> found) {
+        if (type == null) return;
+        for (Class<?> i : type.getInterfaces()) {
+            if (found.add(i)) { // not seen before
+                findAllInterfaces(i, found);
+            }
+        }
+        findAllInterfaces(type.getSuperclass(), found);
+    }
+
 }
