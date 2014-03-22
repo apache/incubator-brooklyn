@@ -109,4 +109,21 @@ public class ReflectionsTest {
         Assert.assertEquals(Reflections.invokeConstructorWithArgs(CI1.class, new Object[] {"hello", 3, 4, 5}).get().constructorArgs, ImmutableList.of("hello", 3, 4, 5));
         Assert.assertFalse(Reflections.invokeConstructorWithArgs(CI1.class, new Object[] {"wrong", "args"}).isPresent());
     }
+
+    interface I { };
+    interface J extends I { };
+    interface K extends I, J { };
+    interface L { };
+    interface M { };
+    class A implements I { };
+    class B extends A implements L { };
+    class C extends B implements M, K { };
+    
+    @Test
+    public void testGetAllInterfaces() throws Exception {
+        Assert.assertEquals(Reflections.getAllInterfaces(A.class), ImmutableList.of(I.class));
+        Assert.assertEquals(Reflections.getAllInterfaces(B.class), ImmutableList.of(L.class, I.class));
+        Assert.assertEquals(Reflections.getAllInterfaces(C.class), ImmutableList.of(M.class, K.class, I.class, J.class, L.class));
+    }
+
 }
