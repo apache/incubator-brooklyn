@@ -112,23 +112,38 @@ define([
             event.preventDefault();
             
             var tabName = $(event.currentTarget).attr("data-target").slice(1);
-            var entityId = $("#app-tree .entity_tree_node_wrapper.active").attr("id");
-            var route = this.getTab(entityId, tabName);
+            var route = this.getTab(tabName);
             if (route) {
                 if (route[0]=='#') route = route.substring(1);
                 Backbone.history.navigate(route);
             }
             // caller will ensure tab is shown
         },
-        getTab: function(entityId, tabName, entityHref) {
-            if (!entityHref) entityHref = this.getEntityHref();
-            if (entityId && entityHref)                
+        getTab: function(tabName, entityId, entityHref) {
+            if (!entityHref) {
+                if (entityId) {
+                    entityHref = this.getEntityHref();
+                    if (!entityHref.endsWith(entityId)) {
+                        lastSlash = entityHref.lastIndexOf('/');
+                        if (lastSlash>=0) {
+                            entityHref = entityHref.substring(0, lastSlash+1) + '/' + entityId;
+                        } else {
+                            log("malformed entityHref when opening tab: "+entityHref)
+                            entityHref = this.getEntityHref();
+                        }
+                    }
+                } else {
+                    entityHref = this.getEntityHref();
+                }
+            }
+            if (entityHref && tabName)                
                 return entityHref+"/"+tabName;
             return null;
         },
-        /** for tabs to redirect to other tabs; entityHref is optional; tabPath is e.g. 'sensors' or 'activities/subtask/1234' */ 
-        openTab: function(entityId, tabPath, entityHref) {
-            var route = this.getTab(entityId, tabPath, entityHref);
+        /** for tabs to redirect to other tabs; entityId and entityHref are optional (can supply either, or null to use current entity); 
+         * tabPath is e.g. 'sensors' or 'activities/subtask/1234' */ 
+        openTab: function(tabPath, entityId, entityHref) {
+            var route = this.getTab(tabPath, entityId, entityHref);
             if (!route) return;
             if (route[0]=='#') route = route.substring(1);
             Backbone.history.navigate(route);

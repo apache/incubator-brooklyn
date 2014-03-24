@@ -2,6 +2,7 @@ package brooklyn.entity.effector;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,7 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class Effectors {
 
@@ -37,7 +39,7 @@ public class Effectors {
         private Class<T> returnType;
         private String effectorName;
         private String description;
-        private List<ParameterType<?>> parameters = new ArrayList<ParameterType<?>>();
+        private Map<String,ParameterType<?>> parameters = new LinkedHashMap<String,ParameterType<?>>();
         private EffectorTaskFactory<T> impl;
         
         private EffectorBuilder(Class<T> returnType, String effectorName) {
@@ -59,10 +61,13 @@ public class Effectors {
         }
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public <V> EffectorBuilder<T> parameter(ConfigKey<V> key) {
-            return parameter(new BasicParameterType<V>(key.getName(), (Class)key.getType(), key.getDescription(), key.getDefaultValue()));
+            return parameter(key.hasDefaultValue()
+                ? new BasicParameterType<V>(key.getName(), (Class)key.getType(), key.getDescription(), key.getDefaultValue())
+                : new BasicParameterType<V>(key.getName(), (Class)key.getType(), key.getDescription()) );
         }
         public EffectorBuilder<T> parameter(ParameterType<?> p) {
-            parameters.add(p);
+            // allow redeclaring, e.g. for the case where we are overriding an existing effector
+            parameters.put(p.getName(), p);
             return this;
         }
         public EffectorBuilder<T> impl(EffectorTaskFactory<T> taskFactory) {
@@ -76,14 +81,14 @@ public class Effectors {
         /** returns the effector, with an implementation (required); @see {@link #buildAbstract()} */
         public Effector<T> build() {
              Preconditions.checkNotNull(impl, "Cannot create effector {} with no impl (did you forget impl? or did you mean to buildAbstract?)", effectorName);
-             return new EffectorAndBody<T>(effectorName, returnType, parameters, description, impl);
+             return new EffectorAndBody<T>(effectorName, returnType, ImmutableList.copyOf(parameters.values()), description, impl);
         }
         
         /** returns an abstract effector, where the body will be defined later/elsewhere 
          * (impl must not be set) */
         public Effector<T> buildAbstract() {
             Preconditions.checkArgument(impl==null, "Cannot create abstract effector {} as an impl is defined", effectorName);
-            return new EffectorBase<T>(effectorName, returnType, parameters, description);
+            return new EffectorBase<T>(effectorName, returnType, ImmutableList.copyOf(parameters.values()), description);
         }
     }
 
@@ -98,7 +103,7 @@ public class Effectors {
         for (ParameterType<?> p: base.getParameters())
             builder.parameter(p);
         builder.description(base.getDescription());
-        if (builder instanceof EffectorWithBody)
+        if (base instanceof EffectorWithBody)
             builder.impl(((EffectorWithBody<T>) base).getBody());
         return builder;
     }

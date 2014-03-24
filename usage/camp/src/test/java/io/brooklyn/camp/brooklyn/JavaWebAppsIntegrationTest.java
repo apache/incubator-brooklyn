@@ -23,7 +23,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
@@ -82,7 +82,7 @@ public class JavaWebAppsIntegrationTest {
             // locations set on AT in this yaml
             Assert.assertEquals(app.getLocations().size(), 1);
 
-            Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
+            Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
             log.info("Waiting on "+tasks.size()+" task(s)");
             for (Task<?> t: tasks) {
                 t.blockUntilEnded();
@@ -138,7 +138,7 @@ public class JavaWebAppsIntegrationTest {
             PlatformComponent pc2 = pcs.next().resolve();
             log.info("pc2 - "+pc2);
             
-            Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
+            Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
             log.info("Waiting on "+tasks.size()+" task(s)");
             AtomicInteger i = new AtomicInteger(0);
             for (Task<?> t: tasks) {
@@ -191,7 +191,7 @@ public class JavaWebAppsIntegrationTest {
             // locations set on individual services here
             Assert.assertEquals(app.getLocations().size(), 0);
             
-            Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
+            Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
             log.info("Waiting on "+tasks.size()+" task(s)");
             for (Task<?> t: tasks) {
                 t.blockUntilEnded();

@@ -31,13 +31,13 @@ import brooklyn.entity.basic.EntityFactory;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.net.Networking;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
@@ -491,15 +491,34 @@ public class TypeCoercions {
                 return input.intValue();
             }
         });
+        registerAdapter(Double.class, BigDecimal.class, new Function<Double,BigDecimal>() {
+            @Override
+            public BigDecimal apply(Double input) {
+                return BigDecimal.valueOf(input);
+            }
+        });
+        registerAdapter(Long.class, BigInteger.class, new Function<Long,BigInteger>() {
+            @Override
+            public BigInteger apply(Long input) {
+                return BigInteger.valueOf(input);
+            }
+        });
+        registerAdapter(Integer.class, BigInteger.class, new Function<Integer,BigInteger>() {
+            @Override
+            public BigInteger apply(Integer input) {
+                return BigInteger.valueOf(input);
+            }
+        });
         registerAdapter(String.class, List.class, new Function<String,List>() {
             @Override
             public List<String> apply(final String input) {
-                return ImmutableList.copyOf(Splitter.on(",").trimResults().omitEmptyStrings().split(input));
+                return JavaStringEscapes.unwrapJsonishListIfPossible(input);
             }
         });
         registerAdapter(String.class, Map.class, new Function<String,Map>() {
             @Override
             public Map<String, String> apply(final String input) {
+                // TODO we should respect quoted strings etc
                 return ImmutableMap.copyOf(Splitter.on(",").trimResults().omitEmptyStrings().withKeyValueSeparator("=").split(input));
             }
         });

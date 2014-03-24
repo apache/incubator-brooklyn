@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
@@ -115,6 +116,15 @@ public class ConfigBag {
      * @return non-modifiable map of strings to object */
     public Map<String,Object> getAllConfig() {
         return Collections.unmodifiableMap(config);
+    }
+
+    /** current values for all entries in a map where the keys are converted to {@link ConfigKey} instances */
+    public Map<ConfigKey<?>, ?> getAllConfigAsConfigKeyMap() {
+        Map<ConfigKey<?>,Object> result = MutableMap.of();
+        for (Map.Entry<String,Object> entry: config.entrySet()) {
+            result.put(ConfigKeys.newConfigKey(Object.class, entry.getKey()), entry.getValue());
+        }
+        return result;
     }
 
     /** internal map containing the current values for all entries;
@@ -467,4 +477,5 @@ public class ConfigBag {
     public String toString() {
         return JavaClassNames.simpleClassName(this)+"["+getAllConfigRaw()+"]";
     }
+
 }

@@ -13,6 +13,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.annotations.Beta;
@@ -97,17 +98,23 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     
 	@Override
 	public void restart() {
-	    DynamicTasks.queue("stop (if running)", new Runnable() { public void run() {
+	    DynamicTasks.queue("stop (best effort)", new Runnable() { public void run() {
+	        DynamicTasks.markInessential();
 	        boolean previouslyRunning = isRunning();
 	        try {
 	            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
 	            stop();
 	        } catch (Exception e) {
+	            // queue a failed task so that there is visual indication that this task had a failure,
+	            // without interrupting the parent
 	            if (previouslyRunning) {
-	                log.debug(getEntity() + " restart: stop failed, when was previously running", e);
+	                log.warn(getEntity() + " restart: stop failed, when was previously running (ignoring)", e);
+	                DynamicTasks.queue(Tasks.fail("Primary job failure (when previously running)", e));
 	            } else {
 	                log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
+	                DynamicTasks.queue(Tasks.fail("Primary job failure (when not previously running)", e));
 	            }
+	            // the above queued tasks will cause this task to be indicated as failed, with an indication of severity
 	        }
 	    }});
 

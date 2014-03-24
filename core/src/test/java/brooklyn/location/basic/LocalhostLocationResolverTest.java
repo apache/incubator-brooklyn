@@ -18,6 +18,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.ImmutableList;
 
@@ -131,17 +132,19 @@ public class LocalhostLocationResolverTest {
         assertTrue(l.get(0) instanceof LocalhostMachineProvisioningLocation, "l="+l);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testRegistryCommaResolution() throws NoMachinesAvailableException {
         List<Location> l;
-        l = getLocationResolver().resolve(ImmutableList.of("localhost,localhost,localhost"));
+        l = getLocationResolver().resolve(JavaStringEscapes.unwrapJsonishListIfPossible("localhost,localhost,localhost"));
         assertEquals(l.size(), 3, "l="+l);
         assertTrue(l.get(0) instanceof LocalhostMachineProvisioningLocation, "l="+l);
         assertTrue(l.get(1) instanceof LocalhostMachineProvisioningLocation, "l="+l);
         assertTrue(l.get(2) instanceof LocalhostMachineProvisioningLocation, "l="+l);
 
         // And check works if comma in brackets
-        l = getLocationResolver().resolve(ImmutableList.of("byon:(hosts=\"192.168.0.1\",user=bob),byon:(hosts=\"192.168.0.2\",user=bob2)"));
+        l = getLocationResolver().resolve(JavaStringEscapes.unwrapJsonishListIfPossible(
+            "[ \"byon:(hosts=\\\"192.168.0.1\\\",user=bob)\", \"byon:(hosts=\\\"192.168.0.2\\\",user=bob2)\" ]"));
         assertEquals(l.size(), 2, "l="+l);
         assertTrue(l.get(0) instanceof FixedListMachineProvisioningLocation, "l="+l);
         assertTrue(l.get(1) instanceof FixedListMachineProvisioningLocation, "l="+l);
@@ -149,10 +152,20 @@ public class LocalhostLocationResolverTest {
         assertEquals(((FixedListMachineProvisioningLocation<SshMachineLocation>)l.get(1)).obtain().getUser(), "bob2");
     }
 
-    @Test
-    public void testAcceptsListOLists() {
-        //if inner list has a single item it automatically gets coerced correctly to string
-        //preserve for compatibility with older CommandLineLocations (since 0.4.0) [but log warning]
+    @Test(expectedExceptions={NoSuchElementException.class})
+    public void testRegistryCommaResolutionInListNotAllowed1() throws NoMachinesAvailableException {
+        // disallowed since 0.7.0
+        getLocationResolver().resolve(ImmutableList.of("localhost,localhost,localhost"));
+    }
+
+    @Test(expectedExceptions={IllegalArgumentException.class})
+    public void testRegistryCommaResolutionInListNotAllowed2() throws NoMachinesAvailableException {
+        // disallowed since 0.7.0
+        getLocationResolver().resolve(ImmutableList.of("byon:(hosts=\"192.168.0.1\",user=bob),byon:(hosts=\"192.168.0.2\",user=bob2)"));
+    }
+
+    @Test(expectedExceptions={IllegalArgumentException.class})
+    public void testDoesNotAcceptsListOLists() {
         ((BasicLocationRegistry)managementContext.getLocationRegistry()).resolve(ImmutableList.of(ImmutableList.of("localhost")));
     }
 

@@ -22,11 +22,29 @@ public abstract class Maybe<T> implements Serializable {
     public static <T> Maybe<T> absent() {
         return new Absent<T>();
     }
+
+    /** Creates an absent whose get throws an {@link IllegalStateException} with the indicated cause.
+     * Both stack traces (the cause and the callers) are provided, which can be quite handy. */
+    public static <T> Maybe<T> absent(final Throwable cause) {
+        return new Absent<T>() {
+            private static final long serialVersionUID = 1L;
+            @Override
+            public T get() {
+                throw new IllegalStateException(cause);
+            }
+        };
+    }
     
     public static <T> Maybe<T> of(@Nullable T value) {
         return new Present<T>(value);
     }
-    
+
+    /** like {@link Optional#fromNullable(Object)}, returns absent if the argument is null */
+    public static <T> Maybe<T> fromNullable(@Nullable T value) {
+        if (value==null) return absent();
+        return new Present<T>(value);
+    }
+
     public static <T> Maybe<T> of(final Optional<T> value) {
         if (value.isPresent()) return new AbstractPresent<T>() {
             private static final long serialVersionUID = -5735268814211401356L;

@@ -1,6 +1,6 @@
 package brooklyn.entity.effector;
 
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
@@ -39,7 +39,7 @@ public abstract class EffectorBody<T> {
     // ---- convenience method(s) for implementers of main -- see subclasses and *Tasks statics for more
     
     protected EntityInternal entity() {
-        return (EntityInternal) BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+        return (EntityInternal) BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
     }
     
     protected <V extends TaskAdaptable<?>> V queue(V task) {
@@ -64,8 +64,12 @@ public abstract class EffectorBody<T> {
         return DynamicTasks.queue(task.newTask());
     }
     
-    /** Returns the last task queued in this context, or null if none. Does not wait,
-     * and no guarantee the task is submitted. */
+    /** Returns the last task queued in this context, or null if none. 
+     * Does not block, and there is no guarantee the task is submitted
+     * or even that it will be submitted (if the queue aborts early). 
+     * @deprecated since 0.7.0 not needed, and misleading given {@link #last(Class)},
+     * and the prospect that the task will never complete if there are errors */
+    @Deprecated
     protected Task<?> last() {
         return DynamicTasks.getTaskQueuingContext().last();
     }

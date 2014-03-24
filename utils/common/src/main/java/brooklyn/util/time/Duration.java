@@ -107,6 +107,7 @@ public class Duration implements Comparable<Duration> {
 
     /** see {@link #of(Object)} and {@link Time#parseTimeString(String)} */
     public static Duration parse(String textualDescription) {
+        if ("null".equalsIgnoreCase(textualDescription)) return null;
         return new Duration(Time.parseTimeString(textualDescription), TimeUnit.MILLISECONDS);
     }
 
@@ -187,6 +188,10 @@ public class Duration implements Comparable<Duration> {
     /** returns a new started {@link CountdownTimer} with this duration */
     public CountdownTimer countdownTimer() {
         return CountdownTimer.newInstanceStarted(this);
+    }
+
+    public boolean isPositive() {
+        return nanos()>0;
     }
 
 }

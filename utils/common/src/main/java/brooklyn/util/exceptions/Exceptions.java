@@ -144,7 +144,7 @@ public class Exceptions {
             return new PropagatedRuntimeException(message, collapseCausalChain ? collapsed : source, true);
     }
     
-    private static String appendSeparator(String message, String next) {
+    static String appendSeparator(String message, String next) {
         if (Strings.isBlank(message))
             return next;
         if (message.trim().endsWith(":") || message.trim().endsWith(";"))

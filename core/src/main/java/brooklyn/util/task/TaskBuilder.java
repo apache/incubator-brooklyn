@@ -18,6 +18,7 @@ public class TaskBuilder<T> {
     String name = null;
     String description = null;
     Callable<T> body = null;
+    Boolean swallowChildrenFailures = null;
     List<Task<?>> children = new ArrayList<Task<?>>();
     Set<Object> tags = new LinkedHashSet<Object>();
     Boolean dynamic = null;
@@ -56,6 +57,12 @@ public class TaskBuilder<T> {
         return this;
     }
     
+    /** sets up a dynamic task not to fail even if children fail */
+    public TaskBuilder<T> swallowChildrenFailures(boolean swallowChildrenFailures) {
+        this.swallowChildrenFailures = swallowChildrenFailures;
+        return this;
+    }
+    
     public TaskBuilder<T> body(Runnable body) {
         this.body = JavaGroovyEquivalents.<T>toCallable(body);
         return this;
@@ -81,8 +88,11 @@ public class TaskBuilder<T> {
         if (description!=null) flags.add("description", description);
         if (!tags.isEmpty()) flags.add("tags", tags);
         
-        if (Boolean.FALSE.equals(dynamic) && children.isEmpty())
+        if (Boolean.FALSE.equals(dynamic) && children.isEmpty()) {
+            if (swallowChildrenFailures!=null)
+                throw new IllegalArgumentException("Cannot set swallowChildrenFailures for non-dynamic task: "+this);
             return new BasicTask<T>(flags, body);
+        }
         
         // prefer dynamic set unless (a) user has said not dynamic, or (b) it's parallel (since there is no dynamic parallel yet)
         // dynamic has better cancel (will interrupt the thread) and callers can submit tasks flexibly;
@@ -91,6 +101,7 @@ public class TaskBuilder<T> {
             if (parallel)
                 throw new UnsupportedOperationException("No implementation of parallel dynamic aggregate task available");
             DynamicSequentialTask<T> result = new DynamicSequentialTask<T>(flags, body);
+            if (swallowChildrenFailures!=null && swallowChildrenFailures.booleanValue()) result.swallowChildrenFailures();
             for (Task t: children)
                 result.queue(t);
             return result;
@@ -99,6 +110,9 @@ public class TaskBuilder<T> {
         // T must be of type List<V> for these to be valid
         if (body != null) {
             throw new UnsupportedOperationException("No implementation of non-dynamic task with both body and children");
+        }
+        if (swallowChildrenFailures!=null) {
+            throw new IllegalArgumentException("Cannot set swallowChildrenFailures for non-dynamic task: "+this);
         }
         
         if (parallel)

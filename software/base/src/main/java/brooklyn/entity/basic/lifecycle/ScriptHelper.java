@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
@@ -243,18 +243,18 @@ public class ScriptHelper {
                 stdin.write(line.getBytes());
                 stdin.write("\n".getBytes());
             }
-            tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDIN, stdin));
+            tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDIN, stdin));
         } catch (IOException e) {
-            log.warn("Error registering stream "+BrooklynTasks.STREAM_STDIN+" on "+tb+": "+e, e);
+            log.warn("Error registering stream "+BrooklynTaskTags.STREAM_STDIN+" on "+tb+": "+e, e);
         }
         if (gatherOutput) {
             stdout = new ByteArrayOutputStream();
-            tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDOUT, stdout));
+            tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDOUT, stdout));
             stderr = new ByteArrayOutputStream();
-            tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDERR, stderr));
+            tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDERR, stderr));
         }
         task = tb.build();
-        if (isTransient) BrooklynTasks.setTransient(task);
+        if (isTransient) BrooklynTaskTags.setTransient(task);
         return task;
     }
     

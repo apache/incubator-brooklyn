@@ -65,21 +65,32 @@ public class CountdownTimer {
     /** block (on this object) until completed 
      * @throws InterruptedException */
     public synchronized void waitForExpiry() throws InterruptedException {
-        while (true) {
-            Duration remainder = getDurationRemaining();
-            if (remainder.toMilliseconds() <= 0) 
-                return;
-            wait(remainder.toMilliseconds());
-        }
+        while (waitOnForExpiry(this)) {};
     }
 
     /** as {@link #waitForExpiry()} but catches and wraps InterruptedException as unchecked RuntimeInterruptedExcedption */
     public synchronized void waitForExpiryUnchecked() {
+        waitOnForExpiryUnchecked(this);
+    }
+
+    /** block on the given argument until the timer is completed or the object receives a notified;
+     * callers must be synchronized on the waitTarget
+     * @return true if the object is notified (or receives a spurious wake), false if the duration is expired 
+     * @throws InterruptedException */
+    public boolean waitOnForExpiry(Object waitTarget) throws InterruptedException {
+        Duration remainder = getDurationRemaining();
+        if (remainder.toMilliseconds() <= 0) 
+            return false;
+        waitTarget.wait(remainder.toMilliseconds());
+        return true;
+    }
+    /** as {@link #waitOnForExpiry(Object)} but catches and wraps InterruptedException as unchecked RuntimeInterruptedExcedption */
+    public boolean waitOnForExpiryUnchecked(Object waitTarget) {
         try {
-            waitForExpiry();
+            return waitOnForExpiry(waitTarget);
         } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
-        }
+        }        
     }
     
 }

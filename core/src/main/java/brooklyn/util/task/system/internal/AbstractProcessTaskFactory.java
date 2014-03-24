@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskBuilder;
@@ -151,7 +151,7 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
     public TaskBuilder<Object> constructCustomizedTaskBuilder() {
         TaskBuilder<Object> tb = TaskBuilder.builder().dynamic(false).name("ssh: "+getSummary());
         
-        tb.tag(BrooklynTasks.tagForStream(BrooklynTasks.STREAM_STDIN, 
+        tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDIN, 
                 Streams.byteArrayOfString(Strings.join(commands, "\n"))));
         
         return tb;

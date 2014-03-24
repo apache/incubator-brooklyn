@@ -26,8 +26,10 @@ import brooklyn.location.LocationResolver.EnableableLocationResolver;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.WildcardGlobs;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -260,36 +262,30 @@ public class BasicLocationRegistry implements LocationRegistry {
         return false;
     }
 
-    /**
-     * Expects a collection of strings being the spec for locations, returns a list of locations.
-     * Also allows single elements which are comma-separated lists of locations.
-     * <p>
-     * For legacy compatibility this also accepts nested lists, but that is deprecated
-     * (and triggers a warning).
-     */
     @Override
     public List<Location> resolve(Iterable<?> spec) {
         List<Location> result = new ArrayList<Location>();
         for (Object id : spec) {
             if (id instanceof String) {
-                // if it as comma-separated list -- TODO with no comma in the brackets
-                List<String> l = expandCommaSeparateLocations((String)id);
-                if (l.size()>1) id = l;
-            } else if (id instanceof Iterable) {
-                log.warn("Deprecated use of LocationRegistry got list of list of location strings, "+spec+"; flattening");
-            }
-            if (id instanceof String) {
                 result.add(resolve((String) id));
-            } else if (id instanceof Iterable) {
-                result.addAll(resolve((Iterable<?>) id));
             } else if (id instanceof Location) {
                 result.add((Location) id);
             } else {
+                if (id instanceof Iterable)
+                    throw new IllegalArgumentException("Cannot resolve '"+id+"' to a location; collections of collections not allowed"); 
                 throw new IllegalArgumentException("Cannot resolve '"+id+"' to a location; unsupported type "+
                         (id == null ? "null" : id.getClass().getName())); 
             }
         }
         return result;
+    }
+    
+    public List<Location> resolveList(Object l) {
+        if (l==null) l = Collections.emptyList();
+        if (l instanceof String) l = JavaStringEscapes.unwrapJsonishListIfPossible((String)l);
+        if (l instanceof Iterable) return resolve((Iterable<?>)l);
+        throw new IllegalArgumentException("Location list must be supplied as a collection or a string, not "+
+            JavaClassNames.simpleClassName(l)+"/"+l);
     }
     
     @Override

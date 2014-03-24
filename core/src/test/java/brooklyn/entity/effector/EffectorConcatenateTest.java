@@ -19,7 +19,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.management.ExecutionManager;
@@ -188,7 +188,7 @@ public class EffectorConcatenateTest {
 
                     // Expect spawned task to be have been tagged with entity
                     ExecutionManager em = e.getManagementContext().getExecutionManager();
-                    Task<?> subtask = Iterables.find(BrooklynTasks.getTasksInEntityContext(em, e), new Predicate<Task<?>>() {
+                    Task<?> subtask = Iterables.find(BrooklynTaskTags.getTasksInEntityContext(em, e), new Predicate<Task<?>>() {
                         public boolean apply(Task<?> input) {
                             return "SpawnedChildName".equals(input.getDisplayName());
                         }

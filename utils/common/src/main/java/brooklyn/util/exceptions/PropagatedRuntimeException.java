@@ -26,7 +26,7 @@ public class PropagatedRuntimeException extends RuntimeException {
     @Override
     public String toString() {
         if (causeEmbeddedInMessage) return super.toString();
-        else return super.toString()+": "+Exceptions.collapseText(getCause());
+        else return Exceptions.appendSeparator(super.toString(), Exceptions.collapseText(getCause()));
     }
     
     public boolean isCauseEmbeddedInMessage() {

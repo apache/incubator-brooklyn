@@ -4,16 +4,22 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.testng.annotations.Test;
 
+import com.google.common.base.Stopwatch;
+
+import brooklyn.util.exceptions.Exceptions;
+
 @Test
-public class CountdownTimerIntegrationTest {
+public class CountdownTimerTest {
 
     // Test failed on jenkins when using 1 second, sleeping for 500ms; 
     // hence relaxing time constraints so is less time-sensitive at the expense of being a slower test.
     @Test(groups="Integration")
-    public void testSimple() {
+    public void testSimpleExpiry() {
         final int TOTAL_TIME_MS = 5*1000;
         final int OVERHEAD_MS = 2000;
         final int EARLY_RETURN_GRACE_MS = 30;
@@ -34,6 +40,27 @@ public class CountdownTimerIntegrationTest {
         
         Time.sleep(Duration.millis(SECOND_SLEEP_TIME_MS));
         assertTrue(timer.isExpired());
+    }
+    
+    public void testNotify() throws InterruptedException {
+        CountdownTimer timer = Duration.FIVE_SECONDS.countdownTimer();
+        final Object mutex = new Object();
+        final Semaphore gun = new Semaphore(0);
+        Stopwatch watch = Stopwatch.createStarted();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (mutex) {
+                    try { gun.acquire(); } catch (Exception e) { throw Exceptions.propagate(e); }
+                    mutex.notifyAll();
+                }
+            }
+        }).start();
+        synchronized (mutex) {
+            gun.release();
+            assertTrue(timer.waitOnForExpiry(mutex));
+        }
+        assertTrue(watch.elapsed(TimeUnit.MILLISECONDS) < 3000, "took too long: "+watch);
     }
     
     private void assertOrdered(long... vals) {

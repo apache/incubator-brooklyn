@@ -348,7 +348,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         }
         if (!isRunningResult) {
             String msg = "Software process entity "+this+" did not pass is-running check within "+
-                    "the required "+startTimeout+" limit ("+timer.getDurationElapsed()+" elapsed)";
+                    "the required "+startTimeout+" limit ("+timer.getDurationElapsed().toStringRounded()+" elapsed)";
             log.warn(msg+" (throwing)");
             setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
             throw new IllegalStateException(msg);

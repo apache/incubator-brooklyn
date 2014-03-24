@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
@@ -77,7 +77,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
             else throw new IllegalArgumentException("Invalid child "+job+
                 " passed to compound task; must be Runnable, Callable, Closure or Task");
             
-            BrooklynTasks.addTagDynamically(subtask, ManagementContextInternal.SUB_TASK_TAG);
+            BrooklynTaskTags.addTagDynamically(subtask, ManagementContextInternal.SUB_TASK_TAG);
             children.add(subtask);
         }
         

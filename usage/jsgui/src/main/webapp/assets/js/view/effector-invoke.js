@@ -56,7 +56,6 @@ define([
                     }))
                     var $selectLocations = container.find('#select-location')
                     this.locations.each(function(aLocation) {
-                        log(aLocation)
                         var $option = that.locationOptionTemplate({
                             id:aLocation.id,
                             url:aLocation.getLinkByName("self"),
@@ -104,12 +103,8 @@ define([
                 success:function (data) {
                     that.$el.modal("hide")
                     that.$el.fadeTo(500,1);
-                    // data.id contains the task, if we wanted to switch to showing it
-                    // NB we now timeout immediately, so always run in background
-                    // ideally we might have a timeout of 300ms
-                    // switch to task if it is still running
-                    // otherwise show the answer
-                    // ... or simpler, just switch to task, so response can be shown
+                    if (that.options.openTask)
+                        that.options.tabView.openTab('activities/subtask/'+data.id);
                 },
                 error: function(data) {
                     that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);

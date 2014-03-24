@@ -6,12 +6,17 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import brooklyn.util.net.URLParamEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.net.URLParamEncoder;
 
 public class StringEscapes {
 
+    private static final Logger log = LoggerFactory.getLogger(StringEscapes.class);
+    
     /** if s is wrapped in double quotes containing no unescaped double quotes */
     public static boolean isWrappedInDoubleQuotes(String s) {
         if (Strings.isEmpty(s)) return false;
@@ -52,7 +57,7 @@ public class StringEscapes {
         try {
             return URLEncoder.encode(url, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
     }
 
@@ -75,7 +80,7 @@ public class StringEscapes {
                 wrapBash(value, out);
             } catch (IOException e) {
                 //shouldn't happen for string buffer
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             }
             return out.toString();
         }
@@ -108,7 +113,7 @@ public class StringEscapes {
                 escapeLiteralForDoubleQuotedBash(unquotedInputToBeEscaped, out);
             } catch (IOException e) {
                 // shouldn't happen for StringBuilder
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             }
             return out.toString();
         }
@@ -168,7 +173,7 @@ public class StringEscapes {
                 escapeJavaString(value, out);
             } catch (IOException e) {
                 //shouldn't happen for string builder
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             }
             return out.toString();
         }
@@ -179,7 +184,7 @@ public class StringEscapes {
                 wrapJavaString(value, out);
             } catch (IOException e) {
                 //shouldn't happen for string builder
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             }
             return out.toString();
         }
@@ -264,6 +269,70 @@ public class StringEscapes {
             
             assert quoted;
             throw new IllegalArgumentException("String '"+s+"' is not a valid Java string (unterminated string)");
+        }
+        
+        /** converts a comma separated list in a single string to a list of strings, 
+         * doing what would be expected if given java or json style string as input,
+         * and falling back to returning the input.
+         * <p>
+         * this method does <b>not</b> throw exceptions on invalid input,
+         * but just returns that input
+         * <p>
+         * specifically, uses the following rules (executed once in sequence:
+         * <li> 1) if of form <code>[ X ]</code> (in brackets after trim), 
+         *      then removes brackets and applies following rules to X (for any X including quoted or with commas)
+         * <li> 2) if of form <code>"X"</code> 
+         *      (in double quotes after trim, 
+         *      where X contains no internal double quotes unless escaped with backslash) 
+         *      then returns list containing X unescaped (\x replaced by x)
+         * <li> 3) if of form <code>X</code> or <code>X, Y, ...</code> 
+         *      (where X, Y, ... each satisfy the constraint given in 2, or have no double quotes or commas in them)
+         *      then returns the concatenation of rule 2 applied to non-empty X, Y, ...
+         *      (if you want an empty string in a list, you must double quote it)
+         * <li> 4) for any other form X returns [ X ], including empty list for empty string
+         * <p>
+         * @see #unwrapOptionallyQuotedJavaStringList(String)
+         **/
+        public static List<String> unwrapJsonishListIfPossible(String input) {
+            try {
+                return unwrapOptionallyQuotedJavaStringList(input);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                if (e instanceof IllegalArgumentException) {
+                    if (log.isDebugEnabled()) 
+                        log.debug("Unable to parse JSON list '"+input+"' ("+e+"); treating as single-element string list");
+                } else {
+                    log.warn("Unable to parse JSON list '"+input+"' ("+e+"); treating as single-element string list", e);
+                }
+                return MutableList.of(input);
+            }
+        }
+        
+        /** as {@link #unwrapJsonishListIfPossible(String)} but throwing errors 
+         * if something which looks like a string or set of brackets is not well-formed
+         * (this does the work for that method) 
+         * @throws IllegalArgumentException if looks to have quoted list or surrounding brackets but they are not syntactically valid */
+        public static List<String> unwrapOptionallyQuotedJavaStringList(String input) {
+            if (input==null) return null;
+            MutableList<String> result = MutableList.of();
+            String i1 = input.trim();
+            
+            boolean inBrackets = (i1.startsWith("[") && i1.endsWith("]"));
+            if (inBrackets) i1 = i1.substring(1, i1.length()-2).trim();
+                
+            QuotedStringTokenizer qst = new QuotedStringTokenizer(i1, "\"", true, ",", false);
+            while (qst.hasMoreTokens()) {
+                String t = qst.nextToken().trim();
+                if (isWrappedInDoubleQuotes(t))
+                    result.add(unwrapJavaString(t));
+                else {
+                    if (inBrackets && (t.indexOf('[')>=0 || t.indexOf(']')>=0))
+                        throw new IllegalArgumentException("Literal square brackets must be quoted, in element '"+t+"'");
+                    result.add(t.trim());
+                }
+            }
+            
+            return result;
         }
     }
     

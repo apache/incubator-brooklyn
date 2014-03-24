@@ -75,6 +75,7 @@ public class EffectorMetadataTest {
                         new BasicParameterType<String>("param1", String.class, "my param description", "my default val")));
     }
 
+    @SuppressWarnings("rawtypes")
     @Test
     public void testEffectorMetaDataFromOverriddenMethod() {
         // Overridden with new annotations
@@ -85,7 +86,7 @@ public class EffectorMetadataTest {
         assertParametersEqual(
                 startEffector.getParameters(), 
                 ImmutableList.<ParameterType<?>>of(
-                        new BasicParameterType<Collection>("locations2", Collection.class, "my overridden param description", null)));
+                        new BasicParameterType<Collection>("locations", Collection.class, "my overridden param description", null)));
     }
 
     private Effector<?> findEffector(Entity entity, String effectorName) {
@@ -141,9 +142,10 @@ public class EffectorMetadataTest {
     
     @ImplementedBy(MyOverridingEntityImpl.class)
     public interface MyOverridingEntity extends Entity, Startable {
-        @Override
-        @brooklyn.entity.annotation.Effector(description="My overridden start description")
-        void start(@EffectorParam(name="locations2", description="my overridden param description") Collection<? extends Location> locations2);
+        brooklyn.entity.Effector<Void> START = Effectors.effector(Startable.START)
+            .description("My overridden start description")
+            .parameter(Collection.class, "locations", "my overridden param description")
+            .build();
     }
 
     public static class MyOverridingEntityImpl extends AbstractEntity implements MyOverridingEntity {

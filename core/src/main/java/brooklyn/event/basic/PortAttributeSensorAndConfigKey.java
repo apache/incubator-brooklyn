@@ -17,8 +17,8 @@ import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
@@ -56,17 +56,17 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
         if (value==null) return null;
         Collection<? extends Location> locations = entity.getLocations();
         if (!locations.isEmpty()) {
-            Optional<? extends Location> lo = Locations.findUniqueMachineLocation(locations);
+            Maybe<? extends Location> lo = Locations.findUniqueMachineLocation(locations);
             if (!lo.isPresent()) {
                 // Try a unique location which isn't a machine provisioner
                 Iterator<? extends Location> li = Iterables.filter(locations,
                         Predicates.not(Predicates.instanceOf(MachineProvisioningLocation.class))).iterator();
-                if (li.hasNext()) lo = Optional.of(li.next());
-                if (li.hasNext()) lo = Optional.absent();
+                if (li.hasNext()) lo = Maybe.of(li.next());
+                if (li.hasNext()) lo = Maybe.absent();
             }
             // Fall back to selecting the single location
             if (!lo.isPresent() && locations.size() == 1) {
-                lo = Optional.of(locations.iterator().next());
+                lo = Maybe.of(locations.iterator().next());
             }
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Convert config to sensor for {} found locations: {}. Selected: {}",

@@ -1,6 +1,7 @@
 package brooklyn.entity.basic;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -12,17 +13,22 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.Task;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.os.Os;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
@@ -91,6 +97,44 @@ public class SoftwareProcessEntityTest {
         Assert.assertEquals(entity.getAttribute(SoftwareProcess.RUN_DIR), Os.mergePaths(resolvedDataDir, "apps/"+entity.getApplicationId()+"/entities/MyService_"+entity.getId()));
     }
 
+    protected <T extends MyService> void doStartAndCheckVersion(Class<T> type, String expectedLabel, ConfigBag config) {
+        MyService entity = app.createAndManageChild(EntitySpec.create(type)
+            .configure(BrooklynConfigKeys.BROOKLYN_DATA_DIR, "/tmp/brooklyn-foo")
+            .configure(config.getAllConfigAsConfigKeyMap()));
+        entity.start(ImmutableList.of(loc));
+        Assert.assertEquals(entity.getAttribute(SoftwareProcess.INSTALL_DIR), "/tmp/brooklyn-foo/installs/"
+            + expectedLabel);
+    }
+    
+    @Test
+    public void testCustomInstallDir0() throws Exception {
+        doStartAndCheckVersion(MyService.class, "MyService", ConfigBag.newInstance());
+    }
+    @Test
+    public void testCustomInstallDir1() throws Exception {
+        doStartAndCheckVersion(MyService.class, "MyService_9.9.8", ConfigBag.newInstance()
+            .configure(SoftwareProcess.SUGGESTED_VERSION, "9.9.8"));
+    }
+    @Test
+    public void testCustomInstallDir2() throws Exception {
+        doStartAndCheckVersion(MyService.class, "MySvc_998", ConfigBag.newInstance()
+            .configure(SoftwareProcess.INSTALL_UNIQUE_LABEL, "MySvc_998"));
+    }
+    @Test
+    public void testCustomInstallDir3() throws Exception {
+        doStartAndCheckVersion(MyServiceWithVersion.class, "MyServiceWithVersion_9.9.9", ConfigBag.newInstance());
+    }
+    @Test
+    public void testCustomInstallDir4() throws Exception {
+        doStartAndCheckVersion(MyServiceWithVersion.class, "MyServiceWithVersion_9.9.7", ConfigBag.newInstance()
+            .configure(SoftwareProcess.SUGGESTED_VERSION, "9.9.7"));
+    }
+    @Test
+    public void testCustomInstallDir5() throws Exception {
+        doStartAndCheckVersion(MyServiceWithVersion.class, "MyServiceWithVersion_9.9.9_NaCl", ConfigBag.newInstance()
+            .configure(ConfigKeys.newStringConfigKey("salt"), "NaCl"));
+    }
+
     @Test
     public void testBasicSoftwareProcessEntityLifecycle() throws Exception {
         MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
@@ -138,44 +182,65 @@ public class SoftwareProcessEntityTest {
         Entities.unmanage(entity);
     }
 
-    @Test
-    public void testReleaseEvenIfErrorDuringStop() throws Exception {
+    @SuppressWarnings("rawtypes")
+    public void doTestReleaseEvenIfErrorDuringStop(final Class driver) throws Exception {
         MyServiceImpl entity = new MyServiceImpl(app) {
             @Override public Class getDriverInterface() {
-                return SimulatedFailOnStopDriver.class;
+                return driver;
             }
         };
         Entities.manage(entity);
         
         entity.start(ImmutableList.of(loc));
-        try {
-            entity.stop();
-            Assert.fail();
-        } catch (Exception e) {
-            Assert.assertEquals(loc.getAvailable(), ImmutableSet.of(machine));
-            IllegalStateException cause = Throwables2.getFirstThrowableOfType(e, IllegalStateException.class);
-            if (cause == null || !cause.toString().contains("Simulating stop error")) throw e;
-        }
+        Task<Void> t = entity.invoke(Startable.STOP);
+        t.blockUntilEnded();
+        
+        Assert.assertFalse(t.isError(), "Expected parent to succeed, not fail with "+Tasks.getError(t));
+        Iterator<Task<?>> failures;
+        failures = Tasks.failed(Tasks.descendants(t, true)).iterator();
+        Assert.assertTrue(failures.hasNext(), "Expected error in descendants");
+        failures = Tasks.failed(Tasks.children(t)).iterator();
+        Assert.assertTrue(failures.hasNext(), "Expected error in child");
+        Throwable e = Tasks.getError(failures.next());
+        if (e == null || !e.toString().contains("Simulating stop error")) 
+            Assert.fail("Wrong error", e);
+
+        Assert.assertEquals(loc.getAvailable(), ImmutableSet.of(machine), "Expected location to be available again");
+
         Entities.unmanage(entity);
+    }
+
+    @Test
+    public void testReleaseEvenIfErrorDuringStop() throws Exception {
+        doTestReleaseEvenIfErrorDuringStop(SimulatedFailOnStopDriver.class);
+    }
+    
+    @Test
+    public void testReleaseEvenIfChildErrorDuringStop() throws Exception {
+        doTestReleaseEvenIfErrorDuringStop(SimulatedFailInChildOnStopDriver.class);
     }
 
     @ImplementedBy(MyServiceImpl.class)
     public interface MyService extends SoftwareProcess {
         public SoftwareProcessDriver getDriver();
     }
-    
-    public static class MyServiceImpl extends SoftwareProcessImpl implements MyService {
-        public MyServiceImpl() {
-        }
 
-        public MyServiceImpl(Entity parent) {
-            super(parent);
-        }
+    public static class MyServiceImpl extends SoftwareProcessImpl implements MyService {
+        public MyServiceImpl() {}
+        public MyServiceImpl(Entity parent) { super(parent); }
 
         @Override
-        public Class getDriverInterface() {
-            return SimulatedDriver.class;
-        }
+        public Class getDriverInterface() { return SimulatedDriver.class; }
+    }
+
+    @ImplementedBy(MyServiceWithVersionImpl.class)
+    public interface MyServiceWithVersion extends MyService {
+        public static ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "9.9.9");
+    }
+
+    public static class MyServiceWithVersionImpl extends MyServiceImpl implements MyServiceWithVersion {
+        public MyServiceWithVersionImpl() {}
+        public MyServiceWithVersionImpl(Entity parent) { super(parent); }
     }
 
     public static class SimulatedFailOnStartDriver extends SimulatedDriver {
@@ -197,6 +262,17 @@ public class SoftwareProcessEntityTest {
         @Override
         public void stop() {
             throw new IllegalStateException("Simulating stop error");
+        }
+    }
+    
+    public static class SimulatedFailInChildOnStopDriver extends SimulatedDriver {
+        public SimulatedFailInChildOnStopDriver(EntityLocal entity, SshMachineLocation machine) {
+            super(entity, machine);
+        }
+        
+        @Override
+        public void stop() {
+            DynamicTasks.queue(Tasks.fail("Simulating stop error in child", null));
         }
     }
     
@@ -242,6 +318,11 @@ public class SoftwareProcessEntityTest {
             events.add("launch");
             launched = true;
             entity.setAttribute(Startable.SERVICE_UP, true);
+        }
+        
+        @Override
+        protected String getInstallLabelExtraSalt() {
+            return (String)getEntity().getConfigRaw(ConfigKeys.newStringConfigKey("salt"), true).or((String)null);
         }
     }
 }

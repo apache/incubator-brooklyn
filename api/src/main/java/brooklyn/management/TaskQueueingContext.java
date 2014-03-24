@@ -2,6 +2,8 @@ package brooklyn.management;
 
 import java.util.List;
 
+import brooklyn.util.time.Duration;
+
 import com.google.common.annotations.Beta;
 
 /**
@@ -19,7 +21,25 @@ public interface TaskQueueingContext {
     /** returns a list of queued tasks (immutable copy) */
     public List<Task<?>> getQueue();
 
-    /** returns the last task in the queue, or null if none */
+    /** returns the last task in the queue, or null if none 
+     * @deprecated since 0.7.0 this method is misleading if the caller attempts to block on the task and the queue aborts */
+    @Deprecated
     public Task<?> last();
+
+    /** Drains the task queue for this context to complete, ie waits for this context to complete (or terminate early)
+     * @param optionalTimeout null to run forever
+     * @param includePrimary whether the parent (this context) should also be joined on;
+     *   should only be true if invoking this from another task, as otherwise it will be waiting for itself!
+     * @param throwFirstError whether to throw the first exception encountered
+     * <p>
+     * Also note that this waits on tasks so that blocking details on the caller are meaningful.
+     */
+    public void drain(Duration optionalTimeout, boolean includePrimaryThread, boolean throwFirstError);
+
+    /** Returns the task which is this queueing context */
+    public Task<?> asTask();
+
+    /** causes subsequent children failures not to fail the parent */
+    public void swallowChildrenFailures();
     
 }

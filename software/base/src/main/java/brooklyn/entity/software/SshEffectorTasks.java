@@ -13,7 +13,7 @@ import brooklyn.config.ConfigUtils;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -96,7 +96,7 @@ public class SshEffectorTasks {
         }
         @Override
         public synchronized ProcessTaskWrapper<RET> newTask() {
-            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+            Entity entity = BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
             if (machine==null) {
                 if (log.isDebugEnabled())
                     log.debug("Using an ssh task not in an effector without any machine; will attempt to infer the machine: "+this);
@@ -141,7 +141,7 @@ public class SshEffectorTasks {
         }
         @Override
         public SshPutTaskWrapper newTask() {
-            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+            Entity entity = BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
             if (machine==null) {
                 if (log.isDebugEnabled())
                     log.debug("Using an ssh put task not in an effector without any machine; will attempt to infer the machine: "+this);
@@ -170,7 +170,7 @@ public class SshEffectorTasks {
         }
         @Override
         public SshFetchTaskWrapper newTask() {
-            Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+            Entity entity = BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
             if (machine==null) {
                 if (log.isDebugEnabled())
                     log.debug("Using an ssh fetch task not in an effector without any machine; will attempt to infer the machine: "+this);

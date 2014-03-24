@@ -15,8 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTasks;
-import brooklyn.entity.basic.BrooklynTasks.WrappedEntity;
+import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.entity.basic.BrooklynTaskTags.WrappedEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
@@ -61,7 +61,7 @@ public class BasicExecutionContext extends AbstractExecutionContext {
         // the context tag should always be a non-proxy entity, because that is what is passed to effector tasks
         // which may require access to internal methods
         for (Object tag: tags) {
-            if (tag instanceof BrooklynTasks.WrappedEntity) {
+            if (tag instanceof BrooklynTaskTags.WrappedEntity) {
                 if (Proxy.isProxyClass(((WrappedEntity)tag).entity.getClass()))
                     log.warn(""+this+" has entity proxy in "+tag);
             }
@@ -89,8 +89,8 @@ public class BasicExecutionContext extends AbstractExecutionContext {
         // the issue is that we want to ensure that cross-entity calls switch execution contexts;
         // previously it was all very messy how that was handled (and it didn't really handle it in many cases)
         if (task instanceof Task<?>) taskTags.addAll( ((Task<?>)task).getTags() ); 
-        Entity target = BrooklynTasks.getWrappedEntityOfType(taskTags, BrooklynTasks.TARGET_ENTITY);
-        if (target!=null && !tags.contains(BrooklynTasks.tagForContextEntity(target))) {
+        Entity target = BrooklynTaskTags.getWrappedEntityOfType(taskTags, BrooklynTaskTags.TARGET_ENTITY);
+        if (target!=null && !tags.contains(BrooklynTaskTags.tagForContextEntity(target))) {
             // task is switching execution context boundaries
             /* 
              * longer notes:
@@ -125,13 +125,12 @@ public class BasicExecutionContext extends AbstractExecutionContext {
                 submit(Tasks.<T>builder().name("Cross-context execution").dynamic(true).body(new Callable<T>() {
                     public T call() {
                         if (task instanceof Callable) {
-                            DynamicTasks.queue( Tasks.<T>builder().dynamic(false).body((Callable<T>)task).build() );
+                            return DynamicTasks.queue( Tasks.<T>builder().dynamic(false).body((Callable<T>)task).build() ).getUnchecked();
                         } else if (task instanceof Runnable) {
-                            DynamicTasks.queue( Tasks.builder().dynamic(false).body((Runnable)task).build() );
+                            return DynamicTasks.queue( Tasks.<T>builder().dynamic(false).body((Runnable)task).build() ).getUnchecked();
                         } else {
                             throw new IllegalArgumentException("Unhandled task type: "+task+"; type="+(task!=null ? task.getClass() : "null"));
                         }
-                        return (T)DynamicTasks.getTaskQueuingContext().last();
                     }
                 }).build());
             }

@@ -43,12 +43,13 @@ import brooklyn.location.basic.Machines;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
@@ -168,8 +169,26 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         } else if (!getDriver().isClustered()) {
             return getListenAddress();
         } else {
-            // In other situations, prefer the hostname so other regions can see it
-            return getAttribute(CassandraNode.HOSTNAME);
+            // In other situations, prefer the hostname, so other regions can see it
+            // *Unless* hostname resolves at the target to a local-only interface which is different to ADDRESS
+            // (workaround for issue deploying to localhost)
+            String hostname = getAttribute(CassandraNode.HOSTNAME);
+            try {
+                String resolvedAddress = getDriver().getResolvedAddress(hostname);
+                if (resolvedAddress==null) {
+                    log.debug("Cassandra using broadcast address "+getListenAddress()+" for "+this+" because hostname "+hostname+" could not be resolved at remote machine");
+                    return getListenAddress();
+                }
+                if (resolvedAddress.equals("127.0.0.1")) {
+                    log.debug("Cassandra using broadcast address "+getListenAddress()+" for "+this+" because hostname "+hostname+" resolves to 127.0.0.1");
+                    return getListenAddress();                    
+                }
+                return hostname;
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                log.warn("Error resolving hostname "+hostname+" for "+this+": "+e, e);
+                return hostname;
+            }
         }
     }
     /** not always the private IP, if public IP has been insisted on for broadcast, e.g. setting up a rack topology */
@@ -216,7 +235,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 if (Strings.isNonBlank(sensorName)) {
                     seedsHostnames.add(entity.getAttribute(Sensors.newStringSensor(sensorName)));
                 } else {
-                    Optional<String> optionalSeedHostname = Machines.findSubnetOrPublicHostname(entity);
+                    Maybe<String> optionalSeedHostname = Machines.findSubnetOrPublicHostname(entity);
                     if (optionalSeedHostname.isPresent()) {
                         String seedHostname = optionalSeedHostname.get();
                         seedsHostnames.add(seedHostname);

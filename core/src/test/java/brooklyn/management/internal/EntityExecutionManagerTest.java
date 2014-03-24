@@ -20,8 +20,8 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BrooklynTasks;
-import brooklyn.entity.basic.BrooklynTasks.WrappedEntity;
+import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.entity.basic.BrooklynTaskTags.WrappedEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -71,7 +71,7 @@ public class EntityExecutionManagerTest {
                     }});
         latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         
-        Collection<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(app.getManagementContext().getExecutionManager(), e);
+        Collection<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(app.getManagementContext().getExecutionManager(), e);
         assertEquals(tasks, ImmutableList.of(task));
     }
     
@@ -82,12 +82,12 @@ public class EntityExecutionManagerTest {
         String eId = e.getId();
         
         e.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of()).get();
-        Set<Task<?>> tasks = BrooklynTasks.getTasksInEntityContext(app.getManagementContext().getExecutionManager(), e);
+        Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(app.getManagementContext().getExecutionManager(), e);
         Task<?> task = Iterables.get(tasks, 0);
-        assertTrue(task.getTags().contains(BrooklynTasks.tagForContextEntity(e)));
+        assertTrue(task.getTags().contains(BrooklynTaskTags.tagForContextEntity(e)));
 
         Set<Object> tags = app.getManagementContext().getExecutionManager().getTaskTags();
-        assertTrue(tags.contains(BrooklynTasks.tagForContextEntity(e)), "tags="+tags);
+        assertTrue(tags.contains(BrooklynTaskTags.tagForContextEntity(e)), "tags="+tags);
         
         Entities.destroy(e);
         e = null;
@@ -99,7 +99,7 @@ public class EntityExecutionManagerTest {
                 fail("tags contains unmanaged entity "+tag);
             }
             if ((tag instanceof WrappedEntity) && ((WrappedEntity)tag).entity.getId().equals(eId) 
-                    && ((WrappedEntity)tag).wrappingType.equals(BrooklynTasks.CONTEXT_ENTITY)) {
+                    && ((WrappedEntity)tag).wrappingType.equals(BrooklynTaskTags.CONTEXT_ENTITY)) {
                 fail("tags contains unmanaged entity (wrapped) "+tag);
             }
         }
@@ -180,7 +180,7 @@ public class EntityExecutionManagerTest {
         
         // Should initially have all tasks
         Set<Task<?>> storedTasks = app.getManagementContext().getExecutionManager().getTasksWithAllTags(
-                ImmutableList.of(BrooklynTasks.tagForContextEntity(entity), ManagementContextInternal.EFFECTOR_TAG));
+                ImmutableList.of(BrooklynTaskTags.tagForContextEntity(entity), ManagementContextInternal.EFFECTOR_TAG));
         assertEquals(storedTasks, ImmutableSet.copyOf(tasks), "storedTasks="+storedTasks+"; expected="+tasks);
         
         // Then oldest should be GC'ed to leave only maxNumTasks
@@ -188,7 +188,7 @@ public class EntityExecutionManagerTest {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             @Override public void run() {
                 Set<Task<?>> storedTasks2 = app.getManagementContext().getExecutionManager().getTasksWithAllTags(
-                       ImmutableList.of(BrooklynTasks.tagForContextEntity(entity), ManagementContextInternal.EFFECTOR_TAG));
+                       ImmutableList.of(BrooklynTaskTags.tagForContextEntity(entity), ManagementContextInternal.EFFECTOR_TAG));
                 assertEquals(storedTasks2, ImmutableSet.copyOf(recentTasks), "storedTasks="+storedTasks2+"; expected="+recentTasks);
             }});
     }
@@ -212,7 +212,7 @@ public class EntityExecutionManagerTest {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             @Override public void run() {
                 Set<Task<?>> storedTasks = app.getManagementContext().getExecutionManager().getTasksWithAllTags(ImmutableList.of(
-                        BrooklynTasks.tagForTargetEntity(entity), 
+                        BrooklynTaskTags.tagForTargetEntity(entity), 
                         ManagementContextInternal.EFFECTOR_TAG));
                 assertEquals(storedTasks, ImmutableSet.of(), "storedTasks="+storedTasks);
             }});

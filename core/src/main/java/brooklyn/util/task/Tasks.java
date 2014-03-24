@@ -20,8 +20,12 @@ import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 
+import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
@@ -114,7 +118,7 @@ public class Tasks {
                 if (!vfuture.isDone()) {
                     final AtomicReference<Object> vref = new AtomicReference<Object>(v);
                     
-                    withBlockingDetails("Waiting for "+(contextMessage!=null ? contextMessage+", " : ""+v), 
+                    withBlockingDetails("Waiting for "+(contextMessage!=null ? contextMessage : ""+v), 
                             new Callable<Void>() {
                         public Void call() throws Exception {
                             vref.set( vfuture.get() );
@@ -295,6 +299,21 @@ public class Tasks {
             }
         });
     }
+    
+    /** returns the task, its children, and all its children, and so on;
+     * @param root task whose descendants should be iterated
+     * @param parentFirst whether to put parents before children or after
+     */
+    public static Iterable<Task<?>> descendants(Task<?> root, final boolean parentFirst) {
+        Iterable<Task<?>> descs = Iterables.concat(Iterables.transform(Tasks.children(root), new Function<Task<?>,Iterable<Task<?>>>() {
+            @Override
+            public Iterable<Task<?>> apply(Task<?> input) {
+                return descendants(input, parentFirst);
+            }
+        }));
+        if (parentFirst) return Iterables.concat(Collections.singleton(root), descs);
+        else return Iterables.concat(descs, Collections.singleton(root));
+    }
 
     /** returns the error thrown by the task if {@link Task#isError()}, or null if no error or not done */
     public static Throwable getError(Task<?> t) {
@@ -308,6 +327,40 @@ public class Tasks {
             // do not propagate as we are pretty much guaranteed above that it wasn't this
             // thread which originally threw the error
             return error;
+        }
+    }
+    public static Task<Void> fail(final String name, final Throwable optionalError) {
+        return Tasks.<Void>builder().dynamic(false).name(name).body(new Runnable() { public void run() { 
+            if (optionalError!=null) throw Exceptions.propagate(optionalError); else throw new RuntimeException("Failed: "+name);
+        } }).build();
+    }
+
+    /** marks the current task inessential; this mainly matters if the task is running in a parent
+     * {@link TaskQueueingContext} and we don't want the parent to fail if this task fails
+     * <p>
+     * no-op (silently ignored) if not in a task */
+    public static void markInessential() {
+        Task<?> task = Tasks.current();
+        if (task==null) {
+            TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
+            if (qc!=null) task = qc.asTask();
+        }
+        if (task!=null) {
+            TaskTags.markInessential(task);
+        }
+    }
+
+    /** causes failures in subtasks of the current task not to fail the parent;
+     * no-op if not in a {@link TaskQueueingContext}.
+     * <p>
+     * essentially like a {@link #markInessential()} on all tasks in the current 
+     * {@link TaskQueueingContext}, including tasks queued subsequently */
+    @Beta
+    public static void swallowChildrenFailures() {
+        Preconditions.checkNotNull(DynamicTasks.getTaskQueuingContext(), "Task queueing context required here");
+        TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
+        if (qc!=null) {
+            qc.swallowChildrenFailures();
         }
     }
 

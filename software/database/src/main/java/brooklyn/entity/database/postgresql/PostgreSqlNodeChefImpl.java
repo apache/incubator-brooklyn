@@ -21,10 +21,9 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
-
-import com.google.common.base.Optional;
 
 public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements PostgreSqlNode {
 
@@ -119,7 +118,7 @@ public class PostgreSqlNodeChefImpl extends EffectorStartableImpl implements Pos
     protected void connectSensors() {
         setAttribute(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
 
-        Optional<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
+        Maybe<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
 
         if (machine.isPresent()) {
             feed = SshFeed.builder()

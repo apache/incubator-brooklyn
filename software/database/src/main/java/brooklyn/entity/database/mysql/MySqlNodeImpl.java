@@ -1,7 +1,6 @@
 package brooklyn.entity.database.mysql;
 
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,8 +8,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
@@ -18,13 +15,12 @@ import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 
 public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
 
@@ -78,7 +74,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
          *   Uptime: 2427  Threads: 1  Questions: 581  Slow queries: 0  Opens: 53  Flush tables: 1  Open tables: 35  Queries per second avg: 0.239
          * So can extract lots of sensors from that.
          */
-        Optional<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
+        Maybe<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
         String cmd = getDriver().getStatusCmd();
         if (machine.isPresent()) {
             feed = SshFeed.builder()
@@ -105,7 +101,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     @Override
     protected void connectServiceUpIsRunning() {
         String cmd = getDriver().getStatusCmd();
-        Optional<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
+        Maybe<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
         SshFeed.builder()
                 .entity(this)
                 .period(Duration.FIVE_SECONDS)

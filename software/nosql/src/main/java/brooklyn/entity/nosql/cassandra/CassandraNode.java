@@ -32,6 +32,8 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.15");
+    // when this changes remember to put a copy under releng2:/var/www/developer/brooklyn/repository/ !
+    // TODO experiment with supporting 2.0.x
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
@@ -39,7 +41,11 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
 
     /** download mirror, if desired */
     @SetFromFlag("mirrorUrl")
-    ConfigKey<String> MIRROR_URL = new BasicConfigKey<String>(String.class, "cassandra.install.mirror.url", "URL of mirror", "http://www.mirrorservice.org/sites/ftp.apache.org/cassandra");
+    ConfigKey<String> MIRROR_URL = new BasicConfigKey<String>(String.class, "cassandra.install.mirror.url", "URL of mirror", 
+        "http://www.mirrorservice.org/sites/ftp.apache.org/cassandra"
+        // for older versions, but slower:
+//        "http://archive.apache.org/dist/cassandra/"
+        );
 
     @SetFromFlag("tgzUrl")
     ConfigKey<String> TGZ_URL = new BasicConfigKey<String>(String.class, "cassandra.install.tgzUrl", "URL of TGZ download file");

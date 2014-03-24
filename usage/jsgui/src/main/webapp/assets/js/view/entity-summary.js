@@ -92,7 +92,7 @@ define([
             }
             return statusIconInfo;
         },
-        updateAddlInfoForProblem: function() {
+        updateAddlInfoForProblem: function(tasksReloaded) {
             if (!this.options.tasks)
                 // if tasks not supplied, then don't attempt to show status info!
                 return;
@@ -118,13 +118,15 @@ define([
             				"<i>"+_.escape(lastFailedTask.attributes.displayName)+"</i> "
                     +"("+lastFailedTask.id+")</a>: </b>"+
                     _.escape(lastFailedTask.attributes.result);
-            } else {
+            } else if (!that.problemTasksLoaded) {
                 // trigger callback to get tasks
                 problemDetails = "<i>Loading problem details...</i>";
                 ViewUtils.get(this, this.options.tasks.url, function() {
+                    that.problemTasksLoaded = true;
                     that.updateAddlInfoForProblem();
                 });
-            }      
+            }
+            
             if (problemDetails) {
                 this.$(".additional-info-on-problem").html(problemDetails).show();
             } else {
@@ -145,7 +147,7 @@ define([
                 // trying to open in a new tab, do not act on it here!
                 return;
             var tab = $(event.currentTarget).attr('tab-target');
-            this.options.tabView.openTab(this.model.id, tab);
+            this.options.tabView.openTab(tab);
             // and prevent the a from firing
             event.preventDefault();
             return false;

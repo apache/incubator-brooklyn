@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
@@ -19,11 +20,15 @@ import org.testng.annotations.Test;
 
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -31,18 +36,27 @@ public class DynamicSequentialTaskTest {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicSequentialTaskTest.class);
     
+    public static final Duration TIMEOUT = Duration.TEN_SECONDS;
+    public static final Duration TINY_TIME = Duration.millis(20);
+    
     BasicExecutionManager em;
     BasicExecutionContext ec;
-    List<String> messages = new ArrayList<String>();
+    List<String> messages;
     Semaphore cancellations;
+    Stopwatch stopwatch;
+    Map<String,Semaphore> monitorableJobSemaphoreMap;
+    Map<String,Task<String>> monitorableTasksMap;
 
-
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
         em = new BasicExecutionManager("mycontext");
         ec = new BasicExecutionContext(em);
         cancellations = new Semaphore(0);
-        messages.clear();
+        messages = new ArrayList<String>();
+        monitorableJobSemaphoreMap = MutableMap.of();
+        monitorableTasksMap = MutableMap.of();
+        monitorableTasksMap.clear();
+        stopwatch = Stopwatch.createStarted();
     }
     
     @AfterMethod(alwaysRun=true)
@@ -158,6 +172,137 @@ public class DynamicSequentialTaskTest {
         
         // but we do _not_ get a mutex from task3 as it does not run (is not interrupted)
         Assert.assertEquals(cancellations.availablePermits(), 0);
+    }
+
+    protected Task<String> monitorableTask(final String id) {
+        return monitorableTask(null, id, null);
+    }
+    protected Task<String> monitorableTask(final Runnable pre, final String id, final Callable<String> post) {
+        Task<String> t = Tasks.<String>builder().body(monitorableJob(pre, id, post)).build();
+        monitorableTasksMap.put(id, t);
+        return t;
+    }
+    protected Callable<String> monitorableJob(final String id) {
+        return monitorableJob(null, id, null);
+    }
+    protected Callable<String> monitorableJob(final Runnable pre, final String id, final Callable<String> post) {
+        monitorableJobSemaphoreMap.put(id, new Semaphore(0));
+        return new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                if (pre!=null) pre.run();
+                // wait for semaphore
+                if (!monitorableJobSemaphoreMap.get(id).tryAcquire(1, TIMEOUT.toMilliseconds(), TimeUnit.MILLISECONDS))
+                    throw new IllegalStateException("timeout for "+id);
+                synchronized (messages) {
+                    messages.add(id);
+                    messages.notifyAll();
+                }
+                if (post!=null) return post.call();
+                return id;
+            }
+        };
+    }
+    protected void releaseMonitorableJob(final String id) {
+        monitorableJobSemaphoreMap.get(id).release();
+    }
+    protected void waitForMessage(final String id) {
+        CountdownTimer timer = CountdownTimer.newInstanceStarted(TIMEOUT);
+        synchronized (messages) {
+            while (!timer.isExpired()) {
+                if (messages.contains(id)) return;
+                timer.waitOnForExpiryUnchecked(messages);
+            }
+        }
+        Assert.fail("Did not see message "+id);
+    }
+    
+    @Test
+    public void testChildrenRunConcurrentlyWithPrimary() {
+        Task<String> t = Tasks.<String>builder().dynamic(true)
+            .body(monitorableJob("main"))
+            .add(monitorableTask("1")).add(monitorableTask("2")).build();
+        ec.submit(t);
+        releaseMonitorableJob("1");
+        waitForMessage("1");
+        releaseMonitorableJob("main");
+        waitForMessage("main");
+        Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
+        releaseMonitorableJob("2");
+        
+        Assert.assertTrue(t.blockUntilEnded(TIMEOUT));
+        Assert.assertEquals(messages, MutableList.of("1", "main", "2"));
+        Assert.assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < TIMEOUT.toMilliseconds(), "took too long: "+stopwatch);
+        Assert.assertFalse(t.isError());
+    }
+    
+    protected static class FailRunnable implements Runnable {
+        @Override public void run() { throw new RuntimeException("Planned exception for test"); }
+    }
+    protected static class FailCallable implements Callable<String> {
+        @Override public String call() { throw new RuntimeException("Planned exception for test"); }
+    }
+    
+    @Test
+    public void testByDefaultChildrenFailureAbortsSecondaryFailsPrimaryButNotAbortsPrimary() {
+        Task<String> t1 = monitorableTask(null, "1", new FailCallable());
+        Task<String> t = Tasks.<String>builder().dynamic(true)
+            .body(monitorableJob("main"))
+            .add(t1).add(monitorableTask("2")).build();
+        ec.submit(t);
+        releaseMonitorableJob("1");
+        waitForMessage("1");
+        Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
+        releaseMonitorableJob("main");
+        
+        Assert.assertTrue(t.blockUntilEnded(TIMEOUT));
+        Assert.assertEquals(messages, MutableList.of("1", "main"));
+        Assert.assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < TIMEOUT.toMilliseconds(), "took too long: "+stopwatch);
+        Assert.assertTrue(t.isError());
+        Assert.assertTrue(t1.isError());
+    }
+
+    @Test
+    public void testWhenSwallowingChildrenFailureDoesNotAbortSecondaryOrFailPrimary() {
+        Task<String> t1 = monitorableTask(null, "1", new FailCallable());
+        Task<String> t = Tasks.<String>builder().dynamic(true)
+            .body(monitorableJob("main"))
+            .add(t1).add(monitorableTask("2")).swallowChildrenFailures(true).build();
+        ec.submit(t);
+        releaseMonitorableJob("1");
+        waitForMessage("1");
+        Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
+        releaseMonitorableJob("2");
+        waitForMessage("2");
+        Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
+        releaseMonitorableJob("main");
+        Assert.assertTrue(t.blockUntilEnded(TIMEOUT));
+        Assert.assertEquals(messages, MutableList.of("1", "2", "main"));
+        Assert.assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < TIMEOUT.toMilliseconds(), "took too long: "+stopwatch);
+        Assert.assertFalse(t.isError());
+        Assert.assertTrue(t1.isError());
+    }
+
+    @Test
+    public void testInessentialChildrenFailureDoesNotAbortSecondaryOrFailPrimary() {
+        Task<String> t1 = monitorableTask(null, "1", new FailCallable());
+        TaskTags.markInessential(t1);
+        Task<String> t = Tasks.<String>builder().dynamic(true)
+            .body(monitorableJob("main"))
+            .add(t1).add(monitorableTask("2")).build();
+        ec.submit(t);
+        releaseMonitorableJob("1");
+        waitForMessage("1");
+        Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
+        releaseMonitorableJob("2");
+        waitForMessage("2");
+        Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
+        releaseMonitorableJob("main");
+        Assert.assertTrue(t.blockUntilEnded(TIMEOUT));
+        Assert.assertEquals(messages, MutableList.of("1", "2", "main"));
+        Assert.assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < TIMEOUT.toMilliseconds(), "took too long: "+stopwatch);
+        Assert.assertFalse(t.isError());
+        Assert.assertTrue(t1.isError());
     }
 
 }

@@ -68,12 +68,7 @@ public class Os {
                 log.debug("TmpDirFinder: using fallback tmp directory "+tmpdir, new Throwable("Caller using fallback tmp dir"));
             if (isFound()) return Maybe.of(tmpdir);
             if (find()) return Maybe.of(tmpdir);
-            return new Maybe.Absent<String>() {
-                private static final long serialVersionUID = -757170462010887057L;
-                public String get() {
-                    throw fail("TmpDirFinder: No valid tmp dir can be found");
-                }
-            };
+            return Maybe.absent(newFailure("TmpDirFinder: No valid tmp dir can be found"));
         }
 
         public boolean isFallback() {
@@ -157,8 +152,8 @@ public class Os {
             }
         }
         
-        protected IllegalStateException fail(String message) {
-            throw new IllegalStateException(message);
+        protected IllegalStateException newFailure(String message) {
+            return new IllegalStateException(message);
         }
     }
 

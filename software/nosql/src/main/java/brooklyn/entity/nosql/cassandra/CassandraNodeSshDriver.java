@@ -26,11 +26,13 @@ import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
+import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
@@ -54,6 +56,8 @@ import com.google.common.collect.Sets;
 public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver implements CassandraNodeDriver {
 
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeSshDriver.class);
+    
+    protected Maybe<String> resolvedAddressCache = Maybe.<String>absent();
     
     public CassandraNodeSshDriver(CassandraNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -155,6 +159,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
         newScript(CUSTOMIZING)
                 .body.append(commands.build())
+                .failOnNonZeroResultCode()
                 .execute();
 
         // Copy the cassandra.yaml configuration file across
@@ -365,4 +370,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
             + " --file "+fileToRun;
     }
 
+    @Override
+    public String getResolvedAddress(String hostname) {
+        if (resolvedAddressCache.isPresent()) return resolvedAddressCache.get();
+        return (resolvedAddressCache = Maybe.of(BrooklynAccessUtils.getResolvedAddress(getEntity(), getMachine(), hostname))).get();
+    }
+    
 }

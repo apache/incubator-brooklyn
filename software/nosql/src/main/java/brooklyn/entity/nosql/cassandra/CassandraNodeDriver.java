@@ -26,4 +26,7 @@ public interface CassandraNodeDriver extends JavaSoftwareProcessDriver {
 
     ProcessTaskWrapper<Integer> executeScriptAsync(String commands);
 
+    /** returns the address that the given hostname resolves to at the target */
+    String getResolvedAddress(String hostname);
+
 }

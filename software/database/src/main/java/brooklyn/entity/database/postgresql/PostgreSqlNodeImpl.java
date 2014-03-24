@@ -11,9 +11,8 @@ import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
-
-import com.google.common.base.Optional;
 
 public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSqlNode {
 
@@ -55,7 +54,7 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
         super.connectSensors();
         setAttribute(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
 
-        Optional<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
+        Maybe<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
 
         if (machine.isPresent()) {
             String cmd = getDriver().getStatusCmd();

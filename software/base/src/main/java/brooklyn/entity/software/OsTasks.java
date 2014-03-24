@@ -15,6 +15,7 @@ import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
@@ -46,7 +47,7 @@ public class OsTasks {
      * @throws IllegalStateException if given entity has no {@link SshMachineLocation}
      */
     public static Task<OsDetails> getOsDetails(final Entity entity) {
-        Optional<SshMachineLocation> location = Locations.findUniqueSshMachineLocation(entity.getLocations());
+        Maybe<SshMachineLocation> location = Locations.findUniqueSshMachineLocation(entity.getLocations());
         if (!location.isPresent()) {
             throw new IllegalStateException("Entity "+entity+" has no SSH location to gather OS details. Locations: "+entity.getLocations());
         }

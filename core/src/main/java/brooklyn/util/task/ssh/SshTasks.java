@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTasks;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
@@ -120,7 +120,7 @@ public class SshTasks {
             .allowingNonZeroExitCode()
             .returning(new Function<ProcessTaskWrapper<?>,Boolean>() { public Boolean apply(ProcessTaskWrapper<?> task) {
                 if (task.getExitCode()==0 && task.getStdout().contains("sudo-is-working-"+id)) return true;
-                Entity entity = BrooklynTasks.getTargetOrContextEntity(Tasks.current());
+                Entity entity = BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
                 log.warn("Error setting up sudo for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+" "+
                         " (exit code "+task.getExitCode()+(entity!=null ? ", entity "+entity : "")+")");
                 Streams.logStreamTail(log, "STDERR of sudo setup problem", Streams.byteArrayOfString(task.getStderr()), 1024);

@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTasks;
-import brooklyn.entity.basic.BrooklynTasks.WrappedStream;
+import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.rest.domain.LinkWithMetadata;
@@ -43,7 +43,7 @@ public class TaskTransformer {
     public static TaskSummary taskSummary(Task<?> task) {
       try {
         Preconditions.checkNotNull(task);
-        Entity entity = BrooklynTasks.getContextEntity(task);
+        Entity entity = BrooklynTaskTags.getContextEntity(task);
         String entityId;
         String entityDisplayName;
         URI entityLink;
@@ -69,7 +69,7 @@ public class TaskTransformer {
         }
         
         Map<String,LinkWithMetadata> streams = new MutableMap<String, LinkWithMetadata>();
-        for (WrappedStream stream: BrooklynTasks.streams(task)) {
+        for (WrappedStream stream: BrooklynTaskTags.streams(task)) {
             MutableMap<String, Object> metadata = MutableMap.<String,Object>of("name", stream.streamType);
             if (stream.streamSize.get()!=null) {
                 metadata.add("size", stream.streamSize.get());
@@ -119,7 +119,7 @@ public class TaskTransformer {
         MutableMap<String,Object> data = new MutableMap<String,Object>();
         data.put("id", t.getId());
         if (t.getDisplayName()!=null) data.put("taskName", t.getDisplayName());
-        Entity entity = BrooklynTasks.getContextEntity(t);
+        Entity entity = BrooklynTaskTags.getContextEntity(t);
         if (entity!=null) {
             data.put("entityId", entity.getId());
             if (entity.getDisplayName()!=null) data.put("entityDisplayName", entity.getDisplayName());
