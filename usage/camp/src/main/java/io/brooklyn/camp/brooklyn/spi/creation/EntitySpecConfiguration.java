@@ -18,6 +18,7 @@ import com.google.common.collect.Maps;
  */
 public class EntitySpecConfiguration {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(EntitySpecConfiguration.class);
 
     private final Map<String, Object> specConfiguration;

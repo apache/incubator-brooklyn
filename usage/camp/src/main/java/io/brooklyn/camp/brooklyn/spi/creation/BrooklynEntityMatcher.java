@@ -12,10 +12,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-
-import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.entity.Entity;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
@@ -24,6 +20,8 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import brooklyn.util.text.Strings;
+
+import com.google.common.collect.Lists;
 
 public class BrooklynEntityMatcher implements PdpMatcher {
 
@@ -37,52 +35,29 @@ public class BrooklynEntityMatcher implements PdpMatcher {
 
     @Override
     public boolean accepts(Object deploymentPlanItem) {
-        return lookup(deploymentPlanItem) != null;
+        return lookupType(deploymentPlanItem) != null;
     }
 
-    /** returns a CatalogItem (if id matches), Class<Entity> (if type matches), or null */
-    protected Object lookup(Object deploymentPlanItem) {
+    /** returns the type of the given plan item, 
+     * typically whether a Service can be matched to a Brooklyn entity,
+     * or null if not supported */
+    protected String lookupType(Object deploymentPlanItem) {
         if (deploymentPlanItem instanceof Service) {
-            String rawServiceType = ((Service)deploymentPlanItem).getServiceType();
-            String serviceType = Strings.removeFromStart(rawServiceType, "brooklyn:");
-            boolean mustBeBrooklyn = !serviceType.equals(rawServiceType);
-            
-            CatalogItem<?> catalogItem = mgmt.getCatalog().getCatalogItem( serviceType );
-            if (catalogItem!=null && catalogItem.getCatalogItemType()==CatalogItemType.ENTITY) 
-                return catalogItem;
-            
-            // TODO should put everything in catalog, rather than attempt loading classes!
-            
-            try {
-                Class<? extends Entity> type = mgmt.getCatalog().loadClassByType(serviceType, Entity.class);
-                if (type!=null) 
-                    return type;
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                log.debug("Item "+serviceType+" not known in catalog: "+e);
-            }
-
-            try {
-                Class<?> type = mgmt.getCatalog().getRootClassLoader().loadClass(serviceType);
-                if (type!=null) 
-                    return type;
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                log.debug("Item "+serviceType+" not known in classpath ("+mgmt.getCatalog().getRootClassLoader()+"): "+e);
-            }
-            
-            if (mustBeBrooklyn)
-                throw new IllegalArgumentException("Unknown brooklyn service/entity type: "+rawServiceType);
+            if (!BrooklynComponentTemplateResolver.Factory.supportsType(mgmt, ((Service)deploymentPlanItem).getServiceType()))
+                return null;
+            return ((Service)deploymentPlanItem).getServiceType();
         }
         return null;
     }
 
     @Override
     public boolean apply(Object deploymentPlanItem, AssemblyTemplateConstructor atc) {
-        Object item = lookup(deploymentPlanItem);
-        if (item==null) return false;
+        if (!(deploymentPlanItem instanceof Service)) return false;
+        
+        String type = lookupType(deploymentPlanItem);
+        if (type==null) return false;
 
-        log.debug("Item "+deploymentPlanItem+" being instantiated with "+item);
+        log.debug("Item "+deploymentPlanItem+" being instantiated with "+type);
 
         Object old = atc.getInstantiator();
         if (old!=null && !old.equals(BrooklynAssemblyTemplateInstantiator.class)) {
@@ -91,16 +66,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         }
 
         Builder<? extends PlatformComponentTemplate> builder = PlatformComponentTemplate.builder();
-        
-        String type;
-        if (item instanceof CatalogItem) {
-            type = ((CatalogItem<?>)item).getJavaType();
-        } else if (item instanceof Class) {
-            type = ((Class<?>) item).getName();
-        } else {
-            throw new IllegalStateException("Item "+item+" is not recognised here");
-        }
-        builder.type( "brooklyn:"+type );
+        builder.type( type.indexOf(':')==-1 ? "brooklyn:"+type : type );
         
         // currently instantiator must be brooklyn at the ATC level
         // optionally would be nice to support multiple/mixed instantiators, 
@@ -131,7 +97,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
             brooklynConfig.putAll((Map<?,?>)origBrooklynConfig);
         }
         // also take *recognised* flags and config keys from the top-level, and put them under config
-        List<FlagConfigKeyAndValueRecord> topLevelApparentConfig = extractValidConfigFlagsOrKeys(Strings.removeFromStart(type, "brooklyn:"), attrs, true);
+        List<FlagConfigKeyAndValueRecord> topLevelApparentConfig = extractValidConfigFlagsOrKeys(type, attrs, true);
         if (topLevelApparentConfig!=null) for (FlagConfigKeyAndValueRecord r: topLevelApparentConfig) {
             if (r.getConfigKeyMaybeValue().isPresent())
                 brooklynConfig.put(r.getConfigKey(), r.getConfigKeyMaybeValue().get());
@@ -191,7 +157,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         if (attrs==null || attrs.isEmpty())
             return null;
         try {
-            Class<?> type = Class.forName(typeName);
+            Class<Entity> type = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, typeName).loadEntityClass();
             ConfigBag bag = ConfigBag.newInstance(attrs);
             List<FlagConfigKeyAndValueRecord> values = FlagUtils.findAllFlagsAndConfigKeys(null, type, bag);
             

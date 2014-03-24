@@ -1,11 +1,8 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatform;
 import io.brooklyn.camp.brooklyn.spi.platform.HasBrooklynManagementContext;
-import io.brooklyn.camp.spi.AbstractResource;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
@@ -13,12 +10,9 @@ import io.brooklyn.camp.spi.collection.ResolvableLink;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +22,9 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicApplicationImpl;
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
@@ -46,21 +37,11 @@ import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.EnricherSpec;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import brooklyn.util.text.Strings;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateInstantiator {
@@ -99,7 +80,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             log.warn("CAMP AssemblyTemplate was not empty when creating from catalog spec; ignoring templates declared within it " +
                     "("+template+")");
 
-        // TODO name (and description) -- not prescribed by camp spec (cf discussion with gil)
+        // name (and description) -- not prescribed by camp spec (cf discussion with gil)
         String name = template.getName();
                 
         String type = item.getJavaType();
@@ -110,7 +91,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         if (Strings.isEmpty(type)) {
             clazz = BasicApplication.class;
         } else {
-            clazz = BrooklynEntityClassResolver.resolve(type, mgmt);
+            clazz = BrooklynEntityClassResolver.resolveEntity(type, mgmt);
         }
         
         try {
@@ -120,7 +101,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                 
                 if (!Strings.isEmpty(name)) appBuilder.appDisplayName(name);
         
-                // TODO use configureEntitySpec instead
+                // TODO use resolver's configureEntitySpec instead
                 final Map<?,?> configO = (Map<?,?>) template.getCustomAttributes().get("brooklyn.config");
 
                 log.info("CAMP placing '{}' under management", appBuilder);
@@ -132,7 +113,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                     ((EntityInternal)instance).addLocations(locations);
                 
             } else if (Application.class.isAssignableFrom(clazz)) {
-                // TODO use configureEntitySpec instead
+                // TODO use resolver's configureEntitySpec instead
                 final Map<?,?> configO = (Map<?,?>) template.getCustomAttributes().get("brooklyn.config");
                 
                 brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
@@ -157,18 +138,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         }
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T> Class<T> loadClass(BrooklynCatalog catalog, String type) throws ClassNotFoundException {
-        try {
-            Class<T> result = (Class<T>) catalog.getRootClassLoader().loadClass(type);
-            log.debug("Loaded class {} directly", type);
-            return result;
-        } catch (ClassNotFoundException e) {
-            log.warn("Could not load class {} directly; rethrowing", type);
-            throw e;
-        }
-    }
-
     private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
         ManagementContext mgmt = ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
         return mgmt;
@@ -181,7 +150,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             MutableMap.of("locations", MutableList.of()));
     }
 
-    // TODO exact copy of BrooklynRestResoureUtils
+    // TODO this is an exact copy of BrooklynRestResoureUtils; make available to both somehow? (or even better, avoid somehow)
     private static Map<?,?> convertFlagsToKeys(Class<? extends Entity> javaType, Map<?, ?> config) {
         if (config==null || config.isEmpty() || javaType==null) return config;
 
@@ -199,7 +168,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         return result;
     }
 
-    // TODO exact copy of BRRU
+    // TODO exact copy of BRRU, as above
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private <T extends Entity> EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<?,?> configO) {
         Map<?, ?> config = (configO == null) ? Maps.newLinkedHashMap() : Maps.newLinkedHashMap(configO);
@@ -220,156 +189,19 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         return result;
     }
 
-    /** returns new *uninitialised* entity, with just a few of the pieces from the spec;
-     * initialisation occurs soon after, in {@link #initEntity(ManagementContext, Entity, EntitySpec)},
-     * inside an execution context and after entity ID's are recognised
-     */
-    protected <T extends Entity> T newEntity(ManagementContext mgmt, EntitySpec<T> spec) {
-        Class<? extends T> entityImpl = (spec.getImplementation() != null) ? spec.getImplementation() : mgmt.getEntityManager().getEntityTypeRegistry().getImplementedBy(spec.getType());
-        InternalEntityFactory entityFactory = ((ManagementContextInternal)mgmt).getEntityFactory();
-        T entity = entityFactory.constructEntity(entityImpl, spec);
-        if (entity instanceof AbstractApplication) {
-            FlagUtils.setFieldsFromFlags(ImmutableMap.of("mgmt", mgmt), entity);
-        }
-
-        // TODO Some of the code below could go into constructEntity?
-        if (spec.getId() != null) {
-            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", spec.getId()), entity);
-        }
-        String planId = (String)spec.getConfig().get(BrooklynCampConstants.PLAN_ID.getConfigKey());
-        if (planId != null) {
-            ((EntityInternal)entity).setConfig(BrooklynCampConstants.PLAN_ID, planId);
-        }
-        ((ManagementContextInternal)mgmt).prePreManage(entity);
-        ((AbstractEntity)entity).setManagementContext((ManagementContextInternal)mgmt);
-        
-        ((AbstractEntity)entity).setProxy(entityFactory.createEntityProxy(spec, entity));
-        
-        if (spec.getParent() != null) entity.setParent(spec.getParent());
-        
-        return entity;
-    }
-
-    protected <T extends Entity> void initEntity(ManagementContext mgmt, T entity, EntitySpec<T> spec) {
-        InternalEntityFactory entityFactory = ((ManagementContextInternal)mgmt).getEntityFactory();
-        entityFactory.initEntity(entity, spec);
-    }
-
-    protected <T extends Entity> EntitySpec<T> buildSpec(ManagementContext mgmt, Class<T> type, Map<String, Object> attrsOrig) {
-        Map<String, Object> attrs = MutableMap.copyOf(attrsOrig);
-        String name = (String)attrs.remove("name");
-        String id = (String)attrs.remove("id");
-        List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(attrs, true);
-        
-        EntitySpec<T> spec = EntitySpec.create(type);
-        if (!Strings.isBlank(name))
-            spec.displayName(name);
-        if (id != null)
-            spec.configure(BrooklynCampConstants.PLAN_ID, id);
-        if (locations != null)
-            spec.locations(locations);
-        
-        decorateSpec(mgmt, spec, attrs);
-        
-        return spec;
-    }
-
-    protected <T extends Entity> void decorateSpec(ManagementContext mgmt, EntitySpec<T> spec, Map<String, Object> attrs) {
-        spec.policySpecs(extractPolicySpecs(mgmt, attrs));
-        spec.enricherSpecs(extractEnricherSpecs(mgmt, attrs));
-        configureEntityConfig(spec, attrs, mgmt);
-    }
-
-    protected <T extends Entity> EntitySpec<T> buildSpec(ManagementContext mgmt, Class<T> type, AbstractResource template) {
-        return buildSpec(mgmt, type, null, template);
-    }
-    
-    protected <T extends Entity> EntitySpec<T> buildSpec(ManagementContext mgmt, Class<T> type, Class<? extends T> impl, AbstractResource template) {
-        Map<String, Object> customAttrs = MutableMap.copyOf(template.getCustomAttributes());
-        String name = template.getName();
-        String id = template.getId();
-        String planId = (String) customAttrs.remove("planId");
-        List<Location> childLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(customAttrs, true);
-
-        EntitySpec<T> spec = EntitySpec.create(type);
-        if (impl != null) spec.impl(impl);
-        if (!Strings.isBlank(name))
-            spec.displayName(name);
-        if (id != null)
-            spec.configure(BrooklynCampConstants.TEMPLATE_ID, id);
-        if (planId != null)
-            spec.configure(BrooklynCampConstants.PLAN_ID, planId);
-        if (childLocations != null)
-            spec.locations(childLocations);
-        
-        decorateSpec(mgmt, spec, customAttrs);
-        
-        return spec;
-    }
-
-    @SuppressWarnings("unchecked")
-    private void configureEntityConfig(EntitySpec<?> spec, Map<String, Object> attrs, ManagementContext mgmt) {
-        ConfigBag bag = ConfigBag.newInstance((Map<Object, Object>) attrs.remove("brooklyn.config"));
-        
-        List<FlagConfigKeyAndValueRecord> records = FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bag);
-        Set<String> keyNamesUsed = new LinkedHashSet<String>();
-        for (FlagConfigKeyAndValueRecord r: records) {
-            if (r.getFlagMaybeValue().isPresent()) {
-                Object transformed = transformSpecialFlags(r.getFlagMaybeValue().get(), mgmt);
-                spec.configure(r.getFlagName(), transformed);
-                keyNamesUsed.add(r.getFlagName());
-            }
-            if (r.getConfigKeyMaybeValue().isPresent()) {
-                Object transformed = transformSpecialFlags(r.getConfigKeyMaybeValue().get(), mgmt);
-                spec.configure((ConfigKey<Object>)r.getConfigKey(), transformed);
-                keyNamesUsed.add(r.getConfigKey().getName());
-            }
-        }
-
-        // set unused keys as anonymous config keys -
-        // they aren't flags or known config keys, so must be passed as config keys in order for
-        // EntitySpec to know what to do with them (as they are passed to the spec as flags)
-        for (String key: MutableSet.copyOf(bag.getUnusedConfig().keySet())) {
-            // we don't let a flag with the same name as a config key override the config key
-            // (that's why we check whether it is used)
-            if (!keyNamesUsed.contains(key)) {
-                Object transformed = transformSpecialFlags(bag.getStringKey(key), mgmt);
-                spec.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), transformed);
-            }
-        }
-    }
-
-    /**
-     * Makes additional transformations to the given flag with the extra knowledge of the flag's management context.
-     * @return The modified flag, or the flag unchanged.
-     */
-    protected Object transformSpecialFlags(Object flag, ManagementContext mgmt) {
-        if (flag instanceof EntitySpecConfiguration) {
-            EntitySpecConfiguration specConfig = (EntitySpecConfiguration) flag;
-            String type = (String) checkNotNull(specConfig.getSpecConfiguration().get("type"), "entitySpec must have key 'type'");
-            Class<? extends Entity> clazz = BrooklynEntityClassResolver.resolve(type, mgmt);
-            return buildSpec(mgmt, clazz, specConfig.getSpecConfiguration());
-        }
-        return flag;
-    }
-
     /*
      * recursive method that finds child entities referenced in the config map, side-effecting the entities and entitySpecs maps.
      */
-    @SuppressWarnings("unchecked")
     protected void buildEntityHierarchy(ManagementContext mgmt, Map<Entity, EntitySpec<?>> entitySpecs, Entity parent, List<Map<String, Object>> childConfig) {
         if (childConfig != null) {
             for (Map<String, Object> childAttrs : childConfig) {
-                MutableMap<String, Object> childAttrsMutable = MutableMap.copyOf(childAttrs);
-                String bTypeName = Strings.removeFromStart((String)childAttrsMutable.remove("serviceType"), "brooklyn:");
-                final Class<? extends Entity> bType = BrooklynEntityClassResolver.resolve(bTypeName, mgmt);
+                BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, childAttrs);
+                EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
 
-                final EntitySpec<? extends Entity> spec = buildSpec(mgmt, bType, childAttrsMutable);
                 spec.parent(parent);
-                Entity entity = newEntity(mgmt, spec);
+                Entity entity = entityResolver.newEntity(spec);
                 entitySpecs.put(entity, spec);
-
-                buildEntityHierarchy(mgmt, entitySpecs, entity, (List<Map<String, Object>>) childAttrs.get("brooklyn.children"));
+                buildEntityHierarchy(mgmt, entitySpecs, entity, entityResolver.getChildren(childAttrs));
             }
         }
     }
@@ -380,26 +212,21 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         final ManagementContext mgmt = getBrooklynManagementContext(platform);
 
         Map<Entity, EntitySpec<?>> entitySpecs = Maps.newLinkedHashMap();
-        
-        EntitySpec<StartableApplication> appSpec = buildSpec(mgmt, StartableApplication.class, BasicApplicationImpl.class, template);
-        String planId = (String) template.getCustomAttributes().get("id");
-        if (planId != null)
-            appSpec.configure(BrooklynCampConstants.PLAN_ID, planId);
-        Application app = newEntity(mgmt, appSpec);
+
+        BrooklynComponentTemplateResolver appResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, template);
+        EntitySpec<StartableApplication> appSpec = appResolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
+        Application app = appResolver.newEntity(appSpec);
         entitySpecs.put(app, appSpec);
         
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
-            final PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
-            final String bTypeName = Strings.removeFromStart(appChildComponentTemplate.getType(), "brooklyn:");
-            final Class<? extends Entity> bType = BrooklynEntityClassResolver.resolve(bTypeName, mgmt);
+            PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
+            BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
+            EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
 
-            final EntitySpec<? extends Entity> spec = buildSpec(mgmt, bType, appChildComponentTemplate);
             spec.parent(app);
-            Entity entity = newEntity(mgmt, spec);
+            Entity entity = entityResolver.newEntity(spec);
             entitySpecs.put(entity, spec);
-            
-            List<Map<String, Object>> childAttrs = (List<Map<String, Object>>) appChildComponentTemplate.getCustomAttributes().get("brooklyn.children");
-            buildEntityHierarchy(mgmt, entitySpecs, entity, childAttrs);
+            buildEntityHierarchy(mgmt, entitySpecs, entity, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));
         }
 
         for (final Entity entity : entitySpecs.keySet()) {
@@ -418,75 +245,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
 
         return app;
     }
-    
-    private <T extends Policy> PolicySpec<?> toCorePolicySpec(Class<T> clazz, Map<?, ?> config) {
-        Map<?, ?> policyConfig = (config == null) ? Maps.<Object, Object>newLinkedHashMap() : Maps.newLinkedHashMap(config);
-        PolicySpec<?> result;
-        result = PolicySpec.create(clazz)
-                .configure(policyConfig);
-        return result;
+
+    protected <T extends Entity> void initEntity(ManagementContext mgmt, T entity, EntitySpec<T> spec) {
+        InternalEntityFactory entityFactory = ((ManagementContextInternal)mgmt).getEntityFactory();
+        entityFactory.initEntity(entity, spec);
     }
 
-    private <T extends Enricher> EnricherSpec<?> toCoreEnricherSpec(Class<T> clazz, Map<?, ?> config) {
-        Map<?, ?> enricherConfig = (config == null) ? Maps.<Object, Object>newLinkedHashMap() : Maps.newLinkedHashMap(config);
-        EnricherSpec<?> result;
-        result = EnricherSpec.create(clazz)
-                .configure(enricherConfig);
-        return result;
-    }
-    
-    private List<PolicySpec<?>> extractPolicySpecs(ManagementContext mgmt, Map<String, Object> attrs) {
-        return buildPolicySpecs(mgmt, attrs.remove("brooklyn.policies"));
-    }
-
-    private List<PolicySpec<?>> buildPolicySpecs(ManagementContext mgmt, Object policies) {
-        List<PolicySpec<?>> policySpecs = new ArrayList<PolicySpec<?>>();
-        if (policies instanceof Iterable) {
-            for (Object policy : (Iterable<?>)policies) {
-                if (policy instanceof Map) {
-                    String policyTypeName = ((Map<?, ?>) policy).get("policyType").toString();
-                    Class<? extends Policy> policyType = null;
-                    try {
-                        policyType = this.<Policy>loadClass(mgmt.getCatalog(), policyTypeName);
-                    } catch (ClassNotFoundException e) {
-                        throw Exceptions.propagate(e);
-                    }
-                    policySpecs.add(toCorePolicySpec(policyType, (Map<?, ?>) ((Map<?, ?>) policy).get("brooklyn.config")));
-                } else {
-                    throw new IllegalArgumentException("policy should be map, not " + policy.getClass());
-                }
-            }
-        } else if (policies != null) {
-            // TODO "map" short form
-            throw new IllegalArgumentException("policies body should be iterable, not " + policies.getClass());
-        }
-        return policySpecs;
-    }
-    
-    private List<EnricherSpec<?>> extractEnricherSpecs(ManagementContext mgmt, Map<String, Object> attrs) {
-        return buildEnricherSpecs(mgmt, attrs.remove("brooklyn.enrichers"));
-    }    
-
-    private List<EnricherSpec<?>> buildEnricherSpecs(ManagementContext mgmt, Object enrichers) {
-        List<EnricherSpec<?>> enricherSpecs = Lists.newArrayList();
-        if (enrichers instanceof Iterable) {
-            for (Object enricher : (Iterable<?>)enrichers) {
-                if (enricher instanceof Map) {
-                    String enricherTypeName = ((Map<?, ?>) enricher).get("enricherType").toString();
-                    Class<? extends Enricher> enricherType = null;
-                    try {
-                        enricherType = this.<Enricher>loadClass(mgmt.getCatalog(), enricherTypeName);
-                    } catch (ClassNotFoundException e) {
-                        throw Exceptions.propagate(e);
-                    }
-                    enricherSpecs.add(toCoreEnricherSpec(enricherType, (Map<?, ?>) ((Map<?, ?>) enricher).get("brooklyn.config")));
-                } else {
-                    throw new IllegalArgumentException("enricher should be map, not " + enricher.getClass());
-                }
-            }
-        } else if (enrichers != null) {
-            throw new IllegalArgumentException("enrichers body should be iterable, not " + enrichers.getClass());
-        }
-        return enricherSpecs;
-    }
 }

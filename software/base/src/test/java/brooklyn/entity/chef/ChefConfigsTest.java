@@ -23,8 +23,8 @@ public class ChefConfigsTest {
     @Test
     public void testAddToRunList() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        ChefConfigs.addToRunList(app, "a", "b");
-        Set<? extends String> runs = app.getConfig(ChefConfig.CHEF_RUN_LIST);
+        ChefConfigs.addToLaunchRunList(app, "a", "b");
+        Set<? extends String> runs = app.getConfig(ChefConfig.CHEF_LAUNCH_RUN_LIST);
         Assert.assertEquals(runs.size(), 2, "runs="+runs);
         Assert.assertTrue(runs.contains("a"));
         Assert.assertTrue(runs.contains("b"));

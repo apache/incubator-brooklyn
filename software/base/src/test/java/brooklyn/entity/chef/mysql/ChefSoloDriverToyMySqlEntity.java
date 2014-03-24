@@ -14,7 +14,8 @@ import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 
-public class ChefDriverToyMySqlEntity extends SoftwareProcessImpl implements ChefConfig {
+@Deprecated /** @deprecated since 0.7.0 use MySqlEntityChef */
+public class ChefSoloDriverToyMySqlEntity extends SoftwareProcessImpl implements ChefConfig {
 
     public static final String PID_FILE = "/var/run/mysqld/mysqld.pid";
     public static final ConfigKey<TaskFactory<? extends TaskAdaptable<Boolean>>> IS_RUNNING_TASK =
@@ -54,7 +55,7 @@ public class ChefDriverToyMySqlEntity extends SoftwareProcessImpl implements Che
     @Override
     public void init() {
         super.init();
-        ChefConfigs.addToRunList(this, "mysql::server");
+        ChefConfigs.addToLaunchRunList(this, "mysql::server");
         ChefConfigs.addToCookbooksFromGithub(this, "mysql", "build-essential", "openssl");
         ChefConfigs.setLaunchAttribute(this, "mysql",  
                 MutableMap.of()

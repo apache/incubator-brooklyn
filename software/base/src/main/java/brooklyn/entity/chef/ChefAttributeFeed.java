@@ -80,10 +80,11 @@ public class ChefAttributeFeed extends AbstractFeed {
         return new Builder();
     }
 
+    @SuppressWarnings("rawtypes")
     public static class Builder {
         private EntityLocal entity;
         private String nodeName;
-        private Map<String, AttributeSensor> sensors = Maps.newHashMap();
+        private Map<String, AttributeSensor<?>> sensors = Maps.newHashMap();
         private long period = 30;
         private TimeUnit periodUnits = TimeUnit.SECONDS;
         private volatile boolean built;
@@ -142,7 +143,7 @@ public class ChefAttributeFeed extends AbstractFeed {
     private final String nodeName;
     private final long period;
     private final TimeUnit periodUnits;
-    private final Map<String, AttributeSensor> chefAttributeSensors;
+    private final Map<String, AttributeSensor<?>> chefAttributeSensors;
     private final KnifeTaskFactory<String> knifeTaskFactory;
 
     protected ChefAttributeFeed(Builder builder) {
@@ -155,6 +156,7 @@ public class ChefAttributeFeed extends AbstractFeed {
         knifeTaskFactory = new KnifeNodeAttributeQueryTaskFactory(nodeName);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void preStart() {
         final Callable<SshPollValue> getAttributesFromKnife = new Callable<SshPollValue>() {
@@ -222,10 +224,10 @@ public class ChefAttributeFeed extends AbstractFeed {
         private static final Iterable<String> PREFIXES = ImmutableList.of("", "automatic", "force_override", "override", "normal", "force_default", "default");
         private static final Splitter SPLITTER = Splitter.on('.');
 
-        private Map<String, AttributeSensor> chefAttributeSensors;
+        private Map<String, AttributeSensor<?>> chefAttributeSensors;
         private EntityLocal entity;
 
-        public SendChefAttributesToSensors(EntityLocal entity, Map<String, AttributeSensor> chefAttributeSensors) {
+        public SendChefAttributesToSensors(EntityLocal entity, Map<String, AttributeSensor<?>> chefAttributeSensors) {
             this.chefAttributeSensors = chefAttributeSensors;
             this.entity = entity;
         }
@@ -241,6 +243,7 @@ public class ChefAttributeFeed extends AbstractFeed {
             return true;
         }
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public void onSuccess(SshPollValue val) {
             String stdout = val.getStdout();
@@ -249,9 +252,9 @@ public class ChefAttributeFeed extends AbstractFeed {
                 stdout = stdout.substring(jsonStarts);
             JsonElement jsonElement = new Gson().fromJson(stdout, JsonElement.class);
 
-            for (Map.Entry<String, AttributeSensor> attribute : chefAttributeSensors.entrySet()) {
+            for (Map.Entry<String, AttributeSensor<?>> attribute : chefAttributeSensors.entrySet()) {
                 String chefAttributeName = attribute.getKey();
-                AttributeSensor sensor = attribute.getValue();
+                AttributeSensor<?> sensor = attribute.getValue();
                 log.trace("Finding value for attribute sensor " + sensor.getName());
 
                 Iterable<String> path = SPLITTER.split(chefAttributeName);
@@ -280,7 +283,7 @@ public class ChefAttributeFeed extends AbstractFeed {
                     }
                 }
                 if (elementForSensor != null) {
-                    entity.setAttribute(sensor, TypeCoercions.coerce(elementForSensor.getAsString(), sensor.getType()));
+                    entity.setAttribute((AttributeSensor)sensor, TypeCoercions.coerce(elementForSensor.getAsString(), sensor.getType()));
                 } else {
                     log.debug("Entity {}: no Chef attribute matching {}; setting sensor {} to null", new Object[]{
                             entity.getDisplayName(),
@@ -308,7 +311,7 @@ public class ChefAttributeFeed extends AbstractFeed {
         @Override
         public void onFailure(SshPollValue val) {
             log.error("Chef attribute query did not respond as expected. exitcode={} stdout={} stderr={}", new Object[]{val.getExitStatus(), val.getStdout(), val.getStderr()});
-            for (AttributeSensor attribute : chefAttributeSensors.values()) {
+            for (AttributeSensor<?> attribute : chefAttributeSensors.values()) {
                 if (!attribute.getName().startsWith(CHEF_ATTRIBUTE_PREFIX))
                     continue;
                 entity.setAttribute(attribute, null);
@@ -318,7 +321,7 @@ public class ChefAttributeFeed extends AbstractFeed {
         @Override
         public void onException(Exception exception) {
             log.error("Detected exception while retrieving Chef attributes from entity " + entity.getDisplayName(), exception);
-            for (AttributeSensor attribute : chefAttributeSensors.values()) {
+            for (AttributeSensor<?> attribute : chefAttributeSensors.values()) {
                 if (!attribute.getName().startsWith(CHEF_ATTRIBUTE_PREFIX))
                     continue;
                 entity.setAttribute(attribute, null);

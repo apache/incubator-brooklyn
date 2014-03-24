@@ -1,18 +1,16 @@
-# shows how an entity can be constructed simply given a command to run
-# (optionally it can also take an archive, see VanillaSoftwareProcess for more info)
+# shows how multiple software processes can be built up, sequentially, as part of a compound entity
 # used in VanillaSoftwareYamlTest
 
 name: vanilla-date-test
 location: localhost
 services:
-- type: brooklyn.entity.basic.VanillaSoftwareProcess
+- type: vanilla
   name: Date1
   brooklyn.config:
     launch.command: "echo utc `date +%s` > DATE ; echo human `date` >> DATE ; { nohup sleep 60 & } ; echo $! > $PID_FILE ; sleep 3"
     children.startable.mode: foreground_late
-
-# TODO Date2 should be a child of Date1 - and see test which also needs to be updated!
-#- type: brooklyn.entity.basic.VanillaSoftwareProcess
-#  name: Date2
-#  brooklyn.config:
-#    launch.command: "echo utc `date +%s` > DATE ; echo human `date` >> DATE ; { nohup sleep 60 & } ; echo $! > $PID_FILE ; sleep 3"
+  brooklyn.children:
+  - type: vanilla
+    name: Date2
+    brooklyn.config:
+      launch.command: "echo utc `date +%s` > DATE ; echo human `date` >> DATE ; { nohup sleep 60 & } ; echo $! > $PID_FILE ; sleep 3"

@@ -9,8 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.management.ManagementContext;
-
-import com.google.common.base.Optional;
+import brooklyn.util.guava.Maybe;
 
 /**
  * Resolves a class name to a <code>Class&lt;? extends Entity&gt;</code> with a given 
@@ -25,40 +24,41 @@ public class BrooklynEntityClassResolver {
      * Tries the context's catalogue first, then from its root classloader.
      * @throws java.lang.IllegalStateException if no class extending {@link Entity} is found
      */
-    public static Class<? extends Entity> resolve(String entityType, ManagementContext mgmt) {
+    public static <T extends Entity> Class<T> resolveEntity(String entityTypeName, ManagementContext mgmt) {
         checkNotNull(mgmt, "management context");
-        Optional<Class<? extends Entity>> entityClazz = tryLoadFromCatalogue(entityType, mgmt);
-        if (!entityClazz.isPresent()) entityClazz = tryLoadFromClasspath(entityType, mgmt);
+        Maybe<Class<T>> entityClazz = tryLoadEntityFromCatalogue(entityTypeName, mgmt);
+        if (!entityClazz.isPresent()) entityClazz = tryLoadFromClasspath(entityTypeName, mgmt);
         if (!entityClazz.isPresent()) {
-            LOG.warn("No catalog item for {} and could not load class directly; throwing", entityType);
-            throw new IllegalStateException("Unable to load class "+ entityType +" (extending Entity) from catalogue or classpath");
+            LOG.warn("No catalog item for {} and could not load class directly; throwing", entityTypeName);
+            throw new IllegalStateException("Unable to load class "+ entityTypeName +" (extending Entity) from catalogue or classpath: not found");
         }
-        return entityClazz.get();
+        if (!Entity.class.isAssignableFrom(entityClazz.get())) {
+            LOG.warn("Found class {} on classpath but it is not assignable to {}", entityTypeName, Entity.class);
+            throw new IllegalStateException("Unable to load class "+ entityTypeName +" (extending Entity) from catalogue or classpath: wrong type "+entityClazz.get());
+        }
+        return (Class<T>) entityClazz.get();
     }
 
-    private static Optional<Class<? extends Entity>> tryLoadFromCatalogue(String entityType, ManagementContext mgmt) {
+    @SuppressWarnings("unchecked")
+    public static <T extends Entity> Maybe<Class<T>> tryLoadEntityFromCatalogue(String entityTypeName, ManagementContext mgmt) {
         try {
-            return Optional.<Class<? extends Entity>>of(mgmt.getCatalog().loadClassByType(entityType, Entity.class));
+            return (Maybe<Class<T>>)(Maybe<?>) Maybe.<Class<? extends Entity>>of(mgmt.getCatalog().loadClassByType(entityTypeName, Entity.class));
         } catch (NoSuchElementException e) {
-            LOG.debug("Class {} not found in catalogue classpath", entityType);
-            return Optional.absent();
+            LOG.debug("Class {} not found in catalogue classpath", entityTypeName);
+            return Maybe.absent();
         }
     }
 
-    private static Optional<Class<? extends Entity>> tryLoadFromClasspath(String entityType, ManagementContext mgmt) {
-        Class<?> clazz;
+    @SuppressWarnings("unchecked")
+    public static <T> Maybe<Class<T>> tryLoadFromClasspath(String typeName, ManagementContext mgmt) {
+        Class<T> clazz;
         try {
-            clazz = mgmt.getCatalog().getRootClassLoader().loadClass(entityType);
+            clazz = (Class<T>) mgmt.getCatalog().getRootClassLoader().loadClass(typeName);
         } catch (ClassNotFoundException e) {
-            LOG.debug("Class {} not found on classpath", entityType);
-            return Optional.absent();
+            LOG.debug("Class {} not found on classpath", typeName);
+            return Maybe.absent(new Throwable("Could not find "+typeName+" on classpath"));
         }
 
-        if (Entity.class.isAssignableFrom(clazz)) {
-            return Optional.<Class<? extends Entity>>of((Class<Entity>) clazz);
-        } else {
-            LOG.debug("Found class {} on classpath but it is not assignable to {}", entityType, Entity.class);
-            return Optional.absent();
-        }
+        return Maybe.<Class<T>>of(clazz);
     }
 }

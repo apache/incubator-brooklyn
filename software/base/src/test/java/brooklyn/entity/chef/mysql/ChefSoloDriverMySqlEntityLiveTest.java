@@ -20,13 +20,13 @@ public class ChefSoloDriverMySqlEntityLiveTest extends AbstractChefToyMySqlEntit
 
     @Override
     protected Integer getPid(Entity mysql) {
-        ProcessTaskWrapper<Integer> t = Entities.submit(mysql, SshEffectorTasks.ssh("sudo cat "+ChefDriverToyMySqlEntity.PID_FILE));
+        ProcessTaskWrapper<Integer> t = Entities.submit(mysql, SshEffectorTasks.ssh("sudo cat "+ChefSoloDriverToyMySqlEntity.PID_FILE));
         return Integer.parseInt(t.block().getStdout().trim());
     }
     
     @Override
     protected Entity createMysql() {
-        return app.createAndManageChild(EntitySpec.create(Entity.class, ChefDriverToyMySqlEntity.class).
+        return app.createAndManageChild(EntitySpec.create(Entity.class, ChefSoloDriverToyMySqlEntity.class).
                 additionalInterfaces(SoftwareProcess.class));
     }
     
