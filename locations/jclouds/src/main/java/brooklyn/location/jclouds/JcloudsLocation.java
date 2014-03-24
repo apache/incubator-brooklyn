@@ -1517,7 +1517,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     
     protected Map<String,Object> extractSshConfig(ConfigBag setup, NodeMetadata node) {
         ConfigBag nodeConfig = new ConfigBag();
-        if (node!=null) {
+        if (node!=null && node.getCredentials() != null) {
             nodeConfig.putIfNotNull(PASSWORD, node.getCredentials().getPassword());
             nodeConfig.putIfNotNull(PRIVATE_KEY_DATA, node.getCredentials().getPrivateKey());
         }
