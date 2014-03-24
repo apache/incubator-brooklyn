@@ -43,7 +43,7 @@ public class SampleMain extends Main {
     }
 
     @Command(name = "launch", description = "Starts a server, and optionally an application. "
-        + "Use e.g. --single or --cluster to launch one-node and clustered variants of the sample web applicaiton.")
+        + "Use e.g. --single or --cluster to launch one-node and clustered variants of the sample web application.")
     public static class LaunchCommand extends Main.LaunchCommand {
 
         // add these options to the LaunchCommand as shortcuts for our favourite applications

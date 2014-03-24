@@ -41,7 +41,7 @@ custom keys and passphrases. For more information see:
 
 Usage:
 
-    ./start.sh launch <--type> \
+    ./start.sh launch [--WHAT] \
         [--port 8081+] \
         [--location location] 
 
@@ -53,8 +53,9 @@ http://brooklyncentral.github.io/use/guide/management/ .)
 In the console, you can access the catalog and deploy applications to
 configured locations.
 
-In this sample application, `--cluster` and `--single` are supported as <--type>,
-or leave it blank to have nothing launched. (These sample classes will be in the catalog.)
+In this sample application, `--cluster` and `--single` are supported in place of `--WHAT`,
+corresponding to sample blueprints in the project. This can be left blank to have nothing 
+launched; note that the blueprints can be launched at runtime via the GUI or API.
 
 Use `./start.sh help` or `./start.sh help launch` for more detailed help.
 
@@ -88,7 +89,7 @@ contact Cloudsoft, the supporters of Brooklyn, at:
 * www.CloudsoftCorp.com
 * info@cloudsoftcorp.com
 
-Brooklyn is (c) 2013 Cloudsoft Corporation and released as open source under 
+Brooklyn is (c) 2014 Cloudsoft Corporation and released as open source under 
 the Apache License v2.0.
 
 A sample Brooklyn project should specify its license here.
