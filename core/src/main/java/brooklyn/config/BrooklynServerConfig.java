@@ -40,7 +40,11 @@ public class BrooklynServerConfig {
     
     public static String getMgmtBaseDir(StringConfigMap brooklynProperties) {
         String base = (String) brooklynProperties.getConfigRaw(MGMT_BASE_DIR, true).orNull();
-        if (base==null) base = brooklynProperties.getConfig(BROOKLYN_DATA_DIR);
+        if (base==null) {
+            base = brooklynProperties.getConfig(BROOKLYN_DATA_DIR);
+            if (base!=null)
+                log.warn("Using deprecated "+BROOKLYN_DATA_DIR.getName()+": use "+MGMT_BASE_DIR.getName()+" instead; value: "+base);
+        }
         if (base==null) base = brooklynProperties.getConfig(MGMT_BASE_DIR);
         return Os.tidyPath(base)+File.separator;
     }
