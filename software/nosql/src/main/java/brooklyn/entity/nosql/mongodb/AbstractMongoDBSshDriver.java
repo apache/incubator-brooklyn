@@ -1,5 +1,6 @@
 package brooklyn.entity.nosql.mongodb;
 
+import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -61,8 +62,11 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
     
     @Override
     public boolean isRunning() {
-        Map<String,?> flags = ImmutableMap.of("usePidFile", getPidFile());
-        return newScript(flags, CHECK_RUNNING).execute() == 0;
+        try {
+            return MongoDBClientSupport.forServer((AbstractMongoDBServer) entity).getServerStatus().get("ok").equals(1.0);
+        } catch (Exception e) {
+            return false;
+        }
     }
     
     /**
@@ -141,4 +145,5 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
                 .updateTaskAndFailOnNonZeroResultCode()
                 .body.append(command).execute();
     }
+ 
 }
