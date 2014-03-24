@@ -29,6 +29,7 @@ import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
@@ -73,6 +74,7 @@ public class AbstractControllerTest {
         loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(MutableMap.of("machines", machines));
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app.setConfig(MachineLifecycleEffectorTasks.SKIP_ON_BOX_BASE_DIR_RESOLUTION, true);
         cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 0)
                 .configure("factory", new ClusteredEntity.Factory()));

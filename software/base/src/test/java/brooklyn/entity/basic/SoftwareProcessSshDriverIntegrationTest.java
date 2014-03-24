@@ -15,6 +15,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
@@ -27,7 +28,8 @@ import com.google.common.io.Files;
 public class SoftwareProcessSshDriverIntegrationTest {
 
     private LocalManagementContext managementContext;
-    private SshMachineLocation machine;
+    private LocalhostMachineProvisioningLocation localhost;
+    private SshMachineLocation machine127;
     private TestApplication app;
     private File tempDataDir;
     
@@ -35,9 +37,9 @@ public class SoftwareProcessSshDriverIntegrationTest {
     public void setUp() throws Exception {
         tempDataDir = Files.createTempDir();
         managementContext = new LocalManagementContext();
-        managementContext.getBrooklynProperties().put(BrooklynConfigKeys.BROOKLYN_DATA_DIR, tempDataDir.getAbsolutePath());
         
-        machine = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+        localhost = managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
+        machine127 = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", "localhost"));
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     }
@@ -49,13 +51,16 @@ public class SoftwareProcessSshDriverIntegrationTest {
     }
 
     // Integration test because requires ssh'ing (and takes about 5 seconds)
+    // See also SoftwareProcessEntityTest.testCustomInstallDirX for a lot more mocked variants
     @Test(groups="Integration")
     public void testCanInstallMultipleVersionsOnSameMachine() throws Exception {
+        managementContext.getBrooklynProperties().put(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+
         MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class)
                 .configure(SoftwareProcess.SUGGESTED_VERSION, "0.1.0"));
         MyService entity2 = app.createAndManageChild(EntitySpec.create(MyService.class)
                 .configure(SoftwareProcess.SUGGESTED_VERSION, "0.2.0"));
-        app.start(ImmutableList.of(machine));
+        app.start(ImmutableList.of(machine127));
         
         String installDir1 = entity.getAttribute(SoftwareProcess.INSTALL_DIR);
         String installDir2 = entity2.getAttribute(SoftwareProcess.INSTALL_DIR);
@@ -65,6 +70,47 @@ public class SoftwareProcessSshDriverIntegrationTest {
         assertTrue(installDir2.contains("0.2.0"), "installDir2="+installDir2);
         assertTrue(new File(new File(installDir1), "myfile").isFile());
         assertTrue(new File(new File(installDir2), "myfile").isFile());
+    }
+
+    @Test(groups="Integration")
+    public void testLocalhostInTmp() throws Exception {
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        app.start(ImmutableList.of(localhost));
+
+        String installDir = entity.getAttribute(SoftwareProcess.INSTALL_DIR);
+        assertTrue(installDir.startsWith("/tmp/brooklyn-"+Os.user()+"/installs/"), "installed in "+installDir);
+    }
+
+    @Test(groups="Integration")
+    public void testMachine127InHome() throws Exception {
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        app.start(ImmutableList.of(machine127));
+
+        String installDir = entity.getAttribute(SoftwareProcess.INSTALL_DIR);
+        assertTrue(installDir.startsWith(Os.home()+"/brooklyn-managed-processes/installs/"), "installed in "+installDir);
+    }
+
+    @Test(groups="Integration")
+    public void testLocalhostInCustom() throws Exception {
+        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        app.start(ImmutableList.of(localhost));
+
+        String installDir = entity.getAttribute(SoftwareProcess.INSTALL_DIR);
+        assertTrue(installDir.startsWith(tempDataDir.getAbsolutePath()+"/installs/"), "installed in "+installDir);
+    }
+
+    @Test(groups="Integration")
+    @Deprecated
+    public void testMachineInCustomFromDataDir() throws Exception {
+        managementContext.getBrooklynProperties().put(BrooklynConfigKeys.BROOKLYN_DATA_DIR, tempDataDir.getAbsolutePath());
+
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        app.start(ImmutableList.of(machine127));
+
+        String installDir = entity.getAttribute(SoftwareProcess.INSTALL_DIR);
+        assertTrue(installDir.startsWith(tempDataDir.getAbsolutePath()+"/installs/"), "installed in "+installDir);
     }
 
     @ImplementedBy(MyServiceImpl.class)
@@ -77,7 +123,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
         }
 
         @Override
-        public Class getDriverInterface() {
+        public Class<?> getDriverInterface() {
             return SimulatedDriver.class;
         }
     }

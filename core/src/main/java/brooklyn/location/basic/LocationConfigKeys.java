@@ -54,4 +54,5 @@ public class LocationConfigKeys {
     public static final ConfigKey<Object> CALLER_CONTEXT = new BasicConfigKey<Object>(Object.class, "callerContext",
             "An object whose toString is used for logging, to indicate wherefore a VM is being created");
     public static final ConfigKey<String> CLOUD_MACHINE_NAMER_CLASS = ConfigKeys.newStringConfigKey("cloudMachineNamer", "fully qualified class name of a class that extends CloudMachineNamer and has a single-parameter constructor that takes a ConfigBag");
+    
 }

@@ -1,7 +1,5 @@
 package brooklyn.launcher;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.File;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -17,7 +15,6 @@ import java.util.Map;
 
 import javax.servlet.DispatcherType;
 
-import org.apache.commons.io.FileUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
@@ -30,10 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.launcher.config.CustomResourceLocator;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -154,16 +150,7 @@ public class BrooklynWebServer {
         if (!leftovers.isEmpty())
             log.warn("Ignoring unknown flags " + leftovers);
         
-        String brooklynBaseDir = Os.tidyPath(checkNotNull(ConfigToAttributes.transform(managementContext, BrooklynConfigKeys.BROOKLYN_WEB_SERVER_BASE_DIR)));
-        this.webappTempDir = new File(Os.mergePaths(brooklynBaseDir, "planes", managementContext.getManagementPlaneId(), managementContext.getManagementNodeId(), "jetty"));
-        try {
-            FileUtils.forceMkdir(webappTempDir);
-            Os.deleteOnExitRecursivelyAndEmptyParentsUpTo(webappTempDir, new File(brooklynBaseDir)); 
-        } catch (Exception e) {
-            IllegalStateException e2 = new IllegalStateException("Cannot create working directory "+webappTempDir+" for embedded jetty server: "+e, e);
-            log.warn(e2.getMessage()+" (rethrowing)");
-            throw e2;
-        }
+        webappTempDir = BrooklynServerConfig.getBrooklynWebTmpDir(managementContext);
     }
 
     public BrooklynWebServer(ManagementContext managementContext, int port) {

@@ -22,6 +22,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
@@ -38,7 +39,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JavaSoftwareProcessSshDriverIntegrationTest.class);
 
-    private MachineProvisioningLocation localhost;
+    private MachineProvisioningLocation<?> localhost;
     private TestApplication app;
 
     private static class ConcreteJavaSoftwareProcessSshDriver extends JavaSoftwareProcessSshDriver {
@@ -55,8 +56,13 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        localhost = new LocalhostMachineProvisioningLocation(MutableMap.of("name", "localhost"));
+        setup(new LocalManagementContext());
+    }
+    
+    protected void setup(ManagementContext mgmt) {
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
+        localhost = mgmt.getLocationManager().createLocation(
+                LocationSpec.create(LocalhostMachineProvisioningLocation.class).configure("name", "localhost"));
     }
 
     @AfterMethod(alwaysRun=true)
@@ -93,8 +99,8 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         String dir = Os.mergePathsUnix(Os.tmp(), "/brooklyn-test-"+Strings.makeRandomId(4));
         shutdown();
         LocalManagementContext mgmt = new LocalManagementContext();
-        mgmt.getBrooklynProperties().put(BrooklynConfigKeys.BROOKLYN_DATA_DIR, dir);
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
+        mgmt.getBrooklynProperties().put(BrooklynConfigKeys.ONBOX_BASE_DIR, dir);
+        setup(mgmt);
         
         doTestSpecifiedDirectory(dir, dir);
         Os.tryDeleteDirectory(dir);
@@ -104,7 +110,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
     public void testStartsInAppSpecifiedDirectoryUnderHome() {
         String dir = Os.mergePathsUnix("~/.brooklyn-test-"+Strings.makeRandomId(4));
         try {
-            app.setConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR, dir);
+            app.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, dir);
             doTestSpecifiedDirectory(dir, dir);
         } finally {
             Os.tryDeleteDirectory(dir);
@@ -130,7 +136,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         LocalManagementContext mgmt = new LocalManagementContext();
         mgmt.getBrooklynProperties().put("brooklyn.dirs.install", dir1);
         mgmt.getBrooklynProperties().put("brooklyn.dirs.run", dir2);
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
+        setup(mgmt);
         
         app.setConfig(BrooklynConfigKeys.RUN_DIR, dir2);
         doTestSpecifiedDirectory(dir1, dir2);

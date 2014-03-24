@@ -65,15 +65,38 @@ public class BashCommands {
      * If null is supplied, it is returned (sometimes used to indicate no command desired).
      */
     public static String sudo(String command) {
+        if (command.startsWith("( "))
+            return sudoNew(command);
+        else
+            return sudoOld(command);
+    }
+
+    // TODO would like to move away from sudoOld -- but needs extensive testing!
+    
+    private static String sudoOld(String command) {
         if (command==null) return null;
         return format("( if test \"$UID\" -eq 0; then ( %s ); else sudo -E -n -S -- %s; fi )", command, command);
+    }
+    private static String sudoNew(String command) {
+        if (command==null) return null;
+        return "( if test \"$UID\" -eq 0; then ( "+command+" ); else sudo -E -n -S -s -- " +
+            BashStringEscapes.wrapBash(command)+ "; fi )";
     }
 
     /** sudo to a given user and run the indicated command*/
     public static String sudoAsUser(String user, String command) {
+        return sudoAsUserOld(user, command);
+    }
+    
+    private static String sudoAsUserOld(String user, String command) {
         if (command == null) return null;
         return format("{ sudo -E -n -u %s -s -- %s ; }", user, command);
     }
+    // TODO would like to move away from sudoOld -- but needs extensive testing!
+//    private static String sudoAsUserNew(String user, String command) {
+//        if (command == null) return null;
+//        return "{ sudo -E -n -S -u "+user+" -- "+BashStringEscapes.wrapBash(command)+" ; }";
+//    }
 
     /** executes a command, then as user tees the output to the given file. 
      * useful e.g. for appending to a file which is only writable by root or a priveleged user. */
@@ -81,7 +104,6 @@ public class BashCommands {
         return format("{ %s | sudo -E -n -u %s -s -- tee -a %s ; }",
                 commandWhoseOutputToWrite, user, file);
     }
-
 
     /** some machines require a tty for sudo; brooklyn by default does not use a tty
      * (so that it can get separate error+stdout streams); you can enable a tty as an

@@ -258,6 +258,11 @@ public class ConfigBag {
             return putStringKey(key, value.get());
         return null;
     }
+    public Object putStringKeyIfNotNull(String key, Object value) {
+        if (value!=null)
+            return putStringKey(key, value);
+        return null;
+    }
 
     public boolean containsKey(HasConfigKey<?> key) {
         return config.containsKey(key.getConfigKey());

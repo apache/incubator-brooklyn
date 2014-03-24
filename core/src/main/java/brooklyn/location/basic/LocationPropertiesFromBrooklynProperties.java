@@ -9,9 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigUtils;
-import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.os.Os;
 
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
@@ -50,21 +53,31 @@ public class LocationPropertiesFromBrooklynProperties {
      * Converts deprecated hyphenated properties to the non-deprecated camelCase format. 
      */
     public Map<String, Object> getLocationProperties(String provider, String namedLocation, Map<String, ?> properties) {
-        Map<String, Object> result = Maps.newHashMap();
+        ConfigBag result = ConfigBag.newInstance();
         
+        if (!Strings.isNullOrEmpty(provider)) 
+            result.put(LocationConfigKeys.CLOUD_PROVIDER, provider);
         // named properties are preferred over providerOrApi properties
-        if (!Strings.isNullOrEmpty(provider)) result.put("provider", provider);
         result.putAll(transformDeprecated(getGenericLocationSingleWordProperties(properties)));
         if (!Strings.isNullOrEmpty(provider)) result.putAll(transformDeprecated(getScopedLocationProperties(provider, properties)));
         if (!Strings.isNullOrEmpty(namedLocation)) result.putAll(transformDeprecated(getNamedLocationProperties(namedLocation, properties)));
-        String brooklynDataDir = (String) properties.get(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName());
-        if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
-            result.put("localTempDir", new File(brooklynDataDir));
-        }
         
-        return result;
+        setLocalTempDir(properties, result);
+        
+        return result.getAllConfigRaw();
     }
 
+    /** allow the temp dir where ssh temporary files on the brooklyn server side are placed */
+    public static void setLocalTempDir(Map<String,?> source, ConfigBag target) {
+        // TODO better would be to use BrooklynServerConfig, requiring management passed in
+        String brooklynDataDir = (String) source.get(BrooklynServerConfig.getMgmtBaseDir(source));
+        if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
+            File f = new File(Os.mergePaths(brooklynDataDir, "tmp", "ssh"));
+            target.putIfAbsentAndNotNull(SshTool.PROP_LOCAL_TEMP_DIR, f);
+            Os.deleteOnExitEmptyParentsUpTo(f, new File(brooklynDataDir));
+        }
+    }
+    
     /**
      * Gets the named provider (e.g. if using a property like {@code brooklyn.location.named.myfavourite=localhost}, then
      * {@code getNamedProvider("myfavourite", properties)} will return {@code "localhost"}).

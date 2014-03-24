@@ -17,7 +17,9 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.trait.Startable;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
@@ -46,12 +48,14 @@ public class SoftwareProcessEntityTest {
     private FixedListMachineProvisioningLocation<SshMachineLocation> loc;
     private TestApplication app;
     
+    @SuppressWarnings("unchecked")
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         managementContext = new LocalManagementContextForTests();
-        machine = new SshMachineLocation(MutableMap.of("address", "localhost"));
-        loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(MutableMap.of("machines", ImmutableList.of(machine)));
-        Entities.manage(loc, managementContext);
+        loc = managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class));
+        machine = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+            .configure("address", "localhost").configure(MachineLifecycleEffectorTasks.SKIP_ON_BOX_BASE_DIR_RESOLUTION, true));
+        loc.addMachine(machine);
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     }
 
@@ -74,7 +78,7 @@ public class SoftwareProcessEntityTest {
     @Test
     public void testInstallDirAndRunDir() throws Exception {
         MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class)
-            .configure(BrooklynConfigKeys.BROOKLYN_DATA_DIR, "/tmp/brooklyn-foo"));
+            .configure(BrooklynConfigKeys.ONBOX_BASE_DIR, "/tmp/brooklyn-foo"));
 
         entity.start(ImmutableList.of(loc));
 
@@ -83,13 +87,13 @@ public class SoftwareProcessEntityTest {
     }
 
     @Test
-    public void testInstallDirAndRunDirUsingTilda() throws Exception {
+    public void testInstallDirAndRunDirUsingTilde() throws Exception {
         String dataDirName = ".brooklyn-foo"+Strings.makeRandomId(4);
         String dataDir = "~/"+dataDirName;
         String resolvedDataDir = Os.mergePaths(Os.home(), dataDirName);
         
         MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class)
-            .configure(BrooklynConfigKeys.BROOKLYN_DATA_DIR, dataDir));
+            .configure(BrooklynConfigKeys.ONBOX_BASE_DIR, dataDir));
 
         entity.start(ImmutableList.of(loc));
 
@@ -99,7 +103,7 @@ public class SoftwareProcessEntityTest {
 
     protected <T extends MyService> void doStartAndCheckVersion(Class<T> type, String expectedLabel, ConfigBag config) {
         MyService entity = app.createAndManageChild(EntitySpec.create(type)
-            .configure(BrooklynConfigKeys.BROOKLYN_DATA_DIR, "/tmp/brooklyn-foo")
+            .configure(BrooklynConfigKeys.ONBOX_BASE_DIR, "/tmp/brooklyn-foo")
             .configure(config.getAllConfigAsConfigKeyMap()));
         entity.start(ImmutableList.of(loc));
         Assert.assertEquals(entity.getAttribute(SoftwareProcess.INSTALL_DIR), "/tmp/brooklyn-foo/installs/"
@@ -158,7 +162,7 @@ public class SoftwareProcessEntityTest {
     @Test
     public void testReleaseEvenIfErrorDuringStart() throws Exception {
         MyServiceImpl entity = new MyServiceImpl(app) {
-            @Override public Class getDriverInterface() {
+            @Override public Class<?> getDriverInterface() {
                 return SimulatedFailOnStartDriver.class;
             }
         };
@@ -185,7 +189,7 @@ public class SoftwareProcessEntityTest {
     @SuppressWarnings("rawtypes")
     public void doTestReleaseEvenIfErrorDuringStop(final Class driver) throws Exception {
         MyServiceImpl entity = new MyServiceImpl(app) {
-            @Override public Class getDriverInterface() {
+            @Override public Class<?> getDriverInterface() {
                 return driver;
             }
         };
@@ -230,7 +234,7 @@ public class SoftwareProcessEntityTest {
         public MyServiceImpl(Entity parent) { super(parent); }
 
         @Override
-        public Class getDriverInterface() { return SimulatedDriver.class; }
+        public Class<?> getDriverInterface() { return SimulatedDriver.class; }
     }
 
     @ImplementedBy(MyServiceWithVersionImpl.class)

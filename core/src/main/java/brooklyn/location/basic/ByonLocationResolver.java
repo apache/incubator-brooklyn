@@ -20,6 +20,9 @@ import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
@@ -119,22 +122,19 @@ public class ByonLocationResolver implements LocationResolver {
         }
         
         Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties("byon", namedLocation, properties);
-        MutableMap<String, Object> flags = MutableMap.<String, Object>builder().putAll(filteredProperties).putAll(locationFlags).build();
+        ConfigBag flags = ConfigBag.newInstance(locationFlags).putIfAbsent(filteredProperties);
 
-        flags.put("machines", machines);
-        if (user != null) flags.put("user", user);
-        if (name != null) flags.put("name", name);
-        if (registry != null) {
-            String brooklynDataDir = (String) registry.getProperties().get(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName());
-            if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
-                flags.put("localTempDir", new File(brooklynDataDir));
-            }
-        }
+        flags.putStringKey("machines", machines);
+        flags.putIfNotNull(LocationConfigKeys.USER, user);
+        flags.putStringKeyIfNotNull("name", name);
+        
+        if (registry != null) 
+            LocationPropertiesFromBrooklynProperties.setLocalTempDir(registry.getProperties(), flags);
 
         log.debug("Created BYON location "+name+": "+machines);
 
         return managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
-                .configure(flags)
+                .configure(flags.getAllConfigRaw())
                 .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
     }
     

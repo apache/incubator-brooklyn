@@ -14,9 +14,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
@@ -75,28 +75,11 @@ public class BrooklynLauncherTest {
         String dataDir = "~/"+dataDirName;
 
         launcher = BrooklynLauncher.newInstance()
-                .brooklynProperties(BrooklynConfigKeys.BROOKLYN_DATA_DIR.getName(), dataDir)
+                .brooklynProperties(BrooklynServerConfig.MGMT_BASE_DIR, dataDir)
                 .start();
         
         ManagementContext managementContext = launcher.getServerDetails().getManagementContext();
         String expectedTempDir = Os.mergePaths(Os.home(), dataDirName, "planes", managementContext.getManagementPlaneId(), managementContext.getManagementNodeId(), "jetty");
-        
-        File webappTempDir = launcher.getServerDetails().getWebServer().getWebappTempDir();
-        assertEquals(webappTempDir.getAbsolutePath(), expectedTempDir);
-    }
-    
-    // Integration because takes a few seconds to start web-console
-    @Test(groups="Integration")
-    public void testWebServerTempDirRespectsWebServerBaseDirConfig() throws Exception {
-        String baseWebDirName = ".brooklyn-foo"+Strings.makeRandomId(4);
-        String baseWebDir = "~/"+baseWebDirName;
-
-        launcher = BrooklynLauncher.newInstance()
-                .brooklynProperties(BrooklynConfigKeys.BROOKLYN_WEB_SERVER_BASE_DIR.getName(), baseWebDir)
-                .start();
-        
-        ManagementContext managementContext = launcher.getServerDetails().getManagementContext();
-        String expectedTempDir = Os.mergePaths(Os.home(), baseWebDirName, "planes", managementContext.getManagementPlaneId(), managementContext.getManagementNodeId(), "jetty");
         
         File webappTempDir = launcher.getServerDetails().getWebServer().getWebappTempDir();
         assertEquals(webappTempDir.getAbsolutePath(), expectedTempDir);
@@ -346,7 +329,7 @@ public class BrooklynLauncherTest {
         persistenceDir = Files.createTempDir();
         
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
-        brooklynProperties.put(BrooklynConfigKeys.BROOKLYN_PERSISTENCE_DIR, persistenceDir.getAbsolutePath());
+        brooklynProperties.put(BrooklynServerConfig.PERSISTENCE_DIR, persistenceDir.getAbsolutePath());
         
         // Rebind to the app we started last time
         launcher = BrooklynLauncher.newInstance()
@@ -367,7 +350,7 @@ public class BrooklynLauncherTest {
                 .start();
         
         ManagementContext managementContext = launcher.getServerDetails().getManagementContext();
-        assertEquals(getPersistenceDir(managementContext), new File(Os.tidyPath(BrooklynConfigKeys.BROOKLYN_PERSISTENCE_DIR.getDefaultValue())));
+        assertEquals(getPersistenceDir(managementContext).getAbsolutePath(), BrooklynServerConfig.getPersistenceDir(BrooklynProperties.Factory.newDefault()));
     }
 
     private File getPersistenceDir(ManagementContext managementContext) {
