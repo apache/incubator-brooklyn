@@ -33,7 +33,11 @@ public interface MongoDBClient extends AbstractMongoDBServer {
     
     @SetFromFlag("shardedDeployment")
     ConfigKey<MongoDBShardedDeployment> SHARDED_DEPLOYMENT = ConfigKeys.newConfigKey(MongoDBShardedDeployment.class, 
-            "mongodb.colocatedrouter.shardeddeployment", "Sharded deployment that the client will use to run scripts");
+            "mongodb.client.shardeddeployment", "Sharded deployment that the client will use to run scripts");
+    
+    @SetFromFlag("server")
+    ConfigKey<AbstractMongoDBServer> SERVER = ConfigKeys.newConfigKey(AbstractMongoDBServer.class, 
+            "mongodb.client.server", "MongoDBServer that the client will use to run scripts");
     
     @Effector(description="Runs one of the scripts defined in mongodb.client.scripts")
     void runScript(@EffectorParam(name="pre-start", description="use this to create parameters that can be used by the script, e.g.:<p><code>var loopCount = 10</code>") String preStart,

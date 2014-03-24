@@ -1,0 +1,17 @@
+name: Mongo Single Server with Scripts
+location: localhost
+services:
+- serviceType: brooklyn.entity.nosql.mongodb.MongoDBServer
+  id: mySingleServer
+  name: mongod
+- serviceType: brooklyn.entity.nosql.mongodb.MongoDBClient
+  name: MongoDB Javascript Client
+  brooklyn.config:
+    server: $brooklyn:component("mySingleServer")
+    scripts:
+      insert: classpath://mongo-product-insert.js 
+      update: classpath://mongo-product-update.js
+      delete: classpath://mongo-product-delete.js
+    defaultScripts: # These will be run in order on startup
+      - insert
+      - update
