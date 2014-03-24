@@ -1418,7 +1418,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     // -------------- create the SshMachineLocation instance, and connect to it etc ------------------------
     
-    /** @deprecated since 0.7.0 use {@link #registerJcloudsSshMachineLocation(ComputeService, NodeMetadata, String, Optional, ConfigBag)} */
+    /** @deprecated since 0.7.0 use {@link #registerJcloudsSshMachineLocation(ComputeService, NodeMetadata, LoginCredentials, Optional, ConfigBag)} */
     @Deprecated
     protected final JcloudsSshMachineLocation registerJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
         LOG.warn("Using deprecated registerJcloudsSshMachineLocation: now wants computeService passed", new Throwable("source of deprecated registerJcloudsSshMachineLocation invocation"));

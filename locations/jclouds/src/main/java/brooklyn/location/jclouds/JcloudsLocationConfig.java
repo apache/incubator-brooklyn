@@ -53,7 +53,9 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<LoginCredentials> CUSTOM_CREDENTIALS = new BasicConfigKey<LoginCredentials>(LoginCredentials.class, 
             "customCredentials", "Custom jclouds LoginCredentials object to be used to connect to the VM", null);
     
-    public static final ConfigKey<String> GROUP_ID = ConfigKeys.newStringConfigKey("groupId");
+    public static final ConfigKey<String> GROUP_ID = ConfigKeys.newStringConfigKey("groupId",
+            "The Jclouds group provisioned machines should be members of. " +
+            "Users of this config key are also responsible for configuring security groups.");
     
     // jclouds compatibility
     public static final ConfigKey<String> JCLOUDS_KEY_USERNAME = ConfigKeys.newStringConfigKey(
@@ -96,8 +98,8 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "A system-specific identifier for the VM image to be used by default when creating a VM " +
             "(if no other VM image selection criteria are supplied)", null);
 
-    public static final ConfigKey<TemplateBuilder> TEMPLATE_BUILDER = new BasicConfigKey<TemplateBuilder>(TemplateBuilder.class, "templateBuilder", 
-            "A TemplateBuilder instance provided programmatically, to be used when creating a VM", null);
+    public static final ConfigKey<TemplateBuilder> TEMPLATE_BUILDER = ConfigKeys.newConfigKey(TemplateBuilder.class,
+            "templateBuilder", "A TemplateBuilder instance provided programmatically, to be used when creating a VM");
 
     public static final ConfigKey<Object> SECURITY_GROUPS = new BasicConfigKey<Object>(Object.class, "securityGroups",
             "Security groups to be applied when creating a VM, on supported clouds " +
@@ -127,8 +129,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "customizerType", "Optional location customizer type (to be class-loaded and constructed with no-arg constructor)", null);
 
     @SuppressWarnings("serial")
-    public static final ConfigKey<Collection<JcloudsLocationCustomizer>> JCLOUDS_LOCATION_CUSTOMIZERS =
-            new BasicConfigKey<Collection<JcloudsLocationCustomizer>>(
+    public static final ConfigKey<Collection<JcloudsLocationCustomizer>> JCLOUDS_LOCATION_CUSTOMIZERS = ConfigKeys.newConfigKey(
                     new TypeToken<Collection<JcloudsLocationCustomizer>>() {},
                     "customizers", "Optional location customizers", null);
 
