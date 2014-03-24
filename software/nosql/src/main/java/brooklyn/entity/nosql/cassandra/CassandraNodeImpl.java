@@ -43,6 +43,7 @@ import brooklyn.location.basic.Machines;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -184,6 +185,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 }
                 return hostname;
             } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
                 log.warn("Error resolving hostname "+hostname+" for "+this+": "+e, e);
                 return hostname;
             }

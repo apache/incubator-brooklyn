@@ -23,7 +23,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
-import com.google.common.base.Throwables;
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
 
 /** Represents a task whose run() method can create other tasks
@@ -35,6 +35,9 @@ import com.google.common.collect.ImmutableList;
  * You can change the behavior of this task with fields in {@link FailureHandlingConfig},
  * or the convenience {@link TaskQueueingContext#swallowChildrenFailures()}
  * (and {@link DynamicTasks#swallowChildrenFailures()} if you are inside the task).
+ * <p>
+ * This synchronizes on secondary tasks when submitting them, in case they may be manually submitted
+ * and the submitter wishes to ensure it is only submitted once.
  * <p>
  * Improvements which would be nice to have:
  * <li> unqueued tasks not visible in api; would like that
@@ -57,14 +60,25 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     protected FailureHandlingConfig failureHandlingConfig = FailureHandlingConfig.DEFAULT;
 
     // default values for how to handle the various failures
+    @Beta
     public static class FailureHandlingConfig {
+        /** secondary queue runs independently of primary task (submitting and blocking on each secondary task in order), 
+         * but can set it up not to submit any more tasks if the primary fails */
         public final boolean abortSecondaryQueueOnPrimaryFailure;
+        /** as {@link #abortSecondaryQueueOnPrimaryFailure} but controls cancelling of secondary queue*/
         public final boolean cancelSecondariesOnPrimaryFailure;
+        /** secondary queue can continue submitting+blocking tasks even if a secondary task fails (unusual;
+         * typically handled by {@link TaskTags#markInessential(Task)} on the secondary tasks, in which case
+         * the secondary queue is never aborted */
         public final boolean abortSecondaryQueueOnSecondaryFailure;
+        /** unsubmitted secondary tasks (ie those further in the queue) can be cancelled if a secondary task fails */
         public final boolean cancelSecondariesOnSecondaryFailure;
+        /** whether to issue cancel against primary task if a secondary task fails */
         public final boolean cancelPrimaryOnSecondaryFailure;
+        /** whether to fail this task if a secondary task fails */
         public final boolean failParentOnSecondaryFailure;
         
+        @Beta
         public FailureHandlingConfig(
                 boolean abortSecondaryQueueOnPrimaryFailure, boolean cancelSecondariesOnPrimaryFailure,
                 boolean abortSecondaryQueueOnSecondaryFailure, boolean cancelSecondariesOnSecondaryFailure,
@@ -78,8 +92,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         }
         
         public static final FailureHandlingConfig DEFAULT = new FailureHandlingConfig(false, false, true, false, false, true);
-        public static final FailureHandlingConfig SWALLOWING_CHILDREN_FAILURES = 
-            new FailureHandlingConfig(false, false, false, false, false, false);
+        public static final FailureHandlingConfig SWALLOWING_CHILDREN_FAILURES = new FailureHandlingConfig(false, false, false, false, false, false);
     }
     
     
@@ -258,7 +271,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                                         
                                         result.add(Tasks.getError(secondaryJob));
                                         if (log.isDebugEnabled())
-                                            log.debug("Secondary job queue for "+DynamicSequentialTask.this+" ignoring error in child task "+secondaryJob+" ("+e+", being remembered)");
+                                            log.debug("Secondary job queue for "+DynamicSequentialTask.this+" continuing in presence of error in child task "+secondaryJob+" ("+e+", being remembered)");
                                     }
                                 }
                             }
@@ -282,6 +295,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                 log.trace("calling primary job for {}", this);
                 if (primaryJob!=null) result = primaryJob.call();
             } catch (Throwable selfException) {
+                Exceptions.propagateIfFatal(selfException);
                 error = selfException;
                 errorIsFromChild = false;
                 if (failureHandlingConfig.abortSecondaryQueueOnPrimaryFailure) {
@@ -295,7 +309,9 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                     synchronized (jobTransitionLock) {
                         for (Task<?> t: secondaryJobsRemaining)
                             t.cancel(true);
-                        jobTransitionLock.notifyAll();
+                        // do this early to prevent additions; and note we notify very soon below, so not notify is help off until below
+                        primaryThread = null;
+                        primaryFinished = true;
                     }
                 }
             } finally {
@@ -317,6 +333,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                         } catch (ClassCastException e) { /* ignore class cast exception; leave the result as null */ }
                     }
                 } catch (Throwable childException) {
+                    Exceptions.propagateIfFatal(childException);
                     if (error==null) {
                         error = childException;
                         errorIsFromChild = true;
@@ -369,6 +386,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     }
 
     public void handleException(Throwable throwable, boolean fromChild) throws Exception {
+        Exceptions.propagateIfFatal(throwable);
         if (fromChild && !failureHandlingConfig.failParentOnSecondaryFailure) {
             log.debug("Parent task "+this+" swallowing child error: "+throwable);
             return;
@@ -396,7 +414,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         try {
             dstJob.join(includePrimary, optionalTimeout);
         } catch (InterruptedException e) {
-            Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
         if (throwFirstError) {
             if (isError()) 

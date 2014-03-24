@@ -41,18 +41,20 @@ public class DynamicSequentialTaskTest {
     
     BasicExecutionManager em;
     BasicExecutionContext ec;
-    List<String> messages = new ArrayList<String>();
+    List<String> messages;
     Semaphore cancellations;
     Stopwatch stopwatch;
+    Map<String,Semaphore> monitorableJobSemaphoreMap;
+    Map<String,Task<String>> monitorableTasksMap;
 
-
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
         em = new BasicExecutionManager("mycontext");
         ec = new BasicExecutionContext(em);
         cancellations = new Semaphore(0);
-        messages.clear();
-        monitorableJobSemaphoreMap.clear();
+        messages = new ArrayList<String>();
+        monitorableJobSemaphoreMap = MutableMap.of();
+        monitorableTasksMap = MutableMap.of();
         monitorableTasksMap.clear();
         stopwatch = Stopwatch.createStarted();
     }
@@ -172,9 +174,6 @@ public class DynamicSequentialTaskTest {
         Assert.assertEquals(cancellations.availablePermits(), 0);
     }
 
-    Map<String,Semaphore> monitorableJobSemaphoreMap = MutableMap.of();
-    Map<String,Task<String>> monitorableTasksMap = MutableMap.of();
-
     protected Task<String> monitorableTask(final String id) {
         return monitorableTask(null, id, null);
     }
@@ -274,6 +273,7 @@ public class DynamicSequentialTaskTest {
         waitForMessage("1");
         Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
         releaseMonitorableJob("2");
+        waitForMessage("2");
         Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
         releaseMonitorableJob("main");
         Assert.assertTrue(t.blockUntilEnded(TIMEOUT));
@@ -295,6 +295,7 @@ public class DynamicSequentialTaskTest {
         waitForMessage("1");
         Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
         releaseMonitorableJob("2");
+        waitForMessage("2");
         Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
         releaseMonitorableJob("main");
         Assert.assertTrue(t.blockUntilEnded(TIMEOUT));

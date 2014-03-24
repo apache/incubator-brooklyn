@@ -23,7 +23,9 @@ import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
@@ -306,7 +308,6 @@ public class Tasks {
         Iterable<Task<?>> descs = Iterables.concat(Iterables.transform(Tasks.children(root), new Function<Task<?>,Iterable<Task<?>>>() {
             @Override
             public Iterable<Task<?>> apply(Task<?> input) {
-                // TODO Auto-generated method stub
                 return descendants(input, parentFirst);
             }
         }));
@@ -348,5 +349,19 @@ public class Tasks {
             TaskTags.markInessential(task);
         }
     }
-    
+
+    /** causes failures in subtasks of the current task not to fail the parent;
+     * no-op if not in a {@link TaskQueueingContext}.
+     * <p>
+     * essentially like a {@link #markInessential()} on all tasks in the current 
+     * {@link TaskQueueingContext}, including tasks queued subsequently */
+    @Beta
+    public static void swallowChildrenFailures() {
+        Preconditions.checkNotNull(DynamicTasks.getTaskQueuingContext(), "Task queueing context required here");
+        TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
+        if (qc!=null) {
+            qc.swallowChildrenFailures();
+        }
+    }
+
 }

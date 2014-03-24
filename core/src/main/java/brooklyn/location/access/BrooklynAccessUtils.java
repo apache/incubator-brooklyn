@@ -12,9 +12,16 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.Machines;
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.SupportsPortForwarding;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Cidr;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.task.ssh.SshTasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
+import brooklyn.util.text.Strings;
 
 import com.google.common.net.HostAndPort;
 
@@ -66,6 +73,41 @@ public class BrooklynAccessUtils {
         if (host!=null) return HostAndPort.fromParts(host, port);
         
         throw new IllegalStateException("Cannot find way to access port "+port+" on "+entity+" from Brooklyn (no host.name)");
+    }
+
+    /** attempts to resolve hostnameTarget from origin
+     * @return null if it definitively can't be resolved,  
+     * best-effort IP address if possible, or blank if we could not run ssh or make sense of the output */
+    public static String getResolvedAddress(Entity entity, SshMachineLocation origin, String hostnameTarget) {
+        ProcessTaskWrapper<Integer> task = SshTasks.newSshExecTaskFactory(origin, "ping -c 1 -t 1 "+hostnameTarget)
+            .summary("checking resolution of "+hostnameTarget).allowingNonZeroExitCode().newTask();
+        DynamicTasks.queueIfPossible(task).orSubmitAndBlock(entity).asTask().blockUntilEnded();
+        if (task.asTask().isError()) {
+            log.warn("ping could not be run, at "+entity+" / "+origin+": "+Tasks.getError(task.asTask()));
+            return "";
+        }
+        if (task.getExitCode()==null || task.getExitCode()!=0) {
+            if (task.getExitCode()!=null && task.getExitCode()<10) {
+                // small number means ping failed to resolve or ping the hostname
+                log.debug("not able to resolve "+hostnameTarget+" from "+origin+" for "+entity+" because exit code was "+task.getExitCode());
+                return null;
+            }
+            // large number means ping probably did not run
+            log.warn("ping not run as expected, at "+entity+" / "+origin+" (code "+task.getExitCode()+"):\n"+task.getStdout().trim()+" --- "+task.getStderr().trim());
+            return "";
+        }
+        String out = task.getStdout();
+        try {
+            String line1 = Strings.getFirstLine(out);
+            String ip = Strings.getFragmentBetween(line1, "(", ")");
+            if (Strings.isNonBlank(ip)) 
+                return ip;
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            /* ignore non-parseable output */ 
+        }
+        if (out.contains("127.0.0.1")) return "127.0.0.1";
+        return "";
     }
 
 }

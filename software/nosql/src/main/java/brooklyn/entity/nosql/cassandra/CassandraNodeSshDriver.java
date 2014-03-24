@@ -26,6 +26,7 @@ import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
+import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -55,6 +56,8 @@ import com.google.common.collect.Sets;
 public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver implements CassandraNodeDriver {
 
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeSshDriver.class);
+    
+    protected Maybe<String> resolvedAddressCache = Maybe.<String>absent();
     
     public CassandraNodeSshDriver(CassandraNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -367,37 +370,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
             + " --file "+fileToRun;
     }
 
-    protected Maybe<String> _resolvedAddress = Maybe.<String>absent();
-    
-    /** returns null if it definitively can't be resolved;  
-     * or best-effort parse of IP address, balling back to blank we could not make sense of the output */
     @Override
     public String getResolvedAddress(String hostname) {
-        if (_resolvedAddress.isPresent()) return _resolvedAddress.get();
-        
-        ProcessTaskWrapper<Integer> task = SshEffectorTasks.ssh("ping -c 1 -t 1 "+hostname).machine(getMachine())
-            .summary("checking resolution of "+hostname).allowingNonZeroExitCode().newTask();
-        DynamicTasks.queueIfPossible(task).orSubmitAndBlock(getEntity()).asTask().blockUntilEnded();
-        if (task.asTask().isError()) {
-            log.warn("ping could not be run, at "+getEntity()+" / "+getMachine()+": "+Tasks.getError(task.asTask()));
-            return "";
-        }
-        if (task.getExitCode()==null || task.getExitCode()!=0) {
-            if (task.getExitCode()!=null && task.getExitCode()<10)
-                // small number means ping failed to resolve or ping the hostname
-                return (_resolvedAddress = Maybe.of((String)null)).get();
-            // large number means ping probably did not run
-            log.warn("ping not run as expected, at "+getEntity()+" / "+getMachine()+" (code "+task.getExitCode()+"):\n"+task.getStdout().trim()+" --- "+task.getStderr().trim());
-            return (_resolvedAddress = Maybe.of("")).get();
-        }
-        String out = task.getStdout();
-        try {
-            String line1 = Strings.getFirstLine(out);
-            String ip = Strings.getFragmentBetween(line1, "(", ")");
-            if (Strings.isNonBlank(ip)) 
-                return (_resolvedAddress = Maybe.of(ip)).get();
-        } catch (Exception e) { /* ignore non-parseable output */ }
-        if (out.contains("127.0.0.1")) return (_resolvedAddress = Maybe.of("127.0.0.1")).get();
-        return (_resolvedAddress = Maybe.of("")).get();
+        if (resolvedAddressCache.isPresent()) return resolvedAddressCache.get();
+        return (resolvedAddressCache = Maybe.of(BrooklynAccessUtils.getResolvedAddress(getEntity(), getMachine(), hostname))).get();
     }
+    
 }

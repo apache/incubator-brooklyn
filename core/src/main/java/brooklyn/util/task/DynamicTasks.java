@@ -259,16 +259,11 @@ public class DynamicTasks {
         return qc;
     }
 
-    /** causes failures in subtasks of the current task not to fail the parent;
-     * no-op if not in a {@link TaskQueueingContext}.
-     * <p>
-     * essentially like a {@link #markInessential()} on all tasks in the current 
-     * {@link TaskQueueingContext}, including tasks queued subsequently */
+    /** as {@link Tasks#swallowChildrenFailures()} but requiring a {@link TaskQueueingContext}. */
+    @Beta
     public static void swallowChildrenFailures() {
-        TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
-        if (qc!=null) {
-            qc.swallowChildrenFailures();
-        }
+        Preconditions.checkNotNull(DynamicTasks.getTaskQueuingContext(), "Task queueing context required here");
+        Tasks.swallowChildrenFailures();
     }
 
     /** same as {@link Tasks#markInessential()}

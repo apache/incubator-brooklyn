@@ -35,6 +35,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
@@ -238,7 +239,11 @@ public class BasicTask<T> implements TaskInternal<T> {
 
     @Override
     public synchronized boolean cancel() { return cancel(true); }
-    
+
+    /** doesn't resume it, just means if something was cancelled but not submitted it could now be submitted;
+     * probably going to be removed and perhaps some mechanism for running again made available
+     * @since 0.7.0  */
+    @Beta
     public synchronized boolean uncancel() {
         boolean wasCancelled = cancelled;
         cancelled = false; 
@@ -358,9 +363,9 @@ public class BasicTask<T> implements TaskInternal<T> {
             }
             return isDone();
         } catch (Throwable t) {
-            if (log.isDebugEnabled())
-                log.debug("call from "+Thread.currentThread()+" blocking until "+this+" finishes ended with error: "+t);
-            /* contract is just to log errors at debug, otherwise do nothing */
+            Exceptions.propagateIfFatal(t);
+            if (!(t instanceof TimeoutException) && log.isDebugEnabled())
+                log.debug("call from "+Thread.currentThread()+", blocking until '"+this+"' finishes, ended with error: "+t);
             return isDone(); 
         }
     }

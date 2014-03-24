@@ -39,8 +39,8 @@ public class StringEscapesTest {
 
     @Test
     public void testJavaUnwrap() {
-        Assert.assertEquals("Hello World", JavaStringEscapes.unwrapJavaString("\"Hello World\""));
-        Assert.assertEquals("Hello \"Bob\"", JavaStringEscapes.unwrapJavaString("\"Hello \\\"Bob\\\"\""));
+        Assert.assertEquals(JavaStringEscapes.unwrapJavaString("\"Hello World\""), "Hello World");
+        Assert.assertEquals(JavaStringEscapes.unwrapJavaString("\"Hello \\\"Bob\\\"\""), "Hello \"Bob\"");
         try {
             JavaStringEscapes.unwrapJavaString("Hello World");
             Assert.fail("Should have thrown");
@@ -51,9 +51,9 @@ public class StringEscapesTest {
             Assert.fail("Should have thrown");
         } catch (Exception e) { /* expected */ }
         
-        Assert.assertEquals("Hello World", JavaStringEscapes.unwrapJavaStringIfWrapped("\"Hello World\""));
-        Assert.assertEquals("Hello \"Bob\"", JavaStringEscapes.unwrapJavaStringIfWrapped("\"Hello \\\"Bob\\\"\""));
-        Assert.assertEquals("Hello World", JavaStringEscapes.unwrapJavaStringIfWrapped("Hello World"));
+        Assert.assertEquals(JavaStringEscapes.unwrapJavaStringIfWrapped("\"Hello World\""), "Hello World");
+        Assert.assertEquals(JavaStringEscapes.unwrapJavaStringIfWrapped("\"Hello \\\"Bob\\\"\""), "Hello \"Bob\"");
+        Assert.assertEquals(JavaStringEscapes.unwrapJavaStringIfWrapped("Hello World"), "Hello World");
         try {
             // missing final quote
             JavaStringEscapes.unwrapJavaStringIfWrapped("\"Hello \\\"Bob\\\"");
@@ -63,7 +63,7 @@ public class StringEscapesTest {
     
     @Test
     public void testJavaEscape() {
-        Assert.assertEquals("\"Hello \\\"World\\\"\"", JavaStringEscapes.wrapJavaString("Hello \"World\""));
+        Assert.assertEquals(JavaStringEscapes.wrapJavaString("Hello \"World\""), "\"Hello \\\"World\\\"\"");
     }
     
     @Test

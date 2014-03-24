@@ -41,8 +41,9 @@ public class TaskTags {
         return task.getTags().contains(INESSENTIAL_TASK);
     }
     
-    public static void markInessential(Task<?> task) {
+    public static <U,V extends TaskAdaptable<U>> V markInessential(V task) {
         addTagDynamically(task, INESSENTIAL_TASK);
+        return task;
     }
 
 }

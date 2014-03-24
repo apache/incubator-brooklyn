@@ -376,6 +376,7 @@ public abstract class MachineLifecycleEffectorTasks {
         
         // shutdown the machine if stopping process fails or takes too long
         synchronized (stoppingMachine) {
+            // task also used as mutex by DST when it submits it; ensure it only submits once!
             if (!stoppingMachine.isSubmitted()) {
                 // force the stoppingMachine task to run by submitting it here
                 log.warn("Submitting machine stop early in background for "+entity()+" because process stop has "+
@@ -420,8 +421,7 @@ public abstract class MachineLifecycleEffectorTasks {
         }
     }
     
-    /** can run synchronously (or not) -- caller will submit/queue as needed, and will block on any submitted tasks. 
-     * @return true if machines are deprovisioned */
+    /** can run synchronously (or not) -- caller will submit/queue as needed, and will block on any submitted tasks. */
     protected StopMachineDetails<Integer> stopAnyProvisionedMachines() {
         @SuppressWarnings("unchecked")
         MachineProvisioningLocation<MachineLocation> provisioner = entity().getAttribute(SoftwareProcess.PROVISIONING_LOCATION);
@@ -431,19 +431,19 @@ public abstract class MachineLifecycleEffectorTasks {
         
         if (Iterables.isEmpty(entity().getLocations())) {
             log.debug("No machine decommissioning necessary for "+entity()+" - no locations");
-            return new StopMachineDetails<Integer>("No machine decommissioning necessary for - no locations", 0);
+            return new StopMachineDetails<Integer>("No machine decommissioning necessary - no locations", 0);
         }
         
         // Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
         if (provisioner==null) {
             log.debug("No machine decommissioning necessary for "+entity()+" - did not provision");
-            return new StopMachineDetails<Integer>("No machine decommissioning necessary for - did not provision", 0);
+            return new StopMachineDetails<Integer>("No machine decommissioning necessary - did not provision", 0);
         }
 
         Location machine = getLocation(null);
         if (!(machine instanceof MachineLocation)) {
             log.debug("No decommissioning necessary for "+entity()+" - not a machine location ("+machine+")");
-            return new StopMachineDetails<Integer>("No machine decommissioning necessary for - not a machine ("+machine+")", 0);
+            return new StopMachineDetails<Integer>("No machine decommissioning necessary - not a machine ("+machine+")", 0);
         }
         
         try {
