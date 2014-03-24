@@ -1,6 +1,7 @@
 package brooklyn.location.jclouds;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.net.InetAddress;
@@ -21,12 +22,12 @@ public class JcloudsByonLocationResolverTest extends AbstractJcloudsTest {
 
     private LocationRegistry registry;
 
-    // TODO Expects this VM to exist; how to write this better? 
-    // Should we just create a VM at the start of the test?
+    // FIXME Expects this VM to exist; how to write this better? 
+    // We should create a VM in @BeforeClass - slower but automated and will work for everyone
     private final String user = "aled";
-    private final String instanceId = "i-f2014593";
-    private final String ip = "54.226.119.72";
-    private final String hostname = "ec2-54-226-119-72.compute-1.amazonaws.com";
+    private final String instanceId = "i-72b1b132";
+    private final String ip = "54.195.164.70";
+    private final String hostname = "ec2-54-195-164-70.eu-west-1.compute.amazonaws.com";
 
     @BeforeMethod(alwaysRun=true)
     @Override
@@ -49,27 +50,46 @@ public class JcloudsByonLocationResolverTest extends AbstractJcloudsTest {
     // TODO Requires that a VM already exists; could create that VM first to make test more robust
     @Test(groups={"Live","WIP"})
     public void testResolvesJcloudsByon() throws Exception {
-        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\"us=east-1\",user=\""+user+"\",hosts=\""+instanceId+"\")";
-        assertResolvesJclouds(spec);
+        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\"eu-west-1\",user=\""+user+"\",hosts=\""+instanceId+"\")";
+        
+        FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> loc = resolve(spec);
+        
+        Set<JcloudsSshMachineLocation> machines = loc.getAllMachines();
+        JcloudsSshMachineLocation machine = Iterables.getOnlyElement(machines);
+        assertEquals(machine.getParent().getProvider(), "aws-ec2");
+        assertEquals(machine.getAddress().getHostAddress(), ip);
+        assertEquals(machine.getAddress().getHostName(), hostname);
+        assertEquals(machine.getUser(), user);
+        
+        assertTrue(machine.isSshable());
     }
 
     // TODO Requires that a VM already exists; could create that VM first to make test more robust
     @Test(groups={"Live","WIP"})
     public void testResolvesNamedJcloudsByon() throws Exception {
-        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\"us=east-1\",user=\""+user+"\",hosts=\""+instanceId+"\")";
+        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\"eu-west-1\",user=\""+user+"\",hosts=\""+instanceId+"\")";
         brooklynProperties.put("brooklyn.location.named.mynamed", spec);
+        registry = new BasicLocationRegistry(managementContext);
         
         FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> loc = resolve("named:mynamed");
-        assertEquals(loc.obtain().getAddress(), InetAddress.getByName("1.1.1.1"));
+        assertEquals(loc.obtain().getAddress(), InetAddress.getByName(hostname));
     }
 
     // TODO Requires that a VM already exists; could create that VM first to make test more robust
     @Test(groups={"Live","WIP"})
     public void testJcloudsPropertiesPrecedence() throws Exception {
-        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\"us=east-1\",user=\""+user+"\",hosts=\""+instanceId+"\")";
+        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\"eu-west-1\",user=\""+user+"\",hosts=\""+instanceId+"\")";
         brooklynProperties.put("brooklyn.location.named.mynamed", spec);
         
-        // prefer those in "named" over everything else
+        // prefer those in spec string over everything else
+        brooklynProperties.put("brooklyn.location.named.mynamed.user", "user-inNamed");
+        brooklynProperties.put("brooklyn.location.jclouds.aws-ec2.user", "user-inProviderSpecific");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.user", "user-inProviderSpecificDeprecated");
+        brooklynProperties.put("brooklyn.location.jclouds.user", "user-inJcloudsGeneric");
+        brooklynProperties.put("brooklyn.jclouds.user", "user-inJcloudsGenericDeprecated");
+        brooklynProperties.put("brooklyn.location.user", "user-inLocationGeneric");
+
+        // prefer those in "named" over everything else (except spec string itself)
         brooklynProperties.put("brooklyn.location.named.mynamed.privateKeyFile", "privateKeyFile-inNamed");
         brooklynProperties.put("brooklyn.location.jclouds.aws-ec2.privateKeyFile", "privateKeyFile-inProviderSpecific");
         brooklynProperties.put("brooklyn.jclouds.aws-ec2.privateKeyFile", "privateKeyFile-inProviderSpecificDeprecated");
@@ -96,8 +116,8 @@ public class JcloudsByonLocationResolverTest extends AbstractJcloudsTest {
         brooklynProperties.put("brooklyn.location.loginUser", "loginUser-inLocationGeneric");
 
         // prefer those in jclouds-generic (deprecated) over location-generic
-        brooklynProperties.put("brooklyn.jclouds.user", "user-inJcloudsGenericDeprecated");
-        brooklynProperties.put("brooklyn.location.user", "user-inLocationGeneric");
+        brooklynProperties.put("brooklyn.jclouds.imageId", "imageId-inJcloudsGenericDeprecated");
+        brooklynProperties.put("brooklyn.location.imageId", "imageId-inLocationGeneric");
 
         // prefer location-generic if nothing else
         brooklynProperties.put("brooklyn.location.keyPair", "keyPair-inLocationGeneric");
@@ -112,28 +132,18 @@ public class JcloudsByonLocationResolverTest extends AbstractJcloudsTest {
         brooklynProperties.put("brooklyn.jclouds.aws-ec2.private-key-passphrase", "privateKeyPassphrase-inProviderSpecific");
         brooklynProperties.put("brooklyn.jclouds.private-key-passphrase", "privateKeyPassphrase-inJcloudsGeneric");
 
+        registry = new BasicLocationRegistry(managementContext);
         Map<String, Object> conf = resolve("named:mynamed").obtain().getAllConfig(true);
         
+        assertEquals(conf.get("user"), user);
         assertEquals(conf.get("privateKeyFile"), "privateKeyFile-inNamed");
         assertEquals(conf.get("publicKeyFile"), "publicKeyFile-inProviderSpecific");
         assertEquals(conf.get("securityGroups"), "securityGroups-inProviderSpecificDeprecated");
         assertEquals(conf.get("loginUser"), "loginUser-inJcloudsGeneric");
-        assertEquals(conf.get("user"), "user-inJcloudsGenericDeprecated");
+        assertEquals(conf.get("imageId"), "imageId-inJcloudsGenericDeprecated");
         assertEquals(conf.get("keyPair"), "keyPair-inLocationGeneric");
         assertEquals(conf.get("privateKeyData"), "privateKeyData-inNamed");
         assertEquals(conf.get("privateKeyPassphrase"), "privateKeyPassphrase-inNamed");
-    }
-
-    // TODO Requires that a VM already exists; could create that VM first to make test more robust
-    private void assertResolvesJclouds(String spec) throws Exception {
-        FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> loc = resolve(spec);
-        
-        Set<JcloudsSshMachineLocation> machines = loc.getAllMachines();
-        JcloudsSshMachineLocation machine = Iterables.getOnlyElement(machines);
-        assertEquals(machine.getParent().getProvider(), "aws-ec2");
-        assertEquals(machine.getAddress().getHostAddress(), ip);
-        assertEquals(machine.getAddress().getHostName(), hostname);
-        assertEquals(machine.getUser(), user);
     }
 
     @SuppressWarnings("unchecked")

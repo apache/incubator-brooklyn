@@ -19,12 +19,12 @@ import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationConfigUtils;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.Strings;
 import brooklyn.util.text.WildcardGlobs;
@@ -32,6 +32,7 @@ import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -55,7 +56,7 @@ public class JcloudsByonLocationResolver implements LocationResolver {
 
     private static final Pattern PATTERN = Pattern.compile("("+BYON+"|"+BYON.toUpperCase()+")" + ":" + "\\((.*)\\)$");
 
-    private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("provider", "region", "hosts", "name", "user");
+    private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("provider", "region", "endpoint", "hosts", "name", "user");
 
     private ManagementContext managementContext;
 
@@ -69,6 +70,7 @@ public class JcloudsByonLocationResolver implements LocationResolver {
         return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
     }
     
+    // TODO Remove some duplication from JcloudsResolver; needs more careful review
     protected FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
@@ -80,11 +82,13 @@ public class JcloudsByonLocationResolver implements LocationResolver {
         
         // prefer args map over location flags
         
-        String namedLocation = (String) locationFlags.get("named");
+        String namedLocation = (String) locationFlags.get(LocationInternal.NAMED_SPEC_NAME.getName());
 
-        String provider = argsMap.containsKey("provider") ? argsMap.get("provider") : (String)locationFlags.get("provider");
+        String providerOrApi = argsMap.containsKey("provider") ? argsMap.get("provider") : (String)locationFlags.get("provider");
 
-        String region = argsMap.containsKey("region") ? argsMap.get("region") : (String)locationFlags.get("region");
+        String regionName = argsMap.containsKey("region") ? argsMap.get("region") : (String)locationFlags.get("region");
+        
+        String endpoint = argsMap.containsKey("endpoint") ? argsMap.get("endpoint") : (String)locationFlags.get("endpoint");
         
         String name = argsMap.containsKey("name") ? argsMap.get("name") : (String)locationFlags.get("name");
 
@@ -96,7 +100,7 @@ public class JcloudsByonLocationResolver implements LocationResolver {
             Set<String> illegalArgs = Sets.difference(argsMap.keySet(), ACCEPTABLE_ARGS);
             throw new IllegalArgumentException("Invalid location '"+spec+"'; illegal args "+illegalArgs+"; acceptable args are "+ACCEPTABLE_ARGS);
         }
-        if (Strings.isEmpty(provider)) {
+        if (Strings.isEmpty(providerOrApi)) {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; provider must be defined");
         }
         if (hosts == null || hosts.isEmpty()) {
@@ -106,22 +110,25 @@ public class JcloudsByonLocationResolver implements LocationResolver {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; if name supplied then value must be non-empty");
         }
 
-        Map namedProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties(null, namedLocation, properties);
-        Map<String,?> jcloudsProperties = MutableMap.<String,Object>builder().putAll(locationFlags).removeAll("named").putAll(namedProperties).build();
-
-        JcloudsLocation jcloudsLocation = (JcloudsLocation) registry.resolve("jclouds:"+provider+(region != null ? ":"+region : ""), jcloudsProperties);
+        // For everything in brooklyn.properties, only use things with correct prefix (and remove that prefix).
+        // But for everything passed in via locationFlags, pass those as-is.
+        // TODO Should revisit the locationFlags: where are these actually used? Reason accepting properties without
+        //      full prefix is that the map's context is explicitly this location, rather than being generic properties.
+        Map allProperties = getAllProperties(registry, properties);
+        Map jcloudsProperties = new JcloudsPropertiesFromBrooklynProperties().getJcloudsProperties(providerOrApi, regionName, namedLocation, allProperties);
+        jcloudsProperties.putAll(locationFlags);
+        
+        String jcloudsSpec = "jclouds:"+providerOrApi + (regionName != null ? ":"+regionName : "") + (endpoint != null ? ":"+endpoint : "");
+        JcloudsLocation jcloudsLocation = (JcloudsLocation) registry.resolve(jcloudsSpec, jcloudsProperties);
 
         List<String> hostIdentifiers = WildcardGlobs.getGlobsAfterBraceExpansion("{"+hosts+"}",
                 true /* numeric */, /* no quote support though */ PhraseTreatment.NOT_A_SPECIAL_CHAR, PhraseTreatment.NOT_A_SPECIAL_CHAR);
         List<JcloudsSshMachineLocation> machines = Lists.newArrayList();
         
         for (String hostIdentifier : hostIdentifiers) {
-            
             Map<?, ?> machineFlags = MutableMap.builder()
                     .put("id", hostIdentifier) 
-                    //.put("hostname", "162.13.8.61") 
                     .putIfNotNull("user", user)
-                    .put(JcloudsLocation.PUBLIC_KEY_FILE.getName(), "/Users/aled/.ssh/id_rsa")
                     .build();
             try {
                 JcloudsSshMachineLocation machine = jcloudsLocation.rebindMachine(jcloudsLocation.getAllConfigBag().putAll(machineFlags));
@@ -133,7 +140,7 @@ public class JcloudsByonLocationResolver implements LocationResolver {
             }
         }
         
-        ConfigBag flags = ConfigBag.newInstance(locationFlags);
+        ConfigBag flags = ConfigBag.newInstance(jcloudsProperties);
 
         flags.putStringKey("machines", machines);
         flags.putIfNotNull(LocationConfigKeys.USER, user);
@@ -147,6 +154,13 @@ public class JcloudsByonLocationResolver implements LocationResolver {
         return managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
                 .configure(flags.getAllConfig())
                 .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
+    }
+    
+    private Map getAllProperties(brooklyn.location.LocationRegistry registry, Map<?,?> properties) {
+        Map<Object,Object> allProperties = Maps.newHashMap();
+        if (registry!=null) allProperties.putAll(registry.getProperties());
+        allProperties.putAll(properties);
+        return allProperties;
     }
     
     @Override
