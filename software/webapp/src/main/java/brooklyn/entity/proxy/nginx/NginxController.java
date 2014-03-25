@@ -73,7 +73,7 @@ public interface NginxController extends AbstractController, HasShortName {
 
     @SetFromFlag("pcreVersion")
     ConfigKey<String> PCRE_VERSION = ConfigKeys.newStringConfigKey(
-            "pcre.version", "Version of PCRE to be installed, if required", "8.32");
+            "pcre.version", "Version of PCRE to be installed, if required", "8.33");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
