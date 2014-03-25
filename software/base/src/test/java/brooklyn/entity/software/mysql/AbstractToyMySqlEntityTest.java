@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 
-import brooklyn.entity.BrooklynMgmtContextLiveTestSupport;
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
@@ -27,7 +27,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
 
-public abstract class AbstractToyMySqlEntityTest extends BrooklynMgmtContextLiveTestSupport {
+public abstract class AbstractToyMySqlEntityTest extends BrooklynAppLiveTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractToyMySqlEntityTest.class);
     

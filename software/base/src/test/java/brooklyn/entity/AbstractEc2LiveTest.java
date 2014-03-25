@@ -17,7 +17,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Runs a test with many different distros and versions.
  */
-public abstract class AbstractEc2LiveTest extends BrooklynMgmtContextLiveTestSupport {
+public abstract class AbstractEc2LiveTest extends BrooklynAppLiveTestSupport {
     
     // FIXME Currently have just focused on test_Debian_6; need to test the others as well!
 

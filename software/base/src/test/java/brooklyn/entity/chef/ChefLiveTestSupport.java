@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 
-import brooklyn.entity.BrooklynMgmtContextLiveTestSupport;
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.location.Location;
@@ -20,7 +20,7 @@ import brooklyn.util.stream.InputStreamSupplier;
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 
-public class ChefLiveTestSupport extends BrooklynMgmtContextLiveTestSupport {
+public class ChefLiveTestSupport extends BrooklynAppLiveTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(ChefLiveTestSupport.class);
     

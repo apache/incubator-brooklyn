@@ -18,9 +18,9 @@ import brooklyn.test.entity.TestApplication;
  * <p>
  * Uses a light-weight management context that will not read {@code ~/.brooklyn/brooklyn.properties}.
  */
-public class BrooklynMgmtContextUnitTestSupport {
+public class BrooklynAppUnitTestSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BrooklynMgmtContextUnitTestSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynAppUnitTestSupport.class);
 
     protected TestApplication app;
     protected ManagementContextInternal mgmt;

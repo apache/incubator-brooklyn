@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
@@ -21,7 +21,7 @@ import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 
 import com.google.common.collect.ImmutableList;
 
-public class EntityLocationUtilsTest extends BrooklynMgmtContextUnitTestSupport {
+public class EntityLocationUtilsTest extends BrooklynAppUnitTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(EntityLocationUtilsTest.class);
     

@@ -24,7 +24,7 @@ import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.testing.TestWordSpout;
 import backtype.storm.topology.TopologyBuilder;
-import brooklyn.entity.BrooklynMgmtContextLiveTestSupport;
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.messaging.storm.topologies.ExclamationBolt;
@@ -43,7 +43,7 @@ import brooklyn.util.time.Time;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
-public abstract class StormAbstractCloudLiveTest extends BrooklynMgmtContextLiveTestSupport {
+public abstract class StormAbstractCloudLiveTest extends BrooklynAppLiveTestSupport {
 
     protected static final Logger log = LoggerFactory
             .getLogger(StormAbstractCloudLiveTest.class);

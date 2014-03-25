@@ -18,7 +18,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
@@ -37,7 +37,7 @@ import com.google.common.collect.MapDifference.ValueDifference;
 import com.google.common.collect.Maps;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class JavaOptsTest extends BrooklynMgmtContextUnitTestSupport {
+public class JavaOptsTest extends BrooklynAppUnitTestSupport {
 
     // TODO Test setting classpath; but this works by customize() copying all the artifacts into /lib/*
     // so that we can simply set this on the classpath...

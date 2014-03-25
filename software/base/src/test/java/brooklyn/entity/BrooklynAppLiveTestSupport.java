@@ -18,9 +18,9 @@ import brooklyn.test.entity.TestApplication;
  * Uses a management context that will not load {@code ~/.brooklyn/catalog.xml} but will
  * read from the default {@code ~/.brooklyn/brooklyn.properties}.
  */
-public class BrooklynMgmtContextLiveTestSupport {
+public class BrooklynAppLiveTestSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BrooklynMgmtContextLiveTestSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynAppLiveTestSupport.class);
 
     protected TestApplication app;
     protected ManagementContext mgmt;

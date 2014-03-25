@@ -5,13 +5,13 @@ package brooklyn.entity.nosql.solr;
 
 import org.testng.annotations.BeforeMethod;
 
-import brooklyn.entity.BrooklynMgmtContextLiveTestSupport;
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.location.Location;
 
 /**
  * Solr test framework for integration and live tests.
  */
-public class AbstractSolrServerTest extends BrooklynMgmtContextLiveTestSupport {
+public class AbstractSolrServerTest extends BrooklynAppLiveTestSupport {
 
     protected Location testLocation;
     protected SolrServer solr;

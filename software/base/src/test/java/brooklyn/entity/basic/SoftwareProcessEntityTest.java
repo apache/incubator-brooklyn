@@ -13,7 +13,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 
-public class SoftwareProcessEntityTest extends BrooklynMgmtContextUnitTestSupport {
+public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
 
     // NB: These tests don't actually require ssh to localhost -- only that 'localhost' resolves.
 

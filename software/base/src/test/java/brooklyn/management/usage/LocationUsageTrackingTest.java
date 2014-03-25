@@ -10,7 +10,7 @@ import java.util.Set;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessEntityTest;
 import brooklyn.entity.proxying.EntitySpec;
@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-public class LocationUsageTrackingTest extends BrooklynMgmtContextUnitTestSupport {
+public class LocationUsageTrackingTest extends BrooklynAppUnitTestSupport {
 
     private DynamicLocalhostMachineProvisioningLocation loc;
     

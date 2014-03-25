@@ -14,7 +14,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynMgmtContextLiveTestSupport;
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.nosql.cassandra.TokenGenerators.PosNeg63TokenGenerator;
 import brooklyn.entity.proxying.EntitySpec;
@@ -32,7 +32,7 @@ import com.google.common.collect.Iterables;
  *
  * Tests that a one node cluster can be started on localhost and data can be written/read, using the Astyanax API.
  */
-public class CassandraDatacenterIntegrationTest extends BrooklynMgmtContextLiveTestSupport {
+public class CassandraDatacenterIntegrationTest extends BrooklynAppLiveTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(CassandraDatacenterIntegrationTest.class);
 

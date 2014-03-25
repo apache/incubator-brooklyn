@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 
-public class SoftwareProcessSubclassTest extends BrooklynMgmtContextUnitTestSupport {
+public class SoftwareProcessSubclassTest extends BrooklynAppUnitTestSupport {
 
 //  NB: These tests don't actually require ssh to localhost -- only that 'localhost' resolves.
 
