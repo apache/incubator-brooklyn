@@ -6,9 +6,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
@@ -35,7 +35,7 @@ public class BrooklynMgmtContextUnitTestSupport {
             mgmt = new LocalManagementContextForTests();
         }
         EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class)
-                .configure(MachineLifecycleEffectorTasks.SKIP_ON_BOX_BASE_DIR_RESOLUTION, shouldSkipOnBoxBaseDirResolution());
+                .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, shouldSkipOnBoxBaseDirResolution());
         app = ApplicationBuilder.newManagedApp(appSpec, mgmt);
     }
 
