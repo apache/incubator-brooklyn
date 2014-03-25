@@ -551,6 +551,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
                 //FIXME initialCredentials = initUserTemplateOptions(template, setup);
                 for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
+                    customizer.customize(this, computeService, template);
                     customizer.customize(this, computeService, template.getOptions());
                 }
                 LOG.debug("jclouds using template {} / options {} to provision machine in {}",

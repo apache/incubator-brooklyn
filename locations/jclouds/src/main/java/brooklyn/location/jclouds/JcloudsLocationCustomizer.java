@@ -1,6 +1,7 @@
 package brooklyn.location.jclouds;
 
 import org.jclouds.compute.ComputeService;
+import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.TemplateOptions;
 
@@ -19,6 +20,14 @@ public interface JcloudsLocationCustomizer {
      * before it is built and immutable.
      */
     void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder);
+
+    /**
+     * Override to configure a subclass of this with the built template, or to configure the built
+     * template's {@link org.jclouds.compute.options.TemplateOptions}.
+     * <p/>
+     * This method will be called before {@link #customize(JcloudsLocation, ComputeService, TemplateOptions)}.
+     */
+    void customize(JcloudsLocation location, ComputeService computeService, Template template);
 
     /**
      * Override to configure the {@link org.jclouds.compute.options.TemplateOptions} that will
