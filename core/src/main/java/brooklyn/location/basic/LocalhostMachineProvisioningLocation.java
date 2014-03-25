@@ -11,8 +11,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.AddressableLocation;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.OsDetails;
@@ -44,7 +46,11 @@ import com.google.common.collect.Sets;
 public class LocalhostMachineProvisioningLocation extends FixedListMachineProvisioningLocation<SshMachineLocation> implements AddressableLocation {
 
     public static final Logger LOG = LoggerFactory.getLogger(LocalhostMachineProvisioningLocation.class);
-                
+    
+    public static final ConfigKey<Boolean> SKIP_ON_BOX_BASE_DIR_RESOLUTION = ConfigKeys.newConfigKeyWithDefault(
+            BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, 
+            true);
+    
     @SetFromFlag("count")
     int initialCount;
 
@@ -209,6 +215,15 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     }
     
     public static class LocalhostMachine extends SshMachineLocation {
+        // declaring this here (as well as on LocalhostMachineProvisioningLocation) because:
+        //  1. machine.getConfig(key) will not inherit default value of machine.getParent()'s key
+        //  2. things might instantiate a `LocalhostMachine` without going through LocalhostMachineProvisioningLocation
+        //     so not sufficient for LocalhostMachineProvisioningLocation to just push its config value into
+        //     the LocalhostMachine instance.
+        public static final ConfigKey<Boolean> SKIP_ON_BOX_BASE_DIR_RESOLUTION = ConfigKeys.newConfigKeyWithDefault(
+                BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, 
+                true);
+
         private static final WithMutexes mutexSupport = new MutexSupport();
         
         private final Set<Integer> portsObtained = Sets.newLinkedHashSet();

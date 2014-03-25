@@ -20,6 +20,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.SoftwareProcessEntityTest;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;

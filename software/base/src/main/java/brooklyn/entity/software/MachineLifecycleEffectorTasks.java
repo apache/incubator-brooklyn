@@ -79,8 +79,6 @@ public abstract class MachineLifecycleEffectorTasks {
 
     private static final Logger log = LoggerFactory.getLogger(MachineLifecycleEffectorTasks.class);
     
-    public static final ConfigKey<Boolean> SKIP_ON_BOX_BASE_DIR_RESOLUTION = ConfigKeys.newBooleanConfigKey("onbox.base.dir.skipResolution",
-        "Whether to skip on-box directory resolution, and just assume the directory exists; can be set on machine or on entity", false);
     public static final ConfigKey<Boolean> ON_BOX_BASE_DIR_RESOLVED = ConfigKeys.newBooleanConfigKey("onbox.base.dir.resolved",
         "Whether the on-box base directory has been resolved (for internal use)");
     
@@ -299,7 +297,7 @@ public abstract class MachineLifecycleEffectorTasks {
         if (base.startsWith("~/")) base = "."+base.substring(1);
         
         String resolvedBase = null;
-        if (entity.getConfig(SKIP_ON_BOX_BASE_DIR_RESOLUTION) || machine.getConfig(SKIP_ON_BOX_BASE_DIR_RESOLUTION)) {
+        if (entity.getConfig(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION) || machine.getConfig(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION)) {
             if (log.isDebugEnabled()) log.debug("Skipping on-box base dir resolution for "+entity+" at "+machine);
             if (!Os.isAbsolute(base)) base = "~/"+base;
             resolvedBase = Os.tidyPath(base);

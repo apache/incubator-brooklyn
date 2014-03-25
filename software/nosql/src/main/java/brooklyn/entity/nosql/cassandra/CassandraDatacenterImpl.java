@@ -517,9 +517,6 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                 if (log.isTraceEnabled()) log.trace("Seeds considered stable for cluster {} (node {} changed hostname {})", new Object[] {CassandraDatacenterImpl.this, member, hostname});
                 return;
             }
-            
-            Supplier<Set<Entity>> seedSupplier = getSeedSupplier();
-            setAttribute(CURRENT_SEEDS, seedSupplier.get());
         }
         public void onServiceUpChanged(Entity member, Boolean serviceUp) {
             Boolean oldVal = memberUpness.put(member, serviceUp);
@@ -540,12 +537,6 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                 if (log.isTraceEnabled()) log.trace("Seeds considered stable for cluster {} (node {} changed serviceUp {})", new Object[] {CassandraDatacenterImpl.this, member, serviceUp});
                 return;
             }
-            
-            Supplier<Set<Entity>> seedSupplier = getSeedSupplier();
-            Set<Entity> newSeeds = seedSupplier.get();
-            setAttribute(CURRENT_SEEDS, newSeeds);
-            if (log.isDebugEnabled())
-                log.debug("Seeds for "+CassandraDatacenterImpl.this+" now "+newSeeds);
         }
         protected Set<Entity> getSeeds() {
             Set<Entity> result = getAttribute(CURRENT_SEEDS);

@@ -4,9 +4,6 @@ import static brooklyn.entity.basic.ConfigKeys.newBooleanConfigKey;
 import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
 import static brooklyn.entity.basic.ConfigKeys.newConfigKeyWithPrefix;
 import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
-
-import java.io.File;
-
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -30,6 +27,11 @@ public class BrooklynConfigKeys {
     public static final ConfigKey<String> ONBOX_BASE_DIR = newStringConfigKey(
         "onbox.base.dir", "Default base directory on target machines where Brooklyn config data is stored; "
         + "default depends on the location, either ~/brooklyn-managed-processes or /tmp/brooklyn-${username} on localhost");
+
+    public static final ConfigKey<Boolean> SKIP_ON_BOX_BASE_DIR_RESOLUTION = ConfigKeys.newBooleanConfigKey(
+            "onbox.base.dir.skipResolution",
+            "Whether to skip on-box directory resolution (which can require ssh'ing), and just assume the directory exists; can be set on machine or on entity", 
+            false);
 
     // TODO Rename to VERSION, instead of SUGGESTED_VERSION? And declare as BasicAttributeSensorAndConfigKey?
     public static final ConfigKey<String> SUGGESTED_VERSION = newStringConfigKey("install.version", "Suggested version");
