@@ -1,5 +1,6 @@
 package brooklyn.location.basic;
 
+import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
@@ -93,6 +95,8 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
 
     private final Map<Class<?>, Object> extensions = Maps.newConcurrentMap();
     
+    private final EntityDynamicType entityType;
+    
     /**
      * Construct a new instance of an AbstractLocation.
      */
@@ -126,6 +130,12 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
             LOG.warn("Forcing use of deprecated old-style location construction for "+getClass().getName()+" because properties were specified ("+properties+")");
             _legacyConstruction = true;
         }
+        
+        // When one calls getConfig(key), we want to use the default value specified on *this* location
+        // if it overrides the default config. The easiest way to look up all our config keys is to 
+        // reuse the code for Entity (and this will become identical when locations become first-class
+        // entities). See {@link #getConfig(ConfigKey)}
+        entityType = new EntityDynamicType((Class)getClass());
         
         if (_legacyConstruction) {
             LOG.warn("Deprecated use of old-style location construction for "+getClass().getName()+"; instead use LocationManager().createLocation(spec)");
@@ -363,7 +373,12 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
     public <T> T getConfig(ConfigKey<T> key) {
         if (hasConfig(key, false)) return getLocalConfigBag().get(key);
         if (getParent()!=null) return getParent().getConfig(key);
-        return key.getDefaultValue();
+        
+        // In case this entity class has overridden the given key (e.g. to set default), then retrieve this entity's key
+        // TODO when locations become entities, the duplication of this compared to EntityConfigMap.getConfig will disappear.
+        ConfigKey<T> ownKey = (ConfigKey<T>) elvis(entityType.getConfigKey(key.getName()), key);
+
+        return ownKey.getDefaultValue();
     }
 
     @Override

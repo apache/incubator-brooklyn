@@ -145,11 +145,25 @@ public class LocationConfigTest {
         assertEquals(child.getAllConfig(false), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "mychildconfigflagname", "overrideMyval"));
     }
     
+    @Test
+    public void testLocationCanOverrideConfigDefaultValue() throws Exception {
+        LocationInternal loc = managementContext.getLocationManager().createLocation(LocationSpec.create(MyLocation.class));
+        LocationInternal subloc = managementContext.getLocationManager().createLocation(LocationSpec.create(MySubLocation.class));
+
+        assertEquals(loc.getConfig(MyLocation.MY_CONFIG_WITH_DEFAULT), "mydefault");
+        assertEquals(loc.getConfig(ConfigKeys.newStringConfigKey("mylocation.myconfigwithdefault", "", "differentdefault")), "mydefault");
+        
+        assertEquals(subloc.getConfig(MySubLocation.MY_CONFIG_WITH_DEFAULT), "mysubdefault");
+        assertEquals(subloc.getConfig(MyLocation.MY_CONFIG_WITH_DEFAULT), "mysubdefault");
+    }
+    
     public static class MyLocation extends AbstractLocation {
         public static final ConfigKey<String> MY_CONFIG = ConfigKeys.newStringConfigKey("mylocation.myconfig");
 
         @SetFromFlag("myconfigflagname")
         public static final ConfigKey<String> MY_CONFIG_WITH_FLAGNAME = ConfigKeys.newStringConfigKey("mylocation.myconfigwithflagname");
+        
+        public static final ConfigKey<String> MY_CONFIG_WITH_DEFAULT = ConfigKeys.newStringConfigKey("mylocation.myconfigwithdefault", "", "mydefault");
     }
     
     public static class MyChildLocation extends AbstractLocation {
@@ -158,4 +172,9 @@ public class LocationConfigTest {
         @SetFromFlag("mychildconfigflagname")
         public static final ConfigKey<String> MY_CHILD_CONFIG_WITH_FLAGNAME = ConfigKeys.newStringConfigKey("mychildlocation.myconfigwithflagname");
     }
+    
+    public static class MySubLocation extends MyLocation {
+        public static final ConfigKey<String> MY_CONFIG_WITH_DEFAULT = ConfigKeys.newConfigKeyWithDefault(MyLocation.MY_CONFIG_WITH_DEFAULT, "mysubdefault");
+    }
+    
 }
