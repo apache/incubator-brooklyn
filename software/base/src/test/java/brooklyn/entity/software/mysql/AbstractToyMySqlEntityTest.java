@@ -3,10 +3,9 @@ package brooklyn.entity.software.mysql;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import brooklyn.entity.BrooklynMgmtContextTestSupport;
+import brooklyn.entity.BrooklynMgmtContextLiveTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
@@ -28,7 +27,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
 
-public abstract class AbstractToyMySqlEntityTest extends BrooklynMgmtContextTestSupport {
+public abstract class AbstractToyMySqlEntityTest extends BrooklynMgmtContextLiveTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractToyMySqlEntityTest.class);
     
@@ -40,12 +39,6 @@ public abstract class AbstractToyMySqlEntityTest extends BrooklynMgmtContextTest
         super.setUp();
         
         targetLocation = createLocation();
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (mgmt != null) Entities.destroyAll(mgmt);
-        mgmt = null;
     }
 
     protected MachineProvisioningLocation<? extends SshMachineLocation> createLocation() {

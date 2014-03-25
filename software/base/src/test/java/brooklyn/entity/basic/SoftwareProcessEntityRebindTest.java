@@ -12,44 +12,44 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
 import brooklyn.entity.basic.SoftwareProcessEntityTest.MyService;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
-public class SoftwareProcessEntityRebindTest {
+public class SoftwareProcessEntityRebindTest extends BrooklynMgmtContextUnitTestSupport {
 
     private ClassLoader classLoader = getClass().getClassLoader();
-    private ManagementContext origManagementContext;
-    private TestApplication origApp;
     private TestApplication newApp;
     private ManagementContext newManagementContext;
     private MyService origE;
     private File mementoDir;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
-        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
-        origApp = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
+        mgmt = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
+        super.setUp();
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun=true)
+    @Override
     public void tearDown() throws Exception {
-        if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
+        super.tearDown();
         if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
-        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
         if (newManagementContext != null) Entities.destroyAll(newManagementContext);
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
@@ -57,10 +57,11 @@ public class SoftwareProcessEntityRebindTest {
     
     @Test
     public void testReleasesLocationOnStopAfterRebinding() throws Exception {
-        origE = origApp.createAndManageChild(EntitySpec.create(MyService.class));
+        origE = app.createAndManageChild(EntitySpec.create(MyService.class));
         
-        MyProvisioningLocation origLoc = new MyProvisioningLocation(MutableMap.of("name", "mylocname"));
-        origApp.start(ImmutableList.of(origLoc));
+        MyProvisioningLocation origLoc = mgmt.getLocationManager().createLocation(LocationSpec.create(MyProvisioningLocation.class)
+                .displayName("mylocname"));
+        app.start(ImmutableList.of(origLoc));
         assertEquals(origLoc.inUseCount.get(), 1);
         
         newApp = (TestApplication) rebind();
@@ -72,7 +73,7 @@ public class SoftwareProcessEntityRebindTest {
     }
 
     private TestApplication rebind() throws Exception {
-        RebindTestUtils.waitForPersisted(origApp);
+        RebindTestUtils.waitForPersisted(app);
         TestApplication result = (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
         newManagementContext = result.getManagementContext();
         return result;
@@ -84,10 +85,9 @@ public class SoftwareProcessEntityRebindTest {
         @SetFromFlag(defaultVal="0")
         AtomicInteger inUseCount;
 
-        public MyProvisioningLocation(Map flags) {
-            super(flags);
+        public MyProvisioningLocation() {
         }
-
+        
         @Override
         public MachineProvisioningLocation<SshMachineLocation> newSubLocation(Map<?, ?> newFlags) {
             throw new UnsupportedOperationException();
@@ -96,7 +96,9 @@ public class SoftwareProcessEntityRebindTest {
         @Override
         public SshMachineLocation obtain(Map flags) throws NoMachinesAvailableException {
             inUseCount.incrementAndGet();
-            return new SshMachineLocation(MutableMap.of("address","localhost"));
+            return getManagementContext().getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                    .parent(this)
+                    .configure("address","localhost"));
         }
 
         @Override

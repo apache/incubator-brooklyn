@@ -7,16 +7,14 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EmptySoftwareProcess;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
@@ -26,9 +24,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicate;
@@ -37,27 +33,20 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-public class CassandraFabricTest {
+public class CassandraFabricTest extends BrooklynMgmtContextUnitTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(CassandraFabricTest.class);
     
-    private ManagementContext managementContext;
-    private TestApplication app;
     private LocalhostMachineProvisioningLocation loc1;
     private LocalhostMachineProvisioningLocation loc2;
     private CassandraFabric fabric;
     
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        managementContext = app.getManagementContext();
-        loc1 = managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
-        loc2 = managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (managementContext != null) Entities.destroyAll(managementContext);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        loc1 = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
+        loc2 = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
     }
     
     @Test

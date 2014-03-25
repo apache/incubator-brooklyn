@@ -9,23 +9,19 @@ import org.jclouds.util.Throwables2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.os.Os;
@@ -37,31 +33,24 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 
-public class SoftwareProcessEntityTest {
+public class SoftwareProcessEntityTest extends BrooklynMgmtContextUnitTestSupport {
 
-//  NB: These tests don't actually require ssh to localhost -- only that 'localhost' resolves.
+    // NB: These tests don't actually require ssh to localhost -- only that 'localhost' resolves.
 
     private static final Logger LOG = LoggerFactory.getLogger(SoftwareProcessEntityTest.class);
 
-    private LocalManagementContext managementContext;
     private SshMachineLocation machine;
     private FixedListMachineProvisioningLocation<SshMachineLocation> loc;
-    private TestApplication app;
     
-    @SuppressWarnings("unchecked")
     @BeforeMethod(alwaysRun=true)
+    @SuppressWarnings("unchecked")
+    @Override
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContextForTests();
-        loc = managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class));
-        machine = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
-            .configure("address", "localhost").configure(MachineLifecycleEffectorTasks.SKIP_ON_BOX_BASE_DIR_RESOLUTION, true));
+        super.setUp();
+        loc = mgmt.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class));
+        machine = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                .configure("address", "localhost"));
         loc.addMachine(machine);
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

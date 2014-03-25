@@ -14,7 +14,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynMgmtContextTestSupport;
+import brooklyn.entity.BrooklynMgmtContextLiveTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.nosql.cassandra.TokenGenerators.PosNeg63TokenGenerator;
 import brooklyn.entity.proxying.EntitySpec;
@@ -28,12 +28,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 /**
- * A live test of the {@link CassandraDatacenter} entity.
+ * An integration test of the {@link CassandraDatacenter} entity.
  *
- * Tests that a two node cluster can be started on Amazon EC2 and data written on one {@link CassandraNode}
- * can be read from another, using the Astyanax API.
+ * Tests that a one node cluster can be started on localhost and data can be written/read, using the Astyanax API.
  */
-public class CassandraDatacenterIntegrationTest extends BrooklynMgmtContextTestSupport {
+public class CassandraDatacenterIntegrationTest extends BrooklynMgmtContextLiveTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(CassandraDatacenterIntegrationTest.class);
 

@@ -7,12 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessEntityTest;
 import brooklyn.entity.proxying.EntitySpec;
@@ -20,36 +18,27 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.usage.LocationUsage.LocationEvent;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-public class LocationUsageTrackingTest {
+public class LocationUsageTrackingTest extends BrooklynMgmtContextUnitTestSupport {
 
-    private LocalManagementContext managementContext;
     private DynamicLocalhostMachineProvisioningLocation loc;
-    private TestApplication app;
     
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        managementContext = new LocalManagementContext();
-        loc = managementContext.getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class));
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (managementContext != null) Entities.destroyAll(managementContext);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        loc = mgmt.getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class));
     }
 
     @Test
     public void testUsageInitiallyEmpty() {
-        Set<LocationUsage> usage = managementContext.getUsageManager().getLocationUsage(Predicates.alwaysTrue());
+        Set<LocationUsage> usage = mgmt.getUsageManager().getLocationUsage(Predicates.alwaysTrue());
         assertEquals(usage, ImmutableSet.of());
     }
 
@@ -63,7 +52,7 @@ public class LocationUsageTrackingTest {
         long postStart = System.currentTimeMillis();
         SshMachineLocation machine = Iterables.getOnlyElement(loc.getAllMachines());
         
-        Set<LocationUsage> usages1 = managementContext.getUsageManager().getLocationUsage(Predicates.alwaysTrue());
+        Set<LocationUsage> usages1 = mgmt.getUsageManager().getLocationUsage(Predicates.alwaysTrue());
         LocationUsage usage1 = Iterables.getOnlyElement(usages1);
         List<LocationEvent> events1 = usage1.getEvents();
         LocationEvent event1 = Iterables.getOnlyElement(events1);
@@ -79,7 +68,7 @@ public class LocationUsageTrackingTest {
         app.stop();
         long postStop = System.currentTimeMillis();
 
-        Set<LocationUsage> usages2 = managementContext.getUsageManager().getLocationUsage(Predicates.alwaysTrue());
+        Set<LocationUsage> usages2 = mgmt.getUsageManager().getLocationUsage(Predicates.alwaysTrue());
         LocationUsage usage2 = Iterables.getOnlyElement(usages2);
         List<LocationEvent> events2 = usage2.getEvents();
         LocationEvent event2 = events2.get(1);

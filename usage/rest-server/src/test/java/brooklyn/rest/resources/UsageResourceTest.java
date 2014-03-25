@@ -21,6 +21,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.SoftwareProcessEntityTest;
+import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
@@ -207,7 +208,8 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testListAndGetMachineUsage() throws Exception {
-        Location location = getManagementContext().getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class));
+        Location location = getManagementContext().getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class)
+                .configure(MachineLifecycleEffectorTasks.SKIP_ON_BOX_BASE_DIR_RESOLUTION, true));
         TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, getManagementContext());
         SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(brooklyn.entity.proxying.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
         
@@ -233,7 +235,8 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testListMachinesUsageForApp() throws Exception {
-        Location location = getManagementContext().getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class));
+        Location location = getManagementContext().getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class)
+                .configure(MachineLifecycleEffectorTasks.SKIP_ON_BOX_BASE_DIR_RESOLUTION, true));
         TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, getManagementContext());
         SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(brooklyn.entity.proxying.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
         String appId = app.getId();

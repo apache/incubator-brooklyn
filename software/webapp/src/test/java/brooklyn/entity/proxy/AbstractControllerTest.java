@@ -4,7 +4,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.net.Inet4Address;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,12 +13,11 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
@@ -29,17 +27,16 @@ import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
@@ -52,29 +49,28 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-public class AbstractControllerTest {
+public class AbstractControllerTest extends BrooklynMgmtContextUnitTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractControllerTest.class);
     
-    FixedListMachineProvisioningLocation loc;
-    TestApplication app;
+    FixedListMachineProvisioningLocation<?> loc;
     Cluster cluster;
     TrackingAbstractController controller;
     
     @BeforeMethod(alwaysRun = true)
-    public void setUp() {
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        
         List<SshMachineLocation> machines = new ArrayList<SshMachineLocation>();
         for (int i=1; i<=10; i++) {
-            try {
-                machines.add(new SshMachineLocation(MutableMap.of("address", Inet4Address.getByName("1.1.1."+i))));
-            } catch (UnknownHostException e) {
-                throw Exceptions.propagate(e);
-            }
+            SshMachineLocation machine = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                    .configure("address", Inet4Address.getByName("1.1.1."+i)));
+            machines.add(machine);
         }
-        loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(MutableMap.of("machines", machines));
+        loc = mgmt.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
+                .configure("machines", machines));
         
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        app.setConfig(MachineLifecycleEffectorTasks.SKIP_ON_BOX_BASE_DIR_RESOLUTION, true);
         cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 0)
                 .configure("factory", new ClusteredEntity.Factory()));
@@ -84,14 +80,9 @@ public class AbstractControllerTest {
                 .configure("portNumberSensor", ClusteredEntity.HTTP_PORT)
                 .configure("domain", "mydomain"));
         
-        app.start(Arrays.asList(loc));
+        app.start(ImmutableList.of(loc));
     }
     
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
-
     @ImplementedBy(TrackingAbstractControllerImpl.class)
     public static interface TrackingAbstractController extends AbstractController {
         List<Collection<String>> getUpdates();

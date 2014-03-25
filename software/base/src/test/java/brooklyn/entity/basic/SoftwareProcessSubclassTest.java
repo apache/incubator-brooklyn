@@ -8,25 +8,20 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 
-public class SoftwareProcessSubclassTest {
+public class SoftwareProcessSubclassTest extends BrooklynMgmtContextUnitTestSupport {
 
 //  NB: These tests don't actually require ssh to localhost -- only that 'localhost' resolves.
 
@@ -72,24 +67,17 @@ public class SoftwareProcessSubclassTest {
         
     }
     
-    private LocalManagementContext managementContext;
-    private LocalhostMachineProvisioningLocation loc;
-    private List<LocalhostMachineProvisioningLocation> locs;
-    private TestApplication app;
+    private Location loc;
+    private List<Location> locs;
     private SubSoftwareProcess entity;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContextForTests();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
-        loc = managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
+        super.setUp();
+        loc = mgmt.getLocationRegistry().resolve("localhost");
         locs = ImmutableList.of(loc);
         entity = app.createAndManageChild(EntitySpec.create(SubSoftwareProcess.class));
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (managementContext != null) Entities.destroyAll(managementContext);
     }
 
     @Test

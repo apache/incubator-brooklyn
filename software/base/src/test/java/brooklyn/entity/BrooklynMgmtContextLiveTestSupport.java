@@ -5,14 +5,22 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 
-public class BrooklynMgmtContextTestSupport {
+/**
+ * To be extended by live tests.
+ * <p>
+ * Uses a management context that will not load {@code ~/.brooklyn/catalog.xml} but will
+ * read from the default {@code ~/.brooklyn/brooklyn.properties}.
+ */
+public class BrooklynMgmtContextLiveTestSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BrooklynMgmtContextTestSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynMgmtContextLiveTestSupport.class);
 
     protected TestApplication app;
     protected ManagementContext mgmt;
@@ -22,8 +30,8 @@ public class BrooklynMgmtContextTestSupport {
         if (mgmt!=null) {
             app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
         } else {
-            app = ApplicationBuilder.newManagedApp(TestApplication.class);
-            mgmt = app.getManagementContext();
+            mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newDefault());
+            app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
         }
     }
 

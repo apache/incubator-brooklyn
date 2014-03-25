@@ -3,7 +3,6 @@ package brooklyn.entity.java;
 import static org.testng.Assert.fail;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,21 +18,16 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
-import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
@@ -43,7 +37,7 @@ import com.google.common.collect.MapDifference.ValueDifference;
 import com.google.common.collect.Maps;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class JavaOptsTest {
+public class JavaOptsTest extends BrooklynMgmtContextUnitTestSupport {
 
     // TODO Test setting classpath; but this works by customize() copying all the artifacts into /lib/*
     // so that we can simply set this on the classpath...
@@ -116,23 +110,22 @@ public class JavaOptsTest {
         }
     }
 
-    private ManagementContext managementContext;
-    private TestApplication app;
     private SshMachineLocation loc;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
         RecordingSshTool.execScriptCmds.clear();
-        managementContext = new LocalManagementContextForTests();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
-        loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+        super.setUp();
+        loc = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", "localhost")
                 .configure(SshTool.PROP_TOOL_CLASS, RecordingSshTool.class.getName()));
     }
     
     @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
         RecordingSshTool.execScriptCmds.clear();
     }
     

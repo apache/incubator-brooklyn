@@ -24,7 +24,7 @@ import com.google.common.collect.LinkedHashMultimap;
 
 public class BalancingNodePlacementStrategyTest {
 
-    // TODO Should move BrooklynMgmtContextTestSupport to core, from software/base
+    // TODO Should move BrooklynMgmtContext*TestSupport to core, from software/base
     
     private ManagementContext managementContext;
     private TestApplication app;

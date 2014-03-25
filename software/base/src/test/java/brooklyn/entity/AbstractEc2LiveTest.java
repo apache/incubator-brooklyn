@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.location.Location;
 import brooklyn.location.jclouds.JcloudsLocationConfig;
-import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
@@ -17,7 +17,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Runs a test with many different distros and versions.
  */
-public abstract class AbstractEc2LiveTest extends BrooklynMgmtContextTestSupport {
+public abstract class AbstractEc2LiveTest extends BrooklynMgmtContextLiveTestSupport {
     
     // FIXME Currently have just focused on test_Debian_6; need to test the others as well!
 
@@ -38,6 +38,7 @@ public abstract class AbstractEc2LiveTest extends BrooklynMgmtContextTestSupport
     protected Location jcloudsLocation;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
         // Don't let any defaults from brooklyn.properties (except credentials) interfere with test
         brooklynProperties = BrooklynProperties.Factory.newDefault();
@@ -50,7 +51,7 @@ public abstract class AbstractEc2LiveTest extends BrooklynMgmtContextTestSupport
         // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
         brooklynProperties.remove("brooklyn.ssh.config.scriptHeader");
         
-        mgmt = new LocalManagementContext(brooklynProperties);
+        mgmt = new LocalManagementContextForTests(brooklynProperties);
         
         super.setUp();
     }

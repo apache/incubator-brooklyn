@@ -2,7 +2,9 @@ package brooklyn.entity.messaging.storm;
 
 import static brooklyn.entity.messaging.storm.Storm.NIMBUS_HOSTNAME;
 import static brooklyn.entity.messaging.storm.Storm.ZOOKEEPER_ENSEMBLE;
-import static brooklyn.entity.messaging.storm.Storm.Role.*;
+import static brooklyn.entity.messaging.storm.Storm.Role.NIMBUS;
+import static brooklyn.entity.messaging.storm.Storm.Role.SUPERVISOR;
+import static brooklyn.entity.messaging.storm.Storm.Role.UI;
 import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 
 import java.io.File;
@@ -22,7 +24,7 @@ import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.testing.TestWordSpout;
 import backtype.storm.topology.TopologyBuilder;
-import brooklyn.entity.BrooklynMgmtContextTestSupport;
+import brooklyn.entity.BrooklynMgmtContextLiveTestSupport;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.messaging.storm.topologies.ExclamationBolt;
@@ -41,7 +43,7 @@ import brooklyn.util.time.Time;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
-public abstract class StormAbstractCloudLiveTest extends BrooklynMgmtContextTestSupport {
+public abstract class StormAbstractCloudLiveTest extends BrooklynMgmtContextLiveTestSupport {
 
     protected static final Logger log = LoggerFactory
             .getLogger(StormAbstractCloudLiveTest.class);

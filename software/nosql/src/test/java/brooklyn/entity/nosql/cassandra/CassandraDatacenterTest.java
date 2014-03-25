@@ -9,23 +9,19 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynMgmtContextUnitTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.EmptySoftwareProcessSshDriver;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.TemplateProcessor;
@@ -37,25 +33,18 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-public class CassandraDatacenterTest {
+public class CassandraDatacenterTest extends BrooklynMgmtContextUnitTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(CassandraDatacenterTest.class);
     
-    private ManagementContext managementContext;
-    private TestApplication app;
     private LocalhostMachineProvisioningLocation loc;
     private CassandraDatacenter cluster;
     
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        managementContext = app.getManagementContext();
-        loc = managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (managementContext != null) Entities.destroyAll(managementContext);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        loc = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
     }
     
     @Test
@@ -73,7 +62,7 @@ public class CassandraDatacenterTest {
         EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraDatacenter.CURRENT_SEEDS, ImmutableSet.<Entity>of(e1, e2));
     }
     
-    @Test
+    @Test(groups="Integration") // because takes approx 2 seconds
     public void testUpdatesSeedsOnFailuresAndAdditions() throws Exception {
         doTestUpdatesSeedsOnFailuresAndAdditions(true, false);
     }
@@ -166,18 +155,23 @@ public class CassandraDatacenterTest {
         Assert.assertTrue(processedTemplate.indexOf("775808") > 0);
     }
     
-    @Test(groups="Integration")
+    @Test(groups="Integration") // because takes approx 30 seconds
     public void testUpdatesSeedsFastishManyTimes() throws Exception {
         final int COUNT = 20;
         for (int i=0; i<COUNT; i++) {
             log.info("Test "+JavaClassNames.niceClassAndMethod()+", iteration "+(i+1)+" of "+COUNT);
-            doTestUpdatesSeedsOnFailuresAndAdditions(true, true);
-            tearDown();
-            setUp();
+            try {
+                doTestUpdatesSeedsOnFailuresAndAdditions(true, true);
+                tearDown();
+                setUp();
+            } catch (Exception e) {
+                log.warn("Error in "+JavaClassNames.niceClassAndMethod()+", iteration "+(i+1)+" of "+COUNT, e);
+                throw e;
+            }
         }
     }
     
-    @Test(groups="Integration")
+    @Test(groups="Integration") // because takes approx 5 seconds
     public void testUpdateSeedsSlowAndRejoining() throws Exception {
         final int COUNT = 1;
         for (int i=0; i<COUNT; i++) {
