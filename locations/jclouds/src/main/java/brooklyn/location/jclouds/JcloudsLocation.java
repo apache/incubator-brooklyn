@@ -859,13 +859,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             String[] securityGroups = toStringArray(v);
                             ((GoogleComputeEngineTemplateOptions)t).securityGroups(securityGroups);
                         } else {
-                            LOG.info("ignoring securityGroups({}) in VM creation because not supported for cloud/type ({})", v, t);
+                            LOG.info("ignoring securityGroups({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
                         }
                     }})
             .put(INBOUND_PORTS, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         int[] inboundPorts = toIntArray(v);
-                        if (LOG.isDebugEnabled()) LOG.debug("opening inbound ports {} for {}", Arrays.toString(inboundPorts), t);
+                        if (LOG.isDebugEnabled()) LOG.debug("opening inbound ports {} for cloud/type {}", Arrays.toString(inboundPorts), t.getClass());
                         t.inboundPorts(inboundPorts);
                     }})
             .put(USER_METADATA_STRING, new CustomizeTemplateOptions() {
@@ -874,7 +874,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             if (v==null) return;
                             ((EC2TemplateOptions)t).userData(v.toString().getBytes());
                         } else {
-                            LOG.info("ignoring userDataString({}) in VM creation because not supported for cloud/type ({})", v, t);
+                            LOG.info("ignoring userDataString({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
                         }
                     }})
             .put(USER_DATA_UUENCODED, new CustomizeTemplateOptions() {
@@ -883,7 +883,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             byte[] bytes = toByteArray(v);
                             ((EC2TemplateOptions)t).userData(bytes);
                         } else {
-                            LOG.info("ignoring userData({}) in VM creation because not supported for cloud/type ({})", v, t);
+                            LOG.info("ignoring userData({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
                         }
                     }})
             .put(STRING_TAGS, new CustomizeTemplateOptions() {
