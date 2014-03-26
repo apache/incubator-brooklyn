@@ -276,7 +276,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
         try {
             setAttribute(SERVICE_UP, calculateServiceUp());
+            
             for (Policy it : getPolicies()) { it.suspend(); }
+            
+            shrinkInternal( getCurrentSize() );
+            // run first without mutex (above) to make things stop even if starting,
+            // then run with mutex (below) to prevent others from starting things
             resize(0);
 
             // also stop any remaining stoppable children -- eg those on fire
@@ -306,7 +311,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             } else {
                 if (LOG.isDebugEnabled()) LOG.debug("Resize no-op {} from {} to {}", new Object[] {this, currentSize, desiredSize});
             }
-
+            
             if (delta > 0) {
                 grow(delta);
             } else if (delta < 0) {
@@ -534,19 +539,23 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public void shrink(int delta) {
         synchronized (mutex) {
-            Collection<Entity> removedEntities = pickAndRemoveMembers(delta * -1);
+            shrinkInternal(delta);
+        }
+    }
 
-            // FIXME symmetry in order of added as child, managed, started, and added to group
-            // FIXME assume stoppable; use logic of grow?
-            Task<?> invoke = Entities.invokeEffector(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
-            try {
-                invoke.get();
-            } catch (Exception e) {
-                throw Exceptions.propagate(e);
-            } finally {
-                for (Entity removedEntity : removedEntities) {
-                    discardNode(removedEntity);
-                }
+    private void shrinkInternal(int delta) {
+        Collection<Entity> removedEntities = pickAndRemoveMembers(delta * -1);
+
+        // FIXME symmetry in order of added as child, managed, started, and added to group
+        // FIXME assume stoppable; use logic of grow?
+        Task<?> invoke = Entities.invokeEffector(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
+        try {
+            invoke.get();
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            for (Entity removedEntity : removedEntities) {
+                discardNode(removedEntity);
             }
         }
     }
