@@ -41,7 +41,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
 implements MachineProvisioningLocation<T>, Closeable {
 
     // TODO Synchronization looks very wrong for accessing machines/inUse 
-    // e.g. removeChildLocation doesn't synchronize when doing machines.remove(...),
+    // e.g. removeChild doesn't synchronize when doing machines.remove(...),
     // and getMachines() returns the real sets risking 
     // ConcurrentModificationException in the caller if it iterates over them etc.
     
@@ -74,9 +74,9 @@ implements MachineProvisioningLocation<T>, Closeable {
             // FIXME Bad casting
             Location machine = (Location) location;
             Location parent = machine.getParent();
-            if (parent != null && !parent.equals(this))
-                throw new IllegalStateException("Machines must not have a parent location, but machine '"+machine.getDisplayName()+"' has its parent location set");
-            addChild(machine);
+            if (parent == null) {
+                addChild(machine);
+            }
         }
     }
     
@@ -121,9 +121,9 @@ implements MachineProvisioningLocation<T>, Closeable {
             }
             
             Location existingParent = ((Location)machine).getParent();
-            if (existingParent != null && !existingParent.equals(this))
-                throw new IllegalStateException("Machine "+machine+" must not have a parent location to be added to "+toString()+", but parent is already set to '"+existingParent+"'");
-            addChild((Location)machine);
+            if (existingParent == null) {
+                addChild(machine);
+            }
             
             machines.add(machine);
         }
@@ -136,7 +136,9 @@ implements MachineProvisioningLocation<T>, Closeable {
             } else {
                 machines.remove(machine);
                 pendingRemoval.remove(machine);
-                removeChild((Location)machine);
+                if (this.equals(machine.getParent())) {
+                    removeChild((Location)machine);
+                }
             }
         }
     }

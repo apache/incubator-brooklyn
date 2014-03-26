@@ -249,6 +249,29 @@ public class FixedListMachineProvisioningLocationTest {
         assertEquals(provisioner.getAllMachines(), ImmutableSet.of(machine));
     }
     
+    @Test
+    public void testCanAddAlreadyParentedMachine() throws UnknownHostException, NoMachinesAvailableException {
+        provisioner.obtain(); // so no machines left
+        
+        FixedListMachineProvisioningLocation<SshMachineLocation> provisioner2 = new FixedListMachineProvisioningLocation.Builder(mgmt.getLocationManager())
+            .addAddress("1.2.3.4")
+            .build();
+        SshMachineLocation machine = provisioner2.obtain();
+        
+        provisioner.addMachine(machine);
+        assertEquals(provisioner.obtain(), machine);
+    }
+
+    @Test
+    public void testCanCreateWithAlreadyParentedMachine() throws UnknownHostException, NoMachinesAvailableException {
+        machine = provisioner.obtain();
+        
+        FixedListMachineProvisioningLocation<SshMachineLocation> provisioner2 = new FixedListMachineProvisioningLocation.Builder(mgmt.getLocationManager())
+            .add(machine)
+            .build();
+        assertEquals(provisioner2.obtain(), machine);
+    }
+
     private static void assertUserAndHost(SshMachineLocation l, String user, String host) {
         assertEquals(l.getUser(), user);
         assertEquals(l.getAddress().getHostAddress(), host);
