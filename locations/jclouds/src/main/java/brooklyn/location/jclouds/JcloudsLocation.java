@@ -126,6 +126,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -303,7 +304,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         JcloudsLocationCustomizer customizer = setup.get(JCLOUDS_LOCATION_CUSTOMIZER);
         Collection<JcloudsLocationCustomizer> customizers = setup.get(JCLOUDS_LOCATION_CUSTOMIZERS);
         String customizerType = setup.get(JCLOUDS_LOCATION_CUSTOMIZER_TYPE);
-        
+        String customizersSupplierType = setup.get(JCLOUDS_LOCATION_CUSTOMIZERS_SUPPLIER_TYPE);
+
         List<JcloudsLocationCustomizer> result = new ArrayList<JcloudsLocationCustomizer>();
         if (customizer != null) result.add(customizer);
         if (customizers != null) result.addAll(customizers);
@@ -314,6 +316,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 result.add(customizerByType);
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to load customizer "+customizerType+" for location "+this);
+            }
+        }
+        if (Strings.isNonBlank(customizersSupplierType)) {
+            try {
+                Class<?> customizerClazz = getClass().getClassLoader().loadClass(customizersSupplierType);
+                Supplier<Collection<JcloudsLocationCustomizer>> customizerSupplier = (Supplier) customizerClazz.getConstructor().newInstance();
+                result.addAll(customizerSupplier.get());
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to load customizer supplier "+customizersSupplierType+" for location "+this);
             }
         }
         return result;

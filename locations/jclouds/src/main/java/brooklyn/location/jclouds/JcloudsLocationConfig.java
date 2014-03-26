@@ -122,16 +122,19 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<Boolean> MAP_DEV_RANDOM_TO_DEV_URANDOM = ConfigKeys.newBooleanConfigKey(
             "installDevUrandom", "Map /dev/random to /dev/urandom to prevent halting on insufficient entropy", false);
 
-    public static final ConfigKey<JcloudsLocationCustomizer> JCLOUDS_LOCATION_CUSTOMIZER = new BasicConfigKey<JcloudsLocationCustomizer>(
-            JcloudsLocationCustomizer.class, "customizer", "Optional location customizer", null);
+    public static final ConfigKey<JcloudsLocationCustomizer> JCLOUDS_LOCATION_CUSTOMIZER = ConfigKeys.newConfigKey(JcloudsLocationCustomizer.class,
+            "customizer", "Optional location customizer");
+
+    public static final ConfigKey<Collection<JcloudsLocationCustomizer>> JCLOUDS_LOCATION_CUSTOMIZERS = ConfigKeys.newConfigKey(
+            new TypeToken<Collection<JcloudsLocationCustomizer>>() {},
+            "customizers", "Optional location customizers");
 
     public static final ConfigKey<String> JCLOUDS_LOCATION_CUSTOMIZER_TYPE = ConfigKeys.newStringConfigKey(
-            "customizerType", "Optional location customizer type (to be class-loaded and constructed with no-arg constructor)", null);
+            "customizerType", "Optional location customizer type (to be class-loaded and constructed with no-arg constructor)");
 
-    @SuppressWarnings("serial")
-    public static final ConfigKey<Collection<JcloudsLocationCustomizer>> JCLOUDS_LOCATION_CUSTOMIZERS = ConfigKeys.newConfigKey(
-                    new TypeToken<Collection<JcloudsLocationCustomizer>>() {},
-                    "customizers", "Optional location customizers", null);
+    public static final ConfigKey<String> JCLOUDS_LOCATION_CUSTOMIZERS_SUPPLIER_TYPE = ConfigKeys.newStringConfigKey(
+            "customizersSupplierType", "Optional type of a Supplier<Collection<JcloudsLocationCustomizer>> " +
+            "(to be class-loaded and constructed with no-arg constructor)");
 
     public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
     
