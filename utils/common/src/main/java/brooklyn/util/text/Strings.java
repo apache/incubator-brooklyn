@@ -5,7 +5,9 @@ package brooklyn.util.text;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Collections;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import javax.annotation.Nullable;
 
@@ -700,6 +702,15 @@ public class Strings {
             if (index>=0) input = input.substring(0, index);
         }
         return input;
+    }
+
+    public static int getWordCount(String phrase, boolean respectQuotes) {
+        if (phrase==null) return 0;
+        phrase = phrase.trim();
+        if (respectQuotes)
+            return new QuotedStringTokenizer(phrase).remainderAsList().size();
+        else
+            return Collections.list(new StringTokenizer(phrase)).size();
     }
     
 }
