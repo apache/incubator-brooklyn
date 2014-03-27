@@ -91,17 +91,5 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
     public MongoDBRouter getAnyRunningRouter() {
         return getAttribute(MongoDBRouterCluster.ANY_RUNNING_ROUTER);
     }
-    
-    @Override
-    protected boolean calculateServiceUp() {
-        boolean anyRouterUp = false;
-        for (Entity entity : getMembers()) {
-            if (entity instanceof MongoDBRouter & entity.getAttribute(SERVICE_UP)) {
-                anyRouterUp = true;
-                break;
-            }
-        }
-        return anyRouterUp && super.calculateServiceUp();
-    }
-    
+ 
 }

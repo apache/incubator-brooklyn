@@ -67,10 +67,6 @@ public class MongoDBShardClusterImpl extends DynamicClusterImpl implements Mongo
         policy.setGroup(this);
     }
 
-    protected boolean calculateServiceUp() {
-        return addedMembers.size() > 0 && super.calculateServiceUp();
-    }
-
     protected void addShards() {
         MongoDBRouter router = getParent().getAttribute(MongoDBShardedDeployment.ROUTER_CLUSTER).getAttribute(MongoDBRouterCluster.ANY_RUNNING_ROUTER);
         if (router == null)
