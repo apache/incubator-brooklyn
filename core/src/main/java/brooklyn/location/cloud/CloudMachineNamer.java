@@ -30,7 +30,7 @@ public class CloudMachineNamer {
             
         return groupId + "-" + Identifiers.makeRandomId(Math.min(4, suffixLength));
     }
-    
+
     public String generateNewGroupId() {
         return generateNewIdReservingLength(nameInGroupReservedLength);
     }
@@ -45,8 +45,7 @@ public class CloudMachineNamer {
         
         // randId often not necessary, as an 8-char hex identifier is added later (in jclouds? can we override?)
         // however it can be useful to have this early in the string, to prevent collisions in places where it is abbreviated 
-        shortener.
-            append("randId", Identifiers.makeRandomId(4));
+        shortener.append("randId", Identifiers.makeRandomId(4));
         
         String user = System.getProperty("user.name");
         if (!"brooklyn".equals(user))
@@ -56,39 +55,36 @@ public class CloudMachineNamer {
         if (entity!=null) {
             Application app = entity.getApplication();
             if (app!=null) {
-                shortener.
-                    append("app", shortName(app)).
-                    append("appId", app.getId());
+                shortener.append("app", shortName(app))
+                        .append("appId", app.getId());
             }
-            shortener.append("entity", shortName(entity)).
-                append("entityId", entity.getId());
+            shortener.append("entity", shortName(entity))
+                    .append("entityId", entity.getId());
         } else if (context!=null) {
             shortener.append("context", context.toString());
         }
         
-        shortener.
-            truncate("user", 12).
-            truncate("app", 16).
-            truncate("entity", 16).
-            truncate("appId", 4).
-            truncate("entityId", 4).
-            truncate("context", 12);
+        shortener.truncate("user", 12)
+                .truncate("app", 16)
+                .truncate("entity", 16)
+                .truncate("appId", 4)
+                .truncate("entityId", 4)
+                .truncate("context", 12);
         
-        shortener.
-            canTruncate("user", 8).
-            canTruncate("app", 5).
-            canTruncate("entity", 5).
-            canTruncate("system", 2).
-            canTruncate("app", 3).
-            canTruncate("entity", 3).
-            canRemove("app").
-            canTruncate("user", 4).
-            canRemove("entity").
-            canTruncate("context", 4).
-            canTruncate("randId", 2).
-            canRemove("user").
-            canTruncate("appId", 2).
-            canRemove("appId");
+        shortener.canTruncate("user", 8)
+                .canTruncate("app", 5)
+                .canTruncate("entity", 5)
+                .canTruncate("system", 2)
+                .canTruncate("app", 3)
+                .canTruncate("entity", 3)
+                .canRemove("app")
+                .canTruncate("user", 4)
+                .canRemove("entity")
+                .canTruncate("context", 4)
+                .canTruncate("randId", 2)
+                .canRemove("user")
+                .canTruncate("appId", 2)
+                .canRemove("appId");
         
         int len = getMaxNameLength();
         // decrement by e.g. 9 chars because jclouds adds that (dash plus 8 for hex id)

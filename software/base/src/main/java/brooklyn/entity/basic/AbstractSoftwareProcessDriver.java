@@ -24,18 +24,18 @@ import com.google.common.collect.ImmutableMap;
  */
 public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDriver {
 
-	private static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessDriver.class);
-	
+    private static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessDriver.class);
+
     protected final EntityLocal entity;
     protected final ResourceUtils resource;
     protected final Location location;
-    
+
     public AbstractSoftwareProcessDriver(EntityLocal entity, Location location) {
         this.entity = checkNotNull(entity, "entity");
         this.location = checkNotNull(location, "location");
         this.resource = ResourceUtils.create(entity);
     }
-	
+
     /*
      * (non-Javadoc)
      * @see brooklyn.entity.basic.SoftwareProcessDriver#rebind()
@@ -57,101 +57,101 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      *
      * @see #stop()
      */
-	@Override
-	public void start() {
-	    DynamicTasks.queue("install", new Runnable() { public void run() {
+    @Override
+    public void start() {
+        DynamicTasks.queue("install", new Runnable() { public void run() {
             waitForConfigKey(BrooklynConfigKeys.INSTALL_LATCH);
             install();
         }});
-        
-	    DynamicTasks.queue("customize", new Runnable() { public void run() {
+
+        DynamicTasks.queue("customize", new Runnable() { public void run() {
             waitForConfigKey(BrooklynConfigKeys.CUSTOMIZE_LATCH);
             customize();
         }});
-        
-	    DynamicTasks.queue("launch", new Runnable() { public void run() {
+
+        DynamicTasks.queue("launch", new Runnable() { public void run() {
             waitForConfigKey(BrooklynConfigKeys.LAUNCH_LATCH);
             launch();
         }});
-        
-	    DynamicTasks.queue("post-launch", new Runnable() { public void run() {
+
+        DynamicTasks.queue("post-launch", new Runnable() { public void run() {
             postLaunch();
         }});
-	}
+    }
 
-	@Override
-	public abstract void stop();
-	
-	public abstract void install();
-	public abstract void customize();
-	public abstract void launch();
-    
+    @Override
+    public abstract void stop();
+
+    public abstract void install();
+    public abstract void customize();
+    public abstract void launch();
+
     @Override
     public void kill() {
         stop();
     }
-    
+
     /**
      * Implement this method in child classes to add some post-launch behavior
      */
-	public void postLaunch() {}
-    
-	@Override
-	public void restart() {
-	    DynamicTasks.queue("stop (best effort)", new Runnable() { public void run() {
-	        DynamicTasks.markInessential();
-	        boolean previouslyRunning = isRunning();
-	        try {
-	            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
-	            stop();
-	        } catch (Exception e) {
-	            // queue a failed task so that there is visual indication that this task had a failure,
-	            // without interrupting the parent
-	            if (previouslyRunning) {
-	                log.warn(getEntity() + " restart: stop failed, when was previously running (ignoring)", e);
-	                DynamicTasks.queue(Tasks.fail("Primary job failure (when previously running)", e));
-	            } else {
-	                log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
-	                DynamicTasks.queue(Tasks.fail("Primary job failure (when not previously running)", e));
-	            }
-	            // the above queued tasks will cause this task to be indicated as failed, with an indication of severity
-	        }
-	    }});
+    public void postLaunch() {}
 
-	    if (doFullStartOnRestart()) {
-	        DynamicTasks.waitForLast();
-	        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
-	        start();
-	    } else {
-	        DynamicTasks.queue("launch", new Runnable() { public void run() {
-	            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
-	            launch();
-	        }});
-	        DynamicTasks.queue("post-launch", new Runnable() { public void run() {
-	            postLaunch();
-	        }});
-	    }
-	}
-	
-	@Beta
-	/** ideally restart() would take options, e.g. whether to do full start, skip installs, etc;
-	 * however in the absence here is a toggle - not sure how well it works;
-	 * default is false which is similar to previous behaviour (with some seemingly-obvious tidies),
-	 * meaning install and configure will NOT be done on restart. */
-	protected boolean doFullStartOnRestart() {
-	    return false;
-	}
-	
-	@Override
-    public EntityLocal getEntity() { return entity; } 
+    @Override
+    public void restart() {
+        DynamicTasks.queue("stop (best effort)", new Runnable() { public void run() {
+            DynamicTasks.markInessential();
+            boolean previouslyRunning = isRunning();
+            try {
+                getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+                stop();
+            } catch (Exception e) {
+                // queue a failed task so that there is visual indication that this task had a failure,
+                // without interrupting the parent
+                if (previouslyRunning) {
+                    log.warn(getEntity() + " restart: stop failed, when was previously running (ignoring)", e);
+                    DynamicTasks.queue(Tasks.fail("Primary job failure (when previously running)", e));
+                } else {
+                    log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
+                    DynamicTasks.queue(Tasks.fail("Primary job failure (when not previously running)", e));
+                }
+                // the above queued tasks will cause this task to be indicated as failed, with an indication of severity
+            }
+        }});
 
-	@Override
-    public Location getLocation() { return location; } 
-    
+        if (doFullStartOnRestart()) {
+            DynamicTasks.waitForLast();
+            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+            start();
+        } else {
+            DynamicTasks.queue("launch", new Runnable() { public void run() {
+                getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+                launch();
+            }});
+            DynamicTasks.queue("post-launch", new Runnable() { public void run() {
+                postLaunch();
+            }});
+        }
+    }
+
+    @Beta
+    /** ideally restart() would take options, e.g. whether to do full start, skip installs, etc;
+     * however in the absence here is a toggle - not sure how well it works;
+     * default is false which is similar to previous behaviour (with some seemingly-obvious tidies),
+     * meaning install and configure will NOT be done on restart. */
+    protected boolean doFullStartOnRestart() {
+        return false;
+    }
+
+    @Override
+    public EntityLocal getEntity() { return entity; }
+
+    @Override
+    public Location getLocation() { return location; }
+
     public InputStream getResource(String url) {
         return resource.getResourceFromUrl(url);
     }
-    
+
     public String getResourceAsString(String url) {
         return resource.getResourceAsString(url);
     }
@@ -169,7 +169,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      * as well as replacing config keys on the management context
      * <p>
      * uses Freemarker templates under the covers
-     **/  
+     **/
     public String processTemplate(String templateConfigUrl) {
         return processTemplate(templateConfigUrl, ImmutableMap.<String,String>of());
     }
@@ -181,11 +181,11 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     public String processTemplateContents(String templateContents) {
         return processTemplateContents(templateContents, ImmutableMap.<String,String>of());
     }
-    
+
     public String processTemplateContents(String templateContents, Map<String,? extends Object> extraSubstitutions) {
         return TemplateProcessor.processTemplateContents(templateContents, this, extraSubstitutions);
     }
-    
+
     protected void waitForConfigKey(ConfigKey<?> configKey) {
         Object val = entity.getConfig(configKey);
         if (val != null) log.debug("{} finished waiting for {} (value {}); continuing...", new Object[] {this, configKey, val});

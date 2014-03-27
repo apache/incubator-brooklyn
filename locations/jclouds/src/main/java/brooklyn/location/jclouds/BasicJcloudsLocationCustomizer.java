@@ -1,6 +1,7 @@
 package brooklyn.location.jclouds;
 
 import org.jclouds.compute.ComputeService;
+import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.TemplateOptions;
 
@@ -19,6 +20,11 @@ public class BasicJcloudsLocationCustomizer implements JcloudsLocationCustomizer
 
     @Override
     public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
+        // no-op
+    }
+
+    @Override
+    public void customize(JcloudsLocation location, ComputeService computeService, Template template) {
         // no-op
     }
 
