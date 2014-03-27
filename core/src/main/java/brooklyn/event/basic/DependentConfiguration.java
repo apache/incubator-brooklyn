@@ -1,5 +1,7 @@
 package brooklyn.event.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import groovy.lang.Closure;
 
 import java.util.Arrays;
@@ -31,6 +33,8 @@ import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.CompoundRuntimeException;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.DeferredSupplier;
@@ -38,9 +42,9 @@ import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.TaskInternal;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -82,15 +86,10 @@ public class DependentConfiguration {
      * particular useful in Entity configuration where config will block until Tasks have a value
      */
     public static <T> Task<T> attributeWhenReady(final Entity source, final AttributeSensor<T> sensor, final Predicate<? super T> ready) {
-        Preconditions.checkNotNull(source, "Entity source must be set");
-        Preconditions.checkNotNull(sensor, "Sensor must be set");
-        return new BasicTask<T>(
-                MutableMap.of("tag", "attributeWhenReady", "displayName", "retrieving sensor "+sensor.getName()+" from "+source.getDisplayName()), 
-                new Callable<T>() {
-                    public T call() {
-                        return waitInTaskForAttributeReady(source, sensor, ready);
-                    }
-                });
+        Builder<T, T> builder = builder().attributeWhenReady(source, sensor);
+        if (ready != null) builder.readiness(ready);
+        return builder.build();
+
     }
 
     public static <T,V> Task<V> attributePostProcessedWhenReady(Entity source, AttributeSensor<T> sensor, Closure<Boolean> ready, Closure<V> postProcess) {
@@ -118,19 +117,19 @@ public class DependentConfiguration {
     public static <T,V> Task<V> attributePostProcessedWhenReady(final Entity source, final AttributeSensor<T> sensor, final Predicate<? super T> ready, final Closure<V> postProcess) {
         return attributePostProcessedWhenReady(source, sensor, ready, GroovyJavaMethods.<T,V>functionFromClosure(postProcess));
     }
-
+    
     public static <T,V> Task<V> attributePostProcessedWhenReady(final Entity source, final AttributeSensor<T> sensor, final Predicate<? super T> ready, final Function<? super T,V> postProcess) {
-        return new BasicTask<V>(
-                MutableMap.of("tag", "attributePostProcessedWhenReady", "displayName", "retrieving "+source+" "+sensor), 
-                new Callable<V>() {
-                    @Override public V call() {
-                        T result = waitInTaskForAttributeReady(source, sensor, ready);
-                        return postProcess.apply(result);
-                    }
-                });
+        Builder<T, T> builder = builder().attributeWhenReady(source, sensor);
+        if (ready != null) builder.readiness(ready);
+        if (postProcess != null) builder.postProcess(postProcess);
+        return ((Builder)builder).build();
     }
 
     public static <T> T waitInTaskForAttributeReady(Entity source, AttributeSensor<T> sensor, Predicate<? super T> ready) {
+        return waitInTaskForAttributeReady(source, sensor, ready, ImmutableList.<AttributeAndSensorCondition<?>>of());
+    }
+    
+    public static <T> T waitInTaskForAttributeReady(final Entity source, final AttributeSensor<T> sensor, Predicate<? super T> ready, List<AttributeAndSensorCondition<?>> abortConditions) {
         T value = source.getAttribute(sensor);
         if (ready==null) ready = GroovyJavaMethods.truthPredicate();
         if (ready.apply(value)) return value;
@@ -140,14 +139,25 @@ public class DependentConfiguration {
         if (entity == null) throw new IllegalStateException("Should only be invoked in a running task with an entity tag; "+
                 current+" has no entity tag ("+current.getStatusDetail(false)+")");
         final AtomicReference<T> data = new AtomicReference<T>();
+        final List<Exception> abortion = Lists.newCopyOnWriteArrayList();
         final Semaphore semaphore = new Semaphore(0); // could use Exchanger
         SubscriptionHandle subscription = null;
+        List<SubscriptionHandle> abortSubscriptions = Lists.newArrayList();
         try {
             subscription = ((EntityInternal)entity).getSubscriptionContext().subscribe(source, sensor, new SensorEventListener<T>() {
                 @Override public void onEvent(SensorEvent<T> event) {
                     data.set(event.getValue());
                     semaphore.release();
                 }});
+            for (final AttributeAndSensorCondition abortCondition : abortConditions) {
+                abortSubscriptions.add(((EntityInternal)entity).getSubscriptionContext().subscribe(abortCondition.source, abortCondition.sensor, new SensorEventListener<Object>() {
+                    @Override public void onEvent(SensorEvent<Object> event) {
+                        if (abortCondition.predicate.apply(event.getValue())) {
+                            abortion.add(new Exception("Abort due to "+abortCondition.source+" -> "+abortCondition.sensor));
+                            semaphore.release();
+                        }
+                    }}));
+            }
             value = source.getAttribute(sensor);
             while (!ready.apply(value)) {
                 current.setBlockingDetails("Waiting for ready from "+source+" "+sensor+" (subscription)");
@@ -156,16 +166,22 @@ public class DependentConfiguration {
                 } finally {
                     current.resetBlockingDetails();
                 }
+                
+                if (abortion.size() > 0) {
+                    throw new CompoundRuntimeException("Aborted waiting for ready from "+source+" "+sensor, abortion);
+                }
                 value = data.get();
             }
             if (LOG.isDebugEnabled()) LOG.debug("Attribute-ready for {} in entity {}", sensor, source);
             return value;
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         } finally {
             if (subscription != null) {
                 ((EntityInternal)entity).getSubscriptionContext().unsubscribe(subscription);
+            }
+            for (SubscriptionHandle handle : abortSubscriptions) {
+                ((EntityInternal)entity).getSubscriptionContext().unsubscribe(handle);
             }
         }
     }
@@ -294,12 +310,9 @@ public class DependentConfiguration {
     
     /** returns a task for parallel execution returning a list of values of the given sensor list on the given entity, 
      * optionally when the values satisfy a given readiness predicate (defaulting to groovy truth if not supplied) */    
-    public static <T> Task<List<T>> listAttributesWhenReady(final AttributeSensor<T> sensor, Iterable<Entity> entities, final Predicate<? super T> readiness) {
-        return new ParallelTask<T>(Iterables.transform(entities, new Function<Entity, Task<T>>() {
-            @Override public Task<T> apply(Entity it) {
-                return attributeWhenReady(it, sensor, readiness);
-            }
-        }));
+    public static <T> Task<List<T>> listAttributesWhenReady(final AttributeSensor<T> sensor, Iterable<Entity> entities, Predicate<? super T> readiness) {
+        if (readiness == null) readiness = GroovyJavaMethods.truthPredicate();
+        return builder().attributeWhenReadyFromMultiple(entities, sensor, readiness).build();
     }
 
     /** @see #waitForTask(Task, Entity, String) */
@@ -319,4 +332,106 @@ public class DependentConfiguration {
         }
     }
     
+    public static class AttributeAndSensorCondition<T> {
+        protected final Entity source;
+        protected final AttributeSensor<T> sensor;
+        protected final Predicate<? super T> predicate;
+        
+        public AttributeAndSensorCondition(Entity source, AttributeSensor<T> sensor, Predicate<? super T> predicate) {
+            this.source = checkNotNull(source, "source");
+            this.sensor = checkNotNull(sensor, "sensor");
+            this.predicate = checkNotNull(predicate, "predicate");
+        }
+    }
+    
+    public static Builder<?,?> builder() {
+        return new Builder<Object,Object>();
+    }
+    
+    /**
+     * Builder for producing variants of attributeWhenReady.
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Beta
+    public static class Builder<T,V> {
+        protected Entity source;
+        protected AttributeSensor<T> sensor;
+        protected Predicate<? super T> readiness;
+        protected List<AttributeAndSensorCondition<?>> multiSource = Lists.newArrayList();
+        protected Function<? super T, ? extends V> postProcess;
+        protected List<AttributeAndSensorCondition<?>> abortConditions = Lists.newArrayList();
+        
+        public <T2> Builder<T2,T2> attributeWhenReady(Entity source, AttributeSensor<T2> sensor) {
+            this.source = checkNotNull(source, "source");
+            this.sensor = (AttributeSensor) checkNotNull(sensor, "sensor");
+            return (Builder<T2, T2>) this;
+        }
+        /** returns a task for parallel execution returning a list of values of the given sensor list on the given entity, 
+         * optionally when the values satisfy a given readiness predicate (defaulting to groovy truth if not supplied) */ 
+        @Beta
+        public <T2> Builder<T2, List<T2>> attributeWhenReadyFromMultiple(Iterable<? extends Entity> sources, AttributeSensor<T2> sensor) {
+            return attributeWhenReadyFromMultiple(sources, sensor, GroovyJavaMethods.truthPredicate());
+        }
+        @Beta
+        public <T2> Builder<T2, List<T2>> attributeWhenReadyFromMultiple(Iterable<? extends Entity> sources, AttributeSensor<T2> sensor, Predicate<? super T2> readiness) {
+            for (Entity s : checkNotNull(sources, "sources")) {
+                AttributeAndSensorCondition<T2> condition = new AttributeAndSensorCondition<T2>(s, sensor, readiness);
+                multiSource.add(condition);
+            }
+            return (Builder<T2, List<T2>>) this;
+        }
+        public Builder<T,V> readiness(Closure<Boolean> val) {
+            this.readiness = GroovyJavaMethods.predicateFromClosure(checkNotNull(val, "val"));
+            return this;
+        }
+        public Builder<T,V> readiness(Predicate<? super T> val) {
+            this.readiness = checkNotNull(val, "ready");
+            return this;
+        }
+        public <V2> Builder<T,V2> postProcess(Closure<V2> val) {
+            this.postProcess = (Function) GroovyJavaMethods.<T,V2>functionFromClosure(checkNotNull(val, "postProcess"));
+            return (Builder<T,V2>) this;
+        }
+        public <V2> Builder<T,V2> postProcess(final Function<? super T, V2>  val) {
+            this.postProcess = (Function) checkNotNull(val, "postProcess");
+            return (Builder<T,V2>) this;
+        }
+        public <T2> Builder<T,V> abortIf(Entity source, AttributeSensor<T2> sensor) {
+            return abortIf(source, sensor, GroovyJavaMethods.truthPredicate());
+        }
+        public <T2> Builder<T,V> abortIf(Entity source, AttributeSensor<T2> sensor, Predicate<? super T2> predicate) {
+            abortConditions.add(new AttributeAndSensorCondition<T2>(source, sensor, predicate));
+            return this;
+        }
+        public Task<V> build() {
+            checkState(source != null ^ multiSource.size() > 0, "Entity source or sources must be set: source=%s; multiSource=%s", source, multiSource);
+            checkState(source == null ? sensor == null : sensor != null, "Sensor must be set if single source is set: source=%s; sensors=%s", source, sensor);
+            if (multiSource.size() > 0) {
+                checkState(readiness == null, "Cannot set global readiness with multi-source");
+                checkState(postProcess == null, "Cannot set global post-process with multi-source");
+                checkState(abortConditions.isEmpty(), "Cannot set global abort-conditions with multi-source");
+            } else {
+                if (readiness == null) readiness = GroovyJavaMethods.truthPredicate();
+                if (postProcess == null) postProcess = (Function) Functions.identity();
+            }
+            
+            if (source != null) {
+                return new BasicTask<V>(
+                        MutableMap.of("tag", "attributeWhenReady", "displayName", "retrieving sensor "+sensor.getName()+" from "+source.getDisplayName()), 
+                        new Callable<V>() {
+                            @Override public V call() {
+                                T result = waitInTaskForAttributeReady(source, sensor, readiness, abortConditions);
+                                return postProcess.apply(result);
+                            }
+                        });
+            } else {
+                // FIXME Do we really want to try to support the list-of-entities?
+                return (Task<V>) new ParallelTask<Object>(Iterables.transform(multiSource, new Function<AttributeAndSensorCondition<?>, Task<T>>() {
+                    @Override public Task<T> apply(AttributeAndSensorCondition<?> it) {
+                        return (Task) builder().attributeWhenReady(it.source, it.sensor).readiness((Predicate)it.predicate).build();
+                    }
+                }));
+            }
+        }
+    }
 }
