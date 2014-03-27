@@ -215,7 +215,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public String getStatusCmd() {
-        return format("%s/bin/mysqladmin --defaults-file=%s status", getBaseDir(), getRunDir()+"/"+getConfigFile());
+        return format("%s/bin/mysqladmin --defaults-file=%s status", getBaseDir(), Urls.mergePaths(getRunDir(), getConfigFile()));
     }
 
     public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {

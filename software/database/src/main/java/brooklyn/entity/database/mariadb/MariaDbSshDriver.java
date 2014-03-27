@@ -215,7 +215,7 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     @Override
     public String getStatusCmd() {
-        return format("%s/bin/mysqladmin --defaults-file=%s status", getExpandedInstallDir(), getConfigFile());
+        return format("%s/bin/mysqladmin --defaults-file=%s status", getExpandedInstallDir(), Urls.mergePaths(getRunDir(), getConfigFile()));
     }
 
     public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
