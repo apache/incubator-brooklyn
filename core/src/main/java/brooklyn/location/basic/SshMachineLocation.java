@@ -351,8 +351,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @Override
     protected void finalize() throws Throwable {
-        close();
-        super.finalize();
+        try {
+            close();
+        } finally {
+            super.finalize();
+        }
     }
 
     @Override
@@ -799,13 +802,16 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         if (details == null) {
             // Or could just load and store several times
             Tasks.setBlockingDetails("Waiting for machine details");
-            synchronized (machineDetailsLock) {
-                details = machineDetails;
-                if (details == null) {
-                    machineDetails = details = BasicMachineDetails.forSshMachineLocation(this);
+            try {
+                synchronized (machineDetailsLock) {
+                    details = machineDetails;
+                    if (details == null) {
+                        machineDetails = details = BasicMachineDetails.forSshMachineLocation(this);
+                    }
                 }
+            } finally {
+                Tasks.resetBlockingDetails();
             }
-            Tasks.resetBlockingDetails();
         }
         return details;
     }
