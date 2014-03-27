@@ -99,6 +99,8 @@ public class SameServerDriverLifecycleEffectorTasks extends MachineLifecycleEffe
         return "children started";
     }
 
+    // Also see stopProcessesAtMachine in SoftwareProcessDriverLifecycleEffectorTasks.
+    // Any fixes made there should probably be applied here too.
     @Override
     protected String stopProcessesAtMachine() {
         TaskAdaptable<?> children = StartableMethods.stoppingChildren(entity());

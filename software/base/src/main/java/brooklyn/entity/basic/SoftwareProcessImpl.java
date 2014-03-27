@@ -388,7 +388,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	}
 
     /**
-     * If custom behaviour is required by sub-classes, consider overriding {@link #doStop()}.
+     * If custom behaviour is required by sub-classes, consider overriding {@link #doRestart()}.
      */
     @Override
     public final void restart() {
@@ -420,7 +420,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      * To be overridden instead of {@link #restart()}; sub-classes should call {@code super.doRestart()} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
      */
-    public void doRestart() {
+    protected void doRestart() {
         LIFECYCLE_TASKS.restart();
     }
 }
