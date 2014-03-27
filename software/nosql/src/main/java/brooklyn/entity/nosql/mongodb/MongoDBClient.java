@@ -20,26 +20,28 @@ public interface MongoDBClient extends AbstractMongoDBServer {
     MethodEffector<Void> RUN_SCRIPT = new MethodEffector<Void>(MongoDBClient.class, "runScript");
     
     @SuppressWarnings("serial")
-    @SetFromFlag("defaultScripts")
-    ConfigKey<List<String>> DEFAULT_SCRIPTS = ConfigKeys.newConfigKey(
-            new TypeToken<List<String>>(){}, "mongodb.client.defaultScripts", 
+    @SetFromFlag("startupJsScripts")
+    ConfigKey<List<String>> STARTUP_JS_SCRIPTS = ConfigKeys.newConfigKey(
+            new TypeToken<List<String>>(){}, "mongodb.client.startupJsScripts", 
                 "List of scripts defined in mongodb.client.scripts to be run on startup");
     
     @SuppressWarnings("serial")
     @SetFromFlag("scripts")
-    ConfigKey<Map<String, String>> SCRIPTS = ConfigKeys.newConfigKey(
+    ConfigKey<Map<String, String>> JS_SCRIPTS = ConfigKeys.newConfigKey(
             new TypeToken<Map<String, String>>(){}, "mongodb.client.scripts", "List of javascript scripts to be copied "
                     + "to the server. These scripts can be run using the runScript effector");
     
     @SetFromFlag("shardedDeployment")
     ConfigKey<MongoDBShardedDeployment> SHARDED_DEPLOYMENT = ConfigKeys.newConfigKey(MongoDBShardedDeployment.class, 
-            "mongodb.client.shardeddeployment", "Sharded deployment that the client will use to run scripts");
+            "mongodb.client.shardeddeployment", "Sharded deployment that the client will use to run scripts. "
+                    + "If both SERVER and SHARDED_DEPLOYMENT are specified, SERVER will be used");
     
     @SetFromFlag("server")
     ConfigKey<AbstractMongoDBServer> SERVER = ConfigKeys.newConfigKey(AbstractMongoDBServer.class, 
-            "mongodb.client.server", "MongoDBServer that the client will use to run scripts");
+            "mongodb.client.server", "MongoDBServer that the client will use to run scripts. "
+                    + "If both SERVER and SHARDED_DEPLOYMENT are specified, SERVER will be used");
     
     @Effector(description="Runs one of the scripts defined in mongodb.client.scripts")
-    void runScript(@EffectorParam(name="pre-start", description="use this to create parameters that can be used by the script, e.g.:<p><code>var loopCount = 10</code>") String preStart,
-            @EffectorParam(name="script name", description="Name of the script as defined in mongodb.client.scripts") String scriptName);
+    void runScript(@EffectorParam(name="preStart", description="use this to create parameters that can be used by the script, e.g.:<p><code>var loopCount = 10</code>") String preStart,
+            @EffectorParam(name="scriptName", description="Name of the script as defined in mongodb.client.scripts") String scriptName);
 }

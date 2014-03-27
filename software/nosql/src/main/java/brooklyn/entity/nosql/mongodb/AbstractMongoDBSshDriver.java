@@ -14,6 +14,7 @@ import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 
@@ -64,6 +65,7 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
         try {
             return MongoDBClientSupport.forServer((AbstractMongoDBServer) entity).ping();
         } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
             return false;
         }
     }
@@ -74,6 +76,9 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
      */
     @Override
     public void stop() {
+        // TODO: Wait for process to terminate. Currently, this will send the signal and then immediately continue with next steps, 
+        // which could involve stopping VM etc.
+        
         // We could also use SIGTERM (15)
         new ScriptHelper(this, "Send SIGINT to MongoDB server")
         .body.append("kill -2 $(cat " + getPidFile() + ")")

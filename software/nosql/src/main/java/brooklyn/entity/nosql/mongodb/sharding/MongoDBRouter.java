@@ -22,5 +22,8 @@ public interface MongoDBRouter extends AbstractMongoDBServer {
     AttributeSensor<Boolean> RUNNING = Sensors.newBooleanSensor("mongodb.router.running", "Indicates that the router is running, "
             + "and can be used to add shards, but is not necessarity available for CRUD operations (e.g. if no shards have been added)");
 
+    /**
+     * @throws IllegalStateException if times out.
+     */
     public void waitForServiceUp(Duration duration);
 }

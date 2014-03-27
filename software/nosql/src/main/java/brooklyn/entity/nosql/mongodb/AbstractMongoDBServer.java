@@ -24,6 +24,7 @@ public interface AbstractMongoDBServer extends SoftwareProcess, Entity {
     ConfigKey<String> SUGGESTED_VERSION =
             ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.5.4");
 
+    // TODO: Windows support
     // e.g. http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.2.2.tgz,
     // http://fastdl.mongodb.org/osx/mongodb-osx-x86_64-2.2.2.tgz
     // http://downloads.mongodb.org/win32/mongodb-win32-x86_64-1.8.5.zip

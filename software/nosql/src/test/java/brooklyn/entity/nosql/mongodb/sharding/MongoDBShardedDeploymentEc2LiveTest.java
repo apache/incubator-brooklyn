@@ -2,8 +2,6 @@ package brooklyn.entity.nosql.mongodb.sharding;
 
 import groovy.time.TimeDuration;
 
-import java.util.concurrent.Callable;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -45,16 +43,14 @@ public class MongoDBShardedDeploymentEc2LiveTest extends AbstractEc2LiveTest {
         
         Entities.dumpInfo(app);
 
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Runnable() {
+            public void run() {
                 Assert.assertEquals(deployment.getRouterCluster().getCurrentSize(), ROUTER_CLUSTER_SIZE);
                 Assert.assertEquals(deployment.getShardCluster().getCurrentSize(), SHARD_CLUSTER_SIZE);
                 Assert.assertEquals(deployment.getConfigCluster().getCurrentSize(), MongoDBShardedDeployment.CONFIG_CLUSTER_SIZE.getDefaultValue());
                 for (Entity entity : deployment.getShardCluster().getMembers()) {
-                    Assert.assertEquals(((MongoDBReplicaSet)entity).getCurrentSize(), REPLICASET_SIZE);
+                    Assert.assertEquals(((MongoDBReplicaSet) entity).getCurrentSize(), REPLICASET_SIZE);
                 }
-                return true;
             }
         });
     }

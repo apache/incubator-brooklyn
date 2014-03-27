@@ -3,6 +3,7 @@ package brooklyn.entity.nosql.mongodb.sharding;
 import java.util.Collection;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
@@ -15,6 +16,7 @@ import brooklyn.util.collections.MutableMap;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements MongoDBRouterCluster {
@@ -50,11 +52,8 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
     }
     
     protected void setAnyRouter() {
-        setAttribute(MongoDBRouterCluster.ANY_ROUTER, Iterables.tryFind(getRouters(), new Predicate<MongoDBRouter>() {
-            @Override
-            public boolean apply(MongoDBRouter input) {
-                return input.getAttribute(Startable.SERVICE_UP);
-            }}).orNull());
+        setAttribute(MongoDBRouterCluster.ANY_ROUTER, Iterables.tryFind(getRouters(), 
+                EntityPredicates.attributeEqualTo(Startable.SERVICE_UP, true)).orNull());
         
         setAttribute(MongoDBRouterCluster.ANY_RUNNING_ROUTER, Iterables.tryFind(getRouters(), new Predicate<MongoDBRouter>() {
             @Override
@@ -63,17 +62,24 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
             }}).orNull());
     }
     
+//    @Override
+//    public Collection<MongoDBRouter> getRouters() {
+//        return FluentIterable.from(getMembers())
+//                .transform(new Function<Entity, MongoDBRouter>() {
+//                    @Override
+//                    public MongoDBRouter apply(Entity input) {
+//                        return (MongoDBRouter)input;
+//                    }
+//                })
+//                .toSet();
+//    }
+
+    
     @Override
     public Collection<MongoDBRouter> getRouters() {
-        return FluentIterable.from(getMembers())
-                .transform(new Function<Entity, MongoDBRouter>() {
-                    @Override
-                    public MongoDBRouter apply(Entity input) {
-                        return (MongoDBRouter)input;
-                    }
-                })
-                .toSet();
+        return ImmutableList.copyOf(Iterables.filter(getMembers(), MongoDBRouter.class));
     }
+    
     
     @Override
     protected EntitySpec<?> getMemberSpec() {

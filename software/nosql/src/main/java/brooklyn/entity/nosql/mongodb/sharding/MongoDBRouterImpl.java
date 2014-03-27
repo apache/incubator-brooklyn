@@ -39,6 +39,9 @@ public class MongoDBRouterImpl extends SoftwareProcessImpl implements MongoDBRou
                         .callable(new Callable<Boolean>() {
                             @Override
                             public Boolean call() throws Exception {
+                                // TODO: This is the same as in AbstractMongoDBSshDriver.isRunning. 
+                                // This feels like the right place. But feels like can be more consistent with different 
+                                // MongoDB types using the FunctionFeed.
                                 MongoDBClientSupport clientSupport = MongoDBClientSupport.forServer(MongoDBRouterImpl.this);
                                 return clientSupport.ping() && MongoDBRouterImpl.this.getAttribute(SHARD_COUNT) > 0;
                             }
@@ -52,7 +55,7 @@ public class MongoDBRouterImpl extends SoftwareProcessImpl implements MongoDBRou
                                 return (int) clientSupport.getShardCount();
                             }    
                         })
-                        .onException(Functions.<Integer>constant(0)))
+                        .onException(Functions.<Integer>constant(-1)))
                 .build();
     }
     

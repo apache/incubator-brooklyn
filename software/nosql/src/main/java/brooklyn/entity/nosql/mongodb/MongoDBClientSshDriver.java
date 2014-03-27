@@ -2,6 +2,7 @@ package brooklyn.entity.nosql.mongodb;
 
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 
@@ -25,13 +26,13 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
     
     @Override
     public void customize() {
-        String command = String.format("mkdir -p %s", getRunDir());
-        newScript(LAUNCHING)
+        String command = String.format("mkdir -p %s", getUserScriptDir());
+        newScript(CUSTOMIZING)
             .updateTaskAndFailOnNonZeroResultCode()
             .body.append(command).execute();
-        Map<String, String> scripts = entity.getConfig(MongoDBClient.SCRIPTS);
+        Map<String, String> scripts = entity.getConfig(MongoDBClient.JS_SCRIPTS);
         for (String scriptName : scripts.keySet()) {
-            copyResource(scripts.get(scriptName), getRunDir() + "/" + scriptName + ".js");
+            copyResource(scripts.get(scriptName), getUserScriptDir() + scriptName + ".js");
         }
     }
 
@@ -40,7 +41,7 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
         AbstractMongoDBServer server = getServer();
         String host = server.getAttribute(AbstractMongoDBServer.HOSTNAME);
         Integer port = server.getAttribute(AbstractMongoDBServer.PORT);
-        for (String scriptName : entity.getConfig(MongoDBClient.DEFAULT_SCRIPTS)) {
+        for (String scriptName : entity.getConfig(MongoDBClient.STARTUP_JS_SCRIPTS)) {
             runScript("", scriptName, host, port);
         }
         isRunning = true;
@@ -51,6 +52,10 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
         return isRunning;
     }
     
+    private String getUserScriptDir() {
+        return getRunDir() + "/userScripts/" ;
+    }
+    
     public void runScript(String preStart, String scriptName) {
         AbstractMongoDBServer server = getServer();
         String host = server.getAttribute(AbstractMongoDBServer.HOSTNAME);
@@ -59,8 +64,9 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
     }
     
     private void runScript(String preStart, String scriptName, String host, Integer port) {
+        // TODO: escape preStart to prevent injection attack
         String command = String.format("%s/bin/mongo %s:%s --eval \"%s\" %s/%s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), 
-                host, port, preStart, getRunDir(), scriptName + ".js");
+                host, port, preStart, getUserScriptDir(), scriptName + ".js");
         newScript(LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
             .body.append(command).execute();
@@ -70,6 +76,7 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
         AbstractMongoDBServer server = entity.getConfig(MongoDBClient.SERVER);
         if (server == null) {
             MongoDBShardedDeployment deployment = entity.getConfig(MongoDBClient.SHARDED_DEPLOYMENT);
+            Preconditions.checkNotNull(deployment, "Either server or shardedDeployment must be specified");
             Task<MongoDBRouter> task = DependentConfiguration.attributeWhenReady(deployment.getRouterCluster(),
                     MongoDBRouterCluster.ANY_ROUTER);
             try {
@@ -83,6 +90,12 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
                 };
             });
         } else {
+            Task<Boolean> task = DependentConfiguration.attributeWhenReady(server, Startable.SERVICE_UP);
+            try {
+                DependentConfiguration.waitForTask(task, server);
+            } catch (InterruptedException e) {
+                throw Exceptions.propagate(e);
+            }
             DependentConfiguration.waitInTaskForAttributeReady(server, Startable.SERVICE_UP, Predicates.equalTo(true));
         }
         return server;

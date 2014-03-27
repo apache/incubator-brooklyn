@@ -309,7 +309,7 @@ public class CliTest {
     @Test
     public void testLaunchStartsYamlAppWithYamlAppLocation() throws Exception {
         Cli<BrooklynCommand> cli = buildCli();
-        BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", "example-app-entity-location.yaml");
+        BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", "example-app-app-location.yaml");
         submitCommandAndAssertRunnableSucceeds(command, new Runnable() {
                 public void run() {
                     assertTrue(exampleEntityRunning);
@@ -321,7 +321,7 @@ public class CliTest {
     @Test
     public void testLaunchStartsYamlAppWithYamlAndAppCliLocation() throws Exception {
         Cli<BrooklynCommand> cli = buildCli();
-        BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", "example-app-entity-location.yaml", "--location", "localhost");
+        BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", "example-app-app-location.yaml", "--location", "localhost");
         submitCommandAndAssertRunnableSucceeds(command, new Runnable() {
                 public void run() {
                     assertTrue(exampleEntityRunning);

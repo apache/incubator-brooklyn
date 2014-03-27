@@ -1,7 +1,5 @@
 package brooklyn.entity.nosql.mongodb.sharding;
 
-import java.util.Iterator;
-
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -90,9 +88,8 @@ public class MongoDBShardedDeploymentIntegrationTest {
     private void testReadAndWriteDifferentRouters() {
         MongoDBShardedDeployment deployment = makeAndStartDeployment();
         EntityTestUtils.assertAttributeEqualsEventually(deployment, Startable.SERVICE_UP, true);
-        Iterator<Entity> routerIterator = deployment.getRouterCluster().getMembers().iterator();
-        MongoDBRouter router1 = (MongoDBRouter)routerIterator.next();
-        MongoDBRouter router2 = (MongoDBRouter)routerIterator.next();
+        MongoDBRouter router1 = (MongoDBRouter) Iterables.get(deployment.getRouterCluster().getMembers(), 0);
+        MongoDBRouter router2 = (MongoDBRouter) Iterables.get(deployment.getRouterCluster().getMembers(), 1);
         EntityTestUtils.assertAttributeEqualsEventually(router1, Startable.SERVICE_UP, true);
         EntityTestUtils.assertAttributeEqualsEventually(router2, Startable.SERVICE_UP, true);
         
@@ -108,7 +105,7 @@ public class MongoDBShardedDeploymentIntegrationTest {
         Assert.assertNotNull(entity);
         Assert.assertTrue(expectedClass.isAssignableFrom(entity.getClass()), "expected: " + expectedClass 
                 + " on interfaces, found: " + entity.getClass().getInterfaces());
-        EntityTestUtils.assertAttributeEquals(entity, Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
     }
 
 }

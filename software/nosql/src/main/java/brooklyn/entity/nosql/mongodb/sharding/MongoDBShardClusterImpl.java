@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.nosql.mongodb.MongoDBClientSupport;
 import brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
@@ -18,7 +17,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 
@@ -27,6 +25,7 @@ import com.google.common.collect.Sets;
 public class MongoDBShardClusterImpl extends DynamicClusterImpl implements MongoDBShardCluster {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBShardClusterImpl.class);
+    // TODO: Need to use attributes for this in order to support brooklyn restart 
     private Set<Entity> addedMembers = Sets.newConcurrentHashSet();
 
     @Override
@@ -56,15 +55,6 @@ public class MongoDBShardClusterImpl extends DynamicClusterImpl implements Mongo
             }
         });
         
-        AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name",
-                "Shard cluster membership tracker")) {
-            protected void onEntityRemoved(Entity member) {
-                serverRemoved((MongoDBReplicaSet) member);
-            }
-        };
-        
-        addPolicy(policy);
-        policy.setGroup(this);
     }
 
     protected void addShards() {
@@ -80,18 +70,13 @@ public class MongoDBShardClusterImpl extends DynamicClusterImpl implements Mongo
         }
         for (Entity member : this.getMembers()) {
             if (member.getAttribute(Startable.SERVICE_UP) && !addedMembers.contains(member)) {
-                MongoDBServer primary = null;
-                primary = member.getAttribute(MongoDBReplicaSet.PRIMARY_ENTITY);
-                String replicaSetURL = ((MongoDBReplicaSet) member).getName() + "/"
-                        + Strings.removeFromStart(primary.getAttribute(MongoDBServer.MONGO_SERVER_ENDPOINT), "http://");
+                MongoDBServer primary = member.getAttribute(MongoDBReplicaSet.PRIMARY_ENTITY);
+                String addr = Strings.removeFromStart(primary.getAttribute(MongoDBServer.MONGO_SERVER_ENDPOINT), "http://");
+                String replicaSetURL = ((MongoDBReplicaSet) member).getName() + "/" + addr;
                 LOG.info("Using {} to add shard URL {}...", router, replicaSetURL);
                 client.addShardToRouter(replicaSetURL);
                 addedMembers.add(member);
             }
         }
-    }
-
-    protected void serverRemoved(MongoDBReplicaSet member) {
-
     }
 }

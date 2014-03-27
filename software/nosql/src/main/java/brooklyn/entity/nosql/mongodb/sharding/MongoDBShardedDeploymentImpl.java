@@ -48,31 +48,38 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
 
     @Override
     public void start(Collection<? extends Location> locations) {
-        final MongoDBRouterCluster routers = getAttribute(ROUTER_CLUSTER);
-        final MongoDBShardCluster shards = getAttribute(SHARD_CLUSTER);
-        List<DynamicCluster> clusters = ImmutableList.of(getAttribute(CONFIG_SERVER_CLUSTER), routers, shards);
+        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
         try {
-            Entities.invokeEffectorList(this, clusters, Startable.START, ImmutableMap.of("locations", locations))
-                .get();
+            final MongoDBRouterCluster routers = getAttribute(ROUTER_CLUSTER);
+            final MongoDBShardCluster shards = getAttribute(SHARD_CLUSTER);
+            List<DynamicCluster> clusters = ImmutableList.of(getAttribute(CONFIG_SERVER_CLUSTER), routers, shards);
+            try {
+                Entities.invokeEffectorList(this, clusters, Startable.START, ImmutableMap.of("locations", locations))
+                    .get();
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+            if (getConfigRaw(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP, true).isPresent()) {
+                AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Co-located router tracker")) {
+                    protected void onEntityAdded(Entity member) {
+                        routers.addMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
+                    }
+                    protected void onEntityRemoved(Entity member) {
+                        routers.removeMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
+                    }
+                };
+                addPolicy(policy);
+                policy.setGroup((Group)getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP));
+            }
+            setAttribute(SERVICE_UP, true);
+            setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
         } catch (Exception e) {
+            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            // no need to log here; the effector invocation should do that
             throw Exceptions.propagate(e);
         }
-        if (getConfigRaw(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP, true).isPresent()) {
-            AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Co-located router tracker")) {
-                protected void onEntityAdded(Entity member) {
-                    routers.addMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
-                }
-                protected void onEntityRemoved(Entity member) {
-                    routers.removeMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
-                }
-            };
-            addPolicy(policy);
-            policy.setGroup((Group)getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP));
-        }
-        // FIXME: Check if service is up, call connectSensors
-        setAttribute(SERVICE_UP, true);
     }
-
+    
     @Override
     public void stop() {
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
@@ -80,6 +87,7 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
             Entities.invokeEffectorList(this, ImmutableList.of(getAttribute(CONFIG_SERVER_CLUSTER), getAttribute(ROUTER_CLUSTER), 
                     getAttribute(SHARD_CLUSTER)), Startable.STOP).get();
         } catch (Exception e) {
+            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         }
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPED);
@@ -88,8 +96,7 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
     
     @Override
     public void restart() {
-        // TODO Auto-generated method stub
-        
+        throw new UnsupportedOperationException();
     }
 
     @Override

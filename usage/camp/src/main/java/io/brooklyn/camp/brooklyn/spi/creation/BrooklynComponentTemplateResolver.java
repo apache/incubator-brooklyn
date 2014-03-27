@@ -291,6 +291,8 @@ public class BrooklynComponentTemplateResolver {
     protected Object transformSpecialFlags(Object flag, ManagementContext mgmt) {
         if (flag instanceof EntitySpecConfiguration) {
             EntitySpecConfiguration specConfig = (EntitySpecConfiguration) flag;
+            // TODO: This should called from BrooklynAssemblyTemplateInstantiator.configureEntityConfig
+            // And have transformSpecialFlags(Object flag, ManagementContext mgmt) drill into the Object flag if it's a map or iterable?
             @SuppressWarnings("unchecked")
             Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration(), mgmt);
             specConfig.setSpecConfiguration(resolvedConfig);

@@ -12,6 +12,6 @@ services:
       insert: classpath://mongo-product-insert.js 
       update: classpath://mongo-product-update.js
       delete: classpath://mongo-product-delete.js
-    defaultScripts: # These will be run in order on startup
+    startupJsScripts: # These will be run in order on startup
       - insert
       - update

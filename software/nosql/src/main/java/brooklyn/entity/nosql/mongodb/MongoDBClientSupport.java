@@ -43,7 +43,6 @@ public class MongoDBClientSupport {
 
     public MongoDBClientSupport(ServerAddress standalone) {
         // We could also use a MongoClient to access an entire replica set. See MongoClient(List<ServerAddress>).
-//        client = new MongoClient(standalone, connectionOptions);
         address = standalone;
     }
 
@@ -59,11 +58,12 @@ public class MongoDBClientSupport {
     }
 
     private ServerAddress getServerAddress() {
-        ServerAddress address;
         MongoClient client = client();
-        address = client.getServerAddressList().get(0); 
-        client.close();
-        return address;
+        try {
+            return client.getServerAddressList().get(0);
+        } finally {
+            client.close();
+        }
     }
 
     private HostAndPort getServerHostAndPort() {

@@ -1,7 +1,6 @@
 name: Humongous app
 description: Auto-scaling web app backed by MongoDB
 origin: http://brooklyn.io
-#location: named:ec2-ubuntu12_0
 location: localhost
 services:
 - serviceType: brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment
@@ -33,10 +32,4 @@ services:
                 java.sysprops:
                   brooklyn.example.mongodb.port: $brooklyn:component("parent", "").attributeWhenReady("mongodb.server.port")
           - $brooklyn:entitySpec:
-              type: brooklyn.entity.java.VanillaJavaApp
-              brooklyn.config:
-                main: brooklyn.entity.java.ExampleVanillaMain
-                classpath: /Users/Martin/Documents/brooklyn/software/base/target/test-classes/
-                args:
-                - bar
-                - baz
+              type: brooklyn.entity.basic.EmptySoftwareProcess

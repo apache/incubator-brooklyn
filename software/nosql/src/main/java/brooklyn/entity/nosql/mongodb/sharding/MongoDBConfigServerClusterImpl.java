@@ -8,6 +8,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class MongoDBConfigServerClusterImpl extends DynamicClusterImpl implements MongoDBConfigServerCluster {
@@ -41,7 +42,7 @@ public class MongoDBConfigServerClusterImpl extends DynamicClusterImpl implement
                 return entity.getAttribute(MongoDBConfigServer.HOSTNAME) + ":" + entity.getAttribute(MongoDBConfigServer.PORT);
             }
         });
-        setAttribute(MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES, memberHostNamesAndPorts);
+        setAttribute(MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES, ImmutableList.copyOf(memberHostNamesAndPorts));
     }
 
 }

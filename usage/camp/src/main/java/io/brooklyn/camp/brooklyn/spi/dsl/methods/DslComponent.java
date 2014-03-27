@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.DependentConfiguration;
@@ -17,7 +18,7 @@ import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.util.task.TaskBuilder;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -32,6 +33,7 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 	}
 	
 	public DslComponent(Scope scope, String componentId) {
+	    Preconditions.checkNotNull(scope, "scope");
 	    this.componentId = componentId;
 	    this.scope = scope;
 	}
@@ -41,29 +43,29 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
         return TaskBuilder.<Entity>builder().name("component("+componentId+")").body(new Callable<Entity>() {
             @Override
             public Entity call() throws Exception {
-                if (scope == Scope.THIS)
-                    return entity();
-                if (scope == Scope.PARENT)
-                    return entity().getParent();
                 Iterable<Entity> entitiesToSearch = null;
-                if (scope == Scope.GLOBAL)
-                    entitiesToSearch = ((EntityManagerInternal)entity().getManagementContext().getEntityManager())
-                        .getAllEntitiesInApplication( entity().getApplication() );
-                if (scope == Scope.DESCENDANT) {
-                    entitiesToSearch = Sets.newHashSet();
-                    addDescendants(entity(), (Set<Entity>)entitiesToSearch);
+                switch (scope) {
+                    case THIS:
+                        return entity();
+                    case PARENT:
+                        return entity().getParent();
+                    case GLOBAL:
+                        entitiesToSearch = ((EntityManagerInternal)entity().getManagementContext().getEntityManager())
+                            .getAllEntitiesInApplication( entity().getApplication() );
+                        break;
+                    case DESCENDANT:
+                        entitiesToSearch = Sets.newLinkedHashSet();
+                        addDescendants(entity(), (Set<Entity>)entitiesToSearch);
+                        break;
+                    case SIBLING:
+                        entitiesToSearch = entity().getParent().getChildren();
+                        break;
+                    case CHILD:
+                        entitiesToSearch = entity().getChildren();
                 }
-                if (scope == Scope.SIBLING) {
-                    entitiesToSearch = entity().getParent().getChildren();
-                }
-                if (scope == Scope.CHILD)
-                    entitiesToSearch = entity().getChildren();
-                Optional<Entity> result = Iterables.tryFind(entitiesToSearch, new Predicate<Entity>() {
-                    @Override
-                    public boolean apply(Entity input) {
-                        return componentId.equals(input.getConfig(BrooklynCampConstants.PLAN_ID));
-                    }
-                });
+                
+                Optional<Entity> result = Iterables.tryFind(entitiesToSearch, EntityPredicates.configEqualTo(BrooklynCampConstants.PLAN_ID, componentId));
+                
                 if (result.isPresent())
                     return result.get();
                 
@@ -95,13 +97,13 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 		};
 	}
 	
-	public static class Scope {
-	    public static final Scope GLOBAL = new Scope("global");
-	    public static final Scope CHILD = new Scope("child");
-	    public static final Scope PARENT = new Scope("parent");
-	    public static final Scope SIBLING = new Scope("sibling");
-	    public static final Scope DESCENDANT = new Scope("descendant");
-	    public static final Scope THIS = new Scope("this");
+	public static enum Scope {
+	    GLOBAL ("global"),
+	    CHILD ("child"),
+	    PARENT ("parent"),
+	    SIBLING ("sibling"),
+	    DESCENDANT ("descendant"),
+	    THIS ("this");
 	    
 	    public static final Set<Scope> VALUES = ImmutableSet.of(GLOBAL, CHILD, PARENT, SIBLING, DESCENDANT, THIS);
 	    
@@ -113,14 +115,14 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 	    
 	    public static Scope fromString(String name) {
 	        for (Scope scope : VALUES)
-	            if (scope.name.equals(name))
+	            if (scope.name.toLowerCase().equals(name.toLowerCase()))
 	                return scope;
 	        throw new IllegalArgumentException(name + " is not a valid scope");
 	    }
 	    
 	    public static boolean isValid(String name) {
 	        for (Scope scope : VALUES)
-	            if (scope.name.equals(name))
+	            if (scope.name.toLowerCase().equals(name.toLowerCase()))
 	                return true;
 	        return false;
 	    }
