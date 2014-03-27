@@ -276,5 +276,19 @@ public class StringsTest {
         Assert.assertEquals("fooba", Strings.getFragmentBetween("foobar", null, "r"));
         Assert.assertEquals(null, Strings.getFragmentBetween("foobar", "z", "r"));
     }
+
+    @Test
+    public void testWordCount() {
+        Assert.assertEquals(Strings.getWordCount("hello", true), 1);
+        Assert.assertEquals(Strings.getWordCount("hello world", true), 2);
+        Assert.assertEquals(Strings.getWordCount("hello\nworld", true), 2);
+        Assert.assertEquals(Strings.getWordCount("hello world \nit is me!\n", true), 5);
+        Assert.assertEquals(Strings.getWordCount("", true), 0);
+        Assert.assertEquals(Strings.getWordCount(null, true), 0);
+        Assert.assertEquals(Strings.getWordCount("\"hello world\" ", true), 1);
+        Assert.assertEquals(Strings.getWordCount("\"hello world\" ", false), 2);
+        Assert.assertEquals(Strings.getWordCount("hello world \nit's me!\n", true), 3);
+        Assert.assertEquals(Strings.getWordCount("hello world \nit's me!\n", false), 4);
+    }
     
 }

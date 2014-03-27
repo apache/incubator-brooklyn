@@ -414,13 +414,10 @@ public class Jsonya {
             StringBuilder sb = new StringBuilder();
             sb.append("[");
             boolean first = true;
-            for (Object entry: ((Map<?,?>)focus).entrySet()) {
+            for (Object entry: (Collection<?>)focus) {
                 if (!first) sb.append(",");
                 else first = false;
-                sb.append(" ");
-                sb.append( render(((Map.Entry<?,?>)entry).getKey()) );
-                sb.append(": ");
-                sb.append( render(((Map.Entry<?,?>)entry).getValue()) );
+                sb.append( render(entry) );
             }
             sb.append(" ]");
             return sb.toString();

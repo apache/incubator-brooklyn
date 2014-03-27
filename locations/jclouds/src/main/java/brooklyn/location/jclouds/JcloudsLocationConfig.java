@@ -105,19 +105,30 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Security groups to be applied when creating a VM, on supported clouds " +
             "(either a single group identifier as a String, or an Iterable<String> or String[])", null);
 
-    public static final ConfigKey<String> USER_DATA_UUENCODED = ConfigKeys.newStringConfigKey("userData", 
-            "Arbitrary user data, as a uuencoded string, on supported clouds", null);
-
     public static final ConfigKey<Object> INBOUND_PORTS = new BasicConfigKey<Object>(Object.class, "inboundPorts", 
-            "Inbound ports to be applied when creating a VM, on supported clouds " +
+        "Inbound ports to be applied when creating a VM, on supported clouds " +
             "(either a single port as a String, or an Iterable<Integer> or Integer[])", null);
+    
+    public static final ConfigKey<String> USER_METADATA_STRING = ConfigKeys.newStringConfigKey("userMetadataString", 
+        "Arbitrary user data, as a single string, on supported clouds (AWS)", null);
 
-    public static final ConfigKey<Object> TAGS = new BasicConfigKey<Object>(Object.class, "tags", 
+    @Deprecated /** @deprecated since 0.7.0 even AWS (the only one where this was supported) does not seem to want this uuencoded;
+      use #USER_METADATA_STRING */
+    public static final ConfigKey<String> USER_DATA_UUENCODED = ConfigKeys.newStringConfigKey("userData", 
+        "Arbitrary user data, as a single string in uuencoded format, on supported clouds (AWS)", null);
+
+    public static final ConfigKey<Object> STRING_TAGS = new BasicConfigKey<Object>(Object.class, "tags", 
             "Tags to be applied when creating a VM, on supported clouds " +
-            "(either a single tag as a String, or an Iterable<String> or String[])", null);
+            "(either a single tag as a String, or an Iterable<String> or String[];" +
+            "note this is not key-value pairs (e.g. what AWS calls 'tags'), for that see userMetadata)", null);
+    @Deprecated /** @deprecated since 0.7.0 use #STRING_TAGS */
+    public static final ConfigKey<Object> TAGS = STRING_TAGS;
 
-    public static final ConfigKey<Object> USER_METADATA = new BasicConfigKey<Object>(Object.class, "userMetadata", 
-            "Arbitrary user metadata, as a map (or String of comma-separated key=value pairs), on supported clouds", null);
+    public static final ConfigKey<Object> USER_METADATA_MAP = new BasicConfigKey<Object>(Object.class, "userMetadata", 
+            "Arbitrary user metadata, as a map (or String of comma-separated key=value pairs), on supported clouds; " +
+            "note often values cannot be null", null);
+    @Deprecated /** @deprecated since 0.7.0 use #USER_METADATA_MAP */
+    public static final ConfigKey<Object> USER_METADATA = USER_METADATA_MAP;
 
     public static final ConfigKey<Boolean> MAP_DEV_RANDOM_TO_DEV_URANDOM = ConfigKeys.newBooleanConfigKey(
             "installDevUrandom", "Map /dev/random to /dev/urandom to prevent halting on insufficient entropy", false);

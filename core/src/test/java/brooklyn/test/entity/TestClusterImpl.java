@@ -26,6 +26,12 @@ public class TestClusterImpl extends DynamicClusterImpl implements TestCluster {
     }
     
     @Override
+    public void stop() {
+        size = 0;
+        super.stop();
+    }
+    
+    @Override
     public Integer getCurrentSize() {
         return size;
     }

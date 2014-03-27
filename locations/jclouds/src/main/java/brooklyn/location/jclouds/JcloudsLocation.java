@@ -65,6 +65,7 @@ import org.jclouds.scriptbuilder.functions.InitAdminAccess;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 import org.jclouds.scriptbuilder.statements.login.ReplaceShadowPasswordEntry;
 import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
+import org.jclouds.softlayer.compute.options.SoftLayerTemplateOptions;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -863,8 +864,29 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         } else if (t instanceof NovaTemplateOptions) {
                             String[] securityGroups = toStringArray(v);
                             ((NovaTemplateOptions)t).securityGroupNames(securityGroups);
+                        } else if (t instanceof SoftLayerTemplateOptions) {
+                            String[] securityGroups = toStringArray(v);
+                            ((SoftLayerTemplateOptions)t).securityGroups(securityGroups);
+                        } else if (t instanceof GoogleComputeEngineTemplateOptions) {
+                            String[] securityGroups = toStringArray(v);
+                            ((GoogleComputeEngineTemplateOptions)t).securityGroups(securityGroups);
                         } else {
-                            LOG.info("ignoring securityGroups({}) in VM creation because not supported for cloud/type ({})", v, t);
+                            LOG.info("ignoring securityGroups({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
+                        }
+                    }})
+            .put(INBOUND_PORTS, new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
+                        int[] inboundPorts = toIntArray(v);
+                        if (LOG.isDebugEnabled()) LOG.debug("opening inbound ports {} for cloud/type {}", Arrays.toString(inboundPorts), t.getClass());
+                        t.inboundPorts(inboundPorts);
+                    }})
+            .put(USER_METADATA_STRING, new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
+                        if (t instanceof EC2TemplateOptions) {
+                            if (v==null) return;
+                            ((EC2TemplateOptions)t).userData(v.toString().getBytes());
+                        } else {
+                            LOG.info("ignoring userDataString({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
                         }
                     }})
             .put(USER_DATA_UUENCODED, new CustomizeTemplateOptions() {
@@ -873,22 +895,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             byte[] bytes = toByteArray(v);
                             ((EC2TemplateOptions)t).userData(bytes);
                         } else {
-                            LOG.info("ignoring userData({}) in VM creation because not supported for cloud/type ({})", v, t);
+                            LOG.info("ignoring userData({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
                         }
                     }})
-            .put(INBOUND_PORTS, new CustomizeTemplateOptions() {
-                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
-                        int[] inboundPorts = toIntArray(v);
-                        if (LOG.isDebugEnabled()) LOG.debug("opening inbound ports {} for {}", Arrays.toString(inboundPorts), t);
-                        t.inboundPorts(inboundPorts);
-                    }})
-            .put(TAGS, new CustomizeTemplateOptions() {
+            .put(STRING_TAGS, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         List<String> tags = toListOfStrings(v);
                         if (LOG.isDebugEnabled()) LOG.debug("setting VM tags {} for {}", tags, t);
                         t.tags(tags);
                     }})
-            .put(USER_METADATA, new CustomizeTemplateOptions() {
+            .put(USER_METADATA_MAP, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         t.userMetadata(toMapStringString(v));
                     }})

@@ -236,7 +236,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     @Override
     public void stop() {
         Map flags = MutableMap.of("usePidFile", true);
-        newScript(flags, STOPPING).execute();
+        newScript(flags, STOPPING).environmentVariablesReset().execute();
     }
 
     @Override

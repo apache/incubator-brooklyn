@@ -411,6 +411,7 @@ public abstract class MachineLifecycleEffectorTasks {
             return;
         }
                
+        Maybe<SshMachineLocation> sshMachine = Machines.findUniqueSshMachineLocation(entity().getLocations());
         Task<String> stoppingProcess = DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
             DynamicTasks.markInessential();
             stopProcessesAtMachine();
@@ -442,10 +443,11 @@ public abstract class MachineLifecycleEffectorTasks {
         
         try {
             if (stoppingMachine.get().value==0) {
-                // throw early errors *only if* we have not destroyed the machine
                 // TODO we should test for destruction above, not merely successful "stop", as things like localhost and ssh won't be destroyed
                 DynamicTasks.waitForLast();
-                stoppingProcess.get();
+                if (sshMachine.isPresent())
+                    // throw early errors *only if* there is a machine and we have not destroyed it
+                    stoppingProcess.get();
             }
             
             entity().setAttribute(SoftwareProcess.SERVICE_UP, false);

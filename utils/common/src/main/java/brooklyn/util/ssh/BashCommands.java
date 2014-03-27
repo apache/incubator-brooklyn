@@ -14,6 +14,7 @@ import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 
 public class BashCommands {
@@ -83,7 +84,9 @@ public class BashCommands {
             BashStringEscapes.wrapBash(command)+ "; fi )";
     }
 
-    /** sudo to a given user and run the indicated command*/
+    /** sudo to a given user and run the indicated command;
+     * @deprecated since 0.7.0 semantics of this are fiddly, e.g. whether user gets their environment */
+    @Beta
     public static String sudoAsUser(String user, String command) {
         return sudoAsUserOld(user, command);
     }
@@ -95,7 +98,10 @@ public class BashCommands {
     // TODO would like to move away from sudoOld -- but needs extensive testing!
 //    private static String sudoAsUserNew(String user, String command) {
 //        if (command == null) return null;
-//        return "{ sudo -E -n -S -u "+user+" -- "+BashStringEscapes.wrapBash(command)+" ; }";
+//          // no -E, run with permissions of this user
+//          // FIXME still doesn't always work e.g. doesn't have path of user 
+//          // (Alex says: can't find any combinations which work reliably)
+//        return "{ sudo -n -S -i -u "+user+" -- "+BashStringEscapes.wrapBash(command)+" ; }";
 //    }
 
     /** executes a command, then as user tees the output to the given file. 
