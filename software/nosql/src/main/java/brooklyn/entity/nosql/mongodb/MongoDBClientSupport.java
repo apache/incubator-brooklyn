@@ -113,6 +113,16 @@ public class MongoDBClientSupport {
             return EMPTY_RESPONSE;
         }
     }
+    
+    public boolean ping() {
+        DBObject ping = new BasicDBObject("ping", "1");
+        try {
+            runDBCommand("admin", ping);
+        } catch (MongoException e) {
+            return false;
+        }
+        return true;
+    }
 
     public boolean initializeReplicaSet(String replicaSetName, Integer id) {
         HostAndPort primary = getServerHostAndPort();

@@ -20,19 +20,28 @@ import com.google.common.collect.Iterables;
 public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements MongoDBRouterCluster {
 
     @Override
-    public void start(Collection<? extends Location> locations) {
-        super.start(locations);
-        subscribeToMembers(this, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
+    public void init() {
+        super.init();
+        subscribeToChildren(this, MongoDBRouter.RUNNING, new SensorEventListener<Boolean>() {
             public void onEvent(SensorEvent<Boolean> event) {
                 setAnyRouter();
             }
         });
+    }
+    
+    @Override
+    public void start(Collection<? extends Location> locations) {
+        super.start(locations);
         AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Router cluster membership tracker")) {
             @Override
             protected void onEntityAdded(Entity member) {
                 setAnyRouter();
             }
             protected void onEntityRemoved(Entity member) {
+                setAnyRouter();
+            }
+            @Override
+            protected void onEntityChange(Entity member) {
                 setAnyRouter();
             }
         };
@@ -45,6 +54,12 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
             @Override
             public boolean apply(MongoDBRouter input) {
                 return input.getAttribute(Startable.SERVICE_UP);
+            }}).orNull());
+        
+        setAttribute(MongoDBRouterCluster.ANY_RUNNING_ROUTER, Iterables.tryFind(getRouters(), new Predicate<MongoDBRouter>() {
+            @Override
+            public boolean apply(MongoDBRouter input) {
+                return input.getAttribute(MongoDBRouter.RUNNING);
             }}).orNull());
     }
     
@@ -70,6 +85,23 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
     @Override
     public MongoDBRouter getAnyRouter() {
         return getAttribute(MongoDBRouterCluster.ANY_ROUTER);
+    }
+    
+    @Override
+    public MongoDBRouter getAnyRunningRouter() {
+        return getAttribute(MongoDBRouterCluster.ANY_RUNNING_ROUTER);
+    }
+    
+    @Override
+    protected boolean calculateServiceUp() {
+        boolean anyRouterUp = false;
+        for (Entity entity : getMembers()) {
+            if (entity instanceof MongoDBRouter & entity.getAttribute(SERVICE_UP)) {
+                anyRouterUp = true;
+                break;
+            }
+        }
+        return anyRouterUp && super.calculateServiceUp();
     }
     
 }

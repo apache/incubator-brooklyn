@@ -1,6 +1,5 @@
 package brooklyn.entity.nosql.mongodb;
 
-import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -63,14 +62,14 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
     @Override
     public boolean isRunning() {
         try {
-            return MongoDBClientSupport.forServer((AbstractMongoDBServer) entity).getServerStatus().get("ok").equals(1.0);
+            return MongoDBClientSupport.forServer((AbstractMongoDBServer) entity).ping();
         } catch (Exception e) {
             return false;
         }
     }
     
     /**
-     * Kills the server with SIGINT. Sending SIGKILL is likely to resuult in data corruption.
+     * Kills the server with SIGINT. Sending SIGKILL is likely to result in data corruption.
      * @see <a href="http://docs.mongodb.org/manual/tutorial/manage-mongodb-processes/#sending-a-unix-int-or-term-signal">http://docs.mongodb.org/manual/tutorial/manage-mongodb-processes/#sending-a-unix-int-or-term-signal</a>
      */
     @Override

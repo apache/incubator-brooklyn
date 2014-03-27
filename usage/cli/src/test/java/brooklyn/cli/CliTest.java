@@ -73,7 +73,7 @@ public class CliTest {
     public void tearDown() throws Exception {
         if (executor != null) executor.shutdownNow();
         if (app != null) Entities.destroyAll(app.getManagementContext());
-        if (exampleEntity != null) Entities.destroyAll(exampleEntity.getApplication().getManagementContext());
+        if (exampleEntity != null && exampleEntity.getApplication() != null) Entities.destroyAll(exampleEntity.getApplication().getManagementContext());
     }
     
     @Test

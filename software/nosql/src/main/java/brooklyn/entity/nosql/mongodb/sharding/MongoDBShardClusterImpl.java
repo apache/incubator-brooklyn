@@ -49,7 +49,7 @@ public class MongoDBShardClusterImpl extends DynamicClusterImpl implements Mongo
         super.start(locations);
         
         MongoDBRouterCluster routers = getParent().getAttribute(MongoDBShardedDeployment.ROUTER_CLUSTER);
-        subscribe(routers, MongoDBRouterCluster.ANY_ROUTER, new SensorEventListener<MongoDBRouter>() {
+        subscribe(routers, MongoDBRouterCluster.ANY_RUNNING_ROUTER, new SensorEventListener<MongoDBRouter>() {
             public void onEvent(SensorEvent<MongoDBRouter> event) {
                 if (event.getValue() != null)
                     addShards();
@@ -67,8 +67,12 @@ public class MongoDBShardClusterImpl extends DynamicClusterImpl implements Mongo
         policy.setGroup(this);
     }
 
+    protected boolean calculateServiceUp() {
+        return addedMembers.size() > 0 && super.calculateServiceUp();
+    }
+
     protected void addShards() {
-        MongoDBRouter router = getParent().getAttribute(MongoDBShardedDeployment.ROUTER_CLUSTER).getAttribute(MongoDBRouterCluster.ANY_ROUTER);
+        MongoDBRouter router = getParent().getAttribute(MongoDBShardedDeployment.ROUTER_CLUSTER).getAttribute(MongoDBRouterCluster.ANY_RUNNING_ROUTER);
         if (router == null)
             return;
         

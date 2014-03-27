@@ -9,10 +9,6 @@ import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
-import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
-import com.mongodb.DBObject;
 
 public class MongoDBRouterImpl extends SoftwareProcessImpl implements MongoDBRouter {
     
@@ -28,13 +24,23 @@ public class MongoDBRouterImpl extends SoftwareProcessImpl implements MongoDBRou
         super.connectSensors();
         serviceUp = FunctionFeed.builder()
                 .entity(this)
+                .poll(new FunctionPollConfig<Boolean, Boolean>(RUNNING)
+                        .period(5, TimeUnit.SECONDS)
+                        .callable(new Callable<Boolean>() {
+                            @Override
+                            public Boolean call() throws Exception {
+                                MongoDBClientSupport clientSupport = MongoDBClientSupport.forServer(MongoDBRouterImpl.this);
+                                return clientSupport.ping();
+                            }
+                        })
+                        .onException(Functions.<Boolean>constant(false)))
                 .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_UP)
                         .period(5, TimeUnit.SECONDS)
                         .callable(new Callable<Boolean>() {
                             @Override
                             public Boolean call() throws Exception {
                                 MongoDBClientSupport clientSupport = MongoDBClientSupport.forServer(MongoDBRouterImpl.this);
-                                return clientSupport.getServerStatus().get("ok").equals(1.0);
+                                return clientSupport.ping() && MongoDBRouterImpl.this.getAttribute(SHARD_COUNT) > 0;
                             }
                         })
                         .onException(Functions.<Boolean>constant(false)))
@@ -48,5 +54,11 @@ public class MongoDBRouterImpl extends SoftwareProcessImpl implements MongoDBRou
                         })
                         .onException(Functions.<Integer>constant(0)))
                 .build();
+    }
+    
+    @Override
+    protected void disconnectSensors() {
+        super.disconnectSensors();
+        serviceUp.stop();
     }
 }

@@ -70,7 +70,7 @@ public class MongoDBReplicaSetIntegrationTest {
             public void run() {
                 assertEquals(replicaSet.getCurrentSize(), size);
                 assertNotNull(replicaSet.getPrimary(), "replica set has no primary");
-                assertEquals(replicaSet.getPrimary().getReplicaSet().getName(), "test-rs-"+testDescription);
+                assertEquals(replicaSet.getPrimary().getReplicaSet().getName(), "test-rs-"+testDescription+replicaSet.getId());
                 assertEquals(replicaSet.getSecondaries().size(), size-1);
             }
         });

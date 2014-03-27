@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.nosql.mongodb.AbstractMongoDBServer;
 import brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
 import brooklyn.entity.nosql.mongodb.MongoDBTestHelper;
 import brooklyn.entity.proxying.EntitySpec;
@@ -19,6 +20,7 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.mongodb.DBObject;
 
 public class MongoDBShardedDeploymentIntegrationTest {
@@ -87,9 +89,16 @@ public class MongoDBShardedDeploymentIntegrationTest {
     @Test(groups = "Integration")
     private void testReadAndWriteDifferentRouters() {
         MongoDBShardedDeployment deployment = makeAndStartDeployment();
+        EntityTestUtils.assertAttributeEqualsEventually(deployment, Startable.SERVICE_UP, true);
         Iterator<Entity> routerIterator = deployment.getRouterCluster().getMembers().iterator();
         MongoDBRouter router1 = (MongoDBRouter)routerIterator.next();
         MongoDBRouter router2 = (MongoDBRouter)routerIterator.next();
+        EntityTestUtils.assertAttributeEqualsEventually(router1, Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(router2, Startable.SERVICE_UP, true);
+        
+        for (Entity entity : Iterables.filter(app.getManagementContext().getEntityManager().getEntitiesInApplication(app), AbstractMongoDBServer.class)) {
+            EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
+        }
         String documentId = MongoDBTestHelper.insert(router1, "meaning-of-life", 42);
         DBObject docOut = MongoDBTestHelper.getById(router2, documentId);
         Assert.assertEquals(docOut.get("meaning-of-life"), 42);

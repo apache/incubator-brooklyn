@@ -1,4 +1,4 @@
-<%@ page language="java" import="java.sql.*"%>
+<%@ page language="java" import="java.sql.*,com.mongodb.*"%>
 
 <html>
 <head>

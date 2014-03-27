@@ -19,6 +19,19 @@ public class MongoDBConfigServerClusterImpl extends DynamicClusterImpl implement
         return EntitySpec.create(MongoDBConfigServer.class);
     }
     
+
+    protected boolean calculateServiceUp() {
+        // Number of config servers is fixed at INITIAL_SIZE
+        int requiredMembers = this.getConfig(INITIAL_SIZE);
+        int availableMembers = 0;
+        for (Entity entity : getMembers()) {
+            if (entity instanceof MongoDBConfigServer & entity.getAttribute(SERVICE_UP)) {
+                availableMembers++;
+            }
+        }
+        return availableMembers == requiredMembers;
+    }
+    
     @Override
     public void start(Collection<? extends Location> locs) {
         super.start(locs);

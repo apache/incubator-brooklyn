@@ -21,7 +21,7 @@ public class EntitySpecConfiguration {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(EntitySpecConfiguration.class);
 
-    private final Map<String, Object> specConfiguration;
+    private Map<String, Object> specConfiguration;
 
     public EntitySpecConfiguration(Map<String, ?> specConfiguration) {
         this.specConfiguration = Maps.newHashMap(checkNotNull(specConfiguration, "specConfiguration"));
@@ -29,5 +29,12 @@ public class EntitySpecConfiguration {
 
     public Map<String, Object> getSpecConfiguration() {
         return specConfiguration;
+    }
+    
+    /**
+     * Allows BrooklynComponentTemplateResolver to traverse the configuration and resolve any entity specs
+     */
+    public void setSpecConfiguration(Map<String, Object> specConfiguration) {
+       this.specConfiguration =  specConfiguration;
     }
 }

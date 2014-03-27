@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BrooklynComponentTemplateResolver {
 
@@ -292,11 +291,10 @@ public class BrooklynComponentTemplateResolver {
     protected Object transformSpecialFlags(Object flag, ManagementContext mgmt) {
         if (flag instanceof EntitySpecConfiguration) {
             EntitySpecConfiguration specConfig = (EntitySpecConfiguration) flag;
-            String type = (String) checkNotNull(specConfig.getSpecConfiguration().get("type"), "entitySpec must have key 'type'");
-            Class<? extends Entity> clazz = BrooklynEntityClassResolver.resolveEntity(type, mgmt);
             @SuppressWarnings("unchecked")
-            Map<String, Object> config = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration(), mgmt);
-            return buildSpec(mgmt, clazz, config);
+            Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration(), mgmt);
+            specConfig.setSpecConfiguration(resolvedConfig);
+            return Factory.newInstance(mgmt, specConfig.getSpecConfiguration()).resolveSpec();
         }
         return flag;
     }
