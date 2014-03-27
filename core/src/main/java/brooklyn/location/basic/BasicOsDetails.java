@@ -1,5 +1,6 @@
 package brooklyn.location.basic;
 
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
@@ -22,6 +23,8 @@ public class BasicOsDetails implements OsDetails {
         this.name = name; this.arch = arch; this.version = version; this.is64bit = is64Bit;
     }
     
+    // TODO: Should be replaced with an enum like Jclouds' OsFamily and isX methods should
+    // switch against known cases
     @Nullable
     @Override
     public String getName() {
@@ -48,8 +51,8 @@ public class BasicOsDetails implements OsDetails {
 
     @Override
     public boolean isLinux() {
-        //TODO confirm
-        return getName()!=null && getName().toLowerCase().contains("linux");
+        String unices = "centos|debian|fedora|gentoo|linux|rhel|slackware|solaris|suse|ubuntu";
+        return getName() != null && Pattern.matches(unices, getName().toLowerCase());
     }
 
     @Override

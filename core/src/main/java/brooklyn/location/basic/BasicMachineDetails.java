@@ -17,9 +17,13 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
+import com.google.common.io.Closeables;
+import com.google.common.io.Closer;
 
 import brooklyn.location.HardwareDetails;
 import brooklyn.location.MachineDetails;
@@ -30,6 +34,7 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ssh.internal.PlainSshExecTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
+import brooklyn.util.text.Strings;
 
 @Immutable
 public class BasicMachineDetails implements MachineDetails {
@@ -88,10 +93,16 @@ public class BasicMachineDetails implements MachineDetails {
         List<String> script;
         try {
             script = CharStreams.readLines(reader);
-            reader.close();
         } catch (IOException e) {
             LOG.error("Error reading os-details script", e);
             throw Throwables.propagate(e);
+        } finally {
+            try {
+                reader.close();
+            } catch (IOException e) {
+                // Not rethrowing e because it might obscure an exception caught by the first catch
+                LOG.error("Error closing os-details script reader", e);
+            }
         }
         Task<BasicMachineDetails> task = new PlainSshExecTaskFactory<String>(location, script)
                 .summary("Getting machine details for: " + location)
@@ -118,13 +129,13 @@ public class BasicMachineDetails implements MachineDetails {
                     LOG.debug("Found following details at {}: {}", location, stdout);
                 }
 
-                List<String> details = Lists.newArrayList(stdout.split("\\r?\\n"));
+                Iterable<String> details = Splitter.on("\\r?\\n").split(stdout);
                 String name = findAndRemove(details, "name:").orNull();
                 String version = findAndRemove(details, "version:").orNull();
                 String architecture = findAndRemove(details, "architecture:").orNull();
                 Integer ram = intOrNull(details, "ram:");
                 Integer cpuCount = intOrNull(details, "cpus:");
-                if (!details.isEmpty()) {
+                if (!Iterables.isEmpty(details)) {
                     LOG.debug("Unused outputs from os-details script: " + Joiner.on(", ").join(details));
                 }
 
@@ -140,21 +151,19 @@ public class BasicMachineDetails implements MachineDetails {
 
             // Finds the first entry in the list of inputs starting with field and removes
             // it from inputs.
-            private Optional<String> findAndRemove(List<String> inputs, String field) {
+            private Optional<String> findAndRemove(Iterable<String> inputs, String field) {
                 for (Iterator<String> it = inputs.iterator(); it.hasNext(); ) {
                     String input = it.next();
                     if (input.startsWith(field)) {
                         it.remove();
-                        String value = input.substring(field.length()).trim();
-                        return (!value.isEmpty())
-                            ? Optional.of(input.substring(field.length()))
-                            : Optional.<String>absent();
+                        String value = input.substring(field.length());
+                        return Strings.isNonBlank(value) ? Optional.of(value) : Optional.<String>absent();
                     }
                 }
                 return Optional.absent();
             }
 
-            private Integer intOrNull(List<String> inputs, String field) {
+            private Integer intOrNull(Iterable<String> inputs, String field) {
                 Optional<String> f = findAndRemove(inputs, field);
                 if (f.isPresent()) {
                     return Integer.valueOf(f.get());

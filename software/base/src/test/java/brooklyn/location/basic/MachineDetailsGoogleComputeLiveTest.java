@@ -23,14 +23,12 @@ import brooklyn.util.collections.MutableMap;
 public class MachineDetailsGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(MachineDetailsGoogleComputeLiveTest.class);
-    private static final int TIMEOUT_MS = 1000 * 60 * 10; // ten minutes
 
     @Override
     protected void doTest(Location loc) throws Exception {
         Entity testEntity = app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class));
         app.start(ImmutableList.of(loc));
-        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS),
-                testEntity, Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(testEntity, Startable.SERVICE_UP, true);
 
         SshMachineLocation sshLoc = Locations.findUniqueSshMachineLocation(testEntity.getLocations()).get();
         MachineDetails machine = app.getExecutionContext()
