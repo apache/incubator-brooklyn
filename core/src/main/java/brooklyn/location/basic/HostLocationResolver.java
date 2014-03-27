@@ -47,10 +47,8 @@ public class HostLocationResolver implements LocationResolver {
     @SuppressWarnings("rawtypes")
     @Override
     public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
-        return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
-    }
-    
-    protected FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
+        Map globalProperties = registry.getProperties();
+        
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid location '" + spec + "'; must specify something like host:(\"1.1.1.1\")");
@@ -58,7 +56,7 @@ public class HostLocationResolver implements LocationResolver {
         
         String namedLocation = (String) locationFlags.get("named");
 
-        Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties(null, namedLocation, properties);
+        Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties(null, namedLocation, globalProperties);
         MutableMap<String, Object> flags = MutableMap.<String, Object>builder().putAll(filteredProperties).putAll(locationFlags).removeAll("named").build();
 
         String args = matcher.group(2);
@@ -70,7 +68,7 @@ public class HostLocationResolver implements LocationResolver {
         return managementContext.getLocationManager().createLocation(LocationSpec.create(SingleMachineProvisioningLocation.class)
                 .configure("location", target)
                 .configure("locationFlags", flags)
-                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
+                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, globalProperties, namedLocation)));
     }
     
     @Override

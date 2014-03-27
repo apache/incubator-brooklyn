@@ -78,10 +78,8 @@ public class ByonLocationResolver implements LocationResolver {
     
     @Override
     public FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
-        return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
-    }
-    
-    protected FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
+        Map globalProperties = registry.getProperties();
+
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like byon(hosts=\"addr1,addr2\")");
@@ -144,7 +142,7 @@ public class ByonLocationResolver implements LocationResolver {
             machines.add(machine);
         }
         
-        Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties("byon", namedLocation, properties);
+        Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties("byon", namedLocation, globalProperties);
         ConfigBag flags = ConfigBag.newInstance(locationFlags).putIfAbsent(filteredProperties);
 
         flags.putStringKey("machines", machines);
@@ -158,7 +156,7 @@ public class ByonLocationResolver implements LocationResolver {
 
         return managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
                 .configure(flags.getAllConfigRaw())
-                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
+                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, globalProperties, namedLocation)));
     }
     
     @Override

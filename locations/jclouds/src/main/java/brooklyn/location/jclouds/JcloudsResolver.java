@@ -83,11 +83,6 @@ public class JcloudsResolver implements LocationResolver {
         this.managementContext = checkNotNull(managementContext, "managementContext");
     }
     
-    @Override
-    public JcloudsLocation newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
-        return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
-    }
-
     protected static class JcloudsSpecParser {
         String providerOrApi;
         String parameter;
@@ -152,8 +147,11 @@ public class JcloudsResolver implements LocationResolver {
         }
     }
     
+    @Override
     @SuppressWarnings("unchecked")
-    protected JcloudsLocation newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
+    public JcloudsLocation newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
+        Map globalProperties = registry.getProperties();
+
         JcloudsSpecParser details = JcloudsSpecParser.parse(spec, false);
         String namedLocation = (String) locationFlags.get(LocationInternal.NAMED_SPEC_NAME.getName());
 
@@ -173,7 +171,7 @@ public class JcloudsResolver implements LocationResolver {
         // But for everything passed in via locationFlags, pass those as-is.
         // TODO Should revisit the locationFlags: where are these actually used? Reason accepting properties without
         //      full prefix is that the map's context is explicitly this location, rather than being generic properties.
-        Map allProperties = getAllProperties(registry, properties);
+        Map allProperties = getAllProperties(registry, globalProperties);
         String regionOrEndpoint = details.parameter;
         if (regionOrEndpoint==null && isProvider) regionOrEndpoint = (String)locationFlags.get(LocationConfigKeys.CLOUD_REGION_ID.getName());
         Map jcloudsProperties = new JcloudsPropertiesFromBrooklynProperties().getJcloudsProperties(providerOrApi, regionOrEndpoint, namedLocation, allProperties);
@@ -193,7 +191,7 @@ public class JcloudsResolver implements LocationResolver {
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(JcloudsLocation.class)
-                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, jcloudsProperties, properties, namedLocation))
+                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, jcloudsProperties, globalProperties, namedLocation))
                 .configure(jcloudsProperties) );
     }
 

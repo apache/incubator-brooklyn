@@ -20,7 +20,6 @@ package brooklyn.location.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -30,14 +29,12 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
-import brooklyn.location.LocationSpec;
 import brooklyn.location.LocationResolver.EnableableLocationResolver;
+import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.KeyValueParser;
@@ -84,10 +81,8 @@ public class LocalhostResolver implements LocationResolver, EnableableLocationRe
     
     @Override
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
-        return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
-    }
+        Map globalProperties = registry.getProperties();
     
-    protected Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
         String namedLocation = (String) locationFlags.get(LocationInternal.NAMED_SPEC_NAME.getName());
         
         Matcher matcher = PATTERN.matcher(spec);
@@ -107,7 +102,7 @@ public class LocalhostResolver implements LocationResolver, EnableableLocationRe
             throw new IllegalArgumentException("Invalid location '"+spec+"'; if name supplied then value must be non-empty");
         }
 
-        Map<String, Object> filteredProperties = new LocalhostPropertiesFromBrooklynProperties().getLocationProperties("localhost", namedLocation, properties);
+        Map<String, Object> filteredProperties = new LocalhostPropertiesFromBrooklynProperties().getLocationProperties("localhost", namedLocation, globalProperties);
         // TODO filteredProperties stuff above should not be needed as named location items will already be passed in
         ConfigBag flags = ConfigBag.newInstance(locationFlags).putIfAbsent(filteredProperties);
         
@@ -118,7 +113,7 @@ public class LocalhostResolver implements LocationResolver, EnableableLocationRe
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
             .configure(flags.getAllConfig())
-            .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
+            .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, globalProperties, namedLocation)));
     }
 
     @Override

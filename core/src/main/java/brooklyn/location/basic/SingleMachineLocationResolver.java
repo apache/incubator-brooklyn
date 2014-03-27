@@ -47,10 +47,8 @@ public class SingleMachineLocationResolver implements LocationResolver {
 
     @Override
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
-        return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
-    }
-    
-    protected Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
+        Map globalProperties = registry.getProperties();
+        
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid location '" + spec + "'; must specify something like single(named:foo)");
@@ -60,7 +58,7 @@ public class SingleMachineLocationResolver implements LocationResolver {
         String args = matcher.group(2);
         Map<String,?> locationArgs = KeyValueParser.parseMap(args);
 
-        Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties(null, namedLocation, properties);
+        Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties(null, namedLocation, globalProperties);
         MutableMap<String, Object> flags = MutableMap.<String, Object>builder()
                 .putAll(filteredProperties)
                 .putAll(locationFlags)
@@ -79,7 +77,7 @@ public class SingleMachineLocationResolver implements LocationResolver {
         return managementContext.getLocationManager().createLocation(LocationSpec.create(SingleMachineProvisioningLocation.class)
                 .configure("location", target)
                 .configure("locationFlags", flags)
-                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
+                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, globalProperties, namedLocation)));
     }
 
     @Override

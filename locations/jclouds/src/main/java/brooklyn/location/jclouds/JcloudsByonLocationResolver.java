@@ -81,13 +81,11 @@ public class JcloudsByonLocationResolver implements LocationResolver {
         this.managementContext = checkNotNull(managementContext, "managementContext");
     }
     
+    // TODO Remove some duplication from JcloudsResolver; needs more careful review
     @Override
     public FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
-        return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
-    }
-    
-    // TODO Remove some duplication from JcloudsResolver; needs more careful review
-    protected FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
+        Map globalProperties = registry.getProperties();
+
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like jcloudsByon(provider=\"aws-ec2\",region=\"us-east-1\",hosts=\"i-f2014593,i-d1234567\")");
@@ -132,7 +130,7 @@ public class JcloudsByonLocationResolver implements LocationResolver {
         // But for everything passed in via locationFlags, pass those as-is.
         // TODO Should revisit the locationFlags: where are these actually used? Reason accepting properties without
         //      full prefix is that the map's context is explicitly this location, rather than being generic properties.
-        Map allProperties = getAllProperties(registry, properties);
+        Map allProperties = getAllProperties(registry, globalProperties);
         Map jcloudsProperties = new JcloudsPropertiesFromBrooklynProperties().getJcloudsProperties(providerOrApi, regionName, namedLocation, allProperties);
         jcloudsProperties.putAll(locationFlags);
         
@@ -171,7 +169,7 @@ public class JcloudsByonLocationResolver implements LocationResolver {
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
                 .configure(flags.getAllConfig())
-                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
+                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, globalProperties, namedLocation)));
     }
     
     private Map getAllProperties(brooklyn.location.LocationRegistry registry, Map<?,?> properties) {
