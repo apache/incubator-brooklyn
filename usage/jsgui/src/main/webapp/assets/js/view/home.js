@@ -46,7 +46,7 @@ define([
                     backoffMaxPeriod: 10*1000 });
             ViewUtils.fetchRepeatedlyWithDelay(this, this.options.locations, { fetchOptions: { reset: true }, doitnow: true });
 
-            id = $(this.$el).find("#circles-map");
+            var id = $(this.$el).find("#circles-map");
             if (this.options.offline) {
                 id.find("#circles-map-message").html("(map off in offline mode)");
             } else {
