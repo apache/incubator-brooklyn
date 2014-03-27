@@ -51,7 +51,7 @@ public class DynamicToyMySqlEntityBuilder {
             }
         }
         // download
-        String version = "5.5.35";
+        String version = "5.5.37";
         String osTag = getOsTag(e);
         String mirrorUrl = "http://www.mirrorservice.org/sites/ftp.mysql.com/";
         return "http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-"+version+"-"+osTag+".tar.gz/from/"+mirrorUrl;
