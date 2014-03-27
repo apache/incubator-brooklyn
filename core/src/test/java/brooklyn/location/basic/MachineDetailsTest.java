@@ -1,4 +1,4 @@
-package brooklyn.entity.software;
+package brooklyn.location.basic;
 
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -14,16 +14,17 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineDetails;
 import brooklyn.location.OsDetails;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.task.DynamicSequentialTask;
+import brooklyn.util.task.DynamicTasks;
 
-public class OsTasksTest {
+public class MachineDetailsTest {
 
-    public static final Logger LOG = LoggerFactory.getLogger(OsTasksTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SshMachineLocationTest.class);
 
     TestApplication app;
     ManagementContext mgmt;
@@ -46,12 +47,14 @@ public class OsTasksTest {
         mgmt = null;
     }
 
-    @Test(groups="Integration")
-    public void testGetOsDetails() {
-        Task<OsDetails> detailsTask = app.getExecutionContext().submit(OsTasks.getOsDetails(app));
-        OsDetails details = detailsTask.getUnchecked();
-        LOG.info("testGetOsDetails found the following on localhost: name={}, version={}, arch={}, is64bit={}",
-                new Object[] {details.getName(), details.getVersion(), details.getArch(), details.is64bit()});
+    @Test(groups = "Integration")
+    public void testGetMachineDetails() {
+        Task<BasicMachineDetails> detailsTask = app.getExecutionContext().submit(
+                BasicMachineDetails.taskForSshMachineLocation(host));
+        MachineDetails machine = detailsTask.getUnchecked();
+        LOG.info("Found the following on localhost: {}", machine);
+        assertNotNull(machine);
+        OsDetails details = machine.getOsDetails();
         assertNotNull(details);
         assertNotNull(details.getArch());
         assertNotNull(details.getName());
@@ -60,5 +63,4 @@ public class OsTasksTest {
         assertFalse(details.getName().startsWith("name:"), "name prefix not removed from details");
         assertFalse(details.getVersion().startsWith("version:"), "version prefix not removed from details");
     }
-
 }

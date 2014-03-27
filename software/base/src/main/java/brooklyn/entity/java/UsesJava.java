@@ -17,7 +17,7 @@ public interface UsesJava {
             "java.sysprops", "Java command line system properties", Maps.<String,String>newLinkedHashMap());
 
     /**
-     * Used to set java options. These options are pre-pended to the defaults.
+     * Used to set java options. These options are prepended to the defaults.
      * They can also be used to override defaults. The rules for overrides are:
      * <ul>
      *   <li>If contains a mutually exclusive setting, then the others are removed. Those supported are:

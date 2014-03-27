@@ -87,7 +87,6 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
     /**
      * Name to be used in the local repo, when looking for the download file.
-     * If null, will 
      */
     public String getDownloadFilename() {
         return getEntity().getEntityType().getSimpleName().toLowerCase() + "-"+getVersion() + ".tar.gz";

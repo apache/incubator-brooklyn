@@ -13,7 +13,14 @@ public interface MachineLocation extends AddressableLocation {
      * @return the machine's network address.
      */
     InetAddress getAddress();
-    
+
+    /** @deprecated since 0.7.0. Use getMachineDetails().getOsDetails() instead. */
+    @Deprecated
     OsDetails getOsDetails();
-    
+
+    /*
+     * @return hardware and operating system-specific details for the machine.
+     */
+    MachineDetails getMachineDetails();
+
 }

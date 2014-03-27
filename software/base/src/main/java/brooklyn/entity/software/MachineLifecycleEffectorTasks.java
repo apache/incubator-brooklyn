@@ -67,8 +67,8 @@ import com.google.common.collect.Iterables;
  *  <li> {@link #startProcessesAtMachine(Supplier)} (required)
  *  <li> {@link #stopProcessesAtMachine()} (required, but can be left blank if you assume the VM will be destroyed)
  *  <li> {@link #preStartCustom(MachineLocation)}
- *  <li> {@link #postStartCustom(MachineLocation)}
- *  <li> {@link #preStopCustom(MachineLocation)}
+ *  <li> {@link #postStartCustom()}
+ *  <li> {@link #preStopCustom()}
  *
  * Note methods at this level typically look after the {@link Attributes#SERVICE_STATE} sensor.
  *  

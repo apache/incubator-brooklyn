@@ -1,30 +1,43 @@
 package brooklyn.location.basic;
 
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
+
+import com.google.common.base.Objects;
+
 import brooklyn.location.OsDetails;
 
+@Immutable
 public class BasicOsDetails implements OsDetails {
 
     final String name, arch, version;
     final boolean is64bit;
-    
+
+    /** Sets is64Bit according to value of arch parameter. */
     public BasicOsDetails(String name, String arch, String version) {
-       this(name,arch,version, arch != null && arch.contains("64"));
+       this(name, arch, version, arch != null && arch.contains("64"));
     }
 
     public BasicOsDetails(String name, String arch, String version, boolean is64Bit) {
         this.name = name; this.arch = arch; this.version = version; this.is64bit = is64Bit;
     }
     
-    /** java property os.name (human readable name); e.g. "Mac OS X" */
+    // TODO: Should be replaced with an enum like Jclouds' OsFamily and isX methods should
+    // switch against known cases
+    @Nullable
     @Override
     public String getName() {
         return name;
     }
-    /** java property os.arch (hardware architecture); e.g. "x86_64" */
+
+    @Nullable
     @Override
     public String getArch() {
         return arch;
     }
+
+    @Nullable
     @Override
     public String getVersion() {
         return version;
@@ -38,8 +51,8 @@ public class BasicOsDetails implements OsDetails {
 
     @Override
     public boolean isLinux() {
-        //TODO confirm
-        return getName()!=null && getName().toLowerCase().contains("linux");
+        String unices = "centos|debian|fedora|gentoo|linux|rhel|slackware|solaris|suse|ubuntu";
+        return getName() != null && Pattern.matches(unices, getName().toLowerCase());
     }
 
     @Override
@@ -54,7 +67,12 @@ public class BasicOsDetails implements OsDetails {
 
     @Override
     public String toString() {
-        return "OS["+name+";"+arch+";"+version+"]";
+        return Objects.toStringHelper(OsDetails.class)
+                .omitNullValues()
+                .add("name", name)
+                .add("version", version)
+                .add("arch", arch)
+                .toString();
     }
 
     public static class OsNames {
@@ -82,7 +100,4 @@ public class BasicOsDetails implements OsDetails {
         public static final OsDetails ANONYMOUS_LINUX_64 = new BasicOsDetails("linux", OsArchs.X_86_64, "unknown");
     }
     
-    public static void main(String[] args) {
-        System.out.println("ARCH: "+Factory.newLocalhostInstance().toString());
-    }
 }

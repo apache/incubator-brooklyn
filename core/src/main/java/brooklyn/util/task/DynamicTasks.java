@@ -143,7 +143,13 @@ public class DynamicTasks {
         }
     }
     
-    /** tries to add the task to the current addition context if there is one, otherwise does nothing */
+    /**
+     * Tries to add the task to the current addition context if there is one, otherwise does nothing.
+     * <p/>
+     * Call {@link TaskQueueingResult#orSubmitAsync() orSubmitAsync()} on the returned
+     * {@link TaskQueueingResult TaskQueueingResult} to handle execution of tasks in a
+     * {@link BasicExecutionContext}.
+     */
     public static <T> TaskQueueingResult<T> queueIfPossible(TaskAdaptable<T> task) {
         TaskQueueingContext adder = getTaskQueuingContext();
         boolean result = false;
@@ -151,6 +157,8 @@ public class DynamicTasks {
             result = Tasks.tryQueueing(adder, task);
         return new TaskQueueingResult<T>(task, result);
     }
+
+    /** @see #queueIfPossible(TaskAdaptable) */
     public static <T> TaskQueueingResult<T> queueIfPossible(TaskFactory<? extends TaskAdaptable<T>> task) {
         return queueIfPossible(task.newTask());
     }
@@ -187,6 +195,16 @@ public class DynamicTasks {
         throw new IllegalStateException("No task addition context available in current task hierarchy for adding task "+task);
     }
 
+    /**
+     * Queues the given task.
+     * <p/>
+     * This method is only valid within a dynamic task. Use {@link #queueIfPossible(TaskAdaptable)}
+     * and {@link TaskQueueingResult#orSubmitAsync()} if the calling context is a basic task.
+     *
+     * @param task The task to queue
+     * @throws IllegalStateException if no task queueing context is available
+     * @return The queued task
+     */
     public static <V extends TaskAdaptable<?>> V queue(V task) {
         try {
             Preconditions.checkNotNull(task, "Task to queue cannot be null");
@@ -202,26 +220,31 @@ public class DynamicTasks {
         }
     }
 
+    /** @see #queue(brooklyn.management.TaskAdaptable)  */
     public static void queue(TaskAdaptable<?> task1, TaskAdaptable<?> task2, TaskAdaptable<?> ...tasks) {
         queue(task1);
         queue(task2);
         for (TaskAdaptable<?> task: tasks) queue(task);
     }
 
+    /** @see #queue(brooklyn.management.TaskAdaptable)  */
     public static <T extends TaskAdaptable<?>> T queue(TaskFactory<T> taskFactory) {
         return queue(taskFactory.newTask());
     }
 
+    /** @see #queue(brooklyn.management.TaskAdaptable)  */
     public static void queue(TaskFactory<?> task1, TaskFactory<?> task2, TaskFactory<?> ...tasks) {
         queue(task1.newTask());
         queue(task2.newTask());
         for (TaskFactory<?> task: tasks) queue(task.newTask());
     }
 
+    /** @see #queue(brooklyn.management.TaskAdaptable)  */
     public static <T> Task<T> queue(String name, Callable<T> job) {
         return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
     }
 
+    /** @see #queue(brooklyn.management.TaskAdaptable)  */
     public static <T> Task<T> queue(String name, Runnable job) {
         return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
     }
