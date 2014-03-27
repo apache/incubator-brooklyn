@@ -29,7 +29,7 @@ fi
 
 # force resolution of localhost to be loopback, otherwise we hit problems
 # TODO should be changed in code
-JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 ${JAVA_OPTS}"
+JAVA_OPTS="-Dbrooklyn.location.localhost.address=127.0.0.1 ${JAVA_OPTS}"
 
 # start Brooklyn
 echo $$ > "$ROOT/pid_java"
