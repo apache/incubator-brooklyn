@@ -11,22 +11,21 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SameServerEntity;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.location.OsDetails;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
-
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
+
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindTestUtils;
+import brooklyn.location.MachineLocation;
+import brooklyn.location.OsDetails;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.TestApplication;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 
 public class RebindJcloudsLocationLiveTest extends AbstractJcloudsTest {
 
@@ -35,9 +34,7 @@ public class RebindJcloudsLocationLiveTest extends AbstractJcloudsTest {
 
     private ClassLoader classLoader = getClass().getClassLoader();
     private TestApplication origApp;
-    private SameServerEntity origSameServerE;
-    private TestEntity origE;
-    private TestApplication newApp;
+    private LiveTestEntity origEntity;
     private File mementoDir;
     
     @BeforeMethod(alwaysRun=true)
@@ -45,10 +42,8 @@ public class RebindJcloudsLocationLiveTest extends AbstractJcloudsTest {
     public void setUp() throws Exception {
         super.setUp();
         origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), managementContext);
-        origSameServerE = origApp.createAndManageChild(EntitySpec.create(SameServerEntity.class));
-        origE = origSameServerE.addChild(EntitySpec.create(TestEntity.class));
-        Entities.manage(origE);
-        
+        origEntity = origApp.createAndManageChild(EntitySpec.create(LiveTestEntity.class));
+
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         jcloudsLocation.setConfig(JcloudsLocation.HARDWARE_ID, AWS_EC2_SMALL_HARDWARE_ID);
     }
@@ -57,7 +52,7 @@ public class RebindJcloudsLocationLiveTest extends AbstractJcloudsTest {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
+        if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
     
@@ -71,20 +66,20 @@ public class RebindJcloudsLocationLiveTest extends AbstractJcloudsTest {
     public void testRebindsToJcloudsMachine() throws Exception {
         origApp.start(ImmutableList.of(jcloudsLocation));
         JcloudsLocation origJcloudsLocation = jcloudsLocation;
-        JcloudsSshMachineLocation origMachine = (JcloudsSshMachineLocation) Iterables.find(origE.getLocations(), Predicates.instanceOf(JcloudsSshMachineLocation.class));
-        
-        newApp = (TestApplication) rebind();
-        SameServerEntity newSameServerE = (SameServerEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(SameServerEntity.class));
-        TestEntity newE = (TestEntity) Iterables.find(newSameServerE.getChildren(), Predicates.instanceOf(TestEntity.class));
-        JcloudsSshMachineLocation newMachine = (JcloudsSshMachineLocation) Iterables.find(newE.getLocations(), Predicates.instanceOf(JcloudsSshMachineLocation.class));
-        
+        System.out.println("orig locations: " + origEntity.getLocations());
+        JcloudsSshMachineLocation origMachine = (JcloudsSshMachineLocation) Iterables.find(origEntity.getLocations(), Predicates.instanceOf(JcloudsSshMachineLocation.class));
+
+        TestApplication newApp = rebind();
+        LiveTestEntity newEntity = (LiveTestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(LiveTestEntity.class));
+        JcloudsSshMachineLocation newMachine = (JcloudsSshMachineLocation) Iterables.find(newEntity.getLocations(), Predicates.instanceOf(JcloudsSshMachineLocation.class));
+
         assertMachineEquals(newMachine, origMachine);
         assertTrue(newMachine.isSshable());
-        
+
         JcloudsLocation newJcloudsLoction = newMachine.getParent();
         assertJcloudsLocationEquals(newJcloudsLoction, origJcloudsLocation);
     }
-    
+
     private void assertMachineEquals(JcloudsSshMachineLocation actual, JcloudsSshMachineLocation expected) {
         String errmsg = "actual="+actual.toVerboseString()+"; expected="+expected.toVerboseString();
         assertEquals(actual.getId(), expected.getId(), errmsg);

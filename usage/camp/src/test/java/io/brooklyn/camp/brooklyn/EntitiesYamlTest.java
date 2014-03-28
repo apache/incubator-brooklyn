@@ -1,6 +1,7 @@
 package io.brooklyn.camp.brooklyn;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.StringReader;
@@ -18,8 +19,12 @@ import org.testng.collections.Lists;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
@@ -527,7 +532,26 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         assertEquals(entitySpec.getType(), TestEntity.class);
         assertEquals(entitySpec.getConfig(), ImmutableMap.of(TestEntity.CONF_NAME, "inchildspec"));
     }
-    
+
+    @Test
+    public void testAppWithSameServerEntityStarts() throws Exception {
+        Entity app = createAndStartApplication("same-server-entity-test.yaml");
+        waitForApplicationTasks(app);
+        assertNotNull(app);
+        assertEquals(app.getAttribute(Attributes.SERVICE_STATE), Lifecycle.RUNNING, "service state");
+        assertTrue(app.getAttribute(Attributes.SERVICE_UP), "service up");
+
+        assertEquals(app.getChildren().size(), 1);
+        Entity entity = Iterables.getOnlyElement(app.getChildren());
+        assertTrue(entity instanceof SameServerEntity, "entity="+entity);
+
+        SameServerEntity sse = (SameServerEntity) entity;
+        assertEquals(sse.getChildren().size(), 2);
+        for (Entity child : sse.getChildren()) {
+            assertTrue(child instanceof BasicEntity, "child="+child);
+        }
+    }
+
     @Override
     protected Logger getLogger() {
         return log;

@@ -62,14 +62,14 @@ import com.google.common.collect.Iterables;
  * Knows how to provision machines, making use of {@link ProvidesProvisioningFlags#obtainProvisioningFlags(MachineProvisioningLocation)},
  * and provides hooks for injecting behaviour at common places.
  * Methods are designed for overriding, with the convention that *Async methods should queue (and not block).
- * The following methods are commonly overridden (and you can safely queue tasks, block, or return immediately in these):
- * 
+ * The following methods are commonly overridden (and you can safely queue tasks, block, or return immediately in them):
+ * <ul>
  *  <li> {@link #startProcessesAtMachine(Supplier)} (required)
  *  <li> {@link #stopProcessesAtMachine()} (required, but can be left blank if you assume the VM will be destroyed)
  *  <li> {@link #preStartCustom(MachineLocation)}
  *  <li> {@link #postStartCustom()}
  *  <li> {@link #preStopCustom()}
- *
+ * </ul>
  * Note methods at this level typically look after the {@link Attributes#SERVICE_STATE} sensor.
  *  
  * @since 0.6.0
@@ -94,7 +94,8 @@ public abstract class MachineLifecycleEffectorTasks {
         ((EntityInternal)entity).getMutableEntityType().addEffector(newStopEffector());
     }
     
-    /** returns an effector suitable for setting in a public static final or attaching dynamically;
+    /**
+     * @return an effector suitable for setting in a public static final or attaching dynamically;
      * the effector overrides the corresponding effector from {@link Startable} with 
      * the behaviour in this lifecycle class instance */
     public Effector<Void> newStartEffector() {
@@ -112,7 +113,7 @@ public abstract class MachineLifecycleEffectorTasks {
     }
     
     /** returns the TaskFactory which supplies the implementation for this effector,
-     * calling the relevant method in this class ({@link #start(Collection)} */
+     * calling the relevant method in this class ({@link #start(Collection)}) */
     public EffectorBody<Void> newStartEffectorTask() {
         return new EffectorBody<Void>() {
             @Override
