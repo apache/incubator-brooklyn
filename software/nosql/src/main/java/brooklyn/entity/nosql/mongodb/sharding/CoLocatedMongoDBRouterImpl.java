@@ -24,7 +24,7 @@ public class CoLocatedMongoDBRouterImpl extends SameServerEntityImpl implements 
     }
     
     @Override
-    public void start(Collection<? extends Location> locations) {
+    protected void doStart(Collection<? extends Location> locations) {
         super.start(locations);
         setAttribute(Startable.SERVICE_UP, true);
     }
