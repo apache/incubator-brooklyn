@@ -93,12 +93,13 @@ public class MongoDBShardedDeploymentIntegrationTest {
         EntityTestUtils.assertAttributeEqualsEventually(router1, Startable.SERVICE_UP, true);
         EntityTestUtils.assertAttributeEqualsEventually(router2, Startable.SERVICE_UP, true);
         
-        for (Entity entity : Iterables.filter(app.getManagementContext().getEntityManager().getEntitiesInApplication(app), AbstractMongoDBServer.class)) {
-            EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
-        }
         String documentId = MongoDBTestHelper.insert(router1, "meaning-of-life", 42);
         DBObject docOut = MongoDBTestHelper.getById(router2, documentId);
         Assert.assertEquals(docOut.get("meaning-of-life"), 42);
+        
+        for (Entity entity : Iterables.filter(app.getManagementContext().getEntityManager().getEntitiesInApplication(app), AbstractMongoDBServer.class)) {
+            EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
+        }
     }
     
     private void checkEntityTypeAndServiceUp(Entity entity, Class<? extends Entity> expectedClass) {

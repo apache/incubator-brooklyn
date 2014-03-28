@@ -62,6 +62,9 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
                         break;
                     case CHILD:
                         entitiesToSearch = entity().getChildren();
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected scope "+scope);
                 }
                 
                 Optional<Entity> result = Iterables.tryFind(entitiesToSearch, EntityPredicates.configEqualTo(BrooklynCampConstants.PLAN_ID, componentId));

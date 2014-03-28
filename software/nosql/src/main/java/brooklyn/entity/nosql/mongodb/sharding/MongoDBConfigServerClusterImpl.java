@@ -21,6 +21,7 @@ public class MongoDBConfigServerClusterImpl extends DynamicClusterImpl implement
     }
     
 
+    @Override
     protected boolean calculateServiceUp() {
         // Number of config servers is fixed at INITIAL_SIZE
         int requiredMembers = this.getConfig(INITIAL_SIZE);
@@ -30,7 +31,7 @@ public class MongoDBConfigServerClusterImpl extends DynamicClusterImpl implement
                 availableMembers++;
             }
         }
-        return availableMembers == requiredMembers;
+        return availableMembers >= requiredMembers;
     }
     
     @Override

@@ -2,10 +2,6 @@ package brooklyn.entity.nosql.mongodb;
 
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.nosql.mongodb.sharding.MongoDBRouter;
 import brooklyn.entity.nosql.mongodb.sharding.MongoDBRouterCluster;
@@ -15,6 +11,10 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.util.exceptions.Exceptions;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 
 public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements MongoDBClientDriver {
     
@@ -74,8 +74,8 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
     
     private AbstractMongoDBServer getServer() {
         AbstractMongoDBServer server = entity.getConfig(MongoDBClient.SERVER);
+        MongoDBShardedDeployment deployment = entity.getConfig(MongoDBClient.SHARDED_DEPLOYMENT);
         if (server == null) {
-            MongoDBShardedDeployment deployment = entity.getConfig(MongoDBClient.SHARDED_DEPLOYMENT);
             Preconditions.checkNotNull(deployment, "Either server or shardedDeployment must be specified");
             Task<MongoDBRouter> task = DependentConfiguration.attributeWhenReady(deployment.getRouterCluster(),
                     MongoDBRouterCluster.ANY_ROUTER);
@@ -90,6 +90,10 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
                 };
             });
         } else {
+            if (deployment != null) {
+                log.warn("Server and ShardedDeployment defined for {}; using server ({} instead of {})", 
+                        new Object[] {this, server, deployment});
+            }
             Task<Boolean> task = DependentConfiguration.attributeWhenReady(server, Startable.SERVICE_UP);
             try {
                 DependentConfiguration.waitForTask(task, server);
@@ -100,5 +104,4 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
         }
         return server;
     }
-
 }

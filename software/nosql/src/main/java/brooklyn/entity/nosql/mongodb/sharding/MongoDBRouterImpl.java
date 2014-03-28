@@ -12,7 +12,7 @@ import com.google.common.base.Functions;
 
 public class MongoDBRouterImpl extends SoftwareProcessImpl implements MongoDBRouter {
     
-    private volatile FunctionFeed serviceUp;
+    private volatile FunctionFeed functionFeed;
 
     @Override
     public Class<?> getDriverInterface() {
@@ -22,7 +22,7 @@ public class MongoDBRouterImpl extends SoftwareProcessImpl implements MongoDBRou
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        serviceUp = FunctionFeed.builder()
+        functionFeed = FunctionFeed.builder()
                 .entity(this)
                 .poll(new FunctionPollConfig<Boolean, Boolean>(RUNNING)
                         .period(5, TimeUnit.SECONDS)
@@ -62,6 +62,6 @@ public class MongoDBRouterImpl extends SoftwareProcessImpl implements MongoDBRou
     @Override
     protected void disconnectSensors() {
         super.disconnectSensors();
-        serviceUp.stop();
+        if (functionFeed != null) functionFeed.stop();
     }
 }
