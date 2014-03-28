@@ -1,7 +1,5 @@
 package brooklyn.entity.nosql.mongodb;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.net.UnknownHostException;
 
 import org.bson.BSONObject;
@@ -25,11 +23,15 @@ import com.mongodb.ServerAddress;
  *
  * @see <a href="http://docs.mongodb.org/manual/reference/command/">MongoDB database command documentation</a>
  */
-public class MongoDBClientSupport implements Closeable {
+public class MongoDBClientSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBClientSupport.class);
 
-    private final MongoClient client;
+    private ServerAddress address;
+    
+    private MongoClient client() {
+        return new MongoClient(address, connectionOptions);
+    }
 
     // Set client to automatically reconnect to servers.
     private static final MongoClientOptions connectionOptions = MongoClientOptions.builder()
@@ -41,14 +43,14 @@ public class MongoDBClientSupport implements Closeable {
 
     public MongoDBClientSupport(ServerAddress standalone) {
         // We could also use a MongoClient to access an entire replica set. See MongoClient(List<ServerAddress>).
-        client = new MongoClient(standalone, connectionOptions);
+        address = standalone;
     }
 
     /**
      * Creates a {@link MongoDBClientSupport} instance in standalone mode.
      * Returns {@link com.google.common.base.Optional#absent} if the server's host and port are unknown.
      */
-    public static MongoDBClientSupport forServer(MongoDBServer standalone) throws UnknownHostException {
+    public static MongoDBClientSupport forServer(AbstractMongoDBServer standalone) throws UnknownHostException {
         String hostname = standalone.getAttribute(MongoDBServer.HOSTNAME);
         Integer port = standalone.getAttribute(MongoDBServer.PORT);
         ServerAddress address = new ServerAddress(hostname, port);
@@ -56,7 +58,12 @@ public class MongoDBClientSupport implements Closeable {
     }
 
     private ServerAddress getServerAddress() {
-        return client.getServerAddressList().get(0);
+        MongoClient client = client();
+        try {
+            return client.getServerAddressList().get(0);
+        } finally {
+            client.close();
+        }
     }
 
     private HostAndPort getServerHostAndPort() {
@@ -64,29 +71,38 @@ public class MongoDBClientSupport implements Closeable {
         return HostAndPort.fromParts(address.getHost(), address.getPort());
     }
 
-    private Optional<CommandResult> runDBCommand(String database, String command) {
+    public Optional<CommandResult> runDBCommand(String database, String command) {
         return runDBCommand(database, new BasicDBObject(command, Boolean.TRUE));
     }
 
     private Optional<CommandResult> runDBCommand(String database, DBObject command) {
-        DB db = client.getDB(database);
-        CommandResult status;
+        MongoClient client = client();
         try {
-            status = db.command(command);
-        } catch (MongoException e) {
-            LOG.warn("Command "+command+" on "+getServerAddress()+" failed", e);
-            return Optional.absent();
+            DB db = client.getDB(database);
+            CommandResult status;
+            try {
+                status = db.command(command);
+            } catch (MongoException e) {
+                LOG.warn("Command " + command + " on " + getServerAddress() + " failed", e);
+                return Optional.absent();
+            }
+            if (!status.ok()) {
+                LOG.debug("Unexpected result of {} on {}: {}",
+                        new Object[] { command, getServerAddress(), status.getErrorMessage() });
+            }
+            return Optional.of(status);
+        } finally {
+            client.close();
         }
-        if (!status.ok()) {
-            LOG.debug("Unexpected result of {} on {}: {}",
-                    new Object[]{command, getServerAddress(), status.getErrorMessage()});
-        }
-        return Optional.of(status);
     }
-
-    @Override
-    public void close() throws IOException {
-        client.close();
+    
+    public long getShardCount() {
+        MongoClient client = client();
+        try {
+            return client.getDB("config").getCollection("shards").getCount();
+        } finally {
+            client.close();
+        }
     }
 
     public BasicBSONObject getServerStatus() {
@@ -96,6 +112,16 @@ public class MongoDBClientSupport implements Closeable {
         } else {
             return EMPTY_RESPONSE;
         }
+    }
+    
+    public boolean ping() {
+        DBObject ping = new BasicDBObject("ping", "1");
+        try {
+            runDBCommand("admin", ping);
+        } catch (MongoException e) {
+            return false;
+        }
+        return true;
     }
 
     public boolean initializeReplicaSet(String replicaSetName, Integer id) {
@@ -109,7 +135,7 @@ public class MongoDBClientSupport implements Closeable {
 
         Optional<CommandResult> result = runDBCommand("admin", dbObject);
         if (result.isPresent() && result.get().ok() && LOG.isDebugEnabled()) {
-            LOG.debug("Completed intiating MongoDB replica set {} on entity {}", replicaSetName, this);
+            LOG.debug("Completed initiating MongoDB replica set {} on entity {}", replicaSetName, this);
         }
         return result.isPresent() && result.get().ok();
     }
@@ -118,11 +144,14 @@ public class MongoDBClientSupport implements Closeable {
      * Java equivalent of calling rs.conf() in the console.
      */
     private BSONObject getReplicaSetConfig() {
+        MongoClient client = client();
         try {
             return client.getDB("local").getCollection("system.replset").findOne();
         } catch (MongoException e) {
             LOG.error("Failed to get replica set config on "+client, e);
             return null;
+        } finally {
+            client.close();
         }
     }
 
@@ -201,6 +230,13 @@ public class MongoDBClientSupport implements Closeable {
     private boolean reconfigureReplicaSet(BasicBSONObject newConfig) {
         BasicDBObject command = new BasicDBObject("replSetReconfig", newConfig);
         LOG.debug("Reconfiguring replica set to: " + command);
+        Optional<CommandResult> result = runDBCommand("admin", command);
+        return result.isPresent() && result.get().ok();
+    }
+
+    public boolean addShardToRouter(String hostAndPort) {
+        LOG.debug("Adding shard " + hostAndPort);
+        BasicDBObject command = new BasicDBObject("addShard", hostAndPort);
         Optional<CommandResult> result = runDBCommand("admin", command);
         return result.isPresent() && result.get().ok();
     }

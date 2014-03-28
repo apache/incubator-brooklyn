@@ -1,0 +1,22 @@
+name: Mongo Demo app
+description: MongoDB sharded deployment with MongoDB (javascript) client
+origin: http://brooklyn.io
+#location: named:ec2-ubuntu12_0
+location: localhost
+services:
+- serviceType: brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment
+  id: shardeddeployment
+  name: MongoDB Sharded Deployment
+  brooklyn.config:
+    initialRouterClusterSize: 1
+- serviceType: brooklyn.entity.nosql.mongodb.MongoDBClient
+  name: MongoDB Javascript Client
+  brooklyn.config:
+    shardedDeployment: $brooklyn:component("shardeddeployment")
+    scripts:
+      insert: classpath://mongo-product-insert.js 
+      update: classpath://mongo-product-update.js
+      delete: classpath://mongo-product-delete.js
+    startupJsScripts: # These will be run in order on startup
+      - insert
+      - update

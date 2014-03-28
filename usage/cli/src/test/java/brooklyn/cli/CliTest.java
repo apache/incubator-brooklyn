@@ -54,6 +54,7 @@ public class CliTest {
 
     private ExecutorService executor;
     private StartableApplication app;
+    private static volatile ExampleEntity exampleEntity;
 
     // static so that they can be set from the static classes ExampleApp and ExampleEntity
     private static volatile boolean exampleAppRunning;
@@ -72,6 +73,7 @@ public class CliTest {
     public void tearDown() throws Exception {
         if (executor != null) executor.shutdownNow();
         if (app != null) Entities.destroyAll(app.getManagementContext());
+        if (exampleEntity != null && exampleEntity.getApplication() != null) Entities.destroyAll(exampleEntity.getApplication().getManagementContext());
     }
     
     @Test
@@ -284,10 +286,46 @@ public class CliTest {
     @Test
     public void testLaunchStartsYamlApp() throws Exception {
         Cli<BrooklynCommand> cli = buildCli();
-        BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", "example-app.yaml", "--location", "localhost");
+        BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", "example-app-no-location.yaml", "--location", "localhost");
         submitCommandAndAssertRunnableSucceeds(command, new Runnable() {
                 public void run() {
                     assertTrue(exampleEntityRunning);
+                }
+            });
+    }
+    
+    @Test
+    public void testLaunchStartsYamlAppWithCommandLineLocation() throws Exception {
+        Cli<BrooklynCommand> cli = buildCli();
+        BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", "example-app-no-location.yaml", "--location", "localhost:(name=testLocalhost)");
+        submitCommandAndAssertRunnableSucceeds(command, new Runnable() {
+                public void run() {
+                    assertTrue(exampleEntityRunning);
+                    assertTrue(Iterables.getOnlyElement(exampleEntity.getApplication().getLocations()).getDisplayName().equals("testLocalhost"));
+                }
+            });
+    }
+    
+    @Test
+    public void testLaunchStartsYamlAppWithYamlAppLocation() throws Exception {
+        Cli<BrooklynCommand> cli = buildCli();
+        BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", "example-app-app-location.yaml");
+        submitCommandAndAssertRunnableSucceeds(command, new Runnable() {
+                public void run() {
+                    assertTrue(exampleEntityRunning);
+                    assertTrue(Iterables.getOnlyElement(exampleEntity.getApplication().getLocations()).getDisplayName().equals("appLocalhost"));
+                }
+            });
+    }
+    
+    @Test
+    public void testLaunchStartsYamlAppWithYamlAndAppCliLocation() throws Exception {
+        Cli<BrooklynCommand> cli = buildCli();
+        BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", "example-app-app-location.yaml", "--location", "localhost");
+        submitCommandAndAssertRunnableSucceeds(command, new Runnable() {
+                public void run() {
+                    assertTrue(exampleEntityRunning);
+                    assertTrue(Iterables.getFirst(exampleEntity.getApplication().getLocations(), null).getDisplayName().equals("appLocalhost"));
                 }
             });
     }
@@ -333,9 +371,13 @@ public class CliTest {
     // An empty entity to be used for testing
     @ImplementedBy(ExampleEntityImpl.class)
     public static interface ExampleEntity extends Entity, Startable {
-    }
+    }   
 
     public static class ExampleEntityImpl extends AbstractEntity implements ExampleEntity {
+        public ExampleEntityImpl() {
+            super();
+            exampleEntity = this;
+        }
         @Override public void start(Collection<? extends Location> locations) {
             exampleEntityRunning = true;
         }

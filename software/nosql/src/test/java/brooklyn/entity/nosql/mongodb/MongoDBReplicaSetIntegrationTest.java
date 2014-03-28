@@ -23,7 +23,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -31,6 +30,7 @@ import com.mongodb.DBObject;
 
 public class MongoDBReplicaSetIntegrationTest {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(MongoDBReplicaSetIntegrationTest.class);
     
     private TestApplication app;
@@ -70,7 +70,7 @@ public class MongoDBReplicaSetIntegrationTest {
             public void run() {
                 assertEquals(replicaSet.getCurrentSize(), size);
                 assertNotNull(replicaSet.getPrimary(), "replica set has no primary");
-                assertEquals(replicaSet.getPrimary().getReplicaSet().getName(), "test-rs-"+testDescription);
+                assertEquals(replicaSet.getPrimary().getReplicaSet().getName(), "test-rs-"+testDescription+replicaSet.getId());
                 assertEquals(replicaSet.getSecondaries().size(), size-1);
             }
         });

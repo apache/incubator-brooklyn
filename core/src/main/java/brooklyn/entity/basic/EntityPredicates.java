@@ -2,6 +2,7 @@ package brooklyn.entity.basic;
 
 import javax.annotation.Nullable;
 
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.event.AttributeSensor;
@@ -47,6 +48,16 @@ public class EntityPredicates {
             }
         };
     }
+    
+
+    public static <T> Predicate<Entity> configEqualTo(final HasConfigKey<T> configKey, final T val) {
+        return new Predicate<Entity>() {
+            @Override
+            public boolean apply(Entity input) {
+                return Objects.equal(input.getConfig(configKey), val);
+            }
+        };
+    }
 
     public static <T> Predicate<Entity> isChildOf(final Entity parent) {
         return new Predicate<Entity>() {
@@ -87,4 +98,5 @@ public class EntityPredicates {
             }
         };
     }
+
 }

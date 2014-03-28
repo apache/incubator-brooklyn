@@ -135,7 +135,8 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
 
     @Override
     public String getName() {
-        return getConfig(REPLICA_SET_NAME);
+        // FIXME: Names must be unique if the replica sets are used in a sharded cluster
+        return getConfig(REPLICA_SET_NAME) + this.getId();
     }
 
     @Override

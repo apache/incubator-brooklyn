@@ -335,16 +335,14 @@ public class Main {
             boolean hasLocations = !Strings.isBlank(locations);
             if (app != null) {
                 if (hasLocations && isYamlApp()) {
-                    System.err.println("YAML app combined with command line locations; locations in the YAML file will take precedence");
+                    log.info("YAML app combined with command line locations; YAML locations will take precedence");
                 } else if (!hasLocations && isYamlApp()) {
-                    System.err.println("Using locations defined in YAML or localhost if none given");
-                    locations = "localhost";
+                    log.info("No locations supplied; defaulting to locations defined in YAML (if any)");
                 } else if (!hasLocations) {
-                    System.err.println("Locations parameter not supplied: assuming localhost");
-                    locations = "localhost";
+                    log.info("No locations supplied; starting with no locations");
                 }
             } else if (hasLocations) {
-                System.err.println("Locations specified without any applications; ignoring locations");
+                log.error("Locations specified without any applications; ignoring locations");
             }
         }
 

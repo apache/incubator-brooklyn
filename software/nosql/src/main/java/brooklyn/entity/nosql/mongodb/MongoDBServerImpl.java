@@ -1,6 +1,5 @@
 package brooklyn.entity.nosql.mongodb;
 
-import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -141,11 +140,6 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         disconnectServiceUpIsRunning();
         if (serviceStats != null) serviceStats.stop();
         if (replicaSetStats != null) replicaSetStats.stop();
-        try {
-            if (client != null) client.close();
-        } catch (IOException e) {
-            LOG.debug("Exception closing server connection: " + e.getMessage());
-        }
     }
 
     @Override
