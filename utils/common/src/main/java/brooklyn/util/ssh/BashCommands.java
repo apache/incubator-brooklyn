@@ -80,7 +80,7 @@ public class BashCommands {
     }
     private static String sudoNew(String command) {
         if (command==null) return null;
-        return "( if test \"$UID\" -eq 0; then ( "+command+" ); else sudo -E -n -S -s -- " +
+        return "( if test \"$UID\" -eq 0; then ( "+command+" ); else sudo -E -n -S -s -- bash -c " +
             BashStringEscapes.wrapBash(command)+ "; fi )";
     }
 

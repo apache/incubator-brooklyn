@@ -250,8 +250,8 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         }
 
         Hardware hardware = node.getHardware();
-        Optional<Integer> ram = Optional.fromNullable(hardware.getRam());
-        Optional<Integer> cpus = Optional.fromNullable(hardware.getProcessors() != null ? hardware.getProcessors().size() : null);
+        Optional<Integer> ram = hardware==null ? Optional.<Integer>absent() : Optional.fromNullable(hardware.getRam());
+        Optional<Integer> cpus = hardware==null ? Optional.<Integer>absent() : Optional.fromNullable(hardware.getProcessors() != null ? hardware.getProcessors().size() : null);
 
         // Skip superclass' SSH to machine if all data is present, otherwise defer to super
         if (name.isPresent() && version.isPresent() && architecture.isPresent() && ram.isPresent() && cpus.isPresent()) {

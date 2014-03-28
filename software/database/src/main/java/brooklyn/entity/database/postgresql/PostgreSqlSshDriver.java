@@ -148,11 +148,13 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
             arch = "x86_64";
         }
 
-        if (osMajorVersion.indexOf(".")>0) osMajorVersion = osMajorVersion.substring(0, osMajorVersion.indexOf('.'));
         if (Strings.isBlank(osMajorVersion)) {
             if (osName.equals("fedora")) osMajorVersion = "20";
             else osMajorVersion = "6";
             log.warn("Insuffient OS version information '"+getMachine().getOsDetails().getVersion()+"' for "+getMachine()+"when installing "+getEntity()+" (yum repos); treating as "+osMajorVersion);
+        } else {
+            if (osMajorVersion.indexOf(".")>0) 
+                osMajorVersion = osMajorVersion.substring(0, osMajorVersion.indexOf('.'));
         }
 
         return chainGroup(
