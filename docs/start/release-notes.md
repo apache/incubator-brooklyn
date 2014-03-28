@@ -39,6 +39,8 @@ The major changes between 0.6.0 and 0.7.0-M1 are:
    to the existing entities under management. Previously, this required custom coding.
    Now it just requires starting with `brooklyn launch --persist auto --noShutdownOnExit`.
    Most likely, `--persist auto` will become the default in the 0.7.0 GA release.
+   Note that policies are not yet persisted and will not be present after a stop-and-rebind;
+   this will be fixed in another release soon!
 
 3. Many usability and performance improvements to the web-console.
 
@@ -52,12 +54,15 @@ The major changes between 0.6.0 and 0.7.0-M1 are:
    This extends the default brooklyn main (used by `brooklyn launch`) so shares all the 
    same features.
 
-7. Improvements to REST api, including:
+7. Increased Windows support - Brooklyn can now be started on Windows using the new 
+   `brooklyn.ps1` script, which behaves as the Linux/UNIX `brooklyn` script.
+
+8. Improvements to REST api, including:
     * Deploying YAML blueprints
     * Retrieving location details
     * Fetching entity info for all (or filtered) descendants; see /{application}/descendants
 
-8. Many new conveniences and utilities, including:
+9. Many new conveniences and utilities, including:
     * brooklyn.entity.software.OsTasks for finding the OS and architecture details of a machine.
     * brooklyn.util.os.Os, including for improved use of tmp directories.
     * brooklyn.enricher.Enrichers.builder(), for easier construction of enrichers using a 
@@ -66,9 +71,10 @@ The major changes between 0.6.0 and 0.7.0-M1 are:
       org.apache.http.client.HttpClient and for doing simple GET/POST/PUT/DELETE requests.
     * brooklyn.util.javalang.Threads
 
-9. Massive improvements to the SoftLayer support (being contributed back to jclouds).
+10. Massive improvements to several clouds, including SoftLayer and Google Compute Engine
+   (being contributed back to jclouds).
 
-10. New entities include:
+11. New entities include:
     * VanillaSoftwareProcess for a script-based entity, requiring no Java code to be written.
     * MongoDB sharded database.
     * Solr
@@ -114,16 +120,11 @@ The major changes between 0.6.0 and 0.7.0-M1 are:
 
 Big things we expect in 0.7.0 GA, or very soon after, include:
 
-1. Location extends Entity - i.e. all locations will also be entities.
+1. Location extends Entity - i.e. all locations will be entities and can be explored 
+   better via the API and managed autonomically.
 
-2. Brooklyn persistence on by default, including persisting of policies which is not
-   enabled in 0.7.0-M1.
-
-3. For rebinding (i.e. restarting Brooklyn from persisted state), improved error reporting 
-   and recovery.
-
-4. Whirr integration will move from core brooklyn to the downstream project 
-   https://github.com/cloudsoft/brooklyn-whirr
+2. Brooklyn persistence on by default, with improved robustness, error reporting, and 
+   manual recovery. 
 
 
 ### Community Activity
