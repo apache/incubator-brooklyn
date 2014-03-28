@@ -335,7 +335,7 @@ public class Main {
             boolean hasLocations = !Strings.isBlank(locations);
             if (app != null) {
                 if (hasLocations && isYamlApp()) {
-                    log.info("YAML app combined with command line locations; YAML locations will take precedence");
+                    log.info("YAML app combined with command line locations; YAML locations will take precedence; this behaviour may change in subsequent versions");
                 } else if (!hasLocations && isYamlApp()) {
                     log.info("No locations supplied; defaulting to locations defined in YAML (if any)");
                 } else if (!hasLocations) {

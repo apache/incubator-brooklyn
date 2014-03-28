@@ -13,9 +13,6 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -25,7 +22,7 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
     public void init() {
         super.init();
         subscribeToChildren(this, MongoDBRouter.RUNNING, new SensorEventListener<Boolean>() {
-            public void onEvent(SensorEvent<Boolean> event) {
+            @Override public void onEvent(SensorEvent<Boolean> event) {
                 setAnyRouter();
             }
         });
@@ -35,15 +32,13 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
     public void start(Collection<? extends Location> locations) {
         super.start(locations);
         AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Router cluster membership tracker")) {
-            @Override
-            protected void onEntityAdded(Entity member) {
+            @Override protected void onEntityAdded(Entity member) {
                 setAnyRouter();
             }
-            protected void onEntityRemoved(Entity member) {
+            @Override protected void onEntityRemoved(Entity member) {
                 setAnyRouter();
             }
-            @Override
-            protected void onEntityChange(Entity member) {
+            @Override protected void onEntityChange(Entity member) {
                 setAnyRouter();
             }
         };
@@ -54,32 +49,17 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
     protected void setAnyRouter() {
         setAttribute(MongoDBRouterCluster.ANY_ROUTER, Iterables.tryFind(getRouters(), 
                 EntityPredicates.attributeEqualTo(Startable.SERVICE_UP, true)).orNull());
-        
-        setAttribute(MongoDBRouterCluster.ANY_RUNNING_ROUTER, Iterables.tryFind(getRouters(), new Predicate<MongoDBRouter>() {
-            @Override
-            public boolean apply(MongoDBRouter input) {
-                return input.getAttribute(MongoDBRouter.RUNNING);
-            }}).orNull());
-    }
-    
-//    @Override
-//    public Collection<MongoDBRouter> getRouters() {
-//        return FluentIterable.from(getMembers())
-//                .transform(new Function<Entity, MongoDBRouter>() {
-//                    @Override
-//                    public MongoDBRouter apply(Entity input) {
-//                        return (MongoDBRouter)input;
-//                    }
-//                })
-//                .toSet();
-//    }
 
+        setAttribute(
+                MongoDBRouterCluster.ANY_RUNNING_ROUTER, 
+                Iterables.tryFind(getRouters(), EntityPredicates.attributeEqualTo(MongoDBRouter.RUNNING, true))
+                .orNull());
+    }
     
     @Override
     public Collection<MongoDBRouter> getRouters() {
         return ImmutableList.copyOf(Iterables.filter(getMembers(), MongoDBRouter.class));
     }
-    
     
     @Override
     protected EntitySpec<?> getMemberSpec() {
