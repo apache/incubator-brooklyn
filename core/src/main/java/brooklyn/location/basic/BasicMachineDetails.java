@@ -6,24 +6,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.io.CharStreams;
-import com.google.common.io.Closeables;
-import com.google.common.io.Closer;
 
 import brooklyn.location.HardwareDetails;
 import brooklyn.location.MachineDetails;
@@ -35,6 +23,16 @@ import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ssh.internal.PlainSshExecTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Strings;
+
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.io.CharStreams;
 
 @Immutable
 public class BasicMachineDetails implements MachineDetails {
@@ -129,7 +127,7 @@ public class BasicMachineDetails implements MachineDetails {
                     LOG.debug("Found following details at {}: {}", location, stdout);
                 }
 
-                Iterable<String> details = Splitter.on("\\r?\\n").split(stdout);
+                Iterable<String> details = Lists.newArrayList(Splitter.on("\\r?\\n").split(stdout));
                 String name = findAndRemove(details, "name:").orNull();
                 String version = findAndRemove(details, "version:").orNull();
                 String architecture = findAndRemove(details, "architecture:").orNull();
