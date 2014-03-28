@@ -4,12 +4,15 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.BasicLocationRegistry;
+import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.text.Strings;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+
 import org.jclouds.apis.ApiMetadata;
 import org.jclouds.apis.Apis;
 import org.jclouds.providers.ProviderMetadata;
@@ -152,6 +155,7 @@ public class JcloudsResolver implements LocationResolver {
         // TODO Should revisit the locationFlags: where are these actually used? Reason accepting properties without
         //      full prefix is that the map's context is explicitly this location, rather than being generic properties.
         Map allProperties = getAllProperties(registry, properties);
+        if (regionName==null) regionName = (String)locationFlags.get(LocationConfigKeys.CLOUD_REGION_ID.getName());
         Map jcloudsProperties = new JcloudsPropertiesFromBrooklynProperties().getJcloudsProperties(providerOrApi, regionName, namedLocation, allProperties);
         jcloudsProperties.putAll(locationFlags);
         
