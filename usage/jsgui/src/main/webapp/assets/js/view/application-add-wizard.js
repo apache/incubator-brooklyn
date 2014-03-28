@@ -12,7 +12,8 @@ define([
     "text!tpl/app-add-wizard/required-config-entry.html",
     "text!tpl/app-add-wizard/edit-config-entry.html",
     "text!tpl/app-add-wizard/deploy.html",
-    "text!tpl/app-add-wizard/deploy-location-row.html", "text!tpl/app-add-wizard/deploy-location-option.html",
+    "text!tpl/app-add-wizard/deploy-location-row.html",
+    "text!tpl/app-add-wizard/deploy-location-option.html",
     "text!tpl/app-add-wizard/preview.html",
     "bootstrap"
     
@@ -233,7 +234,7 @@ define([
         }
     })
     
-        // Note: this does not restore values on a back click; setting type and entity type+name is easy,
+    // Note: this does not restore values on a back click; setting type and entity type+name is easy,
     // but relevant config lines is a little bit more tedious
     ModalWizard.StepCreate = Backbone.View.extend({
         className:'modal-body',
@@ -245,10 +246,8 @@ define([
             'click #remove-config':'removeConfigRow',
             'click #add-config':'addConfigRow',
             'click .template-lozenge':'templateClick',
-            'change .text-filter input':'applyFilter',
-            'keyup .text-filter input':'applyFilter',
-            'change #yaml_code':'onYamlCodeChange',
-            'keyup #yaml_code':'onYamlCodeChange',
+            'input .text-filter input':'applyFilter',
+            'input #yaml_code':'onYamlCodeChange',
             'shown a[data-toggle="tab"]':'onTabChange'
         },
         template:_.template(CreateHtml),
@@ -257,9 +256,9 @@ define([
             var self = this
             self.catalogEntityIds = []
             self.catalogApplicationIds = []
-            
+
             this.$el.html(this.template({}))
-            
+
             // for building from entities
             this.addEntityBox()
 
@@ -298,7 +297,7 @@ define([
             } else {
                 $("li.text-filter").hide()
             }
-            
+
             if (e.target.text=="YAML") {
                 this.model.mode = "yaml";
             } else if (e.target.text=="Template") {
@@ -321,9 +320,9 @@ define([
             } else {
                 _.each($(".template-lozenge"), function(it) {
                     var viz = $(it).text().toLowerCase().indexOf(filter)>=0
-                    if (viz) 
-                        $(it).show() 
-                    else 
+                    if (viz)
+                        $(it).show()
+                    else
                         $(it).hide()
                 })
             }
@@ -356,7 +355,7 @@ define([
             } else {
                 this.selectedTemplate = null;
             }
-            
+
             if (this.options.wizard)
                 this.options.wizard.updateButtonVisibility();
         },
@@ -379,7 +378,7 @@ define([
             saveTarget.name = name
             saveTarget.type = type
             saveTarget.config = this.getConfigMap($entityGroup)
-            
+
             if (name=="") name=type;
             if (name=="") name="<i>(new entity)</i>";
             $('#entity-name-header',$entityGroup).html( name )
@@ -426,13 +425,13 @@ define([
             var that = this
             parent.append($entity)
             parent.children().last().find('.entity-type-input').typeahead({ source: that.catalogEntityIds })
-        },        
+        },
         removeEntityClick:function (event) {
             var $entityGroup = $(event.currentTarget).parent().parent().parent();
             this.model.spec.removeEntityIndex($entityGroup.index())
             $entityGroup.remove()
         },
-        
+
         addConfigRow:function (event) {
             var $row = _.template(EditConfigEntryHtml, {})
             $(event.currentTarget).parent().prev().append($row)
@@ -440,7 +439,7 @@ define([
         removeConfigRow:function (event) {
             $(event.currentTarget).parent().remove()
         },
-        
+
         validate:function () {
             var that = this
             var tabName = $('#app-add-wizard-create-tab li[class="active"] a').attr('href')
@@ -481,7 +480,7 @@ define([
             this.$('div.app-add-wizard-create-info-message').slideDown(250).delay(10000).slideUp(500)
             return false
         },
-        
+
         showFailure: function(text) {
             if (!text) text = "Failure performing the specified action";
             this.$('div.error-message .error-message-text').html(_.escape(text));

@@ -26,6 +26,7 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 
@@ -122,6 +123,18 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
 
             public static Builder fromProperties(BrooklynProperties brooklynProperties) {
                 return new Builder(brooklynProperties);
+            }
+
+            @Override
+            public String toString() {
+                return Objects.toStringHelper(this)
+                        .omitNullValues()
+                        .add("originalProperties", originalProperties)
+                        .add("defaultLocationMetadataUrl", defaultLocationMetadataUrl)
+                        .add("globalLocationMetadataUrl", globalLocationMetadataFile)
+                        .add("globalPropertiesFile", globalPropertiesFile)
+                        .add("localPropertiesFile", localPropertiesFile)
+                        .toString();
             }
         }
         
