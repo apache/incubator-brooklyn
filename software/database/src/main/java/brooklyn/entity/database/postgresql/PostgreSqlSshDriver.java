@@ -15,7 +15,18 @@
  */
 package brooklyn.entity.database.postgresql;
 
-import static brooklyn.util.ssh.BashCommands.*;
+import static brooklyn.util.ssh.BashCommands.INSTALL_WGET;
+import static brooklyn.util.ssh.BashCommands.alternativesGroup;
+import static brooklyn.util.ssh.BashCommands.chainGroup;
+import static brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
+import static brooklyn.util.ssh.BashCommands.executeCommandThenAsUserTeeOutputToFile;
+import static brooklyn.util.ssh.BashCommands.fail;
+import static brooklyn.util.ssh.BashCommands.ifExecutableElse0;
+import static brooklyn.util.ssh.BashCommands.ifExecutableElse1;
+import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.sudoAsUser;
+import static brooklyn.util.ssh.BashCommands.warn;
 import static java.lang.String.format;
 
 import java.io.File;
@@ -24,7 +35,6 @@ import java.io.InputStream;
 
 import javax.annotation.Nullable;
 
-import brooklyn.location.OsDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +43,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.software.SshEffectorTasks;
+import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
@@ -72,7 +83,11 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         String majorMinorVersion = version.substring(0, version.lastIndexOf("-"));
         String shortVersion = majorMinorVersion.replace(".", "");
 
+        String altTarget = "/opt/brooklyn/postgres/";
+        String altInstallDir = Urls.mergePaths(altTarget, "install/"+majorMinorVersion);
+        
         Iterable<String> pgctlLocations = ImmutableList.of(
+            altInstallDir+"/bin",
             "/usr/lib/postgresql/"+majorMinorVersion+"/bin/",
             "/opt/local/lib/postgresql"+shortVersion+"/bin/",
             "/usr/pgsql-"+majorMinorVersion+"/bin",
@@ -83,6 +98,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(),
             // sudo is absolutely required here, in customize we set user to postgres
             true)).orSubmitAndBlock();
+        DynamicTasks.waitForLast();
 
         // Check whether we can find a usable pg_ctl, and if not install one
         MutableList<String> findOrInstall = MutableList.<String>of()
@@ -116,6 +132,30 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
             alternativesGroup(linkFromHere))
             .failOnNonZeroResultCode()
             .queue();
+        
+        // check that the proposed install dir is one that user postgres can access
+        if (DynamicTasks.queue(SshEffectorTasks.ssh(sudoAsUser("postgres", "ls "+getInstallDir())).allowingNonZeroExitCode()
+                .summary("check postgres user can access install dir")).asTask().getUnchecked()!=0) {
+            log.info("Postgres install dir "+getInstallDir()+" for "+getEntity()+" is not accessible to user 'postgres'; " + "using "+altInstallDir+" instead");
+            String newRunDir = Urls.mergePaths(altTarget, "apps", getEntity().getApplication().getId(), getEntity().getId());
+            if (DynamicTasks.queue(SshEffectorTasks.ssh("ls "+altInstallDir+"/pg_ctl").allowingNonZeroExitCode()
+                    .summary("check whether "+altInstallDir+" is set up")).asTask().getUnchecked()==0) {
+                // alt target already exists with binary; nothing to do for install
+            } else {
+                DynamicTasks.queue(SshEffectorTasks.ssh(
+                    "mkdir -p "+altInstallDir,
+                    "rm -rf '"+altInstallDir+"'",
+                    "mv "+getInstallDir()+" "+altInstallDir,
+                    "rm -rf '"+getInstallDir()+"'",
+                    "ln -s "+altInstallDir+" "+getInstallDir(),
+                    "mkdir -p " + newRunDir,
+                    "chown -R postgres:postgres "+altTarget).runAsRoot().requiringExitCodeZero()
+                    .summary("move install dir from user to postgres owned space"));
+            }
+            DynamicTasks.waitForLast();
+            setInstallDir(altInstallDir);
+            setRunDir(newRunDir);
+        }
     }
 
     private String getYumRepository(String version, String majorMinorVersion, String shortVersion) {

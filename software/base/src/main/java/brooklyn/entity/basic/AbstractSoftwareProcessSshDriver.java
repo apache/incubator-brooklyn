@@ -122,6 +122,11 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                 entity.getClass().getName())+(getVersion() != null ? separator+getVersion() : "");
     }
     
+    protected void setInstallDir(String installDir) {
+        this.installDir = installDir;
+        entity.setAttribute(SoftwareProcess.INSTALL_DIR, installDir);
+    }
+    
     public String getInstallDir() {
         if (installDir != null) return installDir;
 
@@ -146,8 +151,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             }
         }
 
-        installDir = Os.tidyPath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.INSTALL_DIR));
-        entity.setAttribute(SoftwareProcess.INSTALL_DIR, installDir);
+        setInstallDir(Os.tidyPath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.INSTALL_DIR)));
         return installDir;
     }
     
@@ -166,6 +170,11 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return null;
     }
 
+    protected void setRunDir(String runDir) {
+        this.runDir = runDir;
+        entity.setAttribute(SoftwareProcess.RUN_DIR, runDir);
+    }
+    
     public String getRunDir() {
         if (runDir != null) return runDir;
         
@@ -188,8 +197,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             }
         }
 
-        runDir = Os.tidyPath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.RUN_DIR));
-        entity.setAttribute(SoftwareProcess.RUN_DIR, runDir);
+        setRunDir(Os.tidyPath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.RUN_DIR)));
         return runDir;
     }
 
