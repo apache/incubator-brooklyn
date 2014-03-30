@@ -96,7 +96,7 @@ public class LocalManagementContext extends AbstractManagementContext {
      * Creates a LocalManagement with default BrooklynProperties.
      */
     public LocalManagementContext() {
-        this(BrooklynProperties.Factory.newDefault());
+        this(new Builder());
     }
 
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
@@ -294,6 +294,9 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     public void reloadBrooklynProperties() {
         log.info("Reloading brooklyn properties from " + builder);
+        if (builder.hasDelegateOriginalProperties())
+            log.warn("When reloading, mgmt context "+this+" properties are fixed, so reload will be of limited utility");
+        
         BrooklynProperties properties = builder.build();
         configMap = properties;
         if (brooklynAdditionalProperties != null) {
