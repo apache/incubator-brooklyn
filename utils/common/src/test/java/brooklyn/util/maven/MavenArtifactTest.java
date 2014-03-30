@@ -21,7 +21,7 @@ public class MavenArtifactTest {
     // only *integration* tests require these to be *installed*;
     // note this may vary from machine to machine so version should be aligned with that in parent pom
     final static String MAVEN_JAR_PLUGIN_COORDINATE = "org.apache.maven.plugins:maven-jar-plugin:jar:2.3.2";
-    final static String THIS_PROJECT_COORDINATE = "io.brooklyn:brooklyn-utils-common:jar:0.7.0-SNAPSHOT";  // BROOKLYN_VERSION
+    final static String THIS_PROJECT_COORDINATE = "io.brooklyn:brooklyn-utils-common:jar:0.7.0-M1";  // BROOKLYN_VERSION
 
     // Don't need to be installed, only used as examples
     final static String RELEASED_SOURCES_COORDINATE = "io.brooklyn:brooklyn-core:jar:sources:0.6.0";
@@ -143,7 +143,7 @@ public class MavenArtifactTest {
     @Test(groups="Integration")
     public void testRetrievalHostedSnapshotIntegration() {
         MavenArtifact m = MavenArtifact.fromCoordinate(
-                "io.brooklyn:brooklyn-utils-common:jar:0.7.0-SNAPSHOT");  // BROOKLYN_VERSION
+                "io.brooklyn:brooklyn-utils-common:jar:0.7.0-M1");  // BROOKLYN_VERSION
         
         String localPath = new MavenRetriever().getLocalPath(m);
         File f = new File(localPath);
