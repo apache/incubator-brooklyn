@@ -77,6 +77,17 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFile());
     }
 
+    /*
+     * TODO this is much messier than we would like because postgres runs as user postgres,
+     * meaning the dirs must be RW by that user, and accessible (thus all parent paths),
+     * which may rule out putting it in a location used by the default user.
+     * Two irritating things:
+     * * currently we sometimes make up a different onbox base dir;
+     * * currently we put files to /tmp for staging
+     * Could investigate if it really needs to run as user postgres;
+     * could also see whether default user can be added to group postgres,
+     * and the run dir (and all parents) made accessible to group postgres.
+     */
     @Override
     public void install() {
         String version = getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION);
@@ -303,12 +314,24 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         }
     }
 
+    private boolean installFile(InputStream contents, String destName) {
+        String uid = Identifiers.makeRandomId(8);
+        // TODO currently put in /tmp for staging, since run dir may not be accessible to ssh user
+        getMachine().copyTo(contents, "/tmp/"+destName+"_"+uid);
+        DynamicTasks.queueIfPossible(SshEffectorTasks.ssh(
+            "cd "+getRunDir(), 
+            "mv /tmp/"+destName+"_"+uid+" "+destName,
+            "chown postgres:postgres "+destName,
+            "chmod 644 "+destName)
+            .runAsRoot().requiringExitCodeZero())
+            .orSubmitAndBlock(getEntity()).andWaitForSuccess();
+        return true;
+    }
     private boolean copyDatabaseCreationScript() {
         InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
         if (creationScript==null)
             return false;
-        getMachine().copyTo(creationScript, getRunDir() + "/creation-script.sql");
-        return true;
+        return installFile(creationScript, "creation-script.sql");
     }
 
     public String getDataDir() {
@@ -376,7 +399,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
         String filename = "postgresql-commands-"+Identifiers.makeRandomId(8);
-        DynamicTasks.queue(SshEffectorTasks.put(Urls.mergePaths(getRunDir(), filename)).contents(commands).summary("copying datastore script to execute "+filename));
+        installFile(Streams.newInputStreamWithContents(commands), filename);
         return executeScriptFromInstalledFileAsync(filename);
     }
 
