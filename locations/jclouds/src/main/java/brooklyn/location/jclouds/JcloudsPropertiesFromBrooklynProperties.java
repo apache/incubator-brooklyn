@@ -60,7 +60,7 @@ public class JcloudsPropertiesFromBrooklynProperties extends LocationPropertiesF
     /**
      * @see LocationPropertiesFromBrooklynProperties#getLocationProperties(String, String, Map)
      */
-    public Map<String, Object> getJcloudsProperties(String providerOrApi, String regionName, String namedLocation, Map<String, ?> properties) {
+    public Map<String, Object> getJcloudsProperties(String providerOrApi, String regionOrEndpoint, String namedLocation, Map<String, ?> properties) {
         if(Strings.isNullOrEmpty(namedLocation) && Strings.isNullOrEmpty(providerOrApi)) {
             throw new IllegalArgumentException("Neither cloud provider/API nor location name have been specified correctly");
         }
@@ -73,7 +73,7 @@ public class JcloudsPropertiesFromBrooklynProperties extends LocationPropertiesF
         jcloudsProperties.putAll(transformDeprecated(getGenericLocationSingleWordProperties(properties)));
         jcloudsProperties.putAll(transformDeprecated(getGenericJcloudsSingleWordProperties(providerOrApi, properties)));
         jcloudsProperties.putAll(transformDeprecated(getProviderOrApiJcloudsProperties(providerOrApi, properties)));
-        jcloudsProperties.putAll(transformDeprecated(getRegionJcloudsProperties(providerOrApi, regionName, properties)));
+        jcloudsProperties.putAll(transformDeprecated(getRegionJcloudsProperties(providerOrApi, regionOrEndpoint, properties)));
         if (!Strings.isNullOrEmpty(namedLocation)) jcloudsProperties.putAll(transformDeprecated(getNamedJcloudsProperties(namedLocation, properties)));
         setLocalTempDir(properties, jcloudsProperties);
 

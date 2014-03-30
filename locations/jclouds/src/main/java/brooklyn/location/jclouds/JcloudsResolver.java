@@ -1,5 +1,19 @@
 package brooklyn.location.jclouds;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
+import org.jclouds.apis.ApiMetadata;
+import org.jclouds.apis.Apis;
+import org.jclouds.providers.ProviderMetadata;
+import org.jclouds.providers.Providers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
@@ -12,20 +26,6 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
-import org.jclouds.apis.ApiMetadata;
-import org.jclouds.apis.Apis;
-import org.jclouds.providers.ProviderMetadata;
-import org.jclouds.providers.Providers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @SuppressWarnings("rawtypes")
 public class JcloudsResolver implements LocationResolver {
@@ -141,7 +141,8 @@ public class JcloudsResolver implements LocationResolver {
 
         boolean isProvider = details.isProvider();
         String providerOrApi = details.providerOrApi;
-        String regionName = details.parameter;
+        // gce claims to be an api ... perhaps just a bug? email sent to jclouds dev list, 28 mar 2014
+        isProvider = isProvider || "google-compute-engine".equals(providerOrApi);
         
         if (Strings.isEmpty(providerOrApi)) {
             throw new IllegalArgumentException("Cloud provider/API type not specified in spec \""+spec+"\"");
@@ -155,21 +156,22 @@ public class JcloudsResolver implements LocationResolver {
         // TODO Should revisit the locationFlags: where are these actually used? Reason accepting properties without
         //      full prefix is that the map's context is explicitly this location, rather than being generic properties.
         Map allProperties = getAllProperties(registry, properties);
-        if (regionName==null) regionName = (String)locationFlags.get(LocationConfigKeys.CLOUD_REGION_ID.getName());
-        Map jcloudsProperties = new JcloudsPropertiesFromBrooklynProperties().getJcloudsProperties(providerOrApi, regionName, namedLocation, allProperties);
+        String regionOrEndpoint = details.parameter;
+        if (regionOrEndpoint==null && isProvider) regionOrEndpoint = (String)locationFlags.get(LocationConfigKeys.CLOUD_REGION_ID.getName());
+        Map jcloudsProperties = new JcloudsPropertiesFromBrooklynProperties().getJcloudsProperties(providerOrApi, regionOrEndpoint, namedLocation, allProperties);
         jcloudsProperties.putAll(locationFlags);
         
         if (isProvider) {
             // providers from ServiceLoader take a location (endpoint already configured), and optionally a region name
             // NB blank might be supplied if spec string is "mycloud:" -- that should be respected, 
             // whereas no parameter/regionName ie null value -- "mycloud" -- means don't set
-            if (regionName!=null)
-                jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionName);
+            if (regionOrEndpoint!=null)
+                jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionOrEndpoint);
         } else {
             // other "providers" are APIs so take an _endpoint_ (but not a location);
             // see note above re null here
-            if (regionName!=null)
-                jcloudsProperties.put(JcloudsLocationConfig.CLOUD_ENDPOINT.getName(), regionName);
+            if (regionOrEndpoint!=null)
+                jcloudsProperties.put(JcloudsLocationConfig.CLOUD_ENDPOINT.getName(), regionOrEndpoint);
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(JcloudsLocation.class)
@@ -177,6 +179,7 @@ public class JcloudsResolver implements LocationResolver {
                 .configure(jcloudsProperties) );
     }
 
+    @SuppressWarnings("unchecked")
     private Map getAllProperties(brooklyn.location.LocationRegistry registry, Map<?,?> properties) {
         Map<Object,Object> allProperties = Maps.newHashMap();
         if (registry!=null) allProperties.putAll(registry.getProperties());
