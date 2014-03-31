@@ -76,12 +76,20 @@ public class BashCommands {
     
     private static String sudoOld(String command) {
         if (command==null) return null;
+        // some OS's (which?) fail if you try running sudo when you're already root (dumb but true)
         return format("( if test \"$UID\" -eq 0; then ( %s ); else sudo -E -n -S -- %s; fi )", command, command);
     }
     private static String sudoNew(String command) {
         if (command==null) return null;
-        return "( if test \"$UID\" -eq 0; then ( "+command+" ); else sudo -E -n -S -s -- " +
-            BashStringEscapes.wrapBash(command)+ "; fi )";
+        // on some OS's e.g. Centos 6.5 in SL, sudo -- X tries to run X as a literal argument;
+        // in particular "( echo foo && echo bar )" fails when passed as an argument in that way,
+        // but works if passed to bash -c;
+        // but others e.g. OS X fail if you say  sudo -- bash -c "( echo foo )"   ... not liking the parentheses
+        // piping to sudo bash seems the most reliable way
+        return "( if test \"$UID\" -eq 0; then ( "+command+" ); else "
+                + "echo " + BashStringEscapes.wrapBash(command) + " | "
+                + "sudo -E -n -S -s -- bash"
+                + " ; fi )";
     }
 
     /** sudo to a given user and run the indicated command;

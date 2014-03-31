@@ -306,9 +306,9 @@ public abstract class MachineLifecycleEffectorTasks {
             SshMachineLocation ms = (SshMachineLocation)machine;
             ProcessTaskWrapper<Integer> baseTask = SshEffectorTasks.ssh(
                 BashCommands.alternatives("mkdir -p \"${BASE_DIR}\"",
-                    BashCommands.sudo(BashCommands.chain(
-                        "mkdir -p \"${BASE_DIR}\"",
-                        "chown "+ms.getUser()+" \"${BASE_DIR}\""))),
+                    BashCommands.chain(
+                        BashCommands.sudo("mkdir -p \"${BASE_DIR}\""),
+                        BashCommands.sudo("chown "+ms.getUser()+" \"${BASE_DIR}\""))),
                 "cd ~",
                 "cd ${BASE_DIR}",
                 "echo BASE_DIR_RESULT':'`pwd`:BASE_DIR_RESULT")
