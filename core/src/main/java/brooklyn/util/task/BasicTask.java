@@ -65,6 +65,8 @@ public class BasicTask<T> implements TaskInternal<T> {
     public final String description;
 
     protected final Set<Object> tags = new LinkedHashSet<Object>();
+    // for debugging, to record where tasks were created
+//    { tags.add(new Throwable("Creation stack trace")); }
 
     protected String blockingDetails = null;
     protected Task<?> blockingTask = null;
