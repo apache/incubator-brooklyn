@@ -298,7 +298,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         return Machines.findSubnetHostname(this).get();
 	}
 
-    void initDriver(MachineLocation machine) {
+    protected void initDriver(MachineLocation machine) {
         SoftwareProcessDriver newDriver = doInitDriver(machine);
         if (newDriver == null) {
             throw new UnsupportedOperationException("cannot start "+this+" on "+machine+": no driver available");

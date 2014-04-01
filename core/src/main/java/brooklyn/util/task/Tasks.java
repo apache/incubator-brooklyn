@@ -73,13 +73,15 @@ public class Tasks {
             log.warn("legacy invocation of withBlockingDetails with null code block, ignoring");
             return null;
         }
-        if (current instanceof TaskInternal)
-            ((TaskInternal)current).setBlockingDetails(description); 
+        String prevBlockingDetails = null;
+        if (current instanceof TaskInternal) {
+            prevBlockingDetails = ((TaskInternal)current).setBlockingDetails(description);
+        } 
         try {
             return code.call();
         } finally {
             if (current instanceof TaskInternal)
-                ((TaskInternal)current).setBlockingDetails(null); 
+                ((TaskInternal)current).setBlockingDetails(prevBlockingDetails); 
         }
     }
 
@@ -196,11 +198,8 @@ public class Tasks {
         return parallelInternal(name, asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
     }
     
-    public static Task<List<?>> parallelInternal(String name, Task<?> tasks[]) {
-        TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().name(name).parallel(true);
-        for (Task<?> task: tasks)
-            tb.add(task);
-        return tb.build();
+    public static Task<List<?>> parallelInternal(String name, Task<?>[] tasks) {
+        return Tasks.<List<?>>builder().name(name).parallel(true).add(tasks).build();
     }
 
     public static Task<List<?>> sequential(TaskAdaptable<?> ...tasks) {
@@ -211,11 +210,8 @@ public class Tasks {
         return sequentialInternal(name, asTasks(tasks));
     }
     
-    private static Task<List<?>> sequentialInternal(String name, Task<?> tasks[]) {
-        TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().name(name).parallel(false);
-        for (Task<?> task: tasks)
-            tb.add(task);
-        return tb.build();
+    private static Task<List<?>> sequentialInternal(String name, Task<?>[] tasks) {
+        return Tasks.<List<?>>builder().name(name).parallel(false).add(tasks).build();
     }
 
     public static TaskFactory<?> sequential(TaskFactory<?> ...taskFactories) {

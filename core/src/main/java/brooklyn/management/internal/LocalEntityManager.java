@@ -37,6 +37,7 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -141,8 +142,19 @@ public class LocalEntityManager implements EntityManagerInternal {
     }
     
     @Override
-    public synchronized Iterable<Entity> getEntitiesInApplication(Application application) {
+    public synchronized Collection<Entity> getEntitiesInApplication(Application application) {
         Predicate<Entity> predicate = EntityPredicates.applicationIdEqualTo(application.getId());
+        return ImmutableList.copyOf(Iterables.filter(entityProxiesById.values(), predicate));
+    }
+
+    @Override
+    public synchronized Collection<Entity> findEntities(Predicate<? super Entity> filter) {
+        return ImmutableList.copyOf(Iterables.filter(entityProxiesById.values(), filter));
+    }
+    
+    @Override
+    public synchronized Collection<Entity> findEntitiesInApplication(Application application, Predicate<? super Entity> filter) {
+        Predicate<Entity> predicate = Predicates.and(EntityPredicates.applicationIdEqualTo(application.getId()), filter);
         return ImmutableList.copyOf(Iterables.filter(entityProxiesById.values(), predicate));
     }
 

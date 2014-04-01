@@ -5,16 +5,19 @@ import static org.testng.Assert.fail;
 
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
+import java.util.List;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 import brooklyn.util.stream.Streams;
 
 import com.google.common.collect.ImmutableList;
@@ -272,6 +275,25 @@ public class FixedListMachineProvisioningLocationTest {
         assertEquals(provisioner2.obtain(), machine);
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testMachinesObtainedInOrder() throws Exception {
+        List<SshMachineLocation> machines = ImmutableList.of(
+                mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("1.1.1.1"))),
+                mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("1.1.1.6"))),
+                mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("1.1.1.3"))),
+                mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("1.1.1.4"))),
+                mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("1.1.1.5"))));
+        
+        provisioner2 = mgmt.getLocationManager().createLocation(
+                MutableMap.of("machines", machines),
+                FixedListMachineProvisioningLocation.class);
+
+        for (SshMachineLocation expected : machines) {
+            assertEquals(provisioner2.obtain(), expected);
+        }
+    }
+    
     private static void assertUserAndHost(SshMachineLocation l, String user, String host) {
         assertEquals(l.getUser(), user);
         assertEquals(l.getAddress().getHostAddress(), host);

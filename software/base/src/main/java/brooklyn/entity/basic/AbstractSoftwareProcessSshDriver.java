@@ -5,6 +5,8 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,9 +26,13 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.internal.ssh.sshj.SshjTool;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.stream.KnownSizeInputStream;
+import brooklyn.util.stream.ReaderInputStream;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -379,6 +385,65 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             if (log.isDebugEnabled()) {
                 log.debug("Copied file for {}: {} to {} - result {}", new Object[] { entity, source, dest, result });
             }
+        }
+        return result;
+    }
+
+    /**
+     * @see #copyResource(Map, InputStream, String)
+     */
+    public int copyResource(Reader source, String target) {
+        return copyResource(MutableMap.of(), source, target);
+    }
+
+    /**
+     * @see #copyResource(Map, InputStream, String)
+     */
+    public int copyResource(InputStream source, String target) {
+        return copyResource(MutableMap.of(), source, target);
+    }
+
+    /**
+     * @see #copyResource(Map, InputStream, String)
+     */
+    public int copyResource(Map<?,?> sshFlags, Reader source, String target) {
+        return copyResource(sshFlags, new ReaderInputStream(source), target);
+    }
+    
+    /**
+     * Input stream will be closed automatically.
+     * <p>
+     * If using {@link SshjTool} usage, consider using {@link KnownSizeInputStream} to avoid having
+     * to write out stream once to find its size!  
+     * 
+     * @see #copyResource(Map, String, String) for parameter descriptions.
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public int copyResource(Map<?,?> sshFlags, InputStream source, String target) {
+        Map flags = Maps.newLinkedHashMap();
+        if (!sshFlags.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
+            flags.putAll(getSshFlags());
+        }
+        flags.putAll(sshFlags);
+
+        // prefix with runDir if relative target
+        File file = new File(target);
+        String dest = file.isAbsolute() ? target : Urls.mergePaths(getRunDir(), target);
+
+        // TODO SshMachineLocation.copyTo currently doesn't log warn on non-zero or set blocking details
+        // (because delegated to by installTo, for multiple calls). So do it here for now.
+        int result;
+        String prevBlockingDetails = Tasks.setBlockingDetails("copying resource to server at "+target);
+        try {
+            result = getMachine().copyTo(flags, source, dest);
+        } finally {
+            Tasks.setBlockingDetails(prevBlockingDetails);
+        }
+        
+        if (result == 0) {
+            log.debug("copying stream complete; {} on {}", new Object[] { target, getMachine() });
+        } else {
+            log.warn("copying stream failed; {} on {}: {}", new Object[] { target, getMachine(), result });
         }
         return result;
     }
