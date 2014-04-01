@@ -42,6 +42,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
@@ -177,7 +178,7 @@ public class BrooklynComponentTemplateResolver {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
             Class interfaceclazz = (Application.class.isAssignableFrom(type)) ? Application.class : Entity.class;
-            Class<?>[] additionalInterfaceClazzes = type.getInterfaces();
+            List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
             spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);
         }
 
