@@ -45,9 +45,11 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -346,28 +348,35 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     }
 
     public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
-        String filename = Os.mergePathsUnix("brooklyn_commands", "cassandra-commands-"+Identifiers.makeRandomId(8));
-        DynamicTasks.queueIfPossible(SshEffectorTasks.put(Os.mergePaths(getRunDir(), filename))
-            .machine(getMachine())
-            .contents(commands)
-            .summary("copying cassandra script to execute "+filename)).orSubmitAndBlock(getEntity());
-        return executeScriptFromInstalledFileAsync(filename);
+        String fileToRun = Os.mergePathsUnix("brooklyn_commands", "cassandra-commands-"+Identifiers.makeRandomId(8));
+        DynamicTasks.queueIfPossible(SshEffectorTasks.put(Os.mergePaths(getRunDir(), fileToRun))
+                .machine(getMachine())
+                .contents(commands)
+                .summary("copying cassandra script to execute "+fileToRun)).orSubmitAndBlock(getEntity());
+        return executeScriptFromInstalledFileAsync(fileToRun);
     }
 
-    public ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String filenameAlreadyInstalledAtServer) {
+    public ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String fileToRun) {
         ProcessTaskWrapper<Integer> task = SshEffectorTasks.ssh(
-            "cd "+getRunDir(),
-            scriptInvocationCommand(getEntity().getAttribute(CassandraNode.THRIFT_PORT), filenameAlreadyInstalledAtServer))
-            .machine(getMachine())
-            .summary("executing cassandra script "+filenameAlreadyInstalledAtServer).newTask();
+                        "cd "+getRunDir(),
+                        scriptInvocationCommand(getEntity().getAttribute(CassandraNode.THRIFT_PORT), fileToRun))
+                .machine(getMachine())
+                .summary("executing cassandra script "+fileToRun)
+                .newTask();
         DynamicTasks.queueIfPossible(task).orSubmitAndBlock(getEntity());
         return task;
     }
 
     protected String scriptInvocationCommand(Integer optionalThriftPort, String fileToRun) {
-        return "bin/cassandra-cli "
-            + (optionalThriftPort!=null ? "--port "+optionalThriftPort : "")
-            + " --file "+fileToRun;
+        List<String> args = Lists.newArrayList();
+        args.add("bin/cassandra-cli");
+        if (optionalThriftPort != null) {
+            args.add("--port");
+            args.add(Integer.toString(optionalThriftPort));
+        }
+        args.add("--file");
+        args.add(fileToRun);
+        return Joiner.on(" ").join(args);
     }
 
     @Override

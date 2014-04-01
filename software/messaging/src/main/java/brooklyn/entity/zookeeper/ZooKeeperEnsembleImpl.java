@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ZooKeeperEnsembleImpl extends DynamicClusterImpl implements ZooKeeperEnsemble {
 
     private static final Logger log = LoggerFactory.getLogger(ZooKeeperEnsembleImpl.class);
-    private static AtomicInteger myId = new AtomicInteger();
+    private static final AtomicInteger myId = new AtomicInteger();
 
     public ZooKeeperEnsembleImpl() {}
 
@@ -77,7 +77,7 @@ public class ZooKeeperEnsembleImpl extends DynamicClusterImpl implements ZooKeep
         super.start(locations);
         setAttribute(Startable.SERVICE_UP, calculateServiceUp());
         List<String> zookeeperServers = Lists.newArrayList();
-        for(Entity zookeeper : getMembers()) {
+        for (Entity zookeeper : getMembers()) {
             zookeeperServers.add(zookeeper.getAttribute(Attributes.HOSTNAME));
         }
         setAttribute(ZOOKEEPER_SERVERS, zookeeperServers);
