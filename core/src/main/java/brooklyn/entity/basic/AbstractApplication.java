@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.StartableMethods;
@@ -17,8 +16,6 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.guava.Maybe;
 
 /**
  * Users can extend this to define the entities in their application, and the relationships between
@@ -107,13 +104,13 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     @Override
     public void start(Collection<? extends Location> locations) {
         this.addLocations(locations);
-
+        Collection<? extends Location> locationsToUse = getLocations();
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
         recordApplicationEvent(Lifecycle.STARTING);
         try {
-            preStart(locations);
-            doStart(locations);
-            postStart(locations);
+            preStart(locationsToUse);
+            doStart(locationsToUse);
+            postStart(locationsToUse);
         } catch (Exception e) {
             setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
             recordApplicationEvent(Lifecycle.ON_FIRE);

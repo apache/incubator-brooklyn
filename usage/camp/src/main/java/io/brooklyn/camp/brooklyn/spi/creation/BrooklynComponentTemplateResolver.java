@@ -247,6 +247,10 @@ public class BrooklynComponentTemplateResolver {
         
         ((AbstractEntity)entity).setProxy(entityFactory.createEntityProxy(spec, entity));
         
+        if (spec.getLocations().size() > 0) {
+            ((AbstractEntity)entity).addLocations(spec.getLocations());
+        }
+        
         if (spec.getParent() != null) entity.setParent(spec.getParent());
         
         return entity;
