@@ -83,12 +83,12 @@ public class JmxRmiAgent {
     public static void doMainForeground(String agentArgs) {
         final JMXConnectorServer connector = new JmxRmiAgent().startServer(System.getProperties());
         if (connector != null) {
-            Runtime.getRuntime().addShutdownHook(new Thread("jmxmp-agent-shutdownHookThread") {
+            Runtime.getRuntime().addShutdownHook(new Thread("jmxrmi-agent-shutdownHookThread") {
                 @Override public void run() {
                     try {
                         connector.stop();
                     } catch (Exception e) {
-                        System.err.println("Error closing jmxmp connector in shutdown hook (continuing): "+e);
+                        System.err.println("Error closing jmxrmi connector in shutdown hook (continuing): "+e);
                     }
                 }});
         }
