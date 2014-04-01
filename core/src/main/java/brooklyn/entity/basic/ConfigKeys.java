@@ -3,8 +3,11 @@ package brooklyn.entity.basic;
 import javax.annotation.Nonnull;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.event.basic.AttributeSensorAndConfigKey;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -38,6 +41,38 @@ public class ConfigKeys {
 
     public static <T> ConfigKey<T> newConfigKey(TypeToken<T> type, String name, String description, T defaultValue) {
         return new BasicConfigKey<T>(type, name, description, defaultValue);
+    }
+
+    public static <T> AttributeSensorAndConfigKey<T,T> newSensorAndConfigKey(Class<T> type, String name, String description) {
+        return new BasicAttributeSensorAndConfigKey<T>(type, name, description);
+    }
+
+    public static <T> AttributeSensorAndConfigKey<T,T> newSensorAndConfigKey(Class<T> type, String name, String description, T defaultValue) {
+        return new BasicAttributeSensorAndConfigKey<T>(type, name, description, defaultValue);
+    }
+
+    public static AttributeSensorAndConfigKey<String,String> newStringSensorAndConfigKey(String name, String description) {
+        return new BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey(name, description);
+    }
+
+    public static AttributeSensorAndConfigKey<String,String> newStringSensorAndConfigKey(String name, String description, String defaultValue) {
+        return new BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey(name, description, defaultValue);
+    }
+
+    public static AttributeSensorAndConfigKey<Integer,Integer> newIntegerSensorAndConfigKey(String name, String description) {
+        return new BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey(name, description);
+    }
+
+    public static AttributeSensorAndConfigKey<Integer,Integer> newIntegerSensorAndConfigKey(String name, String description, Integer defaultValue) {
+        return new BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey(name, description, defaultValue);
+    }
+
+    public static PortAttributeSensorAndConfigKey newPortSensorAndConfigKey(String name, String description) {
+        return new PortAttributeSensorAndConfigKey(name, description);
+    }
+
+    public static PortAttributeSensorAndConfigKey newPortSensorAndConfigKey(String name, String description, Object defaultValue) {
+        return new PortAttributeSensorAndConfigKey(name, description, defaultValue);
     }
 
     /** Infers the type from the default value */

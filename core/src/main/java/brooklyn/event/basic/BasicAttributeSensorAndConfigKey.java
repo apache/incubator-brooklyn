@@ -21,7 +21,6 @@ public class BasicAttributeSensorAndConfigKey<T> extends AttributeSensorAndConfi
     public BasicAttributeSensorAndConfigKey(Class<T> type, String name, String description) {
         this(type, name, description, null);
     }
-
     public BasicAttributeSensorAndConfigKey(Class<T> type, String name, String description, T defaultValue) {
         super(type, type, name, description, defaultValue);
     }
