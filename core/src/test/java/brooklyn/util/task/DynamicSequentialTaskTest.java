@@ -29,6 +29,7 @@ import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -216,6 +217,10 @@ public class DynamicSequentialTaskTest {
         }
         Assert.fail("Did not see message "+id);
     }
+    protected void releaseAndWaitForMonitorableJob(final String id) {
+        releaseMonitorableJob(id);
+        waitForMessage(id);
+    }
     
     @Test
     public void testChildrenRunConcurrentlyWithPrimary() {
@@ -223,10 +228,8 @@ public class DynamicSequentialTaskTest {
             .body(monitorableJob("main"))
             .add(monitorableTask("1")).add(monitorableTask("2")).build();
         ec.submit(t);
-        releaseMonitorableJob("1");
-        waitForMessage("1");
-        releaseMonitorableJob("main");
-        waitForMessage("main");
+        releaseAndWaitForMonitorableJob("1");
+        releaseAndWaitForMonitorableJob("main");
         Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
         releaseMonitorableJob("2");
         
@@ -250,8 +253,7 @@ public class DynamicSequentialTaskTest {
             .body(monitorableJob("main"))
             .add(t1).add(monitorableTask("2")).build();
         ec.submit(t);
-        releaseMonitorableJob("1");
-        waitForMessage("1");
+        releaseAndWaitForMonitorableJob("1");
         Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
         releaseMonitorableJob("main");
         
@@ -269,11 +271,9 @@ public class DynamicSequentialTaskTest {
             .body(monitorableJob("main"))
             .add(t1).add(monitorableTask("2")).swallowChildrenFailures(true).build();
         ec.submit(t);
-        releaseMonitorableJob("1");
-        waitForMessage("1");
+        releaseAndWaitForMonitorableJob("1");
         Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
-        releaseMonitorableJob("2");
-        waitForMessage("2");
+        releaseAndWaitForMonitorableJob("2");
         Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
         releaseMonitorableJob("main");
         Assert.assertTrue(t.blockUntilEnded(TIMEOUT));
@@ -291,11 +291,9 @@ public class DynamicSequentialTaskTest {
             .body(monitorableJob("main"))
             .add(t1).add(monitorableTask("2")).build();
         ec.submit(t);
-        releaseMonitorableJob("1");
-        waitForMessage("1");
+        releaseAndWaitForMonitorableJob("1");
         Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
-        releaseMonitorableJob("2");
-        waitForMessage("2");
+        releaseAndWaitForMonitorableJob("2");
         Assert.assertFalse(t.blockUntilEnded(TINY_TIME));
         releaseMonitorableJob("main");
         Assert.assertTrue(t.blockUntilEnded(TIMEOUT));
@@ -305,4 +303,31 @@ public class DynamicSequentialTaskTest {
         Assert.assertTrue(t1.isError());
     }
 
+    @Test
+    public void testTaskBuilderUsingAddVarargChildren() {
+        Task<String> t = Tasks.<String>builder().dynamic(true)
+            .body(monitorableJob("main"))
+            .add(monitorableTask("1"), monitorableTask("2"))
+            .build();
+        ec.submit(t);
+        releaseAndWaitForMonitorableJob("1");
+        releaseAndWaitForMonitorableJob("2");
+        releaseAndWaitForMonitorableJob("main");
+        
+        Assert.assertEquals(messages, MutableList.of("1", "2", "main"));
+    }
+    
+    @Test
+    public void testTaskBuilderUsingAddAllChildren() {
+        Task<String> t = Tasks.<String>builder().dynamic(true)
+            .body(monitorableJob("main"))
+            .addAll(ImmutableList.of(monitorableTask("1"), monitorableTask("2")))
+            .build();
+        ec.submit(t);
+        releaseAndWaitForMonitorableJob("1");
+        releaseAndWaitForMonitorableJob("2");
+        releaseAndWaitForMonitorableJob("main");
+        
+        Assert.assertEquals(messages, MutableList.of("1", "2", "main"));
+    }
 }

@@ -1,16 +1,20 @@
 package brooklyn.util.task;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.collections.MutableMap;
+
+import com.google.common.collect.Iterables;
 
 /** Convenience for creating tasks; note that DynamicSequentialTask is the default */
 public class TaskBuilder<T> {
@@ -19,7 +23,7 @@ public class TaskBuilder<T> {
     String description = null;
     Callable<T> body = null;
     Boolean swallowChildrenFailures = null;
-    List<Task<?>> children = new ArrayList<Task<?>>();
+    List<TaskAdaptable<?>> children = new ArrayList<TaskAdaptable<?>>();
     Set<Object> tags = new LinkedHashSet<Object>();
     Boolean dynamic = null;
     boolean parallel = false;
@@ -70,8 +74,18 @@ public class TaskBuilder<T> {
 
     /** adds a child to the given task; the semantics of how the child is executed is set using
      * {@link #dynamic(boolean)} and {@link #parallel(boolean)} */
-    public TaskBuilder<T> add(Task<?> child) {
+    public TaskBuilder<T> add(TaskAdaptable<?> child) {
         children.add(child);
+        return this;
+    }
+
+    public TaskBuilder<T> addAll(Iterable<? extends TaskAdaptable<?>> additionalChildren) {
+        Iterables.addAll(children, additionalChildren);
+        return this;
+    }
+
+    public TaskBuilder<T> add(TaskAdaptable<?>... additionalChildren) {
+        children.addAll(Arrays.asList(additionalChildren));
         return this;
     }
 
@@ -102,8 +116,8 @@ public class TaskBuilder<T> {
                 throw new UnsupportedOperationException("No implementation of parallel dynamic aggregate task available");
             DynamicSequentialTask<T> result = new DynamicSequentialTask<T>(flags, body);
             if (swallowChildrenFailures!=null && swallowChildrenFailures.booleanValue()) result.swallowChildrenFailures();
-            for (Task t: children)
-                result.queue(t);
+            for (TaskAdaptable t: children)
+                result.queue(t.asTask());
             return result;
         }
         
