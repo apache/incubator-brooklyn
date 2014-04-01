@@ -551,6 +551,17 @@ public class EntitiesYamlTest extends AbstractYamlTest {
             assertTrue(child instanceof BasicEntity, "child="+child);
         }
     }
+    
+    @Test
+    public void testEntityImplExposesAllInterfacesIncludingStartable() throws Exception {
+        String yaml =
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntityImpl\n";
+        
+        Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
+        TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
+        assertTrue(entity.getCallHistory().contains("start"), "history="+entity.getCallHistory());
+    }
 
     @Override
     protected Logger getLogger() {

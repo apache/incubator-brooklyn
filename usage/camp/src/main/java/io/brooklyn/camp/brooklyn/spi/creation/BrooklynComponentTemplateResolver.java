@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
@@ -166,10 +167,20 @@ public class BrooklynComponentTemplateResolver {
     public <T extends Entity> EntitySpec<T> resolveSpec(Class<T> type, Class<? extends T> optionalImpl) {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
-        
-        EntitySpec<T> spec = EntitySpec.create(type);
-        if (optionalImpl != null) spec.impl(optionalImpl);
-        
+
+        EntitySpec<T> spec;
+        if (optionalImpl != null) {
+            spec = EntitySpec.create(type).impl(optionalImpl);
+        } else if (type.isInterface()) {
+            spec = EntitySpec.create(type);
+        } else {
+            // If this is a concrete class, particularly for an Application class, we want the proxy
+            // to expose all interfaces it implements.
+            Class interfaceclazz = (Application.class.isAssignableFrom(type)) ? Application.class : Entity.class;
+            Class<?>[] additionalInterfaceClazzes = type.getInterfaces();
+            spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);
+        }
+
         String name, templateId=null, planId=null;
         if (template.isPresent()) {
             name = template.get().getName();
