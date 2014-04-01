@@ -23,22 +23,16 @@ import java.util.concurrent.ExecutionException;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.Tasks;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.reflect.TypeToken;
 
 public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements ZooKeeperDriver {
 
@@ -69,12 +63,11 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
       List<ZooKeeperServerConfig> result = Lists.newArrayList();
 
       for (Entity member : ensemble.getMembers()) {
-         ZooKeeperNode server = (ZooKeeperNode) member;
-         Integer myid = attributeWhenReady(server, ZooKeeperNode.MY_ID);
-         String hostname = attributeWhenReady(server, ZooKeeperNode.HOSTNAME);
-         Integer port = attributeWhenReady(server, ZooKeeperNode.ZOOKEEPER_PORT);
-         Integer leaderPort = attributeWhenReady(server, ZooKeeperNode.ZOOKEEPER_LEADER_PORT);
-         Integer electionPort = attributeWhenReady(server, ZooKeeperNode.ZOOKEEPER_ELECTION_PORT);
+         Integer myid = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.MY_ID).get();
+         String hostname = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.HOSTNAME).get();
+         Integer port = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.ZOOKEEPER_PORT).get();
+         Integer leaderPort = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.ZOOKEEPER_LEADER_PORT).get();
+         Integer electionPort = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.ZOOKEEPER_ELECTION_PORT).get();
          result.add(new ZooKeeperServerConfig(myid, hostname, port, leaderPort, electionPort));
       }
       return result;
@@ -104,15 +97,14 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
 
         List<String> commands = ImmutableList.<String> builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
-                .add(BashCommands.INSTALL_CURL)
                 .add(BashCommands.INSTALL_TAR)
-                 .add("tar xzfv " + saveAs)
+                .add("tar xzfv " + saveAs)
                 .build();
 
         newScript(INSTALLING)
                 .failOnNonZeroResultCode()
                 .body.append(commands)
-                .execute();        
+                .execute();
     }
 
     @Override
@@ -137,44 +129,28 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
         newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
         .body.append(
                 format("nohup java $JAVA_OPTS -cp zookeeper-%s.jar:lib/*:conf org.apache.zookeeper.server.quorum.QuorumPeerMain conf/zoo.cfg > %s 2>&1 &", getVersion(), getLogFileLocation()))
-        .execute();        
+        .execute();
     }
 
-   @SuppressWarnings({ "unchecked", "serial" })
-   public static <T> T attributeWhenReady(final Entity entity, final AttributeSensor<T> sensor) throws ExecutionException, InterruptedException {
-      final Task<T> task = DependentConfiguration.attributeWhenReady(entity, sensor);
-      TypeToken<T> type = new TypeToken<T>(sensor.getType()) {};
-      return Tasks.resolveValue(task, (Class<T>) type.getRawType(), ((EntityInternal) entity).getExecutionContext(), "attributeSupplierWhenReady");
-   }
+    public static class ZooKeeperServerConfig {
+        private final Integer myid;
+        private final String hostname;
+        private final Integer port;
+        private final Integer leaderPort;
+        private final Integer electionPort;
 
-   public static class ZooKeeperServerConfig {
-      private final Integer myid;
-      private final String hostname;
-      private final Integer port;
-      private final Integer leaderPort;
-      private final Integer electionPort;
+        public ZooKeeperServerConfig(Integer myid, String hostname, Integer port, Integer leaderPort, Integer electionPort) {
+            this.myid = myid;
+            this.hostname = hostname;
+            this.port = port;
+            this.leaderPort = leaderPort;
+            this.electionPort = electionPort;
+        }
 
-      public ZooKeeperServerConfig(Integer myid, String hostname, Integer port, Integer leaderPort, Integer electionPort) {
-         this.myid = myid;
-         this.hostname = hostname;
-         this.port = port;
-         this.leaderPort = leaderPort;
-         this.electionPort = electionPort;
-      }
-      public Integer getMyid() {
-         return myid;
-      }
-      public String getHostname() {
-         return hostname;
-      }
-      public Integer getPort() {
-         return port;
-      }
-      public Integer getLeaderPort() {
-          return leaderPort;
-      }
-      public Integer getElectionPort() {
-          return electionPort;
-      }
-   }
+        public Integer getMyid() { return myid; }
+        public String getHostname() { return hostname; }
+        public Integer getPort() { return port; }
+        public Integer getLeaderPort() { return leaderPort; }
+        public Integer getElectionPort() { return electionPort; }
+    }
 }
