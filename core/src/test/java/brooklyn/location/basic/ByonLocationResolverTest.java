@@ -5,6 +5,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.net.InetAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -29,9 +30,12 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -228,6 +232,20 @@ public class ByonLocationResolverTest {
 
         Assert.assertEquals("/tmp/x", l.getAllConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
     }
+
+    @Test
+    public void testMachinesObtainedInOrder() throws Exception {
+        List<String> ips = ImmutableList.of("1.1.1.1", "1.1.1.6", "1.1.1.3", "1.1.1.4", "1.1.1.5");
+        String spec = "byon:(hosts=\""+Joiner.on(",").join(ips)+"\")";
+        
+        MachineProvisioningLocation<SshMachineLocation> ll = resolve(spec);
+
+        for (String expected : ips) {
+            SshMachineLocation obtained = ll.obtain(ImmutableMap.of());
+            assertEquals(obtained.getAddress().getHostAddress(), expected);
+        }
+    }
+    
 
     private void assertByonClusterEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<String> expectedHosts) {
         assertByonClusterEquals(cluster, expectedHosts, defaultNamePredicate);
