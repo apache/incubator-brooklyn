@@ -73,13 +73,15 @@ public class Tasks {
             log.warn("legacy invocation of withBlockingDetails with null code block, ignoring");
             return null;
         }
-        if (current instanceof TaskInternal)
-            ((TaskInternal)current).setBlockingDetails(description); 
+        String prevBlockingDetails = null;
+        if (current instanceof TaskInternal) {
+            prevBlockingDetails = ((TaskInternal)current).setBlockingDetails(description);
+        } 
         try {
             return code.call();
         } finally {
             if (current instanceof TaskInternal)
-                ((TaskInternal)current).setBlockingDetails(null); 
+                ((TaskInternal)current).setBlockingDetails(prevBlockingDetails); 
         }
     }
 

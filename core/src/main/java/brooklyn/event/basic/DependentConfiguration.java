@@ -160,11 +160,11 @@ public class DependentConfiguration {
             }
             value = source.getAttribute(sensor);
             while (!ready.apply(value)) {
-                current.setBlockingDetails("Waiting for ready from "+source+" "+sensor+" (subscription)");
+                String prevBlockingDetails = current.setBlockingDetails("Waiting for ready from "+source+" "+sensor+" (subscription)");
                 try {
                     semaphore.acquire();
                 } finally {
-                    current.resetBlockingDetails();
+                    current.setBlockingDetails(prevBlockingDetails);
                 }
                 
                 if (abortion.size() > 0) {
