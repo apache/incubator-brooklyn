@@ -31,9 +31,9 @@
             </includes>
         </fileSet>
         <fileSet>
-            <!-- Add an empty dropin folder (so need to reference an existing dir, and exclude everything) -->
+            <!-- Add an empty dropins folder (so need to reference an existing dir, and exclude everything) -->
             <directory>${project.basedir}/src/main/dist/lib</directory>
-            <outputDirectory>/lib/dropin</outputDirectory>
+            <outputDirectory>/lib/dropins</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
             <excludes>

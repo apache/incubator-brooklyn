@@ -72,8 +72,8 @@ if ( Test-Path ${BROOKLYN_HOME}\patch ) {
 
 $cp += Get-ChildItem ${BROOKLYN_HOME}\lib\brooklyn | Select-Object -ExpandProperty FullName
 
-if ( Test-Path ${BROOKLYN_HOME}\dropin ) {
-    $cp += Get-ChildItem ${BROOKLYN_HOME}\dropin | Select-Object -ExpandProperty FullName
+if ( Test-Path ${BROOKLYN_HOME}\dropins ) {
+    $cp += Get-ChildItem ${BROOKLYN_HOME}\dropins | Select-Object -ExpandProperty FullName
 }
 
 $INITIAL_CLASSPATH = $cp -join ';'
