@@ -4,7 +4,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
@@ -13,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
@@ -161,6 +159,20 @@ public class LocationsYamlTest extends AbstractYamlTest {
         } catch (IllegalStateException e) {
             if (!e.toString().contains("must be a string or map")) throw e;
         }
+    }
+    
+    @Test
+    public void testRootLocationPassedToChild() throws Exception {
+        String yaml = 
+                "locations:\n"+
+                "- localhost:(name=loc1)\n"+
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntity\n";
+        
+        Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
+        Entity child = Iterables.getOnlyElement(app.getChildren());
+        LocalhostMachineProvisioningLocation loc = (LocalhostMachineProvisioningLocation) Iterables.getOnlyElement(child.getLocations());
+        assertEquals(loc.getDisplayName(), "loc1");
     }
 
     @Override

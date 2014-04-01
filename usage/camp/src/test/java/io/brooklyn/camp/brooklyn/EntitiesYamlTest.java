@@ -370,7 +370,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity entity = app.getChildren().iterator().next();
         Assert.assertNotNull(entity);
-        Assert.assertEquals(entity.getLocations().size(), 0);
+        Assert.assertEquals(entity.getLocations().size(), 1);
     }
 
     @Test
@@ -409,7 +409,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity entity = app.getChildren().iterator().next();
         Assert.assertNotNull(entity);
-        Assert.assertEquals(entity.getLocations().size(), 0);
+        Assert.assertEquals(entity.getLocations().size(), 2);
     }
 
     @Test
@@ -443,7 +443,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(app.getLocations().size(), 1);
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity entity = app.getChildren().iterator().next();
-        Assert.assertEquals(entity.getLocations().size(), 1);
+        Assert.assertEquals(entity.getLocations().size(), 2);
         Location appLocation = app.getLocations().iterator().next();
         Assert.assertEquals(appLocation.getDisplayName(), "byon name");
         Location entityLocation = entity.getLocations().iterator().next();
