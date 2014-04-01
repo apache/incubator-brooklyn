@@ -167,9 +167,7 @@ public class LocationsYamlTest extends AbstractYamlTest {
                 "locations:\n"+
                 "- localhost:(name=loc1)\n"+
                 "services:\n"+
-                "- serviceType: brooklyn.test.entity.TestEntity\n"+
-                "  brooklyn.children:\n"+
-                "  - serviceType: brooklyn.test.entity.TestEntity\n";
+                "- serviceType: brooklyn.test.entity.TestEntity\n";
         
         Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
         Entity child = Iterables.getOnlyElement(app.getChildren());
