@@ -1,9 +1,11 @@
 package brooklyn.entity.basic;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.io.File;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,8 +22,12 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.os.Os;
+import brooklyn.util.stream.KnownSizeInputStream;
+import brooklyn.util.stream.Streams;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 
 
@@ -113,9 +119,48 @@ public class SoftwareProcessSshDriverIntegrationTest {
         assertTrue(installDir.startsWith(tempDataDir.getAbsolutePath()+"/installs/"), "installed in "+installDir);
     }
 
+    @Test(groups="Integration")
+    public void testCopyResource() throws Exception {
+        File tempDest = new File(tempDataDir, "tempDest.txt");
+        String tempLocalContent = "abc";
+        File tempLocal = new File(tempDataDir, "tempLocal.txt");
+        Files.write(tempLocalContent, tempLocal, Charsets.UTF_8);
+        
+        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        app.start(ImmutableList.of(localhost));
+
+        // Copy local file
+        entity.getDriver().copyResource(tempLocal, tempDest.getAbsolutePath());
+        assertEquals(Files.readLines(tempDest, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
+        tempDest.delete();
+        
+        // Copy local file using url
+        entity.getDriver().copyResource(tempLocal.toURI().toString(), tempDest.getAbsolutePath());
+        assertEquals(Files.readLines(tempDest, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
+        tempDest.delete();
+        
+        // Copy reader
+        entity.getDriver().copyResource(new StringReader(tempLocalContent), tempDest.getAbsolutePath());
+        assertEquals(Files.readLines(tempDest, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
+        tempDest.delete();
+        
+        // Copy stream
+        entity.getDriver().copyResource(ByteSource.wrap(tempLocalContent.getBytes()).openStream(), tempDest.getAbsolutePath());
+        assertEquals(Files.readLines(tempDest, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
+        tempDest.delete();
+        
+        // Copy known-size stream
+        entity.getDriver().copyResource(new KnownSizeInputStream(Streams.newInputStreamWithContents(tempLocalContent), tempLocalContent.length()), tempDest.getAbsolutePath());
+        assertEquals(Files.readLines(tempDest, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
+        tempDest.delete();
+    }
+
+
     @ImplementedBy(MyServiceImpl.class)
     public interface MyService extends SoftwareProcess {
-        public SoftwareProcessDriver getDriver();
+        public SimulatedDriver getDriver();
     }
     
     public static class MyServiceImpl extends SoftwareProcessImpl implements MyService {
@@ -125,6 +170,11 @@ public class SoftwareProcessSshDriverIntegrationTest {
         @Override
         public Class<?> getDriverInterface() {
             return SimulatedDriver.class;
+        }
+        
+        @Override
+        public SimulatedDriver getDriver() {
+            return (SimulatedDriver) super.getDriver();
         }
     }
 
