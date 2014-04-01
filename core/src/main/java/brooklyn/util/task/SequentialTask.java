@@ -3,9 +3,12 @@ package brooklyn.util.task;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import brooklyn.management.Task;
+
+import com.google.common.collect.ImmutableList;
 
 
 /** runs tasks in order, waiting for one to finish before starting the next; return value here is TBD;
@@ -14,8 +17,13 @@ import brooklyn.management.Task;
 public class SequentialTask<T> extends CompoundTask<T> {
 
     public SequentialTask(Object... tasks) { super(tasks); }
-    public SequentialTask(Collection<Object> tasks) { super(tasks); }
-
+    
+    public SequentialTask(Map<String,?> flags, Collection<? extends Object> tasks) { super(flags, tasks); }
+    public SequentialTask(Collection<? extends Object> tasks) { super(tasks); }
+    
+    public SequentialTask(Map<String,?> flags, Iterable<? extends Object> tasks) { super(flags, ImmutableList.copyOf(tasks)); }
+    public SequentialTask(Iterable<? extends Object> tasks) { super(ImmutableList.copyOf(tasks)); }
+    
     protected List<T> runJobs() throws InterruptedException, ExecutionException {
         setBlockingDetails("Executing "+
                 (children.size()==1 ? "1 child task" :
