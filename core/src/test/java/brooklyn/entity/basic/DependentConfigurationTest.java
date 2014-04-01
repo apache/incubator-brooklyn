@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -21,12 +22,14 @@ import brooklyn.management.Task;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -113,6 +116,18 @@ public class DependentConfigurationTest {
     }
 
     @Test
+    public void testAttributeWhenReadyWithPostProcessingWithBuilder() throws Exception {
+        final Task<String> t = submit(DependentConfiguration.builder()
+                .attributeWhenReady(entity, TestEntity.SEQUENCE)
+                .postProcess(Functions.toStringFunction())
+                .build());
+        assertNotDoneContinually(t);
+        
+        entity.setAttribute(TestEntity.SEQUENCE, 1);
+        assertEquals(assertDoneEventually(t), "1");
+    }
+
+    @Test
     public void testAttributeWhenReadyWithAbortHappyPath() throws Exception {
         final Task<String> t = submit(DependentConfiguration.builder()
                 .attributeWhenReady(entity, TestEntity.NAME)
@@ -172,6 +187,27 @@ public class DependentConfigurationTest {
         assertNotDoneContinually(t);
         entity2.setAttribute(TestEntity.NAME, "myval2");
         assertEquals(ImmutableSet.copyOf(assertDoneEventually(t)), ImmutableSet.of("myval", "myval2"));
+    }
+
+    @Test
+    public void testListAttributeWhenReadyFromMultipleEntitiesWithGlobalPostProcessor() throws Exception {
+        final Task<String> t = submit(DependentConfiguration.builder()
+                .attributeWhenReadyFromMultiple(ImmutableList.of(entity, entity2), TestEntity.SEQUENCE)
+                .multiPostProcess(new Function<List<Integer>, String>() {
+                        @Override public String apply(List<Integer> input) {
+                            if (input == null) {
+                                return null;
+                            } else {
+                                MutableList<Integer> inputCopy = MutableList.copyOf(input);
+                                Collections.sort(inputCopy);
+                                return Joiner.on(",").join(inputCopy);
+                            }
+                        }})
+                .build());
+        
+        entity.setAttribute(TestEntity.SEQUENCE, 1);
+        entity2.setAttribute(TestEntity.SEQUENCE, 2);
+        assertEquals(assertDoneEventually(t), "1,2");
     }
 
     private void assertNotDoneContinually(final Task<?> t) {
