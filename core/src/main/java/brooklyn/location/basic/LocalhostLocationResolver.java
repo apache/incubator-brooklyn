@@ -49,9 +49,9 @@ import brooklyn.util.text.KeyValueParser;
  * 
  * @author alex, aled
  */
-public class LocalhostResolver implements LocationResolver, EnableableLocationResolver {
+public class LocalhostLocationResolver implements LocationResolver, EnableableLocationResolver {
 
-    private static final Logger log = LoggerFactory.getLogger(LocalhostResolver.class);
+    private static final Logger log = LoggerFactory.getLogger(LocalhostLocationResolver.class);
     
     public static final String LOCALHOST = "localhost";
     

@@ -1,6 +1,6 @@
 brooklyn.location.basic.DefinedLocationByIdResolver
 brooklyn.location.basic.NamedLocationResolver
-brooklyn.location.basic.LocalhostResolver
+brooklyn.location.basic.LocalhostLocationResolver
 brooklyn.location.basic.ByonLocationResolver
 brooklyn.location.basic.SingleMachineLocationResolver
 brooklyn.location.basic.HostLocationResolver
