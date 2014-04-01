@@ -22,7 +22,6 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 
@@ -57,12 +56,7 @@ public class Streams {
     
     public static InputStream newInputStreamWithContents(String contents) {
         byte[] bytes = checkNotNull(contents, "contents").getBytes(Charsets.UTF_8);
-        try {
-            return ByteSource.wrap(bytes).openStream();
-        } catch (IOException ioe) {
-            if (log.isDebugEnabled()) log.debug("Error creating InputStream from String: " + ioe.getMessage());
-            throw Exceptions.propagate(ioe);
-        }
+        return KnownSizeInputStream.of(bytes);
     }
 
     public static Reader newReaderWithContents(String contents) {
