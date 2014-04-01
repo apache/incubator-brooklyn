@@ -14,6 +14,8 @@ import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 
+import com.google.common.base.Predicate;
+
 public class NonDeploymentEntityManager implements EntityManagerInternal {
 
     private final ManagementContext initialManagementContext;
@@ -73,9 +75,27 @@ public class NonDeploymentEntityManager implements EntityManagerInternal {
     }
 
     @Override
-    public Iterable<Entity> getEntitiesInApplication(Application application) {
+    public Collection<Entity> getEntitiesInApplication(Application application) {
         if (isInitialManagementContextReal()) {
             return initialManagementContext.getEntityManager().getEntitiesInApplication(application);
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public Collection<Entity> findEntities(Predicate<? super Entity> filter) {
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getEntityManager().findEntities(filter);
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public Collection<Entity> findEntitiesInApplication(Application application, Predicate<? super Entity> filter) {
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getEntityManager().findEntitiesInApplication(application, filter);
         } else {
             return Collections.emptyList();
         }

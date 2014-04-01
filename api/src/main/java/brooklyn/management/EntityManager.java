@@ -14,6 +14,8 @@ import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 
+import com.google.common.base.Predicate;
+
 /**
  * For managing and querying entities.
  */
@@ -65,7 +67,17 @@ public interface EntityManager {
     /**
      * All entities managed as part of the given application
      */
-    Iterable<Entity> getEntitiesInApplication(Application application);
+    Collection<Entity> getEntitiesInApplication(Application application);
+
+    /**
+     * All entities under control of this management plane that match the given filter
+     */
+    Collection<Entity> findEntities(Predicate<? super Entity> filter);
+
+    /**
+     * All entities managed as part of the given application that match the given filter
+     */
+    Collection<Entity> findEntitiesInApplication(Application application, Predicate<? super Entity> filter);
 
     /**
      * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote),
