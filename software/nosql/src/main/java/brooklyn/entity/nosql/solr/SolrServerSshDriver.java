@@ -114,18 +114,18 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     @Override
     public void launch() {
-        newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
-                .body.append("nohup java -jar start.jar > ./logs/console.log 2>&1 &")
+        newScript(MutableMap.of(USE_PID_FILE, getPidFile()), LAUNCHING)
+                .body.append("nohup java $JAVA_OPTS -jar start.jar > ./logs/console.log 2>&1 &")
                 .execute();
     }
 
     @Override
     public boolean isRunning() {
-        return newScript(MutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).execute() == 0;
+        return newScript(MutableMap.of(USE_PID_FILE, getPidFile()), CHECK_RUNNING).execute() == 0;
     }
 
     @Override
     public void stop() {
-        newScript(MutableMap.of("usePidFile", getPidFile()), STOPPING).execute();
+        newScript(MutableMap.of(USE_PID_FILE, getPidFile()), STOPPING).execute();
     }
 }

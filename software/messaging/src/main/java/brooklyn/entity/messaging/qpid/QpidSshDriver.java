@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableMap;
 public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidDriver{
 
     private static final Logger log = LoggerFactory.getLogger(QpidSshDriver.class);
-    
+
     public QpidSshDriver(QpidBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -37,14 +37,14 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
     public String getAmqpVersion() { return entity.getAttribute(QpidBroker.AMQP_VERSION); }
 
     public Integer getHttpManagementPort() { return entity.getAttribute(QpidBroker.HTTP_MANAGEMENT_PORT); }
-    
+
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("qpid-broker-%s", getVersion())));
-        
+
         List<String> commands = new LinkedList<String>();
         commands.addAll( BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
@@ -75,7 +75,7 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
 
     @Override
     public void launch() {
-        newScript(ImmutableMap.of("usePidFile", false), LAUNCHING)
+        newScript(ImmutableMap.of(USE_PID_FILE, false), LAUNCHING)
                 .body.append("nohup ./bin/qpid-server -b '*' > qpid-server-launch.log 2>&1 &")
                 .execute();
     }
@@ -84,20 +84,20 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
     
     @Override
     public boolean isRunning() {
-        return newScript(ImmutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).execute() == 0;
+        return newScript(ImmutableMap.of(USE_PID_FILE, getPidFile()), CHECK_RUNNING).execute() == 0;
     }
-
 
     @Override
     public void stop() {
-        newScript(ImmutableMap.of("usePidFile", getPidFile()), STOPPING).execute();
+        newScript(ImmutableMap.of(USE_PID_FILE, getPidFile()), STOPPING).execute();
     }
 
     @Override
     public void kill() {
-        newScript(ImmutableMap.of("usePidFile", getPidFile()), KILLING).execute();
+        newScript(ImmutableMap.of(USE_PID_FILE, getPidFile()), KILLING).execute();
     }
 
+    @Override
     public Map<String, Object> getCustomJavaSystemProperties() {
         return MutableMap.<String, Object>builder()
                 .putAll(super.getCustomJavaSystemProperties())
@@ -110,6 +110,7 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
                 .build();
     }
 
+    @Override
     public Map<String, String> getShellEnvironment() {
         return MutableMap.<String, String>builder()
                 .putAll(super.getShellEnvironment())

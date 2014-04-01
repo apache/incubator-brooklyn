@@ -49,9 +49,10 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv "+saveAs);
 
-        newScript(INSTALLING).
-                failOnNonZeroResultCode().
-                body.append(commands).execute();
+        newScript(INSTALLING)
+                .failOnNonZeroResultCode()
+                .body.append(commands)
+                .execute();
     }
 
     protected String getTemplateConfigurationUrl() {
@@ -61,19 +62,17 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
     @Override
     public void customize() {
         Networking.checkPortsValid(ImmutableMap.of("jmxPort", getJmxPort(), "openWirePort", getOpenWirePort()));
-        newScript(CUSTOMIZING).
-                body.append(
-                String.format("cp -R %s/{bin,conf,data,lib,webapps} .", getExpandedInstallDir()),
-                
-                // Required in version 5.5.1 (at least), but not in version 5.7.0
-                "sed -i.bk 's/\\[-z \"$JAVA_HOME\"]/\\[ -z \"$JAVA_HOME\" ]/g' bin/activemq",
-                // Stop it writing to dev null on start
-                "sed -i.bk \"s/\\(ACTIVEMQ_HOME..bin.run.jar.*\\)>.dev.null/\\1/\" bin/activemq",
-                
-                // Required if launching multiple AMQ's, prevent jetty port conflicts
-                "sed -i.bk 's/8161/"+getEntity().getAttribute(ActiveMQBroker.AMQ_JETTY_PORT)+"/g' conf/jetty.xml"
-                
-                ).execute();
+        newScript(CUSTOMIZING)
+                .body.append(
+                        String.format("cp -R %s/{bin,conf,data,lib,webapps} .", getExpandedInstallDir()),
+                        // Required in version 5.5.1 (at least), but not in version 5.7.0
+                        "sed -i.bk 's/\\[-z \"$JAVA_HOME\"]/\\[ -z \"$JAVA_HOME\" ]/g' bin/activemq",
+                        // Stop it writing to dev null on start
+                        "sed -i.bk \"s/\\(ACTIVEMQ_HOME..bin.run.jar.*\\)>.dev.null/\\1/\" bin/activemq",
+                        // Required if launching multiple AMQ's, prevent jetty port conflicts
+                        "sed -i.bk 's/8161/"+getEntity().getAttribute(ActiveMQBroker.AMQ_JETTY_PORT)+"/g' conf/jetty.xml"
+                )
+                .execute();
         
         // TODO disable persistence (this should be a flag -- but it seems to have no effect, despite ):
         // "sed -i.bk 's/broker /broker persistent=\"false\" /g' conf/activemq.xml",
@@ -87,10 +86,9 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
     @Override
     public void launch() {
         // Using nohup, as recommended at http://activemq.apache.org/run-broker.html
-        newScript(ImmutableMap.of("usePidFile", false), LAUNCHING).
-                body.append(
-                "nohup ./bin/activemq start > ./data/activemq-extra.log 2>&1 &"
-                ).execute();
+        newScript(ImmutableMap.of(USE_PID_FILE, false), LAUNCHING)
+                .body.append("nohup ./bin/activemq start > ./data/activemq-extra.log 2>&1 &")
+                .execute();
     }
 
     public String getPidFile() {
@@ -99,17 +97,17 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
     
     @Override
     public boolean isRunning() {
-        return newScript(ImmutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).execute() == 0;
+        return newScript(ImmutableMap.of(USE_PID_FILE, getPidFile()), CHECK_RUNNING).execute() == 0;
     }
 
     @Override
     public void stop() {
-        newScript(ImmutableMap.of("usePidFile", getPidFile()), STOPPING).execute();
+        newScript(ImmutableMap.of(USE_PID_FILE, getPidFile()), STOPPING).execute();
     }
 
     @Override
     public void kill() {
-        newScript(ImmutableMap.of("usePidFile", getPidFile()), KILLING).execute();
+        newScript(ImmutableMap.of(USE_PID_FILE, getPidFile()), KILLING).execute();
     }
 
     @Override

@@ -55,23 +55,23 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
         return entity.getAttribute(ZooKeeperNode.MY_ID);
     }
 
-   // FIXME All for one, and one for all! If any node fails then we're stuck waiting for its hostname/port forever.
-   // Need a way to terminate the wait based on the entity going on-fire etc.
-   // FIXME Race in getMemebers. Should we change DynamicCluster.grow to create the members and only then call start on them all?
-   public List<ZooKeeperServerConfig> getZookeeperServers() throws ExecutionException, InterruptedException {
-      ZooKeeperEnsemble ensemble = (ZooKeeperEnsemble) entity.getParent();
-      List<ZooKeeperServerConfig> result = Lists.newArrayList();
+    // FIXME All for one, and one for all! If any node fails then we're stuck waiting for its hostname/port forever.
+    // Need a way to terminate the wait based on the entity going on-fire etc.
+    // FIXME Race in getMemebers. Should we change DynamicCluster.grow to create the members and only then call start on them all?
+    public List<ZooKeeperServerConfig> getZookeeperServers() throws ExecutionException, InterruptedException {
+        ZooKeeperEnsemble ensemble = (ZooKeeperEnsemble) entity.getParent();
+        List<ZooKeeperServerConfig> result = Lists.newArrayList();
 
-      for (Entity member : ensemble.getMembers()) {
-         Integer myid = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.MY_ID).get();
-         String hostname = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.HOSTNAME).get();
-         Integer port = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.ZOOKEEPER_PORT).get();
-         Integer leaderPort = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.ZOOKEEPER_LEADER_PORT).get();
-         Integer electionPort = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.ZOOKEEPER_ELECTION_PORT).get();
-         result.add(new ZooKeeperServerConfig(myid, hostname, port, leaderPort, electionPort));
-      }
-      return result;
-   }
+        for (Entity member : ensemble.getMembers()) {
+            Integer myid = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.MY_ID).get();
+            String hostname = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.HOSTNAME).get();
+            Integer port = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.ZOOKEEPER_PORT).get();
+            Integer leaderPort = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.ZOOKEEPER_LEADER_PORT).get();
+            Integer electionPort = Entities.attributeSupplierWhenReady(member, ZooKeeperNode.ZOOKEEPER_ELECTION_PORT).get();
+            result.add(new ZooKeeperServerConfig(myid, hostname, port, leaderPort, electionPort));
+        }
+        return result;
+    }
 
     @Override
     public Integer getZooKeeperPort() {
@@ -126,10 +126,11 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
 
     @Override
     public void launch() {
-        newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
-        .body.append(
-                format("nohup java $JAVA_OPTS -cp zookeeper-%s.jar:lib/*:conf org.apache.zookeeper.server.quorum.QuorumPeerMain conf/zoo.cfg > %s 2>&1 &", getVersion(), getLogFileLocation()))
-        .execute();
+        newScript(MutableMap.of(USE_PID_FILE, getPidFile()), LAUNCHING)
+                .body.append(
+                        format("nohup java $JAVA_OPTS -cp zookeeper-%s.jar:lib/*:conf org.apache.zookeeper.server.quorum.QuorumPeerMain conf/zoo.cfg > %s 2>&1 &", getVersion(), getLogFileLocation())
+                )
+                .execute();
     }
 
     public static class ZooKeeperServerConfig {
