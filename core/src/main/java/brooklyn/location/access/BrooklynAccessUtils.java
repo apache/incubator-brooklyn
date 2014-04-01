@@ -23,6 +23,7 @@ import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Supplier;
 import com.google.common.net.HostAndPort;
 
 public class BrooklynAccessUtils {
@@ -108,6 +109,15 @@ public class BrooklynAccessUtils {
         }
         if (out.contains("127.0.0.1")) return "127.0.0.1";
         return "";
+    }
+
+    public static Supplier<String> resolvedAddressSupplier(final Entity entity, final SshMachineLocation origin, final String hostnameTarget) {
+        return new Supplier<String>() {
+            @Override
+            public String get() {
+                return getResolvedAddress(entity, origin, hostnameTarget);
+            }
+        };
     }
 
 }

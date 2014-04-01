@@ -381,8 +381,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public String getResolvedAddress(String hostname) {
-        if (resolvedAddressCache.isPresent()) return resolvedAddressCache.get();
-        return (resolvedAddressCache = Maybe.of(BrooklynAccessUtils.getResolvedAddress(getEntity(), getMachine(), hostname))).get();
+        return resolvedAddressCache.or(BrooklynAccessUtils.resolvedAddressSupplier(getEntity(), getMachine(), hostname));
     }
     
 }
