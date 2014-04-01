@@ -1,6 +1,7 @@
 package brooklyn.entity.basic;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -14,9 +15,12 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
@@ -50,47 +54,46 @@ public class DataEntityTest {
 
     @Test
     public void testSupplierSetsAttribute() throws Exception {
-        entity = app.addChild(EntitySpec.create(DataEntity.class)
-                .configure(DataEntity.POLL_PERIOD, 100l)
+        entity = app.createAndManageChild(EntitySpec.create(DataEntity.class)
+                .configure(DataEntity.POLL_PERIOD, 50L)
                 .configure(DataEntity.SENSOR_SUPPLIER_MAP, MutableMap.<AttributeSensor<?>, Supplier<?>>of(stringSensor, new Supplier<String>() {
                     @Override
                     public String get() {
                         return reference.get();
                     }
                 })));
-        Entities.startManagement(entity);
         app.start(ImmutableList.of(loc));
 
         reference.set("new");
-        Thread.sleep(200l); // Twice polling period
-        String value = entity.getAttribute(stringSensor);
 
-        assertNotNull(value);
-        assertEquals(value, "new");
+        EntityTestUtils.assertAttributeEqualsEventually(entity, stringSensor, "new");
     }
 
     @Test
     public void testSupplierIsPolled() throws Exception {
-        entity = app.addChild(EntitySpec.create(DataEntity.class)
-                .configure(DataEntity.POLL_PERIOD, 100l)
+        entity = app.createAndManageChild(EntitySpec.create(DataEntity.class)
+                .configure(DataEntity.POLL_PERIOD, 50L)
                 .configure(DataEntity.SENSOR_SUPPLIER_MAP, MutableMap.<AttributeSensor<?>, Supplier<?>>of(longSensor, currentTimeMillis)));
-        Entities.startManagement(entity);
         app.start(ImmutableList.of(loc));
 
-        Thread.sleep(200l);
-        Long first = entity.getAttribute(longSensor);
-        Thread.sleep(200l);
-        Long second = entity.getAttribute(longSensor);
-
+        Asserts.eventually(Entities.attributeSupplier(entity, longSensor), Predicates.notNull());
+        final Long first = entity.getAttribute(longSensor);
         assertNotNull(first);
-        assertNotNull(second);
-        assertTrue(second.longValue() > first.longValue());
+
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                Long second = entity.getAttribute(longSensor);
+                assertNotNull(second);
+                assertTrue(second.longValue() > first.longValue());
+            }
+        });
     }
 
     @Test
     public void testWithMultipleSuppliers() throws Exception {
-        entity = app.addChild(EntitySpec.create(DataEntity.class)
-                .configure(DataEntity.POLL_PERIOD, 100l)
+        entity = app.createAndManageChild(EntitySpec.create(DataEntity.class)
+                .configure(DataEntity.POLL_PERIOD, 50L)
                 .configure(DataEntity.SENSOR_SUPPLIER_MAP, MutableMap.<AttributeSensor<?>, Supplier<?>>builder()
                         .put(longSensor, currentTimeMillis)
                         .put(stringSensor, new Supplier<String>() {
@@ -100,15 +103,19 @@ public class DataEntityTest {
                                 }
                             })
                         .build()));
-        Entities.startManagement(entity);
         app.start(ImmutableList.of(loc));
 
         reference.set("value");
-        Thread.sleep(200l);
-        Long first = entity.getAttribute(longSensor);
-        String second = entity.getAttribute(stringSensor);
 
-        assertNotNull(first);
-        assertNotNull(second);
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                Long first = entity.getAttribute(longSensor);
+                String second = entity.getAttribute(stringSensor);
+
+                assertNotNull(first);
+                assertNotNull(second);
+            }
+        });
     }
 }

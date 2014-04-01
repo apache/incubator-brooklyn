@@ -33,11 +33,6 @@ public class DataEntityImpl extends AbstractEntity implements DataEntity {
     public DataEntityImpl() { }
 
     @Override
-    public void init() {
-        // TODO
-    }
-
-    @Override
     public void start(Collection<? extends Location> locations) {
         connectSensors();
         setAttribute(SERVICE_UP, Boolean.TRUE);

@@ -38,7 +38,7 @@ public class FunctionPollConfig<S, T> extends PollConfig<S, T, FunctionPollConfi
         this.callable = new Callable<S>() {
             @Override
             public S call() throws Exception {
-                return (S) val.get();
+                return val.get();
             }
         };
         return this;
