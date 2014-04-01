@@ -360,7 +360,7 @@ public class DependentConfiguration {
         protected Predicate<? super T> readiness;
         protected List<AttributeAndSensorCondition<?>> multiSource = Lists.newArrayList();
         protected Function<? super T, ? extends V> postProcess;
-        protected Function<?, ? extends V> multiPostProcess;
+        protected Function<?, ? extends V> postProcessFromMultiple;
         protected List<AttributeAndSensorCondition<?>> abortConditions = Lists.newArrayList();
         
         public <T2> Builder<T2,T2> attributeWhenReady(Entity source, AttributeSensor<T2> sensor) {
@@ -398,8 +398,8 @@ public class DependentConfiguration {
             this.postProcess = (Function) checkNotNull(val, "postProcess");
             return (Builder<T,V2>) this;
         }
-        public <V2> Builder<T,V2> multiPostProcess(final Function<? super V, V2> val) {
-            this.multiPostProcess = (Function) checkNotNull(val, "postProcess");
+        public <V2> Builder<T,V2> postProcessFromMultiple(final Function<? super V, V2> val) {
+            this.postProcessFromMultiple = (Function) checkNotNull(val, "postProcess");
             return (Builder<T,V2>) this;
         }
         public <T2> Builder<T,V> abortIf(Entity source, AttributeSensor<T2> sensor) {
@@ -437,13 +437,13 @@ public class DependentConfiguration {
                         return (Task) builder().attributeWhenReady(it.source, it.sensor).readiness((Predicate)it.predicate).build();
                     }
                 }));
-                if (multiPostProcess == null) {
+                if (postProcessFromMultiple == null) {
                     return task;
                 } else {
                     return new BasicTask(new Callable<V>() {
                         @Override public V call() throws Exception {
-                            Object prePostProgess = DynamicTasks.queueIfPossible(task).orSubmitAndBlock().getTask().get();
-                            return ((Function<Object,V>)multiPostProcess).apply(prePostProgess);
+                            Object prePostProgress = DynamicTasks.queueIfPossible(task).orSubmitAndBlock().getTask().get();
+                            return ((Function<Object,V>)postProcessFromMultiple).apply(prePostProgress);
                         }
                     });
                 }

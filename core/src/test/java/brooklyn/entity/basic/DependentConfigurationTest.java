@@ -193,7 +193,7 @@ public class DependentConfigurationTest {
     public void testListAttributeWhenReadyFromMultipleEntitiesWithGlobalPostProcessor() throws Exception {
         final Task<String> t = submit(DependentConfiguration.builder()
                 .attributeWhenReadyFromMultiple(ImmutableList.of(entity, entity2), TestEntity.SEQUENCE)
-                .multiPostProcess(new Function<List<Integer>, String>() {
+                .postProcessFromMultiple(new Function<List<Integer>, String>() {
                         @Override public String apply(List<Integer> input) {
                             if (input == null) {
                                 return null;
