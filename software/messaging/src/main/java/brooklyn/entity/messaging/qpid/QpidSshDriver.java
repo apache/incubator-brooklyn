@@ -111,13 +111,11 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
     }
 
     public Map<String, String> getShellEnvironment() {
-        Map<String, String> orig = super.getShellEnvironment();
         return MutableMap.<String, String>builder()
-                .putAll(orig)
+                .putAll(super.getShellEnvironment())
                 .put("QPID_HOME", getRunDir())
                 .put("QPID_WORK", getRunDir())
                 .renameKey("JAVA_OPTS", "QPID_OPTS")
-                .putIfAbsent("QPID_OPTS", "")
                 .build();
     }
 }

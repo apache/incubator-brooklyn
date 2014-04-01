@@ -132,8 +132,9 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
 
     @Override
     public Map<String, String> getShellEnvironment() {
-        return MutableMap.<String,String>builder().putAll(super.getShellEnvironment())
-                .put("JETTY_RUN",getRunDir())
+        return MutableMap.<String,String>builder()
+                .putAll(super.getShellEnvironment())
+                .put("JETTY_RUN", getRunDir())
                 .renameKey("JAVA_OPTS", "JAVA_OPTIONS")
                 .build();
     }

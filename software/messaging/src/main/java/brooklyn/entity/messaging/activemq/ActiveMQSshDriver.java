@@ -119,8 +119,7 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
                 .putAll(orig)
                 .put("ACTIVEMQ_HOME", getRunDir())
                 .put("ACTIVEMQ_PIDFILE", getPidFile())
-                .put("ACTIVEMQ_OPTS", orig.get("JAVA_OPTS") != null ? orig.get("JAVA_OPTS") : "")
-                .put("JAVA_OPTS", "")
+                .renameKey("JAVA_OPTS", "ACTIVEMQ_OPTS")
                 .build();
     }
 }
