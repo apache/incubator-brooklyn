@@ -74,7 +74,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
             else if (job instanceof Callable) { subtask = new BasicTask<T>((Callable) job); }
             else if (job instanceof Runnable) { subtask = new BasicTask<T>((Runnable) job); }
             
-            else throw new IllegalArgumentException("Invalid child "+job+
+            else throw new IllegalArgumentException("Invalid child "+(job == null ? null : job.getClass() + " ("+job+")")+
                 " passed to compound task; must be Runnable, Callable, Closure or Task");
             
             BrooklynTaskTags.addTagDynamically(subtask, ManagementContextInternal.SUB_TASK_TAG);
