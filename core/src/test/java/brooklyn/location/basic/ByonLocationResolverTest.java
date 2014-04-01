@@ -119,6 +119,7 @@ public class ByonLocationResolverTest {
         assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\")"), ImmutableSet.of("1.1.1.1"));
         assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\")"), ImmutableSet.of("1.1.1.1"));
         assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1,1.1.1.2\")"), ImmutableSet.of("1.1.1.1","1.1.1.2"));
+        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1, 1.1.1.2\")"), ImmutableSet.of("1.1.1.1","1.1.1.2"));
     }
 
     @Test

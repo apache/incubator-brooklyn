@@ -2,7 +2,6 @@ package brooklyn.location.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +12,6 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
@@ -21,8 +19,6 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
@@ -109,7 +105,7 @@ public class ByonLocationResolver implements LocationResolver {
                 hostHere = host.substring(host.indexOf("@")+1);
             }
             try {
-                InetAddress.getByName(hostHere);
+                InetAddress.getByName(hostHere.trim());
             } catch (Exception e) {
                 throw new IllegalArgumentException("Invalid host '"+hostHere+"' specified in '"+spec+"': "+e);
             }
