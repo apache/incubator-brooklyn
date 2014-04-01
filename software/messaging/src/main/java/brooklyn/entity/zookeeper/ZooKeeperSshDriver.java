@@ -136,7 +136,7 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
     public void launch() {
         newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
         .body.append(
-                format("nohup java -cp zookeeper-%s.jar:lib/*:conf org.apache.zookeeper.server.quorum.QuorumPeerMain conf/zoo.cfg > %s 2>&1 &", getVersion(), getLogFileLocation()))
+                format("nohup java $JAVA_OPTS -cp zookeeper-%s.jar:lib/*:conf org.apache.zookeeper.server.quorum.QuorumPeerMain conf/zoo.cfg > %s 2>&1 &", getVersion(), getLogFileLocation()))
         .execute();        
     }
 
