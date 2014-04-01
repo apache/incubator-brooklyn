@@ -91,7 +91,6 @@ public class EntitySpec<T extends Entity> implements Serializable {
         EntitySpec<T> result = create(spec.getType())
                 .displayName(spec.getDisplayName())
                 .additionalInterfaces(spec.getAdditionalInterfaces())
-                .addInitializers(spec.getInitializers())
                 .configure(spec.getConfig())
                 .configure(spec.getFlags())
                 .policySpecs(spec.getPolicySpecs())
