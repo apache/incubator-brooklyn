@@ -50,8 +50,8 @@ public class CountdownTimerTest {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                try { gun.acquire(); } catch (Exception e) { throw Exceptions.propagate(e); }
                 synchronized (mutex) {
-                    try { gun.acquire(); } catch (Exception e) { throw Exceptions.propagate(e); }
                     mutex.notifyAll();
                 }
             }
