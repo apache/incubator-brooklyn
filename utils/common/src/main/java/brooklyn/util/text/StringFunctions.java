@@ -19,6 +19,17 @@ public class StringFunctions {
         };
     }
 
+    public static Function<String,String> prepend(final String prefix) {
+        return new Function<String, String>() {
+            @Override
+            @Nullable
+            public String apply(@Nullable String input) {
+                if (input==null) return null;
+                return prefix + input;
+            }
+        };
+    }
+
     /** given e.g. "hello %s" returns a function which will insert a string into that pattern */
     public static Function<Object, String> formatter(final String pattern) {
         return new Function<Object, String>() {
