@@ -43,11 +43,11 @@ public class EntityCleanupLongevityTest {
         return 100000;
     }
 
-    // FIXME Grinds to a crawl after approx 10000 iterations (with -Xmx512m)
+    // Note leaves behind brooklyn.management.usage.ApplicationUsage$ApplicationEvent (one each for started/stopped/destroyed, per app)
     @Test(groups={"Longevity","Acceptance"})
     public void testAppCreatedStartedAndStopped() throws Exception {
         int iterations = numIterations();
-        Stopwatch timer = new Stopwatch().start();
+        Stopwatch timer = Stopwatch.createStarted();
         
         for (int i = 0; i < iterations; i++) {
             if (i % 100 == 0) LOG.info("testAppCreatedStartedAndStopped iteration {} at {}", i, Time.makeTimeStringRounded(timer));
@@ -61,12 +61,11 @@ public class EntityCleanupLongevityTest {
         }
     }
 
-    // FIXME Grinds to a crawl after approx 12000 iterations (with -Xmx512m)
     // Note does not call stop() on the entities
     @Test(groups={"Longevity","Acceptance"})
     public void testAppCreatedStartedAndUnmanaged() throws Exception {
         int iterations = numIterations();
-        Stopwatch timer = new Stopwatch().start();
+        Stopwatch timer = Stopwatch.createStarted();
         
         for (int i = 0; i < iterations; i++) {
             if (i % 100 == 0) LOG.info("testAppCreatedStartedAndUnmanaged iteration {} at {}", i, Time.makeTimeStringRounded(timer));
@@ -87,6 +86,7 @@ public class EntityCleanupLongevityTest {
             @Override public void onEvent(SensorEvent<String> event) {
                 result.setAttribute(TestApplication.MY_ATTRIBUTE, event.getValue());
             }});
+        entity.setAttribute(TestEntity.NAME, "myname");
         return result;
     }
 }

@@ -244,7 +244,7 @@ public class LocalManagementContext extends AbstractManagementContext {
 
         if (execution == null) {
             execution = new BasicExecutionManager(getManagementNodeId());
-            gc = new BrooklynGarbageCollector(configMap, execution);
+            gc = new BrooklynGarbageCollector(configMap, execution, getStorage());
         }
         return execution;
     }
