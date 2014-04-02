@@ -12,6 +12,7 @@ import brooklyn.internal.storage.Reference;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 public class BrooklynStorageImpl implements BrooklynStorage {
@@ -36,7 +37,7 @@ public class BrooklynStorageImpl implements BrooklynStorage {
      * @return the DataGrid.
      */
     @VisibleForTesting
-    public DataGrid getDataGrid(){
+    public DataGrid getDataGrid() {
         return datagrid;
     }
 
@@ -96,5 +97,13 @@ public class BrooklynStorageImpl implements BrooklynStorage {
     @Override
     public void terminate() {
         datagrid.terminate();
+    }
+    
+    @Override
+    public Map<String, Object> getStorageMetrics() {
+        return ImmutableMap.of(
+                "datagrid", datagrid.getDatagridMetrics(),
+                "refsMapSize", ""+refsMap.size(),
+                "listsMapSize", ""+listsMap.size());
     }
 }

@@ -1,5 +1,6 @@
 package brooklyn.internal.storage;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 public interface DataGrid {
@@ -20,4 +21,6 @@ public interface DataGrid {
      * datagrid is going to be terminated; it only means that all local resources of the datagrid are released.
      */
     void terminate();
+    
+    Map<String, Object> getDatagridMetrics();
 }

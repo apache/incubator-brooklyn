@@ -1,15 +1,18 @@
 package brooklyn.internal.storage.impl.hazelcast;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+
 import brooklyn.entity.Entity;
 import brooklyn.internal.storage.DataGrid;
 import brooklyn.management.internal.ManagementContextInternal;
+
+import com.google.common.collect.ImmutableMap;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceNotActiveException;
-
-import java.util.concurrent.ConcurrentMap;
 
 public class HazelcastDataGrid implements DataGrid {
 
@@ -50,5 +53,10 @@ public class HazelcastDataGrid implements DataGrid {
             hz.getLifecycleService().shutdown();
         } catch (HazelcastInstanceNotActiveException ignore) {
         }
+    }
+    
+    @Override
+    public Map<String, Object> getDatagridMetrics() {
+        return ImmutableMap.<String,Object>of("name", hz.getName(), "isRunning", hz.getLifecycleService().isRunning());
     }
 }

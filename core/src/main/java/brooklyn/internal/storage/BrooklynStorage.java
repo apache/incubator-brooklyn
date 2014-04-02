@@ -82,4 +82,6 @@ public interface BrooklynStorage {
      * Terminates the BrooklynStorage.
      */
     void terminate();
+    
+    Map<String, Object> getStorageMetrics();
 }
