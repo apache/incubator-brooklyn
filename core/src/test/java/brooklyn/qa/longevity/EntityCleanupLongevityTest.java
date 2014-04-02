@@ -1,5 +1,7 @@
 package brooklyn.qa.longevity;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -14,8 +16,11 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;
@@ -31,7 +36,10 @@ public class EntityCleanupLongevityTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        managementContext = Entities.newManagementContext();
+        managementContext = new LocalManagementContextForTests();
+        
+        // do this to ensure GC is initialized
+        managementContext.getExecutionManager();
     }
     
     @AfterMethod(alwaysRun=true)
@@ -48,10 +56,18 @@ public class EntityCleanupLongevityTest {
     public void testAppCreatedStartedAndStopped() throws Exception {
         int iterations = numIterations();
         Stopwatch timer = Stopwatch.createStarted();
+        long last = timer.elapsed(TimeUnit.MILLISECONDS);
         
         for (int i = 0; i < iterations; i++) {
-            if (i % 100 == 0) LOG.info("testAppCreatedStartedAndStopped iteration {} at {}", i, Time.makeTimeStringRounded(timer));
-            if (i % 100 == 0) System.out.println("testAppCreatedStartedAndStopped iteration " + i + " at " + Time.makeTimeStringRounded(timer));
+            if (i % 100 == 0 || i<5) {
+                long now = timer.elapsed(TimeUnit.MILLISECONDS);
+                String msg = JavaClassNames.niceClassAndMethod()+" iteration " + i + " at " + Time.makeTimeStringRounded(now) + " (delta "+Time.makeTimeStringRounded(now-last)+")";
+                LOG.info(msg);
+                System.out.println(msg);
+                System.gc(); System.gc();
+                ((AbstractManagementContext)managementContext).getGarbageCollector().logUsage(JavaClassNames.niceClassAndMethod(), true);
+                last = now;
+            }
             loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
             app = newApp();
             app.start(ImmutableList.of(loc));
@@ -66,10 +82,18 @@ public class EntityCleanupLongevityTest {
     public void testAppCreatedStartedAndUnmanaged() throws Exception {
         int iterations = numIterations();
         Stopwatch timer = Stopwatch.createStarted();
+        long last = timer.elapsed(TimeUnit.MILLISECONDS);
         
         for (int i = 0; i < iterations; i++) {
-            if (i % 100 == 0) LOG.info("testAppCreatedStartedAndUnmanaged iteration {} at {}", i, Time.makeTimeStringRounded(timer));
-            if (i % 100 == 0) System.out.println("testAppCreatedStartedAndUnmanaged iteration " + i + " at " + Time.makeTimeStringRounded(timer));
+            if (i % 100 == 0 || i<5) {
+                long now = timer.elapsed(TimeUnit.MILLISECONDS);
+                String msg = JavaClassNames.niceClassAndMethod()+" iteration " + i + " at " + Time.makeTimeStringRounded(now) + " (delta "+Time.makeTimeStringRounded(now-last)+")";
+                LOG.info(msg);
+                System.out.println(msg);
+                System.gc(); System.gc();
+                ((AbstractManagementContext)managementContext).getGarbageCollector().logUsage(JavaClassNames.niceClassAndMethod(), true);
+                last = now;
+            }
             loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
             app = newApp();
             app.start(ImmutableList.of(loc));

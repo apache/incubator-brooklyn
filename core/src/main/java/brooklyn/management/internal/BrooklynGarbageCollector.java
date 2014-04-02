@@ -127,8 +127,11 @@ public class BrooklynGarbageCollector {
     }
 
     public void logUsage(String prefix) {
-        if (LOG.isDebugEnabled())
-            LOG.debug(prefix+" - "+"using "+
+        logUsage(prefix, false);
+    }
+    public void logUsage(String prefix, boolean logAtInfoLevel) {
+        if (LOG.isDebugEnabled() || logAtInfoLevel) {
+            String message = prefix+" - "+"using "+
                 Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
                 Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory; "+
                 "storage: " + storage.getStorageMetrics() + "; " +
@@ -136,8 +139,10 @@ public class BrooklynGarbageCollector {
                 executionManager.getNumActiveTasks()+" active, "+
                 executionManager.getNumInMemoryTasks()+" in memory "+
                 "("+executionManager.getNumIncompleteTasks()+" incomplete and "+
-                executionManager.getTotalTasksSubmitted()+" total submitted)"
-                );
+                executionManager.getTotalTasksSubmitted()+" total submitted)";
+            if (logAtInfoLevel) LOG.info(message);
+            else LOG.debug(message);
+        }
     }
     
     public void shutdownNow() {

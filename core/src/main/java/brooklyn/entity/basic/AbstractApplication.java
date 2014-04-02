@@ -124,9 +124,13 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 
         recordApplicationEvent(Lifecycle.RUNNING);
 
-        log.info("Started application " + this);
+        logApplicationLifecycle("Started");
     }
 
+    protected void logApplicationLifecycle(String message) {
+        log.info(message+" application " + this);
+    }
+    
     protected void doStart(Collection<? extends Location> locations) {
         StartableMethods.start(this, locations);        
     }
@@ -150,7 +154,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
      */
     @Override
     public void stop() {
-        log.info("Stopping application " + this);
+        logApplicationLifecycle("Stopping");
 
         setAttribute(SERVICE_UP, false);
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
@@ -177,7 +181,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
             getEntityManager().unmanage(this);
         }
 
-        log.info("Stopped application " + this);
+        logApplicationLifecycle("Stopped");
     }
 
     protected void doStop() {
