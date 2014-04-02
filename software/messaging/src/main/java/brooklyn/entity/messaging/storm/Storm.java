@@ -39,11 +39,10 @@ public interface Storm extends SoftwareProcess, UsesJmx {
     ConfigKey<Object> START_MUTEX = ConfigKeys.newConfigKey(Object.class, "storm.start.mutex");
 
     @SetFromFlag("role")
-    ConfigKey<Role> ROLE = ConfigKeys.newConfigKey(Role.class, "storm.role");
+    ConfigKey<Role> ROLE = ConfigKeys.newConfigKey(Role.class, "storm.role", "The Storm server role");
 
     @SetFromFlag("localDir")
-    ConfigKey<String> LOCAL_DIR = ConfigKeys.newStringConfigKey(
-            "storm.local.dir", "Setting for Storm local dir");
+    ConfigKey<String> LOCAL_DIR = ConfigKeys.newStringConfigKey("storm.local.dir", "Setting for Storm local dir");
     
     @SetFromFlag("uiPort")
     PortAttributeSensorAndConfigKey UI_PORT = new PortAttributeSensorAndConfigKey("storm.ui.port", "Storm UI port", "8080+");
@@ -56,8 +55,9 @@ public interface Storm extends SoftwareProcess, UsesJmx {
             "storm.zookeeper.ensemble", "Zookeeper ensemble entity");
 
     @SetFromFlag("stormConfigTemplateUrl")
-    ConfigKey<String> STORM_CONFIG_TEMPLATE_URL = ConfigKeys.newStringConfigKey("storm.config.templateUrl", "Template file (in freemarker format) for the storm.yaml config file",
-           "classpath://brooklyn/entity/messaging/storm/storm.yaml");
+    ConfigKey<String> STORM_CONFIG_TEMPLATE_URL = ConfigKeys.newStringConfigKey("storm.config.templateUrl",
+            "Template file (in freemarker format) for the storm.yaml config file",
+            "classpath://brooklyn/entity/messaging/storm/storm.yaml");
 
     @SetFromFlag("zeromqVersion")
     ConfigKey<String> ZEROMQ_VERSION = ConfigKeys.newStringConfigKey("storm.zeromq.version", "zeromq version", "2.1.7");
@@ -65,12 +65,12 @@ public interface Storm extends SoftwareProcess, UsesJmx {
     AttributeSensor<Boolean> SERVICE_UP_JMX = Sensors.newBooleanSensor("storm.service.jmx.up", "Whether JMX is up for this service");
 
     String getStormConfigTemplateUrl();
+
     String getHostname();
+
     Role getRole();
     
-    public enum Role {
-        NIMBUS, SUPERVISOR, UI
-    }
+    enum Role { NIMBUS, SUPERVISOR, UI }
 
     AttributeSensor<String> STORM_UI_URL = StormUiUrl.STORM_UI_URL;
     

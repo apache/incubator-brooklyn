@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityAndAttribute;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
@@ -26,6 +26,7 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,17 +48,15 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
     }
 
     public String getLocalDir() {
-        return entity.getConfig(Storm.LOCAL_DIR) == null ? format("%s/storm", getRunDir()) : 
-            entity.getConfig(Storm.LOCAL_DIR);
+        return Optional.fromNullable(entity.getConfig(Storm.LOCAL_DIR)).or(Os.mergePathsUnix(getRunDir(), "storm"));
     }
 
     public String getNimbusHostname() {
         String result = entity.getConfig(Storm.NIMBUS_HOSTNAME);
-        if (result!=null) 
-            return result;
-        
+        if (result != null) return result;
+
         Entity nimbus = entity.getConfig(Storm.NIMBUS_ENTITY);
-        if (nimbus==null) {
+        if (nimbus == null) {
             log.warn("No nimbus hostname available; using 'localhost'");
             return "localhost";
         }
@@ -80,24 +79,21 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
             result.add("-XX:+PrintGCTimeStamps");
             result.add("-XX:+PrintGCDetails");
         }
-        
+
         if ("ui".equals(getRoleName())) {
             result.add("-Xmx768m");
         }
-        
+
         return result;
     }
-    
+
     public String getJvmOptsLine() {
-        String opts = getShellEnvironment().get("JAVA_OPTS");
-        if (opts==null) return "";
-        return opts;
+        return Optional.fromNullable(getShellEnvironment().get("JAVA_OPTS")).or("");
     }
     
     public List<String> getZookeeperServers() {
         ZooKeeperEnsemble zooKeeperEnsemble = entity.getConfig(Storm.ZOOKEEPER_ENSEMBLE);
-        Supplier<List<String>> supplier = Entities.attributeSupplierWhenReady(new EntityAndAttribute<List<String>>(
-                zooKeeperEnsemble, ZooKeeperEnsemble.ZOOKEEPER_SERVERS));
+        Supplier<List<String>> supplier = Entities.attributeSupplierWhenReady(zooKeeperEnsemble, ZooKeeperEnsemble.ZOOKEEPER_SERVERS);
         return supplier.get();
     }
 
@@ -145,15 +141,13 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
 
     @Override
     public void launch() {
-        Entity nimbus = null;
         boolean needsSleep = false;
-        
         if (getRoleName().equals("supervisor")) {
-            nimbus = entity.getConfig(Storm.NIMBUS_ENTITY);
-            if (nimbus==null) {
+            Entity nimbus = entity.getConfig(Storm.NIMBUS_ENTITY);
+            if (nimbus == null) {
                 log.warn("No nimbus entity available; not blocking before starting supervisors");
             } else {
-                Entities.submit(entity, DependentConfiguration.attributeWhenReady(nimbus, Attributes.SERVICE_UP)).getUnchecked();
+                Entities.waitForServiceUp(nimbus, Duration.seconds(entity.getConfig(SoftwareProcess.START_TIMEOUT)));
                 needsSleep = true;
             }
         }
@@ -166,10 +160,9 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
         // attempting to eliminate the causes of:
         // 2013-12-12 09:21:45 supervisor [ERROR] Error on initialization of server mk-supervisor
         // org.apache.zookeeper.KeeperException$NoNodeException: KeeperErrorCode = NoNode for /assignments
+        // TODO use SoftwareProcess#START_LATCH instead here?
 
-        Object startMutex = entity.getConfig(Storm.START_MUTEX);
-        if (startMutex==null) startMutex = new Object();
-        
+        Object startMutex = Optional.fromNullable(entity.getConfig(Storm.START_MUTEX)).or(new Object());
         synchronized (startMutex) {
             if (needsSleep) {
                 // give 10s extra to make sure nimbus is ready; we see weird zookeeper no /assignments node error otherwise
