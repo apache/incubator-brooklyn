@@ -29,8 +29,6 @@ import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -67,7 +65,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
 
     public boolean isJmxSslEnabled() {
-        return GroovyJavaMethods.truth(entity.getConfig(UsesJmx.JMX_SSL_ENABLED));
+        return isJmxEnabled() && GroovyJavaMethods.truth(entity.getConfig(UsesJmx.JMX_SSL_ENABLED));
     }
 
     /**
@@ -91,7 +89,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         // (if dbl quotes are needed we could pass on the command-line instead of in an env var)
         String sJavaOpts = Joiner.on(" ").join(javaOpts);
         // println "using java opts: $sJavaOpts"
-        return MutableMap.<String, String> builder().putAll(super.getShellEnvironment()).put("JAVA_OPTS", sJavaOpts).build();
+        return MutableMap.<String, String>builder().putAll(super.getShellEnvironment()).put("JAVA_OPTS", sJavaOpts).build();
     }
 
     /**
