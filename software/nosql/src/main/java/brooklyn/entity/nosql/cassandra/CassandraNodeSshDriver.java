@@ -1,11 +1,23 @@
 /*
- * Copyright 2012-2013 by Cloudsoft Corp.
+ * Copyright 2012-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package brooklyn.entity.nosql.cassandra;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +41,7 @@ import brooklyn.location.Location;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.TaskWrapper;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
@@ -45,11 +58,9 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
@@ -58,17 +69,15 @@ import com.google.common.collect.Sets;
 public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver implements CassandraNodeDriver {
 
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeSshDriver.class);
-    
-    protected Maybe<String> resolvedAddressCache = Maybe.<String>absent();
-    
+
+    protected Maybe<String> resolvedAddressCache = Maybe.absent();
+
     public CassandraNodeSshDriver(CassandraNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
-
-        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
     }
 
     @Override
-    protected String getLogFileLocation() { return String.format("%s/cassandra.log", getRunDir()); }
+    protected String getLogFileLocation() { return Os.mergePathsUnix(getRunDir(),"cassandra.log"); }
 
     @Override
     public Integer getGossipPort() { return entity.getAttribute(CassandraNode.GOSSIP_PORT); }
@@ -85,15 +94,13 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     @Override
     public String getClusterName() { return entity.getAttribute(CassandraNode.CLUSTER_NAME); }
 
-    public String getEndpointSnitchName() {
-        return entity.getConfig(CassandraNode.ENDPOINT_SNITCH_NAME);
-    }
-
     @Override
     public String getCassandraConfigTemplateUrl() { return entity.getConfig(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL); }
 
     @Override
     public String getCassandraConfigFileName() { return entity.getConfig(CassandraNode.CASSANDRA_CONFIG_FILE_NAME); }
+
+    public String getEndpointSnitchName() { return entity.getConfig(CassandraNode.ENDPOINT_SNITCH_NAME); }
 
     public String getCassandraRackdcConfigTemplateUrl() { return entity.getConfig(CassandraNode.CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL); }
 
@@ -112,7 +119,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getDefaultUnpackedDirectoryName()));
-        
+
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.INSTALL_TAR)
@@ -120,15 +127,16 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .build();
 
         newScript(INSTALLING)
-                .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
     }
 
+    @Override
     public Set<Integer> getPortsUsed() {
-        Set<Integer> result = Sets.newLinkedHashSet(super.getPortsUsed());
-        result.addAll(getPortMap().values());
-        return result;
+        return ImmutableSet.<Integer>builder()
+                .addAll(super.getPortsUsed())
+                .addAll(getPortMap().values())
+                .build();
     }
 
     protected Map<String, Integer> getPortMap() {
@@ -136,7 +144,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .put("jmxPort", entity.getAttribute(UsesJmx.JMX_PORT))
                 .put("rmiPort", entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT))
                 .put("gossipPort", getGossipPort())
-                .put("sslGossipPort:", getSslGossipPort())
+                .put("sslGossipPort", getSslGossipPort())
                 .put("thriftPort", getThriftPort())
                 .build();
     }
@@ -145,7 +153,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     public void customize() {
         log.debug("Customizing {} (Cluster {})", entity, getClusterName());
         Networking.checkPortsValid(getPortMap());
-        
+
         customizeInitialSeeds();
 
         String logFileEscaped = getLogFileLocation().replace("/", "\\/"); // escape slashes
@@ -166,13 +174,13 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
         // Copy the cassandra.yaml configuration file across
         String configFileContents = processTemplate(getCassandraConfigTemplateUrl());
-        String destinationConfigFile = String.format("%s/conf/%s", getRunDir(), getCassandraConfigFileName());
-        getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
-        
+        String destinationConfigFile = Os.mergePathsUnix(getRunDir(), "conf", getCassandraConfigFileName());
+        getMachine().copyTo(Streams.newInputStreamWithContents(configFileContents), destinationConfigFile);
+
         // Copy the cassandra-rackdc.properties configuration file across
         String rackdcFileContents = processTemplate(getCassandraRackdcConfigTemplateUrl());
-        String rackdcDestinationFile = String.format("%s/conf/%s", getRunDir(), getCassandraRackdcConfigFileName());
-        getMachine().copyTo(new ByteArrayInputStream(rackdcFileContents.getBytes()), rackdcDestinationFile);
+        String rackdcDestinationFile = Os.mergePathsUnix(getRunDir(), "conf", getCassandraRackdcConfigFileName());
+        getMachine().copyTo(Streams.newInputStreamWithContents(rackdcFileContents), rackdcDestinationFile);
 
         customizeCopySnitch();
     }
@@ -183,7 +191,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         if (Strings.isNonBlank(customSnitchJarUrl)) {
             int lastSlashIndex = customSnitchJarUrl.lastIndexOf("/");
             String customSnitchJarName = (lastSlashIndex > 0) ? customSnitchJarUrl.substring(lastSlashIndex+1) : "customBrooklynSnitch.jar";
-            String jarDestinationFile = String.format("%s/lib/%s", getRunDir(), customSnitchJarName);
+            String jarDestinationFile = Os.mergePathsUnix(getRunDir(), "lib", customSnitchJarName);
             InputStream customSnitchJarStream = checkNotNull(resource.getResourceFromUrl(customSnitchJarUrl), "%s could not be loaded", customSnitchJarUrl);
             try {
                 getMachine().copyTo(customSnitchJarStream, jarDestinationFile);
@@ -216,10 +224,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         List<Entity> ancestors = getCassandraAncestors();
         log.info("Launching " + entity + ": " +
                 "cluster "+getClusterName()+", " +
-        		"hostname (public) " + getEntity().getAttribute(Attributes.HOSTNAME) + ", " +
-        		"hostname (subnet) " + subnetHostname + ", " +
-        		"seeds "+((CassandraNode)entity).getSeeds()+" (from "+seeds+")");
-        
+                "hostname (public) " + getEntity().getAttribute(Attributes.HOSTNAME) + ", " +
+                "hostname (subnet) " + subnetHostname + ", " +
+                "seeds "+((CassandraNode)entity).getSeeds()+" (from "+seeds+")");
+
         boolean isFirst = seeds.iterator().next().equals(entity);
         if (isClustered() && !isFirst && CassandraDatacenter.WAIT_FOR_FIRST) {
             // wait for the first node
@@ -234,7 +242,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 Tasks.resetBlockingDetails();
             }
         }
-        
+
         List<Entity> queuedStart = null;
         if (CassandraDatacenter.DELAY_BETWEEN_STARTS!=null && !ancestors.isEmpty()) {
             Entity root = ancestors.get(ancestors.size()-1);
@@ -253,8 +261,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
             do {
                 // get it again in case it is backed by something external
                 queuedStart = root.getAttribute(CassandraDatacenter.QUEUED_START_NODES);
-                if (queuedStart.get(0).equals(getEntity()))
-                    break;
+                if (queuedStart.get(0).equals(getEntity())) break;
                 synchronized (queuedStart) {
                     try {
                         queuedStart.wait(1000);
@@ -269,13 +276,13 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         }
 
         try {
-            newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
-            .body.append(
-                // log the date to attempt to debug occasional http://wiki.apache.org/cassandra/FAQ#schema_disagreement
-                // (can be caused by machines out of synch time-wise; but in our case it seems to be caused by other things!)
-                "echo date on cassandra server `hostname` when launching is `date`",
-                launchEssentialCommand())
-                .execute();
+            newScript(MutableMap.of(USE_PID_FILE, getPidFile()), LAUNCHING)
+                    .body.append(
+                            // log the date to attempt to debug occasional http://wiki.apache.org/cassandra/FAQ#schema_disagreement
+                            // (can be caused by machines out of synch time-wise; but in our case it seems to be caused by other things!)
+                            "echo date on cassandra server `hostname` when launching is `date`",
+                            launchEssentialCommand())
+                    .execute();
             if (!isClustered()) {
                 InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
                 if (creationScript!=null) { 
@@ -286,14 +293,14 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 }
             }
             if (isClustered() && isFirst) {
-                for (Entity ancestor: getCassandraAncestors())
+                for (Entity ancestor: getCassandraAncestors()) {
                     ((EntityLocal)ancestor).setAttribute(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
+                }
             }
-            
         } finally {
             if (queuedStart!=null) {
                 Entity head = queuedStart.remove(0);
-                Preconditions.checkArgument(head.equals(getEntity()), "first queued node was "+head+" but we are "+getEntity());
+                checkArgument(head.equals(getEntity()), "first queued node was "+head+" but we are "+getEntity());
                 synchronized (queuedStart) {
                     queuedStart.notifyAll();
                 }
@@ -317,16 +324,16 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         return String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile());
     }
 
-    public String getPidFile() { return String.format("%s/cassandra.pid", getRunDir()); }
+    public String getPidFile() { return Os.mergePathsUnix(getRunDir(), "cassandra.pid"); }
 
     @Override
     public boolean isRunning() {
-        return newScript(MutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).body.append("true").execute() == 0;
+        return newScript(MutableMap.of(USE_PID_FILE, getPidFile()), CHECK_RUNNING).execute() == 0;
     }
 
     @Override
     public void stop() {
-        newScript(MutableMap.of("usePidFile", getPidFile()), STOPPING).body.append("true").execute();
+        newScript(MutableMap.of(USE_PID_FILE, getPidFile()), STOPPING).execute();
     }
 
     @SuppressWarnings("unchecked")
@@ -342,24 +349,27 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     public Map<String, String> getShellEnvironment() {
         return MutableMap.<String, String>builder()
                 .putAll(super.getShellEnvironment())
-                .put("CASSANDRA_CONF", String.format("%s/conf", getRunDir()))
+                .put("CASSANDRA_CONF", Os.mergePathsUnix(getRunDir(), "conf"))
                 .renameKey("JAVA_OPTS", "JVM_OPTS")
                 .build();
     }
 
+    @Override
     public ProcessTaskWrapper<Integer> executeScriptAsync(String commands) {
         String fileToRun = Os.mergePathsUnix("brooklyn_commands", "cassandra-commands-"+Identifiers.makeRandomId(8));
-        DynamicTasks.queueIfPossible(SshEffectorTasks.put(Os.mergePaths(getRunDir(), fileToRun))
+        TaskWrapper<Void> task = SshEffectorTasks.put(Os.mergePathsUnix(getRunDir(), fileToRun))
                 .machine(getMachine())
                 .contents(commands)
-                .summary("copying cassandra script to execute "+fileToRun)).orSubmitAndBlock(getEntity());
+                .summary("copying cassandra script to execute "+fileToRun)
+                .newTask();
+        DynamicTasks.queueIfPossible(task).orSubmitAndBlock(getEntity()).andWaitForSuccess();
         return executeScriptFromInstalledFileAsync(fileToRun);
     }
 
     public ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String fileToRun) {
         ProcessTaskWrapper<Integer> task = SshEffectorTasks.ssh(
                         "cd "+getRunDir(),
-                        scriptInvocationCommand(getEntity().getAttribute(CassandraNode.THRIFT_PORT), fileToRun))
+                        scriptInvocationCommand(getThriftPort(), fileToRun))
                 .machine(getMachine())
                 .summary("executing cassandra script "+fileToRun)
                 .newTask();
@@ -368,15 +378,9 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     }
 
     protected String scriptInvocationCommand(Integer optionalThriftPort, String fileToRun) {
-        List<String> args = Lists.newArrayList();
-        args.add("bin/cassandra-cli");
-        if (optionalThriftPort != null) {
-            args.add("--port");
-            args.add(Integer.toString(optionalThriftPort));
-        }
-        args.add("--file");
-        args.add(fileToRun);
-        return Joiner.on(" ").join(args);
+        return "bin/cassandra-cli " +
+                (optionalThriftPort != null ? "--port " + optionalThriftPort : "") +
+                " --file "+fileToRun;
     }
 
     @Override
