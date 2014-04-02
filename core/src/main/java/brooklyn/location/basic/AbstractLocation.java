@@ -23,6 +23,7 @@ import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.Reference;
 import brooklyn.internal.storage.impl.BasicReference;
 import brooklyn.location.Location;
@@ -311,6 +312,15 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
     
     public void onManagementStopped() {
         this.managed = false;
+        if (managementContext.isRunning()) {
+            BrooklynStorage storage = ((ManagementContextInternal)managementContext).getStorage();
+            storage.remove(id+"-parent");
+            storage.remove(id+"-children");
+            storage.remove(id+"-creationTime");
+            storage.remove(id+"-hostGeoInfo");
+            storage.remove(id+"-displayName");
+            storage.remove(id+"-config");
+        }
     }
     
     protected boolean isLegacyConstruction() {
