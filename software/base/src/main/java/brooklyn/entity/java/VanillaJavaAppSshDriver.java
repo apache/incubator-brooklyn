@@ -50,14 +50,12 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
 
     @Override
     protected String getLogFileLocation() {
-        return format("%s/console", getRunDir());
+        return Os.mergePathsUnix(getRunDir(), "console");
     }
 
     @Override
     public void install() {
-        newScript(INSTALLING).
-                failOnNonZeroResultCode().
-                execute();
+        newScript(INSTALLING).execute();
     }
 
     @Override

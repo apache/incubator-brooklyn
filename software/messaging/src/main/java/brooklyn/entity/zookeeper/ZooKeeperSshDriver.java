@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 by Cloudsoft Corp.
+ * Copyright 2013-2014 by Cloudsoft Corporation Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
@@ -41,7 +42,7 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
     }
 
     @Override
-    protected String getLogFileLocation() { return getRunDir()+"/console.out"; }
+    protected String getLogFileLocation() { return Os.mergePathsUnix(getRunDir(), "console.out"); }
 
     protected Map<String, Integer> getPortMap() {
         return MutableMap.of("zookeeperPort", getZooKeeperPort());
@@ -80,12 +81,12 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
 
     @Override
     public boolean isRunning() {
-        return newScript(MutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).execute() == 0;
+        return newScript(MutableMap.of(USE_PID_FILE, getPidFile()), CHECK_RUNNING).execute() == 0;
     }
 
     @Override
     public void stop() {
-        newScript(ImmutableMap.of("usePidFile", getPidFile()), STOPPING).execute();     
+        newScript(ImmutableMap.of(USE_PID_FILE, getPidFile()), STOPPING).execute();     
     }
 
     @Override
@@ -102,7 +103,6 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
                 .build();
 
         newScript(INSTALLING)
-                .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
     }
@@ -113,23 +113,22 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
         Networking.checkPortsValid(getPortMap());
         newScript(CUSTOMIZING)
                 .body.append(
-                    format("cp -R %s/* .", getExpandedInstallDir()),
-                    format("mkdir %s/zookeeper", getRunDir()),
-                    format("echo %d > %s/zookeeper/myid", getMyId(), getRunDir())
-                )
+                        format("cp -R %s/* .", getExpandedInstallDir()),
+                        format("mkdir %s/zookeeper", getRunDir()),
+                        format("echo %d > %s/zookeeper/myid", getMyId(), getRunDir())
+                    )
                 .execute();
-        String destinationConfigFile = String.format("%s/conf/zoo.cfg", getRunDir());
+
+        String destinationConfigFile = Os.mergePathsUnix(getRunDir(), "conf/zoo.cfg");
         copyTemplate(getConfigFileName(), destinationConfigFile);
     }
 
-    public String getPidFile() { return String.format("%s/zookeeper.pid", getRunDir()); }
+    public String getPidFile() { return Os.mergePathsUnix(getRunDir(), "zookeeper.pid"); }
 
     @Override
     public void launch() {
         newScript(MutableMap.of(USE_PID_FILE, getPidFile()), LAUNCHING)
-                .body.append(
-                        format("nohup java $JAVA_OPTS -cp zookeeper-%s.jar:lib/*:conf org.apache.zookeeper.server.quorum.QuorumPeerMain conf/zoo.cfg > %s 2>&1 &", getVersion(), getLogFileLocation())
-                )
+                .body.append(format("nohup java $JAVA_OPTS -cp zookeeper-%s.jar:lib/*:conf org.apache.zookeeper.server.quorum.QuorumPeerMain conf/zoo.cfg > %s 2>&1 &", getVersion(), getLogFileLocation()))
                 .execute();
     }
 

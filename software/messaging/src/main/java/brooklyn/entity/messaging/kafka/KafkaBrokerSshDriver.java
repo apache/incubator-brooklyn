@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 by Cloudsoft Corp.
+ * Copyright 2013-2014 by Cloudsoft Corporation Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,6 @@ import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
-
-import com.google.common.collect.ImmutableMap;
 
 public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements KafkaBrokerDriver {
 
@@ -85,7 +83,7 @@ public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements Kaf
         
         return MutableMap.<String, String> builder()
                 .putAll(super.getShellEnvironment())
-                .putAll(ImmutableMap.of("JMX_PORT", jmxPort))
+                .put("JMX_PORT", jmxPort)
                 .build();
     }
 }

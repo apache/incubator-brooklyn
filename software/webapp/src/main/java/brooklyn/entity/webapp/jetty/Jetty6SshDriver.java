@@ -1,3 +1,18 @@
+/*
+ * Copyright 2011-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.webapp.jetty;
 
 import static java.lang.String.format;
@@ -13,6 +28,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 
 public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver {
@@ -23,7 +39,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
 
     protected String getLogFileLocation() {
         // TODO no wildcard
-        return String.format("%s/logs/*.stderrout.log", getRunDir());
+        return Os.mergePathsUnix(getRunDir(), "logs/*.stderrout.log");
         // also, there is .requests.log
     }
 
@@ -44,7 +60,6 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
         commands.add("unzip "+saveAs);
 
         newScript(INSTALLING)
-                .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
     }
@@ -63,7 +78,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
                         // now modify the config file
                         format("sed -i.bk s/8080/%s/g etc/jetty.xml",getHttpPort()),
                         format("sed -i.bk s/8443/%s/g etc/jetty.xml",getHttpsPort())
-                )
+                    )
                 .execute();
 
         getEntity().deployInitialWars();
@@ -83,7 +98,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
                         "    sleep 1\n" +
                         "done",
                         "echo \"Couldn't determine if jetty-server is running (log file is still empty); continuing but may subsequently fail\""
-                )
+                    )
                 .execute();
         log.debug("launched jetty");
     }

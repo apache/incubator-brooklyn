@@ -21,6 +21,7 @@ import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -112,31 +113,34 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
         String saveAs = resolver.getFilename();
         setExpandedInstallDir(getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("storm-%s", getVersion())));
         
-        ImmutableList.Builder<String> commandsBuilder = ImmutableList.<String> builder();
+        ImmutableList.Builder<String> commands= ImmutableList.<String> builder();
         if (!getLocation().getOsDetails().isMac()) {
-            commandsBuilder.add(BashCommands.installPackage(ImmutableMap.of(
-                    "yum", "libuuid-devel",
-                    "apt", "build-essential uuid-dev pkg-config libtool automake"), 
-                "libuuid-devel"))
-           .add(BashCommands.ifExecutableElse0("yum", "sudo yum -y groupinstall 'Development Tools'"));
+            commands.add(BashCommands.installPackage(ImmutableMap.of(
+                        "yum", "libuuid-devel",
+                        "apt", "build-essential uuid-dev pkg-config libtool automake"), 
+                    "libuuid-devel"));
+            commands.add(BashCommands.ifExecutableElse0("yum", BashCommands.sudo("yum -y groupinstall 'Development Tools'")));
         }
-        commandsBuilder.add(BashCommands.installPackage(ImmutableMap.of("yum", "git"), "git"))
-                       .add(BashCommands.INSTALL_UNZIP)
-                       .addAll(installNativeDependencies())
-                       .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
-                       .add("unzip " + saveAs)
-                       .add("mkdir -p " + getLocalDir())
-                       .add("chmod 777 " + getLocalDir());
-        newScript(INSTALLING).failOnNonZeroResultCode().body.append(commandsBuilder.build()).gatherOutput().execute();
+        commands.add(BashCommands.installPackage(ImmutableMap.of("yum", "git"), "git"))
+                .add(BashCommands.INSTALL_UNZIP)
+                .addAll(installNativeDependencies())
+                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
+                .add("unzip " + saveAs)
+                .add("mkdir -p " + getLocalDir())
+                .add("chmod 777 " + getLocalDir()); // FIXME
+        newScript(INSTALLING)
+                .body.append(commands.build())
+                .gatherOutput()
+                .execute();
     }
 
     public String getPidFile() {
-        return format("%s/%s.pid", getRunDir(), getRoleName());
+        return Os.mergePathsUnix(getRunDir(), format("%s.pid", getRoleName()));
     }
 
     @Override
     protected String getLogFileLocation() {
-        return format("%s/logs/%s.log", getRunDir(), getRoleName());
+        return Os.mergePathsUnix(getRunDir(), "logs", format("%s.log", getRoleName()));
     }
 
     @Override
@@ -172,27 +176,32 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
                 // (this could be optimized by recording nimbus service_up time)
                 Time.sleep(Duration.TEN_SECONDS);
             }
-            newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING).body.append(
-                format("nohup ./bin/storm %s > %s 2>&1 &", getRoleName(), getLogFileLocation())).execute();
+            newScript(MutableMap.of(USE_PID_FILE, getPidFile()), LAUNCHING)
+                    .body.append(format("nohup ./bin/storm %s > %s 2>&1 &", getRoleName(), getLogFileLocation()))
+                    .execute();
         }
     }
 
     @Override
     public boolean isRunning() {
-        return newScript(MutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).body.append("true").execute() == 0;
+        return newScript(MutableMap.of(USE_PID_FILE, getPidFile()), CHECK_RUNNING).execute() == 0;
     }
 
     @Override
     public void stop() {
-        newScript(MutableMap.of("usePidFile", getPidFile()), STOPPING).body.append("true").execute();
+        newScript(MutableMap.of(USE_PID_FILE, getPidFile()), STOPPING).execute();
     }
 
     @Override
     public void customize() {
         log.debug("Customizing {}", entity);
         Networking.checkPortsValid(getPortMap());
-        newScript(CUSTOMIZING).body.append(format("cp -R %s/* .", getExpandedInstallDir())).execute();
-        String destinationConfigFile = String.format("%s/conf/storm.yaml", getRunDir());
+
+        newScript(CUSTOMIZING)
+                .body.append(format("cp -R %s/* .", getExpandedInstallDir()))
+                .execute();
+
+        String destinationConfigFile = Os.mergePathsUnix(getRunDir(), "conf/storm.yaml");
         copyTemplate(getStormConfigTemplateUrl(), destinationConfigFile);
     }
 
@@ -201,61 +210,50 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
         String targz = format("zeromq-%s.tar.gz", getZeromqVersion());
         String jzmq = "https://github.com/nathanmarz/jzmq.git";
 
-        ImmutableList.Builder<String> commandsBuilder = ImmutableList.<String> builder();
+        ImmutableList.Builder<String> commands = ImmutableList.<String>builder();
         if (getLocation().getOsDetails().isMac()) {
-            commandsBuilder.add("export PATH=$PATH:/usr/local/bin")
-                           .add("export JAVA_HOME=$(/usr/libexec/java_home)")
-                           .add("cd " + getInstallDir())
-                           .add(BashCommands.installPackage(ImmutableMap.of("brew", "automake"), "make"))
-                           .add(BashCommands.installPackage(ImmutableMap.of("brew", "libtool"), "libtool"))
-                           .add(BashCommands.installPackage(ImmutableMap.of("brew", "pkg-config"), "pkg-config"))
-                           .add(BashCommands.installPackage(ImmutableMap.of("brew", "zeromq"), "zeromq"))
-                           .add("git clone https://github.com/asmaier/jzmq")
-                           .add("cd jzmq")
-                           .add("./autogen.sh")
-                           .add("./configure")
-                           .add("make")
-                           .add((BashCommands.sudo("make install")))
-                           .add("cd " + getInstallDir());
+            commands.add("export PATH=$PATH:/usr/local/bin")
+                   .add("export JAVA_HOME=$(/usr/libexec/java_home)")
+                   .add("cd " + getInstallDir())
+                   .add(BashCommands.installPackage(ImmutableMap.of("brew", "automake"), "make"))
+                   .add(BashCommands.installPackage(ImmutableMap.of("brew", "libtool"), "libtool"))
+                   .add(BashCommands.installPackage(ImmutableMap.of("brew", "pkg-config"), "pkg-config"))
+                   .add(BashCommands.installPackage(ImmutableMap.of("brew", "zeromq"), "zeromq"))
+                   .add("git clone https://github.com/asmaier/jzmq")
+                   .add("cd jzmq")
+                   .add("./autogen.sh")
+                   .add("./configure")
+                   .add("make")
+                   .add((BashCommands.sudo("make install")))
+                   .add("cd " + getInstallDir());
         } else {
-            commandsBuilder.add("export JAVA_HOME=$(dirname $(readlink -m `which java`))/../../ || export JAVA_HOME=/usr/lib/jvm/java")
-                           .add("cd " + getInstallDir())
-                           .add(BashCommands.commandToDownloadUrlAs(zeromqUrl, targz))
-                           .add("tar xzf " + targz)
-                           .add(format("cd zeromq-%s", getZeromqVersion()))
-                           .add("./configure")
-                           .add("make")
-                           .add((BashCommands.sudo("make install")))
-                           // install jzmq
-                           .add("cd " + getInstallDir())
-                           .add("git clone " + jzmq)
-                           .add("cd jzmq")
-                           .add("./autogen.sh")
-                           .add("./configure")
+            commands.add("export JAVA_HOME=$(dirname $(readlink -m `which java`))/../../ || export JAVA_HOME=/usr/lib/jvm/java")
+                   .add("cd " + getInstallDir())
+                   .add(BashCommands.commandToDownloadUrlAs(zeromqUrl, targz))
+                   .add("tar xzf " + targz)
+                   .add(format("cd zeromq-%s", getZeromqVersion()))
+                   .add("./configure")
+                   .add("make")
+                   .add((BashCommands.sudo("make install")))
+                   // install jzmq
+                   .add("cd " + getInstallDir())
+                   .add("git clone " + jzmq)
+                   .add("cd jzmq")
+                   .add("./autogen.sh")
+                   .add("./configure")
                            
-                           // hack needed on ubuntu 12.04; ignore if it fails
-                           // see https://github.com/zeromq/jzmq/issues/114
-                           .add(BashCommands.ok(
-                               "pushd src ; touch classdist_noinst.stamp ; CLASSPATH=.:./.:$CLASSPATH "
-                               + "javac -d . org/zeromq/ZMQ.java org/zeromq/App.java org/zeromq/ZMQForwarder.java org/zeromq/EmbeddedLibraryTools.java org/zeromq/ZMQQueue.java org/zeromq/ZMQStreamer.java org/zeromq/ZMQException.java"))
-                           .add(BashCommands.ok("popd"))
+                   // hack needed on ubuntu 12.04; ignore if it fails
+                   // see https://github.com/zeromq/jzmq/issues/114
+                   .add(BashCommands.ok(
+                       "pushd src ; touch classdist_noinst.stamp ; CLASSPATH=.:./.:$CLASSPATH "
+                       + "javac -d . org/zeromq/ZMQ.java org/zeromq/App.java org/zeromq/ZMQForwarder.java org/zeromq/EmbeddedLibraryTools.java org/zeromq/ZMQQueue.java org/zeromq/ZMQStreamer.java org/zeromq/ZMQException.java"))
+                   .add(BashCommands.ok("popd"))
 
-                           .add("make")
-                           .add((BashCommands.sudo("make install")))
-                           .add("cd " + getInstallDir());
+                   .add("make")
+                   .add((BashCommands.sudo("make install")))
+                   .add("cd " + getInstallDir());
         }
-        return commandsBuilder.build();
+        return commands.build();
     }
 
-//    @SuppressWarnings("unchecked")
-//    @Override
-//    protected Map<?,?> getCustomJavaSystemProperties() {
-//        // TODO not sure this has any effect as the config is read _from* storm.yaml
-//        String yaml = String.format("%s/conf/storm.yaml", getRunDir());
-//        return MutableMap.<String, String>builder()
-//                .putAll(super.getCustomJavaSystemProperties())
-//                .put("storm.conf.file", yaml)
-//                .build();
-//    }
-    
 }

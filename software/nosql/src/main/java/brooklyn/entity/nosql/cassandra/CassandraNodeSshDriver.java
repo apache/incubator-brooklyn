@@ -173,14 +173,12 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .execute();
 
         // Copy the cassandra.yaml configuration file across
-        String configFileContents = processTemplate(getCassandraConfigTemplateUrl());
         String destinationConfigFile = Os.mergePathsUnix(getRunDir(), "conf", getCassandraConfigFileName());
-        getMachine().copyTo(Streams.newInputStreamWithContents(configFileContents), destinationConfigFile);
+        copyTemplate(getCassandraConfigTemplateUrl(), destinationConfigFile);
 
         // Copy the cassandra-rackdc.properties configuration file across
-        String rackdcFileContents = processTemplate(getCassandraRackdcConfigTemplateUrl());
         String rackdcDestinationFile = Os.mergePathsUnix(getRunDir(), "conf", getCassandraRackdcConfigFileName());
-        getMachine().copyTo(Streams.newInputStreamWithContents(rackdcFileContents), rackdcDestinationFile);
+        copyTemplate(getCassandraRackdcConfigTemplateUrl(), rackdcDestinationFile);
 
         customizeCopySnitch();
     }

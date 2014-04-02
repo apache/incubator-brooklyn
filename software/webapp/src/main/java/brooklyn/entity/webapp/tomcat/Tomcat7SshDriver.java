@@ -1,3 +1,18 @@
+/*
+ * Copyright 2011-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.webapp.tomcat;
 
 import static java.lang.String.format;
@@ -10,8 +25,10 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 
 public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {
@@ -21,7 +38,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
     }
 
     protected String getLogFileLocation() {
-        return String.format("%s/logs/catalina.out", getRunDir());
+        return Os.mergePathsUnix(getRunDir(), "logs/catalina.out");
     }
 
     protected String getDeploySubdir() {
@@ -45,8 +62,8 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
         commands.add(format("tar xvzf %s",saveAs));
 
         newScript(INSTALLING)
-                .failOnNonZeroResultCode()
-                .body.append(commands).execute();
+                .body.append(commands)
+                .execute();
     }
 
     @Override
@@ -57,24 +74,23 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
                         format("cp %s/conf/{server,web}.xml conf/", getExpandedInstallDir()),
                         format("sed -i.bk s/8080/%s/g conf/server.xml", getHttpPort()),
                         format("sed -i.bk s/8005/%s/g conf/server.xml", getShutdownPort()),
-                        "sed -i.bk /8009/D conf/server.xml")
+                        "sed -i.bk /8009/D conf/server.xml"
+                    )
                 .execute();
 
-        ((TomcatServerImpl)entity).deployInitialWars();
+        getEntity().deployInitialWars();
     }
 
     @Override
     public void launch() {
         Map ports = MutableMap.of("httpPort", getHttpPort(), "shutdownPort", getShutdownPort());
-
         Networking.checkPortsValid(ports);
-        Map flags = MutableMap.of("usePidFile",false);
 
         // We wait for evidence of tomcat running because, using 
         // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
         // we saw the ssh session return before the tomcat process was fully running 
         // so the process failed to start.
-        newScript(flags, LAUNCHING)
+        newScript(MutableMap.of(USE_PID_FILE, false), LAUNCHING)
                 .body.append(
                         format("%s/bin/startup.sh >>$RUN/console 2>&1 </dev/null",getExpandedInstallDir()),
                         "for i in {1..10}\n" +
@@ -82,36 +98,34 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
                         "    if [ -s "+getLogFileLocation()+" ]; then exit; fi\n" +
                         "    sleep 1\n" +
                         "done\n" +
-                        "echo \"Couldn't determine if tomcat-server is running (logs/catalina.out is still empty); continuing but may subsequently fail\"")
+                        "echo \"Couldn't determine if tomcat-server is running (logs/catalina.out is still empty); continuing but may subsequently fail\""
+                    )
                 .execute();
     }
 
     @Override
     public boolean isRunning() {
-        Map flags = MutableMap.of("usePidFile","pid.txt");
-        return newScript(flags, CHECK_RUNNING).execute() == 0;
+        return newScript(MutableMap.of(USE_PID_FILE, "pid.txt"), CHECK_RUNNING).execute() == 0;
     }
 
     @Override
     public void stop() {
-        Map flags = MutableMap.of("usePidFile","pid.txt");
-        newScript(flags, STOPPING).execute();
+        newScript(MutableMap.of(USE_PID_FILE, "pid.txt"), STOPPING).execute();
     }
 
     @Override
     public void kill() {
-        Map flags = MutableMap.of("usePidFile","pid.txt");
-        newScript(flags, KILLING).execute();
+        newScript(MutableMap.of(USE_PID_FILE, "pid.txt"), KILLING).execute();
     }
 
     @Override
     protected List<String> getCustomJavaConfigOptions() {
-        List<String> options = new LinkedList<String>();
-        options.addAll(super.getCustomJavaConfigOptions());
-        options.add("-Xms200m");
-        options.add("-Xmx800m");
-        options.add("-XX:MaxPermSize=400m");
-        return options;
+        return MutableList.<String>builder()
+                .addAll(super.getCustomJavaConfigOptions())
+                .add("-Xms200m")
+                .add("-Xmx800m")
+                .add("-XX:MaxPermSize=400m")
+                .build();
     }
 
     @Override

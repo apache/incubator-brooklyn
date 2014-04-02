@@ -1,9 +1,23 @@
+/*
+ * Copyright 2011-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.osgi.karaf;
 
 import static java.lang.String.format;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +25,10 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
@@ -33,7 +50,7 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
 
     @Override
     protected String getLogFileLocation() {
-        return format("{%s}/data/karaf.out", getRunDir());
+        return Os.mergePathsUnix(getRunDir(), "data/karaf.out");
     }
 
     @Override
@@ -42,15 +59,14 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-karaf-%s", getVersion())));
-        
+
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .build();
-        
+
         newScript(INSTALLING)
-                .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
     }
@@ -60,26 +76,23 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         Map<String, Object> ports = new HashMap<String, Object>();
         ports.put("jmxPort", getJmxPort());
         ports.put("rmiRegistryPort", getRmiRegistryPort());
-
         Networking.checkPortsValid(ports);
-        newScript(CUSTOMIZING).
-                body.append(
-                format("cd %s", getRunDir()),
-                format("cp -R %s/{bin,etc,lib,system,deploy} . || exit $!", getExpandedInstallDir()),
-                format("sed -i.bk 's/rmiRegistryPort = 1099/rmiRegistryPort = %s/g' etc/org.apache.karaf.management.cfg", getRmiRegistryPort()),
-                format("sed -i.bk 's/rmiServerPort = 44444/rmiServerPort = %s/g' etc/org.apache.karaf.management.cfg", getJmxPort())
-        ).execute();
+
+        newScript(CUSTOMIZING)
+                .body.append(
+                        format("cd %s", getRunDir()),
+                        format("cp -R %s/{bin,etc,lib,system,deploy} . || exit $!", getExpandedInstallDir()),
+                        format("sed -i.bk 's/rmiRegistryPort = 1099/rmiRegistryPort = %s/g' etc/org.apache.karaf.management.cfg", getRmiRegistryPort()),
+                        format("sed -i.bk 's/rmiServerPort = 44444/rmiServerPort = %s/g' etc/org.apache.karaf.management.cfg", getJmxPort())
+                    )
+                .execute();
     }
 
     @Override
     public void launch() {
-        Map<String, Object> flags = new HashMap<String, Object>();
-        flags.put("usePidFile", true);
-
-        newScript(flags, LAUNCHING).
-                body.append(
-                "nohup ./bin/start"
-        ).execute();
+        newScript(MutableMap.of(USE_PID_FILE, true), LAUNCHING)
+                .body.append("nohup ./bin/start")
+                .execute();
     }
 
     @Override
@@ -89,18 +102,18 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         Integer pid = entity.getAttribute(KarafContainer.KARAF_PID);
         // This method is called on startup, before JMX is initialised, so pid won't always be available.
         if (pid != null) {
-            return newScript(CHECK_RUNNING).
-                    body.append(
-                    format("ps aux | grep 'karaf' | grep %s > /dev/null", pid)
-            ).execute() == 0;
+            return newScript(CHECK_RUNNING)
+                    .body.append(format("ps aux | grep 'karaf' | grep %s > /dev/null", pid))
+                    .execute() == 0;
         } else {
             // Simple method isn't available, use pid in instance.properties.
-            return newScript(CHECK_RUNNING).
-                    body.append(
-                    format("cd %s/instances/",getRunDir()),
-                    "[ $(uname) = \"Darwin\" ] && pid=$(sed -n -e 's/.*pid=\\([0-9]*\\)$/\\1/p' instance.properties) || pid=$(sed -r -n -e 's/.*pid=([0-9]*)$/\\1/p' instance.properties)",
-                    "ps aux | grep 'karaf' | grep $(echo ${pid:-X}) > /dev/null"
-            ).execute() == 0;
+            return newScript(CHECK_RUNNING)
+                    .body.append(
+                            format("cd %s/instances/",getRunDir()),
+                            "[ $(uname) = \"Darwin\" ] && pid=$(sed -n -e 's/.*pid=\\([0-9]*\\)$/\\1/p' instance.properties) || pid=$(sed -r -n -e 's/.*pid=([0-9]*)$/\\1/p' instance.properties)",
+                            "ps aux | grep 'karaf' | grep $(echo ${pid:-X}) > /dev/null"
+                        )
+                    .execute() == 0;
         }
     }
 
@@ -109,7 +122,7 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         newScript(STOPPING)
                 .environmentVariablesReset()
                 .body.append(format("%s/bin/stop",getRunDir()))
-            .execute();
+                .execute();
     }
 
     @Override
@@ -119,12 +132,12 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
 
     @Override
     protected List<String> getCustomJavaConfigOptions() {
-        List<String> result = new LinkedList<String>();
-        result.addAll(super.getCustomJavaConfigOptions());
-        result.add("-Xms200m");
-        result.add("-Xmx800m");
-        result.add("-XX:MaxPermSize=400m");
-        return result;
+        return MutableList.<String>builder()
+                .addAll(super.getCustomJavaConfigOptions())
+                .add("-Xms200m")
+                .add("-Xmx800m")
+                .add("-XX:MaxPermSize=400m")
+                .build();
     }
 
 }
