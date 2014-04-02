@@ -79,6 +79,20 @@ public class EntityCleanupLongevityTest {
         }
     }
 
+    @Test(groups={"Longevity","Acceptance"})
+    public void testLocationCreatedAndUnmanaged() throws Exception {
+        managementContext.getExecutionManager(); // to trigger BrooklynGarbageCollector, and its logging
+        int iterations = numIterations();
+        Stopwatch timer = Stopwatch.createStarted();
+        
+        for (int i = 0; i < iterations; i++) {
+            if (i % 100 == 0) LOG.info("testLocationCreatedAndUnmanaged iteration {} at {}", i, Time.makeTimeStringRounded(timer));
+            if (i % 100 == 0) System.out.println("testLocationCreatedAndUnmanaged iteration " + i + " at " + Time.makeTimeStringRounded(timer));
+            loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+            managementContext.getLocationManager().unmanage(loc);
+        }
+    }
+
     protected TestApplication newApp() {
         final TestApplication result = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         TestEntity entity = result.createAndManageChild(EntitySpec.create(TestEntity.class));
