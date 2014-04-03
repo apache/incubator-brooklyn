@@ -4,12 +4,15 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.management.openmbean.CompositeData;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.RollingTimeWindowMeanEnricher;
 import brooklyn.enricher.TimeFractionDeltaEnricher;
 import brooklyn.entity.Entity;
@@ -17,8 +20,12 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
+import brooklyn.location.PortRange;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.math.MathFunctions;
+import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 
@@ -200,12 +207,44 @@ public class JavaAppUtils {
     public static Function<Number, Double> times(final double x) {
         return MathFunctions.times(x);
     }
-        
+
     public static Function<CompositeData, MemoryUsage> compositeDataToMemoryUsage() {
         return new Function<CompositeData, MemoryUsage>() {
             @Override public MemoryUsage apply(CompositeData input) {
                 return (input == null) ? null : MemoryUsage.from(input);
             }
         };
+    }
+
+    private static AtomicBoolean initialized = new AtomicBoolean(false);
+
+    /** Setup renderer hints for the MXBean attributes. */
+    @SuppressWarnings("rawtypes")
+    public static void init() {
+        if (initialized.get()) return;
+        synchronized (initialized) {
+            if (initialized.get()) return;
+
+            RendererHints.register(UsesJavaMXBeans.USED_HEAP_MEMORY, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.INIT_HEAP_MEMORY, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.MAX_HEAP_MEMORY, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.COMMITTED_HEAP_MEMORY, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.TOTAL_PHYSICAL_MEMORY_SIZE, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.FREE_PHYSICAL_MEMORY_SIZE, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
+
+            RendererHints.register(UsesJavaMXBeans.START_TIME, new RendererHints.DisplayValue(new Function<Long, String>() {
+                    @Override
+                    @Nullable
+                    public String apply(@Nullable Long input) {
+                        if (input == null) return null;
+                        return Time.makeDateStampString(input);
+                    }
+                }));
+            initialized.set(true);
+        }
+    }
+
+    static {
+        init();
     }
 }
