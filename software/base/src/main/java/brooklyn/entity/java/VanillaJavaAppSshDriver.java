@@ -100,7 +100,7 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
             Iterable<String> files = Iterables.transform(lines, new Function<String, String>() {
                         @Override
                         public String apply(@Nullable String input) {
-                            return Os.mergePaths(getRunDir(), "lib", input);
+                            return Os.mergePathsUnix(getRunDir(), "lib", input);
                         }
                     });
             getEntity().setAttribute(VanillaJavaApp.CLASSPATH_FILES, ImmutableList.copyOf(files));
@@ -124,7 +124,7 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
         newScript(MutableMap.of(USE_PID_FILE, true), LAUNCHING)
             .body.append(
                     format("echo \"launching: java $JAVA_OPTS %s %s\"", clazz, args),
-                    format("java $JAVA_OPTS %s %s >> %s/console 2>&1 </dev/null &", clazz, args, getRunDir())
+                    format("java $JAVA_OPTS -cp \"%s\" %s %s >> %s/console 2>&1 </dev/null &", getClasspath(), clazz, args, getRunDir())
                 )
             .execute();
     }

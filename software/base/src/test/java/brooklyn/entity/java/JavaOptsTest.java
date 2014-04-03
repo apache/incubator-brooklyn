@@ -137,7 +137,7 @@ public class JavaOptsTest extends BrooklynAppUnitTestSupport {
         
         String runDir = javaProcess.getRunDir();
         Map<String,String> expectedEnvs = ImmutableMap.<String,String>of();
-        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS my.Main  >> %s/console 2>&1 </dev/null &", runDir));
+        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS -cp \"%1$s/lib\" my.Main  >> %1$s/console 2>&1 </dev/null &", runDir));
         
         assertHasExpectedCmds(expectedCmds, expectedEnvs);
     }
@@ -150,7 +150,7 @@ public class JavaOptsTest extends BrooklynAppUnitTestSupport {
         
         String runDir = javaProcess.getRunDir();
         Map<String,String> expectedEnvs = ImmutableMap.<String,String>of();
-        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS my.Main \"a1\" \"a2\" >> %s/console 2>&1 </dev/null &", runDir));
+        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS -cp \"%1$s/lib\" my.Main \"a1\" \"a2\" >> %1$s/console 2>&1 </dev/null &", runDir));
         
         assertHasExpectedCmds(expectedCmds, expectedEnvs);
     }
@@ -165,7 +165,7 @@ public class JavaOptsTest extends BrooklynAppUnitTestSupport {
         String defaultJavaOpts = "-Xms128m -Xmx512m -XX:MaxPermSize=512m";
         String expectedJavaOpts = defaultJavaOpts+" -abc";
         Map<String,String> expectedEnvs = ImmutableMap.<String,String>of("JAVA_OPTS", expectedJavaOpts);
-        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS my.Main  >> %s/console 2>&1 </dev/null &", runDir));
+        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS -cp \"%1$s/lib\" my.Main  >> %1$s/console 2>&1 </dev/null &", runDir));
         
         assertHasExpectedCmds(expectedCmds, expectedEnvs);
     }
@@ -181,7 +181,7 @@ public class JavaOptsTest extends BrooklynAppUnitTestSupport {
         String defaultJavaOpts = "-Xms128m -Xmx512m -XX:MaxPermSize=512m";
         String expectedJavaOpts = defaultJavaOpts+" -Dmykey=myval";
         Map<String,String> expectedEnvs = ImmutableMap.<String,String>of("JAVA_OPTS", expectedJavaOpts);
-        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS my.Main  >> %s/console 2>&1 </dev/null &", runDir));
+        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS -cp \"%1$s/lib\" my.Main  >> %1$s/console 2>&1 </dev/null &", runDir));
         
         assertHasExpectedCmds(expectedCmds, expectedEnvs);
     }
@@ -195,7 +195,7 @@ public class JavaOptsTest extends BrooklynAppUnitTestSupport {
         String runDir = javaProcess.getRunDir();
         Object expectedJavaOpts = MutableSet.of("-Xms128m", "-Xmx567m", "-XX:MaxPermSize=567m");
         Map<String,Object> expectedEnvs = ImmutableMap.<String,Object>of("JAVA_OPTS", expectedJavaOpts);
-        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS my.Main  >> %s/console 2>&1 </dev/null &", runDir));
+        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS -cp \"%1$s/lib\" my.Main  >> %1$s/console 2>&1 </dev/null &", runDir));
 
         assertHasExpectedCmds(expectedCmds, expectedEnvs);
     }
@@ -223,7 +223,7 @@ public class JavaOptsTest extends BrooklynAppUnitTestSupport {
         String defaultJavaOpts = "-Xms128m -Xmx512m -XX:MaxPermSize=512m";
         String expectedJavaOpts = defaultJavaOpts+" -client";
         Map<String,String> expectedEnvs = ImmutableMap.<String,String>of("JAVA_OPTS", expectedJavaOpts);
-        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS my.Main  >> %s/console 2>&1 </dev/null &", runDir));
+        List<String> expectedCmds = ImmutableList.of(String.format("java $JAVA_OPTS -cp \"%1$s/lib\" my.Main  >> %1$s/console 2>&1 </dev/null &", runDir));
         
         assertHasExpectedCmds(expectedCmds, expectedEnvs);
     }
