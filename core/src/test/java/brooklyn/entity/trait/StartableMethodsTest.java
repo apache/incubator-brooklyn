@@ -12,8 +12,10 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.FailingEntity.RecordingEventListener;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.collect.ImmutableList;
 
@@ -68,6 +70,40 @@ public class StartableMethodsTest {
                 fail();
             } catch (Exception e) {
                 // success; expected exception to be propagated
+            }
+            
+            assertEquals(listener.events.get(0)[0], entity);
+            assertEquals(listener.events.get(1)[0], entity2);
+        } finally {
+            // get rid of entity that will fail on stop, so that tearDown won't encounter exception
+            Entities.unmanage(entity);
+        }
+    }
+    
+    @Test
+    public void testStopSequentiallyContinuesOnFailureInSubTask() throws Exception {
+        try {
+            entity = app.createAndManageChild(EntitySpec.create(FailingEntity.class)
+                    .configure(FailingEntity.FAIL_ON_STOP, true)
+                    .configure(FailingEntity.FAIL_IN_SUB_TASK, true)
+                    .configure(FailingEntity.LISTENER, listener));
+            entity2 = app.createAndManageChild(EntitySpec.create(FailingEntity.class)
+                    .configure(FailingEntity.LISTENER, listener));
+            app.start(ImmutableList.of(loc));
+            listener.events.clear();
+            
+            try {
+                Task<?> task = Tasks.builder().name("stopSequentially")
+                        .body(new Runnable() {
+                            @Override public void run() {
+                                StartableMethods.stopSequentially(ImmutableList.of(entity, entity2));
+                            }})
+                        .build();
+                Entities.submit(app, task).getUnchecked();
+                fail();
+            } catch (Exception e) {
+                // success; expected exception to be propagated
+                if (!(e.toString().contains("Error stopping"))) throw e;
             }
             
             assertEquals(listener.events.get(0)[0], entity);
