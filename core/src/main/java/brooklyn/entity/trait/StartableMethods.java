@@ -12,10 +12,12 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.location.Location;
+import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -55,9 +57,18 @@ public class StartableMethods {
         List<Exception> exceptions = Lists.newArrayList();
         List<Startable> failedEntities = Lists.newArrayList();
         
-        for (Startable entity : entities) {
+        for (final Startable entity : entities) {
+            Task<Object> task = Tasks.builder()
+                    .name("stopping "+entity)
+                    .body(new Runnable() {
+                            @Override public void run() {
+                                DynamicTasks.markInessential();
+                                entity.stop();
+                            }})
+                    .build();
+
             try {
-                DynamicTasks.queueIfPossible( Effectors.invocation((Entity)entity, Startable.STOP, Collections.emptyMap()) ).orSubmitAsync((Entity)entity).andWaitForSuccess(); 
+                DynamicTasks.queueIfPossible(task).orSubmitAsync((Entity)entity).andWaitForSuccess(); 
             } catch (Exception e) {
                 log.warn("Error stopping "+entity+"; continuing with shutdown", e);
                 exceptions.add(e);
