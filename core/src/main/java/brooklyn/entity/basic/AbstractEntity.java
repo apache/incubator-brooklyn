@@ -1205,16 +1205,17 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
      * Invoked by {@link EntityManagementSupport} when this entity is fully unmanaged.
      */
     public void onManagementStopped() {
-        BrooklynStorage storage = ((ManagementContextInternal)getManagementContext()).getStorage();
-        storage.remove(id+"-parent");
-        storage.remove(id+"-groups");
-        storage.remove(id+"-children");
-        storage.remove(id+"-locations");
-        storage.remove(id+"-creationTime");
-        storage.remove(id+"-displayName");
-        storage.remove(id+"-config");
-        storage.remove(id+"-attributes");
-
+        if (getManagementContext().isRunning()) {
+            BrooklynStorage storage = ((ManagementContextInternal)getManagementContext()).getStorage();
+            storage.remove(id+"-parent");
+            storage.remove(id+"-groups");
+            storage.remove(id+"-children");
+            storage.remove(id+"-locations");
+            storage.remove(id+"-creationTime");
+            storage.remove(id+"-displayName");
+            storage.remove(id+"-config");
+            storage.remove(id+"-attributes");
+        }
     }
     
     /** For use by management plane, to invalidate all fields (e.g. when an entity is changing to being proxied) */

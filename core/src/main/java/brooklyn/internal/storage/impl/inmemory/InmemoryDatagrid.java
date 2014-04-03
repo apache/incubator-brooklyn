@@ -2,10 +2,12 @@ package brooklyn.internal.storage.impl.inmemory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import brooklyn.internal.storage.DataGrid;
-
 import brooklyn.internal.storage.impl.ConcurrentMapAcceptingNullVals;
+
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 /**
@@ -16,7 +18,8 @@ import com.google.common.collect.Maps;
 public class InmemoryDatagrid implements DataGrid {
 
     private final Map<String,Map<?,?>> maps = Maps.newLinkedHashMap();
-
+    private final AtomicInteger creationCounter = new AtomicInteger();
+    
     @SuppressWarnings("unchecked")
     @Override
     public <K, V> ConcurrentMap<K, V> getMap(String id) {
@@ -25,6 +28,7 @@ public class InmemoryDatagrid implements DataGrid {
             if (result == null) {
                 result = newMap();
                 maps.put(id, result);
+                creationCounter.incrementAndGet();
             }
             return result;
         }
@@ -52,6 +56,13 @@ public class InmemoryDatagrid implements DataGrid {
     public void terminate() {
         synchronized (maps) {
             maps.clear();
+        }
+    }
+
+    @Override
+    public Map<String, Object> getDatagridMetrics() {
+        synchronized (maps) {
+            return ImmutableMap.<String, Object>of("size", maps.size(), "createCount", creationCounter.get());
         }
     }
 }

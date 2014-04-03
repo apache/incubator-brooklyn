@@ -17,6 +17,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.util.exceptions.Exceptions;
@@ -68,15 +69,18 @@ public class BrooklynGarbageCollector {
             TimeUnit.DAYS.toMillis(1));
     
     private final BasicExecutionManager executionManager;
+    private final BrooklynStorage storage;
     private final ScheduledExecutorService executor;
     private final long gcPeriodMs;
     private final int maxTasksPerTag;
     private final long maxTaskAge;
     private final boolean doSystemGc;
     private volatile boolean running = true;
+
     
-    public BrooklynGarbageCollector(BrooklynProperties brooklynProperties, BasicExecutionManager executionManager){
+    public BrooklynGarbageCollector(BrooklynProperties brooklynProperties, BasicExecutionManager executionManager, BrooklynStorage storage) {
         this.executionManager = executionManager;
+        this.storage = storage;
 
         gcPeriodMs = brooklynProperties.getConfig(GC_PERIOD);
         maxTasksPerTag = brooklynProperties.getConfig(MAX_TASKS_PER_TAG);
@@ -127,6 +131,7 @@ public class BrooklynGarbageCollector {
             LOG.debug(prefix+" - "+"using "+
                 Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
                 Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory; "+
+                "storage: " + storage.getStorageMetrics() + "; " +
                 "tasks: " +
                 executionManager.getNumActiveTasks()+" active, "+
                 executionManager.getNumInMemoryTasks()+" in memory "+
