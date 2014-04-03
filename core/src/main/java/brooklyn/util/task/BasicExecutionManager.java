@@ -36,6 +36,7 @@ import brooklyn.management.TaskAdaptable;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -525,4 +526,10 @@ public class BasicExecutionManager implements ExecutionManager {
             return (old!=null);
         }
     }
+    
+    @VisibleForTesting
+    public ConcurrentMap<Object, TaskScheduler> getSchedulerByTag() {
+        return schedulerByTag;
+    }
+    
 }

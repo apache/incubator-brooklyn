@@ -127,22 +127,20 @@ public class BrooklynGarbageCollector {
     }
 
     public void logUsage(String prefix) {
-        logUsage(prefix, false);
+        if (LOG.isDebugEnabled())
+            LOG.debug(prefix+" - using "+getUsageString());
     }
-    public void logUsage(String prefix, boolean logAtInfoLevel) {
-        if (LOG.isDebugEnabled() || logAtInfoLevel) {
-            String message = prefix+" - "+"using "+
-                Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
-                Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory; "+
-                "storage: " + storage.getStorageMetrics() + "; " +
-                "tasks: " +
-                executionManager.getNumActiveTasks()+" active, "+
-                executionManager.getNumInMemoryTasks()+" in memory "+
-                "("+executionManager.getNumIncompleteTasks()+" incomplete and "+
-                executionManager.getTotalTasksSubmitted()+" total submitted)";
-            if (logAtInfoLevel) LOG.info(message);
-            else LOG.debug(message);
-        }
+    
+    public String getUsageString() {
+        return
+            Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
+            Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory; "+
+            "storage: " + storage.getStorageMetrics() + "; " +
+            "tasks: " +
+            executionManager.getNumActiveTasks()+" active, "+
+            executionManager.getNumInMemoryTasks()+" in memory "+
+            "("+executionManager.getNumIncompleteTasks()+" incomplete and "+
+            executionManager.getTotalTasksSubmitted()+" total submitted)";
     }
     
     public void shutdownNow() {

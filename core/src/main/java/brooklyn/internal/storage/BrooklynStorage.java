@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 
 public interface BrooklynStorage {
 
@@ -82,6 +83,9 @@ public interface BrooklynStorage {
      * Terminates the BrooklynStorage.
      */
     void terminate();
+
+    @VisibleForTesting
+    public boolean isEmpty();
     
     Map<String, Object> getStorageMetrics();
 }

@@ -6,32 +6,29 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.util.javalang.JavaClassNames;
 
-/**
- * This test is NOT definitive because GC is not guaranteed.
- */
-public class EntityCleanupLongevityTest extends EntityCleanupLongevityTestFixture {
+public class EntityCleanupTest extends EntityCleanupLongevityTestFixture {
 
     @Override
     protected int numIterations() {
-        return 10*1000;
-    }
-    
-    @Override
-    protected boolean checkMemoryLeaks() {
-        return true;
+        return 1;
     }
 
-    @Test(groups={"Longevity","Acceptance"})
+    @Override
+    protected boolean checkMemoryLeaks() {
+        return false;
+    }
+    
+    @Test
     public void testAppCreatedStartedAndStopped() throws Exception {
         doTestStartAppThenThrowAway(JavaClassNames.niceClassAndMethod(), true);
     }
     
-    @Test(groups={"Longevity","Acceptance"})
+    @Test
     public void testAppCreatedStartedAndUnmanaged() throws Exception {
         doTestStartAppThenThrowAway(JavaClassNames.niceClassAndMethod(), false);
     }
 
-    @Test(groups={"Longevity","Acceptance"})
+    @Test
     public void testLocationCreatedAndUnmanaged() throws Exception {
         doTestManyTimesAndAssertNoMemoryLeak(JavaClassNames.niceClassAndMethod(), new Runnable() {
             public void run() {
