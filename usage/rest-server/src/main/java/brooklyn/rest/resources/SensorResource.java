@@ -85,8 +85,10 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         final EntityLocal entity = brooklyn().getEntity(application, entityToken);
         AttributeSensor<?> sensor = findSensor(entity, sensorName);
         Object value = entity.getAttribute(sensor);
-        Iterable<RendererHints.DisplayValue> hints = Iterables.filter(RendererHints.getHintsFor(sensor), RendererHints.DisplayValue.class);
-        for (RendererHints.DisplayValue dv : hints) value = dv.getDisplayValue(value);
+        if (!preferJson) {
+            Iterable<RendererHints.DisplayValue> hints = Iterables.filter(RendererHints.getHintsFor(sensor), RendererHints.DisplayValue.class);
+            for (RendererHints.DisplayValue dv : hints) value = dv.getDisplayValue(value);
+        }
         return getValueForDisplay(value, preferJson, true);
     }
 
