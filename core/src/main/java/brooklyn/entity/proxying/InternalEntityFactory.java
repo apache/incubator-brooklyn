@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ManagementContext;
@@ -27,6 +28,7 @@ import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -169,13 +171,31 @@ public class InternalEntityFactory {
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
                 ((EntityLocal)entity).setConfig((ConfigKey)entry.getKey(), entry.getValue());
             }
-            ((AbstractEntity)entity).init();
-            for (EntityInitializer initializer: spec.getInitializers())
-                initializer.apply((EntityInternal)entity);
             
-            ((EntityInternal)entity).getExecutionContext().submit(MutableMap.of(), new Runnable() {
+            /* Marked transient so that the task is not needlessly kept around at the highest level.
+             * Note that the task is not normally visible in the GUI, because 
+             * (a) while it is running, the entity is parentless (and so not in the tree);
+             * and (b) when it is completed it is GC'd, as it is transient.
+             * However task info is available via the API if you know its ID,
+             * and if better subtask querying is available it will be picked up as a background task 
+             * of the parent entity creating this child entity
+             * (note however such subtasks are currently filtered based on parent entity so is excluded).
+             */
+            ((EntityInternal)entity).getExecutionContext().submit(Tasks.builder().dynamic(false).name("Entity initialization").tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
+                    .body(new Runnable() {
                 @Override
                 public void run() {
+                    ((AbstractEntity)entity).init();
+                    for (EntityInitializer initializer: spec.getInitializers())
+                        initializer.apply((EntityInternal)entity);
+                    /* 31 Mar 2014, moved initialization (above) into this task: primarily for consistency and traceability on failure.
+                     * TBC whether this is good/bad/indifferent. My (Alex) opinion is that whether it is done in a subtask 
+                     * should be the same as whether enricher/policy/etc (below) is done subtasks, which is was added recently
+                     * in 249c96fbb18bd9d763029475e0a3dc251c01b287. @nakomis can you give exact reason code below is needed in a task
+                     * commit message said was to do with wiring up yaml sensors and policies -- which makes sense but specifics would be handy!
+                     * and would let me know if there is any reason to do / not_do the initializer code above also here! 
+                     */
+                    
                     for (Enricher enricher : spec.getEnrichers()) {
                         entity.addEnricher(enricher);
                     }
@@ -194,7 +214,7 @@ public class InternalEntityFactory {
                     
                     ((AbstractEntity)entity).addLocations(spec.getLocations());
                 }
-            }).get();
+            }).build()).get();
             
             Entity parent = spec.getParent();
             if (parent != null) {

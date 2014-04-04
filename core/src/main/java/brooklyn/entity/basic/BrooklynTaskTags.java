@@ -35,6 +35,10 @@ public class BrooklynTaskTags extends TaskTags {
 
     public static final String EFFECTOR_TAG = "EFFECTOR";
     public static final String NON_TRANSIENT_TASK_TAG = "NON-TRANSIENT";
+    /** indicates a task is transient, roughly that is to say it is uninteresting -- 
+     * specifically this means it can be GC'd as soon as it is completed, 
+     * and that it need not appear in some task lists;
+     * often used for framework lifecycle events and sensor polling */
     public static final String TRANSIENT_TASK_TAG = "TRANSIENT";
 
     // ------------- entity tags -------------------------
