@@ -62,8 +62,11 @@ public class SensorTransformer {
     private static void addNamedAction(MutableMap.Builder<String, URI> lb, RendererHints.NamedAction na , Entity entity, Sensor<?> sensor) {
         if (na instanceof RendererHints.NamedActionWithUrl) {
             try {
-                String v = ((RendererHints.NamedActionWithUrl) na ).getUrl(entity, (AttributeSensor<?>) sensor);
-                if (Strings.isNonBlank(v)) lb.putIfAbsent("action:open", URI.create(v));
+                String v = ((RendererHints.NamedActionWithUrl) na).getUrl(entity, (AttributeSensor<?>) sensor);
+                if (Strings.isNonBlank(v)) {
+                    String action = na.getActionName().toLowerCase();
+                    lb.putIfAbsent("action:"+action, URI.create(v));
+                }
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
                 log.warn("Unable to make use of URL sensor "+sensor+" on "+entity+": "+e);
