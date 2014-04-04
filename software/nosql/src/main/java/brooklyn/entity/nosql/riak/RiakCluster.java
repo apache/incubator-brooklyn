@@ -1,4 +1,8 @@
 package brooklyn.entity.nosql.riak;
 
-public interface RiakCluster {
+import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.proxying.ImplementedBy;
+
+@ImplementedBy(RiakClusterImpl.class)
+public interface RiakCluster extends DynamicCluster {
 }

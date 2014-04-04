@@ -2,6 +2,8 @@ package brooklyn.entity.nosql.riak;
 
 import static org.testng.Assert.assertFalse;
 
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.MethodEffector;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

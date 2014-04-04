@@ -13,4 +13,9 @@ public interface RiakNode extends SoftwareProcess {
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
             "1.4.8");
 
+    @SetFromFlag("riakVmArgsTemplateUrl")
+    ConfigKey<String> RIAK_VM_ARGS_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
+            "riak.vm.args.template.url", "Template file (in freemarker format) for the vm.args config file",
+            "classpath://brooklyn/entity/nosql/riak/vm.args");
+
 }

@@ -1,27 +1,25 @@
 package brooklyn.entity.nosql.riak;
 
-import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
-import static brooklyn.util.ssh.BashCommands.INSTALL_TAR;
-import static brooklyn.util.ssh.BashCommands.alternatives;
-import static brooklyn.util.ssh.BashCommands.chainGroup;
-import static brooklyn.util.ssh.BashCommands.commandToDownloadUrlAs;
-import static brooklyn.util.ssh.BashCommands.sudo;
-import static java.lang.String.format;
-
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.entity.nosql.mongodb.MongoDBServerImpl;
+import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.net.Urls;
+import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.stream.Streams;
+import brooklyn.util.task.DynamicTasks;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
+import static brooklyn.util.ssh.BashCommands.*;
+import static java.lang.String.format;
 
 // TODO: Alter -env ERL_CRASH_DUMP path in vm.args
 public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implements RiakNodeDriver {
@@ -33,12 +31,15 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         super(entity, machine);
     }
 
-
+    @Override
+    public RiakNodeImpl getEntity() {
+        return RiakNodeImpl.class.cast(super.getEntity());
+    }
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
         String saveAs = resolver.getFilename();
-        String expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("riak-%s", getVersion()));
+        String expandedInstallDir = getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("riak-%s", getVersion()));
         setExpandedInstallDir(expandedInstallDir);
 
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
@@ -67,7 +68,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         String apt = chainGroup(
                 "which apt-get",
                 "curl http://apt.basho.com/gpg/basho.apt.key | " + sudo("apt-key add -"),
-                sudo("bash -c \"echo deb http://apt.basho.com $(lsb_release -sc) main > /etc/apt/sources.list.d/basho.list"),
+                sudo("bash -c \"echo deb http://apt.basho.com $(lsb_release -sc) main > /etc/apt/sources.list.d/basho.list\""),
                 sudo("apt-get update"),
                 sudo("apt-get -y --allow-unauthenticated install riak=" + getEntity().getConfig(RiakNode.SUGGESTED_VERSION) + "*"));
         String yum = chainGroup(
@@ -100,10 +101,36 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     @Override
     public void customize() {
-        // Load, template and copy vm.args to getVmArgsLocation.
+
+        OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
+        List<String> commands = Lists.newLinkedList();
+
+        String vmArgsTemplate = processTemplate(entity.getConfig(RiakNode.RIAK_VM_ARGS_TEMPLATE_URL));
+
+        DynamicTasks.queueIfPossible(SshEffectorTasks.put(getVmArgsLocation())
+                .contents(Streams.newInputStreamWithContents(vmArgsTemplate))
+                .machine(getMachine())
+                .summary("sending the vm.args file to the riak node"));
+
         // Edit file at getAppConfigLocation as per instructions at
         // http://docs.basho.com/riak/2.0.0pre20/ops/building/basic-cluster-setup/
         // Could also set scheduler on linux systems
+
+        //replace instances of 127.0.0.1 with the actual hostname in the app.config file
+        commands.add(format("sed -i -e 's/127.0.0.1/%s/g' %s", getHostname(), getAppConfigLocation()));
+
+        //increase open file limit on mac (default min for riak is: 4096)
+        //TODO: detect the actual limit then do the modificaiton
+        if (osDetails.isMac()) {
+            commands.add(BashCommands.sudo("launchctl limit maxfiles 4096 32768"));
+            commands.add("ulimit -n 4096");
+        }
+
+        newScript(CUSTOMIZING)
+                .failOnNonZeroResultCode()
+                .body.append(commands)
+                .execute();
+
     }
 
     @Override
@@ -130,16 +157,24 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .execute() == 0;
     }
 
-    private String getEtcDir() {
-        return isPackageInstall ? "/etc/riak" : Urls.mergePaths(getExpandedInstallDir(), "etc", "riak");
+    public String getEtcDir() {
+        return isPackageInstall ? "/etc" : Urls.mergePaths(getExpandedInstallDir(), "etc");
     }
 
-    private String getAppConfigLocation() {
+    public String getAppConfigLocation() {
         return Urls.mergePaths(getEtcDir(), "app.config");
     }
 
-    private String getVmArgsLocation() {
+    @Override
+    public void joinCluster(List<String> clusterHosts) {
+        //TODO: use for updating the cluster: bin/riak-admin cluster join riak@192.168.1.10
+        //to use after running riak's first node.
+    }
+
+    @Override
+    public String getVmArgsLocation() {
         return Urls.mergePaths(getEtcDir(), "vm.args");
     }
+
 
 }
