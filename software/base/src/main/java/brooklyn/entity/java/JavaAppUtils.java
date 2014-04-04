@@ -4,7 +4,6 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
-import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -20,8 +19,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.location.PortRange;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.math.MathFunctions;
 import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.time.Duration;
@@ -229,17 +226,16 @@ public class JavaAppUtils {
             RendererHints.register(UsesJavaMXBeans.INIT_HEAP_MEMORY, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
             RendererHints.register(UsesJavaMXBeans.MAX_HEAP_MEMORY, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
             RendererHints.register(UsesJavaMXBeans.COMMITTED_HEAP_MEMORY, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.NON_HEAP_MEMORY_USAGE, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
             RendererHints.register(UsesJavaMXBeans.TOTAL_PHYSICAL_MEMORY_SIZE, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
             RendererHints.register(UsesJavaMXBeans.FREE_PHYSICAL_MEMORY_SIZE, new RendererHints.DisplayValue(ByteSizeStrings.metric()));
 
-            RendererHints.register(UsesJavaMXBeans.START_TIME, new RendererHints.DisplayValue(new Function<Long, String>() {
-                    @Override
-                    @Nullable
-                    public String apply(@Nullable Long input) {
-                        if (input == null) return null;
-                        return Time.makeDateStampString(input);
-                    }
-                }));
+            RendererHints.register(UsesJavaMXBeans.START_TIME, new RendererHints.DisplayValue(Time.toDateString()));
+            RendererHints.register(UsesJavaMXBeans.UP_TIME, new RendererHints.DisplayValue(Duration.millisToStringRounded()));
+            RendererHints.register(UsesJavaMXBeans.PROCESS_CPU_TIME, new RendererHints.DisplayValue(Duration.millisToStringRounded()));
+            RendererHints.register(UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_LAST, new RendererHints.DisplayValue(Duration.millisToStringRounded()));
+            RendererHints.register(UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_IN_WINDOW, new RendererHints.DisplayValue(Duration.millisToStringRounded()));
+
             initialized.set(true);
         }
     }
