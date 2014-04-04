@@ -17,6 +17,9 @@ import com.google.common.collect.Lists;
 @ImplementedBy(FailingEntityImpl.class)
 public interface FailingEntity extends TestEntity {
 
+    @SetFromFlag("failInSubTask")
+    ConfigKey<Boolean> FAIL_IN_SUB_TASK = ConfigKeys.newBooleanConfigKey("failInSubTask", "Whether to throw exception in a sub-task (if true) or in current thread (if false)", false);
+    
     @SetFromFlag("listener")
     ConfigKey<EventListener> LISTENER = ConfigKeys.newConfigKey(EventListener.class, "listener", "Whether to throw exception on call to start", EventListener.NOOP);
     

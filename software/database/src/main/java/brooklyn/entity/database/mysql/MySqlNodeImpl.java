@@ -90,8 +90,11 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
                                     return Double.parseDouble(q);
                                 }})
                             .setOnFailureOrException(null) )
+                    .poll(new SshPollConfig<Boolean>(SERVICE_UP)
+                            .command(cmd)
+                            .setOnSuccess(true)
+                            .setOnFailureOrException(false))
                     .build();
-            connectServiceUpIsRunning();
         } else {
             LOG.warn("Location(s) {} not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
             setAttribute(SERVICE_UP, true);
@@ -99,24 +102,9 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     }
     
     @Override
-    protected void connectServiceUpIsRunning() {
-        String cmd = getDriver().getStatusCmd();
-        Maybe<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
-        SshFeed.builder()
-                .entity(this)
-                .period(Duration.FIVE_SECONDS)
-                .machine(machine.get())
-                .poll(new SshPollConfig<Boolean>(SERVICE_UP)
-                        .command(cmd)
-                        .setOnSuccess(true)
-                        .setOnFailureOrException(false))
-                .build();
-    }
-    
-    @Override
     protected void disconnectSensors() {
-        super.disconnectSensors();
         if (feed != null) feed.stop();
+        super.disconnectSensors();
     }
 
     public int getPort() {
