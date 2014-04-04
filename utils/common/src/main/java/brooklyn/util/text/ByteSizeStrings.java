@@ -62,6 +62,7 @@ public class ByteSizeStrings implements Function<Long, String> {
         private String suffixMega = "MB";
         private String suffixGiga = "GB";
         private String suffixTera = "TB";
+        private boolean addSpace = true;
         private int bytesPerMetricUnit = 1000;
         private int maxLen = 4;
         private int precision = 3;
@@ -91,6 +92,15 @@ public class ByteSizeStrings implements Function<Long, String> {
          * The suffix to use when printing Terabytes.
          */
         public Builder suffixTera(String suffixTera) { this.suffixTera = suffixTera; return this; }
+
+        /**
+         * Whether to add a space between the value and the unit suffix.
+         * <p>
+         * Defaults is {@literal true} for '5 MiB' output.
+         */
+        public Builder addSpace(boolean addSpace) { this.addSpace = addSpace; return this; }
+        public Builder addSpace() { this.addSpace = true; return this; }
+        public Builder noSpace() { this.addSpace = false; return this; }
 
         /**
          * The number of bytes per metric usnit, usually either 1000 or 1024.
@@ -126,8 +136,9 @@ public class ByteSizeStrings implements Function<Long, String> {
          * Returns an immutable {@link ByteSizeStrings} formatter using the builder configuration.
          */
         public ByteSizeStrings build() {
-            return new ByteSizeStrings(suffixBytes, suffixKilo, suffixMega, suffixGiga,
-                    suffixTera, bytesPerMetricUnit, maxLen, precision, lowerLimit);
+            String space = addSpace ? " " : "";
+            return new ByteSizeStrings(space + suffixBytes, space + suffixKilo, space + suffixMega, space + suffixGiga,
+                    space + suffixTera, bytesPerMetricUnit, maxLen, precision, lowerLimit);
         }
 
     }
@@ -148,6 +159,7 @@ public class ByteSizeStrings implements Function<Long, String> {
                 .suffixMega("m")
                 .suffixGiga("g")
                 .suffixTera("000g") // Java has no Tera suffix
+                .noSpace()
                 .bytesPerMetricUnit(1024)
                 .maxLen(6)
                 .precision(0)

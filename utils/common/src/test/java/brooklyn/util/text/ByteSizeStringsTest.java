@@ -30,19 +30,19 @@ import com.google.common.collect.Iterables;
 public class ByteSizeStringsTest {
 
     public void testSizeString() {
-        assertEquals(Strings.makeSizeString(-1), "-1B");
-        assertEquals(Strings.makeSizeString(0), "0B");
-        assertEquals(Strings.makeSizeString(999), "999B");
-        assertEquals(Strings.makeSizeString(1024), "1024B");
-        assertEquals(Strings.makeSizeString(1234), "1234B");
-        assertEquals(Strings.makeSizeString(2345), "2.34kB");
-        assertEquals(Strings.makeSizeString(4096), "4.10kB");
-        assertEquals(Strings.makeSizeString(4567), "4.57kB");
-        assertEquals(Strings.makeSizeString(65535), "65.5kB");
-        assertEquals(Strings.makeSizeString(23456789L), "23.5MB");
-        assertEquals(Strings.makeSizeString(23456789012L), "23.5GB");
-        assertEquals(Strings.makeSizeString(23456789012345L), "23.5TB");
-        assertEquals(Strings.makeSizeString(Long.MAX_VALUE), "9223372TB");
+        assertEquals(Strings.makeSizeString(-1), "-1 B");
+        assertEquals(Strings.makeSizeString(0), "0 B");
+        assertEquals(Strings.makeSizeString(999), "999 B");
+        assertEquals(Strings.makeSizeString(1024), "1024 B");
+        assertEquals(Strings.makeSizeString(1234), "1234 B");
+        assertEquals(Strings.makeSizeString(2345), "2.34 kB");
+        assertEquals(Strings.makeSizeString(4096), "4.10 kB");
+        assertEquals(Strings.makeSizeString(4567), "4.57 kB");
+        assertEquals(Strings.makeSizeString(65535), "65.5 kB");
+        assertEquals(Strings.makeSizeString(23456789L), "23.5 MB");
+        assertEquals(Strings.makeSizeString(23456789012L), "23.5 GB");
+        assertEquals(Strings.makeSizeString(23456789012345L), "23.5 TB");
+        assertEquals(Strings.makeSizeString(Long.MAX_VALUE), "9223372 TB");
     }
 
     public void testJavaSizeString() {
@@ -63,20 +63,20 @@ public class ByteSizeStringsTest {
     }
 
     public void testISOSizeString() {
-        assertEquals(ByteSizeStrings.iso().makeSizeString(-1), "-1B");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(0), "0B");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(999), "999B");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(1024), "1024B");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(1234), "1234B");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(2345), "2.29KiB");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(4096), "4KiB");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(4567), "4.46KiB");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(6789), "6.63KiB");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(65535), "64.0KiB");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(23456789L), "22.4MiB");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(23456789012L), "21.8GiB");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(23456789012345L), "21.3TiB");
-        assertEquals(ByteSizeStrings.iso().makeSizeString(Long.MAX_VALUE), "8388608TiB");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(-1), "-1 B");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(0), "0 B");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(999), "999 B");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(1024), "1024 B");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(1234), "1234 B");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(2345), "2.29 KiB");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(4096), "4 KiB");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(4567), "4.46 KiB");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(6789), "6.63 KiB");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(65535), "64.0 KiB");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(23456789L), "22.4 MiB");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(23456789012L), "21.8 GiB");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(23456789012345L), "21.3 TiB");
+        assertEquals(ByteSizeStrings.iso().makeSizeString(Long.MAX_VALUE), "8388608 TiB");
     }
 
     public void testBuilder() {
@@ -90,36 +90,37 @@ public class ByteSizeStringsTest {
                 .suffixMega("Mb")
                 .suffixGiga("Gb")
                 .suffixTera("Tb")
+                .addSpace()
                 .build();
 
-        assertEquals(strings.makeSizeString(-1), "-1b");
-        assertEquals(strings.makeSizeString(0), "0b");
-        assertEquals(strings.makeSizeString(999), "999b");
-        assertEquals(strings.makeSizeString(1024), "1024b");
-        assertEquals(strings.makeSizeString(1234), "1234b");
-        assertEquals(strings.makeSizeString(2345), "2345b");
-        assertEquals(strings.makeSizeString(4096), "4096b");
-        assertEquals(strings.makeSizeString(4567), "4567b");
-        assertEquals(strings.makeSizeString(6789), "6.630kb");
-        assertEquals(strings.makeSizeString(65535), "64.00kb");
-        assertEquals(strings.makeSizeString(23456789L), "22.37Mb");
-        assertEquals(strings.makeSizeString(23456789012L), "21.85Gb");
-        assertEquals(strings.makeSizeString(23456789012345L), "21.33Tb");
-        assertEquals(strings.makeSizeString(Long.MAX_VALUE), "8388608Tb");
+        assertEquals(strings.makeSizeString(-1), "-1 b");
+        assertEquals(strings.makeSizeString(0), "0 b");
+        assertEquals(strings.makeSizeString(999), "999 b");
+        assertEquals(strings.makeSizeString(1024), "1024 b");
+        assertEquals(strings.makeSizeString(1234), "1234 b");
+        assertEquals(strings.makeSizeString(2345), "2345 b");
+        assertEquals(strings.makeSizeString(4096), "4096 b");
+        assertEquals(strings.makeSizeString(4567), "4567 b");
+        assertEquals(strings.makeSizeString(6789), "6.630 kb");
+        assertEquals(strings.makeSizeString(65535), "64.00 kb");
+        assertEquals(strings.makeSizeString(23456789L), "22.37 Mb");
+        assertEquals(strings.makeSizeString(23456789012L), "21.85 Gb");
+        assertEquals(strings.makeSizeString(23456789012345L), "21.33 Tb");
+        assertEquals(strings.makeSizeString(Long.MAX_VALUE), "8388608 Tb");
     }
 
     public void testFormatter() {
         ByteSizeStrings iso = ByteSizeStrings.iso();
-        assertEquals(String.format("%s", iso.formatted(23456789L)), "22.4MiB");
-        assertEquals(String.format("%.6s", iso.formatted(23456789L)), "22.3701MiB");
-        assertEquals(String.format("%#s", iso.formatted(23456789L)), "23.5MB");
+        assertEquals(String.format("%s", iso.formatted(23456789L)), "22.4 MiB");
+        assertEquals(String.format("%.6s", iso.formatted(23456789L)), "22.3701 MiB");
+        assertEquals(String.format("%#s", iso.formatted(23456789L)), "23.5 MB");
     }
 
     public void testFunction() {
         ByteSizeStrings iso = ByteSizeStrings.iso();
         Iterable<String> bytes = Iterables.transform(Arrays.asList(23456789L, 23456789012L, 23456789012345L), iso);
-        assertEquals(Iterables.get(bytes, 0), "22.4MiB");
-        assertEquals(Iterables.get(bytes, 1), "21.8GiB");
-        assertEquals(Iterables.get(bytes, 2), "21.3TiB");
+        assertEquals(Iterables.get(bytes, 0), "22.4 MiB");
+        assertEquals(Iterables.get(bytes, 1), "21.8 GiB");
+        assertEquals(Iterables.get(bytes, 2), "21.3 TiB");
     }
 }
