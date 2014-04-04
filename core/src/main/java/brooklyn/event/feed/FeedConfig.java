@@ -12,7 +12,7 @@ import com.google.common.base.Predicate;
  * 
  * @author aled
  */
-public class FeedConfig<V, T, This extends FeedConfig<V,T,This>> {
+public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
 
     /** The onSuccess or onError functions can return this value to indicate that the sensor should not change. */
     public static final Object UNSET = new Object();
@@ -27,7 +27,7 @@ public class FeedConfig<V, T, This extends FeedConfig<V,T,This>> {
         this.sensor = checkNotNull(sensor, "sensor");
     }
 
-    public FeedConfig(FeedConfig<V, T, This> other) {
+    public FeedConfig(FeedConfig<V, T, F> other) {
         this.sensor = other.sensor;
         this.onsuccess = other.onsuccess;
         this.onfailure = other.onfailure;
@@ -36,8 +36,8 @@ public class FeedConfig<V, T, This extends FeedConfig<V,T,This>> {
     }
 
     @SuppressWarnings("unchecked")
-    protected This self() {
-        return (This) this;
+    protected F self() {
+        return (F) this;
     }
     
     public AttributeSensor<T> getSensor() {
@@ -61,49 +61,49 @@ public class FeedConfig<V, T, This extends FeedConfig<V,T,This>> {
     }
 
     /** sets the predicate used to check whether a feed run is successful */
-    public This checkSuccess(Predicate<? super V> val) {
+    public F checkSuccess(Predicate<? super V> val) {
         this.checkSuccess = checkNotNull(val, "checkSuccess");
         return self();
     }
 
-    public This onSuccess(Function<? super V,T> val) {
+    public F onSuccess(Function<? super V,T> val) {
         this.onsuccess = checkNotNull(val, "onSuccess");
         return self();
     }
     
-    public This setOnSuccess(T val) {
+    public F setOnSuccess(T val) {
         return onSuccess(Functions.constant(val));
     }
     
     /** a failure is when the connection is fine (no exception) but the other end returns a result object V 
      * which the feed can tell indicates a failure (e.g. HTTP code 404) */
-    public This onFailure(Function<? super V,T> val) {
+    public F onFailure(Function<? super V,T> val) {
         this.onfailure = checkNotNull(val, "onFailure");
         return self();
     }
 
-    public This setOnFailure(T val) {
+    public F setOnFailure(T val) {
         return onFailure(Functions.constant(val));
     }
 
     /** registers a callback to be used {@link #onSuccess(Function)} and {@link #onFailure(Function)}, 
      * i.e. whenever a result comes back, but not in case of exceptions being thrown (ie problems communicating) */
-    public This onResult(Function<? super V, T> val) {
+    public F onResult(Function<? super V, T> val) {
         onSuccess(val);
         return onFailure(val);
     }
 
-    public This setOnResult(T val) {
+    public F setOnResult(T val) {
         return onResult(Functions.constant(val));
     }
 
     /** an exception is when there is an error in the communication */
-    public This onException(Function<? super Exception,T> val) {
+    public F onException(Function<? super Exception,T> val) {
         this.onexception = checkNotNull(val, "onException");
         return self();
     }
     
-    public This setOnException(T val) {
+    public F setOnException(T val) {
         return onException(Functions.constant(val));
     }
 
@@ -112,12 +112,12 @@ public class FeedConfig<V, T, This extends FeedConfig<V,T,This>> {
      * (error connecting) and 
      * {@link #onFailure(Function)} 
      * (successful communication but failure report from remote end) */
-    public This onFailureOrException(Function<Object,T> val) {
+    public F onFailureOrException(Function<Object,T> val) {
         onFailure(val);
         return onException(val);
     }
     
-    public This setOnFailureOrException(T val) {
+    public F setOnFailureOrException(T val) {
         return onFailureOrException(Functions.constant(val));
     }
 
