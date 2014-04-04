@@ -28,7 +28,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -127,7 +126,7 @@ public class BasicMachineDetails implements MachineDetails {
                     LOG.debug("Found following details at {}: {}", location, stdout);
                 }
 
-                Iterable<String> details = Lists.newArrayList(Splitter.on("\\r?\\n").split(stdout));
+                Iterable<String> details = Lists.newArrayList(stdout.split("\\r?\\n"));
                 String name = findAndRemove(details, "name:").orNull();
                 String version = findAndRemove(details, "version:").orNull();
                 String architecture = findAndRemove(details, "architecture:").orNull();
