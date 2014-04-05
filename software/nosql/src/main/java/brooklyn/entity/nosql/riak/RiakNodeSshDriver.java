@@ -2,13 +2,12 @@ package brooklyn.entity.nosql.riak;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
-import brooklyn.entity.nosql.mongodb.MongoDBServerImpl;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.net.Urls;
-import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import com.google.common.collect.ImmutableList;
@@ -26,6 +25,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     private static final Logger LOG = LoggerFactory.getLogger(RiakNodeSshDriver.class);
     private boolean isPackageInstall = false;
+    private boolean isRunning = false;
 
     public RiakNodeSshDriver(final RiakNodeImpl entity, final SshMachineLocation machine) {
         super(entity, machine);
@@ -35,6 +35,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     public RiakNodeImpl getEntity() {
         return RiakNodeImpl.class.cast(super.getEntity());
     }
+
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
@@ -107,29 +108,40 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
         String vmArgsTemplate = processTemplate(entity.getConfig(RiakNode.RIAK_VM_ARGS_TEMPLATE_URL));
 
-        DynamicTasks.queueIfPossible(SshEffectorTasks.put(getVmArgsLocation())
+        //create entity's runDir
+        DynamicTasks.queueIfPossible(newScript(CUSTOMIZING).body.append("true").newTask());
+
+        DynamicTasks.queueIfPossible(SshEffectorTasks.put(getRunDir() + "/vm.args")
                 .contents(Streams.newInputStreamWithContents(vmArgsTemplate))
                 .machine(getMachine())
                 .summary("sending the vm.args file to the riak node"));
+
+
+        commands.add(sudo("chown riak:riak " + getRunDir() + "/vm.args"));
+        commands.add(sudo("mv " + getRunDir() + "/vm.args " + getEtcDir()));
 
         // Edit file at getAppConfigLocation as per instructions at
         // http://docs.basho.com/riak/2.0.0pre20/ops/building/basic-cluster-setup/
         // Could also set scheduler on linux systems
 
+
+        //FIXME EC2 requires to configure the private IP in order for the riak node to work.
         //replace instances of 127.0.0.1 with the actual hostname in the app.config file
-        commands.add(format("sed -i -e 's/127.0.0.1/%s/g' %s", getHostname(), getAppConfigLocation()));
+        commands.add(sudo(format("sed -i -e 's/127.0.0.1/%s/g' %s", getPrivateIp(), getAppConfigLocation())));
 
-        //increase open file limit on mac (default min for riak is: 4096)
-        //TODO: detect the actual limit then do the modificaiton
-        if (osDetails.isMac()) {
-            commands.add(BashCommands.sudo("launchctl limit maxfiles 4096 32768"));
+
+        //increase open file limit (default min for riak is: 4096)
+        //TODO: detect the actual limit then do the modificaiton.
+        //TODO: modify ulimit for linux distros
+        //    commands.add(sudo("launchctl limit maxfiles 4096 32768"));
+        if (osDetails.isMac())
             commands.add("ulimit -n 4096");
-        }
 
-        newScript(CUSTOMIZING)
+
+        DynamicTasks.queueIfPossible(newScript(CUSTOMIZING)
                 .failOnNonZeroResultCode()
                 .body.append(commands)
-                .execute();
+                .newTask());
 
     }
 
@@ -137,43 +149,60 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     public void launch() {
         newScript(LAUNCHING)
                 .failOnNonZeroResultCode()
-                .body.append(String.format("nohup sudo %s/bin/riak start >/dev/null 2>&1 < /dev/null &", getInstallDir()))
+                .body.append(format("sudo %s start >/dev/null 2>&1 < /dev/null &", getRiakCmd()))
                 .execute();
     }
 
     @Override
     public void stop() {
-        String command = isPackageInstall ? "sudo " : "" + String.format("%s/bin/riak stop", getInstallDir());
         newScript(STOPPING)
                 .failOnNonZeroResultCode()
-                .body.append(command)
+                .body.append(sudo(format("%s stop", getRiakCmd())))
                 .execute();
+
     }
 
     @Override
     public boolean isRunning() {
-        return newScript("isrunning")
-                .body.append(String.format("sudo %s/bin/riak ping", getInstallDir()))
+
+        return newScript(CHECK_RUNNING)
+                .body.append(sudo(format("%s-admin test", getRiakCmd())))
                 .execute() == 0;
+
     }
 
     public String getEtcDir() {
-        return isPackageInstall ? "/etc" : Urls.mergePaths(getExpandedInstallDir(), "etc");
+        return isPackageInstall ? "/etc/riak" : Urls.mergePaths(getExpandedInstallDir(), "etc");
     }
 
-    public String getAppConfigLocation() {
+    private String getRiakCmd() {
+        return isPackageInstall ? "riak" : Urls.mergePaths(getExpandedInstallDir(), "bin/riak");
+    }
+
+    private String getAppConfigLocation() {
         return Urls.mergePaths(getEtcDir(), "app.config");
     }
 
     @Override
-    public void joinCluster(List<String> clusterHosts) {
-        //TODO: use for updating the cluster: bin/riak-admin cluster join riak@192.168.1.10
-        //to use after running riak's first node.
+    public void clusterJoin(RiakNode node) {
+
+        //TODO: add implementaiton for adding this node to a node in the cluster
     }
 
     @Override
-    public String getVmArgsLocation() {
+    public void clusterLeave() {
+
+        //TODO: add implementaiton for removing this node from the cluster
+    }
+
+    private String getVmArgsLocation() {
         return Urls.mergePaths(getEtcDir(), "vm.args");
+    }
+
+    public String getPrivateIp()
+    {
+        return entity.getAttribute(RiakNode.SUBNET_ADDRESS);
+
     }
 
 

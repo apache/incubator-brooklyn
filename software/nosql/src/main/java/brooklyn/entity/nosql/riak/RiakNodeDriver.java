@@ -6,9 +6,8 @@ import java.util.List;
 
 public interface RiakNodeDriver extends SoftwareProcessDriver {
 
-    public String getVmArgsLocation();
     public String getEtcDir();
-    public String getAppConfigLocation();
-    public String getHostname();
-    public void joinCluster(List<String> clusterHosts);
+    public String getPrivateIp();
+    public void clusterJoin(RiakNode node);
+    public void clusterLeave();
 }

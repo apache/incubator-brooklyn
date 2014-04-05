@@ -4,9 +4,10 @@ import brooklyn.entity.basic.SoftwareProcessImpl;
 
 public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
 
+
     @Override
     public RiakNodeDriver getDriver() {
-        return getDriverInterface().cast(super.getDriver());
+        return (RiakNodeDriver) super.getDriver();
     }
 
     @Override
@@ -16,11 +17,12 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
 
 
     public void connectSensors() {
-
+        super.connectSensors();
+        connectServiceUpIsRunning();
     }
 
     public void disconnectSensors() {
-
+        disconnectServiceUpIsRunning();
     }
 
 
