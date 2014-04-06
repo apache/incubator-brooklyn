@@ -73,7 +73,7 @@ public class SameServerDriverLifecycleEffectorTasks extends MachineLifecycleEffe
             result.put("inboundPorts", ports);
         }
 
-        result.put(LocationConfigKeys.CALLER_CONTEXT.getName(), this);
+        result.put(LocationConfigKeys.CALLER_CONTEXT.getName(), entity());
         return result;
     }
 
