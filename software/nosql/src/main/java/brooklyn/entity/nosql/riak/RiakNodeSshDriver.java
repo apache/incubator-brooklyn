@@ -1,8 +1,8 @@
 package brooklyn.entity.nosql.riak;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.OsDetails;
@@ -10,6 +10,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.net.Urls;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
@@ -25,7 +26,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     private static final Logger LOG = LoggerFactory.getLogger(RiakNodeSshDriver.class);
     private boolean isPackageInstall = false;
-    private boolean isRunning = false;
 
     public RiakNodeSshDriver(final RiakNodeImpl entity, final SshMachineLocation machine) {
         super(entity, machine);
@@ -126,8 +126,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
 
         //FIXME EC2 requires to configure the private IP in order for the riak node to work.
-        //replace instances of 127.0.0.1 with the actual hostname in the app.config file
-        commands.add(sudo(format("sed -i -e 's/127.0.0.1/%s/g' %s", getPrivateIp(), getAppConfigLocation())));
+        //replace instances of 127.0.0.1 with the actual hostname in the app.config and vm.args files
+        commands.add(sudo(format("sed -i -e \"s/127.0.0.1/%s/g\" %s", getPrivateIp(), getAppConfigLocation())));
 
 
         //increase open file limit (default min for riak is: 4096)
@@ -142,6 +142,9 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .failOnNonZeroResultCode()
                 .body.append(commands)
                 .newTask());
+
+        //set the riak node name
+        entity.setAttribute(RiakNode.RIAK_NODE_NAME, format("riak@%s", getHostname()));
 
     }
 
@@ -166,7 +169,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     public boolean isRunning() {
 
         return newScript(CHECK_RUNNING)
-                .body.append(sudo(format("%s-admin test", getRiakCmd())))
+                .body.append(sudo(format("%s test", getRiakAdminCmd())))
                 .execute() == 0;
 
     }
@@ -179,30 +182,73 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         return isPackageInstall ? "riak" : Urls.mergePaths(getExpandedInstallDir(), "bin/riak");
     }
 
+    private String getRiakAdminCmd() {
+        return isPackageInstall ? "riak-admin" : Urls.mergePaths(getExpandedInstallDir(), "bin/riak-admin");
+    }
+
     private String getAppConfigLocation() {
         return Urls.mergePaths(getEtcDir(), "app.config");
     }
 
     @Override
-    public void clusterJoin(RiakNode node) {
+    public void joinCluster(RiakNode node) {
+        //FIXME: find a way to batch commit the changes, instead of committing for every operation.
+        if (!isInCluster()) {
+            String riakName = node.getAttribute(RiakNode.RIAK_NODE_NAME);
 
-        //TODO: add implementaiton for adding this node to a node in the cluster
+            newScript("joinCluster")
+                    .body.append(format("%s cluster join %s", getRiakAdminCmd(), riakName))
+                    .body.append(format("%s cluster plan", getRiakAdminCmd()))
+                    .body.append(format("%s cluster commit", getRiakAdminCmd()))
+                    .failOnNonZeroResultCode()
+                    .execute();
+
+            entity.setAttribute(RiakNode.RIAK_NODE_IN_CLUSTER, Boolean.TRUE);
+        } else {
+            log.warn("entity {}: is already in the riak cluster", entity.getId());
+        }
     }
 
     @Override
-    public void clusterLeave() {
+    public void leaveCluster() {
+        //TODO: add 'riak-admin cluster force-remove' for erreneous and unrecoverable nodes.
+        //FIXME: find a way to batch commit the changes, instead of committing for every operation.
 
-        //TODO: add implementaiton for removing this node from the cluster
+        if (isInCluster()) {
+            newScript("leaveCluster")
+                    .body.append(format("%s cluster leave"))
+                    .body.append(format("%s cluster plan", getRiakAdminCmd()))
+                    .body.append(format("%s cluster commit", getRiakAdminCmd()))
+                    .failOnNonZeroResultCode()
+                    .execute();
+
+            entity.setAttribute(RiakNode.RIAK_NODE_IN_CLUSTER, Boolean.FALSE);
+
+
+        } else {
+            log.warn("entity {}: is not in the riak Cluster", entity.getId());
+        }
     }
 
     private String getVmArgsLocation() {
         return Urls.mergePaths(getEtcDir(), "vm.args");
     }
 
-    public String getPrivateIp()
-    {
-        return entity.getAttribute(RiakNode.SUBNET_ADDRESS);
+    private String getPrivateIp() {
+        Optional<String> subnetAddress = Optional.of(entity.getAttribute(Attributes.SUBNET_ADDRESS));
 
+        if (subnetAddress.isPresent())
+            return subnetAddress.get();
+        else
+            throw new IllegalArgumentException("Subnet address is not set.");
+    }
+
+    private Boolean isInCluster() {
+        Optional<Boolean> inCluster = Optional.of(entity.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER));
+        if (inCluster.isPresent())
+            return inCluster.get();
+        else
+            return Boolean.FALSE;
     }
 
 

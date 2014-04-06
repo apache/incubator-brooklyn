@@ -1,5 +1,6 @@
 package brooklyn.entity.nosql.riak;
 
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 
 public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
@@ -26,4 +27,13 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     }
 
 
+    @Override
+    public void joinCluster(@EffectorParam(name = "riak.node.in.cluster") RiakNode node) {
+        getDriver().joinCluster(node);
+    }
+
+    @Override
+    public void leaveCluster() {
+        getDriver().leaveCluster();
+    }
 }
