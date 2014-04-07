@@ -3,6 +3,7 @@ package brooklyn.entity.nosql.riak;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.OsDetails;
@@ -12,11 +13,13 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
 import static brooklyn.util.ssh.BashCommands.*;
 import static java.lang.String.format;
@@ -26,6 +29,9 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     private static final Logger LOG = LoggerFactory.getLogger(RiakNodeSshDriver.class);
     private boolean isPackageInstall = false;
+    private boolean isRiakOnPath = true;
+
+    private static final String sbinPath = "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
 
     public RiakNodeSshDriver(final RiakNodeImpl entity, final SshMachineLocation machine) {
         super(entity, machine);
@@ -67,6 +73,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         isPackageInstall = true;
         String installBin = Urls.mergePaths(expandedInstallDir, "bin");
         String apt = chainGroup(
+                //debian fix
+                "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
                 "which apt-get",
                 "curl http://apt.basho.com/gpg/basho.apt.key | " + sudo("apt-key add -"),
                 sudo("bash -c \"echo deb http://apt.basho.com $(lsb_release -sc) main > /etc/apt/sources.list.d/basho.list\""),
@@ -103,6 +111,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     @Override
     public void customize() {
 
+        isRiakOnPath = isPackageInstall ? isRiakOnPath() : true;
+
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
         List<String> commands = Lists.newLinkedList();
 
@@ -116,32 +126,33 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .machine(getMachine())
                 .summary("sending the vm.args file to the riak node"));
 
-
-        commands.add(sudo("chown riak:riak " + getRunDir() + "/vm.args"));
-        commands.add(sudo("mv " + getRunDir() + "/vm.args " + getEtcDir()));
-
-        // Edit file at getAppConfigLocation as per instructions at
-        // http://docs.basho.com/riak/2.0.0pre20/ops/building/basic-cluster-setup/
-        // Could also set scheduler on linux systems
-
-
-        //FIXME EC2 requires to configure the private IP in order for the riak node to work.
-        //replace instances of 127.0.0.1 with the actual hostname in the app.config and vm.args files
-        commands.add(sudo(format("sed -i -e \"s/127.0.0.1/%s/g\" %s", getPrivateIp(), getAppConfigLocation())));
-
-
         //increase open file limit (default min for riak is: 4096)
         //TODO: detect the actual limit then do the modificaiton.
         //TODO: modify ulimit for linux distros
         //    commands.add(sudo("launchctl limit maxfiles 4096 32768"));
         if (osDetails.isMac())
             commands.add("ulimit -n 4096");
+        else if (osDetails.isLinux()) {
+            commands.add(sudo("chown riak:riak " + getRunDir() + "/vm.args"));
+        }
 
+        commands.add(sudo("mv " + getRunDir() + "/vm.args " + getEtcDir()));
 
-        DynamicTasks.queueIfPossible(newScript(CUSTOMIZING)
+        //FIXME EC2 requires to configure the private IP in order for the riak node to work.
+        //replace instances of 127.0.0.1 with the actual hostname in the app.config and vm.args files
+        commands.add(sudo(format("sed -i -e \"s/127.0.0.1/%s/g\" %s", getPrivateIp(), getAppConfigLocation())));
+
+        ScriptHelper customizeScript = newScript(CUSTOMIZING)
                 .failOnNonZeroResultCode()
-                .body.append(commands)
-                .newTask());
+                .body.append(commands);
+
+        if (!isRiakOnPath) {
+            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
+            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
+            customizeScript.environmentVariablesReset(newPathVariable);
+        }
+
+        customizeScript.execute();
 
         //set the riak node name
         entity.setAttribute(RiakNode.RIAK_NODE_NAME, format("riak@%s", getHostname()));
@@ -150,27 +161,58 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     @Override
     public void launch() {
-        newScript(LAUNCHING)
+
+        String command = format("%s start >/dev/null 2>&1 < /dev/null &", getRiakCmd());
+        command = isPackageInstall ? "sudo " + command : command;
+
+        ScriptHelper launchScript = newScript(LAUNCHING)
                 .failOnNonZeroResultCode()
-                .body.append(format("sudo %s start >/dev/null 2>&1 < /dev/null &", getRiakCmd()))
-                .execute();
+                .body.append(command);
+
+        if (!isRiakOnPath) {
+            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
+            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
+            launchScript.environmentVariablesReset(newPathVariable);
+        }
+
+        launchScript.execute();
     }
 
     @Override
     public void stop() {
-        newScript(STOPPING)
+
+        leaveCluster();
+
+        String command = format("%s stop", getRiakCmd());
+        command = isPackageInstall ? "sudo " + command : command;
+
+        ScriptHelper stopScript = newScript(STOPPING)
                 .failOnNonZeroResultCode()
-                .body.append(sudo(format("%s stop", getRiakCmd())))
-                .execute();
+                .body.append(command);
+
+        if (!isRiakOnPath) {
+            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
+            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
+            stopScript.environmentVariablesReset(newPathVariable);
+        }
+
+        stopScript.execute();
 
     }
 
     @Override
     public boolean isRunning() {
 
-        return newScript(CHECK_RUNNING)
-                .body.append(sudo(format("%s test", getRiakAdminCmd())))
-                .execute() == 0;
+        ScriptHelper checkRunningScript = newScript(CHECK_RUNNING)
+                .body.append(format("%s ping", getRiakCmd()));
+
+        if (!isRiakOnPath) {
+            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
+            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
+            checkRunningScript.environmentVariablesReset(newPathVariable);
+        }
+
+        return (checkRunningScript.execute() == 0);
 
     }
 
@@ -193,15 +235,24 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     @Override
     public void joinCluster(RiakNode node) {
         //FIXME: find a way to batch commit the changes, instead of committing for every operation.
+
         if (!isInCluster()) {
             String riakName = node.getAttribute(RiakNode.RIAK_NODE_NAME);
 
-            newScript("joinCluster")
+            ScriptHelper joinClusterScript = newScript("joinCluster")
                     .body.append(format("%s cluster join %s", getRiakAdminCmd(), riakName))
                     .body.append(format("%s cluster plan", getRiakAdminCmd()))
                     .body.append(format("%s cluster commit", getRiakAdminCmd()))
-                    .failOnNonZeroResultCode()
-                    .execute();
+                    .failOnNonZeroResultCode();
+
+            if (!isRiakOnPath) {
+                Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
+                log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
+                joinClusterScript.environmentVariablesReset(newPathVariable);
+            }
+
+            joinClusterScript.execute();
+
 
             entity.setAttribute(RiakNode.RIAK_NODE_IN_CLUSTER, Boolean.TRUE);
         } else {
@@ -215,12 +266,20 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         //FIXME: find a way to batch commit the changes, instead of committing for every operation.
 
         if (isInCluster()) {
-            newScript("leaveCluster")
+            ScriptHelper leaveClusterScript = newScript("leaveCluster")
                     .body.append(format("%s cluster leave"))
                     .body.append(format("%s cluster plan", getRiakAdminCmd()))
                     .body.append(format("%s cluster commit", getRiakAdminCmd()))
-                    .failOnNonZeroResultCode()
-                    .execute();
+                    .failOnNonZeroResultCode();
+
+            if (!isRiakOnPath) {
+                Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
+                log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
+                leaveClusterScript.environmentVariablesReset(newPathVariable);
+            }
+
+            leaveClusterScript.execute();
+
 
             entity.setAttribute(RiakNode.RIAK_NODE_IN_CLUSTER, Boolean.FALSE);
 
@@ -235,7 +294,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     }
 
     private String getPrivateIp() {
-        Optional<String> subnetAddress = Optional.of(entity.getAttribute(Attributes.SUBNET_ADDRESS));
+        Optional<String> subnetAddress = Optional.fromNullable(entity.getAttribute(Attributes.SUBNET_ADDRESS));
 
         if (subnetAddress.isPresent())
             return subnetAddress.get();
@@ -244,11 +303,13 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     }
 
     private Boolean isInCluster() {
-        Optional<Boolean> inCluster = Optional.of(entity.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER));
-        if (inCluster.isPresent())
-            return inCluster.get();
-        else
-            return Boolean.FALSE;
+        return Optional.fromNullable(entity.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER)).or(Boolean.FALSE);
+    }
+
+    private boolean isRiakOnPath() {
+        return (newScript("riakOnPath")
+                .body.append("which riak")
+                .execute() == 0);
     }
 
 

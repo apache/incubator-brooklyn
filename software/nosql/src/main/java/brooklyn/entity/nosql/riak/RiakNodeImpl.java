@@ -28,7 +28,7 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
 
 
     @Override
-    public void joinCluster(@EffectorParam(name = "riak.node.in.cluster") RiakNode node) {
+    public void joinCluster(RiakNode node) {
         getDriver().joinCluster(node);
     }
 
