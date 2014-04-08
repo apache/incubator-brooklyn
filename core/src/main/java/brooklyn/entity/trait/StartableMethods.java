@@ -16,6 +16,7 @@ import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.TaskTags;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -55,9 +56,10 @@ public class StartableMethods {
         List<Exception> exceptions = Lists.newArrayList();
         List<Startable> failedEntities = Lists.newArrayList();
         
-        for (Startable entity : entities) {
+        for (final Startable entity : entities) {
             try {
-                DynamicTasks.queueIfPossible( Effectors.invocation((Entity)entity, Startable.STOP, Collections.emptyMap()) ).orSubmitAsync((Entity)entity).andWaitForSuccess(); 
+                TaskAdaptable<Void> task = TaskTags.markInessential(Effectors.invocation((Entity)entity, Startable.STOP, Collections.emptyMap()));
+                DynamicTasks.queueIfPossible(task).orSubmitAsync((Entity)entity).andWaitForSuccess();
             } catch (Exception e) {
                 log.warn("Error stopping "+entity+"; continuing with shutdown", e);
                 exceptions.add(e);

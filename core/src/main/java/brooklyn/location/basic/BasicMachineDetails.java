@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
@@ -24,6 +25,7 @@ import brooklyn.util.task.ssh.internal.PlainSshExecTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -32,6 +34,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 
 @Immutable
@@ -127,14 +130,18 @@ public class BasicMachineDetails implements MachineDetails {
                     LOG.debug("Found following details at {}: {}", location, stdout);
                 }
 
-                Iterable<String> details = Lists.newArrayList(Splitter.on("\\r?\\n").split(stdout));
-                String name = findAndRemove(details, "name:").orNull();
-                String version = findAndRemove(details, "version:").orNull();
-                String architecture = findAndRemove(details, "architecture:").orNull();
-                Integer ram = intOrNull(details, "ram:");
-                Integer cpuCount = intOrNull(details, "cpus:");
-                if (!Iterables.isEmpty(details)) {
-                    LOG.debug("Unused outputs from os-details script: " + Joiner.on(", ").join(details));
+                Map<String,String> details = Maps.newHashMap(Splitter.on(CharMatcher.anyOf("\r\n"))
+                        .omitEmptyStrings()
+                        .withKeyValueSeparator(":")
+                        .split(stdout));
+
+                String name = details.remove("name");
+                String version = details.remove("version");
+                String architecture = details.remove("architecture");
+                Integer ram = intOrNull(details, "ram");
+                Integer cpuCount = intOrNull(details, "cpus");
+                if (!details.isEmpty()) {
+                    LOG.debug("Unused keys from os-details script: " + Joiner.on(", ").join(details.keySet()));
                 }
 
                 OsDetails osDetails = new BasicOsDetails(name, architecture, version);
@@ -147,25 +154,10 @@ public class BasicMachineDetails implements MachineDetails {
                 return machineDetails;
             }
 
-            // Finds the first entry in the list of inputs starting with field and removes
-            // it from inputs.
-            private Optional<String> findAndRemove(Iterable<String> inputs, String field) {
-                for (Iterator<String> it = inputs.iterator(); it.hasNext(); ) {
-                    String input = it.next();
-                    if (input.startsWith(field)) {
-                        it.remove();
-                        String value = input.substring(field.length());
-                        return Strings.isNonBlank(value) ? Optional.of(value) : Optional.<String>absent();
-                    }
-                }
-                return Optional.absent();
-            }
-
-            private Integer intOrNull(Iterable<String> inputs, String field) {
-                Optional<String> f = findAndRemove(inputs, field);
-                if (f.isPresent()) {
-                    return Integer.valueOf(f.get());
-                } else {
+            private Integer intOrNull(Map<String, String> details, String key) {
+                try {
+                    return Integer.valueOf(details.remove(key));
+                } catch (NumberFormatException e) {
                     return null;
                 }
             }
