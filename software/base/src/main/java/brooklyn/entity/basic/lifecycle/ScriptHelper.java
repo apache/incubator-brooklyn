@@ -53,6 +53,7 @@ public class ScriptHelper {
     protected Predicate<? super ScriptHelper> executionCheck = Predicates.alwaysTrue();
     
     protected boolean isTransient = false;
+    protected boolean isInessential = false;
     protected boolean closeSshConnection = false;
     protected boolean gatherOutput = false;
     protected ByteArrayOutputStream stdout, stderr;
@@ -226,6 +227,10 @@ public class ScriptHelper {
     public void setTransient() {
         isTransient = true;
     }
+    
+    public void setInessential() {
+        isInessential = true;
+    }
 
     /** creates a task which will execute this script; note this can only be run once per instance of this class */
     public synchronized Task<Integer> newTask() {
@@ -255,6 +260,7 @@ public class ScriptHelper {
         }
         task = tb.build();
         if (isTransient) BrooklynTaskTags.setTransient(task);
+        if (isInessential) BrooklynTaskTags.setInessential(task);
         return task;
     }
     

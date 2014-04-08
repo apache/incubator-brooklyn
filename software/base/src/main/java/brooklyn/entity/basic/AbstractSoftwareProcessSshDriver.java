@@ -569,6 +569,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             s.updateTaskAndFailOnNonZeroResultCode();
         }
         if (phase.equalsIgnoreCase(CHECK_RUNNING)) {
+            s.setInessential();
             s.setTransient();
             s.setFlag(SshTool.PROP_CONNECT_TIMEOUT, Duration.TEN_SECONDS.toMilliseconds());
             s.setFlag(SshTool.PROP_SESSION_TIMEOUT, Duration.THIRTY_SECONDS.toMilliseconds());
