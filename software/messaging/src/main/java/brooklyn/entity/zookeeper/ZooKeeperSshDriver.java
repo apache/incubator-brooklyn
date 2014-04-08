@@ -106,7 +106,7 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
                 .add(BashCommands.INSTALL_CURL)
                 .add(BashCommands.INSTALL_TAR)
-                 .add("tar xzfv " + saveAs)
+                .add("tar xzfv " + saveAs)
                 .build();
 
         newScript(INSTALLING)
