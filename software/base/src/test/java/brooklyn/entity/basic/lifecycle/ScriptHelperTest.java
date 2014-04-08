@@ -2,6 +2,7 @@ package brooklyn.entity.basic.lifecycle;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.testng.Assert;
 import org.testng.TestException;
@@ -15,11 +16,14 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcessEntityTest;
 import brooklyn.entity.basic.SoftwareProcessEntityTest.MyServiceImpl;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.feed.function.FunctionFeed;
+import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.EntityTestUtils;
 
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 
 public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
@@ -39,8 +43,8 @@ public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
                 .configure("address", "localhost"));
         loc.addMachine(machine);
     }
-    
-    @Test(groups = "Integration")
+
+    @Test
     public void testCheckRunningForcesInessential() {
         MyServiceInessentialDriverImpl entity = new MyServiceInessentialDriverImpl(app);
         Entities.manage(entity);
@@ -49,7 +53,7 @@ public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
         SimulatedInessentialIsRunningDriver driver = (SimulatedInessentialIsRunningDriver) entity.getDriver();
         Assert.assertTrue(driver.isRunning());
         
-        entity.connectPolling();
+        entity.connectServiceUpIsRunning();
         
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
         driver.setFailExecution(true);
@@ -67,8 +71,19 @@ public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
             return SimulatedInessentialIsRunningDriver.class;
         }
         
-        public void connectPolling() {
-            connectServiceUpIsRunning();
+        @Override
+        public void connectServiceUpIsRunning() {
+            FunctionFeed.builder()
+                    .entity(this)
+                    .period(500)
+                    .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_UP)
+                            .onException(Functions.constant(Boolean.FALSE))
+                            .callable(new Callable<Boolean>() {
+                                public Boolean call() {
+                                    return getDriver().isRunning();
+                                }
+                            }))
+                    .build();
         }
     }
     
@@ -82,8 +97,6 @@ public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
         @Override
         public boolean isRunning() {
             return newScript(CHECK_RUNNING)
-                .body.append("ls")
-                .failOnNonZeroResultCode()
                 .execute() == 0;
         }
         
@@ -92,7 +105,7 @@ public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
             if (failExecution) {
                 throw new TestException("Simulated driver exception");
             }
-            return super.execute(script, summaryForLogging);
+            return 0;
         }
         
         @SuppressWarnings("rawtypes")
@@ -101,7 +114,7 @@ public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
             if (failExecution) {
                 throw new TestException("Simulated driver exception");
             }
-            return super.execute(flags2, script, summaryForLogging);
+            return 0;
         }
         
         public void setFailExecution(boolean failExecution) {
