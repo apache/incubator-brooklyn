@@ -1,3 +1,18 @@
+/*
+ * Copyright 2011-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.webapp.jetty;
 
 import static java.lang.String.format;
@@ -10,10 +25,11 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
-
 
 public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver {
 
@@ -23,7 +39,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
 
     protected String getLogFileLocation() {
         // TODO no wildcard
-        return String.format("%s/logs/*.stderrout.log", getRunDir());
+        return Os.mergePathsUnix(getRunDir(), "logs/*.stderrout.log");
         // also, there is .requests.log
     }
 
@@ -43,76 +59,68 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
         commands.add(BashCommands.INSTALL_ZIP);
         commands.add("unzip "+saveAs);
 
-        newScript(INSTALLING).
-                failOnNonZeroResultCode().
-                body.append(commands).execute();
+        newScript(INSTALLING)
+                .body.append(commands)
+                .execute();
     }
 
     @Override
     public void customize() {
-        newScript(CUSTOMIZING).
-                body.append(
-                // create app-specific dirs
-                "mkdir logs contexts webapps",
-                // link to the binary directories; silly that we have to do this but jetty has only one notion of "jetty.home" 
-                // (jetty.run is used only for writing the pid file, not for looking up webapps or even for logging)
-                format("for x in start.jar bin contrib modules lib extras; do ln -s %s/$x $x ; done", getExpandedInstallDir()),
-                // copy config
-                format("for x in etc resources; do cp -r %s/$x $x ; done", getExpandedInstallDir()),
-                
-                // now modify the config file
-                format("sed -i.bk s/8080/%s/g etc/jetty.xml",getHttpPort()),
-                format("sed -i.bk s/8443/%s/g etc/jetty.xml",getHttpsPort())
-        ).execute();
+        newScript(CUSTOMIZING)
+                .body.append(
+                        // create app-specific dirs
+                        "mkdir logs contexts webapps",
+                        // link to the binary directories; silly that we have to do this but jetty has only one notion of "jetty.home" 
+                        // (jetty.run is used only for writing the pid file, not for looking up webapps or even for logging)
+                        format("for x in start.jar bin contrib modules lib extras; do ln -s %s/$x $x ; done", getExpandedInstallDir()),
+                        // copy config
+                        format("for x in etc resources; do cp -r %s/$x $x ; done", getExpandedInstallDir()),
+                        // now modify the config file
+                        format("sed -i.bk s/8080/%s/g etc/jetty.xml",getHttpPort()),
+                        format("sed -i.bk s/8443/%s/g etc/jetty.xml",getHttpsPort())
+                    )
+                .execute();
 
-        ((Jetty6ServerImpl)entity).deployInitialWars();
+        getEntity().deployInitialWars();
     }
 
     @Override
     public void launch() {
-        Map ports = MutableMap.of("httpPort",getHttpPort(), "jmxPort",getJmxPort());
+        Map ports = MutableMap.of("httpPort", getHttpPort(), "jmxPort", getJmxPort());
         Networking.checkPortsValid(ports);
-        
-        Map flags = MutableMap.of("usePidFile",false);
 
-        newScript(flags, LAUNCHING).
-        body.append(
-                "echo JAVA_OPTS is $JAVA_OPTS",
-                format("./bin/jetty.sh " +
-                        "start etc/jetty.xml etc/jetty-logging.xml etc/jetty-jmx.xml etc/jetty-stats.xml "+
-                		">>$RUN_DIR/console 2>&1 </dev/null"),
-                "for i in {1..10}\n" +
-                "do\n" +
-                "    if [ -s "+getLogFileLocation()+" ]; then exit; fi\n" +
-                "    sleep 1\n" +
-                "done\n" +
-            "echo \"Couldn't determine if jetty-server is running (log file is still empty); continuing but may subsequently fail\""
-        ).execute();
+        newScript(MutableMap.of(USE_PID_FILE, false), LAUNCHING)
+                .body.append(
+                        "./bin/jetty.sh start etc/jetty.xml etc/jetty-logging.xml etc/jetty-jmx.xml etc/jetty-stats.xml " +
+                                ">> $RUN_DIR/console 2>&1 < /dev/null",
+                        "for i in {1..10} ; do\n" +
+                        "    if [ -s "+getLogFileLocation()+" ]; then exit; fi\n" +
+                        "    sleep 1\n" +
+                        "done",
+                        "echo \"Couldn't determine if jetty-server is running (log file is still empty); continuing but may subsequently fail\""
+                    )
+                .execute();
         log.debug("launched jetty");
     }
 
     @Override
     public boolean isRunning() {
-        Map flags = MutableMap.of("usePidFile","jetty.pid");
-        return newScript(flags, CHECK_RUNNING).execute() == 0;
+        return newScript(MutableMap.of(USE_PID_FILE, "jetty.pid"), CHECK_RUNNING).execute() == 0;
     }
 
     public void stop() {
-        Map flags = MutableMap.of("usePidFile", false);
-        newScript(flags, STOPPING).
-            body.append("./bin/jetty.sh stop"
-        ).execute();
+        newScript(MutableMap.of(USE_PID_FILE, false), STOPPING)
+                .body.append("./bin/jetty.sh stop")
+                .execute();
     }
 
     // not used, but an alternative to stop which might be useful
     public void kill1() {
-        Map flags = MutableMap.of("usePidFile","jetty.pid");
-        newScript(flags, STOPPING).execute();
+        newScript(MutableMap.of(USE_PID_FILE, "jetty.pid"), STOPPING).execute();
     }
 
     public void kill9() {
-        Map flags = MutableMap.of("usePidFile","jetty.pid");
-        newScript(flags, KILLING).execute();
+        newScript(MutableMap.of(USE_PID_FILE, "jetty.pid"), KILLING).execute();
     }
 
     @Override
@@ -122,18 +130,19 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
 
     @Override
     protected List<String> getCustomJavaConfigOptions() {
-        List<String> options = new LinkedList<String>();
-        options.addAll(super.getCustomJavaConfigOptions());
-        options.add("-Xms200m");
-        options.add("-Xmx800m");
-        options.add("-XX:MaxPermSize=400m");
-        return options;
+        return MutableList.<String>builder()
+                .addAll(super.getCustomJavaConfigOptions())
+                .add("-Xms200m")
+                .add("-Xmx800m")
+                .add("-XX:MaxPermSize=400m")
+                .build();
     }
 
     @Override
     public Map<String, String> getShellEnvironment() {
-        return MutableMap.<String,String>builder().putAll(super.getShellEnvironment())
-                .put("JETTY_RUN",getRunDir())
+        return MutableMap.<String,String>builder()
+                .putAll(super.getShellEnvironment())
+                .put("JETTY_RUN", getRunDir())
                 .renameKey("JAVA_OPTS", "JAVA_OPTIONS")
                 .build();
     }

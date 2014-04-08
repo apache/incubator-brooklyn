@@ -1,3 +1,18 @@
+/*
+ * Copyright 2011-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.messaging.qpid;
 
 import static java.lang.String.format;
@@ -15,6 +30,7 @@ import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableMap;
@@ -22,13 +38,13 @@ import com.google.common.collect.ImmutableMap;
 public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidDriver{
 
     private static final Logger log = LoggerFactory.getLogger(QpidSshDriver.class);
-    
+
     public QpidSshDriver(QpidBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
     @Override
-    protected String getLogFileLocation() { return getRunDir()+"/log/qpid.log"; }
+    protected String getLogFileLocation() { return Os.mergePathsUnix(getRunDir(), "log/qpid.log"); }
 
     @Override
     public Integer getAmqpPort() { return entity.getAttribute(QpidBroker.AMQP_PORT); }
@@ -37,21 +53,20 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
     public String getAmqpVersion() { return entity.getAttribute(QpidBroker.AMQP_VERSION); }
 
     public Integer getHttpManagementPort() { return entity.getAttribute(QpidBroker.HTTP_MANAGEMENT_PORT); }
-    
+
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("qpid-broker-%s", getVersion())));
-        
+
         List<String> commands = new LinkedList<String>();
         commands.addAll( BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv "+saveAs);
 
         newScript(INSTALLING)
-                .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
     }
@@ -61,9 +76,9 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
         Networking.checkPortsValid(MutableMap.of("jmxPort", getJmxPort(), "amqpPort", getAmqpPort()));
         newScript(CUSTOMIZING)
                 .body.append(
-                    format("cp -R %s/{bin,etc,lib} .", getExpandedInstallDir()),
-                    "mkdir lib/opt"
-                )
+                        format("cp -R %s/{bin,etc,lib} .", getExpandedInstallDir()),
+                        "mkdir lib/opt"
+                    )
                 .execute();
 
         Map runtimeFiles = entity.getConfig(QpidBroker.RUNTIME_FILES);
@@ -75,7 +90,7 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
 
     @Override
     public void launch() {
-        newScript(ImmutableMap.of("usePidFile", false), LAUNCHING)
+        newScript(ImmutableMap.of(USE_PID_FILE, false), LAUNCHING)
                 .body.append("nohup ./bin/qpid-server -b '*' > qpid-server-launch.log 2>&1 &")
                 .execute();
     }
@@ -84,20 +99,20 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
     
     @Override
     public boolean isRunning() {
-        return newScript(ImmutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).execute() == 0;
+        return newScript(ImmutableMap.of(USE_PID_FILE, getPidFile()), CHECK_RUNNING).execute() == 0;
     }
-
 
     @Override
     public void stop() {
-        newScript(ImmutableMap.of("usePidFile", getPidFile()), STOPPING).execute();
+        newScript(ImmutableMap.of(USE_PID_FILE, getPidFile()), STOPPING).execute();
     }
 
     @Override
     public void kill() {
-        newScript(ImmutableMap.of("usePidFile", getPidFile()), KILLING).execute();
+        newScript(ImmutableMap.of(USE_PID_FILE, getPidFile()), KILLING).execute();
     }
 
+    @Override
     public Map<String, Object> getCustomJavaSystemProperties() {
         return MutableMap.<String, Object>builder()
                 .putAll(super.getCustomJavaSystemProperties())
@@ -105,19 +120,18 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
                 .put("management.enabled", "true")
                 .put("management.jmxport.registryServer", getRmiRegistryPort())
                 .put("management.jmxport.connectorServer", getJmxPort())
-                .put("management.http.enabled",  getHttpManagementPort() != null ? "true" : "false")
+                .put("management.http.enabled", Boolean.toString(getHttpManagementPort() != null))
                 .putIfNotNull("management.http.port", getHttpManagementPort())
                 .build();
     }
 
+    @Override
     public Map<String, String> getShellEnvironment() {
-        Map<String, String> orig = super.getShellEnvironment();
         return MutableMap.<String, String>builder()
-                .putAll(orig)
+                .putAll(super.getShellEnvironment())
                 .put("QPID_HOME", getRunDir())
                 .put("QPID_WORK", getRunDir())
                 .renameKey("JAVA_OPTS", "QPID_OPTS")
-                .putIfAbsent("QPID_OPTS", "")
                 .build();
     }
 }

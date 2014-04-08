@@ -5,8 +5,11 @@ import java.util.Collection;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.trait.Changeable;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 
 import com.google.common.base.Predicate;
+import com.google.common.reflect.TypeToken;
 
 
 /**
@@ -21,8 +24,11 @@ import com.google.common.base.Predicate;
  */
 public interface AbstractGroup extends Entity, Group, Changeable {
 
-    public void setMembers(Collection<Entity> m);
-    
+    AttributeSensor<Collection<Entity>> GROUP_MEMBERS = Sensors.newSensor(
+            new TypeToken<Collection<Entity>>() { }, "group.members", "Members of the group");
+
+    void setMembers(Collection<Entity> m);
+
     /**
      * Removes any existing members that do not match the given filter, and adds those entities in
      * the given collection that match the predicate.
@@ -31,5 +37,6 @@ public interface AbstractGroup extends Entity, Group, Changeable {
      * @param filter Filter for entities that are to be members (or null for "all")
      */
     // FIXME Do we really want this method? "setMembers" is a misleading name
-    public void setMembers(Collection<Entity> mm, Predicate<Entity> filter);
+    void setMembers(Collection<Entity> mm, Predicate<Entity> filter);
+
 }

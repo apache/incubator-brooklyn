@@ -17,12 +17,14 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.javalang.Boxing;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 
 /**
  * tests that a group's membership gets updated using subscriptions
@@ -58,6 +60,7 @@ public class GroupPickUpEntitiesTest {
         e1.setAttribute(TestEntity.NAME, "bob");
 
         EntityTestUtils.assertAttributeEqualsEventually(group, BasicGroup.GROUP_SIZE, 1);
+        Asserts.assertEqualsIgnoringOrder(group.getAttribute(BasicGroup.GROUP_MEMBERS), ImmutableList.of(e1));
         
         TestEntity e2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
@@ -72,6 +75,7 @@ public class GroupPickUpEntitiesTest {
 
         e2.setAttribute(TestEntity.NAME, "BOB");
         EntityTestUtils.assertAttributeEqualsEventually(group, BasicGroup.GROUP_SIZE, 2);
+        Asserts.assertEqualsIgnoringOrder(group.getAttribute(BasicGroup.GROUP_MEMBERS), ImmutableList.of(e1, e2));
     }
 
 
