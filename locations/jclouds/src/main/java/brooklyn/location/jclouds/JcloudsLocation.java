@@ -102,6 +102,7 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.Protocol;
@@ -184,20 +185,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     /** typically wants at least ACCESS_IDENTITY and ACCESS_CREDENTIAL */
     public JcloudsLocation(Map<?,?> conf) {
        super(conf);
-    }
-
-    private CloudMachineNamer getCloudMachineNamer(ConfigBag config) {
-        String namerClass = config.get(LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS);
-        if (namerClass != null) {
-            try {
-                return (CloudMachineNamer) getManagementContext().getCatalog().getRootClassLoader().loadClass(namerClass)
-                        .getDeclaredConstructor(ConfigBag.class).newInstance(config);
-            } catch (Exception e) {
-                throw Exceptions.propagate(e);
-            }
-        } else {
-            return new JcloudsMachineNamer(config);
-        }
     }
 
     @Override
@@ -300,6 +287,20 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected Semaphore getMachineCreationSemaphore() {
         return checkNotNull(getConfig(MACHINE_CREATION_SEMAPHORE), MACHINE_CREATION_SEMAPHORE.getName());
     }
+
+    protected CloudMachineNamer getCloudMachineNamer(ConfigBag config) {
+        String namerClass = config.get(LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS);
+        if (Strings.isNonBlank(namerClass)) {
+            Optional<CloudMachineNamer> cloudNamer = Reflections.invokeConstructorWithArgs(getManagementContext().getCatalog().getRootClassLoader(), namerClass, config);
+            if (cloudNamer.isPresent()) {
+                return cloudNamer.get();
+            } else {
+                throw new IllegalStateException("Cannot load CloudMachineNamer: " + namerClass);
+            }
+        } else {
+            return new JcloudsMachineNamer(config);
+        }
+    }
     
     protected Collection<JcloudsLocationCustomizer> getCustomizers(ConfigBag setup) {
         JcloudsLocationCustomizer customizer = setup.get(JCLOUDS_LOCATION_CUSTOMIZER);
@@ -311,45 +312,22 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (customizer != null) result.add(customizer);
         if (customizers != null) result.addAll(customizers);
         if (Strings.isNonBlank(customizerType)) {
-            try {
-                Class<JcloudsLocationCustomizer> customizerClazz = (Class<JcloudsLocationCustomizer>) getClass().getClassLoader().loadClass(customizerType);
-                JcloudsLocationCustomizer customizerByType = getClassInvokedWithConfigBag(customizerClazz, setup);
-                result.add(customizerByType);
-            } catch (Exception e) {
-                throw new IllegalStateException("Failed to load customizer "+customizerType+" for location "+this);
+            Optional<JcloudsLocationCustomizer> customizerByType = Reflections.invokeConstructorWithArgs(getManagementContext().getCatalog().getRootClassLoader(), customizerType, setup);
+            if (customizerByType.isPresent()) {
+                result.add(customizerByType.get());
+            } else {
+                throw new IllegalStateException("Failed to load JcloudsLocationCustomizer "+customizersSupplierType+" for location "+this);
             }
         }
         if (Strings.isNonBlank(customizersSupplierType)) {
-            try {
-                Class<Supplier<Collection<JcloudsLocationCustomizer>>> customizerClazz =
-                        (Class<Supplier<Collection<JcloudsLocationCustomizer>>>) getClass().getClassLoader().loadClass(customizersSupplierType);
-                Supplier<Collection<JcloudsLocationCustomizer>> supplier = getClassInvokedWithConfigBag(customizerClazz, setup);
-                result.addAll(supplier.get());
-            } catch (Exception e) {
-                throw new IllegalStateException("Failed to load customizer supplier "+customizersSupplierType+" for location "+this);
+            Optional<Supplier<Collection<JcloudsLocationCustomizer>>> supplier = Reflections.invokeConstructorWithArgs(getManagementContext().getCatalog().getRootClassLoader(), customizersSupplierType, setup);
+            if (supplier.isPresent()) {
+                result.addAll(supplier.get().get());
+            } else {
+                throw new IllegalStateException("Failed to load JcloudsLocationCustomizer supplier "+customizersSupplierType+" for location "+this);
             }
         }
         return result;
-    }
-
-    /**
-     * @param type Class to invoke
-     * @param config The ConfigBag used being to obtain a machine
-     * @return an instance of the given class, or null if the class could not be invoked with a ConfigBag or zero-arg constructor
-     */
-    private <T> T getClassInvokedWithConfigBag(Class<T> type, ConfigBag config) {
-        try {
-            return type.getConstructor(ConfigBag.class).newInstance(config);
-        } catch (Exception e) {
-            // Try no argument constructor
-        }
-        try {
-            return type.getConstructor().newInstance();
-        } catch (Exception e) {
-            LOG.debug("Failed to invoke instance of " + type + " with zero-arg constructor after " +
-                    "attempting ConfigBag constructor", e);
-            return null;
-        }
     }
 
     public void setDefaultImageId(String val) {
