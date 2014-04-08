@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 by Cloudsoft Corp.
+ * Copyright 2013-2014 by Cloudsoft Corporation Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,8 @@ import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
-
-import com.google.common.collect.ImmutableMap;
 
 public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriver {
 
@@ -56,7 +55,7 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
     protected abstract String getProcessIdentifier();
 
     @Override
-    protected String getLogFileLocation() { return getRunDir()+"/console.out"; }
+    protected String getLogFileLocation() { return Os.mergePathsUnix(getRunDir(), "console.out"); }
 
     @Override
     public void install() {
@@ -78,7 +77,6 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
         }
 
         newScript(INSTALLING)
-                .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
     }
@@ -92,6 +90,7 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
     @Override
     public void customize() {
         Networking.checkPortsValid(getPortMap());
+
         newScript(CUSTOMIZING)
                 .failOnNonZeroResultCode()
                 .body.append(format("cp -R %s/* %s", getExpandedInstallDir(), getRunDir()))
@@ -103,22 +102,22 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
 
     @Override
     public void launch() {
-        newScript(ImmutableMap.of("usePidFile", getPidFile()), LAUNCHING)
+        newScript(MutableMap.of(USE_PID_FILE, getPidFile()), LAUNCHING)
                 .failOnNonZeroResultCode()
                 .body.append(String.format("nohup ./bin/%s ./%s > console.out 2>&1 &", getLaunchScriptName(), getConfigFileName()))
                 .execute();
     }
 
-    public String getPidFile() { return getRunDir() + "/kafka.pid"; }
+    public String getPidFile() { return Os.mergePathsUnix(getRunDir(), "kafka.pid"); }
 
     @Override
     public boolean isRunning() {
-        return newScript(ImmutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).execute() == 0;
+        return newScript(MutableMap.of(USE_PID_FILE, getPidFile()), CHECK_RUNNING).execute() == 0;
     }
 
     @Override
     public void stop() {
-        newScript(ImmutableMap.of("usePidFile", false), STOPPING)
+        newScript(MutableMap.of(USE_PID_FILE, false), STOPPING)
                 .body.append(String.format("ps ax | grep %s | awk '{print $1}' | xargs kill", getProcessIdentifier()))
                 .body.append(String.format("ps ax | grep %s | awk '{print $1}' | xargs kill -9", getProcessIdentifier()))
                 .execute();
@@ -129,11 +128,9 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
      */
     @Override
     public Map<String, String> getShellEnvironment() {
-        Map<String, String> orig = super.getShellEnvironment();
-        String kafkaJmxOpts = orig.remove("JAVA_OPTS");
         return MutableMap.<String, String>builder()
-                .putAll(orig)
-                .putIfNotNull("KAFKA_JMX_OPTS", kafkaJmxOpts)
+                .putAll(super.getShellEnvironment())
+                .renameKey("JAVA_OPTS", "KAFKA_JMX_OPTS")
                 .build();
     }
 
