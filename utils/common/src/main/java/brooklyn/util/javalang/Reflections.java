@@ -70,7 +70,7 @@ public class Reflections {
 		this.classLoader = checkNotNull(classLoader);
 	}
 
-	public Object loadInstance(String classname, Object[] argValues) throws ReflectionNotFoundException, ReflectionAccessException {
+	public Object loadInstance(String classname, Object...argValues) throws ReflectionNotFoundException, ReflectionAccessException {
         Class<?> clazz = loadClass(classname);
         Optional<?> v = null;
         try {
@@ -189,12 +189,32 @@ public class Reflections {
 	}
 
     /** Invokes a suitable constructor, supporting varargs and primitives */
-    public static <T> Optional<T> invokeConstructorWithArgs(Class<T> clazz, Object[] argsArray) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    public static <T> Optional<T> invokeConstructorWithArgs(ClassLoader classLoader, String className, Object...argsArray) {
+        Reflections reflections = new Reflections(classLoader);
+        Class<T> clazz = (Class<T>) reflections.loadClass(className);
+        return invokeConstructorWithArgs(reflections, clazz, argsArray, false);
+    }
+
+    /** Invokes a suitable constructor, supporting varargs and primitives */
+    public static <T> Optional<T> invokeConstructorWithArgs(ClassLoader classLoader, Class<T> clazz, Object[] argsArray, boolean setAccessible) {
+        Reflections reflections = new Reflections(classLoader);
+        return invokeConstructorWithArgs(reflections, clazz, argsArray, setAccessible);
+    }
+
+    /** Invokes a suitable constructor, supporting varargs and primitives */
+    public static <T> Optional<T> invokeConstructorWithArgs(Class<T> clazz, Object...argsArray) {
         return invokeConstructorWithArgs(clazz, argsArray, false);
     }
+
+    /** Invokes a suitable constructor, supporting varargs and primitives */
+    public static <T> Optional<T> invokeConstructorWithArgs(Class<T> clazz, Object[] argsArray, boolean setAccessible) {
+        Reflections reflections = new Reflections(clazz.getClassLoader());
+        return invokeConstructorWithArgs(reflections, clazz, argsArray, setAccessible);
+    }
+
     /** Invokes a suitable constructor, supporting varargs and primitives, additionally supporting setAccessible */
     @SuppressWarnings("unchecked")
-    public static <T> Optional<T> invokeConstructorWithArgs(Class<T> clazz, Object[] argsArray, boolean setAccessible) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    public static <T> Optional<T> invokeConstructorWithArgs(Reflections reflections, Class<T> clazz, Object[] argsArray, boolean setAccessible) {
         for (Constructor<?> constructor : clazz.getConstructors()) {
             Class<?>[] parameterTypes = constructor.getParameterTypes();
             if (constructor.isVarArgs()) {
@@ -217,13 +237,13 @@ public class Reflections {
                         System.arraycopy(argsArray, 0, newArgsArray, 0, parameterTypes.length-1);
                         newArgsArray[parameterTypes.length-1] = varargs;
                         if (setAccessible) constructor.setAccessible(true);
-                        return (Optional<T>) Optional.of(constructor.newInstance(newArgsArray));
+                        return (Optional<T>) Optional.of(reflections.loadInstance(constructor, newArgsArray));
                     }
                 }
             }
             if (typesMatch(argsArray, parameterTypes)) {
                 if (setAccessible) constructor.setAccessible(true);
-                return (Optional<T>) Optional.of(constructor.newInstance(argsArray));
+                return (Optional<T>) Optional.of(reflections.loadInstance(constructor, argsArray));
             }
         }
         return Optional.absent();
@@ -239,7 +259,7 @@ public class Reflections {
 		throw new IllegalArgumentException("Class " + clazz + " has more than one constructor");
 	}
 
-	public <T> T loadInstance(Constructor<T> constructor, Object[] argValues) throws IllegalArgumentException, ReflectionAccessException {
+	public <T> T loadInstance(Constructor<T> constructor, Object...argValues) throws IllegalArgumentException, ReflectionAccessException {
 		try {
 			try {
 				return constructor.newInstance(argValues);
