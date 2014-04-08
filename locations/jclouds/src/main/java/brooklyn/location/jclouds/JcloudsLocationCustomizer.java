@@ -5,12 +5,17 @@ import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.TemplateOptions;
 
-
 import com.google.common.annotations.Beta;
+
+import brooklyn.util.config.ConfigBag;
 
 /**
  * Customization hooks to allow apps to perform specific customisation at each stage of jclouds machine provisioning.
  * For example, an app could attach an EBS volume to an EC2 node, or configure a desired availability zone.
+ * <p/>
+ * Instances will be invoked with the {@link ConfigBag} being used to obtain a machine by the
+ * {@link JcloudsLocation }if such a constructor exists. If not, the default no argument constructor
+ * will be invoked.
  */
 @Beta
 public interface JcloudsLocationCustomizer {

@@ -312,8 +312,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (customizers != null) result.addAll(customizers);
         if (Strings.isNonBlank(customizerType)) {
             try {
-                Class<?> customizerClazz = getClass().getClassLoader().loadClass(customizerType);
-                JcloudsLocationCustomizer customizerByType = (JcloudsLocationCustomizer) customizerClazz.getConstructor().newInstance();
+                Class<JcloudsLocationCustomizer> customizerClazz = (Class<JcloudsLocationCustomizer>) getClass().getClassLoader().loadClass(customizerType);
+                JcloudsLocationCustomizer customizerByType = getClassInvokedWithConfigBag(customizerClazz, setup);
                 result.add(customizerByType);
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to load customizer "+customizerType+" for location "+this);
@@ -321,14 +321,35 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         if (Strings.isNonBlank(customizersSupplierType)) {
             try {
-                Class<?> customizerClazz = getClass().getClassLoader().loadClass(customizersSupplierType);
-                Supplier<Collection<JcloudsLocationCustomizer>> customizerSupplier = (Supplier) customizerClazz.getConstructor().newInstance();
-                result.addAll(customizerSupplier.get());
+                Class<Supplier<Collection<JcloudsLocationCustomizer>>> customizerClazz =
+                        (Class<Supplier<Collection<JcloudsLocationCustomizer>>>) getClass().getClassLoader().loadClass(customizersSupplierType);
+                Supplier<Collection<JcloudsLocationCustomizer>> supplier = getClassInvokedWithConfigBag(customizerClazz, setup);
+                result.addAll(supplier.get());
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to load customizer supplier "+customizersSupplierType+" for location "+this);
             }
         }
         return result;
+    }
+
+    /**
+     * @param type Class to invoke
+     * @param config The ConfigBag used being to obtain a machine
+     * @return an instance of the given class, or null if the class could not be invoked with a ConfigBag or zero-arg constructor
+     */
+    private <T> T getClassInvokedWithConfigBag(Class<T> type, ConfigBag config) {
+        try {
+            return type.getConstructor(ConfigBag.class).newInstance(config);
+        } catch (Exception e) {
+            // Try no argument constructor
+        }
+        try {
+            return type.getConstructor().newInstance();
+        } catch (Exception e) {
+            LOG.debug("Failed to invoke instance of " + type + " with zero-arg constructor after " +
+                    "attempting ConfigBag constructor", e);
+            return null;
+        }
     }
 
     public void setDefaultImageId(String val) {
