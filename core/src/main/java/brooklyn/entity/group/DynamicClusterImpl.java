@@ -226,8 +226,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             for (Policy it : getPolicies()) {
                 it.resume();
             }
-            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
             setAttribute(SERVICE_UP, calculateServiceUp());
+            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
         } catch (Exception e) {
             setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
