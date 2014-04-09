@@ -295,7 +295,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (cloudNamer.isPresent()) {
                 return cloudNamer.get();
             } else {
-                throw new IllegalStateException("Cannot load CloudMachineNamer: " + namerClass);
+                throw new IllegalStateException("Failed to create CloudMachineNamer "+namerClass+" for location "+this);
             }
         } else {
             return new JcloudsMachineNamer(config);
@@ -308,23 +308,34 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String customizerType = setup.get(JCLOUDS_LOCATION_CUSTOMIZER_TYPE);
         String customizersSupplierType = setup.get(JCLOUDS_LOCATION_CUSTOMIZERS_SUPPLIER_TYPE);
 
+        ClassLoader catalogClassLoader = getManagementContext().getCatalog().getRootClassLoader();
         List<JcloudsLocationCustomizer> result = new ArrayList<JcloudsLocationCustomizer>();
         if (customizer != null) result.add(customizer);
         if (customizers != null) result.addAll(customizers);
         if (Strings.isNonBlank(customizerType)) {
-            Optional<JcloudsLocationCustomizer> customizerByType = Reflections.invokeConstructorWithArgs(getManagementContext().getCatalog().getRootClassLoader(), customizerType, setup);
+            Optional<JcloudsLocationCustomizer> customizerByType = Reflections.invokeConstructorWithArgs(catalogClassLoader, customizerType, setup);
             if (customizerByType.isPresent()) {
                 result.add(customizerByType.get());
             } else {
-                throw new IllegalStateException("Failed to load JcloudsLocationCustomizer "+customizersSupplierType+" for location "+this);
+                customizerByType = Reflections.invokeConstructorWithArgs(catalogClassLoader, customizerType);
+                if (customizerByType.isPresent()) {
+                    result.add(customizerByType.get());
+                } else {
+                    throw new IllegalStateException("Failed to create JcloudsLocationCustomizer "+customizersSupplierType+" for location "+this);
+                }
             }
         }
         if (Strings.isNonBlank(customizersSupplierType)) {
-            Optional<Supplier<Collection<JcloudsLocationCustomizer>>> supplier = Reflections.invokeConstructorWithArgs(getManagementContext().getCatalog().getRootClassLoader(), customizersSupplierType, setup);
+            Optional<Supplier<Collection<JcloudsLocationCustomizer>>> supplier = Reflections.invokeConstructorWithArgs(catalogClassLoader, customizersSupplierType, setup);
             if (supplier.isPresent()) {
                 result.addAll(supplier.get().get());
             } else {
-                throw new IllegalStateException("Failed to load JcloudsLocationCustomizer supplier "+customizersSupplierType+" for location "+this);
+                supplier = Reflections.invokeConstructorWithArgs(catalogClassLoader, customizersSupplierType);
+                if (supplier.isPresent()) {
+                    result.addAll(supplier.get().get());
+                } else {
+                    throw new IllegalStateException("Failed to create JcloudsLocationCustomizer supplier "+customizersSupplierType+" for location "+this);
+                }
             }
         }
         return result;
