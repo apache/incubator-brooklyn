@@ -295,7 +295,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (cloudNamer.isPresent()) {
                 return cloudNamer.get();
             } else {
-                throw new IllegalStateException("Cannot load CloudMachineNamer: " + namerClass);
+                throw new IllegalStateException("Failed to create CloudMachineNamer "+namerClass+" for location "+this);
             }
         } else {
             return new JcloudsMachineNamer(config);
@@ -321,7 +321,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 if (customizerByType.isPresent()) {
                     result.add(customizerByType.get());
                 } else {
-                    throw new IllegalStateException("Failed to load JcloudsLocationCustomizer "+customizersSupplierType+" for location "+this);
+                    throw new IllegalStateException("Failed to create JcloudsLocationCustomizer "+customizersSupplierType+" for location "+this);
                 }
             }
         }
@@ -334,7 +334,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 if (supplier.isPresent()) {
                     result.addAll(supplier.get().get());
                 } else {
-                    throw new IllegalStateException("Failed to load JcloudsLocationCustomizer supplier "+customizersSupplierType+" for location "+this);
+                    throw new IllegalStateException("Failed to create JcloudsLocationCustomizer supplier "+customizersSupplierType+" for location "+this);
                 }
             }
         }
