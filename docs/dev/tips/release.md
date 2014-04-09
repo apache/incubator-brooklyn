@@ -178,6 +178,8 @@ git push -u origin $RELEASE_VERSION
 
 ### Update the Versioned Docs
 
+Ensure `/docs/meta/versions.md` includes the new version.
+
 {% highlight bash %}
 
 cd $BROOKLYN_DIR/docs
