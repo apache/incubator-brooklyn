@@ -14,6 +14,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
@@ -123,51 +124,67 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
     }
     
     public void start(Collection<? extends Location> locations) {
-        if (isLegacyConstruction()) {
-            init();
-        }
-        
-        if (locations.isEmpty()) locations = this.getLocations();
-        addLocations(locations);
-        
-        LoadBalancer loadBalancer = getController();
-        loadBalancer.bind(MutableMap.of("serverPool", getCluster()));
-
-        List<Entity> childrenToStart = MutableList.<Entity>of(getCluster());
-        // Set controller as child of cluster, if it does not already have a parent
-        if (getController().getParent() == null) {
-            addChild(getController());
-        }
-        
-        // And only start controller if we are parent
-        if (this.equals(getController().getParent())) childrenToStart.add(getController());
-        
+        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
         try {
+            if (isLegacyConstruction()) {
+                init();
+            }
+            
+            if (locations.isEmpty()) locations = this.getLocations();
+            addLocations(locations);
+            
+            LoadBalancer loadBalancer = getController();
+            loadBalancer.bind(MutableMap.of("serverPool", getCluster()));
+    
+            List<Entity> childrenToStart = MutableList.<Entity>of(getCluster());
+            // Set controller as child of cluster, if it does not already have a parent
+            if (getController().getParent() == null) {
+                addChild(getController());
+            }
+            
+            // And only start controller if we are parent
+            if (this.equals(getController().getParent())) childrenToStart.add(getController());
+        
             Entities.invokeEffectorList(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations))
                 .get();
             
             // wait for everything to start, then update controller, to ensure it is up to date
             // (will happen asynchronously as members come online, but we want to force it to happen)
             getController().update();
+            
+            connectSensors();
+            
         } catch (InterruptedException e) {
+            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         } catch (ExecutionException e) {
+            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         }
-        
-        connectSensors();
+
+        setAttribute(SERVICE_UP, getCluster().getAttribute(SERVICE_UP));
+        setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
     }
 
     @Override
     public void stop() {
-        List<Startable> tostop = Lists.newArrayList();
-        if (this.equals(getController().getParent())) tostop.add(getController());
-        tostop.add(getCluster());
-        
-        StartableMethods.stopSequentially(tostop);
+        setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
+        try {
+            List<Startable> tostop = Lists.newArrayList();
+            if (this.equals(getController().getParent())) tostop.add(getController());
+            tostop.add(getCluster());
+            
+            StartableMethods.stopSequentially(tostop);
+    
+            clearLocations();
+            setAttribute(SERVICE_UP, false);
 
-        clearLocations();
-        setAttribute(SERVICE_UP, false);
+            setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
+            setAttribute(SERVICE_UP, false);
+        } catch (Exception e) {
+            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            throw Exceptions.propagate(e);
+        }
     }
 
     @Override
@@ -181,7 +198,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
     
     void connectSensors() {
         addEnricher(Enrichers.builder()
-                .propagatingAllBut(SERVICE_UP, ROOT_URL)
+                .propagatingAllBut(SERVICE_STATE, SERVICE_UP, ROOT_URL)
                 .from(getCluster())
                 .build());
         addEnricher(Enrichers.builder()
