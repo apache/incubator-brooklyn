@@ -57,8 +57,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     private static final SoftwareProcessDriverLifecycleEffectorTasks LIFECYCLE_TASKS =
             new SoftwareProcessDriverLifecycleEffectorTasks();
 
-    private static final long MAX_REBIND_SENSOR_CONNECT_DELAY = Duration.TEN_SECONDS.toMilliseconds();
-
     protected boolean connectedSensors = false;
     
     public SoftwareProcessImpl() {
@@ -183,14 +181,19 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
     
     protected void callRebindHooks() {
-        long delay = (long) (Math.random() * MAX_REBIND_SENSOR_CONNECT_DELAY);
-        log.info("Scheduled reconnection of sensors on {} in {}ms", this, delay);
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override public void run() {
-                connectSensors();
-            }
-        }, delay);
+        Duration configuredMaxDelay = getConfig(MAXIMUM_REBIND_SENSOR_CONNECT_DELAY);
+        if (configuredMaxDelay == null || Duration.ZERO.equals(configuredMaxDelay)) {
+            connectSensors();
+        } else {
+            long delay = (long) (Math.random() * configuredMaxDelay.toMilliseconds());
+            log.debug("Scheduled reconnection of sensors on {} in {}ms", this, delay);
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override public void run() {
+                    connectSensors();
+                }
+            }, delay);
+        }
         // don't wait here - it may be long-running, e.g. if remote entity has died, and we don't want to block rebind waiting or cause it to fail
         // the service will subsequently show service not up and thus failure
 //        waitForServiceUp();
