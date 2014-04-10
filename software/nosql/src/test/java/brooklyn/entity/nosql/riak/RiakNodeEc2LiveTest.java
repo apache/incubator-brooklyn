@@ -7,7 +7,6 @@ import brooklyn.test.EntityTestUtils;
 import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 public class RiakNodeEc2LiveTest extends AbstractEc2LiveTest {
@@ -25,14 +24,8 @@ public class RiakNodeEc2LiveTest extends AbstractEc2LiveTest {
     }
 
 
-
     @Test(enabled = false)
     public void testDummy() {
     } // Convince TestNG IDE integration that this really does have test methods
 
-//    @AfterMethod(alwaysRun=false)
-//    @Override
-//    public void tearDown() throws Exception {
-//        //don't tearDown
-//    }
 }

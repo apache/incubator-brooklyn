@@ -37,9 +37,4 @@ public class RiakNodeGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest
     public void testDummy() {
     } // Convince testng IDE integration that this really does have test methods
 
-    @Override
-    @AfterMethod(alwaysRun = false)
-    public void tearDown() throws Exception {
-        //don't shutdown VM for debugging.
-    }
 }

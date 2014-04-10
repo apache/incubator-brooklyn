@@ -10,9 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-/**
- * Created by zaid.mohsin on 06/04/2014.
- */
 public class RiakClusterEc2LiveTest extends AbstractEc2LiveTest {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(RiakNodeEc2LiveTest.class);
