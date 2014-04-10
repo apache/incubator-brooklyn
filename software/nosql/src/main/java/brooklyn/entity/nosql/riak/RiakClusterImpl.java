@@ -90,7 +90,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                         @Override
                         public boolean apply(@Nullable Entity node) {
                             return (node instanceof RiakNode &&
-                                    node.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER)) ? true : false;
+                                    node.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER));
                         }
                     });
 
@@ -120,8 +120,6 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
 
                 setAttribute(RIAK_CLUSTER_NODES, nodes);
                 log.info("Removing riak node from {}: {}; {}", new Object[]{this, member, riakNodeName});
-
-                log.info("Updating sge hosts to all members");
 
             }
         }

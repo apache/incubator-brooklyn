@@ -18,17 +18,17 @@ public interface RiakNode extends SoftwareProcess {
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
             "1.4.8");
 
-    @SetFromFlag("riakVmArgsTemplateUrl")
+    @SetFromFlag("vmArgsTemplateUrl")
     ConfigKey<String> RIAK_VM_ARGS_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
-            "riak.vm.args.template.url", "Template file (in freemarker format) for the vm.args config file",
+            "riak.vmargs.templateUrl", "Template file (in freemarker format) for the vm.args config file",
             "classpath://brooklyn/entity/nosql/riak/vm.args");
 
     @SetFromFlag("riakNodeInCluster")
     AttributeSensor<Boolean> RIAK_NODE_IN_CLUSTER = Sensors.newBooleanSensor(
-            "riak.node.in.cluster", "Flag to indicate wether the node is a cluster member");
+            "riak.node.inCluster", "Flag to indicate wether the node is a cluster member");
 
     @SetFromFlag("riakNodeName")
-    AttributeSensor<String> RIAK_NODE_NAME = Sensors.newStringSensor("riak.node.name","Returns the riak node name as defined in vm.args");
+    AttributeSensor<String> RIAK_NODE_NAME = Sensors.newStringSensor("riak.node","Returns the riak node name as defined in vm.args");
 
     public static final MethodEffector<Void> JOIN_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "joinCluster");
     public static final MethodEffector<Void> LEAVE_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "leaveCluster");
