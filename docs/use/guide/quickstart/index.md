@@ -98,7 +98,7 @@ $ mkdir ~/.brooklyn
 
 Download the template [brooklyn.properties](brooklyn.properties)  and place this in `~/.brooklyn`.  
 
-Open the file in a text editor and add your cloud credentials. If you would rather test Brooklyn on localhost, follow [these instructions](/use/guide/locations/) to ensure that your Brooklyn can access your machine.
+Open the file in a text editor and add your cloud credentials. If you would rather test Brooklyn on localhost, follow [these instructions]({{site.url}}/use/guide/locations/) to ensure that your Brooklyn can access your machine.
 
 Restart Brooklyn:
 
