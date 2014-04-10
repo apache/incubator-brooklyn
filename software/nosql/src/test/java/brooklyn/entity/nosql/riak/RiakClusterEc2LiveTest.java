@@ -5,9 +5,9 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 public class RiakClusterEc2LiveTest extends AbstractEc2LiveTest {
@@ -16,24 +16,23 @@ public class RiakClusterEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        RiakCluster entity = app.createAndManageChild(EntitySpec.create(RiakCluster.class)
+        RiakCluster cluster = app.createAndManageChild(EntitySpec.create(RiakCluster.class)
                 .configure(RiakCluster.INITIAL_SIZE, 3)
                 .configure(RiakCluster.MEMBER_SPEC, EntitySpec.create(RiakNode.class)));
-                app.start(ImmutableList.of(loc));
+        app.start(ImmutableList.of(loc));
 
-        EntityTestUtils.assertAttributeEqualsEventually(entity, RiakNode.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, RiakNode.SERVICE_UP, true);
 
+        RiakNode first = (RiakNode) Iterables.get(cluster.getMembers(), 0);
+        RiakNode second = (RiakNode) Iterables.get(cluster.getMembers(), 1);
+
+        EntityTestUtils.assertAttributeEqualsEventually(first, RiakNode.RIAK_NODE_IN_CLUSTER, true);
+        EntityTestUtils.assertAttributeEqualsEventually(second, RiakNode.RIAK_NODE_IN_CLUSTER, true);
     }
-
 
 
     @Test(enabled = false)
     public void testDummy() {
     } // Convince TestNG IDE integration that this really does have test methods
 
-    @AfterMethod(alwaysRun=false)
-    @Override
-    public void tearDown() throws Exception {
-        //don't tearDown
-    }
 }
