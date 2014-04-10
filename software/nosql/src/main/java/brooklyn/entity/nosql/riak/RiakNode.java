@@ -33,7 +33,7 @@ public interface RiakNode extends SoftwareProcess {
     public static final MethodEffector<Void> JOIN_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "joinCluster");
     public static final MethodEffector<Void> LEAVE_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "leaveCluster");
 
-    @Effector(description = "add this riak node to a node already in the cluster")
+    @Effector(description = "add this riak node to the riak cluster")
     public void joinCluster(@EffectorParam(name = "riak.node.in.cluster") RiakNode node);
 
     @Effector(description = "remove this riak node from the cluster")

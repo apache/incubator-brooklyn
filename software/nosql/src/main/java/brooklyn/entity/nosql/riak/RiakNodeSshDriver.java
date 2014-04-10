@@ -28,10 +28,9 @@ import static java.lang.String.format;
 public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implements RiakNodeDriver {
 
     private static final Logger LOG = LoggerFactory.getLogger(RiakNodeSshDriver.class);
+    private static final String sbinPath = "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
     private boolean isPackageInstall = false;
     private boolean isRiakOnPath = true;
-
-    private static final String sbinPath = "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
 
     public RiakNodeSshDriver(final RiakNodeImpl entity, final SshMachineLocation machine) {
         super(entity, machine);
@@ -62,10 +61,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                     getMachine() + ". Details: " + getMachine().getMachineDetails().getOsDetails());
         }
         newScript(INSTALLING)
-                .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
-
     }
 
     private List<String> installLinux(String expandedInstallDir) {
@@ -117,26 +114,27 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         List<String> commands = Lists.newLinkedList();
 
         String vmArgsTemplate = processTemplate(entity.getConfig(RiakNode.RIAK_VM_ARGS_TEMPLATE_URL));
-
+        String saveAsVmArgs = Urls.mergePaths(getRunDir(), "vm.args");
         //create entity's runDir
-        DynamicTasks.queueIfPossible(newScript(CUSTOMIZING).body.append("true").newTask());
+        newScript(CUSTOMIZING).execute();
 
-        DynamicTasks.queueIfPossible(SshEffectorTasks.put(getRunDir() + "/vm.args")
+
+        DynamicTasks.queueIfPossible(SshEffectorTasks.put(saveAsVmArgs)
                 .contents(Streams.newInputStreamWithContents(vmArgsTemplate))
                 .machine(getMachine())
                 .summary("sending the vm.args file to the riak node"));
+
+        commands.add(sudo("mv " + saveAsVmArgs + " " + getEtcDir()));
 
         //increase open file limit (default min for riak is: 4096)
         //TODO: detect the actual limit then do the modificaiton.
         //TODO: modify ulimit for linux distros
         //    commands.add(sudo("launchctl limit maxfiles 4096 32768"));
-        if (osDetails.isMac())
+        if (osDetails.isMac()) {
             commands.add("ulimit -n 4096");
-        else if (osDetails.isLinux()) {
-            commands.add(sudo("chown riak:riak " + getRunDir() + "/vm.args"));
+        } else if (osDetails.isLinux()) {
+            commands.add(sudo("chown riak:riak " + getVmArgsLocation()));
         }
-
-        commands.add(sudo("mv " + getRunDir() + "/vm.args " + getEtcDir()));
 
         //FIXME EC2 requires to configure the private IP in order for the riak node to work.
         //replace instances of 127.0.0.1 with the actual hostname in the app.config and vm.args files
@@ -156,7 +154,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
         //set the riak node name
         entity.setAttribute(RiakNode.RIAK_NODE_NAME, format("riak@%s", getHostname()));
-
     }
 
     @Override
@@ -166,7 +163,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         command = isPackageInstall ? "sudo " + command : command;
 
         ScriptHelper launchScript = newScript(LAUNCHING)
-                .failOnNonZeroResultCode()
                 .body.append(command);
 
         if (!isRiakOnPath) {
@@ -181,8 +177,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     @Override
     public void stop() {
 
-        if (entity.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER))
-            leaveCluster();
+        leaveCluster();
 
         String command = format("%s stop", getRiakCmd());
         command = isPackageInstall ? "sudo " + command : command;
@@ -198,7 +193,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         }
 
         stopScript.execute();
-
     }
 
     @Override
@@ -254,7 +248,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
             joinClusterScript.execute();
 
-
             entity.setAttribute(RiakNode.RIAK_NODE_IN_CLUSTER, Boolean.TRUE);
         } else {
             log.warn("entity {}: is already in the riak cluster", entity.getId());
@@ -265,10 +258,10 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     public void leaveCluster() {
         //TODO: add 'riak-admin cluster force-remove' for erreneous and unrecoverable nodes.
         //FIXME: find a way to batch commit the changes, instead of committing for every operation.
-
+        //FIXME: check if only node in cluster then don't execute the leave script.
         if (isInCluster()) {
             ScriptHelper leaveClusterScript = newScript("leaveCluster")
-                    .body.append(format("%s cluster leave"))
+                    .body.append(format("%s cluster leave", getRiakAdminCmd()))
                     .body.append(format("%s cluster plan", getRiakAdminCmd()))
                     .body.append(format("%s cluster commit", getRiakAdminCmd()))
                     .failOnNonZeroResultCode();
@@ -281,10 +274,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
             leaveClusterScript.execute();
 
-
             entity.setAttribute(RiakNode.RIAK_NODE_IN_CLUSTER, Boolean.FALSE);
-
-
         } else {
             log.warn("entity {}: is not in the riak Cluster", entity.getId());
         }
@@ -312,6 +302,4 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .body.append("which riak")
                 .execute() == 0);
     }
-
-
 }
