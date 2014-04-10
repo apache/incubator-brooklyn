@@ -95,7 +95,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                     });
 
                     //invoke join cluster operation on newly added member.
-                    if (anyNodeInCluster.isPresent())
+                    if (anyNodeInCluster.isPresent() && !member.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER))
                         Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, (RiakNode)anyNodeInCluster.get());
                     else
                         log.error("entity {}: is not present",member.getId());
@@ -112,7 +112,10 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
 
                 String riakNodeName = member.getAttribute(RiakNode.RIAK_NODE_NAME);
                 ((EntityInternal) member).setAttribute(RiakNode.RIAK_NODE_IN_CLUSTER, false);
-                Entities.invokeEffector(this, member, RiakNode.LEAVE_RIAK_CLUSTER);
+
+                if (member.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER))
+                    Entities.invokeEffector(this, member, RiakNode.LEAVE_RIAK_CLUSTER);
+
                 nodes.remove(member);
 
                 setAttribute(RIAK_CLUSTER_NODES, nodes);
