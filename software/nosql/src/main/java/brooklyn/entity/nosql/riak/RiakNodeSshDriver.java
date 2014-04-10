@@ -181,7 +181,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     @Override
     public void stop() {
 
-        leaveCluster();
+        if (entity.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER))
+            leaveCluster();
 
         String command = format("%s stop", getRiakCmd());
         command = isPackageInstall ? "sudo " + command : command;

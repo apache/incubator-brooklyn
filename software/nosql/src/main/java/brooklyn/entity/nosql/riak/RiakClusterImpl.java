@@ -90,7 +90,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                         @Override
                         public boolean apply(@Nullable Entity node) {
                             return (node instanceof RiakNode &&
-                                    node.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER));
+                                    node.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER))? true : false;
                         }
                     });
 

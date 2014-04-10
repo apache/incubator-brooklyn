@@ -12,7 +12,7 @@ import brooklyn.entity.proxying.EntitySpec;
 @Catalog(name = "Riak Cluster Application", description = "Riak ring deployment blueprint")
 public class RiakClusterExample extends AbstractApplication {
 
-    @CatalogConfig(label = "Riak Ring Size", priority = 1)
+    @CatalogConfig(label = "Riak Ring Size")
     public static final ConfigKey<Integer> RIAK_RING_SIZE = ConfigKeys.newConfigKey(
             "riak.ring.size", "Initial size of the Riak Ring", 2);
 
