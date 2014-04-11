@@ -13,6 +13,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
 
 public interface SoftwareProcess extends Entity, Startable {
 
@@ -68,6 +69,15 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("provisioningProperties")
     public static final MapConfigKey<Object> PROVISIONING_PROPERTIES = new MapConfigKey<Object>(Object.class,
             "provisioning.properties", "Custom properties to be passed in when provisioning a new machine", MutableMap.<String,Object>of());
+
+    @SetFromFlag("maxRebindSensorsDelay")
+    ConfigKey<Duration> MAXIMUM_REBIND_SENSOR_CONNECT_DELAY = ConfigKeys.newConfigKey(Duration.class,
+            "softwareProcess.maxSensorRebindDelay",
+            "The maximum delay to apply when reconnecting sensors when rebinding to this entity. " +
+                    "Brooklyn will wait a random amount of time, up to the value of this config key, to " +
+                    "avoid a thundering herd problem when the entity shares its machine with " +
+                    "several others. Set to null or to 0 to disable any delay.",
+            Duration.TEN_SECONDS);
 
     /** controls the behavior when starting (stop, restart) {@link Startable} children as part of the start (stop, restart) effector on this entity
      * <p>
