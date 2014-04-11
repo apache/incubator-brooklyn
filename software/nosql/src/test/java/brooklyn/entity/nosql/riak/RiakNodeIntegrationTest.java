@@ -2,8 +2,6 @@ package brooklyn.entity.nosql.riak;
 
 import static org.testng.Assert.assertFalse;
 
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.MethodEffector;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -23,13 +21,13 @@ public class RiakNodeIntegrationTest {
     private TestApplication app;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
 
-    @BeforeMethod(alwaysRun=true)
+    @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
-    	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
+        localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
 
-    @AfterMethod(alwaysRun=true)
+    @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }

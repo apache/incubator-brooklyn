@@ -1,13 +1,14 @@
 package brooklyn.entity.nosql.riak;
 
+import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 import brooklyn.entity.AbstractGoogleComputeLiveTest;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.Test;
 
 public class RiakNodeGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest {
     @Override
@@ -22,8 +23,8 @@ public class RiakNodeGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest
         RiakNode first = (RiakNode) Iterables.get(cluster.getMembers(), 0);
         RiakNode second = (RiakNode) Iterables.get(cluster.getMembers(), 1);
 
-        EntityTestUtils.assertAttributeEqualsEventually(first,RiakNode.RIAK_NODE_IN_CLUSTER,true);
-        EntityTestUtils.assertAttributeEqualsEventually(second,RiakNode.RIAK_NODE_IN_CLUSTER,true);
+        EntityTestUtils.assertAttributeEqualsEventually(first, RiakNode.RIAK_NODE_IN_CLUSTER, true);
+        EntityTestUtils.assertAttributeEqualsEventually(second, RiakNode.RIAK_NODE_IN_CLUSTER, true);
 
     }
 

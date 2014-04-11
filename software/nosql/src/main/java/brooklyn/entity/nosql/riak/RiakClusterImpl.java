@@ -1,5 +1,22 @@
 package brooklyn.entity.nosql.riak;
 
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -8,20 +25,6 @@ import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 
 public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
@@ -77,7 +80,6 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
             if (riakName == null) {
                 log.error("Unable to get riak name for node: {}", member.getId());
             } else {
-
                 //flag a first node to be the first node in the riak cluster.
                 if (!isFirstNodeSet.get()) {
                     nodes.put(member, riakName);
@@ -86,20 +88,25 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                     ((EntityInternal) member).setAttribute(RiakNode.RIAK_NODE_IN_CLUSTER, Boolean.TRUE);
                     isFirstNodeSet.set(true);
 
+                    log.info("Adding riak node {}: {}; {} to cluster", new Object[]{this, member, getRiakName(member)});
+
                 } else {
+
                     //TODO: be wary of erreneous nodes but are still flagged 'in cluster'
                     //add the new node to be part of the riak cluster.
                     Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), new Predicate<Entity>() {
                         @Override
                         public boolean apply(@Nullable Entity node) {
-                            return (node instanceof RiakNode && node.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER)) ? true : false;
+                            return (node instanceof RiakNode && isMemberInCluster(node));
                         }
                     });
 
-                    //invoke join cluster operation on newly added member.
                     if (anyNodeInCluster.isPresent()) {
-                        if (!isMemberInCluster(member)) {
-                            Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, (RiakNode) anyNodeInCluster.get());
+                        if (!nodes.containsKey(member) && !isMemberInCluster(member)) {
+
+                            String anyNodeName = anyNodeInCluster.get().getAttribute(RiakNode.RIAK_NODE_NAME);
+                            Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, anyNodeName);
+
                             nodes.put(member, riakName);
                             setAttribute(RIAK_CLUSTER_NODES, nodes);
                             log.info("Adding riak node {}: {}; {} to cluster", new Object[]{this, member, getRiakName(member)});
@@ -111,15 +118,10 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
             }
         } else {
             Map<Entity, String> nodes = getAttribute(RIAK_CLUSTER_NODES);
-            if (nodes != null) {
-                if (isMemberInCluster(member))
-                    Entities.invokeEffector(this, member, RiakNode.LEAVE_RIAK_CLUSTER);
-
+            if (nodes != null && nodes.containsKey(member)) {
                 nodes.remove(member);
-
                 setAttribute(RIAK_CLUSTER_NODES, nodes);
                 log.info("Removing riak node {}: {}; {} from cluster", new Object[]{this, member, getRiakName(member)});
-
             }
         }
         if (log.isTraceEnabled()) log.trace("Done {} checkEntity {}", this, member);
@@ -131,20 +133,20 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
             return false;
         }
         if (!getMembers().contains(member)) {
-            if (log.isTraceEnabled())
-                log.trace("Members of {}, checking {}, eliminating because not member", this, member);
+            if (log.isTraceEnabled()) log.trace("Members of {}, checking {}, eliminating because not member", this, member);
+
             return false;
         }
         if (log.isTraceEnabled()) log.trace("Members of {}, checking {}, approving", this, member);
+
         return true;
     }
 
     private String getRiakName(Entity node) {
-        return ((RiakNode) node).getAttribute(RiakNode.RIAK_NODE_NAME);
+        return node.getAttribute(RiakNode.RIAK_NODE_NAME);
     }
 
-    private Boolean isMemberInCluster(Entity member)
-    {
-        return (Optional.fromNullable(member.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER)).or(Boolean.FALSE));
+    private Boolean isMemberInCluster(Entity member) {
+        return Optional.fromNullable(member.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER)).or(Boolean.FALSE);
     }
 }

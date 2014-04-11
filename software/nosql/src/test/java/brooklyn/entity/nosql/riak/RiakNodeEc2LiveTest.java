@@ -1,13 +1,15 @@
 package brooklyn.entity.nosql.riak;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
+
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
-import com.google.common.collect.ImmutableList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.Test;
 
 public class RiakNodeEc2LiveTest extends AbstractEc2LiveTest {
 
@@ -23,9 +25,9 @@ public class RiakNodeEc2LiveTest extends AbstractEc2LiveTest {
 
     }
 
-
     @Test(enabled = false)
     public void testDummy() {
     } // Convince TestNG IDE integration that this really does have test methods
+
 
 }

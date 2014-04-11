@@ -1,13 +1,14 @@
 package brooklyn.entity.nosql.riak;
 
+import java.util.Map;
+
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
-import com.google.common.reflect.TypeToken;
-
-import java.util.Map;
 
 @ImplementedBy(RiakClusterImpl.class)
 public interface RiakCluster extends DynamicCluster {
