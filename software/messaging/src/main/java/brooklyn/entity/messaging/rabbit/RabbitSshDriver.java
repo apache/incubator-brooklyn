@@ -1,6 +1,6 @@
 package brooklyn.entity.messaging.rabbit;
 
-import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.*;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -16,7 +16,6 @@ import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,13 +52,18 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rabbitmq_server-%s", getVersion())));
         
         List<String> commands = ImmutableList.<String>builder()
-                .add(installPackage(// NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
+                .add(chainGroup(
+                        "which zypper",
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/SLE_11_SP3 erlang_sles_11"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_11.4 erlang_suse_11"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_12.3 erlang_suse_12")))
+                .add(installPackage( // NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
                         ImmutableMap.of(
                                 "apt", "erlang-nox erlang-dev",
                                 "port", "erlang@"+getErlangVersion()+"+ssl"),
                         "erlang"))
-                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
-                .add(BashCommands.installExecutable("tar"))
+                .addAll(commandsToDownloadUrlsAs(urls, saveAs))
+                .add(installExecutable("tar"))
                 .add(format("tar xvzf %s",saveAs))
                 .build();
 
