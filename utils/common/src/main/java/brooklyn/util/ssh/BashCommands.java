@@ -287,7 +287,7 @@ public class BashCommands {
     }
     public static String installPackageOr(Map<?,?> flags, String packageDefaultName, String optionalCommandToRunIfNone) {
         String ifMissing = (String) flags.get("onlyifmissing");
-        String zypperInstall = formatIfNotNull("zypper --non-interactive install %s", getFlag(flags, "zypper", packageDefaultName));
+        String zypperInstall = formatIfNotNull("zypper --non-interactive --no-gpg-checks install %s", getFlag(flags, "zypper", packageDefaultName));
         String aptInstall = formatIfNotNull("apt-get install -y --allow-unauthenticated %s", getFlag(flags, "apt", packageDefaultName));
         String yumInstall = formatIfNotNull("yum -y --nogpgcheck install %s", getFlag(flags, "yum", packageDefaultName));
         String brewInstall = formatIfNotNull("brew install %s", getFlag(flags, "brew", packageDefaultName));
@@ -300,7 +300,7 @@ public class BashCommands {
             commands.add(ifExecutableElse1("zypper",
                     chainGroup(
                             "echo zypper exists, doing refresh",
-                            ok(sudo("zypper --non-interactive refresh")),
+                            ok(sudo("zypper --non-interactive --no-gpg-checks refresh")),
                             sudo(zypperInstall))));
         if (aptInstall != null)
             commands.add(ifExecutableElse1("apt-get",
@@ -430,26 +430,36 @@ public class BashCommands {
         return found == null ? defaultValue : found;
     }
 
-    /**
-     * Returns the command that installs Java 1.6.
-     * See also: JavaSoftwareProcessSshDriver.installJava, which does a much more thorough job.
-     *
-     * @return the command that install Java 1.6.
-     */
+    /** Returns the commands to install the Java 1.6.0 runtime */
     public static String installJava6IfPossible() {
-        return installPackage(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null);
+        return installPackageOr(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null,
+                chain("which zypper",
+                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/SLE_11_SP3 java_sles_11"),
+                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_11.4 java_suse_11"),
+                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_12.3 java_suse_12"),
+                            alternatives(installPackageOrFail(MutableMap.of("zypper", "java-1_6_0-openjdk-devel"), null),
+                                    installPackage(MutableMap.of("zypper", "java-1_6_0-ibm"), null))));
     }
+
+    /** Returns the commands to install the Java 1.7.0 runtime. */
+    public static String installJava7IfPossible() {
+        return installPackageOr(MutableMap.of("apt", "openjdk-7-jdk","yum", "java-1.7.0-openjdk-devel"), null,
+                chain("which zypper",
+                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/SLE_11_SP3 java_sles_11"),
+                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_11.4 java_suse_11"),
+                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_12.3 java_suse_12"),
+                            alternatives(installPackageOrFail(MutableMap.of("zypper", "java-1_7_0-openjdk-devel"), null),
+                                    installPackage(MutableMap.of("zypper", "java-1_7_0-ibm"), null))));
+    }
+
     public static String installJava6OrFail() {
-        return installPackageOrFail(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null);
+        return alternatives(installJava6IfPossible(), fail("java 6 install failed", 9));
     }
-
     public static String installJava7OrFail() {
-        return BashCommands.installPackageOrFail(MutableMap.of("apt", "openjdk-7-jdk","yum", "java-1.7.0-openjdk-devel"), null);
+        return alternatives(installJava7IfPossible(), fail("java 7 install failed", 9));
     }
-
     public static String installJava7Or6OrFail() {
-        return BashCommands.installPackageOr(MutableMap.of("apt", "openjdk-7-jdk","yum", "java-1.7.0-openjdk-devel"), null, 
-            BashCommands.installJava6OrFail());
+        return alternatives(installJava7IfPossible(), installJava6IfPossible(), fail("java install failed", 9));
     }
 
     /** cats the given text to the given command, using bash << multi-line input syntax */
