@@ -287,6 +287,7 @@ public class BashCommands {
     }
     public static String installPackageOr(Map<?,?> flags, String packageDefaultName, String optionalCommandToRunIfNone) {
         String ifMissing = (String) flags.get("onlyifmissing");
+        String zypperInstall = formatIfNotNull("zypper --non-interactive install %s", getFlag(flags, "zypper", packageDefaultName));
         String aptInstall = formatIfNotNull("apt-get install -y --allow-unauthenticated %s", getFlag(flags, "apt", packageDefaultName));
         String yumInstall = formatIfNotNull("yum -y --nogpgcheck install %s", getFlag(flags, "yum", packageDefaultName));
         String brewInstall = formatIfNotNull("brew install %s", getFlag(flags, "brew", packageDefaultName));
@@ -295,6 +296,12 @@ public class BashCommands {
         List<String> commands = new LinkedList<String>();
         if (ifMissing != null)
             commands.add(format("which %s", ifMissing));
+        if (zypperInstall != null)
+            commands.add(ifExecutableElse1("zypper",
+                    chainGroup(
+                            "echo zypper exists, doing refresh",
+                            ok(sudo("zypper --non-interactive refresh")),
+                            sudo(zypperInstall))));
         if (aptInstall != null)
             commands.add(ifExecutableElse1("apt-get",
                     chainGroup(
