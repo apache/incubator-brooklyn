@@ -452,6 +452,7 @@ public class BashCommands {
                         sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/SLE_11_SP3 java_sles_11"),
                         sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_11.4 java_suse_11"),
                         sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_12.3 java_suse_12"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_13.1 java_suse_13"),
                         alternatives(installPackageOrFail(MutableMap.of("zypper", "java-1_6_0-openjdk-devel"), null),
                                 installPackageOrFail(MutableMap.of("zypper", "java-1_6_0-ibm"), null)))));
     }
@@ -463,6 +464,7 @@ public class BashCommands {
                         sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/SLE_11_SP3 java_sles_11"),
                         sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_11.4 java_suse_11"),
                         sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_12.3 java_suse_12"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_13.1 java_suse_13"),
                         alternatives(installPackageOrFail(MutableMap.of("zypper", "java-1_7_0-openjdk-devel"), null),
                                 installPackageOrFail(MutableMap.of("zypper", "java-1_7_0-ibm"), null)))));
     }
