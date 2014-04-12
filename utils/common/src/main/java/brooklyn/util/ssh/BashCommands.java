@@ -81,7 +81,7 @@ public class BashCommands {
      * If null is supplied, it is returned (sometimes used to indicate no command desired).
      */
     public static String sudo(String command) {
-        if (command.startsWith("( "))
+        if (command.startsWith("( ") || command.endsWith(" &"))
             return sudoNew(command);
         else
             return sudoOld(command);
