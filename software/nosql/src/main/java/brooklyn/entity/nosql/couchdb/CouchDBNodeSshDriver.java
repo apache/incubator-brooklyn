@@ -24,7 +24,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -38,16 +39,17 @@ import com.google.common.collect.Sets;
 /**
  * Start a {@link CouchDBNode} in a {@link Location} accessible over ssh.
  */
-public class CouchDBNodeSshDriver extends JavaSoftwareProcessSshDriver implements CouchDBNodeDriver {
+public class CouchDBNodeSshDriver extends AbstractSoftwareProcessSshDriver implements CouchDBNodeDriver {
 
     private static final Logger log = LoggerFactory.getLogger(CouchDBNodeSshDriver.class);
 
     public CouchDBNodeSshDriver(CouchDBNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
+
+        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
     }
 
-    @Override
-    protected String getLogFileLocation() { return Os.mergePathsUnix(getRunDir(), "couchdb.log"); }
+    public String getLogFileLocation() { return Os.mergePathsUnix(getRunDir(), "couchdb.log"); }
 
     @Override
     public Integer getHttpPort() { return entity.getAttribute(CouchDBNode.HTTP_PORT); }
@@ -88,7 +90,6 @@ public class CouchDBNodeSshDriver extends JavaSoftwareProcessSshDriver implement
                 .build();
 
         newScript(INSTALLING)
-                .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
     }
