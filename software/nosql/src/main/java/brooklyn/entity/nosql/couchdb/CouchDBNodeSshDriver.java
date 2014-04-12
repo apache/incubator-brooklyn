@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 by Cloudsoft Corp.
+ * Copyright 2012-2014 by Cloudsoft Corporation Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 package brooklyn.entity.nosql.couchdb;
 
-import java.io.ByteArrayInputStream;
+import static brooklyn.util.ssh.BashCommands.*;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +29,7 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.os.Os;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,7 +47,7 @@ public class CouchDBNodeSshDriver extends JavaSoftwareProcessSshDriver implement
     }
 
     @Override
-    protected String getLogFileLocation() { return String.format("%s/couchdb.log", getRunDir()); }
+    protected String getLogFileLocation() { return Os.mergePathsUnix(getRunDir(), "couchdb.log"); }
 
     @Override
     public Integer getHttpPort() { return entity.getAttribute(CouchDBNode.HTTP_PORT); }
@@ -66,13 +67,24 @@ public class CouchDBNodeSshDriver extends JavaSoftwareProcessSshDriver implement
     @Override
     public String getCouchDBConfigFileName() { return entity.getAttribute(CouchDBNode.COUCHDB_CONFIG_FILE_NAME); }
 
+    public String getErlangVersion() { return entity.getConfig(CouchDBNode.ERLANG_VERSION); }
+
     @Override
     public void install() {
         log.info("Installing {}", entity);
         List<String> commands = ImmutableList.<String>builder()
-                .add(BashCommands.installPackage("erlang"))
-                .add(BashCommands.installPackage("couchdb"))
-                .add("which service && sudo service couchdb stop")
+                .add(chainGroup(
+                        "which zypper",
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/SLE_11_SP3 erlang_sles_11"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_11.4 erlang_suse_11"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_12.3 erlang_suse_12")))
+                .add(installPackage( // NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
+                        ImmutableMap.of(
+                                "apt", "erlang-nox erlang-dev",
+                                "port", "erlang@"+getErlangVersion()+"+ssl"),
+                        "erlang"))
+                .add(installPackage("couchdb"))
+                .add(ifExecutableElse0("service", sudo("service couchdb stop")))
                 .build();
 
         newScript(INSTALLING)
@@ -81,6 +93,7 @@ public class CouchDBNodeSshDriver extends JavaSoftwareProcessSshDriver implement
                 .execute();
     }
 
+    @Override
     public Set<Integer> getPortsUsed() {
         Set<Integer> result = Sets.newLinkedHashSet(super.getPortsUsed());
         result.addAll(getPortMap().values());
@@ -101,36 +114,33 @@ public class CouchDBNodeSshDriver extends JavaSoftwareProcessSshDriver implement
         newScript(CUSTOMIZING).execute();
 
         // Copy the configuration files across
-        String configFileContents = processTemplate(getCouchDBConfigTemplateUrl());
-        String destinationConfigFile = String.format("%s/%s", getRunDir(), getCouchDBConfigFileName());
-        getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
-        String uriFileContents = processTemplate(getCouchDBUriTemplateUrl());
-        String destinationUriFile = String.format("%s/couch.uri", getRunDir());
-        getMachine().copyTo(new ByteArrayInputStream(uriFileContents.getBytes()), destinationUriFile);
+        String destinationConfigFile = Os.mergePathsUnix(getRunDir(), getCouchDBConfigFileName());
+        copyTemplate(getCouchDBConfigTemplateUrl(), destinationConfigFile);
+        String destinationUriFile = Os.mergePathsUnix(getRunDir(), "couch.uri");
+        copyTemplate(getCouchDBUriTemplateUrl(), destinationUriFile);
     }
 
     @Override
     public void launch() {
         log.info("Launching  {}", entity);
-        newScript(MutableMap.of("usePidFile", false), LAUNCHING)
-                .body.append(String.format("sudo nohup couchdb -p %s -a %s/%s -o couchdb-console.log -e couchdb-error.log -b &", getPidFile(), getRunDir(), getCouchDBConfigFileName()))
-                .failOnNonZeroResultCode()
+        newScript(MutableMap.of(USE_PID_FILE, false), LAUNCHING)
+                .body.append(sudo(String.format("nohup couchdb -p %s -a %s -o couchdb-console.log -e couchdb-error.log -b &", getPidFile(), Os.mergePathsUnix(getRunDir(), getCouchDBConfigFileName()))))
                 .execute();
     }
 
-    public String getPidFile() { return String.format("%s/couchdb.pid", getRunDir()); }
+    public String getPidFile() { return Os.mergePathsUnix(getRunDir(), "couchdb.pid"); }
 
     @Override
     public boolean isRunning() {
-        return newScript(MutableMap.of("usePidFile", false), CHECK_RUNNING)
-                .body.append(String.format("sudo couchdb -p %s -s", getPidFile()))
+        return newScript(MutableMap.of(USE_PID_FILE, false), CHECK_RUNNING)
+                .body.append(sudo(String.format("couchdb -p %s -s", getPidFile())))
                 .execute() == 0;
     }
 
     @Override
     public void stop() {
-        newScript(MutableMap.of("usePidFile", false), STOPPING)
-                .body.append(String.format("sudo couchdb -p %s -k", getPidFile()))
+        newScript(MutableMap.of(USE_PID_FILE, false), STOPPING)
+                .body.append(sudo(String.format("couchdb -p %s -k", getPidFile())))
                 .failOnNonZeroResultCode()
                 .execute();
     }
