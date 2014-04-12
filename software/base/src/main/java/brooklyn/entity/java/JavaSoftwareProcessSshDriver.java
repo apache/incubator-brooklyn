@@ -262,10 +262,10 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         } else {
             // Let's hope not!
             if (version.isPresent()) {
-                log.debug("Found Java version {} on {}@{}. Going to install Java 7.",
+                log.debug("Found old Java version {} on {}@{}. Going to install latest Java version.",
                         new Object[]{version.get(), getEntity(), getLocation()});
             }
-            return tryJavaInstall("7", BashCommands.installJava7OrFail()) == 0;
+            return tryJavaInstall("latest", BashCommands.installJava7Or6OrFail()) == 0;
         }
     }
 

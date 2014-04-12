@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.messaging.rabbit;
 
 import static brooklyn.util.ssh.BashCommands.*;
@@ -52,11 +67,10 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rabbitmq_server-%s", getVersion())));
         
         List<String> commands = ImmutableList.<String>builder()
-                .add(chainGroup(
-                        "which zypper",
+                .add(ifExecutableElse0("zypper", chainGroup(
                         sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/SLE_11_SP3 erlang_sles_11"),
                         sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_11.4 erlang_suse_11"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_12.3 erlang_suse_12")))
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_12.3 erlang_suse_12"))))
                 .add(installPackage( // NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
                         ImmutableMap.of(
                                 "apt", "erlang-nox erlang-dev",

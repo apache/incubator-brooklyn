@@ -75,11 +75,13 @@ public class CouchDBNodeSshDriver extends AbstractSoftwareProcessSshDriver imple
     public void install() {
         log.info("Installing {}", entity);
         List<String> commands = ImmutableList.<String>builder()
-                .add(chainGroup(
-                        "which zypper",
+                .add(ifExecutableElse0("zypper", chainGroup(
                         sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/SLE_11_SP3 erlang_sles_11"),
                         sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_11.4 erlang_suse_11"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_12.3 erlang_suse_12")))
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_12.3 erlang_suse_12"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/server:/database/SLE_11_SP3 db_sles_11"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/server:/database/openSUSE_11.4 db_suse_11"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/server:/database/openSUSE_12.3 db_suse_12"))))
                 .add(installPackage( // NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
                         ImmutableMap.of(
                                 "apt", "erlang-nox erlang-dev",

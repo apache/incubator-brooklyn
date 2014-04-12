@@ -445,36 +445,42 @@ public class BashCommands {
         return found == null ? defaultValue : found;
     }
 
-    /** Returns the commands to install the Java 1.6.0 runtime */
-    public static String installJava6IfPossible() {
+    /** Returns the commands to install the Java 1.6.0 runtime, fails if not possible. */
+    public static String installJava6() {
         return installPackageOr(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null,
-                chain("which zypper",
-                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/SLE_11_SP3 java_sles_11"),
-                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_11.4 java_suse_11"),
-                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_12.3 java_suse_12"),
-                            alternatives(installPackageOrFail(MutableMap.of("zypper", "java-1_6_0-openjdk-devel"), null),
-                                    installPackage(MutableMap.of("zypper", "java-1_6_0-ibm"), null))));
+                ifExecutableElse1("zypper", chainGroup(
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/SLE_11_SP3 java_sles_11"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_11.4 java_suse_11"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_12.3 java_suse_12"),
+                        alternatives(installPackageOrFail(MutableMap.of("zypper", "java-1_6_0-openjdk-devel"), null),
+                                installPackageOrFail(MutableMap.of("zypper", "java-1_6_0-ibm"), null)))));
     }
 
-    /** Returns the commands to install the Java 1.7.0 runtime. */
-    public static String installJava7IfPossible() {
+    /** Returns the commands to install the Java 1.7.0 runtime, fails if not possible. */
+    public static String installJava7() {
         return installPackageOr(MutableMap.of("apt", "openjdk-7-jdk","yum", "java-1.7.0-openjdk-devel"), null,
-                chain("which zypper",
-                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/SLE_11_SP3 java_sles_11"),
-                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_11.4 java_suse_11"),
-                            sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_12.3 java_suse_12"),
-                            alternatives(installPackageOrFail(MutableMap.of("zypper", "java-1_7_0-openjdk-devel"), null),
-                                    installPackage(MutableMap.of("zypper", "java-1_7_0-ibm"), null))));
+                ifExecutableElse1("zypper", chainGroup(
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/SLE_11_SP3 java_sles_11"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_11.4 java_suse_11"),
+                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_12.3 java_suse_12"),
+                        alternatives(installPackageOrFail(MutableMap.of("zypper", "java-1_7_0-openjdk-devel"), null),
+                                installPackageOrFail(MutableMap.of("zypper", "java-1_7_0-ibm"), null)))));
     }
 
+    public static String installJava6IfPossible() {
+        return ok(installJava6());
+    }
+    public static String installJava7IfPossible() {
+        return ok(installJava7());
+    }
     public static String installJava6OrFail() {
-        return alternatives(installJava6IfPossible(), fail("java 6 install failed", 9));
+        return alternatives(installJava6(), fail("java 6 install failed", 9));
     }
     public static String installJava7OrFail() {
-        return alternatives(installJava7IfPossible(), fail("java 7 install failed", 9));
+        return alternatives(installJava7(), fail("java 7 install failed", 9));
     }
     public static String installJava7Or6OrFail() {
-        return alternatives(installJava7IfPossible(), installJava6IfPossible(), fail("java install failed", 9));
+        return alternatives(installJava7(), installJava6(), fail("java latest install failed", 9));
     }
 
     /** cats the given text to the given command, using bash << multi-line input syntax */
