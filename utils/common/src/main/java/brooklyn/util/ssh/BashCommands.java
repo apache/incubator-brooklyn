@@ -30,6 +30,7 @@ import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 public class BashCommands {
@@ -445,28 +446,36 @@ public class BashCommands {
         return found == null ? defaultValue : found;
     }
 
-    /** Returns the commands to install the Java 1.6.0 runtime, fails if not possible. */
-    public static String installJava6() {
-        return installPackageOr(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null,
+    /**
+     * Install a particular Java runtime, fails if not possible.
+     * <p>
+     * <em><strong>Note</strong> Java 8 is not yet supported on SUSE</em>
+     *
+     * @return The command to install the given Java runtime.
+     * @see #installJava6OrFail()
+     * @see #installJava7Or6OrFail()
+     * @see #installJavaLatestOrFail()
+     */
+    public static String installJava(Integer version) {
+        Preconditions.checkArgument(version == 6 || version == 7 || version == 8, "Supported Java versions are 6, 7, or 8");
+        return installPackageOr(MutableMap.of("apt", "openjdk-" + version + "-jdk","yum", "java-1." + version + ".0-openjdk-devel"), null,
                 ifExecutableElse1("zypper", chainGroup(
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/SLE_11_SP3 java_sles_11"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_11.4 java_suse_11"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_12.3 java_suse_12"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_13.1 java_suse_13"),
-                        alternatives(installPackageOrFail(MutableMap.of("zypper", "java-1_6_0-openjdk-devel"), null),
-                                installPackageOrFail(MutableMap.of("zypper", "java-1_6_0-ibm"), null)))));
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/SLE_11_SP3 java_sles_11")),
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_11.4 java_suse_11")),
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_12.3 java_suse_12")),
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_13.1 java_suse_13")),
+                        alternatives(installPackageOrFail(MutableMap.of("zypper", "java-1_" + version + "_0-openjdk-devel"), null),
+                                installPackageOrFail(MutableMap.of("zypper", "java-1_" + version + "_0-ibm"), null)))));
     }
 
-    /** Returns the commands to install the Java 1.7.0 runtime, fails if not possible. */
+    public static String installJava6() {
+        return installJava(6);
+    }
     public static String installJava7() {
-        return installPackageOr(MutableMap.of("apt", "openjdk-7-jdk","yum", "java-1.7.0-openjdk-devel"), null,
-                ifExecutableElse1("zypper", chainGroup(
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/SLE_11_SP3 java_sles_11"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_11.4 java_suse_11"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_12.3 java_suse_12"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/Java:/openjdk6:/Factory/openSUSE_13.1 java_suse_13"),
-                        alternatives(installPackageOrFail(MutableMap.of("zypper", "java-1_7_0-openjdk-devel"), null),
-                                installPackageOrFail(MutableMap.of("zypper", "java-1_7_0-ibm"), null)))));
+        return installJava(7);
+    }
+    public static String installJava8() {
+        return installJava(8);
     }
 
     public static String installJava6IfPossible() {
@@ -475,6 +484,10 @@ public class BashCommands {
     public static String installJava7IfPossible() {
         return ok(installJava7());
     }
+    public static String installJava8IfPossible() {
+        return ok(installJava8());
+    }
+
     public static String installJava6OrFail() {
         return alternatives(installJava6(), fail("java 6 install failed", 9));
     }
@@ -482,7 +495,10 @@ public class BashCommands {
         return alternatives(installJava7(), fail("java 7 install failed", 9));
     }
     public static String installJava7Or6OrFail() {
-        return alternatives(installJava7(), installJava6(), fail("java latest install failed", 9));
+        return alternatives(installJava7(), installJava6(), fail("java install failed", 9));
+    }
+    public static String installJavaLatestOrFail() {
+        return alternatives(installJava8(), installJava7(), installJava6(), fail("java latest install failed", 9));
     }
 
     /** cats the given text to the given command, using bash << multi-line input syntax */
