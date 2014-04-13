@@ -27,6 +27,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.util.GroovyJavaMethods;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
@@ -111,7 +112,12 @@ public class RendererHints {
 
     /**
      * This hint describes a transformation used to generate a display value for sensors.
+     * <p>
+     * <em><strong>Warning</strong> This is currently a {@link Beta} implementation, and
+     * may be changed or removed if there is a suitable alternative mechanism to achieve
+     * this functionality.</em>
      */
+    @Beta
     public static class DisplayValue extends Hint<Sensor> {
         private final Function transform;
 
