@@ -76,12 +76,12 @@ public class CouchDBNodeSshDriver extends AbstractSoftwareProcessSshDriver imple
         log.info("Installing {}", entity);
         List<String> commands = ImmutableList.<String>builder()
                 .add(ifExecutableElse0("zypper", chainGroup( // SLES 11 not supported, would require building from source
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_11.4 erlang_suse_11"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_12.3 erlang_suse_12"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_13.1 erlang_suse_13"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/server:/database/openSUSE_11.4 db_suse_11"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/server:/database/openSUSE_12.3 db_suse_12"),
-                        sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/server:/database/openSUSE_13.1 db_suse_13"))))
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_11.4 erlang_suse_11")),
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_12.3 erlang_suse_12")),
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_13.1 erlang_suse_13")),
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/server:/database/openSUSE_11.4 db_suse_11")),
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/server:/database/openSUSE_12.3 db_suse_12")),
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/server:/database/openSUSE_13.1 db_suse_13")))))
                 .add(installPackage( // NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
                         ImmutableMap.of(
                                 "apt", "erlang-nox erlang-dev",
