@@ -132,15 +132,27 @@ public class DependentConfiguration {
     
     public static <T> T waitInTaskForAttributeReady(final Entity source, final AttributeSensor<T> sensor, Predicate<? super T> ready, List<AttributeAndSensorCondition<?>> abortConditions) {
         T value = source.getAttribute(sensor);
+        final List<Exception> abortion = Lists.newCopyOnWriteArrayList();
+
+        // return immediately if either the ready predicate or the abort conditions hold
         if (ready==null) ready = GroovyJavaMethods.truthPredicate();
         if (ready.apply(value)) return value;
+        for (AttributeAndSensorCondition abortCondition : abortConditions) {
+            Object abortValue = abortCondition.source.getAttribute(abortCondition.sensor);
+            if (abortCondition.predicate.apply(abortValue)) {
+                abortion.add(new Exception("Abort due to "+abortCondition.source+" -> "+abortCondition.sensor));
+            }
+        }
+        if (abortion.size() > 0) {
+            throw new CompoundRuntimeException("Aborted waiting for ready from "+source+" "+sensor, abortion);
+        }
+
         TaskInternal<?> current = (TaskInternal<?>) Tasks.current();
         if (current == null) throw new IllegalStateException("Should only be invoked in a running task");
         Entity entity = BrooklynTaskTags.getTargetOrContextEntity(current);
         if (entity == null) throw new IllegalStateException("Should only be invoked in a running task with an entity tag; "+
                 current+" has no entity tag ("+current.getStatusDetail(false)+")");
         final AtomicReference<T> data = new AtomicReference<T>();
-        final List<Exception> abortion = Lists.newCopyOnWriteArrayList();
         final Semaphore semaphore = new Semaphore(0); // could use Exchanger
         SubscriptionHandle subscription = null;
         List<SubscriptionHandle> abortSubscriptions = Lists.newArrayList();
@@ -231,17 +243,17 @@ public class DependentConfiguration {
         return transformMultiple(MutableMap.of("displayName", "transforming multiple"), transformer, tasks);
     }
 
-    /** @see #transformMultiple(Function, Task...) */
+    /** @see #transformMultiple(Function, TaskAdaptable...) */
     public static <U,T> Task<T> transformMultiple(Closure transformer, TaskAdaptable<U> ...tasks) {
         return transformMultiple(GroovyJavaMethods.functionFromClosure(transformer), tasks);
     }
 
-    /** @see #transformMultiple(Function, Task...) */
+    /** @see #transformMultiple(Function, TaskAdaptable...) */
     public static <U,T> Task<T> transformMultiple(Map flags, Closure transformer, TaskAdaptable<U> ...tasks) {
         return transformMultiple(flags, GroovyJavaMethods.functionFromClosure(transformer), tasks);
     }
     
-    /** @see #transformMultiple(Function, Task...) */
+    /** @see #transformMultiple(Function, TaskAdaptable...) */
     public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, TaskAdaptable<U> ...tasks) {
         return transformMultiple(flags, transformer, Arrays.asList(tasks));
     }
