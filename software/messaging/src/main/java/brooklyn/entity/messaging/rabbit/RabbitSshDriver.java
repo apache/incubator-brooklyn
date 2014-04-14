@@ -1,6 +1,21 @@
+/*
+ * Copyright 2012-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.messaging.rabbit;
 
-import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.*;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -16,7 +31,6 @@ import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
-import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,15 +65,20 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rabbitmq_server-%s", getVersion())));
-        
+
         List<String> commands = ImmutableList.<String>builder()
-                .add(installPackage(// NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
+                .add(ifExecutableElse0("zypper", chainGroup(
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/SLE_11_SP3 erlang_sles_11")),
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_11.4 erlang_suse_11")),
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_12.3 erlang_suse_12")),
+                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_13.1 erlang_suse_13")))))
+                .add(installPackage( // NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
                         ImmutableMap.of(
                                 "apt", "erlang-nox erlang-dev",
                                 "port", "erlang@"+getErlangVersion()+"+ssl"),
                         "erlang"))
-                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
-                .add(BashCommands.installExecutable("tar"))
+                .addAll(commandsToDownloadUrlsAs(urls, saveAs))
+                .add(installExecutable("tar"))
                 .add(format("tar xvzf %s",saveAs))
                 .build();
 

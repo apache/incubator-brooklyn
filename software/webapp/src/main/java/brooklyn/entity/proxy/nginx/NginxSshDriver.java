@@ -126,15 +126,18 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 "onlyifmissing", "gcc",
                 "yum", "gcc",
                 "apt", "gcc",
+                "zypper", "gcc",
                 "port", null);
         MutableMap<String, String> installMakePackageFlags = MutableMap.of(
                 "onlyifmissing", "make",
                 "yum", "make",
                 "apt", "make",
+                "zypper", "make",
                 "port", null);
         MutableMap<String, String> installPackageFlags = MutableMap.of(
                 "yum", "openssl-devel pcre-devel",
                 "apt", "libssl-dev zlib1g-dev libpcre3-dev",
+                "zypper", "libopenssl-devel pcre-devel",
                 "port", null);
 
         String stickyModuleVersion = entity.getConfig(NginxController.STICKY_VERSION);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 by Cloudsoft Corp.
+ * Copyright 2012-2014 by Cloudsoft Corporation Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,12 +27,18 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents a CouchDB node in a {@link CouchDBCluster}.
  */
-@Catalog(name="CouchDB Node", description="Apache CouchDB is a database that uses JSON for documents, JavaScript for MapReduce queries, and regular HTTP for an API", iconUrl="classpath:///couchdb-logo.png")
+@Catalog(name="CouchDB Node",
+        description="Apache CouchDB is a database that uses JSON for documents, JavaScript for MapReduce queries, " +
+                "and regular HTTP for an API",
+        iconUrl="classpath:///couchdb-logo.png")
 @ImplementedBy(CouchDBNodeImpl.class)
 public interface CouchDBNode extends SoftwareProcess, WebAppService {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.1");
+
+    @SetFromFlag("erlangVersion")
+    ConfigKey<String> ERLANG_VERSION = ConfigKeys.newStringConfigKey("erlang.version", "Erlang runtime version", "R15B");
 
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = CouchDBCluster.CLUSTER_NAME;
