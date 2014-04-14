@@ -7,30 +7,12 @@ categories: [use, guide]
 
 {% include fields.md %}
 
-This guide will walk you through deploying an application to a public cloud, and managing that application.
+This guide will walk you through deploying an application to a public cloud.
 
 We will be deploying an example 3-tier web application, described using this blueprint: 
 
 {% highlight yaml %}
-name: My Web Cluster
-location: localhost
-
-services:
-
-- serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
-  name: My Web
-  location: localhost
-  brooklyn.config:
-    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0-M2/brooklyn-example-hello-world-sql-webapp-0.6.0-M2.war
-    java.sysprops: 
-      brooklyn.example.db.url: $brooklyn:formatString("jdbc:%s%s?user=%s\\&password=%s",
-         component("db").attributeWhenReady("database.url"), "visitors", "brooklyn", "br00k11n")
-
-- serviceType: brooklyn.entity.database.mysql.MySqlNode
-  id: db
-  name: My DB
-  brooklyn.config:
-    creationScriptUrl: classpath://visitors-creation-script.sql
+{% readj my-web-cluster.yaml %}
 {% endhighlight %}
 
 (This is written in YAML, following the [camp specification](https://www.oasis-open.org/committees/camp/). )
@@ -58,11 +40,13 @@ $ tar -zxf brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz
 
 This will create a `brooklyn-{{ site.brooklyn-version }}` folder.
 
-Note: you'll also need Java JRE or SDK installed (version 6 or later).
+Note: You'll need a Java JRE or SDK installed (version 6 or later), as Brooklyn is Java under the covers.
 
 ## Launch Brooklyn
 
 Let's setup some paths for easy commands.
+
+(Click the clipboard on these code snippets for easier c&p.)
 
 {% highlight bash %}
 $ cd brooklyn-{{ site.brooklyn-version }}
@@ -78,7 +62,10 @@ $ brooklyn launch
 
 Brooklyn will output the address of the management interface:
 
-`... Started Brooklyn console at http://127.0.0.1:8081/` ([link](http://127.0.0.1:8081/))
+
+`INFO  Starting brooklyn web-console on loopback interface because no security config is set`
+
+`INFO  Started Brooklyn console at http://127.0.0.1:8081/, running classpath://brooklyn.war and []`
 
 But before we really use Brooklyn, we need to setup some Locations.
  
@@ -86,19 +73,23 @@ Stop Brooklyn with ctrl-c.
 
 ## Configuring a Location
 
-Brooklyn deploys applications to Locations. Locations can be clouds, machines with fixed IPs or localhost (for testing).
+Brooklyn deploys applications to Locations.
+
+Locations can be clouds, machines with fixed IPs or localhost (for testing).
 
 Brooklyn loads Location configuration  from `~/.brooklyn/brooklyn.properties`. 
 
-Create a `.brooklyn` folder in your home directory:
+Create a `.brooklyn` folder in your home directory and download the template [brooklyn.properties](brooklyn.properties) to that folder.
 
 {% highlight bash %}
 $ mkdir ~/.brooklyn
+$ cd ~/.brooklyn
+$ wget {{site.url}}/use/guide/quickstart/brooklyn.properties
 {% endhighlight %}
 
-Download the template [brooklyn.properties](brooklyn.properties)  and place this in `~/.brooklyn`.  
+Open brooklyn.properties in a text editor and add your cloud credentials.
 
-Open the file in a text editor and add your cloud credentials. If you would rather test Brooklyn on localhost, follow [these instructions](/use/guide/locations/) to ensure that your Brooklyn can access your machine.
+If you would rather test Brooklyn on localhost, follow [these instructions]({{site.url}}/use/guide/locations/) to ensure that your Brooklyn can access your machine.
 
 Restart Brooklyn:
 
@@ -108,66 +99,83 @@ $ brooklyn launch
 
 ## Launching an Application
 
-There are several ways to deploy a YAML blueprint:
+There are several ways to deploy a YAML blueprint (including specifying the blueprint on the command line or submitting it via the REST API).
 
-1. We can supply a blueprint file at startup: `brooklyn launch --app /path/to/myblueprint.yaml`
-1. We can deploy using the web-console.
-1. We can deploy using the brooklyn REST api.
+For now, we will simply copy-and-paste the raw YAML blueprint into the web console.
 
-We will use the second option to deploy a 3-tier web-app, using the YAML file at the top of this page.
+Open the web console ([127.0.0.1:8081](http://127.0.0.1:8081)). As Brooklyn is not currently managing any applications the 'Create Application' dialog opens automatically. Select the YAML tab.
 
-On the home page of the Brooklyn web-console, click the "add application" button (if no applications are currently running, this will be opened automatically). Select the YAML tab and paste your YAML code.
+![Brooklyn web console, showing the YAML tab of the Add Application dialog.](images/add-application-modal-yaml.png)
 
-### Chose your cloud / location
 
-Edit the yaml to use the location you configured, e.g. replace:
+### Chose your Cloud / Location
+
+Edit the 'location' parameter in the YAML template (repeated below) to use the location you configured.
+
+For example, replace:
 {% highlight yaml %}
+location: location
+{% endhighlight %}
+
+with (one of):
+{% highlight yaml %}
+location: aws-ec2:us-east-1
+location: rackspace-cloudservers-us:ORD
+location: google-compute-engine:europe-west1-a
 location: localhost
 {% endhighlight %}
 
-with:
+**My Web Cluster Blueprint**
+
 {% highlight yaml %}
-location: google-compute-engine:europe-west1-a
+{% readj my-web-cluster.yaml %}
 {% endhighlight %}
 
-Click "finish". You should see your application listed, with status "STARTING".
+Paste the modified YAML into the dialog and click 'Finish'.
+The dialog will close and Brooklyn will begin deploying your application.
 
-## Monitoring and managing applications
+Your application will be shown as 'Starting' on the web console's front page.
 
-In the Brooklyn web-console clicking on an application listed on the home page, or the Applications tab, will show all the applications currently running.
-
-We can explore the management hierarchy of an application, which will show us the entities it is composed of. If you have deployed the above YAML, then you'll see a standard 3-tier web-app. Clicking on the ControlledDynamicWebAppCluster will show if the cluster is ready to serve and, when ready, will provide a web address for the front of the loadbalancer.
-
-If the service.isUp, you can view the demo web application in your browser at the webapp.url.
-
-Through the Activities tab, you can drill into the activities each entity is doing or has recently done. Click on the task to see its details, and to drill into its "Children Tasks". For example, if you drill into MySqlNode's start operation, you can see the "Start (processes)", then "launch", and then the ssh command used including the stdin, stdout and stderr.
+![My Web Cluster is STARTING.](images/my-web-cluster-starting.png)
 
 
-## Stopping the application
+## Monitoring and Managing Applications
 
-To stop an application, select the application in the tree view, click on the Effectors tab, and invoke the "Stop" effector. This will cleanly shutdown all components in the application.
+Click on the application name, or open the Applications tab.
 
-### Testing the Policies
+We can explore the management hierarchy of the application, which will show us the entities it is composed of.
 
-Brooklyn at its heart is a policy driven management plane which can implement business and technical policies.
+ * My Web Cluster (A `BasicApplication`)
+     * My DB (A `MySqlNode`)
+     * My Web (A `ControlledDynamicWebAppCluster`)
+        * Cluster of JBoss7 Servers (A `DynamicWebAppCluster`)
+        * NginxController (An `NginxController`)
 
-The Web Cluster with DB demo comes pre-configured with an `AutoScalerPolicy`, attached to
-the cluster of JBoss7 servers and a `targets` policy attached to the loadbalancer. You can
- observe policies this in the management console using the Policy tab of the relevant
- entity (e.g. `DynamicWebAppCluster` shows the `AutoScalerPolicy`.
 
-The cluster autoscaler policy will automatically scale the cluster up or down to be the
-right size for the current load. ('One server' is the minimum size allowed by the policy.)
-The loadbalancer will automatically be updated by the targets policy as the cluster size
-changes.
 
-Sitting idle, your cluster will only contain one server, but you can check that the policy
-works  using a tool like [jmeter](http://jmeter.apache.org/) pointed at the nginx endpoint
-to create load on the cluster.
+Clicking on the 'My Web' entity will show the Summary tab. Here we can see if the cluster is ready to serve and, when ready, grab the web address for the front of the loadbalancer.
+
+![Exploring My Web.](images/my-web.png)
+
+
+The Activity tab allows us to drill down into what activities each entity is currently doing or has recently done. It is possible to drill down to all child tasks, and view the commands issued, and any errors or warnings that occured.
+
+Drill into the 'My DB' start operation. Working down through  'Start (processes)', then 'launch', we can discover the ssh command used including the stdin, stdout and stderr.
+
+[![My DB Activities.](images/my-db-activities.png)](images/my-db-activities-large.png)
+
+
+## Stopping the Application
+
+To stop an application, select the application in the tree view (the top/root entity), click on the Effectors tab, and invoke the 'Stop' effector. This will cleanly shutdown all components in the application and return any cloud machines that were being used.
+
+[![My DB Activities.](images/my-web-cluster-stop-confirm.png)](images/my-web-cluster-stop-confirm-large.png)
+
 
 ### Next 
 
-The [Elastic Web Cluster Example]({{site.url}}/use/examples/webcluster/index.html) page 
-details how to build the demo application from scratch. It shows how Brooklyn can 
-complement your application with policy driven management, and how an application can be 
-run without using the service catalog.
+So far we have touched on Brooklyn's ability to *deploy* an application blueprint to a cloud provider, but this a very small part of Brooklyn's capabilities!
+
+Brooklyn's real power is in using Policies to automatically *manage* applications. There is also the (very useful) ability to store a catalog of application blueprints, ready to go.
+
+[Getting Started - Policies and Catalogs](policies-and-catalogs.html)
