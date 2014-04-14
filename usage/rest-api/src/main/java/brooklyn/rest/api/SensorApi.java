@@ -39,7 +39,9 @@ public interface SensorApi {
           @ApiParam(value = "Application ID or name", required = true)
           @PathParam("application") final String application,
           @ApiParam(value = "Entity ID or name", required = true)
-          @PathParam("entity") final String entityToken
+          @PathParam("entity") final String entityToken,
+          @ApiParam(value = "Return raw sensor data instead of display values", required = false)
+          @QueryParam("raw") @DefaultValue("false") final Boolean raw
       ) ;
 
   @GET
@@ -55,7 +57,9 @@ public interface SensorApi {
           @ApiParam(value = "Entity ID or name", required = true)
           @PathParam("entity") final String entityToken,
           @ApiParam(value = "Sensor name", required = true)
-          @PathParam("sensor") String sensorName
+          @PathParam("sensor") String sensorName,
+          @ApiParam(value = "Return raw sensor data instead of display values", required = false)
+          @QueryParam("raw") @DefaultValue("false") final Boolean raw
   ) ;
 
   @GET
@@ -70,7 +74,9 @@ public interface SensorApi {
           @ApiParam(value = "Entity ID or name", required = true)
           @PathParam("entity") final String entityToken,
           @ApiParam(value = "Sensor name", required = true)
-          @PathParam("sensor") String sensorName
+          @PathParam("sensor") String sensorName,
+          @ApiParam(value = "Return raw sensor data instead of display values", required = false)
+          @QueryParam("raw") @DefaultValue("false") final Boolean raw
   ) ;
 
 }
