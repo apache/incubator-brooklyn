@@ -427,7 +427,7 @@ public class EntityDynamicType {
                     if (best.value == k.value) {
                         // same value doesn't matter which we take (but take lower if there is one)
                         if (LOG.isDebugEnabled()) 
-                            LOG.debug("multiple definitions for config key {} <String><String><String>on {}; same value {}; " +
+                            LOG.debug("multiple definitions for config key {} on {}; same value {}; " +
                                     "from {} and {}, preferring {}", 
                                     new Object[] {
                                     best.value.getName(), optionalEntity!=null ? optionalEntity : clazz,

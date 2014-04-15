@@ -160,6 +160,21 @@ public class DependentConfigurationTest {
     }
 
     @Test
+    public void testAttributeWhenReadyWithAbortFailsWhenAbortConditionAlreadyHolds() throws Exception {
+        entity2.setAttribute(TestEntity.SEQUENCE, 1);
+        final Task<String> t = submit(DependentConfiguration.builder()
+                .attributeWhenReady(entity, TestEntity.NAME)
+                .abortIf(entity2, TestEntity.SEQUENCE, Predicates.equalTo(1))
+                .build());
+        try {
+            assertDoneEventually(t);
+            fail();
+        } catch (Exception e) {
+            if (!e.toString().contains("Aborted waiting for ready")) throw e;
+        }
+    }
+
+    @Test
     public void testListAttributeWhenReadyFromMultipleEntities() throws Exception {
         final Task<List<String>> t = submit(DependentConfiguration.builder()
                 .attributeWhenReadyFromMultiple(ImmutableList.of(entity, entity2), TestEntity.NAME)
