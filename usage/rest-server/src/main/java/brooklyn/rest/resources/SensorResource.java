@@ -21,6 +21,9 @@ import static com.google.common.collect.Iterables.transform;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
@@ -31,11 +34,14 @@ import brooklyn.rest.domain.SensorSummary;
 import brooklyn.rest.transform.SensorTransformer;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class SensorResource extends AbstractBrooklynRestResource implements SensorApi {
+
+    private static final Logger log = LoggerFactory.getLogger(SensorResource.class);
 
     @Override
     public List<SensorSummary> list(final String application, final String entityToken) {
@@ -58,20 +64,20 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
 
         for (AttributeSensor<?> sensor : sensors) {
             Object value = entity.getAttribute(findSensor(entity, sensor.getName()));
-            if (!raw) {
-                value = displayValue(sensor, value);
+            if (Boolean.FALSE.equals(raw)) {
+                value = applyDisplayValueHint(sensor, value);
             }
             sensorMap.put(sensor.getName(), getValueForDisplay(value, true, false));
         }
         return sensorMap;
     }
 
-    protected Object get(boolean preferJson, String application, String entityToken, String sensorName, final Boolean raw) {
+    protected Object get(boolean preferJson, String application, String entityToken, String sensorName, Boolean raw) {
         final EntityLocal entity = brooklyn().getEntity(application, entityToken);
         AttributeSensor<?> sensor = findSensor(entity, sensorName);
         Object value = entity.getAttribute(sensor);
-        if (!raw) {
-            value = displayValue(sensor, value);
+        if (Boolean.FALSE.equals(raw)) {
+            value = applyDisplayValueHint(sensor, value);
         }
         return getValueForDisplay(value, preferJson, true);
     }
@@ -86,14 +92,15 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         return get(true, application, entityToken, sensorName, raw);
     }
 
-    public static final Object displayValue(AttributeSensor<?> sensor, Object initialValue) {
+    public static final Object applyDisplayValueHint(AttributeSensor<?> sensor, Object initialValue) {
         Iterable<RendererHints.DisplayValue> hints = Iterables.filter(RendererHints.getHintsFor(sensor), RendererHints.DisplayValue.class);
-
         if (Iterables.size(hints) > 1) {
-            throw new IllegalStateException("Multiple display value hints set for sensor, only one permitted");
-        } else if (Iterables.size(hints) == 1) {
-            RendererHints.DisplayValue hint = Iterables.getOnlyElement(hints);
-            return hint.getDisplayValue(initialValue);
+            log.warn("Multiple display value hints set for sensor {}; Only one will be applied, using first", sensor);
+        }
+
+        Optional<RendererHints.DisplayValue> hint = Optional.fromNullable(Iterables.getFirst(hints, null));
+        if (hint.isPresent()) {
+            return hint.get().getDisplayValue(initialValue);
         } else {
             return initialValue;
         }
