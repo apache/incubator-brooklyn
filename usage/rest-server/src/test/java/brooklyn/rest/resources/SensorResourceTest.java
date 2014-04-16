@@ -19,13 +19,17 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Map;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import brooklyn.config.render.RendererHints;
+import brooklyn.config.render.TestRendererHints;
 import brooklyn.event.AttributeSensor;
+import brooklyn.rest.api.SensorApi;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
@@ -87,10 +91,18 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
         assertEquals(result, "one234");
     }
 
+    @AfterClass(alwaysRun = true)
+    @Override
+    public void tearDown() throws Exception {
+        TestRendererHints.clearRegistry();
+        super.tearDown();
+    }
+
     /** Check default is to use display value hint. */
     @Test
     public void testBatchSensorRead() throws Exception {
         ClientResponse response = client().resource(sensorsEndpoint + "/current-state")
+                .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
         Map<String, ?> currentState = response.getEntity(Map.class);
 
@@ -106,6 +118,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     public void testBatchSensorReadRaw() throws Exception {
         ClientResponse response = client().resource(sensorsEndpoint + "/current-state")
                 .queryParam("raw", "true")
+                .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
         Map<String, ?> currentState = response.getEntity(Map.class);
 
@@ -120,6 +133,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testGet() throws Exception {
         ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
+                .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
         assertEquals(value, "\"one234 frogs\"");
@@ -129,7 +143,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     @Test(dependsOnMethods = "testGet")
     public void testGetPlain() throws Exception {
         ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
-                .accept("text/plain")
+                .accept(MediaType.TEXT_PLAIN)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
         assertEquals(value, "one234 frogs");
@@ -140,7 +154,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     public void testGetPlainRaw() throws Exception {
         ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
                 .queryParam("raw", "true")
-                .accept("text/plain")
+                .accept(MediaType.TEXT_PLAIN)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
         assertEquals(value, "one234");
@@ -151,6 +165,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     public void testGetRaw() throws Exception {
         ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
                 .queryParam("raw", "true")
+                .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
         assertEquals(value, "\"one234\"");
@@ -161,7 +176,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     public void testGetPlainRawFalse() throws Exception {
         ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
                 .queryParam("raw", "false")
-                .accept("text/plain")
+                .accept(MediaType.TEXT_PLAIN)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
         assertEquals(value, "one234 frogs");
@@ -172,7 +187,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     public void testGetPlainRawEmpty() throws Exception {
         ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
                 .queryParam("raw", "")
-                .accept("text/plain")
+                .accept(MediaType.TEXT_PLAIN)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
         assertEquals(value, "one234 frogs");
@@ -183,7 +198,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     public void testGetPlainRawError() throws Exception {
         ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
                 .queryParam("raw", "biscuits")
-                .accept("text/plain")
+                .accept(MediaType.TEXT_PLAIN)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
         assertEquals(value, "one234 frogs");
