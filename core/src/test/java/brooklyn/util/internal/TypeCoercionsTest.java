@@ -11,6 +11,7 @@ import org.codehaus.groovy.runtime.GStringImpl;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.util.flags.ClassCoercionException;
 import brooklyn.util.flags.TypeCoercions;
 
@@ -94,7 +95,19 @@ public class TypeCoercionsTest {
         assertEquals(TypeCoercions.coerce(BigDecimal.valueOf(0.5), Double.class), 0.5d, 0.00001d);
         assertEquals(TypeCoercions.coerce(BigDecimal.valueOf(0.5), double.class), 0.5d, 0.00001d);
     }
-        
+
+    @Test
+    public void testCoerceStringToEnum() {
+        assertEquals(TypeCoercions.coerce("STARTING", Lifecycle.class), Lifecycle.STARTING);
+        assertEquals(TypeCoercions.coerce("Starting", Lifecycle.class), Lifecycle.STARTING);
+        assertEquals(TypeCoercions.coerce("starting", Lifecycle.class), Lifecycle.STARTING);
+    }
+
+    @Test(expectedExceptions = ClassCoercionException.class)
+    public void testCoerceStringToEnumFailure() {
+        TypeCoercions.coerce("scrambled-eggs", Lifecycle.class);
+    }
+
     @Test
     public void testListToSetCoercion() {
         Set<?> s = TypeCoercions.coerce(ImmutableList.of(1), Set.class);

@@ -12,14 +12,15 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,11 +35,16 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Table;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
 
@@ -48,32 +54,38 @@ public class TypeCoercions {
     
     private TypeCoercions() {}
 
-    private static Map<Class,Map<Class,Function>> registeredAdapters = Collections.synchronizedMap(
-            new LinkedHashMap<Class,Map<Class,Function>>());
-        
-    /** attempts to coerce 'value' to 'targetType', 
-     * using a variety of strategies,
-     * including looking at:
-     * 
-     * value.asTargetType()
-     * static TargetType.fromType(value) where value instanceof Type
-     * 
-     * value.targetTypeValue()  //handy for primitives
-     * 
-     * registeredAdapters.get(targetType).findFirst({ k,v -> k.isInstance(value) }, { k,v -> v.apply(value) })
-     **/
+    /** Store the coercion {@link Function functions} in a {@link Table table}. */
+    @GuardedBy("TypeCoercions.class")
+    private static Table<Class, Class, Function> registry = HashBasedTable.create();
+
+    /**
+     * Attempts to coerce {@code value} to {@code targetType}.
+     * <p>
+     * Maintains a registry of adapter functions for type pairs in a {@link Table} which
+     * is searched after checking various strategies, including the following:
+     * <ul>
+     * <li>{@code value.asTargetType()}
+     * <li>{@code TargetType.fromType(value)} (if {@code value instanceof Type})
+     * <li>{@code value.targetTypeValue()} (handy for primitives)
+     * <li>{@code TargetType.valueOf(value)} (for enums)
+     * </ul>
+     *
+     * @see #coerce(Object, TypeToken)
+     */
     public static <T> T coerce(Object value, Class<T> targetType) {
         return coerce(value, TypeToken.of(targetType));
     }
 
-    /** see {@link #coerce(Object, Class)} */
+    /** @see #coerce(Object, Class) */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> T coerce(Object value, TypeToken<T> targetTypeToken) {
         if (value==null) return null;
         // does not actually cast generified contents; that is left to the caller
         Class<? super T> targetType = targetTypeToken.getRawType();
-        
+
         if (targetType.isInstance(value)) return (T) value;
+
+        // TODO use registry first?
 
         //deal with primitive->primitive casting
         if (isPrimitiveOrBoxer(targetType) && isPrimitiveOrBoxer(value.getClass())) {
@@ -143,26 +155,56 @@ public class TypeCoercions {
         }
 
         if (targetType.isEnum()) {
-            try {
-                return (T) Enum.valueOf((Class)targetType, ""+value);
-            } catch (IllegalArgumentException e) {
-                // some enums (eg Lifecycle) use a tostring which is different, not ideal...
-                return (T) Enum.valueOf((Class)targetType, (""+value).toUpperCase());
-            }
+            T result = (T) stringToEnum((Class<Enum>) targetType, null).apply(value.toString());
+            if (result != null) return result;
         }
 
-        //now look in registry - TODO use registry first?
-        Map<?,?> adaptersToTarget = registeredAdapters.get(targetType);
-        if (adaptersToTarget!=null) {
-            for (Map.Entry e: adaptersToTarget.entrySet()) {
-                if ( ((Class)e.getKey()).isInstance(value) ) {
-                    return (T) ((Function)e.getValue()).apply(value);
+        //now look in registry
+        synchronized (TypeCoercions.class) {
+            Map<Class, Function> adapters = registry.row(targetType);
+            for (Map.Entry<Class, Function> entry : adapters.entrySet()) {
+                if (entry.getKey().isInstance(value)) {
+                    return (T) entry.getValue().apply(value);
                 }
             }
         }
-                
+
         //not found
         throw new ClassCoercionException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): no adapter known");
+    }
+
+    /**
+     * Type coercion {@link Function function} for {@link Enum enums}.
+     * <p>
+     * Tries to convert the string to {@link CaseFormat#UPPER_UNDERSCORE} first,
+     * handling all of the different {@link CaseFormat format} possibilites.
+     * <p>
+     * Returns {@code defaultValue} if the string cannot be converted.
+     *
+     * @see TypeCoercions#coerce(Object, Class)
+     * @see Enum#valueOf(Class, String)
+     */
+    public static <E extends Enum<E>> Function<String, E> stringToEnum(final Class<E> type, @Nullable final E defaultValue) {
+        return new Function<String, E>() {
+            @Override
+            public E apply(String input) {
+                Preconditions.checkNotNull(input, "input");
+                List<String> options = ImmutableList.of(
+                        input,
+                        CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_UNDERSCORE, input),
+                        CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_UNDERSCORE, input),
+                        CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, input),
+                        CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, input));
+                for (String value : options) {
+                    try {
+                        return Enum.valueOf(type, value);
+                    } catch (IllegalArgumentException iae) {
+                        continue;
+                    }
+                }
+                return defaultValue;
+            }
+        };
     }
 
     /**
@@ -324,16 +366,11 @@ public class TypeCoercions {
         }
         return null;
     }
-    
+
     public synchronized static <A,B> void registerAdapter(Class<A> sourceType, Class<B> targetType, Function<A,B> fn) {
-        Map<Class, Function> sources = registeredAdapters.get(targetType);
-        if (sources==null) {
-            sources = Collections.synchronizedMap(new LinkedHashMap<Class, Function>());
-            registeredAdapters.put(targetType, sources);
-        }
-        sources.put(sourceType, fn);
+        registry.put(targetType, sourceType, fn);
     }
-    
+
     static {
         registerAdapter(CharSequence.class, String.class, new Function<CharSequence,String>() {
             @Override

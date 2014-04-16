@@ -34,8 +34,11 @@ import brooklyn.util.maven.MavenArtifact;
 import brooklyn.util.maven.MavenRetriever;
 import brooklyn.util.net.Urls;
 
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 
 public class JmxSupport implements UsesJmx {
@@ -342,12 +345,7 @@ public class JmxSupport implements UsesJmx {
             if (initialized.get()) return;
 
             TypeCoercions.registerAdapter(String.class, UsesJmx.JmxAgentModes.class,
-                    new Function<String, UsesJmx.JmxAgentModes>() {
-                        @Override
-                        public UsesJmx.JmxAgentModes apply(@Nullable String input) {
-                            return UsesJmx.JmxAgentModes.valueOf(input);
-                        }
-                    });
+                    TypeCoercions.stringToEnum(UsesJmx.JmxAgentModes.class, JmxAgentModes.AUTODETECT));
 
             initialized.set(true);
         }
