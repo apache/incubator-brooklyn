@@ -67,10 +67,7 @@ public interface UsesJmx extends UsesJava {
         JMX_RMI_CUSTOM_AGENT,
         /** do not install a JMX agent; use the default RMI which opens a registry at a known port, redirected to an _unknown_ port for jmx 
          * (experimental) */
-        NONE;
-
-        // Initialize our type coercion adapter
-        static { JmxSupport.init(); }
+        NONE
     }
     
     @SetFromFlag("jmxAgentMode")

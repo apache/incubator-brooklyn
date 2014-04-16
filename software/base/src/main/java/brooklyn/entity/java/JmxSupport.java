@@ -3,7 +3,6 @@ package brooklyn.entity.java;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -26,7 +25,6 @@ import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
@@ -34,11 +32,7 @@ import brooklyn.util.maven.MavenArtifact;
 import brooklyn.util.maven.MavenRetriever;
 import brooklyn.util.net.Urls;
 
-import com.google.common.base.CaseFormat;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 
 public class JmxSupport implements UsesJmx {
@@ -86,23 +80,23 @@ public class JmxSupport implements UsesJmx {
     }
 
     public boolean isJmx() {
-        initInternal();
+        init();
         return isJmx;
     }
 
     public JmxAgentModes getJmxAgentMode() {
-        initInternal();
+        init();
         if (jmxAgentMode==null) return JmxAgentModes.NONE;
         return jmxAgentMode;
     }
     
     public boolean isSecure() {
-        initInternal();
+        init();
         if (isSecure==null) return false;
         return isSecure;
     }
     
-    protected synchronized void initInternal() {
+    protected synchronized void init() {
         if (isJmx!=null)
             return;
         
@@ -146,7 +140,7 @@ public class JmxSupport implements UsesJmx {
     }
 
     public String getJmxUrl() {
-        initInternal();
+        init();
         
         String host = entity.getAttribute(Attributes.HOSTNAME);
         if (host==null) {
@@ -336,21 +330,5 @@ public class JmxSupport implements UsesJmx {
             log.warn("Entity "+entity+" may not function unless running JMX_RMI_CUSTOM_AGENT mode (asked to use "+jmx.get()+")");
         }
     }
-
-    private static AtomicBoolean initialized = new AtomicBoolean(false);
-
-    /** Register the {@link UsesJmx.JmxAgentModes} adapter. */
-    public static void init() {
-        synchronized (initialized) {
-            if (initialized.get()) return;
-
-            TypeCoercions.registerAdapter(String.class, UsesJmx.JmxAgentModes.class,
-                    TypeCoercions.stringToEnum(UsesJmx.JmxAgentModes.class, JmxAgentModes.AUTODETECT));
-
-            initialized.set(true);
-        }
-    }
-
-    static { init(); }
-
+    
 }

@@ -2,7 +2,6 @@ package brooklyn.entity.java;
 
 import static org.testng.Assert.assertEquals;
 
-import org.codehaus.groovy.runtime.GStringImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -65,8 +64,6 @@ public class JmxSupportTest {
 
     @Test
     public void testCoerceStringtoJmxAgentModes() {
-        JmxSupport.init();
-
         // Test coercions
         assertEquals(TypeCoercions.coerce("AUTODETECT", JmxAgentModes.class), JmxAgentModes.AUTODETECT);
         assertEquals(TypeCoercions.coerce("JMXMP_AND_RMI", JmxAgentModes.class), JmxAgentModes.JMXMP_AND_RMI);
@@ -77,11 +74,6 @@ public class JmxSupportTest {
         assertEquals(TypeCoercions.coerce("jmx_rmi_custom_agent", JmxAgentModes.class), JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
         assertEquals(TypeCoercions.coerce("jmx-rmi-custom-agent", JmxAgentModes.class), JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
         assertEquals(TypeCoercions.coerce("JmxRmiCustomAgent", JmxAgentModes.class), JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
-        assertEquals(TypeCoercions.coerce("JmX_rMi_CuStOm_AgEnT", JmxAgentModes.class), JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
-
-        // Test that we default to AUTODETECT with unparseable input
-        assertEquals(TypeCoercions.coerce("", JmxAgentModes.class), JmxAgentModes.AUTODETECT);
-        assertEquals(TypeCoercions.coerce("GARBLE_MARGLE_BARGLE", JmxAgentModes.class), JmxAgentModes.AUTODETECT);
     }
 
 
