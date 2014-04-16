@@ -3,6 +3,7 @@ package brooklyn.entity.java;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -25,6 +26,7 @@ import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
@@ -32,6 +34,7 @@ import brooklyn.util.maven.MavenArtifact;
 import brooklyn.util.maven.MavenRetriever;
 import brooklyn.util.net.Urls;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.net.HostAndPort;
 
@@ -80,23 +83,23 @@ public class JmxSupport implements UsesJmx {
     }
 
     public boolean isJmx() {
-        init();
+        initInternal();
         return isJmx;
     }
 
     public JmxAgentModes getJmxAgentMode() {
-        init();
+        initInternal();
         if (jmxAgentMode==null) return JmxAgentModes.NONE;
         return jmxAgentMode;
     }
     
     public boolean isSecure() {
-        init();
+        initInternal();
         if (isSecure==null) return false;
         return isSecure;
     }
     
-    protected synchronized void init() {
+    protected synchronized void initInternal() {
         if (isJmx!=null)
             return;
         
@@ -140,7 +143,7 @@ public class JmxSupport implements UsesJmx {
     }
 
     public String getJmxUrl() {
-        init();
+        initInternal();
         
         String host = entity.getAttribute(Attributes.HOSTNAME);
         if (host==null) {
@@ -330,5 +333,26 @@ public class JmxSupport implements UsesJmx {
             log.warn("Entity "+entity+" may not function unless running JMX_RMI_CUSTOM_AGENT mode (asked to use "+jmx.get()+")");
         }
     }
-    
+
+    private static AtomicBoolean initialized = new AtomicBoolean(false);
+
+    /** Register the {@link UsesJmx.JmxAgentModes} adapter. */
+    public static void init() {
+        synchronized (initialized) {
+            if (initialized.get()) return;
+
+            TypeCoercions.registerAdapter(String.class, UsesJmx.JmxAgentModes.class,
+                    new Function<String, UsesJmx.JmxAgentModes>() {
+                        @Override
+                        public UsesJmx.JmxAgentModes apply(@Nullable String input) {
+                            return UsesJmx.JmxAgentModes.valueOf(input);
+                        }
+                    });
+
+            initialized.set(true);
+        }
+    }
+
+    static { init(); }
+
 }
