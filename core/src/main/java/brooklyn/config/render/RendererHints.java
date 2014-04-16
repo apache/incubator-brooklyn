@@ -29,7 +29,9 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimaps;
@@ -136,25 +138,20 @@ public class RendererHints {
      * this functionality.</em>
      */
     @Beta
-    public static class DisplayValue extends Hint<Sensor> {
-        private final Function transform;
+    public static class DisplayValue extends Hint<AttributeSensor<?>> {
+        private final Function<Object, String> transform;
 
-        public DisplayValue(Function transform) {
-            this.transform = transform;
+        public DisplayValue(Function<?, String> transform) {
+            this.transform = (Function<Object, String>) Preconditions.checkNotNull(transform, "transform");
         }
 
-        public String getDisplayValue(Entity e, AttributeSensor s) {
+        public String getDisplayValue(Entity e, AttributeSensor<?> s) {
             return getDisplayValue(e.getAttribute(s));
         }
 
         public String getDisplayValue(Object v) {
-            if (transform != null) {
-                v = transform.apply(v);
-            }
-            if (v != null) {
-                return v.toString();
-            }
-            return null;
+            String dv = transform.apply(v);
+            return Strings.nullToEmpty(dv);
         }
 
         @Override
@@ -168,5 +165,10 @@ public class RendererHints {
             DisplayValue o = (DisplayValue) obj;
             return Objects.equal(transform, o.transform);
         }
+    }
+
+    @Beta
+    public static RendererHints.DisplayValue displayValue(Function<?, String> transform) {
+        return new RendererHints.DisplayValue(transform);
     }
 }
