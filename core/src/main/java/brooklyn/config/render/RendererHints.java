@@ -17,9 +17,7 @@ package brooklyn.config.render;
 
 import groovy.lang.Closure;
 
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
 import brooklyn.entity.Entity;
@@ -28,29 +26,49 @@ import brooklyn.event.Sensor;
 import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 
-/** registry of hints for displaying items such as sensors, e.g. in the web console */
+/**
+ * Registry of hints for displaying items such as sensors, e.g. in the web console.
+ */
 public class RendererHints {
 
-    static Map<Object, Set<Hint>> registry = new LinkedHashMap<Object, Set<Hint>>();
+    @VisibleForTesting
+    static SetMultimap<Object, Hint<?>> registry = Multimaps.synchronizedSetMultimap(LinkedHashMultimap.<Object, Hint<?>>create());
 
-    /** registers a hint against the given element (eg a sensor);
-     * returns the element, for convenience when used in a with block after defining the element 
+    /**
+     * Registers a {@link Hint} against the given element.
+     * <p>
+     * Returns the element, for convenience when used in a with block after defining the element.
      */
-    public synchronized static <T> T register(T element, Hint<T> hintForThatElement) {
-        Set<Hint> set = registry.get(element);
-        if (set == null) {
-            set = new LinkedHashSet<Hint>();
-            registry.put(element, set);
-        }
-        set.add(hintForThatElement);
+    public static <T> T register(T element, Hint<T> hintForThatElement) {
+        registry.put(element, hintForThatElement);
         return element;
     }
 
-    /** abstract superclass (marker) for 'hints' */
-    public static abstract class Hint<T> {}
+    public static Set<Hint<?>> getHintsFor(Object element) {
+         return getHintsFor(element, Hint.class);
+    }
+
+    public static Set<Hint<?>> getHintsFor(Object element, Class<? extends Hint> optionalHintSuperClass) {
+        Set<Hint<?>> found = ImmutableSet.copyOf(registry.get(element));
+        if (optionalHintSuperClass != null) {
+            return Sets.filter(found, Predicates.instanceOf(optionalHintSuperClass));
+        } else {
+            return found;
+        }
+    }
+
+    /** Parent marker class for hints. */
+    public static abstract class Hint<T> { }
 
     public static interface NamedAction {
         String getActionName();
@@ -150,21 +168,5 @@ public class RendererHints {
             DisplayValue o = (DisplayValue) obj;
             return Objects.equal(transform, o.transform);
         }
-    }
-
-    public static synchronized Set<Hint> getHintsFor(Object element) {
-         return getHintsFor(element, Hint.class);
-    }
-
-    public static synchronized Set<Hint> getHintsFor(Object element, Class<? extends Hint> optionalHintSuperClass) {
-        Set<Hint> results = new LinkedHashSet<Hint>();
-        Set<Hint> found = registry.get(element);
-        if (found != null) {
-            for (Hint h : found) {
-                if (optionalHintSuperClass == null || optionalHintSuperClass.isAssignableFrom(h.getClass()))
-                    results.add(h);
-            }
-        }
-        return results;
     }
 }
