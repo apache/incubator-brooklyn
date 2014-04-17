@@ -47,7 +47,7 @@ public class ByonLocationResolver implements LocationResolver {
     
     public static final String BYON = "byon";
 
-    private static final Pattern PATTERN = Pattern.compile("(("+BYON+"|"+BYON.toUpperCase()+")" + ":" + "\\((.*)\\)$)|("+BYON+"|"+BYON.toUpperCase()+")$");
+    private static final Pattern PATTERN = Pattern.compile("(?i)" + BYON + "(?::\\((.*)\\))?$");
 
     private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("hosts", "name", "user");
 
@@ -69,7 +69,7 @@ public class ByonLocationResolver implements LocationResolver {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like byon(hosts=\"addr1,addr2\")");
         }
         
-        String argsPart = matcher.group(3);
+        String argsPart = matcher.group(1);
         Map<String, String> argsMap = KeyValueParser.parseMap(argsPart);
         
         // prefer args map over location flags
