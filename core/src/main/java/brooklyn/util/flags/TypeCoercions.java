@@ -154,8 +154,9 @@ public class TypeCoercions {
             }
         }
 
+        //for enums call valueOf with the string representation of the value
         if (targetType.isEnum()) {
-            T result = (T) stringToEnum((Class<Enum>) targetType, null).apply(value.toString());
+            T result = (T) stringToEnum((Class<Enum>) targetType, null).apply(String.valueOf(value));
             if (result != null) return result;
         }
 
