@@ -246,6 +246,19 @@ public class ByonLocationResolverTest {
         }
     }
     
+    @Test
+    public void testEmptySpec() throws Exception {
+        String spec = "byon";
+        Map<String, ?> flags = ImmutableMap.of(
+                "hosts", ImmutableList.of("1.1.1.1", "2.2.2.22"),
+                "name", "foo",
+                "user", "myuser"
+        );
+        MachineProvisioningLocation<SshMachineLocation> provisioner = resolve(spec, flags);
+        SshMachineLocation location1 = provisioner.obtain(ImmutableMap.of());
+        Assert.assertEquals("myuser", location1.getUser());
+        Assert.assertEquals("1.1.1.1", location1.getAddress().getHostAddress());
+    }
 
     private void assertByonClusterEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<String> expectedHosts) {
         assertByonClusterEquals(cluster, expectedHosts, defaultNamePredicate);
@@ -298,6 +311,11 @@ public class ByonLocationResolverTest {
     @SuppressWarnings("unchecked")
     private FixedListMachineProvisioningLocation<SshMachineLocation> resolve(String val) {
         return (FixedListMachineProvisioningLocation<SshMachineLocation>) managementContext.getLocationRegistry().resolve(val);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private FixedListMachineProvisioningLocation<SshMachineLocation> resolve(String val, Map<?, ?> locationFlags) {
+        return (FixedListMachineProvisioningLocation<SshMachineLocation>) managementContext.getLocationRegistry().resolve(val, locationFlags);
     }
     
     private static class UserHostTuple {
