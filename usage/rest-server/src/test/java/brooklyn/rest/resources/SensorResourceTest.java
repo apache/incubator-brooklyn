@@ -19,8 +19,8 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -28,7 +28,10 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.render.RendererHints;
 import brooklyn.config.render.TestRendererHints;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.rest.api.SensorApi;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
@@ -38,8 +41,10 @@ import brooklyn.util.text.StringFunctions;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.base.Functions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 /**
  * Test the {@link SensorApi} implementation.
@@ -57,7 +62,8 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
             .build();
 
     private static final String sensorsEndpoint = "/v1/applications/simple-app/entities/simple-ent/sensors";
-    private static final String sensorName = RestMockSimpleEntity.SAMPLE_SENSOR.getName();
+    private static final String sensorName = "ammphibian.count";
+    private static final AttributeSensor<Integer> sensor = Sensors.newIntegerSensor(sensorName);
 
     @Override
     protected void setUpResources() throws Exception {
@@ -67,28 +73,30 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     /**
      * Sets up the application and entity.
      * <p>
-     * Calls the test effector to set the sensor value to {@code one234}. Configures
-     * a display value hint that appends {@code frogs} to the value of the sensor.
+     * Adds a sensor and sets its value to {@code 12345}. Configures a display value
+     * hint that appends {@code frogs} to the value of the sensor.
      */
     @BeforeClass(alwaysRun = true)
     @Override
     public void setUp() throws Exception {
         super.setUp();
 
-        // Register display value hint
-        RendererHints.register(RestMockSimpleEntity.SAMPLE_SENSOR, new RendererHints.DisplayValue(StringFunctions.append(" frogs")));
-
         // Deploy application
         ClientResponse deploy = clientDeploy(simpleSpec);
         waitForApplicationToBeRunning(deploy.getLocation());
 
-        // Call the effector to set attribute on entioty
-        ClientResponse effector = client().resource("/v1/applications/simple-app/entities/simple-ent/effectors/"+
-                RestMockSimpleEntity.SAMPLE_EFFECTOR.getName())
-            .post(ClientResponse.class, ImmutableMap.of("param1", "one", "param2", 234));
-        assertEquals(effector.getStatus(), Response.Status.ACCEPTED.getStatusCode());
-        String result = effector.getEntity(String.class);
-        assertEquals(result, "one234");
+        // Add new sensor
+        EntityInternal entity = (EntityInternal) Iterables.find(getManagementContext().getEntityManager().getEntities(), new Predicate<Entity>() {
+            @Override
+            public boolean apply(@Nullable Entity input) {
+                return "RestMockSimpleEntity".equals(input.getEntityType().getSimpleName());
+            }
+        });
+        entity.getMutableEntityType().addSensor(sensor);
+        entity.setAttribute(sensor, 12345);
+
+        // Register display value hint
+        RendererHints.register(sensor, RendererHints.displayValue(Functions.compose(StringFunctions.append(" frogs"), Functions.toStringFunction())));
     }
 
     @AfterClass(alwaysRun = true)
@@ -108,7 +116,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
 
         for (String sensor : currentState.keySet()) {
             if (sensor.equals(sensorName)) {
-                assertEquals(currentState.get(sensor), "one234 frogs");
+                assertEquals(currentState.get(sensor), "12345 frogs");
             }
         }
     }
@@ -124,7 +132,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
 
         for (String sensor : currentState.keySet()) {
             if (sensor.equals(sensorName)) {
-                assertEquals(currentState.get(sensor), "one234");
+                assertEquals(currentState.get(sensor), Integer.valueOf(12345));
             }
         }
     }
@@ -136,7 +144,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
-        assertEquals(value, "\"one234 frogs\"");
+        assertEquals(value, "\"12345 frogs\"");
     }
 
     /** Check default is to use display value hint. */
@@ -146,7 +154,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
                 .accept(MediaType.TEXT_PLAIN)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
-        assertEquals(value, "one234 frogs");
+        assertEquals(value, "12345 frogs");
     }
 
     /** Check setting {@code raw} to {@code true} ignores display value hint. */
@@ -157,7 +165,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
                 .accept(MediaType.TEXT_PLAIN)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
-        assertEquals(value, "one234");
+        assertEquals(value, "12345");
     }
 
     /** Check setting {@code raw} to {@code true} ignores display value hint. */
@@ -167,8 +175,8 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
                 .queryParam("raw", "true")
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
-        String value = response.getEntity(String.class);
-        assertEquals(value, "\"one234\"");
+        Integer value = response.getEntity(Integer.class);
+        assertEquals(value, Integer.valueOf(12345));
     }
 
     /** Check setting {@code raw} to {@code false} uses display value hint. */
@@ -179,7 +187,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
                 .accept(MediaType.TEXT_PLAIN)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
-        assertEquals(value, "one234 frogs");
+        assertEquals(value, "12345 frogs");
     }
 
     /** Check empty vaue for {@code raw} will revert to using default. */
@@ -190,7 +198,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
                 .accept(MediaType.TEXT_PLAIN)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
-        assertEquals(value, "one234 frogs");
+        assertEquals(value, "12345 frogs");
     }
 
     /** Check unparseable vaue for {@code raw} will revert to using default. */
@@ -201,6 +209,6 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
                 .accept(MediaType.TEXT_PLAIN)
                 .get(ClientResponse.class);
         String value = response.getEntity(String.class);
-        assertEquals(value, "one234 frogs");
+        assertEquals(value, "12345 frogs");
     }
 }
