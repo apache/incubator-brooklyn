@@ -23,6 +23,7 @@ import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -46,7 +47,7 @@ public class ByonLocationResolver implements LocationResolver {
     
     public static final String BYON = "byon";
 
-    private static final Pattern PATTERN = Pattern.compile("("+BYON+"|"+BYON.toUpperCase()+")" + ":" + "\\((.*)\\)$");
+    private static final Pattern PATTERN = Pattern.compile("(?i)" + BYON + "(?::\\((.*)\\))?$");
 
     private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("hosts", "name", "user");
 
@@ -68,7 +69,7 @@ public class ByonLocationResolver implements LocationResolver {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like byon(hosts=\"addr1,addr2\")");
         }
         
-        String argsPart = matcher.group(2);
+        String argsPart = matcher.group(1);
         Map<String, String> argsMap = KeyValueParser.parseMap(argsPart);
         
         // prefer args map over location flags
@@ -77,24 +78,32 @@ public class ByonLocationResolver implements LocationResolver {
 
         String name = argsMap.containsKey("name") ? argsMap.get("name") : (String)locationFlags.get("name");
         
-        String hosts = argsMap.get("hosts");
+        Object hosts = argsMap.containsKey("hosts") ? argsMap.get("hosts") : locationFlags.get("hosts");
         
-        String user = (String)locationFlags.get("user");
-        if (argsMap.containsKey("user")) user = argsMap.get("user");
+        String user = argsMap.containsKey("user") ? argsMap.get("user") : (String)locationFlags.get("user");
         
         if (!ACCEPTABLE_ARGS.containsAll(argsMap.keySet())) {
             Set<String> illegalArgs = Sets.difference(argsMap.keySet(), ACCEPTABLE_ARGS);
             throw new IllegalArgumentException("Invalid location '"+spec+"'; illegal args "+illegalArgs+"; acceptable args are "+ACCEPTABLE_ARGS);
         }
-        if (hosts == null || hosts.isEmpty()) {
+        if (hosts == null || hosts.toString().isEmpty()) {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; at least one host must be defined");
         }
         if (argsMap.containsKey("name") && (name == null || name.isEmpty())) {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; if name supplied then value must be non-empty");
         }
         
-        List<String> hostAddresses = WildcardGlobs.getGlobsAfterBraceExpansion("{"+hosts+"}",
-                true /* numeric */, /* no quote support though */ PhraseTreatment.NOT_A_SPECIAL_CHAR, PhraseTreatment.NOT_A_SPECIAL_CHAR);
+        List<String> hostAddresses;
+        
+        if (hosts instanceof String) {
+            hostAddresses = WildcardGlobs.getGlobsAfterBraceExpansion("{"+hosts+"}",
+                    true /* numeric */, /* no quote support though */ PhraseTreatment.NOT_A_SPECIAL_CHAR, PhraseTreatment.NOT_A_SPECIAL_CHAR);
+        } else if (hosts instanceof List) {
+            hostAddresses = ImmutableList.copyOf((List)hosts);
+        } else {
+            throw new IllegalStateException("Illegal parameter for 'hosts'; must be a string or map (but got " + hosts + ")");
+        }
+        
         List<SshMachineLocation> machines = Lists.newArrayList();
         for (String host : hostAddresses) {
             SshMachineLocation machine;
