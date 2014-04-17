@@ -15,9 +15,12 @@ import org.testng.annotations.Test;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Identifiers;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 public class SimpleJcloudsLocationUserLoginAndConfigLiveTest extends AbstractJcloudsTest {
 
@@ -120,7 +123,8 @@ public class SimpleJcloudsLocationUserLoginAndConfigLiveTest extends AbstractJcl
     @Test(groups="Live")
     public void testJcloudsWithSpecificLoginUserAndSameUser() throws Exception {
         log.info("TEST testJcloudsWithSpecificLoginUserAndSameUser");
-        JcloudsSshMachineLocation m1 = obtainMachine(MutableMap.of("imageId", EC2_CENTOS_IMAGE,
+        JcloudsSshMachineLocation m1 = obtainMachine(MutableMap.of(
+                "imageId", EC2_CENTOS_IMAGE,
                 "loginUser", "ec2-user",
                 "user", "ec2-user",
                 "waitForSshable", 30*1000));
@@ -144,7 +148,8 @@ public class SimpleJcloudsLocationUserLoginAndConfigLiveTest extends AbstractJcl
     @Test(groups="Live")
     public void testJcloudsWithSpecificLoginUserAndNewUser() throws Exception {
         log.info("TEST testJcloudsWithSpecificLoginUserAndNewUser");
-        JcloudsSshMachineLocation m1 = obtainMachine(MutableMap.of("imageId", EC2_CENTOS_IMAGE,
+        JcloudsSshMachineLocation m1 = obtainMachine(MutableMap.of(
+                "imageId", EC2_CENTOS_IMAGE,
                 "loginUser", "ec2-user",
                 "user", "newbob",
                 "waitForSshable", 30*1000));
@@ -168,7 +173,8 @@ public class SimpleJcloudsLocationUserLoginAndConfigLiveTest extends AbstractJcl
     @Test(groups="Live")
     public void testJcloudsWithSpecificLoginUserAndDefaultUser() throws Exception {
         log.info("TEST testJcloudsWithSpecificLoginUserAndDefaultUser");
-        JcloudsSshMachineLocation m1 = obtainMachine(MutableMap.of("imageId", EC2_CENTOS_IMAGE,
+        JcloudsSshMachineLocation m1 = obtainMachine(MutableMap.of(
+                "imageId", EC2_CENTOS_IMAGE,
                 "loginUser", "ec2-user",
                 "waitForSshable", 30*1000));
 
@@ -185,16 +191,39 @@ public class SimpleJcloudsLocationUserLoginAndConfigLiveTest extends AbstractJcl
         Assert.assertTrue(result.contains("trying m2"));
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private String execWithOutput(SshMachineLocation m, List commands) {
-        Map flags = new LinkedHashMap();
+    @Test(groups="Live")
+    public void testJcloudsCreateWithNoSudoGranted() throws Exception {
+        log.info("TEST testJcloudsCreateWithNoSudoGranted");
+        JcloudsSshMachineLocation m = obtainMachine(MutableMap.of(
+                "grantUserSudo", false,
+                "waitForSshable", 30*1000));
+
+        int exitCode = execWithExitCode(m, ImmutableList.of(BashCommands.sudo("echo yes")));
+        Assert.assertFalse(exitCode == 0, "exit code for sudo command should not have been 0");
+    }
+
+    private String execWithOutput(SshMachineLocation m, List<String> commands) {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        exec(m, commands, stdout, stderr);
+        return new String(stdout.toByteArray());
+    }
+
+    private int execWithExitCode(SshMachineLocation m, List<String> commands) {
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        return exec(m, commands, stdout, stderr);
+    }
+
+    private int exec(SshMachineLocation m, List<String> commands, ByteArrayOutputStream stdout, ByteArrayOutputStream stderr) {
+        Map<String, Object> flags = Maps.newLinkedHashMap();
         flags.put("out", stdout);
         flags.put("err", stderr);
-        m.execCommands(flags, "test", commands);
-        log.info("output from "+commands+":\n"+new String(stdout.toByteArray()));
-        return new String(stdout.toByteArray());
+        int exitCode = m.execCommands(flags, "test", commands);
+        log.info("stdout from "+commands+":\n"+new String(stdout.toByteArray()));
+        log.info("stderr from "+commands+":\n"+new String(stderr.toByteArray()));
+        log.info("exit code: " + exitCode);
+        return exitCode;
     }
 
     private JcloudsLocation resolve(String spec) {

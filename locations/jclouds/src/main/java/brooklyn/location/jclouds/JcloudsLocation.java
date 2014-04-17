@@ -1266,6 +1266,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      *         <li>Use the {@code privateKeyData} if not null or blank (including if using default)
      *         <li>Use the {@code password} (or the auto-generated password if that is blank). 
      *       </ul>
+     *   <li>{@code grantUserSudo} determines whether or not the created user may run the sudo command.</li>
      * </ul>
      *   
      * @param image  The image being used to create the VM
@@ -1282,6 +1283,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String explicitLoginUser = config.get(LOGIN_USER);
         String loginUser = truth(explicitLoginUser) ? explicitLoginUser : (image.getDefaultCredentials() != null) ? image.getDefaultCredentials().identity : null;
         Boolean dontCreateUser = config.get(DONT_CREATE_USER);
+        Boolean grantUserSudo = config.get(GRANT_USER_SUDO);
         String publicKeyData = LocationConfigUtils.getPublicKeyData(config);
         String privateKeyData = LocationConfigUtils.getPrivateKeyData(config);
         String explicitPassword = config.get(PASSWORD);
@@ -1341,18 +1343,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             
         } else {
             // Create the user
-            // By default we now give these users sudo privileges.
-            // If you want something else, that can be specified manually, 
-            // e.g. using jclouds UserAdd.Builder, with RunScriptOnNode, or template.options.runScript(xxx).
-            // (if that is a common use case, we could expose a property here)
             // note AdminAccess requires _all_ fields set, due to http://code.google.com/p/jclouds/issues/detail?id=1095
             AdminAccess.Builder adminBuilder = AdminAccess.builder()
                     .adminUsername(user)
                     .adminPassword(password)
-                    .grantSudoToAdminUser(true)
+                    .grantSudoToAdminUser(truth(grantUserSudo))
                     .resetLoginPassword(true)
                     .loginPassword(password);
-            
+
             if (publicKeyData!=null) {
                 adminBuilder.authorizeAdminPublicKey(true).adminPublicKey(publicKeyData);
             } else {
