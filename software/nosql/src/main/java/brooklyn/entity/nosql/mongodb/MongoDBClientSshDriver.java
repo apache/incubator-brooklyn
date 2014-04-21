@@ -2,7 +2,6 @@ package brooklyn.entity.nosql.mongodb;
 
 import java.util.Map;
 
-<<<<<<< HEAD
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,8 +9,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 
-=======
->>>>>>> upstream/master
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.nosql.mongodb.sharding.MongoDBRouter;
 import brooklyn.entity.nosql.mongodb.sharding.MongoDBRouterCluster;
