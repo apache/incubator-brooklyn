@@ -2,6 +2,16 @@ package brooklyn.entity.nosql.mongodb;
 
 import java.util.Map;
 
+<<<<<<< HEAD
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+
+=======
+>>>>>>> upstream/master
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.nosql.mongodb.sharding.MongoDBRouter;
 import brooklyn.entity.nosql.mongodb.sharding.MongoDBRouterCluster;
@@ -18,6 +28,8 @@ import com.google.common.base.Predicates;
 
 public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements MongoDBClientDriver {
     
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBClientSshDriver.class);
+
     private boolean isRunning = false;
 
     public MongoDBClientSshDriver(EntityLocal entity, SshMachineLocation machine) {
@@ -41,8 +53,15 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
         AbstractMongoDBServer server = getServer();
         String host = server.getAttribute(AbstractMongoDBServer.HOSTNAME);
         Integer port = server.getAttribute(AbstractMongoDBServer.PORT);
-        for (String scriptName : entity.getConfig(MongoDBClient.STARTUP_JS_SCRIPTS)) {
-            runScript("", scriptName, host, port);
+        try {
+            for (String scriptName : entity.getConfig(MongoDBClient.STARTUP_JS_SCRIPTS)) {
+                runScript("", scriptName, host, port);
+            }
+        } catch (NullPointerException e) {
+            // FIXME avoid the null ptr, and do something more intelligent
+            LOG.error("startupScripts not specified in MongoDBClientSshDriver launch method;", e);
+            isRunning = false;
+            return;
         }
         isRunning = true;
     }
