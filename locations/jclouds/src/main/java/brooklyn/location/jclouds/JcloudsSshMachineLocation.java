@@ -255,14 +255,19 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
 
         // Skip superclass' SSH to machine if all data is present, otherwise defer to super
         if (name.isPresent() && version.isPresent() && architecture.isPresent() && ram.isPresent() && cpus.isPresent()) {
-            LOG.debug("Gathered machine details from Jclouds, skipping SSH test on {}", this);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Gathered machine details from Jclouds, skipping SSH test on {}", this);
+            }
             OsDetails osD = new BasicOsDetails(name.get(), architecture.get(), version.get());
             HardwareDetails hwD = new BasicHardwareDetails(cpus.get(), ram.get());
             return new BasicMachineDetails(hwD, osD);
         } else {
-            LOG.debug("Machine details for {} missing from Jclouds, using SSH test instead. name={}, version={}, " +
-                    "arch={}, ram={}, #cpus={}",
-                    new Object[]{this, name, version, architecture, ram, cpus});
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Machine details for {} missing from Jclouds, using SSH test instead. name={}, version={}, " +
+                                "arch={}, ram={}, #cpus={}",
+                        new Object[]{this, name, version, architecture, ram, cpus}
+                );
+            }
             return super.getMachineDetails();
         }
     }

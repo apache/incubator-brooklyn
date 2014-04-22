@@ -49,8 +49,10 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     
     public static final ConfigKey<Boolean> DONT_CREATE_USER = ConfigKeys.newBooleanConfigKey("dontCreateUser", 
             "Whether to skip creation of 'user' when provisioning machines (default false)", false);
+    public static final ConfigKey<Boolean> GRANT_USER_SUDO = ConfigKeys.newBooleanConfigKey("grantUserSudo",
+            "Whether to grant the created user sudo privileges. Irrelevant if dontCreateUser is true. Default: true.", true);
 
-    public static final ConfigKey<LoginCredentials> CUSTOM_CREDENTIALS = new BasicConfigKey<LoginCredentials>(LoginCredentials.class, 
+    public static final ConfigKey<LoginCredentials> CUSTOM_CREDENTIALS = new BasicConfigKey<LoginCredentials>(LoginCredentials.class,
             "customCredentials", "Custom jclouds LoginCredentials object to be used to connect to the VM", null);
     
     public static final ConfigKey<String> GROUP_ID = ConfigKeys.newStringConfigKey("groupId",
@@ -145,7 +147,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
 
     public static final ConfigKey<String> JCLOUDS_LOCATION_CUSTOMIZERS_SUPPLIER_TYPE = ConfigKeys.newStringConfigKey(
             "customizersSupplierType", "Optional type of a Supplier<Collection<JcloudsLocationCustomizer>> " +
-            "(to be class-loaded and constructed with no-arg constructor)");
+            "(to be class-loaded and constructed with ConfigBag or no-arg constructor)");
 
     public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
     
