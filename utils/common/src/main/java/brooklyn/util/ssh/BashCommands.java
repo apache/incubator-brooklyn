@@ -433,7 +433,7 @@ public class BashCommands {
         
         List<String> commands = new ArrayList<String>();
         for (String url : urls) {
-            String command = format("curl -f -L \"%s\"", url);
+            String command = format("curl -f -L -k \"%s\"", url);
             if (saveAs!=null)
                 command = command + format(" -o %s", saveAs);
             commands.add(command);
