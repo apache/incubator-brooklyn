@@ -5,11 +5,13 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.management.openmbean.CompositeData;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.RollingTimeWindowMeanEnricher;
 import brooklyn.enricher.TimeFractionDeltaEnricher;
 import brooklyn.entity.Entity;
@@ -18,7 +20,9 @@ import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.util.math.MathFunctions;
+import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 
@@ -200,12 +204,43 @@ public class JavaAppUtils {
     public static Function<Number, Double> times(final double x) {
         return MathFunctions.times(x);
     }
-        
+
     public static Function<CompositeData, MemoryUsage> compositeDataToMemoryUsage() {
         return new Function<CompositeData, MemoryUsage>() {
             @Override public MemoryUsage apply(CompositeData input) {
                 return (input == null) ? null : MemoryUsage.from(input);
             }
         };
+    }
+
+    private static AtomicBoolean initialized = new AtomicBoolean(false);
+
+    /** Setup renderer hints for the MXBean attributes. */
+    @SuppressWarnings("rawtypes")
+    public static void init() {
+        if (initialized.get()) return;
+        synchronized (initialized) {
+            if (initialized.get()) return;
+
+            RendererHints.register(UsesJavaMXBeans.USED_HEAP_MEMORY, RendererHints.displayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.INIT_HEAP_MEMORY, RendererHints.displayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.MAX_HEAP_MEMORY, RendererHints.displayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.COMMITTED_HEAP_MEMORY, RendererHints.displayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.NON_HEAP_MEMORY_USAGE, RendererHints.displayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.TOTAL_PHYSICAL_MEMORY_SIZE, RendererHints.displayValue(ByteSizeStrings.metric()));
+            RendererHints.register(UsesJavaMXBeans.FREE_PHYSICAL_MEMORY_SIZE, RendererHints.displayValue(ByteSizeStrings.metric()));
+
+            RendererHints.register(UsesJavaMXBeans.START_TIME, RendererHints.displayValue(Time.toDateString()));
+            RendererHints.register(UsesJavaMXBeans.UP_TIME, RendererHints.displayValue(Duration.millisToStringRounded()));
+            RendererHints.register(UsesJavaMXBeans.PROCESS_CPU_TIME, RendererHints.displayValue(Duration.millisToStringRounded()));
+            RendererHints.register(UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_LAST, RendererHints.displayValue(Duration.millisToStringRounded()));
+            RendererHints.register(UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_IN_WINDOW, RendererHints.displayValue(Duration.millisToStringRounded()));
+
+            initialized.set(true);
+        }
+    }
+
+    static {
+        init();
     }
 }

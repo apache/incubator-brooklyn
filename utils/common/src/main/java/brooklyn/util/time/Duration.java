@@ -5,6 +5,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
@@ -125,8 +128,26 @@ public class Duration implements Comparable<Duration> {
     public static Duration nanos(Number n) {
         return new Duration( n.longValue(), TimeUnit.NANOSECONDS );
     }
-    
-    
+
+    public static Function<Number, String> millisToStringRounded() { return millisToStringRounded; }
+    private static Function<Number, String> millisToStringRounded = new Function<Number, String>() {
+            @Override
+            @Nullable
+            public String apply(@Nullable Number input) {
+                if (input == null) return null;
+                return Duration.millis(input).toStringRounded();
+            }
+        };
+
+    public static Function<Number, String> secondsToStringRounded() { return secondsToStringRounded; }
+    private static Function<Number, String> secondsToStringRounded = new Function<Number, String>() {
+            @Override
+            @Nullable
+            public String apply(@Nullable Number input) {
+                if (input == null) return null;
+                return Duration.seconds(input).toStringRounded();
+            }
+        };
 
     /** tries to convert given object to a Duration, parsing strings, treating numbers as millis, etc;
      * throws IAE if not convertible */

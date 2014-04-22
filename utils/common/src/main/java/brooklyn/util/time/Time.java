@@ -14,9 +14,12 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
 
 public class Time {
@@ -40,6 +43,16 @@ public class Time {
 		return new SimpleDateFormat(DATE_FORMAT_PREFERRED).format(new Date(date));
 	}
 
+    public static Function<Long, String> toDateString() { return dateString; }
+    private static Function<Long, String> dateString = new Function<Long, String>() {
+            @Override
+            @Nullable
+            public String apply(@Nullable Long input) {
+                if (input == null) return null;
+                return Time.makeDateString(input);
+            }
+        };
+
     /** returns the current time in YYYYMMDD-HHMMSSmss format */
     public static String makeDateStampString() {
         return makeDateStampString(System.currentTimeMillis());
@@ -49,6 +62,16 @@ public class Time {
     public static String makeDateStampString(long date) {
         return new SimpleDateFormat(DATE_FORMAT_STAMP).format(new Date(date));
     }
+
+    public static Function<Long, String> toDateStampString() { return dateStampString; }
+    private static Function<Long, String> dateStampString = new Function<Long, String>() {
+            @Override
+            @Nullable
+            public String apply(@Nullable Long input) {
+                if (input == null) return null;
+                return Time.makeDateStampString(input);
+            }
+        };
 
     /** @see #makeTimeString(long, boolean) */
     public static String makeTimeStringExact(long t, TimeUnit unit) {
@@ -183,7 +206,27 @@ public class Time {
 		if (ns>0) result += ns+"ns";
 		return Strings.removeAllFromEnd(result, " ");
 	}
-	
+
+    public static Function<Long, String> toTimeString() { return timeString; }
+    private static Function<Long, String> timeString = new Function<Long, String>() {
+            @Override
+            @Nullable
+            public String apply(@Nullable Long input) {
+                if (input == null) return null;
+                return Time.makeTimeStringExact(input);
+            }
+        };
+
+    public static Function<Long, String> toTimeStringRounded() { return timeStringRounded; }
+    private static Function<Long, String> timeStringRounded = new Function<Long, String>() {
+            @Override
+            @Nullable
+            public String apply(@Nullable Long input) {
+                if (input == null) return null;
+                return Time.makeTimeStringRounded(input);
+            }
+        };
+
 	private static String toDecimal(long intPart, double fracPart, int decimalPrecision) {
 		long powTen = 1;
 		for (int i=0; i<decimalPrecision; i++) powTen *= 10;

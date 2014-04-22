@@ -17,6 +17,10 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJavaApp {
 
+    static {
+        JavaAppUtils.init();
+    }
+
     private static final Logger log = LoggerFactory.getLogger(VanillaJavaApp.class);
 
     @SetFromFlag

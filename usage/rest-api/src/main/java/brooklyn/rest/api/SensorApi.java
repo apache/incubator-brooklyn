@@ -1,16 +1,39 @@
+/*
+ * Copyright 2013-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.rest.api;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.SensorSummary;
+
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import java.util.List;
-import java.util.Map;
 
 @Path("/v1/applications/{application}/entities/{entity}/sensors")
 @Apidoc("Entity Sensors")
@@ -39,7 +62,9 @@ public interface SensorApi {
           @ApiParam(value = "Application ID or name", required = true)
           @PathParam("application") final String application,
           @ApiParam(value = "Entity ID or name", required = true)
-          @PathParam("entity") final String entityToken
+          @PathParam("entity") final String entityToken,
+          @ApiParam(value = "Return raw sensor data instead of display values", required = false)
+          @QueryParam("raw") @DefaultValue("false") final Boolean raw
       ) ;
 
   @GET
@@ -55,7 +80,9 @@ public interface SensorApi {
           @ApiParam(value = "Entity ID or name", required = true)
           @PathParam("entity") final String entityToken,
           @ApiParam(value = "Sensor name", required = true)
-          @PathParam("sensor") String sensorName
+          @PathParam("sensor") String sensorName,
+          @ApiParam(value = "Return raw sensor data instead of display values", required = false)
+          @QueryParam("raw") @DefaultValue("false") final Boolean raw
   ) ;
 
   @GET
@@ -70,7 +97,9 @@ public interface SensorApi {
           @ApiParam(value = "Entity ID or name", required = true)
           @PathParam("entity") final String entityToken,
           @ApiParam(value = "Sensor name", required = true)
-          @PathParam("sensor") String sensorName
+          @PathParam("sensor") String sensorName,
+          @ApiParam(value = "Return raw sensor data instead of display values", required = false)
+          @QueryParam("raw") @DefaultValue("false") final Boolean raw
   ) ;
 
 }

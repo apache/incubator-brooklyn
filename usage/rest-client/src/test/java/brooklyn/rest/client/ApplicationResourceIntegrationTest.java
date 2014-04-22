@@ -1,13 +1,9 @@
 package brooklyn.rest.client;
 
 import static brooklyn.rest.BrooklynRestApiLauncher.startServer;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 
 import java.util.Collection;
-import java.util.List;
 
 import javax.ws.rs.core.Response;
 
@@ -32,7 +28,6 @@ import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.EntitySummary;
-import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.domain.SensorSummary;
 
 import com.google.common.base.Predicate;
@@ -97,7 +92,7 @@ public class ApplicationResourceIntegrationTest {
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 1);
         String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
-        while (!api.getSensorApi().get("redis-app", entityId, "service.state").equals(Lifecycle.RUNNING.toString())) {
+        while (!api.getSensorApi().get("redis-app", entityId, "service.state", false).equals(Lifecycle.RUNNING.toString())) {
             Thread.sleep(100);
         }
     }
@@ -108,7 +103,7 @@ public class ApplicationResourceIntegrationTest {
         Response response = api.getApplicationApi().create(legacyRedisSpec);
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 2);
-        while (!api.getSensorApi().get("redis-legacy-app", "redis-ent", "service.state").equals(Lifecycle.RUNNING.toString())) {
+        while (!api.getSensorApi().get("redis-legacy-app", "redis-ent", "service.state", false).equals(Lifecycle.RUNNING.toString())) {
             Thread.sleep(100);
         }
         // Tear the app down so it doesn't interfere with other tests 
@@ -144,7 +139,7 @@ public class ApplicationResourceIntegrationTest {
 
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
-        while (!api.getSensorApi().get("redis-app", entityId, "service.state").equals(Lifecycle.STOPPED.toString())) {
+        while (!api.getSensorApi().get("redis-app", entityId, "service.state", false).equals(Lifecycle.STOPPED.toString())) {
             Thread.sleep(5000);
         }
     }
