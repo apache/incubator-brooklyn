@@ -24,14 +24,19 @@ GO LIVE (SNAPSHOT)
 ------------------
 
 to make the docs live you build.sh then push _site to github brooklyncentral/brooklyncentral.github.com
-the following instructions cover this, assuming brooklyncentral.github.com is a sibling dir to the brooklyn project
+the following instructions cover this, assuming brooklyncentral.github.com is a sibling dir to the brooklyn project,
+and you are in the docs dir
+
 
 updating a snapshot version, in /v/VERSION/ on the server:
-
 
 export TARGET=`pwd -P`/../../brooklyncentral.github.com
 export BV=0.7.0-SNAPSHOT   # BROOKLYN_VERSION
 
+# make sure repo is at latest
+pushd $TARGET
+git pull
+popd
 
 # build, copy
 if [ ! -f $TARGET/index.html ] ; then echo "could not find docs in $TARGET" ; exit 1 ; fi
