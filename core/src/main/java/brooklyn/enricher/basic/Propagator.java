@@ -16,11 +16,13 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
 public class Propagator extends AbstractEnricher implements SensorEventListener<Object> {
@@ -28,12 +30,19 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(Propagator.class);
 
+    @SetFromFlag("producer")
     public static ConfigKey<Entity> PRODUCER = ConfigKeys.newConfigKey(Entity.class, "enricher.producer");
 
+    @SetFromFlag("propagatingAllBut")
     public static ConfigKey<Collection<Sensor<?>>> PROPAGATING_ALL_BUT = ConfigKeys.newConfigKey(new TypeToken<Collection<Sensor<?>>>() {}, "enricher.propagating.propagatingAllBut");
 
+    @SetFromFlag("propagatingAll")
     public static ConfigKey<Boolean> PROPAGATING_ALL = ConfigKeys.newBooleanConfigKey("enricher.propagating.propagatingAll");
 
+    @SetFromFlag("propagating")
+    public static ConfigKey<Collection<? extends Sensor<?>>> PROPAGATING = ConfigKeys.newConfigKey(new TypeToken<Collection<? extends Sensor<?>>>() {}, "enricher.propagating.inclusions");
+
+    @SetFromFlag("sensorMapping")
     public static ConfigKey<Map<? extends Sensor<?>, ? extends Sensor<?>>> SENSOR_MAPPING = ConfigKeys.newConfigKey(new TypeToken<Map<? extends Sensor<?>, ? extends Sensor<?>>>() {}, "enricher.propagating.sensorMapping");
 
     protected Entity producer;
@@ -48,8 +57,26 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
     @Override
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
+        
         this.producer = getConfig(PRODUCER) == null ? entity : getConfig(PRODUCER);
-        if (getConfig(PROPAGATING_ALL_BUT) == null) {
+        if (getConfig(PROPAGATING) != null) {
+            Map<Sensor<?>, Sensor<?>> sensorMappingTemp = Maps.newLinkedHashMap();
+            if (getConfig(SENSOR_MAPPING) != null) {
+                sensorMappingTemp.putAll(getConfig(SENSOR_MAPPING));
+            }
+            for (Sensor<?> sensor : getConfig(PROPAGATING)) {
+                if (!sensorMappingTemp.containsKey(sensor)) {
+                    sensorMappingTemp.put(sensor, sensor);
+                }
+            }
+            this.sensorMapping = ImmutableMap.copyOf(sensorMappingTemp);
+            this.propagatingAll = false;
+            this.sensorFilter = new Predicate<Sensor<?>>() {
+                @Override public boolean apply(Sensor<?> input) {
+                    return input != null && sensorMapping.keySet().contains(input);
+                }
+            };
+        } else if (getConfig(PROPAGATING_ALL_BUT) == null) {
             this.sensorMapping = getConfig(SENSOR_MAPPING) == null ? ImmutableMap.<Sensor<?>, Sensor<?>>of() : getConfig(SENSOR_MAPPING);
             this.propagatingAll = Boolean.TRUE.equals(getConfig(PROPAGATING_ALL));
             this.sensorFilter = Predicates.alwaysTrue();

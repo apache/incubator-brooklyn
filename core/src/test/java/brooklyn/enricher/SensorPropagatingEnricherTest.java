@@ -6,6 +6,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
@@ -14,6 +15,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -22,6 +24,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.javalang.AtomicReferences;
 
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class SensorPropagatingEnricherTest {
@@ -145,5 +148,45 @@ public class SensorPropagatingEnricherTest {
         // name propagated as different attribute
         entity.setAttribute(TestEntity.NAME, "foo");
         EntityTestUtils.assertAttributeEqualsEventually(app, ANOTHER_ATTRIBUTE, "foo");
+    }
+    
+    @Test
+    public void testEnricherSpecPropagatesSpecificSensor() {
+        app.addEnricher(EnricherSpec.create(Propagator.class)
+                .configure(MutableMap.builder()
+                        .putIfNotNull(Propagator.PRODUCER, entity)
+                        .putIfNotNull(Propagator.PROPAGATING, ImmutableList.of(TestEntity.NAME))
+                        .build()));
+
+        // name propagated
+        entity.setAttribute(TestEntity.NAME, "foo");
+        EntityTestUtils.assertAttributeEqualsEventually(app, TestEntity.NAME, "foo");
+        
+        // sequence not propagated
+        entity.setAttribute(TestEntity.SEQUENCE, 2);
+        EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 100), app, TestEntity.SEQUENCE, null);
+    }
+    
+    @Test
+    public void testEnricherSpecPropagatesSpecificSensorAndMapsOthers() {
+        final AttributeSensor<String> ANOTHER_ATTRIBUTE = Sensors.newStringSensor("another.attribute", "");
+        
+        app.addEnricher(EnricherSpec.create(Propagator.class)
+                .configure(MutableMap.builder()
+                        .putIfNotNull(Propagator.PRODUCER, entity)
+                        .putIfNotNull(Propagator.SENSOR_MAPPING, ImmutableMap.of(TestEntity.NAME, ANOTHER_ATTRIBUTE))
+                        .putIfNotNull(Propagator.PROPAGATING, ImmutableList.of(TestEntity.SEQUENCE))
+                        .build()));
+
+        // name propagated as alternative sensor
+        entity.setAttribute(TestEntity.NAME, "foo");
+        EntityTestUtils.assertAttributeEqualsEventually(app, ANOTHER_ATTRIBUTE, "foo");
+        
+        // sequence also propagated
+        entity.setAttribute(TestEntity.SEQUENCE, 2);
+        EntityTestUtils.assertAttributeEqualsEventually(app, TestEntity.SEQUENCE, 2);
+
+        // name not propagated as original sensor
+        EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 100), app, TestEntity.NAME, null);
     }
 }
