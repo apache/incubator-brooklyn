@@ -97,9 +97,9 @@ public class Enrichers {
             this.aggregating = aggregating;
         }
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        public <T2 extends T, B2 extends AggregatorBuilder<S, T2, B2>> AggregatorBuilder<S, T2, B2> publishing(AttributeSensor<T2> val) {
+        public <T2 extends T, B2 extends AggregatorBuilder<S, T2, B2>> B2 publishing(AttributeSensor<T2> val) {
             this.publishing = (AttributeSensor) checkNotNull(val);
-            return (AggregatorBuilder<S, T2, B2>) self();
+            return (B2) self();
         }
         public B from(Entity val) {
             this.fromEntity = checkNotNull(val);
