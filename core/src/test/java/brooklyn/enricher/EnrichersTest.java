@@ -188,7 +188,7 @@ public class EnrichersTest {
                 .publishing(SET1)
                 .fromMembers()
                 .excludingBlank()
-                .computing(new Function<Collection<?>, Set<Object>>() {
+                .computing((Function) new Function<Collection<?>, Set<Object>>() {
                     @Override public Set<Object> apply(Collection<?> input) {
                         // accept null values, so don't use ImmutableSet
                         return (input == null) ? ImmutableSet.<Object>of() : MutableSet.<Object>copyOf(input);
@@ -216,7 +216,7 @@ public class EnrichersTest {
                 .publishing(SET1)
                 .fromMembers()
                 .excludingBlank()
-                .computing(new Function<Collection<?>, Set<Object>>() {
+                .computing((Function) new Function<Collection<?>, Set<Object>>() {
                     @Override public Set<Object> apply(Collection<?> input) {
                         // accept null values, so don't use ImmutableSet
                         return (input == null) ? ImmutableSet.<Object>of() : MutableSet.<Object>copyOf(input);
