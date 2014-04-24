@@ -27,7 +27,6 @@ import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.time.Time;
-import ch.qos.logback.classic.pattern.CallerDataConverter;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
