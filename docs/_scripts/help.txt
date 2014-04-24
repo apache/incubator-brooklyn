@@ -9,76 +9,8 @@ _scripts/build.sh
     will build the site in _site including javadoc for offline browsing
 
 
+Release Process
+===============
 
-###############################################################################
-# Deprecation Warning                                                         #
-#                                                                             #
-# The following content has been superseded, and will be removed shortly      #
-# Please view /dev/tips/release.md or see:                                    #
-# http://brooklyncentral.github.io/v/0.6.0-SNAPSHOT/dev/tips/release.html     #
-#                                                                             #
-###############################################################################
-
-
-GO LIVE (SNAPSHOT)
-------------------
-
-to make the docs live you build.sh then push _site to github brooklyncentral/brooklyncentral.github.com
-the following instructions cover this, assuming brooklyncentral.github.com is a sibling dir to the brooklyn project
-
-updating a snapshot version, in /v/VERSION/ on the server:
-
-
-export TARGET=`pwd -P`/../../brooklyncentral.github.com
-export BV=0.7.0-M1   # BROOKLYN_VERSION
-
-
-# build, copy
-if [ ! -f $TARGET/index.html ] ; then echo "could not find docs in $TARGET" ; exit 1 ; fi
-_scripts/build.sh || { echo "failed to build docs" ; exit 1 ; }
-rm -rf $TARGET/v/$BV
-mkdir $TARGET/v/$BV
-cp -r _site/* $TARGET/v/$BV/
-
-# and push
-pushd $TARGET
-git add -A .
-git commit -m "updated version docs for version $BV"
-git push
-popd
-
-
-RELEASE
--------
-
-when we do a RELEASE we must run the above for e.g. BV=0.4.0
-AND must update the files in the root dir of brooklyncentral.github.com
-
-the commands below do this (basically like the process above but 
-with / in place of /v/$BV and overriding url in _config.yml 
-with the --url arg below):
-
-
-# remove old root files
-pushd $TARGET
-if [ -f start/index.html ] ; then
-  for x in * ; do if [[ $x != "v" ]] ; then rm -rf $x ; fi ; done
-else
-  echo IN WRONG DIRECTORY $TARGET - export TARGET to continue
-  exit 1
-fi
-popd
-
-# build for hosting of / rather than /v/VERSION/
-_scripts/build.sh --url "" || { echo "failed to build docs" ; exit 1 ; }
-cp -r _site/* $TARGET/
-
-# and git push
-pushd $TARGET
-git add -A .
-git commit -m "updated root docs for version $BV"
-git push
-popd
-
-
-// END
+Docs release instructions can be found at:
+http://brooklyncentral.github.io/dev/tips/release.html
