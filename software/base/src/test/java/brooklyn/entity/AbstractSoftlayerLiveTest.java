@@ -1,5 +1,16 @@
 package brooklyn.entity;
 
+import java.util.List;
+import java.util.Map;
+
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import com.google.common.base.CaseFormat;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
@@ -8,15 +19,6 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
-import com.google.common.base.CaseFormat;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Runs a test with many different distros and versions.
@@ -72,7 +74,7 @@ public abstract class AbstractSoftlayerLiveTest {
     @Test(groups = {"Live"})
     public void test_Centos_6_0() throws Exception {
       // Image: {id=CENTOS_6_64, providerId=CENTOS_6_64, os={family=centos, version=6.5, description=CentOS / CentOS / 6.5-64 LAMP for Bare Metal, is64Bit=true}, description=CENTOS_6_64, status=AVAILABLE, loginUser=root}
-        runTest(ImmutableMap.<String,Object>of("imageId", "CENTOS_^_64"));
+        runTest(ImmutableMap.<String,Object>of("imageId", "CENTOS_6_64"));
     }
     
     protected void runTest(Map<String,?> flags) throws Exception {
