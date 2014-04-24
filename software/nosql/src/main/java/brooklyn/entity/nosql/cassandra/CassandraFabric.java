@@ -14,8 +14,11 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
+import brooklyn.location.Location;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Multimap;
+import com.google.common.reflect.TypeToken;
 
 /**
  * A fabric of {@link CassandraNode}s, which forms a cluster spanning multiple locations.
@@ -34,6 +37,11 @@ public interface CassandraFabric extends DynamicFabric {
             "Initial fabric quorum size - number of initial nodes that must have been successfully started " +
             "to report success (if less than 0, then use a value based on INITIAL_SIZE of clusters)",
             -1);
+    
+    @SuppressWarnings("serial")
+    ConfigKey<Function<Location, String>> DATA_CENTER_NAMER = ConfigKeys.newConfigKey(new TypeToken<Function<Location, String>>(){}, 
+            "cassandra.fabric.datacenter.namer",
+            "Function used to provide the cassandra.replication.datacenterName for a given location");
 
     int DEFAULT_SEED_QUORUM = 5;
     

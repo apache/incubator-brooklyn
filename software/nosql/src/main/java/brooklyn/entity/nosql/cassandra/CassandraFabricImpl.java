@@ -27,10 +27,13 @@ import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.time.Time;
+import ch.qos.logback.classic.pattern.CallerDataConverter;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
@@ -277,6 +280,18 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
             return EntitySpec.create(custom)
                     .configure(CassandraDatacenter.SEED_SUPPLIER, getSeedSupplier());
         }
+    }
+    
+    @Override
+    protected Entity createCluster(Location location, Map flags) {
+        Function<Location, String> dataCenterNamer = getConfig(DATA_CENTER_NAMER);
+        if (dataCenterNamer != null) {
+            flags = ImmutableMap.builder()
+                .putAll(flags)
+                .put(CassandraNode.DATACENTER_NAME, dataCenterNamer.apply(location))
+                .build();
+        }
+        return super.createCluster(location, flags);
     }
 
     /**
