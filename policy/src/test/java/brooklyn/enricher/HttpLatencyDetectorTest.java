@@ -57,13 +57,30 @@ public class HttpLatencyDetectorTest {
     }
     
     @Test(groups="Integration")
-    public void testWaitsThenPolls() throws Exception {
-        entity.addEnricher(HttpLatencyDetector.builder().
-                url(TEST_URL).
-                noServiceUp().
-                rollup(500, TimeUnit.MILLISECONDS).
-                period(100, TimeUnit.MILLISECONDS).
-                build());
+    public void testPollsUrl() throws Exception {
+        entity.setAttribute(TestEntity.SERVICE_UP, true);
+        
+        entity.addEnricher(HttpLatencyDetector.builder()
+                .url(baseUrl)
+                .rollup(500, TimeUnit.MILLISECONDS)
+                .period(100, TimeUnit.MILLISECONDS)
+                .build());
+        
+        EntityTestUtils.assertAttributeEventuallyNonNull(entity, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT); 
+        EntityTestUtils.assertAttributeEventuallyNonNull(entity, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW); 
+
+        log.info("Latency to "+entity.getAttribute(TEST_URL)+" is "+entity.getAttribute(HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT));
+        log.info("Mean latency to "+entity.getAttribute(TEST_URL)+" is "+entity.getAttribute(HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW));
+    }
+    
+    @Test(groups="Integration")
+    public void testWaitsForSensorThenPolls() throws Exception {
+        entity.addEnricher(HttpLatencyDetector.builder()
+                .url(TEST_URL)
+                .noServiceUp()
+                .rollup(500, TimeUnit.MILLISECONDS)
+                .period(100, TimeUnit.MILLISECONDS)
+                .build());
         
         // nothing until url is set
         EntityTestUtils.assertAttributeEqualsContinually(
@@ -77,5 +94,24 @@ public class HttpLatencyDetectorTest {
 
         log.info("Latency to "+entity.getAttribute(TEST_URL)+" is "+entity.getAttribute(HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT));
         log.info("Mean latency to "+entity.getAttribute(TEST_URL)+" is "+entity.getAttribute(HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW));
+    }
+    
+    @Test(groups="Integration")
+    public void testWaitsForServiceUp() throws Exception {
+        entity.setAttribute(TestEntity.SERVICE_UP, false);
+        
+        entity.addEnricher(HttpLatencyDetector.builder()
+                .url(baseUrl)
+                .period(100, TimeUnit.MILLISECONDS)
+                .build());
+        
+        // nothing until url is set
+        EntityTestUtils.assertAttributeEqualsContinually(
+                MutableMap.of("timeout", 200), 
+                entity, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT, null);
+        
+        // gets value after url is set, and gets rolling average
+        entity.setAttribute(TestEntity.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEventuallyNonNull(entity, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT); 
     }
 }
