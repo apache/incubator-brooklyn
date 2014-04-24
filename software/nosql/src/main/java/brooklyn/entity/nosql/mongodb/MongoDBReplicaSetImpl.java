@@ -293,7 +293,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 .publishing(MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT)
                 .fromMembers()
                 .valueToReportIfNoSensors(null)
-                .computing((Function) new Function<Collection<String>,String>() {
+                .computing(new Function<Collection<String>, String>() {
                         @Override
                         public String apply(Collection<String> input) {
                             if (input==null || input.isEmpty()) return null;
@@ -312,7 +312,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 .publishing(REPLICA_SET_ENDPOINTS)
                 .fromMembers()
                 .valueToReportIfNoSensors(null)
-                .computing((Function) new Function<Collection<String>,List<String>>() {
+                .computing(new Function<Collection<String>, List<String>>() {
                         @Override
                         public List<String> apply(Collection<String> input) {
                             Set<String> endpoints = new TreeSet<String>();
