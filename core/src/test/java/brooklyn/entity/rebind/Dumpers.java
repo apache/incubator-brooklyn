@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.collections.Lists;
 import org.testng.collections.Maps;
 
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Serializers;
 import brooklyn.util.javalang.Serializers.ObjectReplacer;
@@ -106,7 +107,16 @@ public class Dumpers {
         for (Map.Entry<List<Object>, Class<?>> entry : unserializablePaths.entrySet()) {
             StringBuilder msg = new StringBuilder("\t"+"type="+entry.getValue()+"; chain="+"\n");
             for (Object chainElement : entry.getKey()) {
-                msg.append("\t\t"+"type=").append(chainElement.getClass()).append("; val=").append(chainElement).append("\n");
+                // try-catch motivated by NPE in org.jclouds.domain.LoginCredentials.toString
+                String chainElementStr;
+                try {
+                    chainElementStr = chainElement.toString();
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    LOG.error("Error calling toString on instance of "+chainElement.getClass(), e);
+                    chainElementStr = "<error "+e.getClass().getSimpleName()+" in toString>";
+                }
+                msg.append("\t\t"+"type=").append(chainElement.getClass()).append("; val=").append(chainElementStr).append("\n");
             }
             LOG.warn(msg.toString());
         }
