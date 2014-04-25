@@ -213,7 +213,7 @@ public class JavaAppUtils {
         };
     }
 
-    private static AtomicBoolean initialized = new AtomicBoolean(false);
+    private static final AtomicBoolean initialized = new AtomicBoolean(false);
 
     /** Setup renderer hints for the MXBean attributes. */
     @SuppressWarnings("rawtypes")
