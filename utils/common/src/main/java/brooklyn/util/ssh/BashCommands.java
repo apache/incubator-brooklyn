@@ -437,7 +437,7 @@ public class BashCommands {
         
         List<String> commands = new ArrayList<String>();
         for (String url : urls) {
-            String command = "curl -f -L ";
+            String command = "curl -f -L -k ";
             if (user!=null && password!=null) {
                command = command + format("-u %s:%s ", user, password);
             }
