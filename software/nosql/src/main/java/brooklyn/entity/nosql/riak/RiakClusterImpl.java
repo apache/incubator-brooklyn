@@ -39,7 +39,6 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
 
     @Override
     public void start(Collection<? extends Location> locations) {
-
         super.start(locations);
         connectSensors();
     }
@@ -80,6 +79,9 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 new Object[]{this, member, member.getLocations()});
 
         if (belongsInServerPool(member)) {
+            // TODO can we discover the nodes by asking the riak cluster, rather than assuming what we add will be in there?
+            // TODO and can we do join as part of node starting?
+            
             Map<Entity, String> nodes = getAttribute(RIAK_CLUSTER_NODES);
             if (nodes == null) nodes = Maps.newLinkedHashMap();
             String riakName = getRiakName(member);

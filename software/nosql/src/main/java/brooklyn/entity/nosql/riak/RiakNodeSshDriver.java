@@ -1,6 +1,11 @@
 package brooklyn.entity.nosql.riak;
 
-import static brooklyn.util.ssh.BashCommands.*;
+import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
+import static brooklyn.util.ssh.BashCommands.INSTALL_TAR;
+import static brooklyn.util.ssh.BashCommands.alternatives;
+import static brooklyn.util.ssh.BashCommands.chainGroup;
+import static brooklyn.util.ssh.BashCommands.commandToDownloadUrlAs;
+import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -8,11 +13,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
@@ -22,9 +22,14 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
-import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 // TODO: Alter -env ERL_CRASH_DUMP path in vm.args
 public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implements RiakNodeDriver {
@@ -43,6 +48,15 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         return RiakNodeImpl.class.cast(super.getEntity());
     }
 
+    @Override
+    public Map<String, String> getShellEnvironment() {
+        MutableMap<String, String> result = MutableMap.copyOf(super.getShellEnvironment());
+        // how to change epmd port, according to 
+        // http://serverfault.com/questions/582787/how-to-change-listening-interface-of-rabbitmqs-epmd-port-4369
+        result.put("ERL_EPMD_PORT", ""+getEntity().getEpmdListenerPort());
+        return result;
+    }
+    
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
@@ -109,24 +123,24 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     @Override
     public void customize() {
+        //create entity's runDir
+        newScript(CUSTOMIZING).execute();
 
         isRiakOnPath = isPackageInstall ? isRiakOnPath() : true;
 
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
+        
         List<String> commands = Lists.newLinkedList();
 
         String vmArgsTemplate = processTemplate(entity.getConfig(RiakNode.RIAK_VM_ARGS_TEMPLATE_URL));
         String saveAsVmArgs = Urls.mergePaths(getRunDir(), "vm.args");
-        //create entity's runDir
-        newScript(CUSTOMIZING).execute();
+        DynamicTasks.queueIfPossible(SshEffectorTasks.put(saveAsVmArgs).contents(vmArgsTemplate));
+        commands.add(sudo("mv " + saveAsVmArgs + " " + getRiakEtcDir()));
 
-
-        DynamicTasks.queueIfPossible(SshEffectorTasks.put(saveAsVmArgs)
-                .contents(Streams.newInputStreamWithContents(vmArgsTemplate))
-                .machine(getMachine())
-                .summary("sending the vm.args file to the riak node"));
-
-        commands.add(sudo("mv " + saveAsVmArgs + " " + getEtcDir()));
+        String appConfigTemplate = processTemplate(entity.getConfig(RiakNode.RIAK_APP_CONFIG_TEMPLATE_URL));
+        String saveAsAppConfig = Urls.mergePaths(getRunDir(), "app.config");
+        DynamicTasks.queueIfPossible(SshEffectorTasks.put(saveAsAppConfig).contents(appConfigTemplate));
+        commands.add(sudo("mv " + saveAsAppConfig + " " + getRiakEtcDir()));
 
         //increase open file limit (default min for riak is: 4096)
         //TODO: detect the actual limit then do the modificaiton.
@@ -137,10 +151,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         } else if (osDetails.isLinux()) {
             commands.add(sudo("chown riak:riak " + getVmArgsLocation()));
         }
-
-        //FIXME EC2 requires to configure the private IP in order for the riak node to work.
-        //replace instances of 127.0.0.1 with the actual hostname in the app.config and vm.args files
-        commands.add(sudo(format("sed -i -e \"s/127.0.0.1/%s/g\" %s", getPrivateIp(), getAppConfigLocation())));
 
         ScriptHelper customizeScript = newScript(CUSTOMIZING)
                 .failOnNonZeroResultCode()
@@ -216,7 +226,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     }
 
-    public String getEtcDir() {
+    public String getRiakEtcDir() {
         return isPackageInstall ? "/etc/riak" : Urls.mergePaths(getExpandedInstallDir(), "etc");
     }
 
@@ -229,7 +239,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     }
 
     private String getAppConfigLocation() {
-        return Urls.mergePaths(getEtcDir(), "app.config");
+        return Urls.mergePaths(getRiakEtcDir(), "app.config");
     }
 
     @Override
@@ -328,7 +338,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     }
 
     private String getVmArgsLocation() {
-        return Urls.mergePaths(getEtcDir(), "vm.args");
+        return Urls.mergePaths(getRiakEtcDir(), "vm.args");
     }
 
     private String getPrivateIp() {
