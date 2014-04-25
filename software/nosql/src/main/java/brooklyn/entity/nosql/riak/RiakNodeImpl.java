@@ -16,7 +16,7 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.jclouds.JcloudsLocationConfig;
+import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 
@@ -45,6 +45,27 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         Entities.getRequiredUrlConfig(this, RIAK_APP_CONFIG_TEMPLATE_URL);
     }
     
+    @Override
+    protected Map<String, Object> obtainProvisioningFlags(@SuppressWarnings("rawtypes") MachineProvisioningLocation location) {
+        ConfigBag result = ConfigBag.newInstance( super.obtainProvisioningFlags(location) );
+        result.configure(CloudLocationConfig.OS_64_BIT, true);
+        return result.getAllConfig();
+    }
+    
+    @Override
+    protected Collection<Integer> getRequiredOpenPorts() {
+        // TODO this creates a huge list of inbound ports; much better to define on a security group using range syntax!
+        int erlangRangeStart = getConfig(ERLANG_PORT_RANGE_START).iterator().next();
+        int erlangRangeEnd = getConfig(ERLANG_PORT_RANGE_END).iterator().next();
+        
+        Set<Integer> newPorts = MutableSet.<Integer>copyOf( super.getRequiredOpenPorts() );
+        newPorts.remove(erlangRangeStart);
+        newPorts.remove(erlangRangeEnd);
+        for (int i=erlangRangeStart; i<=erlangRangeEnd; i++)
+            newPorts.add(i);
+        return newPorts;
+    }
+
     public void connectSensors() {
         super.connectSensors();
         connectServiceUpIsRunning();
@@ -109,27 +130,6 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
                 .build();
 
         WebAppServiceMethods.connectWebAppServerPolicies(this);
-    }
-
-    @Override
-    protected Map<String, Object> obtainProvisioningFlags(@SuppressWarnings("rawtypes") MachineProvisioningLocation location) {
-        ConfigBag result = ConfigBag.newInstance( super.obtainProvisioningFlags(location) );
-        result.configure(JcloudsLocationConfig.OS_64_BIT, true);
-        return result.getAllConfig();
-    }
-    
-    @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
-        // TODO this creates a huge list of inbound ports; much better to define on a security group using range syntax!
-        int erlangRangeStart = getConfig(ERLANG_PORT_RANGE_START).iterator().next();
-        int erlangRangeEnd = getConfig(ERLANG_PORT_RANGE_END).iterator().next();
-        
-        Set<Integer> newPorts = MutableSet.<Integer>copyOf( super.getRequiredOpenPorts() );
-        newPorts.remove(erlangRangeStart);
-        newPorts.remove(erlangRangeEnd);
-        for (int i=erlangRangeStart; i<=erlangRangeEnd; i++)
-            newPorts.add(i);
-        return newPorts;
     }
 
     public void disconnectSensors() {

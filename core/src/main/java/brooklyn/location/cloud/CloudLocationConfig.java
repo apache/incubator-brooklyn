@@ -52,5 +52,13 @@ public interface CloudLocationConfig {
     public static final ConfigKey<Object> INBOUND_PORTS = new BasicConfigKey<Object>(Object.class, "inboundPorts", 
         "Inbound ports to be applied when creating a VM, on supported clouds " +
             "(either a single port as a String, or an Iterable<Integer> or Integer[])", null);
-    
+    public static final ConfigKey<Boolean> OS_64_BIT = ConfigKeys.newBooleanConfigKey("os64Bit", 
+        "Whether to require 64-bit OS images (true), 32-bit images (false), or either (null)");
+    public static final ConfigKey<Integer> MIN_RAM = new BasicConfigKey<Integer>(Integer.class, "minRam",
+        "Minimum amount of RAM (in MB), for use in selecting the machine/hardware profile", null);
+    public static final ConfigKey<Integer> MIN_CORES = new BasicConfigKey<Integer>(Integer.class, "minCores",
+        "Minimum number of cores, for use in selecting the machine/hardware profile", null);
+    public static final ConfigKey<Double> MIN_DISK = new BasicConfigKey<Double>(Double.class, "minDisk",
+        "Minimum size of disk (in GB), for use in selecting the machine/hardware profile", null);
+
 }

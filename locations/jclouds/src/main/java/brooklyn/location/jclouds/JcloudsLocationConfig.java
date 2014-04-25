@@ -74,14 +74,6 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Whether to stop iptables entirely; " +
             "if true then ssh in to stop the iptables service, as part of machine provisioning", false);
 
-    public static final ConfigKey<Boolean> OS_64_BIT = ConfigKeys.newBooleanConfigKey("os64Bit", 
-            "Whether to require 64-bit OS images (true), 32-bit images (false), or either (null)");
-    public static final ConfigKey<Integer> MIN_RAM = new BasicConfigKey<Integer>(Integer.class, "minRam",
-            "Minimum amount of RAM (in MB), for use in selecting the machine/hardware profile", null);
-    public static final ConfigKey<Integer> MIN_CORES = new BasicConfigKey<Integer>(Integer.class, "minCores",
-            "Minimum number of cores, for use in selecting the machine/hardware profile", null);
-    public static final ConfigKey<Double> MIN_DISK = new BasicConfigKey<Double>(Double.class, "minDisk",
-        "Minimum size of disk (in GB), for use in selecting the machine/hardware profile", null);
     public static final ConfigKey<String> HARDWARE_ID = ConfigKeys.newStringConfigKey("hardwareId",
             "A system-specific identifier for the hardware profile or machine type to be used when creating a VM", null);
     
