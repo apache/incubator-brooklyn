@@ -23,9 +23,11 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.Machines;
+import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -35,7 +37,6 @@ import brooklyn.util.time.Time;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 /**
  * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
@@ -268,14 +269,14 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     protected final void callStartHooks() {}
     
     protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {
-        Map<String,Object> result = Maps.newLinkedHashMap(location.getProvisioningFlags(ImmutableList.of(getClass().getName())));
+        ConfigBag result = ConfigBag.newInstance(location.getProvisioningFlags(ImmutableList.of(getClass().getName())));
         result.putAll(getConfig(PROVISIONING_PROPERTIES));
-        if (result.get("inboundPorts") == null) {
+        if (result.get(CloudLocationConfig.INBOUND_PORTS) == null) {
             Collection<Integer> ports = getRequiredOpenPorts();
-            if (ports != null && ports.size() > 0) result.put("inboundPorts", ports);
+            if (ports != null && ports.size() > 0) result.put(CloudLocationConfig.INBOUND_PORTS, ports);
         }
-        result.put(LocationConfigKeys.CALLER_CONTEXT.getName(), this);
-        return result;
+        result.put(LocationConfigKeys.CALLER_CONTEXT, this);
+        return result.getAllConfigMutable();
     }
 
     /** returns the ports that this entity wants to use;
