@@ -429,13 +429,22 @@ public class BashCommands {
      * and if saveAs is null it downloads it so stdout.
      */
     public static String simpleDownloadUrlAs(List<String> urls, String saveAs) {
+        return simpleDownloadUrlAs(urls, null, null, saveAs);
+    }
+
+    public static String simpleDownloadUrlAs(List<String> urls, String user, String password, String saveAs) {
         if (urls.isEmpty()) throw new IllegalArgumentException("No URLs supplied to download "+saveAs);
         
         List<String> commands = new ArrayList<String>();
         for (String url : urls) {
-            String command = format("curl -f -L -k \"%s\"", url);
-            if (saveAs!=null)
+            String command = "curl -f -L -k ";
+            if (user!=null && password!=null) {
+               command = command + format("-u %s:%s ", user, password);
+            }
+            command = command + format("\"%s\"", url);
+            if (saveAs!=null) {
                 command = command + format(" -o %s", saveAs);
+            }
             commands.add(command);
         }
         return alternatives(commands);
