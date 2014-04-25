@@ -11,20 +11,21 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 
 public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
@@ -38,11 +39,16 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
 
     @Override
     public void start(Collection<? extends Location> locations) {
-
         super.start(locations);
         connectSensors();
     }
 
+    protected EntitySpec<?> getMemberSpec() {
+        EntitySpec<?> result = super.getMemberSpec();
+        if (result!=null) return result;
+        return EntitySpec.create(RiakNode.class);
+    }
+    
     protected void connectSensors() {
 
         Map<String, Object> flags = MutableMap.<String, Object>builder()
@@ -73,6 +79,9 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 new Object[]{this, member, member.getLocations()});
 
         if (belongsInServerPool(member)) {
+            // TODO can we discover the nodes by asking the riak cluster, rather than assuming what we add will be in there?
+            // TODO and can we do join as part of node starting?
+            
             Map<Entity, String> nodes = getAttribute(RIAK_CLUSTER_NODES);
             if (nodes == null) nodes = Maps.newLinkedHashMap();
             String riakName = getRiakName(member);

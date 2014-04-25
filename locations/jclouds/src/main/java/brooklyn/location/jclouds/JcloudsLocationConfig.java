@@ -1,5 +1,14 @@
 package brooklyn.location.jclouds;
 
+import java.io.File;
+import java.util.Collection;
+import java.util.concurrent.Semaphore;
+
+import org.jclouds.Constants;
+import org.jclouds.compute.domain.Image;
+import org.jclouds.compute.domain.TemplateBuilder;
+import org.jclouds.domain.LoginCredentials;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
@@ -9,16 +18,9 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
 import brooklyn.util.internal.ssh.SshTool;
+
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;
-import org.jclouds.Constants;
-import org.jclouds.compute.domain.Image;
-import org.jclouds.compute.domain.TemplateBuilder;
-import org.jclouds.domain.LoginCredentials;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.concurrent.Semaphore;
 
 public interface JcloudsLocationConfig extends CloudLocationConfig {
 
@@ -105,10 +107,6 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Security groups to be applied when creating a VM, on supported clouds " +
             "(either a single group identifier as a String, or an Iterable<String> or String[])", null);
 
-    public static final ConfigKey<Object> INBOUND_PORTS = new BasicConfigKey<Object>(Object.class, "inboundPorts", 
-        "Inbound ports to be applied when creating a VM, on supported clouds " +
-            "(either a single port as a String, or an Iterable<Integer> or Integer[])", null);
-    
     public static final ConfigKey<String> USER_METADATA_STRING = ConfigKeys.newStringConfigKey("userMetadataString", 
         "Arbitrary user data, as a single string, on supported clouds (AWS)", null);
 
@@ -136,6 +134,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<JcloudsLocationCustomizer> JCLOUDS_LOCATION_CUSTOMIZER = ConfigKeys.newConfigKey(JcloudsLocationCustomizer.class,
             "customizer", "Optional location customizer");
 
+    @SuppressWarnings("serial")
     public static final ConfigKey<Collection<JcloudsLocationCustomizer>> JCLOUDS_LOCATION_CUSTOMIZERS = ConfigKeys.newConfigKey(
             new TypeToken<Collection<JcloudsLocationCustomizer>>() {},
             "customizers", "Optional location customizers");
