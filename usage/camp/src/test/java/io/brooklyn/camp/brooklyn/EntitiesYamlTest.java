@@ -28,6 +28,7 @@ import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.test.entity.TestEntity;
@@ -196,6 +197,24 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(object, TestEntity.SEQUENCE);
     }
 
+    @Test
+    public void testSensorOnArbitraryClass() throws Exception {
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", 
+            "  brooklyn.config:",
+            "    test.confObject: $brooklyn:sensor(\"io.brooklyn.camp.brooklyn.EntitiesYamlTest$ArbitraryClassWithSensor\", \"mysensor\")");
+        waitForApplicationTasks(app);
+
+        log.info("App started:");
+        Entities.dumpInfo(app);
+
+        TestEntity entity = (TestEntity) app.getChildren().iterator().next();
+        Object object = entity.getConfig(TestEntity.CONF_OBJECT);
+        Assert.assertEquals(object, ArbitraryClassWithSensor.MY_SENSOR);
+    }
+    public static class ArbitraryClassWithSensor {
+        public static final AttributeSensor MY_SENSOR = Sensors.newStringSensor("mysensor");
+    }
+    
     @Test
     public void testComponent() throws Exception {
         Entity app = createAndStartApplication("test-entity-basic-template.yaml",

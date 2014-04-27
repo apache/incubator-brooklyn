@@ -53,15 +53,22 @@ public class BrooklynDslCommon {
     public static Object sensor(String clazzName, String sensorName) {
         try {
             Class<?> clazz = Class.forName(clazzName);
-            if (!Entity.class.isAssignableFrom(clazz))
-                throw new IllegalArgumentException("Class " + clazzName + " is not an Entity");
-            Sensor<?> sensor = new EntityDynamicType((Class<? extends Entity>) clazz).getSensor(sensorName);
+            Sensor<?> sensor;
+            if (Entity.class.isAssignableFrom(clazz)) {
+                sensor = new EntityDynamicType((Class<? extends Entity>) clazz).getSensor(sensorName);
+            } else {
+                // Some non-entity classes (e.g. ServiceRestarter policy) declare sensors that other
+                // entities/policies/enrichers may wish to reference.
+                Map<String,Sensor<?>> sensors = EntityDynamicType.findSensors((Class)clazz, null);
+                sensor = sensors.get(sensorName);
+            }
             if (sensor == null)
                 throw new IllegalArgumentException("Sensor " + sensorName + " not found on class " + clazzName);
             return sensor;
         } catch (ClassNotFoundException e) {
             throw Exceptions.propagate(e);
         }
+        
     }
 
     public static EntitySpecConfiguration entitySpec(Map<String, Object> arguments) {
