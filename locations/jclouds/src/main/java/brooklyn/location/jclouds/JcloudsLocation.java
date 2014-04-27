@@ -759,6 +759,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         try {
             context = ContextBuilder.newBuilder("docker")
                     .endpoint(machine.getParent().getEndpoint())
+                    .credentials(getIdentity(), getCredential())
                     .modules(ImmutableSet.<Module>of(new SLF4JLoggingModule(), new SshjSshClientModule()))
                     .build(ComputeServiceContext.class);
             DockerApi api = context.unwrapApi(DockerApi.class);
