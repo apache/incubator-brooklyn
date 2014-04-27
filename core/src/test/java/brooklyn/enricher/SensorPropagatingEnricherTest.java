@@ -21,6 +21,7 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AtomicReferences;
 
 import com.google.common.base.Predicates;
@@ -151,7 +152,7 @@ public class SensorPropagatingEnricherTest {
     }
     
     @Test
-    public void testEnricherSpecPropagatesSpecificSensor() {
+    public void testEnricherSpecPropagatesSpecificSensor() throws Exception {
         app.addEnricher(EnricherSpec.create(Propagator.class)
                 .configure(MutableMap.builder()
                         .putIfNotNull(Propagator.PRODUCER, entity)
@@ -168,7 +169,7 @@ public class SensorPropagatingEnricherTest {
     }
     
     @Test
-    public void testEnricherSpecPropagatesSpecificSensorAndMapsOthers() {
+    public void testEnricherSpecPropagatesSpecificSensorAndMapsOthers() throws Exception {
         final AttributeSensor<String> ANOTHER_ATTRIBUTE = Sensors.newStringSensor("another.attribute", "");
         
         app.addEnricher(EnricherSpec.create(Propagator.class)
@@ -188,5 +189,20 @@ public class SensorPropagatingEnricherTest {
 
         // name not propagated as original sensor
         EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 100), app, TestEntity.NAME, null);
+    }
+    
+    @Test
+    public void testEnricherSpecThrowsOnPropagatesAndPropagatesAllSet() throws Exception {
+        try {
+            app.addEnricher(EnricherSpec.create(Propagator.class)
+                    .configure(MutableMap.builder()
+                            .put(Propagator.PRODUCER, entity)
+                            .put(Propagator.PROPAGATING, ImmutableList.of(TestEntity.NAME))
+                            .put(Propagator.PROPAGATING_ALL, true)
+                            .build()));
+        } catch (Exception e) {
+            IllegalStateException ise = Exceptions.getFirstThrowableOfType(e, IllegalStateException.class);
+            if (ise == null) throw e;
+        }
     }
 }

@@ -60,6 +60,10 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
         
         this.producer = getConfig(PRODUCER) == null ? entity : getConfig(PRODUCER);
         if (getConfig(PROPAGATING) != null) {
+            if (Boolean.TRUE.equals(getConfig(PROPAGATING_ALL)) || getConfig(PROPAGATING_ALL_BUT) != null) {
+                throw new IllegalStateException("Propagator enricher "+this+" must not have 'propagating' set at same time as either 'propagatingAll' or 'propagatingAllBut'");
+            }
+            
             Map<Sensor<?>, Sensor<?>> sensorMappingTemp = Maps.newLinkedHashMap();
             if (getConfig(SENSOR_MAPPING) != null) {
                 sensorMappingTemp.putAll(getConfig(SENSOR_MAPPING));

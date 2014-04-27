@@ -150,6 +150,7 @@ public class ResourceUtilsTest {
         assertEquals(utils.getResourceAsString("data:hello world"), "hello world");
     }
     
+    // See https://github.com/brooklyncentral/brooklyn/issues/1338
     @Test(groups={"Integration", "WIP"})
     public void testResourceFromUrlFollowsRedirect() throws Exception {
         String contents = new ResourceUtils(this).getResourceAsString("http://bit.ly/brooklyn-visitors-creation-script");
