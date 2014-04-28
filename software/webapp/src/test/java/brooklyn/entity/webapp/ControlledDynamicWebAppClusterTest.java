@@ -17,6 +17,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.AbstractControllerTest;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
@@ -64,26 +65,27 @@ public class ControlledDynamicWebAppClusterTest {
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
-    @Test(groups="Integration")
+    @Test
     public void testUsesCustomController() {
-        NginxController controller = app.createAndManageChild(EntitySpec.create(NginxController.class).displayName("mycustom"));
+        AbstractController controller = app.createAndManageChild(EntitySpec.create(AbstractControllerTest.TrackingAbstractController.class).displayName("mycustom"));
+
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER, controller)
                 .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
         app.start(locs);
 
-        EntityTestUtils.assertAttributeEqualsEventually(controller, NginxController.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(controller, AbstractController.SERVICE_UP, true);
         assertEquals(cluster.getController(), controller);
 
         // Stopping cluster should not stop controller (because it didn't create it)
         cluster.stop();
-        EntityTestUtils.assertAttributeEquals(controller, NginxController.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEquals(controller, AbstractController.SERVICE_UP, true);
     }
     
-    @Test(groups="Integration")
+    @Test
     public void testUsesCustomControllerSpec() {
-        EntitySpec<NginxController> controllerSpec = EntitySpec.create(NginxController.class).displayName("mycustom");
+        EntitySpec<AbstractControllerTest.TrackingAbstractController> controllerSpec = EntitySpec.create(AbstractControllerTest.TrackingAbstractController.class).displayName("mycustom");
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, controllerSpec)
@@ -91,12 +93,12 @@ public class ControlledDynamicWebAppClusterTest {
         app.start(locs);
         LoadBalancer controller = cluster.getController();
         
-        EntityTestUtils.assertAttributeEqualsEventually(controller, NginxController.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(controller, AbstractController.SERVICE_UP, true);
         assertEquals(controller.getDisplayName(), "mycustom");
 
         // Stopping cluster should stop the controller (because it created it)
         cluster.stop();
-        EntityTestUtils.assertAttributeEquals(controller, NginxController.SERVICE_UP, false);
+        EntityTestUtils.assertAttributeEquals(controller, AbstractController.SERVICE_UP, false);
     }
     
     @Test(groups="Integration")
@@ -111,11 +113,11 @@ public class ControlledDynamicWebAppClusterTest {
         HttpTestUtils.assertContentEventuallyContainsText(url, "Hello");
     }
     
-    // Needs to be integration test because still using nginx controller; could pass in mock controller
-    @Test(groups="Integration")
+    @Test
     public void testSetsInitialSize() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 2)
+                .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(AbstractControllerTest.TrackingAbstractController.class))
                 .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
         app.start(locs);
 
@@ -142,10 +144,11 @@ public class ControlledDynamicWebAppClusterTest {
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, ControlledDynamicWebAppCluster.SERVICE_UP, expectedServiceUp);
     }
     
-    @Test(groups="Integration")
+    @Test
     public void testUsesCustomWebClusterSpec() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
+                .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(AbstractControllerTest.TrackingAbstractController.class))
                 .configure(ControlledDynamicWebAppCluster.WEB_CLUSTER_SPEC, EntitySpec.create(DynamicWebAppCluster.class)
                         .displayName("mydisplayname")));
         app.start(locs);
