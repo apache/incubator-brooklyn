@@ -5,6 +5,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.LoadBalancer;
@@ -64,6 +65,8 @@ public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resiz
             DynamicWebAppCluster.class, "controlleddynamicwebappcluster.cluster", "Underlying web-app cluster");
 
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
+
+    public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
 
     public LoadBalancer getController();
     

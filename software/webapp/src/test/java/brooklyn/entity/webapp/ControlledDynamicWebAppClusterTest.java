@@ -13,12 +13,17 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.java.VanillaJavaApp;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
@@ -28,6 +33,7 @@ import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 /**
  * TODO clarify test purpose
@@ -161,6 +167,42 @@ public class ControlledDynamicWebAppClusterTest {
 
         // and make sure it really was using our custom spec
         assertEquals(cluster.getCluster().getDisplayName(), "mydisplayname");
+    }
+    
+    // Needs to be integration test because still using nginx controller; could pass in mock controller
+    @Test(groups="Integration")
+    public void testSetsServiceLifecycle() {
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+                .configure("initialSize", 1)
+                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+        
+        RecordingSensorEventListener<Lifecycle> listener = new RecordingSensorEventListener<Lifecycle>();
+        app.subscribe(cluster, Attributes.SERVICE_STATE, listener);
+        app.start(locs);
 
+        assertEquals(listener.getValues(), ImmutableList.of(Lifecycle.STARTING, Lifecycle.RUNNING), "vals="+listener.getValues());
+        listener.getValues().clear();
+        
+        app.stop();
+        assertEquals(listener.getValues(), ImmutableList.of(Lifecycle.STOPPING, Lifecycle.STOPPED), "vals="+listener.getValues());
+    }
+    
+    public static class RecordingSensorEventListener<T> implements SensorEventListener<T> {
+        private final List<SensorEvent<T>> events = Lists.newCopyOnWriteArrayList();
+        private final List<T> values = Lists.newCopyOnWriteArrayList();
+
+        @Override
+        public void onEvent(SensorEvent<T> event) {
+            events.add(event);
+            values.add(event.getValue());
+        }
+        
+        public List<SensorEvent<T>> getEvents() {
+            return events;
+        }
+        
+        public List<T> getValues() {
+            return values;
+        }
     }
 }
