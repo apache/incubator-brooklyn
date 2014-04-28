@@ -10,10 +10,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
+import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
@@ -21,6 +22,8 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableList;
@@ -31,7 +34,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implements ControlledDynamicWebAppCluster {
+public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl implements ControlledDynamicWebAppCluster {
 
     public static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppClusterImpl.class);
 
@@ -54,6 +57,8 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
 
     @Override
     public void init() {
+        super.init();
+        
         ConfigToAttributes.apply(this, FACTORY);
         ConfigToAttributes.apply(this, MEMBER_SPEC);
         ConfigToAttributes.apply(this, CONTROLLER);
@@ -93,6 +98,12 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         DynamicWebAppCluster cluster = addChild(webClusterSpec);
         if (Entities.isManaged(this)) Entities.manage(cluster);
         setAttribute(CLUSTER, cluster);
+        setEntityFilter(EntityPredicates.isMemberOf(cluster));
+        subscribe(cluster, DynamicWebAppCluster.GROUP_MEMBERS, new SensorEventListener<Object>() {
+            @Override public void onEvent(SensorEvent<Object> event) {
+                // TODO inefficient impl; also worth extracting this into a mixin of some sort.
+                rescanEntities();
+            }});
         
         LoadBalancer controller = getAttribute(CONTROLLER);
         if (controller == null) {
@@ -198,7 +209,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
     
     void connectSensors() {
         addEnricher(Enrichers.builder()
-                .propagatingAllBut(SERVICE_STATE, SERVICE_UP, ROOT_URL)
+                .propagatingAllBut(SERVICE_STATE, SERVICE_UP, ROOT_URL, GROUP_MEMBERS, GROUP_SIZE)
                 .from(getCluster())
                 .build());
         addEnricher(Enrichers.builder()

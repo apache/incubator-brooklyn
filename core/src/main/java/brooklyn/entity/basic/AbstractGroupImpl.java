@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -11,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.trait.Changeable;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.SetFromLiveMap;
 
@@ -37,6 +37,11 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
     private Set<Entity> members = Sets.newLinkedHashSet();
 
     public AbstractGroupImpl() {
+    }
+
+    @Deprecated
+    public AbstractGroupImpl(Map flags, Entity parent) {
+        super(flags, parent);
     }
 
     @Override

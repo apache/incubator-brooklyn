@@ -17,7 +17,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.java.VanillaJavaApp;
+import brooklyn.entity.proxy.AbstractControllerTest;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
@@ -25,6 +25,7 @@ import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -204,5 +205,38 @@ public class ControlledDynamicWebAppClusterTest {
         public List<T> getValues() {
             return values;
         }
+    }
+    
+    @Test
+    public void testMembersReflectChildClusterMembers() {
+        final ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+                .configure("initialSize", 1)
+                .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(AbstractControllerTest.TrackingAbstractController.class))
+                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+        app.start(locs);
+        final DynamicWebAppCluster childCluster = cluster.getCluster();
+        
+        // Expect initial member(s) to be the same
+        assertEquals(childCluster.getMembers().size(), 1);
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                Asserts.assertEqualsIgnoringOrder(childCluster.getMembers(), cluster.getMembers());
+            }});
+        
+        // After resize up, same members
+        cluster.resize(2);
+        assertEquals(childCluster.getMembers().size(), 2);
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                Asserts.assertEqualsIgnoringOrder(childCluster.getMembers(), cluster.getMembers());
+            }});
+        
+        // After resize down, same members
+        cluster.resize(1);
+        assertEquals(childCluster.getMembers().size(), 1);
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                Asserts.assertEqualsIgnoringOrder(childCluster.getMembers(), cluster.getMembers());
+            }});
     }
 }

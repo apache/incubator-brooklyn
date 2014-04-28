@@ -18,6 +18,7 @@ package brooklyn.entity.basic;
 import groovy.lang.Closure;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,11 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
     private volatile MyEntitySetChangeListener setChangeListener = null;
 
     public DynamicGroupImpl() { }
+
+    @Deprecated
+    public DynamicGroupImpl(Map flags, Entity parent) {
+        super(flags, parent);
+    }
 
     @Override
     public void init() {
@@ -75,7 +81,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
     }
 
     private boolean isRunning() {
-        return getAttribute(RUNNING);
+        return Boolean.TRUE.equals(getAttribute(RUNNING));
     }
 
     @Override

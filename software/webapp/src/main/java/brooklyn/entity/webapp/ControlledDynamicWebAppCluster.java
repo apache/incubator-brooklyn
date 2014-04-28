@@ -2,9 +2,11 @@ package brooklyn.entity.webapp;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
+import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
@@ -30,9 +32,14 @@ import brooklyn.util.flags.SetFromFlag;
  * <li>a {@link brooklyn.entity.group.DynamicCluster} of {@link WebAppService}s (defaults to JBoss7Server)
  * <li>a cluster controller (defaulting to Nginx if none supplied)
  * </ul>
+ * 
+ * This entity is also a group whose members mirror those of the child DynamicCluster (so do not include the load balancer).
+ * This is convenient for associating policies such as ServiceReplacer with this entity, rather 
+ * than with the child {@link brooklyn.entity.group.DynamicCluster}. However, note that changing this entity's
+ * members has no effect on the members of the underlying DynamicCluster - treat this as a read-only view.
  */
 @ImplementedBy(ControlledDynamicWebAppClusterImpl.class)
-public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resizable, MemberReplaceable, ElasticJavaWebAppService {
+public interface ControlledDynamicWebAppCluster extends DynamicGroup, Entity, Startable, Resizable, MemberReplaceable, Group, ElasticJavaWebAppService {
 
     @SetFromFlag("initialSize")
     public static ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(Cluster.INITIAL_SIZE, 1);
