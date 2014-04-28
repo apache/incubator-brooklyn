@@ -3,7 +3,6 @@ package brooklyn.entity.group;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import brooklyn.config.ConfigKey;
@@ -22,6 +21,7 @@ import brooklyn.entity.group.zoneaware.BalancingNodePlacementStrategy;
 import brooklyn.entity.group.zoneaware.ProportionalZoneFailureDetector;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.trait.MemberReplaceable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
@@ -62,7 +62,7 @@ import com.google.common.reflect.TypeToken;
  */
 // TODO document use of advanced availability zone configuration and features
 @ImplementedBy(DynamicClusterImpl.class)
-public interface DynamicCluster extends AbstractGroup, Cluster {
+public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceable {
 
     @Beta
     interface NodePlacementStrategy {
@@ -78,8 +78,6 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
         void onStartupFailure(Location loc, Entity entity, Throwable cause);
         boolean hasFailed(Location loc);
     }
-
-    MethodEffector<String> REPLACE_MEMBER = new MethodEffector<String>(DynamicCluster.class, "replaceMember");
 
     MethodEffector<Entity> ADD_NODE = new MethodEffector<Entity>(DynamicCluster.class, "addNode");
 
@@ -153,19 +151,6 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
     AttributeSensor<Set<Location>> FAILED_SUB_LOCATIONS = new BasicAttributeSensor<Set<Location>>(
             new TypeToken<Set<Location>>() {},
             "dynamiccluster.failedSubLocations", "Sub locations that seem to have failed");
-
-    /**
-     * Replaces the entity with the given ID, if it is a member.
-     * <p>
-     * First adds a new member, then removes this one. 
-     *
-     * @param memberId entity id of a member to be replaced
-     * @return the id of the new entity
-     * @throws NoSuchElementException If entity cannot be resolved, or it is not a member
-     */
-    @Effector(description="Replaces the entity with the given ID, if it is a member; first adds a new member, then removes this one. "+
-            "Returns id of the new entity; or throws exception if couldn't be replaced.")
-    String replaceMember(@EffectorParam(name="memberId", description="The entity id of a member to be replaced") String memberId);
 
     /**
      * Adds a new node to the cluster in the given location.

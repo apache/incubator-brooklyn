@@ -212,9 +212,15 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         return getCluster().resize(desiredSize);
     }
 
+    @Override
+    public String replaceMember(String memberId) {
+        return getCluster().replaceMember(memberId);
+    }
+    
     /**
      * @return the current size of the group.
      */
+    @Override
     public Integer getCurrentSize() {
         return getCluster().getCurrentSize();
     }
