@@ -51,6 +51,14 @@ public class ConfigKeys {
         return new BasicAttributeSensorAndConfigKey<T>(type, name, description, defaultValue);
     }
 
+    public static <T> AttributeSensorAndConfigKey<T,T> newSensorAndConfigKey(TypeToken<T> type, String name, String description) {
+        return new BasicAttributeSensorAndConfigKey<T>(type, name, description);
+    }
+
+    public static <T> AttributeSensorAndConfigKey<T,T> newSensorAndConfigKey(TypeToken<T> type, String name, String description, T defaultValue) {
+        return new BasicAttributeSensorAndConfigKey<T>(type, name, description, defaultValue);
+    }
+
     public static AttributeSensorAndConfigKey<String,String> newStringSensorAndConfigKey(String name, String description) {
         return new BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey(name, description);
     }
