@@ -15,8 +15,11 @@ import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsLocationConfig;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 
+/** WIP to apply a security group to a jclouds endpoint */
+@Beta
 public class SecurityGroupTool {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityGroupTool.class);

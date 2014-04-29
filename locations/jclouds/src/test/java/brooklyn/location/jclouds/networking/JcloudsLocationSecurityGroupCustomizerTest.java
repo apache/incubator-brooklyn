@@ -1,4 +1,4 @@
-package brooklyn.location.jclouds;
+package brooklyn.location.jclouds.networking;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -26,13 +26,14 @@ import org.jclouds.net.domain.IpProtocol;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Cidr;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Cidr;
 
 public class JcloudsLocationSecurityGroupCustomizerTest {
 

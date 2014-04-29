@@ -14,6 +14,10 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.text.Identifiers;
 
+import com.google.common.annotations.Beta;
+
+/** WIP to define a security group in an up-front way, where subsequently it can be applied to a jclouds location */
+@Beta
 public class SecurityGroupDefinition {
 
     Callable<String> groupNameFactory = new Callable<String>() { public String call() { return "br-sg-"+Identifiers.makeRandomId(8); } };
