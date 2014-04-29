@@ -358,6 +358,14 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return copyResource(MutableMap.of(), resource, target);
     }
 
+    public int copyResource(String resource, String target, boolean createParentDir) {
+        return copyResource(MutableMap.of(), resource, target, createParentDir);
+    }
+
+    public int copyResource(Map sshFlags, String source, String target) {
+        return copyResource(sshFlags, source, target, false);
+    }
+    
     /**
      * @param sshFlags Extra flags to be used when making an SSH connection to the entity's machine.
      *                 If the map contains the key {@link #IGNORE_ENTITY_SSH_FLAGS} then only the
@@ -366,10 +374,11 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * @param source URI of file to copy, e.g. file://.., http://.., classpath://..
      * @param target Destination on server. Will be prefixed with the entity's
      *               {@link #getRunDir() run directory} if relative.
+     * @param createParentDir Whether to create the parent target directory, if it doesn't already exist
      * @return The exit code of the SSH command run
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public int copyResource(Map sshFlags, String source, String target) {
+    public int copyResource(Map sshFlags, String source, String target, boolean createParentDir) {
         Map flags = Maps.newLinkedHashMap();
         if (!sshFlags.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
             flags.putAll(getSshFlags());
@@ -377,9 +386,18 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         flags.putAll(sshFlags);
 
         // prefix with runDir if relative target
+        // TODO will this fail if run on Windows?
         File file = new File(target);
-        String dest = file.isAbsolute() ? target : Urls.mergePaths(getRunDir(), target);
-
+        String dest = file.isAbsolute() ? target : Os.mergePathsUnix(getRunDir(), target);
+        
+        if (createParentDir) {
+            int lastSlashIndex = dest.lastIndexOf("/");
+            String parent = (lastSlashIndex > 0) ? dest.substring(0, lastSlashIndex) : null;
+            if (parent != null) {
+                getMachine().execCommands("createParentDir", ImmutableList.of("mkdir -p "+parent));
+            }
+        }
+        
         int result = getMachine().installTo(resource, flags, source, dest);
         if (result == 0) {
             if (log.isDebugEnabled()) {

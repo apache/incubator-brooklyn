@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.io.File;
 import java.io.StringReader;
@@ -21,6 +22,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.Streams;
@@ -155,6 +157,51 @@ public class SoftwareProcessSshDriverIntegrationTest {
         entity.getDriver().copyResource(new KnownSizeInputStream(Streams.newInputStreamWithContents(tempLocalContent), tempLocalContent.length()), tempDest.getAbsolutePath());
         assertEquals(Files.readLines(tempDest, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
         tempDest.delete();
+    }
+
+    @Test(groups="Integration")
+    public void testCopyResourceCreatingParentDir() throws Exception {
+        File tempDataDirSub = new File(tempDataDir, "subdir");
+        File tempDest = new File(tempDataDirSub, "tempDest.txt");
+        String tempLocalContent = "abc";
+        File tempLocal = new File(tempDataDir, "tempLocal.txt");
+        Files.write(tempLocalContent, tempLocal, Charsets.UTF_8);
+        
+        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        app.start(ImmutableList.of(localhost));
+
+        // First confirm would get exception in createeParentDir==false
+        try {
+            entity.getDriver().copyResource(tempLocal.toURI().toString(), tempDest.getAbsolutePath(), false);
+            assertEquals(Files.readLines(tempDest, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
+            fail("Should have failed to create "+tempDest);
+        } catch (SshException e) {
+            // success
+        } finally {
+            Os.tryDeleteDirectory(tempDataDirSub);
+        }
+        
+        // Copy to absolute path
+        try {
+            entity.getDriver().copyResource(tempLocal.toURI().toString(), tempDest.getAbsolutePath(), true);
+            assertEquals(Files.readLines(tempDest, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
+        } finally {
+            Os.tryDeleteDirectory(tempDataDirSub);
+        }
+        
+        // Copy to absolute path
+        String runDir = entity.getDriver().getRunDir();
+        String tempDataDirRelativeToRunDir = "subdir";
+        String tempDestRelativeToRunDir = Os.mergePaths(tempDataDirRelativeToRunDir, "tempDest.txt");
+        File tempDestInRunDir = new File(Os.mergePaths(runDir, tempDestRelativeToRunDir));
+        try {
+            entity.getDriver().copyResource(tempLocal.toURI().toString(), tempDestRelativeToRunDir, true);
+            assertEquals(Files.readLines(tempDestInRunDir, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
+        } finally {
+            Os.tryDeleteDirectory(new File(runDir, tempDataDirRelativeToRunDir));
+        }
     }
 
 
