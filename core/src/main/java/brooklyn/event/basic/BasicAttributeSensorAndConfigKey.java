@@ -1,5 +1,7 @@
 package brooklyn.event.basic;
 
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
@@ -22,6 +24,18 @@ public class BasicAttributeSensorAndConfigKey<T> extends AttributeSensorAndConfi
         this(type, name, description, null);
     }
     public BasicAttributeSensorAndConfigKey(Class<T> type, String name, String description, T defaultValue) {
+        super(type, type, name, description, defaultValue);
+    }
+
+    public BasicAttributeSensorAndConfigKey(TypeToken<T> type, String name) {
+        super(type, type, name);
+    }
+
+    public BasicAttributeSensorAndConfigKey(TypeToken<T> type, String name, String description) {
+        super(type, type, name, description);
+    }
+
+    public BasicAttributeSensorAndConfigKey(TypeToken<T> type, String name, String description, Object defaultValue) {
         super(type, type, name, description, defaultValue);
     }
 

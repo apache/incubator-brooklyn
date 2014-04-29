@@ -3,6 +3,8 @@ package brooklyn.event.basic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
@@ -35,10 +37,22 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
     }
     
     public AttributeSensorAndConfigKey(Class<ConfigType> configType, Class<SensorType> sensorType, String name, String description) {
-        this(configType, sensorType, name, description, null);
+        this(TypeToken.of(configType), TypeToken.of(sensorType), name, description, null);
     }
     
     public AttributeSensorAndConfigKey(Class<ConfigType> configType, Class<SensorType> sensorType, String name, String description, Object defaultValue) {
+        this(TypeToken.of(configType), TypeToken.of(sensorType), name, description, defaultValue);
+    }
+
+    public AttributeSensorAndConfigKey(TypeToken<ConfigType> configType, TypeToken<SensorType> sensorType, String name) {
+        this(configType, sensorType, name, null);
+    }
+
+    public AttributeSensorAndConfigKey(TypeToken<ConfigType> configType, TypeToken<SensorType> sensorType, String name, String description) {
+        this(configType, sensorType, name, description, null);
+    }
+
+    public AttributeSensorAndConfigKey(TypeToken<ConfigType> configType, TypeToken<SensorType> sensorType, String name, String description, Object defaultValue) {
         super(sensorType, name, description);
         ConfigType defaultValueTyped;
         try {
