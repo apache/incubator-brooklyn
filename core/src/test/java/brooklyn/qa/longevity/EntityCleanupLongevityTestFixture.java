@@ -93,7 +93,7 @@ public abstract class EntityCleanupLongevityTestFixture {
         }
         
         BrooklynStorage storage = ((ManagementContextInternal)managementContext).getStorage();
-        Assert.assertTrue(storage.isEmpty(), "Not empty storage: "+storage);
+        Assert.assertTrue(storage.isMostlyEmpty(), "Not empty storage: "+storage);
         
         DataGrid dg = ((BrooklynStorageImpl)storage).getDataGrid();
         Set<String> keys = dg.getKeys();
