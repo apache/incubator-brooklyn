@@ -264,7 +264,7 @@ public class EntityDynamicType {
     /**
      * Finds the effectors defined on the entity's class, statics and optionally any non-static (discouraged).
      */
-    protected static Map<String,Effector<?>> findEffectors(Class<? extends Entity> clazz, Entity optionalEntity) {
+    public static Map<String,Effector<?>> findEffectors(Class<? extends Entity> clazz, Entity optionalEntity) {
         try {
             Map<String,Effector<?>> result = Maps.newLinkedHashMap();
             Map<String,Field> fieldSources = Maps.newLinkedHashMap();
@@ -328,7 +328,7 @@ public class EntityDynamicType {
     /**
      * Finds the sensors defined on the entity's class, statics and optionally any non-static (discouraged).
      */
-    protected static Map<String,Sensor<?>> findSensors(Class<? extends Entity> clazz, Entity optionalEntity) {
+    public static Map<String,Sensor<?>> findSensors(Class<? extends Entity> clazz, Entity optionalEntity) {
         try {
             Map<String,Sensor<?>> result = Maps.newLinkedHashMap();
             Map<String,Field> sources = Maps.newLinkedHashMap();
