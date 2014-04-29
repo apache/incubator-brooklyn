@@ -5,6 +5,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
@@ -41,24 +42,27 @@ public class EntityTestUtils {
             }});
     }
 
-    public static <T> void assertAttributeEventuallyNonNull(final Entity entity, final AttributeSensor<T> attribute) {
-        assertAttributeEventuallyNonNull(Maps.newLinkedHashMap(), entity, attribute);
+    public static <T> T assertAttributeEventuallyNonNull(final Entity entity, final AttributeSensor<T> attribute) {
+        return assertAttributeEventuallyNonNull(Maps.newLinkedHashMap(), entity, attribute);
     }
 
-    public static <T> void assertAttributeEventuallyNonNull(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute) {
-        assertAttributeEventually(flags, entity, attribute, Predicates.notNull());
+    public static <T> T assertAttributeEventuallyNonNull(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute) {
+        return assertAttributeEventually(flags, entity, attribute, Predicates.notNull());
     }
 
-    public static <T> void assertAttributeEventually(final Entity entity, final AttributeSensor<T> attribute, Predicate<? super T> predicate) {
-        assertAttributeEventually(ImmutableMap.of(), entity, attribute, predicate);
+    public static <T> T assertAttributeEventually(final Entity entity, final AttributeSensor<T> attribute, Predicate<? super T> predicate) {
+        return assertAttributeEventually(ImmutableMap.of(), entity, attribute, predicate);
     }
     
-    public static <T> void assertAttributeEventually(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute, final Predicate<? super T> predicate) {
+    public static <T> T assertAttributeEventually(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute, final Predicate<? super T> predicate) {
+        final AtomicReference<T> result = new AtomicReference<T>();
         Asserts.succeedsEventually((Map)flags, new Runnable() {
             @Override public void run() {
                 T val = entity.getAttribute(attribute);
                 assertTrue(predicate.apply(val), "val="+val);
+                result.set(val);
             }});
+        return result.get();
     }
 
     public static <T extends Entity> void assertPredicateEventuallyTrue(final T entity, final Predicate<? super T> predicate) {
