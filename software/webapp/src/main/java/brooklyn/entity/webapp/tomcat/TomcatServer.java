@@ -37,9 +37,9 @@ public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx, HasSho
      */
     @SetFromFlag("shutdownPort")
     PortAttributeSensorAndConfigKey SHUTDOWN_PORT =
-            new PortAttributeSensorAndConfigKey("tomcat.shutdownport", "Suggested shutdown port", PortRanges.fromString("31880+"));
+            ConfigKeys.newPortSensorAndConfigKey("tomcat.shutdownport", "Suggested shutdown port", PortRanges.fromString("31880+"));
 
-    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, (int) Duration.FIVE_MINUTES.toSeconds());
+    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, Duration.FIVE_MINUTES.toSeconds());
 
     AttributeSensor<String> CONNECTOR_STATUS =
             new BasicAttributeSensor<String>(String.class, "webapp.tomcat.connectorStatus", "Catalina connector state name");
