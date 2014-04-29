@@ -1,13 +1,10 @@
 package brooklyn.entity.nosql.mongodb;
 
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.nosql.mongodb.sharding.MongoDBRouter;
@@ -50,22 +47,37 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
         AbstractMongoDBServer server = getServer();
         String host = server.getAttribute(AbstractMongoDBServer.HOSTNAME);
         Integer port = server.getAttribute(AbstractMongoDBServer.PORT);
-        try {
-            for (String scriptName : entity.getConfig(MongoDBClient.STARTUP_JS_SCRIPTS)) {
-                runScript("", scriptName, host, port);
+        
+        List<String> scripts = entity.getConfig(MongoDBClient.STARTUP_JS_SCRIPTS);
+        if (scripts!=null) {
+            for (String scriptName : scripts) {
+                try {
+                    LOG.debug("Running MongoDB script "+scriptName+" at "+getEntity());
+                    runScript("", scriptName, host, port);
+                } catch (Exception e) {
+                    LOG.warn("Error running MongoDB script "+scriptName+" at "+getEntity()+", throwing: "+e);
+                    isRunning = false;
+                    Exceptions.propagateIfFatal(e);
+                    throw new IllegalStateException("Error running MongoDB script "+scriptName+" at "+entity+": "+e, e);
+                }
             }
-        } catch (NullPointerException e) {
-            // FIXME avoid the null ptr, and do something more intelligent
-            LOG.error("startupScripts not specified in MongoDBClientSshDriver launch method;", e);
-            isRunning = false;
-            return;
         }
         isRunning = true;
     }
     
     @Override
     public boolean isRunning() {
+        // TODO better would be to get some confirmation
         return isRunning;
+    }
+    
+    @Override
+    public void stop() {
+        try {
+            super.stop();
+        } finally {
+            isRunning = false;
+        }
     }
     
     private String getUserScriptDir() {
