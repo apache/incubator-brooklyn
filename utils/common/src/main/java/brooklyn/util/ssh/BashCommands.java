@@ -28,9 +28,12 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class BashCommands {
@@ -381,6 +384,28 @@ public class BashCommands {
     /** fails with nice error if the given file does not exist */
     public static String requireExecutable(String command) {
         return require("which "+BashStringEscapes.wrapBash(command), "The required executable \""+command+"\" does not exist");
+    }
+
+    public static String waitForFileContents(String file, String desiredContent, Duration timeout, boolean failOnAbsent) {
+        long secs = Math.max(timeout.toSeconds(), 1);
+        
+        List<String> commands = ImmutableList.of(
+                "for i in {1.."+secs+"}",
+                "do",
+                "    grep '"+desiredContent+"' "+file+" && result=0 || result=$?",
+                "    [ \"$result\" == 0 ] && break",
+                "    sleep 1",
+                "done",
+                "if test \"$result\" -ne 0; then",
+                "    "+ (failOnAbsent ?
+                            "echo \"Couldn't find "+desiredContent+" in "+file+"; aborting\" && exit 1" :
+                            "echo \"Couldn't find "+desiredContent+" in "+file+"; continuing\""),
+                "fi");
+        return Joiner.on("\n").join(commands);
+    }
+
+    public static String unzip(String file, String targetDir) {
+        return "unzip " + file + (Strings.isNonBlank(targetDir) ? " -d "+targetDir : "");
     }
 
     public static final String INSTALL_TAR = installExecutable("tar");

@@ -2,6 +2,7 @@ package brooklyn.util.ssh;
 
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -28,6 +29,7 @@ import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -235,4 +237,53 @@ public class BashCommandsIntegrationTest {
         assertEquals(Strings.replaceAllRegex(output, "\\s+", " ").trim(), "3 4 25");
     }
 
+    @Test(groups="Integration")
+    public void testWaitForFileContentsWhenAbortingOnFail() throws Exception {
+        String fileContent = "mycontents";
+
+        String cmd = BashCommands.waitForFileContents(destFile.getAbsolutePath(), fileContent, Duration.ONE_SECOND, true);
+        int exitcode = loc.execCommands("test", ImmutableList.of(cmd));
+        assertEquals(1, exitcode);
+        
+        Files.write(fileContent, destFile, Charsets.UTF_8);
+        String cmd2 = BashCommands.waitForFileContents(destFile.getAbsolutePath(), fileContent, Duration.ONE_SECOND, true);
+        int exitcode2 = loc.execCommands("test", ImmutableList.of(cmd2));
+        assertEquals(0, exitcode2);
+    }
+
+    @Test(groups="Integration")
+    public void testWaitForFileContentsWhenNotAbortingOnFail() throws Exception {
+        String fileContent = "mycontents";
+
+        String cmd = BashCommands.waitForFileContents(destFile.getAbsolutePath(), fileContent, Duration.ONE_SECOND, false);
+        ProcessTaskWrapper<String> t = SshTasks.newSshExecTaskFactory(loc, cmd)
+                .requiringZeroAndReturningStdout().newTask();
+        String output = exec.submit(t).get();
+        assertTrue(output.contains("Couldn't find"), "output="+output);
+
+        Files.write(fileContent, destFile, Charsets.UTF_8);
+        String cmd2 = BashCommands.waitForFileContents(destFile.getAbsolutePath(), fileContent, Duration.ONE_SECOND, false);
+        ProcessTaskWrapper<String> t2 = SshTasks.newSshExecTaskFactory(loc, cmd2)
+                .requiringZeroAndReturningStdout().newTask();
+        String output2 = exec.submit(t2).get();
+        assertFalse(output2.contains("Couldn't find"), "output="+output2);
+    }
+    
+    @Test(groups="Integration")
+    public void testWaitForFileContentsWhenContentsAppearAfterStart() throws Exception {
+        String fileContent = "mycontents";
+
+        String cmd = BashCommands.waitForFileContents(destFile.getAbsolutePath(), fileContent, Duration.THIRTY_SECONDS, false);
+        ProcessTaskWrapper<String> t = SshTasks.newSshExecTaskFactory(loc, cmd)
+                .requiringZeroAndReturningStdout().newTask();
+        exec.submit(t);
+        
+        // sleep for long enough to ensure the ssh command is definitely executing
+        Thread.sleep(5*1000);
+        assertFalse(t.isDone());
+        
+        Files.write(fileContent, destFile, Charsets.UTF_8);
+        String output = t.get();
+        assertFalse(output.contains("Couldn't find"), "output="+output);
+    }
 }
