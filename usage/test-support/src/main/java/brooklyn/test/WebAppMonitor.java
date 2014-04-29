@@ -1,5 +1,6 @@
 package brooklyn.test;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -7,6 +8,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.testng.Assert;
+
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
 
 /**
  * Repeatedly polls a given URL, to check if it is always available.
@@ -162,10 +166,22 @@ public class WebAppMonitor implements Runnable {
         }
         return this;
     }
+    public WebAppMonitor waitForAtLeastOneAttempt() {
+        return waitForAtLeastOneAttempt(Duration.of(30, TimeUnit.SECONDS));
+    }
+    public WebAppMonitor waitForAtLeastOneAttempt(Duration timeout) {
+        Asserts.succeedsEventually(MutableMap.of("timeout", timeout), new Runnable() {
+            @Override public void run() {
+                Assert.assertTrue(getAttempts() >= 1);
+            }});
+        return this;
+    }
     public WebAppMonitor assertSuccessFraction(String message, double percentage) {
-        if ((getFailures() > (1-percentage) * getAttempts()+0.0001) || getAttempts()<=0) {
+        int failures = getFailures();
+        int attempts = getAttempts();
+        if ((failures > (1-percentage) * attempts+0.0001) || attempts<=0) {
             Assert.fail(message+" -- webapp access failures! " +
-            		"("+getFailures()+" failed of "+getAttempts()+" monitoring attempts) against "+getUrl()+"; " +
+            		"("+failures+" failed of "+attempts+" monitoring attempts) against "+getUrl()+"; " +
             		"last was "+getLastStatus()+" taking "+getLastTime()+"ms" +
             		(getLastFailure()!=null ? "; last failure was "+getLastFailure() : ""));
         }
