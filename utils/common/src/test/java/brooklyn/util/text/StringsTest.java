@@ -278,6 +278,15 @@ public class StringsTest {
     }
 
     @Test
+    public void testFragmentAfter() {
+        Assert.assertEquals(Strings.getFragmentAfter("foobar", "f"), "oobar");
+        Assert.assertEquals(Strings.getFragmentAfter("foobar", "o"), "obar");
+        Assert.assertEquals(Strings.getFragmentAfter("foo\nbar", "foo"), "\nbar");
+        Assert.assertEquals(Strings.getFragmentAfter("foobar", null), "foobar");
+        Assert.assertEquals(Strings.getFragmentAfter("foobar", "z"), null);
+    }
+
+    @Test
     public void testWordCount() {
         Assert.assertEquals(Strings.getWordCount("hello", true), 1);
         Assert.assertEquals(Strings.getWordCount("hello world", true), 2);
