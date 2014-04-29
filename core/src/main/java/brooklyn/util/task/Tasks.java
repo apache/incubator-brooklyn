@@ -3,6 +3,7 @@ package brooklyn.util.task;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -31,6 +32,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class Tasks {
     
@@ -148,8 +150,28 @@ public class Tasks {
                 
             } else if (v instanceof List) {
                 List result = Lists.newArrayList();
-                int count=0;
+                int count = 0;
                 for (Object it : (List)v) {
+                    result.add(resolveValue(it, type, exec, 
+                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count));
+                    count++;
+                }
+                return (T) result;
+                
+            } else if (v instanceof Set) {
+                Set result = Sets.newLinkedHashSet();
+                int count = 0;
+                for (Object it : (Set)v) {
+                    result.add(resolveValue(it, type, exec, 
+                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count));
+                    count++;
+                }
+                return (T) result;
+                
+            } else if (v instanceof Iterable) {
+                List result = Lists.newArrayList();
+                int count = 0;
+                for (Object it : (Iterable)v) {
                     result.add(resolveValue(it, type, exec, 
                             (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count));
                     count++;
@@ -163,6 +185,14 @@ public class Tasks {
         } catch (Exception e) {
             throw new IllegalArgumentException("Error resolving "+(contextMessage!=null ? contextMessage+", " : "")+v+", in "+exec+": "+e, e);
         }
+        return resolveValue(v, type, exec, contextMessage);
+    }
+
+    public static Object resolveDeepValue(Object v, Class<?> type, ExecutionContext exec) throws ExecutionException, InterruptedException {
+        return resolveValue(v, type, exec);
+    }
+
+    public static Object resolveDeepValue(Object v, Class<?> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
         return resolveValue(v, type, exec, contextMessage);
     }
 
