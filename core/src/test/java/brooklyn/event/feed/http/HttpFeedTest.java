@@ -26,12 +26,14 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.http.BetterMockWebServer;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.mockwebserver.MockResponse;
+import com.google.mockwebserver.SocketPolicy;
 
 public class HttpFeedTest {
 
@@ -89,6 +91,45 @@ public class HttpFeedTest {
         assertSensorEventually(SENSOR_INT, (Integer)200, TIMEOUT_MS);
         assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
     }
+    
+    @Test
+    public void testSetsConnectionTimeout() throws Exception {
+        feed = HttpFeed.builder()
+                .entity(entity)
+                .baseUrl(baseUrl)
+                .poll(new HttpPollConfig<Integer>(SENSOR_INT)
+                        .period(100)
+                        .connectionTimeout(Duration.TEN_SECONDS, Duration.TEN_SECONDS)
+                        .onSuccess(HttpValueFunctions.responseCode()))
+                .build();
+        
+        assertSensorEventually(SENSOR_INT, (Integer)200, TIMEOUT_MS);
+    }
+    
+    // TODO How to cause the other end to just freeze (similar to aws-ec2 when securityGroup port is not open)?
+    @Test
+    public void testSetsConnectionTimeoutWhenServerDisconnects() throws Exception {
+        if (server != null) server.shutdown();
+        server = BetterMockWebServer.newInstanceLocalhost();
+        for (int i = 0; i < 100; i++) {
+            server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+        }
+        server.play();
+        baseUrl = server.getUrl("/");
+
+        feed = HttpFeed.builder()
+                .entity(entity)
+                .baseUrl(baseUrl)
+                .poll(new HttpPollConfig<Integer>(SENSOR_INT)
+                        .period(100)
+                        .connectionTimeout(Duration.TEN_SECONDS, Duration.TEN_SECONDS)
+                        .onSuccess(HttpValueFunctions.responseCode())
+                        .onException(Functions.constant(-1)))
+                .build();
+        
+        assertSensorEventually(SENSOR_INT, -1, TIMEOUT_MS);
+    }
+    
     
     @Test
     public void testPollsAndParsesHttpPostResponse() throws Exception {

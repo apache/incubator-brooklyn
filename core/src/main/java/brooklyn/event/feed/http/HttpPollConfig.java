@@ -9,6 +9,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.URLParamEncoder;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -23,7 +24,9 @@ public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConf
     private Map<String, String> vars = ImmutableMap.<String,String>of();
     private Map<String, String> headers = ImmutableMap.<String,String>of();
     private byte[] body;
-
+    private Duration connectionTimeout;
+    private Duration socketTimeout;
+    
     public static final Predicate<HttpPollValue> DEFAULT_SUCCESS = new Predicate<HttpPollValue>() {
         @Override
         public boolean apply(@Nullable HttpPollValue input) {
@@ -49,6 +52,14 @@ public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConf
     
     public Map<String, String> getVars() {
         return vars;
+    }
+    
+    public Duration getConnectionTimeout() {
+        return connectionTimeout;
+    }
+    
+    public Duration getSocketTimeout() {
+        return socketTimeout;
     }
     
     public String getMethod() {
@@ -78,7 +89,11 @@ public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConf
     public HttpPollConfig<T> body(byte[] val) {
         this.body = val; return this;
     }
-    
+    public HttpPollConfig<T> connectionTimeout(Duration connectionTimeoutVal, Duration socketTimeoutVal) {
+        this.connectionTimeout = connectionTimeoutVal;
+        this.socketTimeout = connectionTimeoutVal;
+        return this;
+    }
     public URI buildUri(URI baseUri, Map<String,String> baseUriVars) {
         String uri = (baseUri != null ? baseUri.toString() : "") + (suburl != null ? suburl : "");
         Map<String,String> allvars = concat(baseUriVars, vars);

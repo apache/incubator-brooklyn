@@ -189,14 +189,17 @@ public class HttpFeed extends AbstractFeed {
         final Map<String,String> headers;
         final byte[] body;
         final Optional<Credentials> credentials;
-
+        final Duration connectionTimeout;
+        final Duration socketTimeout;
         private HttpPollIdentifier(String method, Supplier<URI> uriProvider, Map<String, String> headers, byte[] body,
-                                   Optional<Credentials> credentials) {
+                                   Optional<Credentials> credentials, Duration connectionTimeout, Duration socketTimeout) {
             this.method = checkNotNull(method, "method").toLowerCase();
             this.uriProvider = checkNotNull(uriProvider, "uriProvider");
             this.headers = checkNotNull(headers, "headers");
             this.body = body;
             this.credentials = checkNotNull(credentials, "credentials");
+            this.connectionTimeout = connectionTimeout;
+            this.socketTimeout = socketTimeout;
             
             if (!(this.method.equals("get") || this.method.equals("post"))) {
                 throw new IllegalArgumentException("Unsupported HTTP method (only supports GET and POST): "+method);
@@ -239,7 +242,9 @@ public class HttpFeed extends AbstractFeed {
             String method = config.getMethod();
             Map<String,String> headers = config.buildHeaders(baseHeaders);
             byte[] body = config.getBody();
-
+            Duration connectionTimeout = config.getConnectionTimeout();
+            Duration socketTimeout = config.getSocketTimeout();
+            
             Optional<Credentials> credentials = Optional.fromNullable(builder.credentials);
             
             Supplier<URI> baseUriProvider = builder.baseUriProvider;
@@ -254,7 +259,7 @@ public class HttpFeed extends AbstractFeed {
             }
             checkNotNull(baseUriProvider);
 
-            polls.put(new HttpPollIdentifier(method, baseUriProvider, headers, body, credentials), configCopy);
+            polls.put(new HttpPollIdentifier(method, baseUriProvider, headers, body, credentials, connectionTimeout, socketTimeout), configCopy);
         }
     }
 
@@ -314,6 +319,9 @@ public class HttpFeed extends AbstractFeed {
                 .laxRedirect(true);
         if (uri != null) builder.uri(uri);
         if (uri != null) builder.credential(pollIdentifier.credentials);
+        if (pollIdentifier.connectionTimeout != null || pollIdentifier.socketTimeout != null) {
+            builder.connectionTimeout(pollIdentifier.connectionTimeout, pollIdentifier.socketTimeout);
+        }
         return builder.build();
     }
 

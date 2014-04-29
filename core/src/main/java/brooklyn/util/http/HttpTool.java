@@ -1,6 +1,7 @@
 package brooklyn.util.http;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.net.URI;
 import java.security.cert.CertificateException;
@@ -31,12 +32,16 @@ import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.LaxRedirectStrategy;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Multimap;
@@ -58,6 +63,7 @@ public class HttpTool {
     
     public static class HttpClientBuilder {
         private ClientConnectionManager clientConnectionManager;
+        private HttpParams httpParams;
         private URI uri;
         private Integer port;
         private Credentials credentials;
@@ -70,6 +76,23 @@ public class HttpTool {
 
         public HttpClientBuilder clientConnectionManager(ClientConnectionManager val) {
             this.clientConnectionManager = checkNotNull(val, "clientConnectionManager");
+            return this;
+        }
+        public HttpClientBuilder httpParams(HttpParams val) {
+            checkState(httpParams == null, "Must not call httpParams multiple times, or after other methods like connectionTimeout");
+            this.httpParams = checkNotNull(val, "httpParams");
+            return this;
+        }
+        public HttpClientBuilder connectionTimeout(Duration connectionTimeout, Duration socketTimeout) {
+            if (httpParams == null) httpParams = new BasicHttpParams();
+            if (connectionTimeout != null) {
+                if (connectionTimeout.toMilliseconds() > Integer.MAX_VALUE) throw new IllegalStateException("HttpClient only accepts upto max-int millis for connectionTimeout, but given "+connectionTimeout);
+                HttpConnectionParams.setConnectionTimeout(httpParams, (int) connectionTimeout.toMilliseconds());
+            }
+            if (socketTimeout != null) {
+                HttpConnectionParams.setSoTimeout(httpParams, (int) socketTimeout.toMilliseconds());
+                if (socketTimeout.toMilliseconds() > Integer.MAX_VALUE) throw new IllegalStateException("HttpClient only accepts upto max-int millis for socketTimeout, but given "+connectionTimeout);
+            }
             return this;
         }
         public HttpClientBuilder reuseStrategy(ConnectionReuseStrategy val) {
@@ -119,7 +142,13 @@ public class HttpTool {
         public HttpClient build() {
             final DefaultHttpClient httpClient;
             if (clientConnectionManager != null) {
-                httpClient = new DefaultHttpClient(clientConnectionManager);
+                if (httpParams != null) {
+                    httpClient = new DefaultHttpClient(clientConnectionManager, httpParams);
+                } else {
+                    httpClient = new DefaultHttpClient(clientConnectionManager);
+                }
+            } else if (httpParams != null) {
+                httpClient = new DefaultHttpClient(httpParams);
             } else {
                 httpClient = new DefaultHttpClient();
             }
