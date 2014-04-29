@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -254,6 +256,8 @@ public class EffectorUtils {
         }
     }
 
+    /** @deprecated since 0.7.0, not used */
+    @Deprecated
     public static Effector<?> findEffectorMatching(Entity entity, Method method) {
         effector: for (Effector<?> effector : entity.getEntityType().getEffectors()) {
             if (!effector.getName().equals(entity)) continue;
@@ -266,6 +270,8 @@ public class EffectorUtils {
         return null;
     }
 
+    /** @deprecated since 0.7.0, expects parameters but does not use them! */
+    @Deprecated
     public static Effector<?> findEffectorMatching(Set<Effector<?>> effectors, String effectorName, Map<String, ?> parameters) {
         // TODO Support overloading: check parameters as well
         for (Effector<?> effector : effectors) {
@@ -274,6 +280,21 @@ public class EffectorUtils {
             }
         }
         return null;
+    }
+    
+    /** matches effectors by name only (not parameters) */
+    public static Maybe<Effector<?>> findEffector(Collection<? extends Effector<?>> effectors, String effectorName) {
+        for (Effector<?> effector : effectors) {
+            if (effector.getName().equals(effectorName)) {
+                return Maybe.<Effector<?>>of(effector);
+            }
+        }
+        return Maybe.absent( new NoSuchElementException("No effector with name "+effectorName+" (contenders "+effectors+")") );
+    }
+    
+    /** matches effectors by name only (not parameters), based on what is declared on the entity static type */
+    public static Maybe<Effector<?>> findEffectorDeclared(Entity entity, String effectorName) {
+        return findEffector(entity.getEntityType().getEffectors(), effectorName);
     }
     
     /** returns a (mutable) map of the standard flags which should be placed on an effector */

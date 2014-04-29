@@ -4,8 +4,6 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -23,6 +21,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
+import brooklyn.management.internal.EffectorUtils;
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
@@ -52,7 +51,7 @@ public class EffectorMetadataTest {
 
     @Test
     public void testEffectorMetaDataFromAnnotationsWithConstant() {
-        Effector<?> effector = findEffector(e1, "effWithNewAnnotation");
+        Effector<?> effector = EffectorUtils.findEffectorDeclared(e1, "effWithNewAnnotation").get();
         Assert.assertTrue(Effectors.sameSignature(effector, MyAnnotatedEntity.EFF_WITH_NEW_ANNOTATION));
         assertEquals(effector.getName(), "effWithNewAnnotation");
         assertEquals(effector.getDescription(), "my effector description");
@@ -65,7 +64,7 @@ public class EffectorMetadataTest {
 
     @Test
     public void testEffectorMetaDataFromAnnotationsWithoutConstant() {
-        Effector<?> effector = findEffector(e1, "effWithAnnotationButNoConstant");
+        Effector<?> effector = EffectorUtils.findEffectorDeclared(e1, "effWithAnnotationButNoConstant").get();
         assertEquals(effector.getName(), "effWithAnnotationButNoConstant");
         assertEquals(effector.getDescription(), "my effector description");
         assertEquals(effector.getReturnType(), String.class);
@@ -79,7 +78,7 @@ public class EffectorMetadataTest {
     @Test
     public void testEffectorMetaDataFromOverriddenMethod() {
         // Overridden with new annotations
-        Effector<?> startEffector = findEffector(e2, "start");
+        Effector<?> startEffector = EffectorUtils.findEffectorDeclared(e2, "start").get();
         assertEquals(startEffector.getName(), "start");
         assertEquals(startEffector.getDescription(), "My overridden start description");
         assertEquals(startEffector.getReturnType(), void.class);
@@ -87,16 +86,6 @@ public class EffectorMetadataTest {
                 startEffector.getParameters(), 
                 ImmutableList.<ParameterType<?>>of(
                         new BasicParameterType<Collection>("locations", Collection.class, "my overridden param description", null)));
-    }
-
-    private Effector<?> findEffector(Entity entity, String effectorName) {
-        Set<Effector<?>> effectors = entity.getEntityType().getEffectors();
-        for (Effector<?> effector : effectors) {
-            if (effector.getName().equals(effectorName)) {
-                return effector;
-            }
-        }
-        throw new NoSuchElementException("No effector with name "+effectorName+" (contenders "+effectors+")");
     }
 
     private void assertParametersEqual(List<ParameterType<?>> actuals, List<ParameterType<?>> expecteds) {
