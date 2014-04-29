@@ -2,6 +2,8 @@ package brooklyn.policy.ha;
 
 import brooklyn.event.basic.BasicNotificationSensor;
 
+import com.google.common.base.Objects;
+
 public class HASensors {
 
     public static final BasicNotificationSensor<FailureDescriptor> ENTITY_FAILED = new BasicNotificationSensor<FailureDescriptor>(
@@ -26,6 +28,11 @@ public class HASensors {
         
         public String getDescription() {
             return description;
+        }
+        
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("component", component).add("description", description).toString();
         }
     }
 }
