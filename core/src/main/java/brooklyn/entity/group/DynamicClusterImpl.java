@@ -35,8 +35,10 @@ import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringPredicates;
@@ -59,6 +61,35 @@ import com.google.common.collect.Sets;
  * A cluster of entities that can dynamically increase or decrease the number of entities.
  */
 public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicCluster {
+
+    // TODO better mechanism for arbitrary class name to instance type coercion
+    static {
+        TypeCoercions.registerAdapter(String.class, NodePlacementStrategy.class, new Function<String, NodePlacementStrategy>() {
+            @Override
+            public NodePlacementStrategy apply(final String input) {
+                ClassLoader classLoader = NodePlacementStrategy.class.getClassLoader();
+                Optional<NodePlacementStrategy> strategy = Reflections.<NodePlacementStrategy>invokeConstructorWithArgs(classLoader, input);
+                if (strategy.isPresent()) {
+                    return strategy.get();
+                } else {
+                    throw new IllegalStateException("Failed to create NodePlacementStrategy "+input);
+                }
+            }
+        });
+        TypeCoercions.registerAdapter(String.class, ZoneFailureDetector.class, new Function<String, ZoneFailureDetector>() {
+            @Override
+            public ZoneFailureDetector apply(final String input) {
+                ClassLoader classLoader = ZoneFailureDetector.class.getClassLoader();
+                Optional<ZoneFailureDetector> detector = Reflections.<ZoneFailureDetector>invokeConstructorWithArgs(classLoader, input);
+                if (detector.isPresent()) {
+                    return detector.get();
+                } else {
+                    throw new IllegalStateException("Failed to create ZoneFailureDetector "+input);
+                }
+            }
+        });
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(DynamicClusterImpl.class);
 
     /**
