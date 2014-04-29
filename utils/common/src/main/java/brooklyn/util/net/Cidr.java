@@ -45,7 +45,7 @@ public class Cidr {
             // useful e.g. if user leaves it blank in gui
             cidr = "0.0.0.0/0";
         int slash = cidr.indexOf('/');
-        if (slash==-1) throw new IllegalArgumentException("CIDR should be of form 192.168.0.0/16 (missing slash)");
+        if (slash==-1) throw new IllegalArgumentException("CIDR should be of form 192.168.0.0/16 (missing slash); input="+cidr);
         String subnet = cidr.substring(0, slash);
         String lengthS = cidr.substring(slash+1);
         this.length = Integer.parseInt(lengthS);
