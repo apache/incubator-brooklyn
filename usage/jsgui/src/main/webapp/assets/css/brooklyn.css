@@ -16,6 +16,7 @@ textarea {
     width: 195px !important;
     background: url(../images/brooklyn-logo.png) no-repeat;
     margin-top: 50px;
+    margin-left: 40px;
 }
 
 .navbar-inner {

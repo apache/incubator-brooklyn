@@ -1,7 +1,5 @@
 /* landing page */
 .logo {
-    display: inline-block;
-    padding-top: 10px;
     float: left;
 }
 
@@ -28,7 +26,7 @@
     min-height: 20px;
 }
 
-add-app .tab-content-scroller {
+.add-app .tab-content-scroller {
     overflow: auto !important;
 }
 #application-content div#details {
