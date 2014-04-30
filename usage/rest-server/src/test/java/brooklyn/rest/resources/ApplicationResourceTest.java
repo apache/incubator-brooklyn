@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.Application;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.Location;
@@ -480,7 +481,9 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
   @Test(dependsOnMethods = {"testListEffectors", "testFetchApplicationsAndEntity", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes","testLocatedLocation"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
+    waitForPageFoundResponse("/v1/applications/simple-app", ApplicationSummary.class);
     int size = getManagementContext().getApplications().size();
+    
     ClientResponse response = client().resource("/v1/applications/simple-app")
         .delete(ClientResponse.class);
 
@@ -491,7 +494,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     
     waitForPageNotFoundResponse("/v1/applications/simple-app", ApplicationSummary.class);
 
-    assertEquals(getManagementContext().getApplications().size(), size-1);
+    Collection<Application> apps = getManagementContext().getApplications();
+    assertEquals(apps.size(), size-1, "apps="+apps);
   }
-  
 }
