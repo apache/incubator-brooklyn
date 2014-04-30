@@ -307,12 +307,14 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
         try {
             setAttribute(SERVICE_UP, calculateServiceUp());
-            
+
             for (Policy it : getPolicies()) { it.suspend(); }
-            
-            shrinkInternal( -getCurrentSize() );
-            // run first without mutex (above) to make things stop even if starting,
-            // then run with mutex (below) to prevent others from starting things
+
+            // run shrink without mutex to make things stop even if starting,
+            int size = getCurrentSize();
+            if (size > 0) { shrink(-size); }
+
+            // run resize with mutex to prevent others from starting things
             resize(0);
 
             // also stop any remaining stoppable children -- eg those on fire
@@ -397,7 +399,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 memberLoc = getLocation();
             }
 
-            Entity replacement = replaceMember(member, memberLoc);
+            Entity replacement = replaceMember(member, memberLoc, ImmutableMap.of());
             return replacement.getId();
         }
     }
@@ -405,9 +407,10 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     /**
      * @throws StopFailedRuntimeException If stop failed, after successfully starting replacement
      */
-    protected Entity replaceMember(Entity member, Location memberLoc) {
+    protected Entity replaceMember(Entity member, Location memberLoc, Map<?, ?> extraFlags) {
         synchronized (mutex) {
-            Optional<Entity> added = growByOne(memberLoc, ImmutableMap.of());
+            Optional<Entity> added = addInSingleLocation(memberLoc, extraFlags);
+
             if (!added.isPresent()) {
                 String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
                 throw new IllegalStateException(msg);
@@ -471,131 +474,51 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
      * <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}.
      */
     @Override
-    public Collection<Entity> grow(int delta) {
+    public Collection<Entity> resizeByDelta(int delta) {
         synchronized (mutex) {
-            // choose locations to be deployed to
-            List<Location> chosenLocations;
-            if (isAvailabilityZoneEnabled()) {
-                List<Location> subLocations = getNonFailedSubLocations();
-                Multimap<Location, Entity> membersByLocation = getMembersByLocation();
-                chosenLocations = getZonePlacementStrategy().locationsForAdditions(membersByLocation, subLocations, delta);
-                if (chosenLocations.size() != delta) {
-                    throw new IllegalStateException("Node placement strategy chose " + Iterables.size(chosenLocations)
-                            + ", when expected delta " + delta + " in " + this);
-                }
+            if (delta > 0) {
+                return grow(delta);
+            } else if (delta < 0) {
+                return shrink(delta);
             } else {
-                chosenLocations = Collections.nCopies(delta, getLocation());
-            }
-
-            // create the entities and start them
-            List<Entity> addedEntities = Lists.newArrayList();
-            Map<Entity, Location> addedEntityLocations = Maps.newLinkedHashMap();
-            Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
-            for (Location chosenLocation : chosenLocations) {
-                Entity entity = addNode(chosenLocation, ImmutableMap.of());
-                addedEntities.add(entity);
-                addedEntityLocations.put(entity, chosenLocation);
-                Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(chosenLocation));
-                Task<Void> task = Effectors.invocation(entity, Startable.START, args).asTask();
-                tasks.put(entity, task);
-            }
-            DynamicTasks.queueIfPossible(Tasks.parallel("starting "+tasks.size()+" node"+Strings.s(tasks.size())+" (parallel)", tasks.values())).orSubmitAsync(this);
-            Map<Entity, Throwable> errors = waitForTasksOnEntityStart(tasks);
-
-            // if tracking, then report success/fail to the ZoneFailureDetector
-            if (isAvailabilityZoneEnabled()) {
-                for (Map.Entry<Entity, Location> entry : addedEntityLocations.entrySet()) {
-                    Entity entity = entry.getKey();
-                    Location loc = entry.getValue();
-                    Throwable err = errors.get(entity);
-                    if (err == null) {
-                        getZoneFailureDetector().onStartupSuccess(loc, entity);
-                    } else {
-                        getZoneFailureDetector().onStartupFailure(loc, entity, err);
-                    }
-                }
-            }
-
-            // quarantine/cleanup as necessary
-            if (!errors.isEmpty()) {
-                if (isQuarantineEnabled()) {
-                    quarantineFailedNodes(errors.keySet());
-                } else {
-                    cleanupFailedNodes(errors.keySet());
-                }
-            }
-
-            return MutableList.<Entity> builder().addAll(addedEntities).removeAll(errors.keySet()).build();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}.
-     */
-    @Override
-    public Optional<Entity> growByOne(Location loc, Map<?,?> extraFlags) {
-        synchronized (mutex) {
-            // TODO remove duplication from #grow(int)
-            Entity entity = addNode(loc, extraFlags);
-            Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(loc));
-            Task<?> task = entity.invoke(Startable.START, args);
-            Map<Entity, Throwable> errors = waitForTasksOnEntityStart(ImmutableMap.of(entity, task));
-
-            // if tracking, then report success/fail to the ZoneFailureDetector
-            if (isAvailabilityZoneEnabled()) {
-                Throwable err = errors.get(entity);
-                if (err == null) {
-                    getZoneFailureDetector().onStartupSuccess(loc, entity);
-                } else {
-                    getZoneFailureDetector().onStartupFailure(loc, entity, err);
-                }
-            }
-
-            // quarantine/cleanup as necessary
-            if (!errors.isEmpty()) {
-                if (isQuarantineEnabled()) {
-                    quarantineFailedNodes(ImmutableList.of(entity));
-                } else {
-                    cleanupFailedNodes(ImmutableList.of(entity));
-                }
-            }
-
-            if (errors.isEmpty()) {
-                return Optional.of(entity);
-            } else {
-                return Optional.absent();
+                return ImmutableList.<Entity>of();
             }
         }
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}.
-     */
-    @Override
-    public void shrink(int delta) {
-        synchronized (mutex) {
-            shrinkInternal(delta);
+    /** <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}. */
+    protected Collection<Entity> grow(int delta) {
+        Preconditions.checkArgument(delta > 0, "Must call grow with positive delta.");
+
+        // choose locations to be deployed to
+        List<Location> chosenLocations;
+        if (isAvailabilityZoneEnabled()) {
+            List<Location> subLocations = getNonFailedSubLocations();
+            Multimap<Location, Entity> membersByLocation = getMembersByLocation();
+            chosenLocations = getZonePlacementStrategy().locationsForAdditions(membersByLocation, subLocations, delta);
+            if (chosenLocations.size() != delta) {
+                throw new IllegalStateException("Node placement strategy chose " + Iterables.size(chosenLocations)
+                        + ", when expected delta " + delta + " in " + this);
+            }
+        } else {
+            chosenLocations = Collections.nCopies(delta, getLocation());
         }
+
+        // create the entities and start themo
+        return addInEachLocation(chosenLocations, ImmutableMap.of());
     }
 
-    private void shrinkInternal(int delta) {
-        if (delta>0) {
-            LOG.warn("Call to shrink with positive delta in "+this+"; delta should be negative if shrinking; changing delta from "+delta+" to "+(-delta),
-                new Throwable("Location of call to shrink with positive delta"));
-            delta = -delta;
-        }
+    /** <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}. */
+    protected Collection<Entity> shrink(int delta) {
+        Preconditions.checkArgument(delta < 0, "Must call shrink with negative delta.");
         int size = getCurrentSize();
         if (-delta > size) {
             // some subclasses (esp in tests) use custom sizes without the members set always being accurate, so put a limit on the size
             LOG.warn("Call to shrink "+this+" by "+delta+" when size is "+size+"; amending");
             delta = -size;
         }
-        if (delta==0) return;
-        
+        if (delta==0) return ImmutableList.<Entity>of();
+
         Collection<Entity> removedEntities = pickAndRemoveMembers(delta * -1);
 
         // FIXME symmetry in order of added as child, managed, started, and added to group
@@ -603,6 +526,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         Task<?> invoke = Entities.invokeEffector(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
         try {
             invoke.get();
+            return removedEntities;
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         } finally {
@@ -610,6 +534,59 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 discardNode(removedEntity);
             }
         }
+    }
+
+    @Override
+    public Optional<Entity> addInSingleLocation(Location location, Map<?,?> flags) {
+        Collection<Entity> added = addInEachLocation(ImmutableList.of(location), flags);
+        return Iterables.isEmpty(added) ? Optional.<Entity>absent() : Optional.of(Iterables.getOnlyElement(added));
+    }
+
+    @Override
+    public Collection<Entity> addInEachLocation(Iterable<Location> locations, Map<?,?> flags) {
+        List<Entity> addedEntities = Lists.newArrayList();
+        Map<Entity, Location> addedEntityLocations = Maps.newLinkedHashMap();
+        Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
+
+        for (Location loc : locations) {
+            Entity entity = addNode(loc, flags);
+            addedEntities.add(entity);
+            addedEntityLocations.put(entity, loc);
+            Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(loc));
+            Task<Void> task = Effectors.invocation(entity, Startable.START, args).asTask();
+            tasks.put(entity, task);
+        }
+
+        DynamicTasks.queueIfPossible(Tasks.parallel("starting "+tasks.size()+" node"+Strings.s(tasks.size())+" (parallel)", tasks.values())).orSubmitAsync(this);
+        Map<Entity, Throwable> errors = waitForTasksOnEntityStart(tasks);
+
+        // if tracking, then report success/fail to the ZoneFailureDetector
+        if (isAvailabilityZoneEnabled()) {
+            for (Map.Entry<Entity, Location> entry : addedEntityLocations.entrySet()) {
+                Entity entity = entry.getKey();
+                Location loc = entry.getValue();
+                Throwable err = errors.get(entity);
+                if (err == null) {
+                    getZoneFailureDetector().onStartupSuccess(loc, entity);
+                } else {
+                    getZoneFailureDetector().onStartupFailure(loc, entity, err);
+                }
+            }
+        }
+
+        // quarantine/cleanup as necessary
+        if (!errors.isEmpty()) {
+            if (isQuarantineEnabled()) {
+                quarantineFailedNodes(errors.keySet());
+            } else {
+                cleanupFailedNodes(errors.keySet());
+            }
+        }
+
+        return MutableList.<Entity> builder()
+                .addAll(addedEntities)
+                .removeAll(errors.keySet())
+                .build();
     }
 
     protected void quarantineFailedNodes(Collection<Entity> failedEntities) {
@@ -669,9 +646,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getConfig(CUSTOM_CHILD_FLAGS);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public Entity addNode(Location loc, Map<?,?> extraFlags) {
+    protected Entity addNode(Location loc, Map<?,?> extraFlags) {
         Map<?,?> createFlags = MutableMap.builder()
                 .putAll(getCustomChildFlags())
                 .putAll(extraFlags)

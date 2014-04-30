@@ -288,33 +288,17 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
         return super.createNode(loc, allflags);
     }
 
-    // TODO Duplicates super-class method more than I'd like!
     @Override
-    protected Entity replaceMember(Entity member, Location memberLoc) {
-        BigInteger oldToken = ((CassandraNode)member).getToken();
+    protected Entity replaceMember(Entity member, Location memberLoc, Map<?, ?> extraFlags) {
+        BigInteger oldToken = ((CassandraNode) member).getToken();
         BigInteger newToken = (oldToken != null) ? getTokenGenerator().getTokenForReplacementNode(oldToken) : null;
-        ImmutableMap<BasicAttributeSensorAndConfigKey<BigInteger>, BigInteger> extraFlags = ImmutableMap.of(CassandraNode.TOKEN, newToken);
-        
-        Optional<Entity> added = growByOne(memberLoc, extraFlags);
-        if (!added.isPresent()) {
-            String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
-            throw new IllegalStateException(msg);
-        }
-        
-        try {
-            stopAndRemoveNode(member);
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            throw new StopFailedRuntimeException("replaceMember failed to stop and remove old member "+member.getId(), e);
-        }
-        
-        return added.get();
+        return super.replaceMember(member, memberLoc,  MutableMap.copyOf(extraFlags).add(CassandraNode.TOKEN, newToken));
     }
 
     @Override
     public void start(Collection<? extends Location> locations) {
         Machines.warnIfLocalhost(locations, "CassandraCluster does not support multiple nodes on localhost, " +
-        		"due to assumptions Cassandra makes about the use of the same port numbers used across the cluster.");
+                "due to assumptions Cassandra makes about the use of the same port numbers used across the cluster.");
 
         // force this to be set - even if it is using the default
         setAttribute(CLUSTER_NAME, getConfig(CLUSTER_NAME));
