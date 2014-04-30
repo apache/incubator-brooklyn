@@ -25,11 +25,10 @@ import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.java.JavaAppUtils;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
-import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
@@ -98,12 +97,13 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         if (jmxFeedMx != null) jmxFeedMx.stop();
         super.disconnectSensors();
     }
-    
-    @Override
-    public void waitForServiceUp() {
-        // Increases wait-time by overriding this
-        log.info("Waiting for {} up, via {}", this, jmxFeedJetty == null ? "" : jmxFeedJetty.getJmxUri());
-        waitForServiceUp(Duration.of(getConfig(TomcatServer.START_TIMEOUT), TimeUnit.SECONDS));
+
+    public Integer getJmxPort() {
+        if (((Jetty6Driver) getDriver()).isJmxEnabled()) {
+            return Integer.valueOf(-1);
+        } else {
+            return getAttribute(UsesJmx.JMX_PORT);
+        }
     }
 
     @Override
@@ -123,6 +123,13 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         super.deploy(url, targetName);
         restartIfRunning();
     }
+
+    @Override
+    @Effector(description = "Undeploys the given context/artifact")
+    public void undeploy(@EffectorParam(name = "targetName") String targetName) {
+        super.undeploy(targetName);
+        restartIfRunning();
+    }
     
     protected void restartIfRunning() {
         // TODO for now we simply restart jetty to achieve "hot deployment"; should use the config mechanisms
@@ -131,13 +138,6 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
             restart();
         // may need a restart also if deploy effector is done in parallel to starting
         // but note this routine is used by initialDeployWars so just being in starting state is not enough!
-    }
-
-    @Override
-    @Effector(description = "Undeploys the given context/artifact")
-    public void undeploy(@EffectorParam(name = "targetName") String targetName) {
-        super.undeploy(targetName);
-        restartIfRunning();
     }
 
 }

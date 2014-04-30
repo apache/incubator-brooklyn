@@ -30,6 +30,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.text.Strings;
 
 public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver {
 
@@ -84,7 +85,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
         String destinationBrooklynConfig = Os.mergePathsUnix(getRunDir(), "etc/jetty-brooklyn.xml");
         copyTemplate("classpath://brooklyn/entity/webapp/jetty/jetty-brooklyn.xml", destinationBrooklynConfig);
         String customConfigTemplateUrl = getConfigXmlTemplateUrl();
-        if (customConfigTemplateUrl != null) {
+        if (Strings.isNonEmpty(customConfigTemplateUrl)) {
             String destinationConfigFile = Os.mergePathsUnix(getRunDir(), "etc/jetty-custom.xml");
             copyTemplate(customConfigTemplateUrl, destinationConfigFile);
         }
@@ -103,7 +104,8 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
 
         newScript(MutableMap.of(USE_PID_FILE, false), LAUNCHING)
                 .body.append(
-                        "./bin/jetty.sh start jetty.xml jetty-logging.xml jetty-stats.xml jetty-brooklyn jetty-custom.xml" +
+                        "./bin/jetty.sh start jetty.xml jetty-logging.xml jetty-stats.xml jetty-brooklyn " +
+                                (Strings.isEmpty(getConfigXmlTemplateUrl()) ? "" : "jetty-custom.xml ") +
                                 ">> $RUN_DIR/console 2>&1 < /dev/null",
                         "for i in {1..10} ; do\n" +
                         "    if [ -s "+getLogFileLocation()+" ]; then exit; fi\n" +

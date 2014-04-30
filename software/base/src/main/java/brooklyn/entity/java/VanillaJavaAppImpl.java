@@ -25,16 +25,16 @@ public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJa
 
     @SetFromFlag
     protected long jmxPollPeriod;
-    
+
     protected JmxFeed jmxFeed;
 
     public VanillaJavaAppImpl() {}
-    
+
     @VisibleForTesting
     public VanillaJavaAppImpl(Map<?,?> properties, Entity parent) {
         super(properties, parent);
     }
-    
+
     public String getMainClass() { return getConfig(MAIN_CLASS); }
     public List<String> getClasspath() { return getConfig(CLASSPATH); }
     public List<String> getClasspathFiles() { return getAttribute(CLASSPATH_FILES); }
@@ -48,7 +48,7 @@ public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJa
         newCP.add(url);
         setConfig(CLASSPATH, newCP);
     }
-    
+
     public void addToClasspath(Collection<String> urls) {
         List<String> cp = getConfig(CLASSPATH);
         List<String> newCP = new ArrayList<String>();
@@ -60,7 +60,7 @@ public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJa
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        
+
         if (((VanillaJavaAppDriver) getDriver()).isJmxEnabled()) {
             jmxPollPeriod = (jmxPollPeriod > 0) ? jmxPollPeriod : 500;
             jmxFeed = JavaAppUtils.connectMXBeanSensors(this, jmxPollPeriod);
@@ -75,17 +75,12 @@ public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJa
         disconnectServiceUpIsRunning();
         if (jmxFeed != null) jmxFeed.stop();
     }
-    
-    @Override
-    protected void preStop() {
-        super.preStop();
-    }
 
     @Override
     public Class<? extends VanillaJavaAppDriver> getDriverInterface() {
         return VanillaJavaAppDriver.class;
     }
-    
+
     public String getRunDir() {
         // FIXME Make this an attribute; don't assume it hsa to be ssh? What uses this?
         VanillaJavaAppSshDriver driver = (VanillaJavaAppSshDriver) getDriver();
