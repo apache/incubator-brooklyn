@@ -344,12 +344,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             } else {
                 if (LOG.isDebugEnabled()) LOG.debug("Resize no-op {} from {} to {}", new Object[] {this, currentSize, desiredSize});
             }
-            
-            if (delta > 0) {
-                grow(delta);
-            } else if (delta < 0) {
-                shrink(delta);
-            }
+            resizeByDelta(delta);
         }
         return getCurrentSize();
     }
@@ -375,8 +370,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
             Location memberLoc = null;
             if (isAvailabilityZoneEnabled()) {
-                // this entity's member could be a machine provisioned by a sub-location, or the actual sub-location
-                List<Location> subLocations = getAttribute(SUB_LOCATIONS);
+                // this member's location could be a machine provisioned by a sub-location, or the actual sub-location
+                List<Location> subLocations = findSubLocations(getLocation());
                 Location actualMemberLoc = checkNotNull(Iterables.getOnlyElement(member.getLocations()), "member's location (%s)", member);
                 Location contenderMemberLoc = actualMemberLoc;
                 boolean foundMatch = false;
@@ -442,7 +437,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     protected List<Location> getNonFailedSubLocations() {
         List<Location> result = Lists.newArrayList();
         Set<Location> failed = Sets.newLinkedHashSet();
-        List<Location> subLocations = getAttribute(SUB_LOCATIONS);
+        List<Location> subLocations = findSubLocations(getLocation());
         Set<Location> oldFailedSubLocations = getAttribute(FAILED_SUB_LOCATIONS);
         if (oldFailedSubLocations == null)
             oldFailedSubLocations = ImmutableSet.<Location> of();
@@ -458,6 +453,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         Set<Location> newlyFailed = Sets.difference(failed, oldFailedSubLocations);
         Set<Location> newlyRecovered = Sets.difference(oldFailedSubLocations, failed);
         setAttribute(FAILED_SUB_LOCATIONS, failed);
+        setAttribute(SUB_LOCATIONS, result);
         if (newlyFailed.size() > 0) {
             LOG.warn("Detected probably zone failures for {}: {}", this, newlyFailed);
         }
