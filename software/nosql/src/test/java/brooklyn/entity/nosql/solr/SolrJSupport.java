@@ -27,6 +27,7 @@ public class SolrJSupport {
         server = new HttpSolrServer(String.format("http://%s:%d/solr/%s", hostname, solrPort, core));
         server.setMaxRetries(1);
         server.setConnectionTimeout(5000);
+        server.setSoTimeout(5000);
     }
 
     public void commit() throws Exception {

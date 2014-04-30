@@ -77,8 +77,27 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
         return client().resource(uri).get(ApplicationSummary.class).getStatus();
     }
 
+    protected void waitForPageFoundResponse(final String resource, final Class<?> clazz) {
+        boolean found = Repeater.create("Wait for page found")
+                .until(new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        try {
+                            client().resource(resource).get(clazz);
+                            return true;
+                        } catch (UniformInterfaceException e) {
+                            return false;
+                        }
+                    }
+                })
+                .every(1, TimeUnit.SECONDS)
+                .limitTimeTo(30, TimeUnit.SECONDS)
+                .run();
+        assertTrue(found);
+    }
+    
     protected void waitForPageNotFoundResponse(final String resource, final Class<?> clazz) {
-        boolean found = Repeater.create("Wait for page not found")
+        boolean success = Repeater.create("Wait for page not found")
                 .until(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
@@ -93,6 +112,6 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
                 .every(1, TimeUnit.SECONDS)
                 .limitTimeTo(30, TimeUnit.SECONDS)
                 .run();
-        assertTrue(found);
+        assertTrue(success);
     }
 }

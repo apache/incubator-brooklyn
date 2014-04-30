@@ -3,7 +3,6 @@ package brooklyn.demo;
 import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 import static brooklyn.event.basic.DependentConfiguration.formatString;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -38,6 +37,7 @@ import brooklyn.util.CommandLineUtil;
 import brooklyn.util.ResourceUtils;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 /**
@@ -114,7 +114,7 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
                                 formatString("jdbc:%s%s?user=%s\\&password=%s", 
                                         attributeWhenReady(mysql, MySqlNode.DATASTORE_URL), DB_TABLE, DB_USERNAME, DB_PASSWORD))
                         .configure(DynamicCluster.INITIAL_SIZE, 2)
-                        .configure(WebAppService.ENABLED_PROTOCOLS, Arrays.asList(getConfig(USE_HTTPS) ? "https" : "http")) );
+                        .configure(WebAppService.ENABLED_PROTOCOLS, ImmutableSet.of(getConfig(USE_HTTPS) ? "https" : "http")) );
 
         web.addEnricher(HttpLatencyDetector.builder().
                 url(ROOT_URL).

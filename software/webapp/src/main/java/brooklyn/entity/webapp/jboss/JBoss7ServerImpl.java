@@ -1,23 +1,23 @@
 package brooklyn.entity.webapp.jboss;
 
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.webapp.HttpsSslConfig;
-import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.policy.Enricher;
+
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.Map;
 
 public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements JBoss7Server {
 
@@ -185,16 +185,6 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         return getDriver().getSslKeystoreFile();
     }
     
-    protected boolean isProtocolEnabled(String protocol) {
-        List<String> protocols = getAttribute(JavaWebAppSoftwareProcess.ENABLED_PROTOCOLS);
-        for (String contender : protocols) {
-            if (protocol.equalsIgnoreCase(contender)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public String getShortName() {
         return "JBossAS7";

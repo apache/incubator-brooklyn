@@ -8,6 +8,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.testng.Assert;
 
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
+
 /**
  * Repeatedly polls a given URL, to check if it is always available.
  * 
@@ -59,7 +62,7 @@ public class WebAppMonitor implements Runnable {
             try {
                 if (preAttempt()) {
                     int code = HttpTestUtils.getHttpStatusCode(url);
-                    lastTime.set(System.currentTimeMillis()-startTime);
+                    lastTime.set(System.currentTimeMillis() - startTime);
                     lastStatus.set(code);
                     if (isResponseOkay(code)) {
                         successes.incrementAndGet();
@@ -162,12 +165,24 @@ public class WebAppMonitor implements Runnable {
         }
         return this;
     }
-    public WebAppMonitor assertSuccessFraction(String message, double percentage) {
-        if ((getFailures() > (1-percentage) * getAttempts()+0.0001) || getAttempts()<=0) {
+    public WebAppMonitor waitForAtLeastOneAttempt() {
+        return waitForAtLeastOneAttempt(Asserts.DEFAULT_TIMEOUT);
+    }
+    public WebAppMonitor waitForAtLeastOneAttempt(Duration timeout) {
+        Asserts.succeedsEventually(MutableMap.of("timeout", timeout), new Runnable() {
+            @Override public void run() {
+                Assert.assertTrue(getAttempts() >= 1);
+            }});
+        return this;
+    }
+    public WebAppMonitor assertSuccessFraction(String message, double fraction) {
+        int failures = getFailures();
+        int attempts = getAttempts();
+        if ((failures > (1-fraction) * attempts + 0.0001) || attempts <= 0) {
             Assert.fail(message+" -- webapp access failures! " +
-            		"("+getFailures()+" failed of "+getAttempts()+" monitoring attempts) against "+getUrl()+"; " +
+            		"("+failures+" failed of "+attempts+" monitoring attempts) against "+getUrl()+"; " +
             		"last was "+getLastStatus()+" taking "+getLastTime()+"ms" +
-            		(getLastFailure()!=null ? "; last failure was "+getLastFailure() : ""));
+            		(getLastFailure() != null ? "; last failure was "+getLastFailure() : ""));
         }
         return this;
     }

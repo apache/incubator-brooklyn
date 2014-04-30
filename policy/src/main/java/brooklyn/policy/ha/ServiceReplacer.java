@@ -19,7 +19,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.trait.MemberReplaceable;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -94,7 +94,7 @@ public class ServiceReplacer extends AbstractPolicy {
 
     @Override
     public void setEntity(EntityLocal entity) {
-        checkArgument(entity instanceof DynamicCluster, "Replacer must take a DynamicCluster, not %s", entity);
+        checkArgument(entity instanceof MemberReplaceable, "ServiceReplacer must take a MemberReplaceable, not %s", entity);
         Sensor<?> failureSensorToMonitor = checkNotNull(getConfig(FAILURE_SENSOR_TO_MONITOR), "failureSensorToMonitor");
         
         super.setEntity(entity);
@@ -124,7 +124,7 @@ public class ServiceReplacer extends AbstractPolicy {
             @Override
             public void run() {
                 try {
-                    Entities.invokeEffectorWithArgs(entity, entity, DynamicCluster.REPLACE_MEMBER, event.getSource().getId()).get();
+                    Entities.invokeEffectorWithArgs(entity, entity, MemberReplaceable.REPLACE_MEMBER, event.getSource().getId()).get();
                     consecutiveReplacementFailureTimes.clear();
                 } catch (Exception e) {
                     // FIXME replaceMember fails if stop fails on the old node; should resolve that more gracefully than this

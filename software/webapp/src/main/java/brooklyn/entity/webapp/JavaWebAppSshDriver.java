@@ -3,7 +3,7 @@ package brooklyn.entity.webapp;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
-import java.util.List;
+import java.util.Set;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
@@ -22,7 +22,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
     }
 
     protected boolean isProtocolEnabled(String protocol) {
-        List<String> protocols = getEnabledProtocols();
+        Set<String> protocols = getEnabledProtocols();
         for (String contender : protocols) {
             if (protocol.equalsIgnoreCase(contender)) {
                 return true;
@@ -32,8 +32,8 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
     }
 
     @Override
-    public List<String> getEnabledProtocols() {
-        return entity.getAttribute(JavaWebAppSoftwareProcessImpl.ENABLED_PROTOCOLS);
+    public Set<String> getEnabledProtocols() {
+        return entity.getAttribute(JavaWebAppSoftwareProcess.ENABLED_PROTOCOLS);
     }
     
     @Override
@@ -68,11 +68,11 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
 
     protected String inferRootUrl() {
         if (isProtocolEnabled("https")) {
-            int port = getHttpsPort();
+            Integer port = getHttpsPort();
             checkNotNull(port, "HTTPS_PORT sensors not set; is an acceptable port available?");
             return String.format("https://%s:%s/", getHostname(), port);
         } else if (isProtocolEnabled("http")) {
-            int port = getHttpPort();
+            Integer port = getHttpPort();
             checkNotNull(port, "HTTP_PORT sensors not set; is an acceptable port available?");
             return String.format("http://%s:%s/", getHostname(), port);
         } else {

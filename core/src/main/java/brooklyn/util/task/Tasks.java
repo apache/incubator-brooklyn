@@ -3,6 +3,7 @@ package brooklyn.util.task;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -31,6 +32,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class Tasks {
     
@@ -148,8 +150,28 @@ public class Tasks {
                 
             } else if (v instanceof List) {
                 List result = Lists.newArrayList();
-                int count=0;
+                int count = 0;
                 for (Object it : (List)v) {
+                    result.add(resolveValue(it, type, exec, 
+                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count));
+                    count++;
+                }
+                return (T) result;
+                
+            } else if (v instanceof Set) {
+                Set result = Sets.newLinkedHashSet();
+                int count = 0;
+                for (Object it : (Set)v) {
+                    result.add(resolveValue(it, type, exec, 
+                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count));
+                    count++;
+                }
+                return (T) result;
+                
+            } else if (v instanceof Iterable) {
+                List result = Lists.newArrayList();
+                int count = 0;
+                for (Object it : (Iterable)v) {
                     result.add(resolveValue(it, type, exec, 
                             (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count));
                     count++;
@@ -163,6 +185,32 @@ public class Tasks {
         } catch (Exception e) {
             throw new IllegalArgumentException("Error resolving "+(contextMessage!=null ? contextMessage+", " : "")+v+", in "+exec+": "+e, e);
         }
+        return resolveValue(v, type, exec, contextMessage);
+    }
+
+    /**
+     * @see #resolveDeepValue(Object, Class, ExecutionContext, String)
+     */
+    public static Object resolveDeepValue(Object v, Class<?> type, ExecutionContext exec) throws ExecutionException, InterruptedException {
+        return resolveValue(v, type, exec);
+    }
+
+    /**
+     * Resolves the given object, blocking on futures and coercing it to the given type. If the object is a 
+     * map or iterable (or a list of map of maps, etc, etc) then walks these maps/iterables to convert all of 
+     * their values to the given type. For example, the following will return a list containing a map with "1"="true":
+     * 
+     *   {@code Object result = resolveDeepValue(ImmutableList.of(ImmutableMap.of(1, true)), String.class, exec)} 
+     * 
+     * This differs from {@link #resolveValue(Object, Class, ExecutionContext, String)} only in its 
+     * use of generics and its return type. Even though the {@link #resolveValue(Object, Class, ExecutionContext, String)}
+     * method does "deep" conversion of futures contained within iterables/maps, the return type implies
+     * that it is the top-level object that should be coerced. For example, the following will try to return a String, 
+     * when in fact it is a map, giving a {@link ClassCastException}.
+     * 
+     *   {@code String result = resolveValue(ImmutableList.of(ImmutableMap.of(1, true)), String.class, exec)} 
+     */
+    public static Object resolveDeepValue(Object v, Class<?> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
         return resolveValue(v, type, exec, contextMessage);
     }
 
