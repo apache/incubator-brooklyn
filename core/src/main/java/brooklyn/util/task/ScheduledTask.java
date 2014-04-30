@@ -11,9 +11,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import brooklyn.management.Task;
-import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.TimeExtras;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Throwables;
@@ -48,13 +46,16 @@ public class ScheduledTask extends BasicTask {
         this(MutableMap.of(), taskFactory);
     }
 
-    public ScheduledTask(final Task<?> task){
-        this(new Callable<Task<?>>(){
+    public ScheduledTask(final Task<?> task) {
+        this(MutableMap.of(), task);
+    }
+
+    public ScheduledTask(Map flags, final Task<?> task){
+        this(flags, new Callable<Task<?>>(){
             @Override
             public Task<?> call() throws Exception {
                 return task;
-            }
-        });
+            }});
     }
 
 	public ScheduledTask(Map flags, Callable<Task<?>> taskFactory) {
