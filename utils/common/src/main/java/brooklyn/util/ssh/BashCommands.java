@@ -390,8 +390,7 @@ public class BashCommands {
         long secs = Math.max(timeout.toSeconds(), 1);
         
         List<String> commands = ImmutableList.of(
-                "for i in {1.."+secs+"}",
-                "do",
+                "for i in {1.."+secs+"}; do",
                 "    grep '"+desiredContent+"' "+file+" && result=0 || result=$?",
                 "    [ \"$result\" == 0 ] && break",
                 "    sleep 1",

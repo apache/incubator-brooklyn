@@ -294,7 +294,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         // prefix with runDir if relative target
         String dest = target;
         if (!new File(target).isAbsolute()) {
-            dest = getRunDir() + "/" + target;
+            dest = Os.mergePathsUnix(getRunDir(), target);
         }
         
         String data = processTemplate(template, extraSubstitutions);
@@ -391,6 +391,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         String dest = file.isAbsolute() ? target : Os.mergePathsUnix(getRunDir(), target);
         
         if (createParentDir) {
+            // don't use File.separator because it's remote machine's format, rather than local machine's
             int lastSlashIndex = dest.lastIndexOf("/");
             String parent = (lastSlashIndex > 0) ? dest.substring(0, lastSlashIndex) : null;
             if (parent != null) {

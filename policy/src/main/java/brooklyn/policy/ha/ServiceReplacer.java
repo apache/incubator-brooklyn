@@ -94,7 +94,7 @@ public class ServiceReplacer extends AbstractPolicy {
 
     @Override
     public void setEntity(EntityLocal entity) {
-        checkArgument(entity instanceof MemberReplaceable, "Replacer must take a DynamicCluster, not %s", entity);
+        checkArgument(entity instanceof MemberReplaceable, "ServiceReplacer must take a MemberReplaceable, not %s", entity);
         Sensor<?> failureSensorToMonitor = checkNotNull(getConfig(FAILURE_SENSOR_TO_MONITOR), "failureSensorToMonitor");
         
         super.setEntity(entity);

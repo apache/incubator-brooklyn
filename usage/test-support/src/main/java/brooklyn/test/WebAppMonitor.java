@@ -1,6 +1,5 @@
 package brooklyn.test;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -63,7 +62,7 @@ public class WebAppMonitor implements Runnable {
             try {
                 if (preAttempt()) {
                     int code = HttpTestUtils.getHttpStatusCode(url);
-                    lastTime.set(System.currentTimeMillis()-startTime);
+                    lastTime.set(System.currentTimeMillis() - startTime);
                     lastStatus.set(code);
                     if (isResponseOkay(code)) {
                         successes.incrementAndGet();
@@ -167,7 +166,7 @@ public class WebAppMonitor implements Runnable {
         return this;
     }
     public WebAppMonitor waitForAtLeastOneAttempt() {
-        return waitForAtLeastOneAttempt(Duration.of(30, TimeUnit.SECONDS));
+        return waitForAtLeastOneAttempt(Asserts.DEFAULT_TIMEOUT);
     }
     public WebAppMonitor waitForAtLeastOneAttempt(Duration timeout) {
         Asserts.succeedsEventually(MutableMap.of("timeout", timeout), new Runnable() {
@@ -176,14 +175,14 @@ public class WebAppMonitor implements Runnable {
             }});
         return this;
     }
-    public WebAppMonitor assertSuccessFraction(String message, double percentage) {
+    public WebAppMonitor assertSuccessFraction(String message, double fraction) {
         int failures = getFailures();
         int attempts = getAttempts();
-        if ((failures > (1-percentage) * attempts+0.0001) || attempts<=0) {
+        if ((failures > (1-fraction) * attempts + 0.0001) || attempts <= 0) {
             Assert.fail(message+" -- webapp access failures! " +
             		"("+failures+" failed of "+attempts+" monitoring attempts) against "+getUrl()+"; " +
             		"last was "+getLastStatus()+" taking "+getLastTime()+"ms" +
-            		(getLastFailure()!=null ? "; last failure was "+getLastFailure() : ""));
+            		(getLastFailure() != null ? "; last failure was "+getLastFailure() : ""));
         }
         return this;
     }

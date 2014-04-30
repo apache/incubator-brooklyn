@@ -83,16 +83,18 @@ public class HttpTool {
             this.httpParams = checkNotNull(val, "httpParams");
             return this;
         }
-        public HttpClientBuilder connectionTimeout(Duration connectionTimeout, Duration socketTimeout) {
+        public HttpClientBuilder connectionTimeout(Duration val) {
             if (httpParams == null) httpParams = new BasicHttpParams();
-            if (connectionTimeout != null) {
-                if (connectionTimeout.toMilliseconds() > Integer.MAX_VALUE) throw new IllegalStateException("HttpClient only accepts upto max-int millis for connectionTimeout, but given "+connectionTimeout);
-                HttpConnectionParams.setConnectionTimeout(httpParams, (int) connectionTimeout.toMilliseconds());
-            }
-            if (socketTimeout != null) {
-                HttpConnectionParams.setSoTimeout(httpParams, (int) socketTimeout.toMilliseconds());
-                if (socketTimeout.toMilliseconds() > Integer.MAX_VALUE) throw new IllegalStateException("HttpClient only accepts upto max-int millis for socketTimeout, but given "+connectionTimeout);
-            }
+            long millis = checkNotNull(val, "connectionTimeout").toMilliseconds();
+            if (millis > Integer.MAX_VALUE) throw new IllegalStateException("HttpClient only accepts upto max-int millis for connectionTimeout, but given "+val);
+            HttpConnectionParams.setConnectionTimeout(httpParams, (int) millis);
+            return this;
+        }
+        public HttpClientBuilder socketTimeout(Duration val) {
+            if (httpParams == null) httpParams = new BasicHttpParams();
+            long millis = checkNotNull(val, "socketTimeout").toMilliseconds();
+            if (millis > Integer.MAX_VALUE) throw new IllegalStateException("HttpClient only accepts upto max-int millis for socketTimeout, but given "+val);
+            HttpConnectionParams.setSoTimeout(httpParams, (int) millis);
             return this;
         }
         public HttpClientBuilder reuseStrategy(ConnectionReuseStrategy val) {
@@ -140,18 +142,7 @@ public class HttpTool {
             return this;
         }
         public HttpClient build() {
-            final DefaultHttpClient httpClient;
-            if (clientConnectionManager != null) {
-                if (httpParams != null) {
-                    httpClient = new DefaultHttpClient(clientConnectionManager, httpParams);
-                } else {
-                    httpClient = new DefaultHttpClient(clientConnectionManager);
-                }
-            } else if (httpParams != null) {
-                httpClient = new DefaultHttpClient(httpParams);
-            } else {
-                httpClient = new DefaultHttpClient();
-            }
+            final DefaultHttpClient httpClient = new DefaultHttpClient(clientConnectionManager, httpParams);
     
             // support redirects for POST (similar to `curl --post301 -L`)
             // http://stackoverflow.com/questions/3658721/httpclient-4-error-302-how-to-redirect

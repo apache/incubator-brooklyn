@@ -18,8 +18,8 @@ import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxy.AbstractController;
-import brooklyn.entity.proxy.AbstractControllerTest;
 import brooklyn.entity.proxy.LoadBalancer;
+import brooklyn.entity.proxy.TrackingAbstractController;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -67,7 +67,7 @@ public class ControlledDynamicWebAppClusterTest {
     
     @Test
     public void testUsesCustomController() {
-        AbstractController controller = app.createAndManageChild(EntitySpec.create(AbstractControllerTest.TrackingAbstractController.class).displayName("mycustom"));
+        AbstractController controller = app.createAndManageChild(EntitySpec.create(TrackingAbstractController.class).displayName("mycustom"));
 
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
@@ -85,7 +85,7 @@ public class ControlledDynamicWebAppClusterTest {
     
     @Test
     public void testUsesCustomControllerSpec() {
-        EntitySpec<AbstractControllerTest.TrackingAbstractController> controllerSpec = EntitySpec.create(AbstractControllerTest.TrackingAbstractController.class).displayName("mycustom");
+        EntitySpec<TrackingAbstractController> controllerSpec = EntitySpec.create(TrackingAbstractController.class).displayName("mycustom");
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, controllerSpec)
@@ -117,7 +117,7 @@ public class ControlledDynamicWebAppClusterTest {
     public void testSetsInitialSize() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 2)
-                .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(AbstractControllerTest.TrackingAbstractController.class))
+                .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(TrackingAbstractController.class))
                 .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
         app.start(locs);
 
@@ -148,7 +148,7 @@ public class ControlledDynamicWebAppClusterTest {
     public void testUsesCustomWebClusterSpec() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
-                .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(AbstractControllerTest.TrackingAbstractController.class))
+                .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(TrackingAbstractController.class))
                 .configure(ControlledDynamicWebAppCluster.WEB_CLUSTER_SPEC, EntitySpec.create(DynamicWebAppCluster.class)
                         .displayName("mydisplayname")));
         app.start(locs);
@@ -214,7 +214,7 @@ public class ControlledDynamicWebAppClusterTest {
     public void testMembersReflectChildClusterMembers() {
         final ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
-                .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(AbstractControllerTest.TrackingAbstractController.class))
+                .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(TrackingAbstractController.class))
                 .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
         app.start(locs);
         final DynamicWebAppCluster childCluster = cluster.getCluster();

@@ -704,13 +704,6 @@ public class Strings {
         return input;
     }
 
-    /** looks for first section of text in following the prefix;
-     * null if the prefix is not present in the string;
-     * if prefix is null, it is treated as the start of the string */
-    public static String getFragmentAfter(String input, String prefix) {
-        return getFragmentBetween(input, prefix, null);
-    }
-
     public static int getWordCount(String phrase, boolean respectQuotes) {
         if (phrase==null) return 0;
         phrase = phrase.trim();

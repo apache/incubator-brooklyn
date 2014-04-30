@@ -158,8 +158,8 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
         setAttribute(REQUESTS_PER_SECOND_IN_WINDOW, 0D);
     }
     
-    protected List<String> getEnabledProtocols() {
-        return getAttribute(JavaWebAppSoftwareProcessImpl.ENABLED_PROTOCOLS);
+    protected Set<String> getEnabledProtocols() {
+        return getAttribute(JavaWebAppSoftwareProcess.ENABLED_PROTOCOLS);
     }
     
     protected boolean isProtocolEnabled(String protocol) {

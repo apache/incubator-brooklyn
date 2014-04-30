@@ -20,7 +20,6 @@ import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -128,7 +127,7 @@ public class UrlMappingImpl extends AbstractGroupImpl implements UrlMapping {
         String h = s.getAttribute(Attributes.HOSTNAME);
 
         Integer p = null;
-        List<String> protos = s.getAttribute(WebAppServiceConstants.ENABLED_PROTOCOLS);
+        Set<String> protos = s.getAttribute(WebAppServiceConstants.ENABLED_PROTOCOLS);
         ProxySslConfig sslConfig = getConfig(SSL_CONFIG);
         if (sslConfig != null && sslConfig.getTargetIsSsl()) {
             // use ssl
@@ -213,7 +212,7 @@ public class UrlMappingImpl extends AbstractGroupImpl implements UrlMapping {
         Entities.unmanage(this);
     }
 
-    private boolean hasProtocol(List<String> protocols, String desired) {
+    private boolean hasProtocol(Collection<String> protocols, String desired) {
         for (String contender : protocols) {
             if ("https".equals(contender.toLowerCase())) return true;
         }

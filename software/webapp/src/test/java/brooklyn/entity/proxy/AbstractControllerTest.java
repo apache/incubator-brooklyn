@@ -22,11 +22,9 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.driver.MockSshDriver;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
@@ -83,42 +81,6 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
         app.start(ImmutableList.of(loc));
     }
     
-    @ImplementedBy(TrackingAbstractControllerImpl.class)
-    public static interface TrackingAbstractController extends AbstractController {
-        List<Collection<String>> getUpdates();
-    }
-    
-    public static class TrackingAbstractControllerImpl extends AbstractControllerImpl implements TrackingAbstractController {
-        private final List<Collection<String>> updates = Lists.newCopyOnWriteArrayList();
-        
-        @Override
-        public List<Collection<String>> getUpdates() {
-            return updates;
-        }
-        
-        @Override
-        public void connectSensors() {
-            super.connectSensors();
-            setAttribute(SERVICE_UP, true);
-        }
-        
-        @Override
-        protected void reconfigureService() {
-            log.info("test controller reconfigure, addresses "+serverPoolAddresses);
-            if ((!serverPoolAddresses.isEmpty() && updates.isEmpty()) || (!updates.isEmpty() && serverPoolAddresses!=updates.get(updates.size()-1))) {
-                updates.add(serverPoolAddresses);
-            }
-        }
-
-        @Override
-        public Class getDriverInterface() {
-            return MockSshDriver.class;
-        }
-        public void reload() {
-            // no-op
-        }
-    }
-
     // Fixes bug where entity that wrapped an AS7 entity was never added to nginx because hostname+port
     // was set after service_up. Now we listen to those changes and reset the nginx pool when these
     // values change.

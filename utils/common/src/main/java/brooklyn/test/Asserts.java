@@ -31,7 +31,7 @@ public class Asserts {
      * The default timeout for assertions. Alter in individual tests by giving a
      * "timeout" entry in method flags.
      */
-    private static final Duration DEFAULT_TIMEOUT = Duration.THIRTY_SECONDS;
+    public static final Duration DEFAULT_TIMEOUT = Duration.THIRTY_SECONDS;
 
     private static final Logger log = LoggerFactory.getLogger(Asserts.class);
 

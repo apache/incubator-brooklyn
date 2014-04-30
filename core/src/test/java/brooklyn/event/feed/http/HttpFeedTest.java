@@ -99,7 +99,8 @@ public class HttpFeedTest {
                 .baseUrl(baseUrl)
                 .poll(new HttpPollConfig<Integer>(SENSOR_INT)
                         .period(100)
-                        .connectionTimeout(Duration.TEN_SECONDS, Duration.TEN_SECONDS)
+                        .connectionTimeout(Duration.TEN_SECONDS)
+                        .socketTimeout(Duration.TEN_SECONDS)
                         .onSuccess(HttpValueFunctions.responseCode()))
                 .build();
         
@@ -122,7 +123,8 @@ public class HttpFeedTest {
                 .baseUrl(baseUrl)
                 .poll(new HttpPollConfig<Integer>(SENSOR_INT)
                         .period(100)
-                        .connectionTimeout(Duration.TEN_SECONDS, Duration.TEN_SECONDS)
+                        .connectionTimeout(Duration.TEN_SECONDS)
+                        .socketTimeout(Duration.TEN_SECONDS)
                         .onSuccess(HttpValueFunctions.responseCode())
                         .onException(Functions.constant(-1)))
                 .build();

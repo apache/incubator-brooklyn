@@ -89,9 +89,12 @@ public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConf
     public HttpPollConfig<T> body(byte[] val) {
         this.body = val; return this;
     }
-    public HttpPollConfig<T> connectionTimeout(Duration connectionTimeoutVal, Duration socketTimeoutVal) {
-        this.connectionTimeout = connectionTimeoutVal;
-        this.socketTimeout = connectionTimeoutVal;
+    public HttpPollConfig<T> connectionTimeout(Duration val) {
+        this.connectionTimeout = val;
+        return this;
+    }
+    public HttpPollConfig<T> socketTimeout(Duration val) {
+        this.socketTimeout = val;
         return this;
     }
     public URI buildUri(URI baseUri, Map<String,String> baseUriVars) {

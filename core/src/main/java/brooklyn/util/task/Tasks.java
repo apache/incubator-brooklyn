@@ -188,10 +188,28 @@ public class Tasks {
         return resolveValue(v, type, exec, contextMessage);
     }
 
+    /**
+     * @see #resolveDeepValue(Object, Class, ExecutionContext, String)
+     */
     public static Object resolveDeepValue(Object v, Class<?> type, ExecutionContext exec) throws ExecutionException, InterruptedException {
         return resolveValue(v, type, exec);
     }
 
+    /**
+     * Resolves the given object, blocking on futures and coercing it to the given type. If the object is a 
+     * map or iterable (or a list of map of maps, etc, etc) then walks these maps/iterables to convert all of 
+     * their values to the given type. For example, the following will return a list containing a map with "1"="true":
+     * 
+     *   {@code Object result = resolveDeepValue(ImmutableList.of(ImmutableMap.of(1, true)), String.class, exec)} 
+     * 
+     * This differs from {@link #resolveValue(Object, Class, ExecutionContext, String)} only in its 
+     * use of generics and its return type. Even though the {@link #resolveValue(Object, Class, ExecutionContext, String)}
+     * method does "deep" conversion of futures contained within iterables/maps, the return type implies
+     * that it is the top-level object that should be coerced. For example, the following will try to return a String, 
+     * when in fact it is a map, giving a {@link ClassCastException}.
+     * 
+     *   {@code String result = resolveValue(ImmutableList.of(ImmutableMap.of(1, true)), String.class, exec)} 
+     */
     public static Object resolveDeepValue(Object v, Class<?> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
         return resolveValue(v, type, exec, contextMessage);
     }

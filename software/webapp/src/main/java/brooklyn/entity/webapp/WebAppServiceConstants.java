@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp;
 
-import java.util.List;
+import java.util.Set;
 
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.Attributes;
@@ -23,8 +23,8 @@ public interface WebAppServiceConstants {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @SetFromFlag("enabledProtocols")
-    public static final BasicAttributeSensorAndConfigKey<List<String>> ENABLED_PROTOCOLS = new BasicAttributeSensorAndConfigKey(
-            List.class, "webapp.enabledProtocols", "List of enabled protocols (e.g. http, https)", ImmutableList.of("http"));
+    public static final BasicAttributeSensorAndConfigKey<Set<String>> ENABLED_PROTOCOLS = new BasicAttributeSensorAndConfigKey(
+            Set.class, "webapp.enabledProtocols", "List of enabled protocols (e.g. http, https)", ImmutableList.of("http"));
 
     @SetFromFlag("httpsSsl")
     public static final BasicAttributeSensorAndConfigKey<HttpsSslConfig> HTTPS_SSL_CONFIG = new BasicAttributeSensorAndConfigKey<HttpsSslConfig>(

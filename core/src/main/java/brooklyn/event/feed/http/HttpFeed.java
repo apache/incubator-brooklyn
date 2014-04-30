@@ -319,8 +319,11 @@ public class HttpFeed extends AbstractFeed {
                 .laxRedirect(true);
         if (uri != null) builder.uri(uri);
         if (uri != null) builder.credential(pollIdentifier.credentials);
-        if (pollIdentifier.connectionTimeout != null || pollIdentifier.socketTimeout != null) {
-            builder.connectionTimeout(pollIdentifier.connectionTimeout, pollIdentifier.socketTimeout);
+        if (pollIdentifier.connectionTimeout != null) {
+            builder.connectionTimeout(pollIdentifier.connectionTimeout);
+        }
+        if (pollIdentifier.socketTimeout != null) {
+            builder.socketTimeout(pollIdentifier.socketTimeout);
         }
         return builder.build();
     }
