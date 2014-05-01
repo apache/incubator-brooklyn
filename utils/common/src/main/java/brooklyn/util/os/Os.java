@@ -315,8 +315,13 @@ public class Os {
     public static File mkdirs(File dir) {
         if (dir.isDirectory()) return dir;
         boolean success = dir.mkdirs();
-        if (!success) throw Exceptions.propagate(new IOException("Failed to create directory " + dir + 
-                (dir.isFile() ? "(is file)" : "")));
+        if (!success) {
+            // A race condition can cause dir.mkdirs() to return false if the dir has been created on a separate thread
+            // since the initial check above
+            if (dir.isDirectory()) return dir;
+            throw Exceptions.propagate(new IOException("Failed to create directory " + dir + 
+                    (dir.isFile() ? "(is file)" : "")));
+        }
         return dir;
     }
 
