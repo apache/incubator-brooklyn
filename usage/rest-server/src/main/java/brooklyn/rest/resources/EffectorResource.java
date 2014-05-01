@@ -12,35 +12,39 @@ import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Time;
 import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import com.google.common.collect.FluentIterable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.google.common.collect.Iterables.transform;
-
 public class EffectorResource extends AbstractBrooklynRestResource implements EffectorApi {
 
     private static final Logger log = LoggerFactory.getLogger(EffectorResource.class);
-    
+    private static final Comparator<EffectorSummary> SUMMARY_NAME_COMPARATOR = new Comparator<EffectorSummary>() {
+        @Override public int compare(EffectorSummary o1, EffectorSummary o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+    };
+
    @Override
-  public List<EffectorSummary> list(final String application, final String entityToken
-  ) {
-      final EntityLocal entity = brooklyn().getEntity(application, entityToken);
-      return Lists.newArrayList(transform(
-        entity.getEntityType().getEffectors(),
-        new Function<Effector<?>, EffectorSummary>() {
-          @Override
-          public EffectorSummary apply(Effector<?> effector) {
-            return EffectorTransformer.effectorSummary(entity, effector);
-          }
-        }));
-  }
+  public List<EffectorSummary> list(final String application, final String entityToken) {
+       final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+       return FluentIterable.from(entity.getEntityType().getEffectors())
+            .transform(new Function<Effector<?>, EffectorSummary>() {
+                @Override
+                public EffectorSummary apply(Effector<?> effector) {
+                    return EffectorTransformer.effectorSummary(entity, effector);
+                }
+            })
+           .toSortedList(SUMMARY_NAME_COMPARATOR);
+   }
 
     @Override
   public Response invoke(String application, String entityToken, String effectorName,
@@ -55,7 +59,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
 
     log.info("REST invocation of "+entity+"."+effector+" "+parameters);
     Task<?> t = entity.invoke(effector, parameters);
-    
+
     try {
         Object result = null;
         if (timeout==null || timeout.isEmpty() || "never".equalsIgnoreCase(timeout)) {
@@ -74,5 +78,5 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
         throw Exceptions.propagate(e);
     }
   }
-  
+
 }
