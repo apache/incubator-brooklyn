@@ -68,11 +68,6 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         testStartTime = new Date();
     }
 
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
-    
     @Test
     public void testListApplicationUsages() throws Exception {
         // Create an app

@@ -88,11 +88,6 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
       };
   }
 
-  @Override
-  protected void setUpResources() throws Exception {
-      addResources();
-  }
-
   @Test
   public void testGetUndefinedApplication() {
     try {

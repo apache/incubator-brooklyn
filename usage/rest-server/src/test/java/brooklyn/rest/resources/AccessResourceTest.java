@@ -23,11 +23,6 @@ public class AccessResourceTest extends BrooklynRestResourceTest {
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(AccessResourceTest.class);
 
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
-
     @BeforeClass(alwaysRun = true)
     @Override
     public void setUp() throws Exception {
