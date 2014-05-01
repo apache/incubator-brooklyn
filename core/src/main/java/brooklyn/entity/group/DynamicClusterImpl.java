@@ -379,7 +379,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 throw new IllegalStateException(msg);
             }
 
-            stopAndRemoveNode(member);
+            try {
+                stopAndRemoveNode(member);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                throw new IllegalStateException("replaceMember failed to stop and remove old member "+member.getId(), e);
+            }
 
             return added.get();
         }

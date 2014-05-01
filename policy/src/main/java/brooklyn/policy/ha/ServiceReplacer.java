@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
@@ -107,33 +108,36 @@ public class ServiceReplacer extends AbstractPolicy {
     }
     
     // TODO semaphores would be better to allow at-most-one-blocking behaviour
-    protected synchronized void onDetectedFailure(final SensorEvent<Object> event) {
+    protected synchronized void onDetectedFailure(SensorEvent<Object> event) {
+        final Entity failedEntity = event.getSource();
+        final Object reason = event.getValue();
+        
         if (isSuspended()) {
-            LOG.warn("ServiceReplacer suspended, so not acting on failure detected at "+event.getSource()+" ("+event.getValue()+", child of "+entity+")");
+            LOG.warn("ServiceReplacer suspended, so not acting on failure detected at "+failedEntity+" ("+reason+", child of "+entity+")");
             return;
         }
 
         if (isRepeatedlyFailingTooMuch()) {
-            LOG.error("ServiceReplacer not acting on failure detected at "+event.getSource()+" ("+event.getValue()+", child of "+entity+"), because too many recent replacement failures");
+            LOG.error("ServiceReplacer not acting on failure detected at "+failedEntity+" ("+reason+", child of "+entity+"), because too many recent replacement failures");
             return;
         }
         
-        LOG.warn("ServiceReplacer acting on failure detected at "+event.getSource()+" ("+event.getValue()+", child of "+entity+")");
+        LOG.warn("ServiceReplacer acting on failure detected at "+failedEntity+" ("+reason+", child of "+entity+")");
         ((EntityInternal)entity).getManagementSupport().getExecutionContext().submit(MutableMap.of(), new Runnable() {
 
             @Override
             public void run() {
                 try {
-                    Entities.invokeEffectorWithArgs(entity, entity, MemberReplaceable.REPLACE_MEMBER, event.getSource().getId()).get();
+                    Entities.invokeEffectorWithArgs(entity, entity, MemberReplaceable.REPLACE_MEMBER, failedEntity.getId()).get();
                     consecutiveReplacementFailureTimes.clear();
                 } catch (Exception e) {
                     // FIXME replaceMember fails if stop fails on the old node; should resolve that more gracefully than this
-                    if (e.toString().contains("stopping") && e.toString().contains(event.getSource().getId())) {
-                        LOG.info("ServiceReplacer: ignoring error reported from stopping failed node "+event.getSource());
+                    if (e.toString().contains("failed to stop and remove old member") && e.toString().contains(failedEntity.getId())) {
+                        LOG.info("ServiceReplacer: ignoring error reported from stopping failed node "+failedEntity);
                         return;
                     }
 
-                    onReplacementFailed("Replace failure (error "+e+") at "+entity+": "+event.getValue());
+                    onReplacementFailed("Replace failure (error "+e+") at "+entity+": "+reason);
                 }
 
             }
