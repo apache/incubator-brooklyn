@@ -221,6 +221,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
 
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
+        setAttribute(SERVICE_UP, calculateServiceUp());
         try {
             if (isQuarantineEnabled()) {
                 Group quarantineGroup = addChild(EntitySpec.create(BasicGroup.class).displayName("quarantine"));
@@ -257,8 +258,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             for (Policy it : getPolicies()) {
                 it.resume();
             }
-            setAttribute(SERVICE_UP, calculateServiceUp());
             setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+            setAttribute(SERVICE_UP, calculateServiceUp());
         } catch (Exception e) {
             setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
