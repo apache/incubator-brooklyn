@@ -60,14 +60,14 @@ define([
             // get the model that we need to show, create its view and show it
             var cid = $(eventName.currentTarget).attr("id")
             var effectorModel = this._effectors.get(cid);
-            this._modal = new EffectorInvokeView({
+            var modal = new EffectorInvokeView({
                 el:"#effector-modal",
                 model:effectorModel,
                 entity:this.model,
                 tabView:this.options.tabView,
                 openTask:true
             })
-            this._modal.render().$el.modal('show')
+            modal.render().$el.modal('show')
         }
     })
     return EntityEffectorsView
