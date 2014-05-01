@@ -24,13 +24,13 @@ import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
-import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.basic.SupportsPortForwarding;
 import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Cidr;
 
 import com.google.common.base.Function;
@@ -282,9 +282,9 @@ public class ZabbixFeed extends AbstractFeed {
                 .build();
 
         // Registration job, calls Zabbix host.create API
-        final Callable<HttpPollValue> registerJob = new Callable<HttpPollValue>() {
+        final Callable<HttpToolResponse> registerJob = new Callable<HttpToolResponse>() {
             @Override
-            public HttpPollValue call() throws Exception {
+            public HttpToolResponse call() throws Exception {
                 if (!registered.get()) {
                     // Find the first machine, if available
                     Optional<Location> location = Iterables.tryFind(entity.getLocations(), Predicates.instanceOf(MachineLocation.class));
@@ -323,9 +323,9 @@ public class ZabbixFeed extends AbstractFeed {
         };
 
         // The handler for the registration job
-        PollHandler<? super HttpPollValue> registrationHandler = new PollHandler<HttpPollValue>() {
+        PollHandler<? super HttpToolResponse> registrationHandler = new PollHandler<HttpToolResponse>() {
             @Override
-            public void onSuccess(HttpPollValue val) {
+            public void onSuccess(HttpToolResponse val) {
                 if (registered.get() || val == null) {
                     return; // Skip if we are registered already or no data from job
                 }
@@ -350,11 +350,11 @@ public class ZabbixFeed extends AbstractFeed {
                 }
             }
             @Override
-            public boolean checkSuccess(HttpPollValue val) {
+            public boolean checkSuccess(HttpToolResponse val) {
                 return (val.getResponseCode() == 200);
             }
             @Override
-            public void onFailure(HttpPollValue val) {
+            public void onFailure(HttpToolResponse val) {
                 log.warn("zabbix sever returned failure code: {}", val.getResponseCode());
             }
             @Override
@@ -376,9 +376,9 @@ public class ZabbixFeed extends AbstractFeed {
 
         // Create a polling job for each Zabbix metric
         for (final ZabbixPollConfig<?> config : polls) {
-            Callable<HttpPollValue> pollJob = new Callable<HttpPollValue>() {
+            Callable<HttpToolResponse> pollJob = new Callable<HttpToolResponse>() {
                 @Override
-                public HttpPollValue call() throws Exception {
+                public HttpToolResponse call() throws Exception {
                     if (registered.get()) {
                         if (log.isTraceEnabled()) log.trace("zabbix polling {} for {}", entity, config);
                         byte[] body = JSON_ITEM_GET
@@ -396,7 +396,7 @@ public class ZabbixFeed extends AbstractFeed {
             };
 
             // Schedule the Zabbix polling job
-            AttributePollHandler<? super HttpPollValue> pollHandler = new AttributePollHandler<HttpPollValue>(config, entity, this);
+            AttributePollHandler<? super HttpToolResponse> pollHandler = new AttributePollHandler<HttpToolResponse>(config, entity, this);
             long minPeriod = Integer.MAX_VALUE; // TODO make configurable
             if (config.getPeriod() > 0) minPeriod = Math.min(minPeriod, config.getPeriod());
             getPoller().scheduleAtFixedRate(pollJob, pollHandler, minPeriod);
@@ -405,7 +405,7 @@ public class ZabbixFeed extends AbstractFeed {
     }
 
     @SuppressWarnings("unchecked")
-    protected Poller<HttpPollValue> getPoller() {
-        return (Poller<HttpPollValue>) poller;
+    protected Poller<HttpToolResponse> getPoller() {
+        return (Poller<HttpToolResponse>) poller;
     }
 }

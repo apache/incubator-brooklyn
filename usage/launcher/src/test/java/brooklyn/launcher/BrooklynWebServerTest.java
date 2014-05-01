@@ -20,9 +20,9 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -61,7 +61,7 @@ public class BrooklynWebServerTest {
         try {
             webServer.start();
     
-            HttpPollValue response = HttpTool.execAndConsume(new DefaultHttpClient(), new HttpGet(webServer.getRootUrl()));
+            HttpToolResponse response = HttpTool.execAndConsume(new DefaultHttpClient(), new HttpGet(webServer.getRootUrl()));
             assertEquals(response.getResponseCode(), 200);
         } finally {
             webServer.stop();
@@ -85,7 +85,7 @@ public class BrooklynWebServerTest {
             KeyStore trustStore = load("client.ts", "password");
             SSLSocketFactory socketFactory = new SSLSocketFactory(SSLSocketFactory.TLS, keyStore, "password", trustStore, (SecureRandom)null, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
 
-            HttpPollValue response = HttpTool.execAndConsume(
+            HttpToolResponse response = HttpTool.execAndConsume(
                     HttpTool.httpClientBuilder()
                             .port(webServer.getActualPort())
                             .https(true)
