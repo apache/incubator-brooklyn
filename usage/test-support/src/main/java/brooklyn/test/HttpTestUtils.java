@@ -104,6 +104,11 @@ public class HttpTestUtils {
         }
     }
 
+    public static void assertHealthyStatusCode(int code) {
+        if (code>=200 && code<=299) return;
+        Assert.fail("Wrong status code: "+code);
+    }
+    
     public static int getHttpStatusCode(String url) throws Exception {
         URLConnection connection = connectToUrl(url);
         long startTime = System.currentTimeMillis();

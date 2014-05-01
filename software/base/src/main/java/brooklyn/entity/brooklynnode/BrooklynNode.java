@@ -5,15 +5,18 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Effector;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
+import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
@@ -141,4 +144,20 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     @SetFromFlag("noShutdownOnExit")
     public static final ConfigKey<Boolean> NO_SHUTDOWN_ON_EXIT = ConfigKeys.newBooleanConfigKey("brooklynnode.noshutdownonexit", 
         "Whether to shutdown entities on exit", false);
+    
+    public interface DeployBlueprintEffector {
+        ConfigKey<Map<String,Object>> BLUEPRINT_CAMP_PLAN = new MapConfigKey<Object>(Object.class, "blueprintPlan",
+            "CAMP plan for the blueprint to be deployed; currently only supports Java map or JSON string (not yet YAML)");
+        ConfigKey<String> BLUEPRINT_TYPE = ConfigKeys.newStringConfigKey("blueprintType");
+        ConfigKey<Map<String,Object>> BLUEPRINT_CONFIG = new MapConfigKey<Object>(Object.class, "blueprintConfig");
+        Effector<String> DEPLOY_BLUEPRINT = Effectors.effector(String.class, "deployBlueprint")
+            .description("Deploy a blueprint, either given a plan (as Java map or JSON string for a map), or given URL and optional config")
+            .parameter(BLUEPRINT_TYPE)
+            .parameter(BLUEPRINT_CONFIG)
+            .parameter(BLUEPRINT_CAMP_PLAN)
+            .buildAbstract();
+    }
+    
+    public static Effector<String> DEPLOY_BLUEPRINT = DeployBlueprintEffector.DEPLOY_BLUEPRINT;
+    
 }
