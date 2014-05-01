@@ -5,6 +5,7 @@ import java.net.URI;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -14,7 +15,7 @@ import com.google.common.collect.ImmutableMap;
 @Deprecated
 public class HttpPolls {
 
-    public static HttpPollValue executeSimpleGet(URI uri) {
+    public static HttpToolResponse executeSimpleGet(URI uri) {
         return HttpTool.httpGet(new DefaultHttpClient(), uri, ImmutableMap.<String,String>of());
     }
     

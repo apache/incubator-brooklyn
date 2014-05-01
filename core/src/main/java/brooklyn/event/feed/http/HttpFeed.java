@@ -24,6 +24,7 @@ import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpTool.HttpClientBuilder;
+import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
@@ -276,30 +277,30 @@ public class HttpFeed extends AbstractFeed {
 
             Set<HttpPollConfig<?>> configs = polls.get(pollInfo);
             long minPeriod = Integer.MAX_VALUE;
-            Set<AttributePollHandler<? super HttpPollValue>> handlers = Sets.newLinkedHashSet();
+            Set<AttributePollHandler<? super HttpToolResponse>> handlers = Sets.newLinkedHashSet();
 
             for (HttpPollConfig<?> config : configs) {
-                handlers.add(new AttributePollHandler<HttpPollValue>(config, entity, this));
+                handlers.add(new AttributePollHandler<HttpToolResponse>(config, entity, this));
                 if (config.getPeriod() > 0) minPeriod = Math.min(minPeriod, config.getPeriod());
             }
 
-            Callable<HttpPollValue> pollJob;
+            Callable<HttpToolResponse> pollJob;
             
             if (pollInfo.method.equals("get")) {
-                pollJob = new Callable<HttpPollValue>() {
-                    public HttpPollValue call() throws Exception {
+                pollJob = new Callable<HttpToolResponse>() {
+                    public HttpToolResponse call() throws Exception {
                         if (log.isTraceEnabled()) log.trace("http polling for {} sensors at {}", entity, pollInfo);
                         return HttpTool.httpGet(httpClient, pollInfo.uriProvider.get(), pollInfo.headers);
                     }};
             } else if (pollInfo.method.equals("post")) {
-                pollJob = new Callable<HttpPollValue>() {
-                    public HttpPollValue call() throws Exception {
+                pollJob = new Callable<HttpToolResponse>() {
+                    public HttpToolResponse call() throws Exception {
                         if (log.isTraceEnabled()) log.trace("http polling for {} sensors at {}", entity, pollInfo);
                         return HttpTool.httpPost(httpClient, pollInfo.uriProvider.get(), pollInfo.headers, pollInfo.body);
                     }};
             } else if (pollInfo.method.equals("head")) {
-                pollJob = new Callable<HttpPollValue>() {
-                    public HttpPollValue call() throws Exception {
+                pollJob = new Callable<HttpToolResponse>() {
+                    public HttpToolResponse call() throws Exception {
                         if (log.isTraceEnabled()) log.trace("http polling for {} sensors at {}", entity, pollInfo);
                         return HttpTool.httpHead(httpClient, pollInfo.uriProvider.get(), pollInfo.headers);
                     }};
@@ -307,7 +308,7 @@ public class HttpFeed extends AbstractFeed {
                 throw new IllegalStateException("Unexpected http method: "+pollInfo.method);
             }
             
-            getPoller().scheduleAtFixedRate(pollJob, new DelegatingPollHandler<HttpPollValue>(handlers), minPeriod);
+            getPoller().scheduleAtFixedRate(pollJob, new DelegatingPollHandler<HttpToolResponse>(handlers), minPeriod);
         }
     }
 
@@ -329,7 +330,7 @@ public class HttpFeed extends AbstractFeed {
     }
 
     @SuppressWarnings("unchecked")
-    private Poller<HttpPollValue> getPoller() {
-        return (Poller<HttpPollValue>) poller;
+    private Poller<HttpToolResponse> getPoller() {
+        return (Poller<HttpToolResponse>) poller;
     }
 }

@@ -4,6 +4,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import brooklyn.util.http.HttpToolResponse;
+
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
@@ -14,19 +16,19 @@ public class HttpValueFunctions {
 
     private HttpValueFunctions() {} // instead use static utility methods
     
-    public static Function<HttpPollValue, Integer> responseCode() {
-        return new Function<HttpPollValue, Integer>() {
-            @Override public Integer apply(HttpPollValue input) {
+    public static Function<HttpToolResponse, Integer> responseCode() {
+        return new Function<HttpToolResponse, Integer>() {
+            @Override public Integer apply(HttpToolResponse input) {
                 return input.getResponseCode();
             }
         };
     }
 
-    public static Function<HttpPollValue, Boolean> responseCodeEquals(final int expected) {
+    public static Function<HttpToolResponse, Boolean> responseCodeEquals(final int expected) {
         return chain(HttpValueFunctions.responseCode(), Functions.forPredicate(Predicates.equalTo(expected)));
     }
     
-    public static Function<HttpPollValue, Boolean> responseCodeEquals(final int... expected) {
+    public static Function<HttpToolResponse, Boolean> responseCodeEquals(final int... expected) {
         List<Integer> expectedList = Lists.newArrayList();
         for (int e : expected) {
             expectedList.add((Integer)e);
@@ -34,30 +36,30 @@ public class HttpValueFunctions {
         return chain(HttpValueFunctions.responseCode(), Functions.forPredicate(Predicates.in(expectedList)));
     }
     
-    public static Function<HttpPollValue, String> stringContentsFunction() {
-        return new Function<HttpPollValue, String>() {
-            @Override public String apply(HttpPollValue input) {
+    public static Function<HttpToolResponse, String> stringContentsFunction() {
+        return new Function<HttpToolResponse, String>() {
+            @Override public String apply(HttpToolResponse input) {
                 // TODO Charset?
                 return new String(input.getContent());
             }
         };
     }
     
-    public static Function<HttpPollValue, JsonElement> jsonContents() {
+    public static Function<HttpToolResponse, JsonElement> jsonContents() {
         return chain(stringContentsFunction(), JsonFunctions.asJson());
     }
     
-    public static <T> Function<HttpPollValue, T> jsonContents(String element, Class<T> expected) {
+    public static <T> Function<HttpToolResponse, T> jsonContents(String element, Class<T> expected) {
         return jsonContents(new String[] {element}, expected);
     }
     
-    public static <T> Function<HttpPollValue, T> jsonContents(String[] elements, Class<T> expected) {
+    public static <T> Function<HttpToolResponse, T> jsonContents(String[] elements, Class<T> expected) {
         return chain(jsonContents(), JsonFunctions.walk(elements), JsonFunctions.cast(expected));
     }
     
-    public static Function<HttpPollValue, Long> latency() {
-        return new Function<HttpPollValue, Long>() {
-            public Long apply(HttpPollValue input) {
+    public static Function<HttpToolResponse, Long> latency() {
+        return new Function<HttpToolResponse, Long>() {
+            public Long apply(HttpToolResponse input) {
                 return input.getLatencyFullContent();
             }
         };
