@@ -15,6 +15,7 @@ import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.util.concurrent.Callables;
 
 /**
@@ -157,6 +158,16 @@ public class Repeater {
         Preconditions.checkNotNull(exitCondition, "exitCondition must not be null");
         this.exitCondition = exitCondition;
         return this;
+    }
+
+    public <T> Repeater until(final T target, final Predicate<T> exitCondition) {
+        Preconditions.checkNotNull(exitCondition, "exitCondition must not be null");
+        return until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return exitCondition.apply(target);
+            }
+        });
     }
 
     /**
