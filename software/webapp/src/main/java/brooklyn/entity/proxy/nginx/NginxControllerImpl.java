@@ -94,7 +94,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                                     // Accept any nginx response (don't assert specific version), so that sub-classing
                                     // for a custom nginx build is not strict about custom version numbers in headers
                                     List<String> actual = input.getHeaderLists().get("Server");
-                                    return actual != null && actual.size() == 1 && actual.get(0).startsWith("nginx");
+                                    return actual != null && actual.size() == 1;
                                 }})
                         .setOnException(false))
                 .build();
