@@ -26,6 +26,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.policy.PolicySpec;
 import brooklyn.policy.autoscaling.SizeHistory.WindowSummary;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.loadbalancing.LoadBalancingPolicy;
@@ -142,6 +143,10 @@ public class AutoScalerPolicy extends AbstractPolicy {
         }
         public AutoScalerPolicy build() {
             return new AutoScalerPolicy(toFlags());
+        }
+        public PolicySpec<AutoScalerPolicy> buildSpec() {
+            return PolicySpec.create(AutoScalerPolicy.class)
+                    .configure(toFlags());
         }
         private Map<String,?> toFlags() {
             return MutableMap.<String,Object>builder()
@@ -314,9 +319,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
     private volatile long executorTime = 0;
     private volatile ScheduledExecutorService executor;
 
-    private final SizeHistory recentUnboundedResizes;
+    private SizeHistory recentUnboundedResizes;
 
-    private final SizeHistory recentDesiredResizes;
+    private SizeHistory recentDesiredResizes;
     
     private long maxReachedLastNotifiedTime;
     
@@ -350,7 +355,10 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     public AutoScalerPolicy(Map<String,?> props) {
         super(props);
-        
+    }
+    
+    @Override
+    public void init() {
         long maxReachedNotificationDelay = getMaxReachedNotificationDelay();
         recentUnboundedResizes = new SizeHistory(maxReachedNotificationDelay);
         

@@ -365,11 +365,10 @@ public class AutoScalerPolicyTest {
         long minPeriodBetweenExecs = 0;
         resizable.removePolicy(policy);
         
-        policy = AutoScalerPolicy.builder()
+        policy = resizable.addPolicy(AutoScalerPolicy.builder()
                 .resizeUpStabilizationDelay(resizeUpStabilizationDelay) 
                 .minPeriodBetweenExecs(minPeriodBetweenExecs)
-                .build();
-        resizable.addPolicy(policy);
+                .buildSpec());
         resizable.resize(1);
         
         // After suitable delay, grows to desired

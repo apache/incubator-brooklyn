@@ -39,6 +39,10 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
     public AbstractPolicy(Map flags) {
         super(flags);
         policyType = new PolicyTypeImpl(getAdjunctType());
+        
+        if (isLegacyConstruction()) {
+            init();
+        }
     }
 
     @Override
