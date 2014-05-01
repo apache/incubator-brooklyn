@@ -14,16 +14,15 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
 
-import com.google.common.collect.Lists;
-
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
-import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.internal.Repeater;
+import brooklyn.util.repeat.Repeater;
+
+import com.google.common.collect.Lists;
 
 public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixtureIntegrationTest {
 

@@ -18,7 +18,7 @@ import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.Status;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.internal.Repeater;
+import brooklyn.util.repeat.Repeater;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;

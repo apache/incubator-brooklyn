@@ -18,7 +18,7 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.Repeater;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.Tasks;

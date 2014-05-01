@@ -58,8 +58,8 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.internal.Repeater;
 import brooklyn.util.javalang.Threads;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ParallelTask;
@@ -804,9 +804,8 @@ public class Entities {
     public static void waitForServiceUp(final Entity entity, Duration timeout) {
         String description = "Waiting for SERVICE_UP on "+entity;
         Tasks.setBlockingDetails(description);
-        if (!Repeater.create(description)
-                .limitTimeTo(timeout)
-                .rethrowException().repeat().every(1, TimeUnit.SECONDS)
+        if (!Repeater.create(description).limitTimeTo(timeout)
+                .rethrowException().repeat().every(Duration.ONE_SECOND)
                 .until(new Callable<Boolean>() {
                     public Boolean call() {
                         return entity.getAttribute(Startable.SERVICE_UP);

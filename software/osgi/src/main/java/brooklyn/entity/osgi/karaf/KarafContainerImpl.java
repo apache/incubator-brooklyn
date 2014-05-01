@@ -32,8 +32,8 @@ import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.event.feed.jmx.JmxValueFunctions;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.internal.Repeater;
 import brooklyn.util.os.Os;
+import brooklyn.util.repeat.Repeater;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;

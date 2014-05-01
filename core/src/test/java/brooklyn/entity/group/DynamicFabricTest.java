@@ -38,7 +38,7 @@ import brooklyn.test.entity.BlockingEntity;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.Repeater;
+import brooklyn.util.repeat.Repeater;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
