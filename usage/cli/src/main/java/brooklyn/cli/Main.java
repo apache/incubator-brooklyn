@@ -497,7 +497,7 @@ public class Main {
             }
             final Class<?> clazz = tempclazz;
             
-            // Intantiate an app builder (wrapping app class in ApplicationBuilder, if necessary)
+            // Instantiate an app builder (wrapping app class in ApplicationBuilder, if necessary)
             if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
                 Constructor<?> constructor = clazz.getConstructor();
                 return (ApplicationBuilder) constructor.newInstance();
