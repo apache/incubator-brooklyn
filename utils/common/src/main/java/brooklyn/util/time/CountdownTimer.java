@@ -47,9 +47,14 @@ public class CountdownTimer {
         return Duration.millis(limit.toMilliseconds() - stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
 
-    /** true iff the timer has been running for the given time */
+    /** true iff the timer has been running for the duration specified at creation time */
     public boolean isExpired() {
         return stopwatch.elapsed(TimeUnit.MILLISECONDS) > limit.toMilliseconds();
+    }
+    
+    /** true iff timer is running (even if it is expired) */
+    public boolean isRunning() {
+        return stopwatch.isRunning();
     }
     
     // --- constructor methods

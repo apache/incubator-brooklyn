@@ -27,6 +27,9 @@ public class Duration implements Comparable<Duration> {
     public static final Duration FIVE_MINUTES = of(5, TimeUnit.MINUTES);
     public static final Duration ONE_HOUR = of(1, TimeUnit.HOURS);
     public static final Duration ONE_DAY = of(1, TimeUnit.DAYS);
+    
+    /** longest supported duration, 2^{63}-1 nanoseconds, approx ten billion seconds, or 300 years */ 
+    public static final Duration PRACTICALLY_FOREVER = of(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
     private final long nanos;
 
