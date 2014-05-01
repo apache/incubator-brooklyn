@@ -11,12 +11,14 @@ import brooklyn.rest.domain.PolicySummary;
 import brooklyn.rest.domain.Status;
 import brooklyn.util.exceptions.Exceptions;
 import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -25,18 +27,23 @@ import static com.google.common.collect.Iterables.transform;
 public class PolicyResource extends AbstractBrooklynRestResource implements PolicyApi {
 
     private static final Logger log = LoggerFactory.getLogger(PolicyResource.class);
+    private static final Comparator<PolicySummary> SUMMARY_NAME_COMPARATOR = new Comparator<PolicySummary>() {
+        @Override public int compare(PolicySummary o1, PolicySummary o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+    };
 
     @Override
-    public List<PolicySummary> list( final String application, final String entityToken
-    ) {
+    public List<PolicySummary> list( final String application, final String entityToken) {
         final Entity entity = brooklyn().getEntity(application, entityToken);
-        return Lists.newArrayList(transform(entity.getPolicies(),
-                new Function<Policy, PolicySummary>() {
-                    @Override
-                    public PolicySummary apply(Policy policy) {
-                        return PolicyTransformer.policySummary(entity, policy);
-                    }
-                }));
+        return FluentIterable.from(entity.getPolicies())
+            .transform(new Function<Policy, PolicySummary>() {
+                @Override
+                public PolicySummary apply(Policy policy) {
+                    return PolicyTransformer.policySummary(entity, policy);
+                }
+            })
+            .toSortedList(SUMMARY_NAME_COMPARATOR);
     }
 
     // TODO support parameters  ?show=value,summary&name=xxx
