@@ -2,7 +2,6 @@ package brooklyn.util.task;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +19,9 @@ import org.testng.annotations.Test;
 
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
+import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
@@ -30,6 +29,7 @@ import brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -71,13 +71,13 @@ public class DynamicSequentialTaskTest {
             public String call() {
                 log.info("main job - "+Tasks.current());
                 messages.add("main");
-                DynamicTasks.queue( sayTask("world", null) );
+                DynamicTasks.queue( sayTask("world") );
                 return "bye";
             }            
         };
         DynamicSequentialTask<String> t = new DynamicSequentialTask<String>(mainJob);
         // this should be added before anything added when the task is invoked
-        t.queue(sayTask("hello", null));
+        t.queue(sayTask("hello"));
         
         Assert.assertEquals(messages, Lists.newArrayList());
         Assert.assertEquals(t.isBegun(), false);
@@ -95,69 +95,83 @@ public class DynamicSequentialTaskTest {
         Assert.assertEquals(messages.get(2), "world");
     }
     
-    public Callable<String> sayCallable(final String message, final Duration duration) {
+    public Callable<String> sayCallable(final String message, final Duration duration, final String message2) {
         return new Callable<String>() {
             public String call() {
-                log.info("will say "+message+" after "+duration);
-                if (duration!=null && duration.toMilliseconds()>0) {
-                    try {
-                        Thread.sleep(duration.toMillisecondsRoundingUp());
-                    } catch (InterruptedException e) {
-                        cancellations.release();
-                        throw Exceptions.propagate(e);
+                try {
+                    if (message != null) {
+                        log.info("saying: "+message+ " - "+Tasks.current());
+                        synchronized (messages) {
+                            messages.add(message);
+                            messages.notifyAll();
+                        }
                     }
+                    if (message2 != null) {
+                        log.info("will say "+message2+" after "+duration);
+                    }
+                    if (duration != null && duration.toMilliseconds() > 0) {
+                        Thread.sleep(duration.toMillisecondsRoundingUp());
+                    }
+                } catch (InterruptedException e) {
+                    cancellations.release();
+                    throw Exceptions.propagate(e);
                 }
-                log.info("saying: "+message+ " - "+Tasks.current());
-                synchronized (messages) {
-                    messages.add(message);
-                    messages.notifyAll();
+                if (message2 != null) {
+                    log.info("saying: "+message2+ " - "+Tasks.current());
+                    synchronized (messages) {
+                        messages.add(message2);
+                        messages.notifyAll();
+                    }
                 }
                 return message;
             }            
         };
     }
     
-    public Task<String> sayTask(String message, Duration duration) {
-        return Tasks.<String>builder().body(sayCallable(message, duration)).build();
+    public Task<String> sayTask(String message) {
+        return sayTask(message, null, null);
+    }
+    
+    public Task<String> sayTask(String message, Duration duration, String message2) {
+        return Tasks.<String>builder().body(sayCallable(message, duration, message2)).build();
     }
     
     @Test
     public void testComplex() throws InterruptedException, ExecutionException {
         Task<List<?>> t = Tasks.sequential(
-                sayTask("1", null),
-                sayTask("2", null),
-                Tasks.parallel(sayTask("4", Duration.millis(100)),
-                        sayTask("3", null)),
-                sayTask("5", null)
+                sayTask("1"),
+                sayTask("2"),
+                Tasks.parallel(sayTask("4"), sayTask("3")),
+                sayTask("5")
             );
         ec.submit(t);
         Assert.assertEquals(t.get().size(), 4); 
-        Assert.assertEquals(new HashSet<Object>((List<?>)t.get().get(2)), MutableSet.of("3", "4"));
-        Assert.assertEquals(messages, Arrays.asList("1", "2", "3", "4", "5"));
+        Asserts.assertEqualsIgnoringOrder((List<?>)t.get().get(2), ImmutableSet.of("3", "4"));
+        Assert.assertTrue(messages.equals(Arrays.asList("1", "2", "3", "4", "5")) || messages.equals(Arrays.asList("1", "2", "4", "3", "5")), "messages="+messages);
     }
     
     @Test
     public void testCancelled() throws InterruptedException, ExecutionException {
         Task<List<?>> t = Tasks.sequential(
-                sayTask("1", null),
-                sayTask("2", Duration.TEN_SECONDS),
-                sayTask("3", null));
+                sayTask("1"),
+                sayTask("2a", Duration.THIRTY_SECONDS, "2b"),
+                sayTask("3"));
         ec.submit(t);
         synchronized (messages) {
-            while (messages.size()<=0)
+            while (messages.size() <= 1)
                 messages.wait();
         }
-        Assert.assertEquals(messages, Arrays.asList("1"));
+        Assert.assertEquals(messages, Arrays.asList("1", "2a"));
         Time.sleep(Duration.millis(50));
         t.cancel(true);
         Assert.assertTrue(t.isDone());
         // 2 should get cancelled, and invoke the cancellation semaphore
         // 3 should get cancelled and not run at all
-        Assert.assertEquals(messages, Arrays.asList("1"));
+        Assert.assertEquals(messages, Arrays.asList("1", "2a"));
         
-        // we get one mutex from task2, within duration less than that set on task 2
-        // (should be immediate, but long delays seen on jenkins box)
-        Assert.assertTrue(cancellations.tryAcquire(5, TimeUnit.SECONDS));
+        // Need to ensure that 2 has been started; race where we might cancel it before its run method
+        // is even begun. Hence doing "2a; pause; 2b" where nothing is interruptable before pause.
+        Assert.assertTrue(cancellations.tryAcquire(10, TimeUnit.SECONDS));
         
         Iterator<Task<?>> ci = ((HasTaskChildren)t).getChildren().iterator();
         Assert.assertEquals(ci.next().get(), "1");

@@ -111,18 +111,30 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         try {
             for (File file : entityFiles) {
                 EntityMemento memento = (EntityMemento) serializer.fromString(readFile(file));
-                builder.entity(memento);
-                if (memento.isTopLevelApp()) {
-                    builder.applicationId(memento.getId());
+                if (memento == null) {
+                    LOG.warn("No entity-memento deserialized from file "+file+"; ignoring and continuing");
+                } else {
+                    builder.entity(memento);
+                    if (memento.isTopLevelApp()) {
+                        builder.applicationId(memento.getId());
+                    }
                 }
             }
             for (File file : locationFiles) {
                 LocationMemento memento = (LocationMemento) serializer.fromString(readFile(file));
-                builder.location(memento);
+                if (memento == null) {
+                    LOG.warn("No location-memento deserialized from file "+file+"; ignoring and continuing");
+                } else {
+                    builder.location(memento);
+                }
             }
             for (File file : policyFiles) {
                 PolicyMemento memento = (PolicyMemento) serializer.fromString(readFile(file));
-                builder.policy(memento);
+                if (memento == null) {
+                    LOG.warn("No policy-memento deserialized from file "+file+"; ignoring and continuing");
+                } else {
+                    builder.policy(memento);
+                }
             }
             
             if (LOG.isDebugEnabled()) LOG.debug("Loaded memento; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS))); 

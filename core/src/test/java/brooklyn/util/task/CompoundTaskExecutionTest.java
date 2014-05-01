@@ -1,6 +1,9 @@
 package brooklyn.util.task;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.util.HashSet;
 import java.util.List;
@@ -15,11 +18,14 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
 
+import brooklyn.management.Task;
+import brooklyn.test.Asserts;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
+
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import brooklyn.management.Task;
 
 /**
  * Test the operation of the {@link CompoundTask} class.
@@ -50,6 +56,16 @@ public class CompoundTaskExecutionTest {
                 }
             });
     }
+
+    private BasicTask<String> slowTaskReturning(final String val, final Duration pauseTime) {
+        return new BasicTask<String>(new Callable<String>() {
+                @Override public String call() {
+                    Time.sleep(pauseTime);
+                    return val;
+                }
+            });
+    }
+
 
     @Test
     public void runSequenceTask() throws Exception {
@@ -91,13 +107,18 @@ public class CompoundTaskExecutionTest {
 
     @Test
     public void testParallelTaskFailsWhenIntermediateTaskThrowsException() throws Exception {
+        // differs from test above of SequentialTask in that expect t3 to be executed,
+        // despite t2 failing.
+        // TODO Do we expect tSequence.get() to block for everything to either fail or complete,
+        // and then to throw exception? Currently it does *not* do that so test was previously failing.
+
         BasicTask<String> t1 = taskReturning("a");
         BasicTask<String> t2 = new BasicTask<String>(new Callable<String>() {
                 @Override public String call() throws Exception {
                     throw new IllegalArgumentException("forced exception");
                 }
             });
-        BasicTask<String> t3 = taskReturning("c");
+        BasicTask<String> t3 = slowTaskReturning("c", Duration.millis(100));
         ParallelTask<String> task = new ParallelTask<String>(t1, t2, t3);
         Task<List<String>> tSequence = ec.submit(task);
 
@@ -112,11 +133,19 @@ public class CompoundTaskExecutionTest {
         assertFalse(t1.isError());
         assertTrue(t2.isDone());
         assertTrue(t2.isError());
-        // differs from test above
+        assertTrue(t3.isBegun());
         assertTrue(t3.isDone());
         assertFalse(t3.isError());
     }
 
+    private void assertDoneEventually(final Task<?> task) {
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                task.isDone();
+            }});
+    }
+    
     @Test
     public void runParallelTask() throws Exception {
         BasicTask<String> t1 = taskReturning("a");
