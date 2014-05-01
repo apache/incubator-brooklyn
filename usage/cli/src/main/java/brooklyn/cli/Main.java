@@ -37,6 +37,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
@@ -485,8 +486,17 @@ public class Main {
                 String content = utils.getResourceAsString(app);
                 tempclazz = loader.parseClass(content);
             }
-            final Class<?> clazz = tempclazz;
 
+            if (tempclazz.isInterface()) {
+                ImplementedBy implementedBy = tempclazz.getAnnotation(ImplementedBy.class);
+                if (implementedBy!=null) {
+                    tempclazz = implementedBy.value();
+                } else {
+                    throw new FatalConfigurationRuntimeException("Application class "+tempclazz+" must be concrete or declare ImplementedBy");
+                }
+            }
+            final Class<?> clazz = tempclazz;
+            
             // Intantiate an app builder (wrapping app class in ApplicationBuilder, if necessary)
             if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
                 Constructor<?> constructor = clazz.getConstructor();
@@ -508,7 +518,7 @@ public class Main {
                 return new ApplicationBuilder() {
                     @SuppressWarnings("unchecked")
                     @Override protected void doBuild() {
-                        addChild(EntitySpec.create(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
+                        addChild(EntitySpec.create(Entity.class).impl((Class<? extends AbstractEntity>)clazz).additionalInterfaces(clazz.getInterfaces()));
                     }};
             } else if (Entity.class.isAssignableFrom(clazz)) {
                 return new ApplicationBuilder() {
