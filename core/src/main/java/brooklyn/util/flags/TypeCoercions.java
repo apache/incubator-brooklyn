@@ -45,6 +45,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Table;
+import com.google.common.net.HostAndPort;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
 
@@ -401,6 +402,12 @@ public class TypeCoercions {
             @Override
             public InetAddress apply(String input) {
                 return Networking.getInetAddressWithFixedName(input);
+            }
+        });
+        registerAdapter(String.class, HostAndPort.class, new Function<String,HostAndPort>() {
+            @Override
+            public HostAndPort apply(String input) {
+                return HostAndPort.fromString(input);
             }
         });
         registerAdapter(String.class, Cidr.class, new Function<String,Cidr>() {

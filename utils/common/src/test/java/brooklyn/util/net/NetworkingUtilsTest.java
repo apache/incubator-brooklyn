@@ -2,9 +2,11 @@ package brooklyn.util.net;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
@@ -17,9 +19,9 @@ import org.testng.annotations.Test;
 import brooklyn.test.Asserts;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.net.Networking;
 import brooklyn.util.text.Identifiers;
-import brooklyn.util.time.Time;
+
+import com.google.common.net.HostAndPort;
 
 public class NetworkingUtilsTest {
 
@@ -149,4 +151,27 @@ public class NetworkingUtilsTest {
         Assert.assertEquals(Networking.resolve("bogus-hostname-"+Identifiers.makeRandomId(8)), null);
     }
 
+    @Test(groups="Integration")
+    public void testIsReachable() throws Exception {
+        ServerSocket serverSocket = null;
+        for (int i = 40000; i < 40100; i++) {
+            try {
+                serverSocket = new ServerSocket(i);
+            } catch (IOException e) {
+                // try next number
+            }
+        }
+        assertNotNull(serverSocket, "No ports available in range!");
+        
+        try {
+            HostAndPort hostAndPort = HostAndPort.fromParts(serverSocket.getInetAddress().getHostAddress(), serverSocket.getLocalPort());
+            assertTrue(Networking.isReachable(hostAndPort));
+            
+            serverSocket.close();
+            assertFalse(Networking.isReachable(hostAndPort));
+            
+        } finally {
+            serverSocket.close();
+        }
+    }
 }
