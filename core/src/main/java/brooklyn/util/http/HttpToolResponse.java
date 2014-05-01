@@ -19,6 +19,7 @@ import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 
@@ -62,7 +63,7 @@ public class HttpToolResponse implements HttpPollValue {
             long startTime, long durationMillisOfFirstResponse, long durationMillisOfFullContent) {
         this.response = null;
         this.responseCode = responseCode;
-        this.headerLists.putAll(headers);
+        this.headerLists = ImmutableMap.copyOf(headers);
         this.content = content;
         this.startTime = startTime;
         this.durationMillisOfFirstResponse = durationMillisOfFirstResponse;
