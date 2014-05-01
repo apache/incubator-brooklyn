@@ -68,12 +68,14 @@ public class ServiceFailureDetector extends AbstractPolicy {
     @SetFromFlag("serviceFailedStabilizationDelay")
     public static final ConfigKey<Duration> SERVICE_FAILED_STABILIZATION_DELAY = BasicConfigKey.builder(Duration.class)
             .name("serviceRestarter.serviceFailedStabilizationDelay")
+            .description("Time period for which the service must be consistently down for (e.g. doesn't report down-up-down) before concluding failure")
             .defaultValue(Duration.ZERO)
             .build();
 
     @SetFromFlag("serviceRecoveredStabilizationDelay")
     public static final ConfigKey<Duration> SERVICE_RECOVERED_STABILIZATION_DELAY = BasicConfigKey.builder(Duration.class)
             .name("serviceRestarter.serviceRecoveredStabilizationDelay")
+            .description("For a failed entity, time period for which the service must be consistently up for (e.g. doesn't report up-down-up) before concluding recovered")
             .defaultValue(Duration.ZERO)
             .build();
 

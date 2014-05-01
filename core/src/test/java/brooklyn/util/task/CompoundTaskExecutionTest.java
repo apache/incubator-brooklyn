@@ -134,7 +134,7 @@ public class CompoundTaskExecutionTest {
         assertTrue(t2.isDone());
         assertTrue(t2.isError());
         assertTrue(t3.isBegun());
-        assertDoneEventually(t3);
+        assertTrue(t3.isDone());
         assertFalse(t3.isError());
     }
 

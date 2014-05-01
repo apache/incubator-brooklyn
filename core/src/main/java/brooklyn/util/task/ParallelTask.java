@@ -1,14 +1,16 @@
 package brooklyn.util.task;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import brooklyn.management.Task;
+import brooklyn.util.exceptions.CompoundRuntimeException;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * Runs {@link Task}s in parallel.
@@ -26,6 +28,7 @@ public class ParallelTask<T> extends CompoundTask<T> {
     public ParallelTask(Map<String,?> flags, Iterable<? extends Object> tasks) { super(flags, ImmutableList.copyOf(tasks)); }
     public ParallelTask(Iterable<? extends Object> tasks) { super(ImmutableList.copyOf(tasks)); }
 
+    @Override
     protected List<T> runJobs() throws InterruptedException, ExecutionException {
         setBlockingDetails("Executing "+
                 (children.size()==1 ? "1 child task" :
@@ -34,10 +37,24 @@ public class ParallelTask<T> extends CompoundTask<T> {
             submitIfNecessary(task);
         }
 
-        List<T> result = new ArrayList<T>();
+        List<T> result = Lists.newArrayList();
+        List<Exception> exceptions = Lists.newArrayList();
         for (Task<? extends T> task : children) {
-            result.add(task.get());
+            T x;
+            try {
+                x = task.get();
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                exceptions.add(e);
+                x = null;
+            }
+            result.add(x);
         }
-        return result;
+        
+        if (exceptions.isEmpty()) {
+            return result;
+        } else {
+            throw new CompoundRuntimeException(exceptions.size()+" of "+result.size()+" failed", exceptions);
+        }
     }
 }
