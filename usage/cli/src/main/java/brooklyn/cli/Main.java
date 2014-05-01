@@ -315,7 +315,7 @@ public class Main {
             } catch (Exception e) {
                 // Don't terminate the JVM; leave it as-is until someone explicitly stops it
                 Exceptions.propagateIfFatal(e);
-                log.error("Error launching brooklyn: "+e, e);
+                log.error("Error launching brooklyn: "+Exceptions.collapseText(e), e);
             }
             
             BrooklynServerDetails server = launcher.getServerDetails();

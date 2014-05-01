@@ -754,7 +754,10 @@ public class Entities {
     public static String getRequiredUrlConfig(Entity entity, ConfigKey<String> urlKey) {
         String url = entity.getConfig(urlKey);
         Preconditions.checkNotNull(url, "Key %s on %s should not be null", urlKey, entity);
-        return ResourceUtils.create(entity).checkUrlExists(url);
+        if (!ResourceUtils.create(entity).doesUrlExist(url)) {
+            throw new IllegalStateException(String.format("Key %s on %s contains unavailable URL %s", urlKey, entity, url));
+        }
+        return url;
     }
     /** as {@link #getRequiredUrlConfig(Entity, ConfigKey)} */
     public static String getRequiredUrlConfig(Entity entity, HasConfigKey<String> urlKey) {
