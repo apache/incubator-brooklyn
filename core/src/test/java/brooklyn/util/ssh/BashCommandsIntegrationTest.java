@@ -4,10 +4,13 @@ import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,6 +27,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.net.Networking;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
@@ -243,12 +247,12 @@ public class BashCommandsIntegrationTest {
 
         String cmd = BashCommands.waitForFileContents(destFile.getAbsolutePath(), fileContent, Duration.ONE_SECOND, true);
         int exitcode = loc.execCommands("test", ImmutableList.of(cmd));
-        assertEquals(1, exitcode);
+        assertEquals(exitcode, 1);
         
         Files.write(fileContent, destFile, Charsets.UTF_8);
         String cmd2 = BashCommands.waitForFileContents(destFile.getAbsolutePath(), fileContent, Duration.ONE_SECOND, true);
         int exitcode2 = loc.execCommands("test", ImmutableList.of(cmd2));
-        assertEquals(0, exitcode2);
+        assertEquals(exitcode2, 0);
     }
 
     @Test(groups="Integration")
@@ -285,5 +289,86 @@ public class BashCommandsIntegrationTest {
         Files.write(fileContent, destFile, Charsets.UTF_8);
         String output = t.get();
         assertFalse(output.contains("Couldn't find"), "output="+output);
+    }
+    
+    @Test(groups="Integration")
+    public void testWaitForPortFreeWhenAbortingOnTimeout() throws Exception {
+        ServerSocket serverSocket = openServerSocket();
+        try {
+            int port = serverSocket.getLocalPort();
+    
+            String cmd = BashCommands.waitForPortFree(port, Duration.ONE_SECOND, true);
+            int exitcode = loc.execCommands("test", ImmutableList.of(cmd));
+            assertEquals(exitcode, 1);
+            
+            serverSocket.close();
+            assertTrue(Networking.isPortAvailable(port));
+            String cmd2 = BashCommands.waitForPortFree(port, Duration.ONE_SECOND, true);
+            int exitcode2 = loc.execCommands("test", ImmutableList.of(cmd2));
+            assertEquals(exitcode2, 0);
+        } finally {
+            serverSocket.close();
+        }
+    }
+
+    @Test(groups="Integration")
+    public void testWaitForPortFreeWhenNotAbortingOnTimeout() throws Exception {
+        ServerSocket serverSocket = openServerSocket();
+        try {
+            int port = serverSocket.getLocalPort();
+    
+            String cmd = BashCommands.waitForPortFree(port, Duration.ONE_SECOND, false);
+            ProcessTaskWrapper<String> t = SshTasks.newSshExecTaskFactory(loc, cmd)
+                    .requiringZeroAndReturningStdout().newTask();
+            String output = exec.submit(t).get();
+            assertTrue(output.contains(port+" still in use"), "output="+output);
+    
+            serverSocket.close();
+            assertTrue(Networking.isPortAvailable(port));
+            String cmd2 = BashCommands.waitForPortFree(port, Duration.ONE_SECOND, false);
+            ProcessTaskWrapper<String> t2 = SshTasks.newSshExecTaskFactory(loc, cmd2)
+                    .requiringZeroAndReturningStdout().newTask();
+            String output2 = exec.submit(t2).get();
+            assertFalse(output2.contains("still in use"), "output="+output2);
+        } finally {
+            serverSocket.close();
+        }
+    }
+    
+    @Test(groups="Integration")
+    public void testWaitForPortFreeWhenFreedAfterStart() throws Exception {
+        ServerSocket serverSocket = openServerSocket();
+        try {
+            int port = serverSocket.getLocalPort();
+    
+            String cmd = BashCommands.waitForPortFree(port, Duration.THIRTY_SECONDS, false);
+            ProcessTaskWrapper<String> t = SshTasks.newSshExecTaskFactory(loc, cmd)
+                    .requiringZeroAndReturningStdout().newTask();
+            exec.submit(t);
+            
+            // sleep for long enough to ensure the ssh command is definitely executing
+            Thread.sleep(5*1000);
+            assertFalse(t.isDone());
+            
+            serverSocket.close();
+            assertTrue(Networking.isPortAvailable(port));
+            String output = t.get();
+            assertFalse(output.contains("still in use"), "output="+output);
+        } finally {
+            serverSocket.close();
+        }
+    }
+        
+    private ServerSocket openServerSocket() {
+        ServerSocket serverSocket = null;
+        for (int i = 40000; i < 40100; i++) {
+            try {
+                serverSocket = new ServerSocket(i);
+            } catch (IOException e) {
+                // try next number
+            }
+        }
+        assertNotNull(serverSocket, "No ports available in range!");
+        return serverSocket;
     }
 }
