@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.util.time.Duration;
+
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -17,19 +19,26 @@ import com.google.common.collect.ImmutableList;
  */
 public class TimeWindowedList<T> {
     private final LinkedList<TimestampedValue<T>> values = new LinkedList<TimestampedValue<T>>();
-    private volatile long timePeriod;
+    private volatile Duration timePeriod;
     private final int minVals;
     private final int minExpiredVals;
-    
-    public TimeWindowedList(long timePeriod) {
+
+    public TimeWindowedList(Duration timePeriod) {
         this.timePeriod = timePeriod;
         minVals = 0;
         minExpiredVals = 0;
     }
+    
+    /**
+     * @deprecated since 0.7.0; use {@link #TimeWindowedList(Duration)}
+     */
+    public TimeWindowedList(long timePeriod) {
+        this(Duration.millis(timePeriod));
+    }
 
     public TimeWindowedList(Map<String,?> flags) {
         if (!flags.containsKey("timePeriod")) throw new IllegalArgumentException("Must define timePeriod");
-        timePeriod = ((Number)flags.get("timePeriod")).longValue();
+        timePeriod = Duration.of(flags.get("timePeriod"));
         
         if (flags.containsKey("minVals")) {
             minVals = ((Number)flags.get("minVals")).intValue();
@@ -43,7 +52,7 @@ public class TimeWindowedList<T> {
         }
     }
     
-    public void setTimePeriod(long newTimePeriod) {
+    public void setTimePeriod(Duration newTimePeriod) {
         timePeriod = newTimePeriod;
     }
     
@@ -60,11 +69,12 @@ public class TimeWindowedList<T> {
         return ImmutableList.copyOf(values);
     }
     
-    public synchronized List<TimestampedValue<T>> getValuesInWindow(long now, long subTimePeriod) {
+    public synchronized List<TimestampedValue<T>> getValuesInWindow(long now, Duration subTimePeriod) {
+        long startTime = now - subTimePeriod.toMilliseconds();
         List<TimestampedValue<T>> result = new LinkedList<TimestampedValue<T>>();
         TimestampedValue<T> mostRecentExpired = null;
         for (TimestampedValue<T> val : values) {
-            if (val.getTimestamp() < (now-subTimePeriod)) {
+            if (val.getTimestamp() < startTime) {
                 // discard; but remember most recent too-old value so we include that as the "initial"
                 mostRecentExpired = val;
             } else {
@@ -93,12 +103,17 @@ public class TimeWindowedList<T> {
     }
     
     public synchronized void pruneValues(long now) {
+        long startTime = now - timePeriod.toMilliseconds();
         int expiredValsCount = 0;
-        for (TimestampedValue<T> val : values) {
-            if (timePeriod == 0 || val.getTimestamp() < (now-timePeriod)) {
-                expiredValsCount++;
-            } else {
-                break;
+        if (timePeriod.equals(Duration.ZERO)) {
+            expiredValsCount = values.size();
+        } else {
+            for (TimestampedValue<T> val : values) {
+                if (val.getTimestamp() < startTime) {
+                    expiredValsCount++;
+                } else {
+                    break;
+                }
             }
         }
         int numToPrune = Math.min(expiredValsCount - minExpiredVals, values.size()-minVals);

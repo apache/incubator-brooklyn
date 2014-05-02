@@ -380,6 +380,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
         setConfig(METRIC_UPPER_BOUND, checkNotNull(val));
     }
     
+    /**
+     * @deprecated since 0.7.0; use {@link #setMinPeriodBetweenExecs(Duration)}
+     */
     public void setMinPeriodBetweenExecs(long val) {
         setMinPeriodBetweenExecs(Duration.millis(val));
     }
@@ -389,6 +392,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
         setConfig(MIN_PERIOD_BETWEEN_EXECS, val);
     }
 
+    /**
+     * @deprecated since 0.7.0; use {@link #setResizeDownStabilizationDelay(Duration)}
+     */
     public void setResizeUpStabilizationDelay(long val) {
         setResizeUpStabilizationDelay(Duration.millis(val));
     }
@@ -398,6 +404,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
         setConfig(RESIZE_UP_STABILIZATION_DELAY, val);
     }
     
+    /**
+     * @deprecated since 0.7.0; use {@link #setResizeDownStabilizationDelay(Duration)}
+     */
     public void setResizeDownStabilizationDelay(long val) {
         setResizeDownStabilizationDelay(Duration.millis(val));
     }
@@ -484,10 +493,10 @@ public class AutoScalerPolicy extends AbstractPolicy {
     @Override
     protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
         if (key.equals(RESIZE_UP_STABILIZATION_DELAY)) {
-            long maxResizeStabilizationDelay = Math.max(((Duration)val).toMilliseconds(), getResizeDownStabilizationDelay().toMilliseconds());
+            Duration maxResizeStabilizationDelay = Duration.max((Duration)val, getResizeDownStabilizationDelay());
             recentDesiredResizes.setWindowSize(maxResizeStabilizationDelay);
         } else if (key.equals(RESIZE_DOWN_STABILIZATION_DELAY)) {
-            long maxResizeStabilizationDelay = Math.max(((Duration)val).toMilliseconds(), getResizeUpStabilizationDelay().toMilliseconds());
+            Duration maxResizeStabilizationDelay = Duration.max((Duration)val, getResizeUpStabilizationDelay());
             recentDesiredResizes.setWindowSize(maxResizeStabilizationDelay);
         } else if (key.equals(METRIC_LOWER_BOUND)) {
             // TODO If recorded what last metric value was then we could recalculate immediately
@@ -796,7 +805,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
             return;
         }
         
-        WindowSummary valsSummary = recentUnboundedResizes.summarizeWindow(getMaxReachedNotificationDelay().toMilliseconds());
+        WindowSummary valsSummary = recentUnboundedResizes.summarizeWindow(getMaxReachedNotificationDelay());
         long timeWindowSize = getMaxReachedNotificationDelay().toMilliseconds();
         long currentPoolSize = getCurrentSizeOperator().apply(poolEntity);
         int maxAllowedPoolSize = getMaxPoolSize();
@@ -871,8 +880,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
      */
     private CalculatedDesiredPoolSize calculateDesiredPoolSize(long currentPoolSize) {
         long now = System.currentTimeMillis();
-        WindowSummary downsizeSummary = recentDesiredResizes.summarizeWindow(getResizeDownStabilizationDelay().toMilliseconds());
-        WindowSummary upsizeSummary = recentDesiredResizes.summarizeWindow(getResizeUpStabilizationDelay().toMilliseconds());
+        WindowSummary downsizeSummary = recentDesiredResizes.summarizeWindow(getResizeDownStabilizationDelay());
+        WindowSummary upsizeSummary = recentDesiredResizes.summarizeWindow(getResizeUpStabilizationDelay());
         
         // this is the _sustained_ growth value; the smallest size that has been requested in the "stable-for-growing" period
         long maxDesiredPoolSize = upsizeSummary.min;

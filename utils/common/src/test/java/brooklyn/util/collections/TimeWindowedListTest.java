@@ -1,19 +1,22 @@
 package brooklyn.util.collections;
 
+import static brooklyn.util.time.Duration.ONE_MILLISECOND;
 import static org.testng.Assert.assertEquals;
 
 import java.util.List;
 
 import org.testng.annotations.Test;
 
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.TimeWindowedList;
-import brooklyn.util.collections.TimestampedValue;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.Lists;
 
 @SuppressWarnings({"rawtypes","unchecked"})
 public class TimeWindowedListTest {
+
+    private static final Duration TEN_MILLISECONDS = Duration.millis(10);
+    private static final Duration HUNDRED_MILLISECONDS = Duration.millis(100);
+    private static final Duration TWO_MILLISECONDS = Duration.millis(2);
 
     @Test
     public void testKeepsMinVals() {
@@ -53,12 +56,12 @@ public class TimeWindowedListTest {
     
     @Test
     public void testGetsSubSetOfRecentVals() {
-        TimeWindowedList list = new TimeWindowedList<Object>(1000L);
+        TimeWindowedList list = new TimeWindowedList<Object>(Duration.ONE_SECOND);
         
         list.add("a", 0L);
         list.add("b", 100L);
-        assertEquals(list.getValuesInWindow(100L, 100L), timestampedValues("a", 0L, "b", 100L));
-        assertEquals(list.getValuesInWindow(101L, 1L), timestampedValues("b", 100L));
+        assertEquals(list.getValuesInWindow(100L, HUNDRED_MILLISECONDS), timestampedValues("a", 0L, "b", 100L));
+        assertEquals(list.getValuesInWindow(101L, ONE_MILLISECOND), timestampedValues("b", 100L));
     }
     
     @Test
@@ -67,22 +70,22 @@ public class TimeWindowedListTest {
         
         list.add("a", 0L);
         list.add("b", 100L);
-        assertEquals(list.getValuesInWindow(100L, 100L), timestampedValues("a", 0L, "b", 100L));
-        assertEquals(list.getValuesInWindow(101L, 2L), timestampedValues("a", 0L, "b", 100L));
-        assertEquals(list.getValuesInWindow(102L, 1L), timestampedValues("b", 100L));
-        assertEquals(list.getValuesInWindow(1001L, 1L), timestampedValues("b", 100L));
+        assertEquals(list.getValuesInWindow(100L, HUNDRED_MILLISECONDS), timestampedValues("a", 0L, "b", 100L));
+        assertEquals(list.getValuesInWindow(101L, TWO_MILLISECONDS), timestampedValues("a", 0L, "b", 100L));
+        assertEquals(list.getValuesInWindow(102L, ONE_MILLISECOND), timestampedValues("b", 100L));
+        assertEquals(list.getValuesInWindow(1001L, ONE_MILLISECOND), timestampedValues("b", 100L));
     }
     
     @Test
     public void testGetsWindowWithMinWhenEmpty() {
         TimeWindowedList list = new TimeWindowedList<Object>(MutableMap.of("timePeriod", 1L, "minVals", 1));
-        assertEquals(list.getValuesInWindow(1000L, 10L), timestampedValues());
+        assertEquals(list.getValuesInWindow(1000L, TEN_MILLISECONDS), timestampedValues());
     }
 
     @Test
     public void testGetsWindowWithMinExpiredWhenEmpty() {
         TimeWindowedList list = new TimeWindowedList<Object>(MutableMap.of("timePeriod", 1L, "minExpiredVals", 1));
-        assertEquals(list.getValuesInWindow(1000L, 10L), timestampedValues());
+        assertEquals(list.getValuesInWindow(1000L, TEN_MILLISECONDS), timestampedValues());
     }
 
     @Test
@@ -91,7 +94,7 @@ public class TimeWindowedListTest {
         list.add("a", 0L);
         list.add("b", 1L);
         
-        assertEquals(list.getValuesInWindow(1000L, 10L), timestampedValues("b", 1L));
+        assertEquals(list.getValuesInWindow(1000L, TEN_MILLISECONDS), timestampedValues("b", 1L));
     }
 
     @Test
@@ -99,12 +102,12 @@ public class TimeWindowedListTest {
         TimeWindowedList list = new TimeWindowedList<Object>(MutableMap.of("timePeriod", 0L, "minExpiredVals", 1));
         
         list.add("a", 0L);
-        assertEquals(list.getValuesInWindow(0L, 100L), timestampedValues("a", 0L));
-        assertEquals(list.getValuesInWindow(2L, 1L), timestampedValues("a", 0L));
+        assertEquals(list.getValuesInWindow(0L, HUNDRED_MILLISECONDS), timestampedValues("a", 0L));
+        assertEquals(list.getValuesInWindow(2L, ONE_MILLISECOND), timestampedValues("a", 0L));
         
         list.add("b", 100L);
-        assertEquals(list.getValuesInWindow(100L, 1L), timestampedValues("b", 100L));
-        assertEquals(list.getValuesInWindow(102L, 1L), timestampedValues("b", 100L));
+        assertEquals(list.getValuesInWindow(100L, ONE_MILLISECOND), timestampedValues("b", 100L));
+        assertEquals(list.getValuesInWindow(102L, ONE_MILLISECOND), timestampedValues("b", 100L));
     }
     
     private <T> List<TimestampedValue<T>> timestampedValues() {
