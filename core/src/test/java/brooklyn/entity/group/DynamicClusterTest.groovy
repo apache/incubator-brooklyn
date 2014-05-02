@@ -650,7 +650,7 @@ class DynamicClusterTest {
             cluster.replaceMember(member.getId());
             fail();
         } catch (Exception e) {
-            if (!e.toString().contains("failed to stop and remove old member "+member.getId())) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, StopFailedRuntimeException.class) == null) throw e;
             boolean found = false;
             for (Throwable t : Throwables.getCausalChain(e)) {
                 if (t.toString().contains("Simulating entity stop failure")) {

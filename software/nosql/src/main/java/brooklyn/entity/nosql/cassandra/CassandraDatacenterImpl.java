@@ -26,6 +26,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
+import brooklyn.entity.group.StopFailedRuntimeException;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
@@ -38,6 +39,7 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
@@ -299,7 +301,12 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
             throw new IllegalStateException(msg);
         }
         
-        stopAndRemoveNode(member);
+        try {
+            stopAndRemoveNode(member);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            throw new StopFailedRuntimeException("replaceMember failed to stop and remove old member "+member.getId(), e);
+        }
         
         return added.get();
     }

@@ -20,6 +20,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.group.StopFailedRuntimeException;
 import brooklyn.entity.trait.MemberReplaceable;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -30,6 +31,7 @@ import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Ticker;
@@ -131,17 +133,13 @@ public class ServiceReplacer extends AbstractPolicy {
                     Entities.invokeEffectorWithArgs(entity, entity, MemberReplaceable.REPLACE_MEMBER, failedEntity.getId()).get();
                     consecutiveReplacementFailureTimes.clear();
                 } catch (Exception e) {
-                    // FIXME replaceMember fails if stop fails on the old node; should resolve that more gracefully than this
-                    if (e.toString().contains("failed to stop and remove old member") && e.toString().contains(failedEntity.getId())) {
+                    if (Exceptions.getFirstThrowableOfType(e, StopFailedRuntimeException.class) != null) {
                         LOG.info("ServiceReplacer: ignoring error reported from stopping failed node "+failedEntity);
                         return;
                     }
-
                     onReplacementFailed("Replace failure (error "+e+") at "+entity+": "+reason);
                 }
-
             }
-
         });
     }
 
