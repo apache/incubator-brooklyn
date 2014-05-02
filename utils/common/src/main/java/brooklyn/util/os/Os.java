@@ -313,16 +313,12 @@ public class Os {
 
     /** as {@link File#mkdirs()} but throwing on failure and returning the directory made for fluent convenience */
     public static File mkdirs(File dir) {
-        if (dir.isDirectory()) return dir;
-        boolean success = dir.mkdirs();
-        if (!success) {
-            // A race condition can cause dir.mkdirs() to return false if the dir has been created on a separate thread
-            // since the initial check above
-            if (dir.isDirectory()) return dir;
-            throw Exceptions.propagate(new IOException("Failed to create directory " + dir + 
-                    (dir.isFile() ? "(is file)" : "")));
+        dir.mkdirs();
+        if (dir.isDirectory()) {
+            return dir;
         }
-        return dir;
+        throw Exceptions.propagate(new IOException("Failed to create directory " + dir + 
+                (dir.isFile() ? "(is file)" : "")));
     }
 
     /** writes given contents to a temporary file which will be deleted on exit */
