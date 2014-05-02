@@ -9,7 +9,7 @@ define([
         template: _.template(ExpungeModalHtml),
         events: {
             "click .invoke-expunge": "invokeExpunge",
-            "hidden": "hide"
+            "hide": "hide"
         },
         render: function() {
             this.$el.html(this.template(this.model));

@@ -18,14 +18,27 @@ define([
         locationOptionTemplate:_.template(DeployLocationOptionHtml),
         effectorParam:_.template(ParamHtml),
         effectorParamList:_.template(ParamListHtml),
+
         events:{
             "click .invoke-effector":"invokeEffector",
-            "shown":"unfade"
+            "shown": "onShow",
+            "hide": "onHide"
         },
+
         initialize:function () {
             this.locations = this.options.locations /* for testing */
               || new Location.Collection();
         },
+
+        onShow: function() {
+            this.delegateEvents();
+            this.$el.fadeTo(500,1);
+        },
+
+        onHide: function() {
+            this.undelegateEvents();
+        },
+
         render:function () {
             var that = this, params = this.model.get("parameters")
             this.$el.html(this.template({
@@ -72,9 +85,6 @@ define([
             this.$(".modal-body").find('*[rel="tooltip"]').tooltip()
             return this
         },
-        unfade: function() {
-            this.$el.fadeTo(500,1);
-        },
 
         extractParamsFromTable:function () {
             var parameters = {}
@@ -117,6 +127,7 @@ define([
             // un-delegate events
             this.undelegateEvents()
         }
+
     })
     return EffectorInvokeView
 })

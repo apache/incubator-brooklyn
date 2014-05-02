@@ -11,7 +11,17 @@ define([
         template: _.template(PolicyConfigModalHtml),
         events:{
             "click .save-policy-config":"savePolicyConfig",
-            "shown":"unfade"
+            "shown": "onShow",
+            "hide": "onHide"
+        },
+
+        onShow: function() {
+            this.delegateEvents();
+            this.$el.fadeTo(500,1);
+        },
+
+        onHide: function() {
+            this.undelegateEvents();
         },
 
         render:function () {
@@ -28,10 +38,6 @@ define([
             });
             that.model = this.model;
             return that;
-        },
-
-        unfade:function() {
-            this.$el.fadeTo(500,1);
         },
 
         savePolicyConfig:function () {
