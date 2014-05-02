@@ -47,6 +47,8 @@ public class ConnectionFailureDetector extends AbstractPolicy {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionFailureDetector.class);
 
+    private static final long MIN_PERIOD_BETWEEN_EXECS_MILLIS = 100;
+
     public static final ConfigKey<HostAndPort> ENDPOINT = ConfigKeys.newConfigKey(HostAndPort.class, "connectionFailureDetector.endpoint");
     
     public static final ConfigKey<Duration> POLL_PERIOD = ConfigKeys.newConfigKey(Duration.class, "connectionFailureDetector.pollPeriod", "", Duration.ONE_SECOND);
@@ -58,7 +60,10 @@ public class ConnectionFailureDetector extends AbstractPolicy {
     @SetFromFlag("connectionFailedStabilizationDelay")
     public static final ConfigKey<Duration> CONNECTION_FAILED_STABILIZATION_DELAY = BasicConfigKey.builder(Duration.class)
             .name("connectionFailureDetector.serviceFailedStabilizationDelay")
-            .description("Time period for which the connection must be consistently down for (e.g. doesn't report down-up-down) before concluding failure")
+            .description("Time period for which the connection must be consistently down for "
+                    + "(e.g. doesn't report down-up-down) before concluding failure. "
+                    + "Note that long TCP timeouts mean there can be long (e.g. 70 second) "
+                    + "delays in noticing a connection refused condition.")
             .defaultValue(Duration.ZERO)
             .build();
 
@@ -82,20 +87,19 @@ public class ConnectionFailureDetector extends AbstractPolicy {
 
     private Callable<Task<?>> pollingTaskFactory;
 
-    private Task scheduledTask;
+    private Task<?> scheduledTask;
     
     public ConnectionFailureDetector() {
     }
     
+    @Override
     public void init() {
-        if (getConfig(ENDPOINT) == null) {
-            throw new IllegalStateException("endpoint must be set");
-        }
+        getRequiredConfig(ENDPOINT); // just to confirm it's set, failing fast
 
         pollingTaskFactory = new Callable<Task<?>>() {
-            public Task<?> call() {
+            @Override public Task<?> call() {
                 BasicTask<Void> task = new BasicTask<Void>(new Runnable() {
-                    public void run() {
+                    @Override public void run() {
                         checkHealth();
                     }});
                 BrooklynTaskTags.setTransient(task);
@@ -109,8 +113,7 @@ public class ConnectionFailureDetector extends AbstractPolicy {
         super.setEntity(entity);
 
         if (isRunning()) {
-            ScheduledTask task = new ScheduledTask(MutableMap.of("period", getConfig(POLL_PERIOD)), pollingTaskFactory);
-            scheduledTask = ((EntityInternal)entity).getExecutionContext().submit(task);
+            doStartPolling();
         }
     }
 
@@ -122,16 +125,21 @@ public class ConnectionFailureDetector extends AbstractPolicy {
     
     @Override
     public void resume() {
-        super.resume();
-        
         currentFailureStartTime = null;
         currentRecoveryStartTime = null;
         lastPublished = LastPublished.NONE;
         executorQueued.set(false);
         executorTime = 0;
         
-        ScheduledTask task = new ScheduledTask(MutableMap.of("period", getConfig(POLL_PERIOD)), pollingTaskFactory);
-        scheduledTask = ((EntityInternal)entity).getExecutionContext().submit(task);
+        super.resume();
+        doStartPolling();
+    }
+    
+    protected void doStartPolling() {
+        if (scheduledTask == null || scheduledTask.isDone()) {
+            ScheduledTask task = new ScheduledTask(MutableMap.of("period", getConfig(POLL_PERIOD)), pollingTaskFactory);
+            scheduledTask = ((EntityInternal)entity).getExecutionContext().submit(task);
+        }
     }
     
     private Duration getConnectionFailedStabilizationDelay() {
@@ -155,7 +163,7 @@ public class ConnectionFailureDetector extends AbstractPolicy {
                     currentRecoveryStartTime = now;
                     schedulePublish();
                 } else {
-                    if (LOG.isDebugEnabled()) LOG.debug("{} connectivity-check for {}, continuing recovering: {}", new Object[] {this, entity, status.getDescription()});
+                    if (LOG.isTraceEnabled()) LOG.trace("{} connectivity-check for {}, continuing recovering: {}", new Object[] {this, entity, status.getDescription()});
                 }
             } else {
                 if (currentFailureStartTime != null) {
@@ -173,7 +181,7 @@ public class ConnectionFailureDetector extends AbstractPolicy {
                     currentFailureStartTime = now;
                     schedulePublish();
                 } else {
-                    LOG.info("{} connectivity-check for {}, continuing failing: {}", new Object[] {this, entity, status.getDescription()});
+                    if (LOG.isTraceEnabled()) LOG.trace("{} connectivity-check for {}, continuing failing: {}", new Object[] {this, entity, status.getDescription()});
                 }
             } else {
                 if (currentRecoveryStartTime != null) {
@@ -197,7 +205,7 @@ public class ConnectionFailureDetector extends AbstractPolicy {
     protected void schedulePublish(long delay) {
         if (isRunning() && executorQueued.compareAndSet(false, true)) {
             long now = System.currentTimeMillis();
-            delay = Math.max(0, Math.max(delay, (executorTime + 100) - now));
+            delay = Math.max(0, Math.max(delay, (executorTime + MIN_PERIOD_BETWEEN_EXECS_MILLIS) - now));
             if (LOG.isTraceEnabled()) LOG.trace("{} scheduling publish in {}ms", this, delay);
             
             Runnable job = new Runnable() {
@@ -210,12 +218,12 @@ public class ConnectionFailureDetector extends AbstractPolicy {
                         
                     } catch (Exception e) {
                         if (isRunning()) {
-                            LOG.error("Error resizing: "+e, e);
+                            LOG.error("Problem resizing: "+e, e);
                         } else {
-                            if (LOG.isDebugEnabled()) LOG.debug("Error resizing, but no longer running: "+e, e);
+                            if (LOG.isDebugEnabled()) LOG.debug("Problem resizing, but no longer running: "+e, e);
                         }
                     } catch (Throwable t) {
-                        LOG.error("Error in service-failure-detector: "+t, t);
+                        LOG.error("Problem in service-failure-detector: "+t, t);
                         throw Exceptions.propagate(t);
                     }
                 }
@@ -227,6 +235,8 @@ public class ConnectionFailureDetector extends AbstractPolicy {
     }
     
     private synchronized void publishNow() {
+        if (!isRunning()) return;
+        
         CalculatedStatus calculatedStatus = calculateStatus();
         boolean connected = calculatedStatus.connected;
         

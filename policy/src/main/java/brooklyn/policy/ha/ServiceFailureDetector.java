@@ -2,6 +2,7 @@ package brooklyn.policy.ha;
 
 import static brooklyn.util.time.Time.makeTimeStringRounded;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,6 +22,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.management.SubscriptionHandle;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.util.collections.MutableMap;
@@ -33,6 +35,7 @@ import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 
 /** attaches to a SoftwareProcess (or anything emitting SERVICE_UP and SERVICE_STATE)
  * and emits HASensors.ENTITY_FAILED and ENTITY_RECOVERED as appropriate
@@ -51,6 +54,8 @@ public class ServiceFailureDetector extends AbstractPolicy {
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(ServiceFailureDetector.class);
+
+    private static final long MIN_PERIOD_BETWEEN_EXECS_MILLIS = 100;
 
     public static final BasicNotificationSensor<FailureDescriptor> ENTITY_FAILED = HASensors.ENTITY_FAILED;
 
@@ -93,6 +98,8 @@ public class ServiceFailureDetector extends AbstractPolicy {
     private final AtomicBoolean executorQueued = new AtomicBoolean(false);
     private volatile long executorTime = 0;
 
+    private List<SubscriptionHandle> subscriptionHandles = Lists.newCopyOnWriteArrayList();
+
     public ServiceFailureDetector() {
         this(new ConfigBag());
     }
@@ -109,22 +116,60 @@ public class ServiceFailureDetector extends AbstractPolicy {
     @Override
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
-        
-        if (getConfig(USE_SERVICE_STATE_RUNNING)) {
-            subscribe(entity, Attributes.SERVICE_STATE, new SensorEventListener<Lifecycle>() {
-                @Override public void onEvent(SensorEvent<Lifecycle> event) {
-                    onServiceState(event.getValue());
+        doSubscribe();
+        onMemberAdded();
+    }
+
+    @Override
+    public void suspend() {
+        super.suspend();
+        doUnsubscribe();
+    }
+    
+    @Override
+    public void resume() {
+        serviceIsUp.set(null);
+        serviceState.set(null);
+        serviceLastUp.set(null);
+        serviceLastDown.set(null);
+        currentFailureStartTime = null;
+        currentRecoveryStartTime = null;
+        lastPublished = LastPublished.NONE;
+        weSetItOnFire = false;
+        executorQueued.set(false);
+        executorTime = 0;
+
+        super.resume();
+        doSubscribe();
+        onMemberAdded();
+    }
+
+    protected void doSubscribe() {
+        if (subscriptionHandles.isEmpty()) {
+            if (getConfig(USE_SERVICE_STATE_RUNNING)) {
+                SubscriptionHandle handle = subscribe(entity, Attributes.SERVICE_STATE, new SensorEventListener<Lifecycle>() {
+                    @Override public void onEvent(SensorEvent<Lifecycle> event) {
+                        onServiceState(event.getValue());
+                    }
+                });
+                subscriptionHandles.add(handle);
+            }
+            
+            SubscriptionHandle handle = subscribe(entity, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
+                @Override public void onEvent(SensorEvent<Boolean> event) {
+                    onServiceUp(event.getValue());
                 }
             });
+            subscriptionHandles.add(handle);
         }
-        
-        subscribe(entity, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
-            @Override public void onEvent(SensorEvent<Boolean> event) {
-                onServiceUp(event.getValue());
-            }
-        });
-        
-        onMemberAdded();
+    }
+    
+    protected void doUnsubscribe() {
+        // TODO Could be more defensive with synchronization, but things shouldn't be calling resume + suspend concurrently
+        for (SubscriptionHandle handle : subscriptionHandles) {
+            unsubscribe(entity, handle);
+        }
+        subscriptionHandles.clear();
     }
     
     private Duration getServiceFailedStabilizationDelay() {
@@ -181,7 +226,7 @@ public class ServiceFailureDetector extends AbstractPolicy {
                     currentRecoveryStartTime = now;
                     schedulePublish();
                 } else {
-                    if (LOG.isDebugEnabled()) LOG.debug("{} health-check for {}, component continuing recovering: {}", new Object[] {this, entity, status.getDescription()});
+                    if (LOG.isTraceEnabled()) LOG.trace("{} health-check for {}, component continuing recovering: {}", new Object[] {this, entity, status.getDescription()});
                 }
             } else {
                 if (currentFailureStartTime != null) {
@@ -198,7 +243,7 @@ public class ServiceFailureDetector extends AbstractPolicy {
                     currentFailureStartTime = now;
                     schedulePublish();
                 } else {
-                    LOG.info("{} health-check for {}, component continuing failing: {}", new Object[] {this, entity, status.getDescription()});
+                    if (LOG.isTraceEnabled()) LOG.trace("{} health-check for {}, component continuing failing: {}", new Object[] {this, entity, status.getDescription()});
                 }
             } else {
                 if (currentRecoveryStartTime != null) {
@@ -224,7 +269,7 @@ public class ServiceFailureDetector extends AbstractPolicy {
     protected void schedulePublish(long delay) {
         if (isRunning() && executorQueued.compareAndSet(false, true)) {
             long now = System.currentTimeMillis();
-            delay = Math.max(0, Math.max(delay, (executorTime + 100) - now));
+            delay = Math.max(0, Math.max(delay, (executorTime + MIN_PERIOD_BETWEEN_EXECS_MILLIS) - now));
             if (LOG.isTraceEnabled()) LOG.trace("{} scheduling publish in {}ms", this, delay);
             
             Runnable job = new Runnable() {
@@ -254,6 +299,8 @@ public class ServiceFailureDetector extends AbstractPolicy {
     }
     
     private synchronized void publishNow() {
+        if (!isRunning()) return;
+        
         CalculatedStatus calculatedStatus = calculateStatus();
         
         Long lastUpTime = serviceLastUp.get();
