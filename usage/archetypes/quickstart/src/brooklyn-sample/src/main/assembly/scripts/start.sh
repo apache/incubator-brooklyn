@@ -17,6 +17,6 @@ if [[ ! `ls brooklyn-sample-*.jar 2> /dev/null` ]] ; then
 fi
 
 $JAVA -Xms256m -Xmx1024m -XX:MaxPermSize=1024m \
-    -classpath "conf/:*:lib/*" \
+    -classpath "conf/:patch/*:*:lib/*" \
     com.acme.sample.brooklyn.SampleMain \
     "$@"
