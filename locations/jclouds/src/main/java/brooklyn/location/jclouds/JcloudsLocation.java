@@ -989,6 +989,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             LOG.info("ignoring auto-generate-floating-ips({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
                     }}) 
+             .put(AUTO_ASSIGN_FLOATING_IP, new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
+                        if (t instanceof NovaTemplateOptions) {
+                            ((NovaTemplateOptions)t).autoAssignFloatingIp((Boolean)v);
+                        } else if (t instanceof CloudStackTemplateOptions) {
+                            ((CloudStackTemplateOptions)t).setupStaticNat((Boolean)v);
+                        } else {
+                            LOG.info("ignoring auto-assign-floating-ip({}) in VM creation because not supported for cloud/type ({})", v, t);
+                        }
+                    }}) 
               .put(OVERRIDE_RAM, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         if (t instanceof AbiquoTemplateOptions) {
