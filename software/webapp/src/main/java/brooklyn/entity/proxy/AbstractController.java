@@ -28,7 +28,7 @@ public interface AbstractController extends SoftwareProcess, LoadBalancer {
 
     @SetFromFlag("serviceUpUrlPath")
     ConfigKey<String> SERVICE_UP_URL_PATH = ConfigKeys.newStringConfigKey(
-            "controller.config.serviceUpUrlPath", "The path that will be prepended to the root URL to determine SERVICE_UP", "");
+            "controller.config.serviceUpUrlPath", "The path that will be appended to the root URL to determine SERVICE_UP", "");
 
     boolean isActive();
 
