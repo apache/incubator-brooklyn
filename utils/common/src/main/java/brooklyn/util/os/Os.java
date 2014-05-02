@@ -313,11 +313,12 @@ public class Os {
 
     /** as {@link File#mkdirs()} but throwing on failure and returning the directory made for fluent convenience */
     public static File mkdirs(File dir) {
-        if (dir.isDirectory()) return dir;
-        boolean success = dir.mkdirs();
-        if (!success) throw Exceptions.propagate(new IOException("Failed to create directory " + dir + 
+        dir.mkdirs();
+        if (dir.isDirectory()) {
+            return dir;
+        }
+        throw Exceptions.propagate(new IOException("Failed to create directory " + dir + 
                 (dir.isFile() ? "(is file)" : "")));
-        return dir;
     }
 
     /** writes given contents to a temporary file which will be deleted on exit */
