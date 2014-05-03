@@ -10,6 +10,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
@@ -19,6 +20,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Time;
@@ -69,14 +71,31 @@ public class ServiceRestarter extends AbstractPolicy {
     }
 
     @Override
-    public void setEntity(EntityLocal entity) {
+    public void setEntity(final EntityLocal entity) {
         Preconditions.checkArgument(entity instanceof Startable, "Restarter must take a Startable, not "+entity);
         
         super.setEntity(entity);
         
         subscribe(entity, getConfig(FAILURE_SENSOR_TO_MONITOR), new SensorEventListener<Object>() {
-                @Override public void onEvent(SensorEvent<Object> event) {
-                    onDetectedFailure(event);
+                @Override public void onEvent(final SensorEvent<Object> event) {
+                    // Must execute in another thread - if we called entity.restart in the event-listener's thread
+                    // then we'd block all other events being delivered to this entity's other subscribers.
+                    // Relies on synchronization of `onDetectedFailure`.
+                    // See same pattern used in ServiceReplacer.
+
+                    // TODO Could use BasicExecutionManager.setTaskSchedulerForTag to prevent race of two
+                    // events being received in rapid succession, and onDetectedFailure being executed out-of-order
+                    // for them; or could write events to a blocking queue and have onDetectedFailure read from that.
+                    
+                    if (isRunning()) {
+                        LOG.info("ServiceRestarter notified; dispatching job for "+entity+" ("+event.getValue()+")");
+                        ((EntityInternal)entity).getExecutionContext().submit(MutableMap.of(), new Runnable() {
+                            @Override public void run() {
+                                onDetectedFailure(event);
+                            }});
+                    } else {
+                        LOG.warn("ServiceRestarter not running, so not acting on failure detected at "+entity+" ("+event.getValue()+")");
+                    }
                 }
             });
     }
