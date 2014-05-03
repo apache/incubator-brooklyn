@@ -407,16 +407,17 @@ public class BashCommands {
         long secs = Math.max(timeout.toSeconds(), 1);
 
         // TODO How platform-dependent are the args + output format of netstat?
-        String netstatCommand = "sudo netstat -antp TCP";
-
+        // TODO Not using sudo as wrapping either netstat call or sudo(alternativesGroup(...)) fails; parentheses too confusing!
+        String netstatCommand = alternativesGroup(
+                "sudo netstat -antp --tcp", // for Centos
+                "sudo netstat -antp TCP"); // for OS X 
+        
         // number could appear in an IP address or as a port; look for white space at end, and dot or colon before
         String grepCommand = "grep -E '(:|\\.)"+port+"($|\\s)' > /dev/null";
         
         List<String> commands = ImmutableList.of(
                 "for i in {1.."+secs+"}; do",
-                "    "+alternativesGroup(
-                        "which netstat", 
-                        chain("echo \"No netstat to determine if Port "+port+" still in use; aborting\"", "exit 1")),
+                "    "+BashCommands.requireExecutable("netstat"),
                 "    "+alternativesGroup(
                         chainGroup("which awk", "AWK_EXEC=awk"), 
                         chainGroup("which gawk", "AWK_EXEC=gawk"), 
