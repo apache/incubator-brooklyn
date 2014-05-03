@@ -168,11 +168,11 @@ public class BrooklynLauncherRebindTest {
         assertEquals(getPersistenceDir(managementContext).getAbsolutePath(), BrooklynServerConfig.getPersistenceDir(BrooklynProperties.Factory.newDefault()));
     }
 
-    private File getPersistenceDir(ManagementContext managementContext) {
+    static File getPersistenceDir(ManagementContext managementContext) {
         return ((BrooklynMementoPersisterToMultiFile)managementContext.getRebindManager().getPersister()).getDir();
     }
     
-    private void assertMementoDirNonEmptyEventually(final File dir) {
+    static void assertMementoDirNonEmptyEventually(final File dir) {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.TEN_SECONDS), new Runnable() {
             @Override public void run() {
                 assertFalse(BrooklynLauncher.isMementoDirEmpty(dir));

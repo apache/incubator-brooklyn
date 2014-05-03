@@ -41,13 +41,14 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.launcher.FatalConfigurationRuntimeException;
+import brooklyn.launcher.HighAvailabilityMode;
 import brooklyn.launcher.PersistMode;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
-import brooklyn.util.text.Strings;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
+import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -260,6 +261,18 @@ public class Main {
                 description = "the directory to read/write persisted state")
         public String persistenceDir;
 
+        // TODO currently defaults to disabled; want it to default to on, when we're ready
+        // TODO see "persist", about forcing a line-split per option?!
+        @Option(name = { "--high-availability" }, allowedValues = { "disabled", "auto", "master", "standby" },
+                title = "high availability mode",
+                description =
+                        "The high availability mode. Possible values are: \n"+
+                        "disabled: management node works in isolation - will not cooperate with any other standby/master nodes in management plane; \n"+
+                        "auto: will look for other management nodes, and will allocate itself as standby or master based on other nodes' states; \n"+
+                        "master: will startup as master - if there is already a master then fails immediately; \n"+
+                        "standby: will start up as standby - if there is not already a master then fails immediately")
+        public String highAvailability = "disabled";
+
         @Override
         public Void call() throws Exception {
             // Configure launcher
@@ -281,6 +294,7 @@ public class Main {
                 computeLocations();
                 
                 PersistMode persistMode = computePersistMode();
+                HighAvailabilityMode highAvailabilityMode = computeHighAvailabilityMode(persistMode);
                 
                 ResourceUtils utils = ResourceUtils.create(this);
                 ClassLoader parent = utils.getLoader();
@@ -299,6 +313,9 @@ public class Main {
                 if (persistMode != PersistMode.DISABLED && Strings.isNonBlank(persistenceDir)) {
                     launcher.persistenceDir(persistenceDir);
                 }
+                
+                launcher.highAvailabilityMode(highAvailabilityMode);
+
             } catch (FatalConfigurationRuntimeException e) {
                 throw e;
             } catch (Exception e) {
@@ -372,6 +389,32 @@ public class Main {
                 }
             }
             return persistMode;
+        }
+
+        protected HighAvailabilityMode computeHighAvailabilityMode(PersistMode persistMode) {
+            HighAvailabilityMode highAvailabilityMode;
+            if (Strings.isBlank(highAvailability)) {
+                throw new FatalConfigurationRuntimeException("Higha availability mode mode must not be blank");
+            } else if (persist.equalsIgnoreCase("disabled")) {
+                highAvailabilityMode = HighAvailabilityMode.DISABLED;
+            } else if (persist.equalsIgnoreCase("auto")) {
+                highAvailabilityMode = HighAvailabilityMode.AUTO;
+            } else if (persist.equalsIgnoreCase("master")) {
+                highAvailabilityMode = HighAvailabilityMode.MASTER;
+            } else if (persist.equalsIgnoreCase("standby")) {
+                highAvailabilityMode = HighAvailabilityMode.STANDBY;
+            } else {
+                throw new FatalConfigurationRuntimeException("Illegal highAvailability setting: "+persist);
+            }
+   
+            if (highAvailabilityMode != HighAvailabilityMode.DISABLED) {
+                if (persistMode == PersistMode.DISABLED) {
+                    throw new FatalConfigurationRuntimeException("Cannot specify highAvailability when persistence is disabled");
+                } else if (persistMode == PersistMode.CLEAN && highAvailabilityMode == HighAvailabilityMode.STANDBY) {
+                    throw new FatalConfigurationRuntimeException("Cannot specify highAvailability STANDBY when persistence is CLEAN");
+                }
+            }
+            return highAvailabilityMode;
         }
 
         protected BrooklynLauncher createLauncher() {
@@ -548,7 +591,8 @@ public class Main {
                     .add("stopOnKeyPress", stopOnKeyPress)
                     .add("localBrooklynProperties", localBrooklynProperties)
                     .add("persist", persist)
-                    .add("persistenceDir", persistenceDir);
+                    .add("persistenceDir", persistenceDir)
+                    .add("highAvailability", highAvailability);
         }
     }
 

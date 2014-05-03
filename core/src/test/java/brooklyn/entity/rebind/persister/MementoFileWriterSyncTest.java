@@ -2,35 +2,35 @@ package brooklyn.entity.rebind.persister;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import java.io.File;
-import java.util.concurrent.Executors;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
-import brooklyn.util.time.Duration;
+import brooklyn.util.os.Os;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
-public class MementoFileWriterTest {
+public class MementoFileWriterSyncTest {
 
-    private static final Duration TIMEOUT = Duration.TEN_SECONDS;
+    private static final long TIMEOUT_MS = 10*1000;
     
     private File file;
-    private ListeningExecutorService executor;
+    private File dir;
     private MementoSerializer<String> serializer;
-    private MementoFileWriter<String> writer;
+    private MementoFileWriterSync<String> writer;
+
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        file = File.createTempFile("mementoFileWriterTest", "txt");
-        executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+        dir = Files.createTempDir();
+        file = File.createTempFile("mementoFileWriterSyncTest", "txt");
         serializer = new MementoSerializer<String>() {
             @Override public String toString(String memento) {
                 return memento;
@@ -43,23 +43,57 @@ public class MementoFileWriterTest {
             @Override public void unsetLookupContext() {
             }
         };
-        writer = new MementoFileWriter<String>(file, executor, serializer);
+        writer = new MementoFileWriterSync<String>(file, serializer);
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (executor != null) executor.shutdownNow();
         if (file != null) file.delete();
+        if (dir != null) Os.tryDeleteDirectory(dir);
         
     }
 
     @Test
     public void testWritesFile() throws Exception {
         writer.write("abc");
-        writer.waitForWriteCompleted(TIMEOUT);
         
         String fromfile = Files.asCharSource(file, Charsets.UTF_8).read();
         assertEquals(fromfile, "abc");
+    }
+    
+    @Test
+    public void testWritesFileEvenIfDoesNotExist() throws Exception {
+        File newFile = new File(dir, "mementoFileWriterSyncTest-"+Identifiers.makeRandomId(4)+".txt");
+        writer = new MementoFileWriterSync<String>(newFile, serializer);
+        writer.write("abc");
+        
+        String fromfile = Files.asCharSource(newFile, Charsets.UTF_8).read();
+        assertEquals(fromfile, "abc");
+    }
+    
+    @Test
+    public void testExists() throws Exception {
+        File newFile = new File(dir, "mementoFileWriterSyncTest-"+Identifiers.makeRandomId(4)+".txt");
+        writer = new MementoFileWriterSync<String>(newFile, serializer);
+        assertFalse(writer.exists());
+        
+        writer.write("abc");
+        assertTrue(writer.exists());
+    }
+    
+    @Test
+    public void testDeletesFile() throws Exception {
+        writer.delete();
+        assertFalse(file.exists());
+    }
+
+    @Test
+    public void testAppendsFile() throws Exception {
+        writer.append("abc\n");
+        writer.append("def\n");
+        
+        String fromfile = Files.asCharSource(file, Charsets.UTF_8).read();
+        assertEquals(fromfile, "abc\ndef\n");
     }
     
     @Test
@@ -69,8 +103,6 @@ public class MementoFileWriterTest {
         writer.write(big);
         writer.write(big);
         writer.delete();
-        
-        writer.waitForWriteCompleted(TIMEOUT);
         assertFalse(file.exists());
     }
     

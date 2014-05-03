@@ -33,6 +33,9 @@ import brooklyn.management.ExecutionManager;
 import brooklyn.management.LocationManager;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
+import brooklyn.management.ha.HighAvailabilityManager;
+import brooklyn.management.ha.ManagementPlaneMemento;
+import brooklyn.management.ha.ManagementPlaneMementoPersister;
 import brooklyn.mementos.BrooklynMementoPersister;
 
 public class NonDeploymentManagementContext implements ManagementContextInternal {
@@ -214,6 +217,15 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
 
     @Override
+    public HighAvailabilityManager getHighAvailabilityManager() {
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getHighAvailabilityManager();
+        } else {
+            return new NonDeploymentHighAvailabilityManager();
+        }
+    }
+
+    @Override
     public LocationRegistry getLocationRegistry() {
         checkInitialManagementContextReal();
         return initialManagementContext.getLocationRegistry();
@@ -365,6 +377,46 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
         @Override
         public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+    }
+
+    /**
+     * For when the initial management context is not "real".
+     * 
+     * @author aled
+     */
+    private class NonDeploymentHighAvailabilityManager implements HighAvailabilityManager {
+        @Override
+        public NodeStatus getNodeStatus() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public HighAvailabilityManager setPersister(ManagementPlaneMementoPersister persister) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public void disabled() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public void start(StartMode startMode) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public void stop() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public void terminate() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public ManagementPlaneMementoPersister getPersister() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public ManagementPlaneMemento getManagementPlaneStatus() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }
