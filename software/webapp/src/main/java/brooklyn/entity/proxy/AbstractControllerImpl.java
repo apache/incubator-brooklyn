@@ -212,7 +212,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         }
         if (domain==null) domain = getAttribute(LoadBalancer.HOSTNAME);
         if (domain==null) return null;
-        return protocol+"://"+domain+":"+port+"/";
+        return protocol+"://"+domain+":"+port+"/"+getConfig(SERVICE_UP_URL_PATH);
     }
 
     protected String inferUrl() {

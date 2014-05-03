@@ -24,6 +24,11 @@ public interface AbstractController extends SoftwareProcess, LoadBalancer {
     @SetFromFlag("ssl")
     ConfigKey<ProxySslConfig> SSL_CONFIG = ConfigKeys.newConfigKey(ProxySslConfig.class,
             "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
+    
+
+    @SetFromFlag("serviceUpUrlPath")
+    ConfigKey<String> SERVICE_UP_URL_PATH = ConfigKeys.newStringConfigKey(
+            "controller.config.serviceUpUrlPath", "The path that will be appended to the root URL to determine SERVICE_UP", "");
 
     boolean isActive();
 

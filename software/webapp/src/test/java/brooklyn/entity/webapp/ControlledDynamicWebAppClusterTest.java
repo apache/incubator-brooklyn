@@ -5,6 +5,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
@@ -23,6 +25,7 @@ import brooklyn.entity.proxy.TrackingAbstractController;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
+import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -32,8 +35,10 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestJavaWebAppEntity;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -189,6 +194,32 @@ public class ControlledDynamicWebAppClusterTest {
         
         app.stop();
         assertEquals(listener.getValues(), ImmutableList.of(Lifecycle.STOPPING, Lifecycle.STOPPED), "vals="+listener.getValues());
+    }
+    
+    @Test(groups="Integration")
+    public void testTomcatAbsoluteRedirect() {
+        final ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+            .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TomcatServer.class)
+                    .configure(TomcatServer.ROOT_WAR, "classpath://hello-world.war"))
+            .configure("initialSize", 1)
+            .configure(AbstractController.SERVICE_UP_URL_PATH, "hello/redirectAbsolute")
+        );
+        app.start(locs);
+
+        final NginxController nginxController = (NginxController) cluster.getController();
+        Asserts.succeedsEventually(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return nginxController.getServerPoolAddresses().size() == 1;
+            }
+        });
+        
+        Entity tomcatServer = Iterables.getOnlyElement(cluster.getCluster().getMembers());
+        EntityTestUtils.assertAttributeEqualsEventually(tomcatServer, Attributes.SERVICE_UP, true);
+        
+        EntityTestUtils.assertAttributeEqualsContinually(nginxController, Attributes.SERVICE_UP, true);
+        
+        app.stop();
     }
     
     public static class RecordingSensorEventListener<T> implements SensorEventListener<T> {
