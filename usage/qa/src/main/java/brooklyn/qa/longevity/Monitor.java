@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.collections.TimeWindowedList;
 import brooklyn.util.collections.TimestampedValue;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
@@ -124,7 +125,7 @@ public class Monitor {
 
         final AtomicReference<List<String>> previousLogLines = new AtomicReference<List<String>>(Collections.<String>emptyList());
         final TimeWindowedList<Integer> numWebProcessesHistory = new TimeWindowedList<Integer>(
-                ImmutableMap.of("timePeriod", SECONDS.toMillis(prefs.webProcessesCyclingPeriod), "minExpiredVals", 1));
+                ImmutableMap.of("timePeriod", Duration.seconds(prefs.webProcessesCyclingPeriod), "minExpiredVals", 1));
         final Set<String> logGrepExclusions = ImmutableSet.copyOf(Files.readLines(prefs.logGrepExclusionsFile, Charsets.UTF_8));
         
         executor.scheduleAtFixedRate(new Runnable() {

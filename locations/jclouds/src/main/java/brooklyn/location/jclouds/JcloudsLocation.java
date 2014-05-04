@@ -1009,11 +1009,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }})
               .put(NETWORK_NAME, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
-                        if (t instanceof GoogleComputeEngineTemplateOptions) {
-                            ((GoogleComputeEngineTemplateOptions)t).network((String)v);
-                        } else {
-                            LOG.info("ignoring networkName({}) in VM creation because not supported for cloud/type ({})", v, t);
-                        }     
+                        t.networks((String)v);
                     }})
             .build();
 

@@ -5,6 +5,7 @@ import java.util.List;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.TimeWindowedList;
 import brooklyn.util.collections.TimestampedValue;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
 
@@ -57,7 +58,7 @@ public class SizeHistory {
         recentDesiredResizes.add(val);
     }
 
-    public void setWindowSize(long newWindowSize) {
+    public void setWindowSize(Duration newWindowSize) {
         recentDesiredResizes.setTimePeriod(newWindowSize);
     }
     
@@ -71,7 +72,7 @@ public class SizeHistory {
      *   <li>"stable for shrinking" means that since that low value, there have not been any lower values
      * </ul>
      */
-    public WindowSummary summarizeWindow(long windowSize) {
+    public WindowSummary summarizeWindow(Duration windowSize) {
         long now = System.currentTimeMillis();
         List<TimestampedValue<Number>> windowVals = recentDesiredResizes.getValuesInWindow(now, windowSize);
         
@@ -90,10 +91,10 @@ public class SizeHistory {
     /**
      * If the entire time-window is not covered by the given values, then returns Integer.MAX_VALUE.
      */
-    private <T extends Number> T maxInWindow(List<TimestampedValue<T>> vals, long timewindow) {
+    private <T extends Number> T maxInWindow(List<TimestampedValue<T>> vals, Duration timeWindow) {
         // TODO bad casting from Integer default result to T
         long now = System.currentTimeMillis();
-        long epoch = now-timewindow;
+        long epoch = now - timeWindow.toMilliseconds();
         T result = null;
         double resultAsDouble = Integer.MAX_VALUE;
         for (TimestampedValue<T> val : vals) {
@@ -114,9 +115,9 @@ public class SizeHistory {
     /**
      * If the entire time-window is not covered by the given values, then returns Integer.MIN_VALUE
      */
-    private <T extends Number> T minInWindow(List<TimestampedValue<T>> vals, long timewindow) {
+    private <T extends Number> T minInWindow(List<TimestampedValue<T>> vals, Duration timeWindow) {
         long now = System.currentTimeMillis();
-        long epoch = now-timewindow;
+        long epoch = now - timeWindow.toMilliseconds();
         T result = null;
         double resultAsDouble = Integer.MIN_VALUE;
         for (TimestampedValue<T> val : vals) {

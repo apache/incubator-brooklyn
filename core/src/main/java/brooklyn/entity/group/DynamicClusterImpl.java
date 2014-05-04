@@ -371,6 +371,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
     }
 
+    /**
+     * @throws StopFailedRuntimeException If stop failed, after successfully starting replacement
+     */
     protected Entity replaceMember(Entity member, Location memberLoc) {
         synchronized (mutex) {
             Optional<Entity> added = growByOne(memberLoc, ImmutableMap.of());
@@ -379,7 +382,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 throw new IllegalStateException(msg);
             }
 
-            stopAndRemoveNode(member);
+            try {
+                stopAndRemoveNode(member);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                throw new StopFailedRuntimeException("replaceMember failed to stop and remove old member "+member.getId(), e);
+            }
 
             return added.get();
         }

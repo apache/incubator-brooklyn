@@ -26,12 +26,14 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.policy.PolicySpec;
 import brooklyn.policy.autoscaling.SizeHistory.WindowSummary;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.loadbalancing.LoadBalancingPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -143,6 +145,10 @@ public class AutoScalerPolicy extends AbstractPolicy {
         public AutoScalerPolicy build() {
             return new AutoScalerPolicy(toFlags());
         }
+        public PolicySpec<AutoScalerPolicy> buildSpec() {
+            return PolicySpec.create(AutoScalerPolicy.class)
+                    .configure(toFlags());
+        }
         private Map<String,?> toFlags() {
             return MutableMap.<String,Object>builder()
                     .putIfNotNull("id", id)
@@ -226,22 +232,22 @@ public class AutoScalerPolicy extends AbstractPolicy {
             .build();
     
     @SetFromFlag("minPeriodBetweenExecs")
-    public static final ConfigKey<Long> MIN_PERIOD_BETWEEN_EXECS = BasicConfigKey.builder(Long.class)
+    public static final ConfigKey<Duration> MIN_PERIOD_BETWEEN_EXECS = BasicConfigKey.builder(Duration.class)
             .name("autoscaler.minPeriodBetweenExecs")
-            .defaultValue(100L)
+            .defaultValue(Duration.millis(100))
             .build();
     
     @SetFromFlag("resizeUpStabilizationDelay")
-    public static final ConfigKey<Long> RESIZE_UP_STABILIZATION_DELAY = BasicConfigKey.builder(Long.class)
+    public static final ConfigKey<Duration> RESIZE_UP_STABILIZATION_DELAY = BasicConfigKey.builder(Duration.class)
             .name("autoscaler.resizeUpStabilizationDelay")
-            .defaultValue(0l)
+            .defaultValue(Duration.ZERO)
             .reconfigurable(true)
             .build();
     
     @SetFromFlag("resizeDownStabilizationDelay")
-    public static final ConfigKey<Long> RESIZE_DOWN_STABILIZATION_DELAY = BasicConfigKey.builder(Long.class)
+    public static final ConfigKey<Duration> RESIZE_DOWN_STABILIZATION_DELAY = BasicConfigKey.builder(Duration.class)
             .name("autoscaler.resizeDownStabilizationDelay")
-            .defaultValue(0l)
+            .defaultValue(Duration.ZERO)
             .reconfigurable(true)
             .build();
 
@@ -302,10 +308,10 @@ public class AutoScalerPolicy extends AbstractPolicy {
             .build();
     
     @SetFromFlag("maxReachedNotificationDelay")
-    public static final ConfigKey<Long> MAX_REACHED_NOTIFICATION_DELAY = BasicConfigKey.builder(Long.class)
+    public static final ConfigKey<Duration> MAX_REACHED_NOTIFICATION_DELAY = BasicConfigKey.builder(Duration.class)
             .name("autoscaler.maxReachedNotificationDelay")
-            .description("Time (milliseconds) that we consistently wanted to go above the maxPoolSize for, after which the maxSizeReachedSensor (if any) will be emitted")
-            .defaultValue(0l)
+            .description("Time that we consistently wanted to go above the maxPoolSize for, after which the maxSizeReachedSensor (if any) will be emitted")
+            .defaultValue(Duration.ZERO)
             .build();
     
     private Entity poolEntity;
@@ -314,9 +320,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
     private volatile long executorTime = 0;
     private volatile ScheduledExecutorService executor;
 
-    private final SizeHistory recentUnboundedResizes;
+    private SizeHistory recentUnboundedResizes;
 
-    private final SizeHistory recentDesiredResizes;
+    private SizeHistory recentDesiredResizes;
     
     private long maxReachedLastNotifiedTime;
     
@@ -350,11 +356,14 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     public AutoScalerPolicy(Map<String,?> props) {
         super(props);
-        
-        long maxReachedNotificationDelay = getMaxReachedNotificationDelay();
+    }
+    
+    @Override
+    public void init() {
+        long maxReachedNotificationDelay = getMaxReachedNotificationDelay().toMilliseconds();
         recentUnboundedResizes = new SizeHistory(maxReachedNotificationDelay);
         
-        long maxResizeStabilizationDelay = Math.max(getResizeUpStabilizationDelay(), getResizeDownStabilizationDelay());
+        long maxResizeStabilizationDelay = Math.max(getResizeUpStabilizationDelay().toMilliseconds(), getResizeDownStabilizationDelay().toMilliseconds());
         recentDesiredResizes = new SizeHistory(maxResizeStabilizationDelay);
         
         // TODO Should re-use the execution manager's thread pool, somehow
@@ -371,17 +380,38 @@ public class AutoScalerPolicy extends AbstractPolicy {
         setConfig(METRIC_UPPER_BOUND, checkNotNull(val));
     }
     
+    /**
+     * @deprecated since 0.7.0; use {@link #setMinPeriodBetweenExecs(Duration)}
+     */
     public void setMinPeriodBetweenExecs(long val) {
+        setMinPeriodBetweenExecs(Duration.millis(val));
+    }
+
+    public void setMinPeriodBetweenExecs(Duration val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing minPeriodBetweenExecs from {} to {}", new Object[] {this, getMinPeriodBetweenExecs(), val});
         setConfig(MIN_PERIOD_BETWEEN_EXECS, val);
     }
-    
+
+    /**
+     * @deprecated since 0.7.0; use {@link #setResizeDownStabilizationDelay(Duration)}
+     */
     public void setResizeUpStabilizationDelay(long val) {
+        setResizeUpStabilizationDelay(Duration.millis(val));
+    }
+    
+    public void setResizeUpStabilizationDelay(Duration val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing resizeUpStabilizationDelay from {} to {}", new Object[] {this, getResizeUpStabilizationDelay(), val});
         setConfig(RESIZE_UP_STABILIZATION_DELAY, val);
     }
     
+    /**
+     * @deprecated since 0.7.0; use {@link #setResizeDownStabilizationDelay(Duration)}
+     */
     public void setResizeDownStabilizationDelay(long val) {
+        setResizeDownStabilizationDelay(Duration.millis(val));
+    }
+    
+    public void setResizeDownStabilizationDelay(Duration val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing resizeDownStabilizationDelay from {} to {}", new Object[] {this, getResizeDownStabilizationDelay(), val});
         setConfig(RESIZE_DOWN_STABILIZATION_DELAY, val);
     }
@@ -412,15 +442,15 @@ public class AutoScalerPolicy extends AbstractPolicy {
         return getConfig(METRIC_UPPER_BOUND);
     }
     
-    private long getMinPeriodBetweenExecs() {
+    private Duration getMinPeriodBetweenExecs() {
         return getConfig(MIN_PERIOD_BETWEEN_EXECS);
     }
     
-    private long getResizeUpStabilizationDelay() {
+    private Duration getResizeUpStabilizationDelay() {
         return getConfig(RESIZE_UP_STABILIZATION_DELAY);
     }
     
-    private long getResizeDownStabilizationDelay() {
+    private Duration getResizeDownStabilizationDelay() {
         return getConfig(RESIZE_DOWN_STABILIZATION_DELAY);
     }
     
@@ -456,17 +486,17 @@ public class AutoScalerPolicy extends AbstractPolicy {
         return getConfig(MAX_SIZE_REACHED_SENSOR);
     }
     
-    private long getMaxReachedNotificationDelay() {
+    private Duration getMaxReachedNotificationDelay() {
         return getConfig(MAX_REACHED_NOTIFICATION_DELAY);
     }
 
     @Override
     protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
         if (key.equals(RESIZE_UP_STABILIZATION_DELAY)) {
-            long maxResizeStabilizationDelay = Math.max((Long)val, getResizeDownStabilizationDelay());
+            Duration maxResizeStabilizationDelay = Duration.max((Duration)val, getResizeDownStabilizationDelay());
             recentDesiredResizes.setWindowSize(maxResizeStabilizationDelay);
         } else if (key.equals(RESIZE_DOWN_STABILIZATION_DELAY)) {
-            long maxResizeStabilizationDelay = Math.max((Long)val, getResizeUpStabilizationDelay());
+            Duration maxResizeStabilizationDelay = Duration.max((Duration)val, getResizeUpStabilizationDelay());
             recentDesiredResizes.setWindowSize(maxResizeStabilizationDelay);
         } else if (key.equals(METRIC_LOWER_BOUND)) {
             // TODO If recorded what last metric value was then we could recalculate immediately
@@ -735,7 +765,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
         
         if (isRunning() && isEntityUp() && executorQueued.compareAndSet(false, true)) {
             long now = System.currentTimeMillis();
-            long delay = Math.max(0, (executorTime + getMinPeriodBetweenExecs()) - now);
+            long delay = Math.max(0, (executorTime + getMinPeriodBetweenExecs().toMilliseconds()) - now);
             if (LOG.isTraceEnabled()) LOG.trace("{} scheduling resize in {}ms", this, delay);
             
             executor.schedule(new Runnable() {
@@ -776,7 +806,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
         }
         
         WindowSummary valsSummary = recentUnboundedResizes.summarizeWindow(getMaxReachedNotificationDelay());
-        long timeWindowSize = getMaxReachedNotificationDelay();
+        long timeWindowSize = getMaxReachedNotificationDelay().toMilliseconds();
         long currentPoolSize = getCurrentSizeOperator().apply(poolEntity);
         int maxAllowedPoolSize = getMaxPoolSize();
         long unboundedSustainedMaxPoolSize = valsSummary.min; // The sustained maximum (i.e. the smallest it's dropped down to)

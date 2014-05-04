@@ -23,6 +23,7 @@ import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Preconditions;
@@ -41,7 +42,11 @@ public class ServiceRestarter extends AbstractPolicy {
 
     /** skips retry if a failure re-occurs within this time interval */
     @SetFromFlag("failOnRecurringFailuresInThisDuration")
-    public static final ConfigKey<Long> FAIL_ON_RECURRING_FAILURES_IN_THIS_DURATION = ConfigKeys.newLongConfigKey("failOnRecurringFailuresInThisDuration", "", 3*60*1000L);
+    public static final ConfigKey<Duration> FAIL_ON_RECURRING_FAILURES_IN_THIS_DURATION = ConfigKeys.newConfigKey(
+            Duration.class, 
+            "failOnRecurringFailuresInThisDuration", 
+            "Reports entity as failed if it fails two or more times in this time window", 
+            Duration.seconds(3*60));
 
     @SetFromFlag("setOnFireOnFailure")
     public static final ConfigKey<Boolean> SET_ON_FIRE_ON_FAILURE = ConfigKeys.newBooleanConfigKey("setOnFireOnFailure", "", true);
@@ -113,7 +118,7 @@ public class ServiceRestarter extends AbstractPolicy {
         long current = System.currentTimeMillis();
         Long last = lastFailureTime.getAndSet(current);
         long elapsed = last==null ? -1 : current-last;
-        if (elapsed>=0 && elapsed <= getConfig(FAIL_ON_RECURRING_FAILURES_IN_THIS_DURATION)) {
+        if (elapsed>=0 && elapsed <= getConfig(FAIL_ON_RECURRING_FAILURES_IN_THIS_DURATION).toMilliseconds()) {
             onRestartFailed("Restart failure (failed again after "+Time.makeTimeStringRounded(elapsed)+") at "+entity+": "+event.getValue());
             return;
         }

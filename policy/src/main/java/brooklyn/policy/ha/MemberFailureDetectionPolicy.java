@@ -44,6 +44,8 @@ import com.google.common.collect.Maps;
  * "useServiceStateRunning".
  * 
  * @author aled
+ * 
+ * @deprecated since 0.7.0; use {@link ServiceFailureDetector} associated with each member instead.
  */
 public class MemberFailureDetectionPolicy extends AbstractPolicy {
 

@@ -22,6 +22,7 @@ import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.net.HostAndPort;
 import com.google.common.primitives.UnsignedBytes;
 
 public class Networking {
@@ -349,7 +350,22 @@ public class Networking {
             if (c.contains(me)) return false;
         return true;
     }
-    
+
+    public static boolean isReachable(HostAndPort endpoint) {
+        try {
+            Socket s = new Socket(endpoint.getHostText(), endpoint.getPort());
+            try {
+                s.close();
+            } catch (Exception e) {
+                log.debug("Error closing socket, opened temporarily to check reachability to "+endpoint+" (continuing)", e);
+            }
+            return true;
+        } catch (Exception e) {
+            if (log.isTraceEnabled()) log.trace("Error reaching "+endpoint+" during reachability check (return false)", e);
+            return false;
+        }
+    }
+
     // TODO go through nic's, looking for public, private, etc, on localhost
 
 }

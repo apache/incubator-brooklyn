@@ -16,6 +16,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
@@ -39,7 +40,7 @@ public class GroupPickUpEntitiesTest {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         
-        group.addPolicy(new FindUpServicesWithNameBob());
+        group.addPolicy(PolicySpec.create(FindUpServicesWithNameBob.class));
     }
 
     @AfterMethod(alwaysRun = true)
@@ -98,16 +99,11 @@ public class GroupPickUpEntitiesTest {
         public void setEntity(EntityLocal entity) {
             assert entity instanceof Group;
             super.setEntity(entity);
-            init();
+            subscribe(null, Startable.SERVICE_UP, handler);
             for (Entity e : ((EntityInternal) entity).getManagementContext().getEntityManager().getEntities()) {
                 if (Objects.equal(e.getApplicationId(), entity.getApplicationId()))
                     updateMembership(e);
             }
-        }
-
-        @SuppressWarnings("unchecked")
-        public void init() {
-            subscribe(null, Startable.SERVICE_UP, handler);
         }
 
         protected Group getGroup() {
@@ -130,12 +126,13 @@ public class GroupPickUpEntitiesTest {
 
     public static class FindUpServicesWithNameBob extends FindUpServices {
 
-        @SuppressWarnings("unchecked")
-        public void init() {
-            super.init();
+        @Override
+        public void setEntity(EntityLocal entity) {
+            super.setEntity(entity);
             subscribe(null, TestEntity.NAME, handler);
         }
 
+        @Override
         protected boolean checkMembership(Entity e) {
             if (!super.checkMembership(e)) return false;
             if (!"Bob".equalsIgnoreCase(e.getAttribute(TestEntity.NAME))) return false;

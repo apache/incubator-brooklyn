@@ -23,6 +23,10 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
     public AbstractEnricher(Map flags) {
         super(flags);
         enricherType = new EnricherTypeImpl(getAdjunctType());
+        
+        if (isLegacyConstruction()) {
+            init();
+        }
     }
     
     @Override

@@ -32,6 +32,7 @@ import brooklyn.util.GroovyJavaMethods
 import brooklyn.util.exceptions.Exceptions
 
 import com.google.common.base.Predicates
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
@@ -649,8 +650,15 @@ class DynamicClusterTest {
             cluster.replaceMember(member.getId());
             fail();
         } catch (Exception e) {
-            if (!e.toString().contains("Simulating entity stop failure")) throw e;
-            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, StopFailedRuntimeException.class) == null) throw e;
+            boolean found = false;
+            for (Throwable t : Throwables.getCausalChain(e)) {
+                if (t.toString().contains("Simulating entity stop failure")) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) throw e;
         }
         assertFalse(Entities.isManaged(member));
         assertEquals(cluster.members.size(), 1);

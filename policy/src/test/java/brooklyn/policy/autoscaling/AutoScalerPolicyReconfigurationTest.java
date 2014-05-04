@@ -14,6 +14,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -148,7 +149,7 @@ public class AutoScalerPolicyReconfigurationTest {
                 .build();
         tc.addPolicy(policy);
 
-        policy.setConfig(AutoScalerPolicy.RESIZE_UP_STABILIZATION_DELAY, 0L);
+        policy.setConfig(AutoScalerPolicy.RESIZE_UP_STABILIZATION_DELAY, Duration.ZERO);
 
         tc.setAttribute(MY_ATTRIBUTE, 101);
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
@@ -164,7 +165,7 @@ public class AutoScalerPolicyReconfigurationTest {
                 .build();
         tc.addPolicy(policy);
 
-        policy.setConfig(AutoScalerPolicy.RESIZE_DOWN_STABILIZATION_DELAY, 0L);
+        policy.setConfig(AutoScalerPolicy.RESIZE_DOWN_STABILIZATION_DELAY, Duration.ZERO);
 
         tc.setAttribute(MY_ATTRIBUTE, 1);
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));

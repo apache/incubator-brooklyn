@@ -1,5 +1,7 @@
 package brooklyn.util.time;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,6 +17,7 @@ import com.google.common.base.Stopwatch;
 public class Duration implements Comparable<Duration> {
 
     public static final Duration ZERO = of(0, null);
+    public static final Duration ONE_MILLISECOND = of(1, TimeUnit.MILLISECONDS);
     public static final Duration ONE_SECOND = of(1, TimeUnit.SECONDS);
     public static final Duration FIVE_SECONDS = of(5, TimeUnit.SECONDS);
     public static final Duration TEN_SECONDS = of(10, TimeUnit.SECONDS);
@@ -171,6 +174,14 @@ public class Duration implements Comparable<Duration> {
 
     public static Duration of(long value, TimeUnit unit) {
         return new Duration(value, unit);
+    }
+    
+    public static Duration max(Duration first, Duration second) {
+        return checkNotNull(first, "first").nanos >= checkNotNull(second, "second").nanos ? first : second;
+    }
+    
+    public static Duration min(Duration first, Duration second) {
+        return checkNotNull(first, "first").nanos <= checkNotNull(second, "second").nanos ? first : second;
     }
     
     public static Duration untilUtc(long millisSinceEpoch) {

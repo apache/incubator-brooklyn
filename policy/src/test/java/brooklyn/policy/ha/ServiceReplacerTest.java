@@ -28,6 +28,7 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.policy.PolicySpec;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
@@ -102,15 +103,9 @@ public class ServiceReplacerTest {
     public void testSetsOnFireWhenFailToReplaceMember() throws Exception {
         app.subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
         
-        Predicate<FailingEntity> whetherToFail = new Predicate<FailingEntity>() {
-            private final AtomicInteger counter = new AtomicInteger(0);
-            @Override public boolean apply(FailingEntity input) {
-                return counter.incrementAndGet() >= 2;
-            }
-        };
         final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
-                        .configure(FailingEntity.FAIL_ON_START_CONDITION, whetherToFail))
+                        .configure(FailingEntity.FAIL_ON_START_CONDITION, predicateOnlyTrueForCallAtOrAfter(2)))
                 .configure(DynamicCluster.INITIAL_SIZE, 1)
                 .configure(DynamicCluster.QUARANTINE_FAILED_ENTITIES, true));
         app.start(ImmutableList.<Location>of(loc));
@@ -143,15 +138,9 @@ public class ServiceReplacerTest {
     public void testDoesNotOnFireWhenFailToReplaceMember() throws Exception {
         app.subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
         
-        Predicate<FailingEntity> whetherToFail = new Predicate<FailingEntity>() {
-            private final AtomicInteger counter = new AtomicInteger(0);
-            @Override public boolean apply(FailingEntity input) {
-                return counter.incrementAndGet() >= 2;
-            }
-        };
         final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
-                        .configure(FailingEntity.FAIL_ON_START_CONDITION, whetherToFail))
+                        .configure(FailingEntity.FAIL_ON_START_CONDITION, predicateOnlyTrueForCallAtOrAfter(2)))
                 .configure(DynamicCluster.INITIAL_SIZE, 1)
                 .configure(DynamicCluster.QUARANTINE_FAILED_ENTITIES, true));
         app.start(ImmutableList.<Location>of(loc));
@@ -174,6 +163,44 @@ public class ServiceReplacerTest {
         
         // And will have received notification event about it
         assertEventuallyHasEntityReplacementFailedEvent(cluster);
+    }
+
+    
+    @Test
+    public void testStopFailureOfOldEntityDoesNotSetClusterOnFire() throws Exception {
+        app.subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
+        
+        final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
+                        .configure(FailingEntity.FAIL_ON_STOP_CONDITION, predicateOnlyTrueForCallAt(1)))
+                .configure(DynamicCluster.INITIAL_SIZE, 2));
+        app.start(ImmutableList.<Location>of(loc));
+        
+        cluster.addPolicy(PolicySpec.create(ServiceReplacer.class)
+                .configure(ServiceReplacer.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
+        
+        final Set<Entity> initialMembers = ImmutableSet.copyOf(cluster.getMembers());
+        final TestEntity e1 = (TestEntity) Iterables.get(initialMembers, 0);
+        
+        e1.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
+
+        // Expect e1 to be replaced
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                Set<Entity> newMembers = Sets.difference(ImmutableSet.copyOf(cluster.getMembers()), initialMembers);
+                Set<Entity> removedMembers = Sets.difference(initialMembers, ImmutableSet.copyOf(cluster.getMembers()));
+                assertEquals(removedMembers, ImmutableSet.of(e1));
+                assertEquals(newMembers.size(), 1);
+                assertEquals(((TestEntity)Iterables.getOnlyElement(newMembers)).getCallHistory(), ImmutableList.of("start"));
+                assertEquals(e1.getCallHistory(), ImmutableList.of("start", "stop"));
+                assertFalse(Entities.isManaged(e1));
+            }});
+
+        // Failure to stop the failed member should not cause "on-fire" of cluster
+        Asserts.succeedsContinually(new Runnable() {
+            @Override public void run() {
+                assertNotEquals(cluster.getAttribute(Attributes.SERVICE_STATE), Lifecycle.ON_FIRE);
+            }});
     }
 
     /**
@@ -201,15 +228,9 @@ public class ServiceReplacerTest {
     public void testAbandonsReplacementAfterNumFailures() throws Exception {
         app.subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
         
-        Predicate<FailingEntity> whetherToFail = new Predicate<FailingEntity>() {
-            private final AtomicInteger counter = new AtomicInteger(0);
-            @Override public boolean apply(FailingEntity input) {
-                return counter.incrementAndGet() >= 11;
-            }
-        };
         final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
-                        .configure(FailingEntity.FAIL_ON_START_CONDITION, whetherToFail))
+                        .configure(FailingEntity.FAIL_ON_START_CONDITION, predicateOnlyTrueForCallAtOrAfter(11)))
                 .configure(DynamicCluster.INITIAL_SIZE, 10)
                 .configure(DynamicCluster.QUARANTINE_FAILED_ENTITIES, true));
         app.start(ImmutableList.<Location>of(loc));
@@ -244,6 +265,24 @@ public class ServiceReplacerTest {
         }
     }
 
+
+    private Predicate<Object> predicateOnlyTrueForCallAt(final int callNumber) {
+        return predicateOnlyTrueForCallRange(callNumber, callNumber);
+    }
+
+    private Predicate<Object> predicateOnlyTrueForCallAtOrAfter(final int callLowerNumber) {
+        return predicateOnlyTrueForCallRange(callLowerNumber, Integer.MAX_VALUE);
+    }
+    
+    private Predicate<Object> predicateOnlyTrueForCallRange(final int callLowerNumber, final int callUpperNumber) {
+        return new Predicate<Object>() {
+            private final AtomicInteger counter = new AtomicInteger(0);
+            @Override public boolean apply(Object input) {
+                int num = counter.incrementAndGet();
+                return num >= callLowerNumber && num <= callUpperNumber;
+            }
+        };
+    }
 
     private void assertEventuallyHasEntityReplacementFailedEvent(final Entity expectedCluster) {
         Asserts.succeedsEventually(new Runnable() {
