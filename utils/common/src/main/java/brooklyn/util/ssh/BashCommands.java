@@ -386,7 +386,7 @@ public class BashCommands {
         return require("which "+BashStringEscapes.wrapBash(command), "The required executable \""+command+"\" does not exist");
     }
 
-    public static String waitForFileContents(String file, String desiredContent, Duration timeout, boolean failOnAbsent) {
+    public static String waitForFileContents(String file, String desiredContent, Duration timeout, boolean failOnTimeout) {
         long secs = Math.max(timeout.toSeconds(), 1);
         
         List<String> commands = ImmutableList.of(
@@ -396,9 +396,41 @@ public class BashCommands {
                 "    sleep 1",
                 "done",
                 "if test \"$result\" -ne 0; then",
-                "    "+ (failOnAbsent ?
+                "    "+ (failOnTimeout ?
                             "echo \"Couldn't find "+desiredContent+" in "+file+"; aborting\" && exit 1" :
                             "echo \"Couldn't find "+desiredContent+" in "+file+"; continuing\""),
+                "fi");
+        return Joiner.on("\n").join(commands);
+    }
+
+    public static String waitForPortFree(int port, Duration timeout, boolean failOnTimeout) {
+        long secs = Math.max(timeout.toSeconds(), 1);
+
+        // TODO How platform-dependent are the args + output format of netstat?
+        // TODO Not using sudo as wrapping either netstat call or sudo(alternativesGroup(...)) fails; parentheses too confusing!
+        String netstatCommand = alternativesGroup(
+                "sudo netstat -antp --tcp", // for Centos
+                "sudo netstat -antp TCP"); // for OS X 
+        
+        // number could appear in an IP address or as a port; look for white space at end, and dot or colon before
+        String grepCommand = "grep -E '(:|\\.)"+port+"($|\\s)' > /dev/null";
+        
+        List<String> commands = ImmutableList.of(
+                "for i in {1.."+secs+"}; do",
+                "    "+BashCommands.requireExecutable("netstat"),
+                "    "+alternativesGroup(
+                        chainGroup("which awk", "AWK_EXEC=awk"), 
+                        chainGroup("which gawk", "AWK_EXEC=gawk"), 
+                        chainGroup("which /usr/bin/awk", "AWK_EXEC=/usr/bin/awk"), 
+                        chainGroup("echo \"No awk to determine if Port "+port+" still in use; aborting\"", "exit 1")),
+                "    "+netstatCommand+" | $AWK_EXEC '{print $4}' | "+grepCommand+" && result=0 || result=$?",
+                "    [ \"$result\" != 0 ] && break",
+                "    sleep 1",
+                "done",
+                "if test \"$result\" -eq 0; then",
+                "    "+ (failOnTimeout ?
+                            "echo \"Port "+port+" still in use (according to netstat); aborting\" && exit 1" :
+                            "echo \"Port "+port+" still in use (according to netstat); continuing\""),
                 "fi");
         return Joiner.on("\n").join(commands);
     }
