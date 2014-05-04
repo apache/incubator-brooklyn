@@ -2,8 +2,11 @@ package brooklyn.policy.ha;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -18,12 +21,15 @@ import brooklyn.entity.trait.FailingEntity;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.ManagementContext;
+import brooklyn.policy.PolicySpec;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -121,5 +127,45 @@ public class ServiceRestarterTest {
             @Override public void run() {
                 assertNotEquals(e2.getAttribute(Attributes.SERVICE_STATE), Lifecycle.ON_FIRE);
             }});
+    }
+    
+    // Previously RestarterPolicy called entity.restart inside the event-listener thread.
+    // That caused all other events for that entity's subscriptions to be queued until that
+    // entity's single event handler thread was free again.
+    @Test
+    public void testRestartDoesNotBlockOtherSubscriptions() throws Exception {
+        final CountDownLatch inRestartLatch = new CountDownLatch(1);
+        final CountDownLatch continueRestartLatch = new CountDownLatch(1);
+        
+        final FailingEntity e2 = app.createAndManageChild(EntitySpec.create(FailingEntity.class)
+                .configure(FailingEntity.FAIL_ON_RESTART, true)
+                .configure(FailingEntity.EXEC_ON_FAILURE, new Function<Object, Void>() {
+                    @Override public Void apply(Object input) {
+                        inRestartLatch.countDown();
+                        try {
+                            continueRestartLatch.await();
+                        } catch (InterruptedException e) {
+                            throw Exceptions.propagate(e);
+                        }
+                        return null;
+                    }}));
+        
+        e2.addPolicy(PolicySpec.create(ServiceRestarter.class)
+                .configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
+        e2.subscribe(e2, TestEntity.SEQUENCE, eventListener);
+
+        // Cause failure, and wait for entity.restart to be blocking
+        e2.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
+        assertTrue(inRestartLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        
+        // Expect other notifications to continue to get through
+        e2.setAttribute(TestEntity.SEQUENCE, 1);
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                assertEquals(Iterables.getOnlyElement(events).getValue(), 1);
+            }});
+
+        // Allow restart to finish
+        continueRestartLatch.countDown();
     }
 }
