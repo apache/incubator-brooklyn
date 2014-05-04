@@ -12,8 +12,11 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.management.Task;
+import brooklyn.management.ha.ManagementPlaneMemento;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.api.ServerApi;
+import brooklyn.rest.domain.HighAvailabilitySummary;
+import brooklyn.rest.transform.HighAvailabilityTransformer;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
@@ -62,4 +65,14 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         return BrooklynVersion.get();
     }
 
+    @Override
+    public String getStatus() {
+        return mgmt().getHighAvailabilityManager().getNodeStatus().toString();
+    }
+
+    @Override
+    public HighAvailabilitySummary getHighAvailability() {
+        ManagementPlaneMemento memento = mgmt().getHighAvailabilityManager().getManagementPlaneStatus();
+        return HighAvailabilityTransformer.highAvailabilitySummary(mgmt().getManagementNodeId(), memento);
+    }
 }
