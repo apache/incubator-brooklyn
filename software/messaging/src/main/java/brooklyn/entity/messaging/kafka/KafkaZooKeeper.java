@@ -22,6 +22,7 @@ import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Kafka zookeeper instance.
@@ -30,7 +31,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface KafkaZooKeeper extends ZooKeeperNode, Kafka {
 
     @SetFromFlag("startTimeout")
-    public static final ConfigKey<Integer> START_TIMEOUT = SoftwareProcess.START_TIMEOUT;
+    ConfigKey<Duration> START_TIMEOUT = SoftwareProcess.START_TIMEOUT;
 
     /** The Kafka version, not the Zookeeper version. */
     @SetFromFlag("version")

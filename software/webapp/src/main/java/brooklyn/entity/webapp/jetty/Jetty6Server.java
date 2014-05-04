@@ -39,7 +39,7 @@ public interface Jetty6Server extends JavaWebAppSoftwareProcess, UsesJmx, HasSho
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "6.1.26");
 
-    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, Duration.FIVE_MINUTES.toSeconds());
+    ConfigKey<Duration> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, Duration.FIVE_MINUTES);
 
     @SetFromFlag("configXmlTemplateUrl")
     ConfigKey<String> CONFIG_XML_TEMPLATE_URL = ConfigKeys.newStringConfigKey("jetty.configXml.templateUrl", "Extra XML configuration file template URL if required");

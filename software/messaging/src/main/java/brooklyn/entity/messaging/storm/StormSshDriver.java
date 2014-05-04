@@ -147,7 +147,7 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
             if (nimbus == null) {
                 log.warn("No nimbus entity available; not blocking before starting supervisors");
             } else {
-                Entities.waitForServiceUp(nimbus, Duration.seconds(entity.getConfig(SoftwareProcess.START_TIMEOUT)));
+                Entities.waitForServiceUp(nimbus, entity.getConfig(SoftwareProcess.START_TIMEOUT));
                 needsSleep = true;
             }
         }

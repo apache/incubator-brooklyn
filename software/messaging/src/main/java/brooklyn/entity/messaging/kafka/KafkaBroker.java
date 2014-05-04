@@ -28,6 +28,7 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Kafka broker instance.
@@ -36,7 +37,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface KafkaBroker extends SoftwareProcess, MessageBroker, UsesJmx, Kafka {
 
     @SetFromFlag("startTimeout")
-    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, 300);
+    ConfigKey<Duration> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, Duration.FIVE_MINUTES);
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = Kafka.SUGGESTED_VERSION;

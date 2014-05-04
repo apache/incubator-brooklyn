@@ -1,9 +1,6 @@
 package brooklyn.entity.basic;
 
-import static brooklyn.entity.basic.ConfigKeys.newBooleanConfigKey;
-import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
-import static brooklyn.entity.basic.ConfigKeys.newConfigKeyWithPrefix;
-import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
+import static brooklyn.entity.basic.ConfigKeys.*;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -11,6 +8,7 @@ import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.os.Os;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
 
@@ -90,8 +88,8 @@ public class BrooklynConfigKeys {
     public static final ConfigKey<Boolean> CUSTOMIZE_LATCH = newBooleanConfigKey("customize.latch", "Latch for blocking customize until ready");
     public static final ConfigKey<Boolean> LAUNCH_LATCH = newBooleanConfigKey("launch.latch", "Latch for blocking launch until ready");
 
-    public static final ConfigKey<Integer> START_TIMEOUT = newConfigKey(
-            "start.timeout", "Time to wait for process and for SERVICE_UP before failing (in seconds, default 2m)", 120);
+    public static final ConfigKey<Duration> START_TIMEOUT = newConfigKey(
+            "start.timeout", "Time to wait for process and for SERVICE_UP before failing (in seconds, default 2m)", Duration.seconds(120));
         
     /* selected properties from SshTool for external public access (e.g. putting on entities) */
     

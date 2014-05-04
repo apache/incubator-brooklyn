@@ -28,7 +28,6 @@ public class Duration implements Comparable<Duration> {
     public static final Duration ONE_HOUR = of(1, TimeUnit.HOURS);
     public static final Duration ONE_DAY = of(1, TimeUnit.DAYS);
 
-
     private final long nanos;
 
     public Duration(long value, TimeUnit unit) {
@@ -101,8 +100,8 @@ public class Duration implements Comparable<Duration> {
         return nanos;
     }
 
-    public int toSeconds() {
-        return (int) toUnit(TimeUnit.SECONDS);
+    public long toSeconds() {
+        return toUnit(TimeUnit.SECONDS);
     }
 
     /** number of nanoseconds of this duration */
@@ -118,17 +117,17 @@ public class Duration implements Comparable<Duration> {
 
     /** creates new {@link Duration} instance of the given length of time */
     public static Duration seconds(Number n) {
-        return new Duration( (long)(n.doubleValue() * TimeUnit.SECONDS.toNanos(1)), TimeUnit.NANOSECONDS );
+        return new Duration((long) (n.doubleValue() * TimeUnit.SECONDS.toNanos(1)), TimeUnit.NANOSECONDS);
     }
 
     /** creates new {@link Duration} instance of the given length of time */
     public static Duration millis(Number n) {
-        return new Duration( (long)(n.doubleValue() * TimeUnit.MILLISECONDS.toNanos(1)), TimeUnit.NANOSECONDS );
+        return new Duration((long) (n.doubleValue() * TimeUnit.MILLISECONDS.toNanos(1)), TimeUnit.NANOSECONDS);
     }
 
     /** creates new {@link Duration} instance of the given length of time */
     public static Duration nanos(Number n) {
-        return new Duration( n.longValue(), TimeUnit.NANOSECONDS );
+        return new Duration(n.longValue(), TimeUnit.NANOSECONDS);
     }
 
     public static Function<Number, String> millisToStringRounded() { return millisToStringRounded; }
@@ -154,7 +153,7 @@ public class Duration implements Comparable<Duration> {
     /** tries to convert given object to a Duration, parsing strings, treating numbers as millis, etc;
      * throws IAE if not convertible */
     public static Duration of(Object o) {
-        if (o==null) return null;
+        if (o == null) return null;
         if (o instanceof Duration) return (Duration)o;
         if (o instanceof String) return parse((String)o);
         if (o instanceof Number) return millis((Number)o);
@@ -174,15 +173,15 @@ public class Duration implements Comparable<Duration> {
     public static Duration of(long value, TimeUnit unit) {
         return new Duration(value, unit);
     }
-    
+
     public static Duration max(Duration first, Duration second) {
         return checkNotNull(first, "first").nanos >= checkNotNull(second, "second").nanos ? first : second;
     }
-    
+
     public static Duration min(Duration first, Duration second) {
         return checkNotNull(first, "first").nanos <= checkNotNull(second, "second").nanos ? first : second;
     }
-    
+
     public static Duration untilUtc(long millisSinceEpoch) {
         return millis(millisSinceEpoch - System.currentTimeMillis());
     }
