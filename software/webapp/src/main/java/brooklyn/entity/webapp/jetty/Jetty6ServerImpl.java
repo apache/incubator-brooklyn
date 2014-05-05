@@ -21,8 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.Enrichers;
-import brooklyn.entity.annotation.Effector;
-import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.entity.java.UsesJmx;
@@ -100,9 +98,9 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
 
     public Integer getJmxPort() {
         if (((Jetty6Driver) getDriver()).isJmxEnabled()) {
-            return Integer.valueOf(-1);
-        } else {
             return getAttribute(UsesJmx.JMX_PORT);
+        } else {
+            return Integer.valueOf(-1);
         }
     }
 
@@ -117,16 +115,13 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     }
     
     @Override
-    @Effector(description = "Deploys the given artifact, from a source URL, to a given deployment filename/context")
-    public void deploy(@EffectorParam(name = "url", description = "URL of WAR file") String url,
-            @EffectorParam(name = "targetName", description = "context path where WAR should be deployed (/ for ROOT)") String targetName) {
+    public void deploy(String url, String targetName) {
         super.deploy(url, targetName);
         restartIfRunning();
     }
 
     @Override
-    @Effector(description = "Undeploys the given context/artifact")
-    public void undeploy(@EffectorParam(name = "targetName") String targetName) {
+    public void undeploy(String targetName) {
         super.undeploy(targetName);
         restartIfRunning();
     }

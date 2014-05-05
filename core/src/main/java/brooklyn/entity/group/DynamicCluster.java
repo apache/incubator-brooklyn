@@ -79,8 +79,6 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
         boolean hasFailed(Location loc);
     }
 
-    MethodEffector<String> REPLACE_MEMBER = new MethodEffector<String>(DynamicCluster.class, "replaceMember");
-
     MethodEffector<Collection<Entity>> RESIZE_BY_DELTA = new MethodEffector<Collection<Entity>>(DynamicCluster.class, "resizeByDelta");
 
     @SetFromFlag("quarantineFailedEntities")
@@ -147,19 +145,6 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
     AttributeSensor<Set<Location>> FAILED_SUB_LOCATIONS = new BasicAttributeSensor<Set<Location>>(
             new TypeToken<Set<Location>>() {},
             "dynamiccluster.failedSubLocations", "Sub locations that seem to have failed");
-
-    /**
-     * Replaces the entity with the given ID, if it is a member.
-     * <p>
-     * First adds a new member, then removes this one. 
-     *
-     * @param memberId entity id of a member to be replaced
-     * @return the id of the new entity
-     * @throws NoSuchElementException If entity cannot be resolved, or it is not a member
-     */
-    @Effector(description="Replaces the entity with the given ID, if it is a member; first adds a new member, then removes this one. "+
-            "Returns id of the new entity; or throws exception if couldn't be replaced.")
-    String replaceMember(@EffectorParam(name="memberId", description="The entity id of a member to be replaced") String memberId);
 
     /**
      * Changes the cluster size by the given number.
