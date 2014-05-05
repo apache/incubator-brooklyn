@@ -79,13 +79,7 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
         boolean hasFailed(Location loc);
     }
 
-    MethodEffector<Entity> ADD_NODE = new MethodEffector<Entity>(DynamicCluster.class, "addNode");
-
-    MethodEffector<Collection<Entity>> GROW = new MethodEffector<Collection<Entity>>(DynamicCluster.class, "grow");
-
-    MethodEffector<Optional<Entity>> GROW_BY_ONE = new MethodEffector<Optional<Entity>>(DynamicCluster.class, "growByOne");
-
-    MethodEffector<Void> SHRINK = new MethodEffector<Void>(DynamicCluster.class, "shrink");
+    MethodEffector<Collection<Entity>> RESIZE_BY_DELTA = new MethodEffector<Collection<Entity>>(DynamicCluster.class, "resizeByDelta");
 
     @SetFromFlag("quarantineFailedEntities")
     ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = ConfigKeys.newBooleanConfigKey(
@@ -153,49 +147,24 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
             "dynamiccluster.failedSubLocations", "Sub locations that seem to have failed");
 
     /**
-     * Adds a new node to the cluster in the given location.
+     * Changes the cluster size by the given number.
      *
-     * @param loc where to create the new node§
-     * @param extraFlags flags to add to the the {@link #MEMBER_SPEC} configuration
-     * @return newwly added node
-     * @throws IllegalStateException if 
-     * @see DynamicCluster#growByOne(Location, Map)
-     */
-    @Effector(description="Adds a new node to the cluster in the given location.")
-    Entity addNode(@EffectorParam(name="location", description="The location the node will be created in") Location location,
-            @EffectorParam(name="extraFlags", description="Extra flags to use when creating the node") Map<?,?> extraFlags);
-
-    /**
-     * Increases the cluster size by the given number.
-     *
-     * @param delta number of nodes to add
-     * @return successfully added nodes
-     * @see #shrink(int)
-     * @see #growByOne(Location, Map)
-     */
-    @Effector(description="Increases the size of the cluster. Resturns the added entities.")
-    Collection<Entity> grow(@EffectorParam(name="delta", description="The number of nodes to add") int delta);
-
-    /**
-     * Increases the cluster size by one.
-     *
-     * @param loc where to create the new node
-     * @param extraFlags flags to add to the the {@link #MEMBER_SPEC} configuration
-     * @return an {@link Optional} with the successfully added node or {@link Optional#absent()}
-     * @see DynamicCluster#addNode(Location, Map)
-     */
-    @Effector(description="Tries to increase the size of the cluster in the given location. Returns the added entity, if created.")
-    Optional<Entity> growByOne(@EffectorParam(name="location", description="The location the node will be created in") Location loc,
-            @EffectorParam(name="extraFlags", description="Extra flags to use when creating the node") Map<?,?> extraFlags);
-
-    /**
-     * Decreases the cluster size by the given number.
-     *
-     * @param delta number of nodes to remove
+     * @param delta number of nodes to add or remove
+     * @return successfully added or removed nodes
      * @see #grow(int)
      */
-    @Effector(description="Reduces the size of the cluster.")
-    void shrink(@EffectorParam(name="delta", description="The number of nodes to remove") int delta);
+    @Effector(description="Changes the size of the cluster.")
+    Collection<Entity> resizeByDelta(@EffectorParam(name="delta", description="The change in number of nodes") int delta);
+
+    /**
+     * Adds a node to the cluster in a single {@link Location}
+     */
+    Optional<Entity> addInSingleLocation(Location loc, Map<?,?> extraFlags);
+
+    /**
+     * Adds a node to the cluster in each {@link Location}
+     */
+    Collection<Entity> addInEachLocation(Iterable<Location> locs, Map<?,?> extraFlags);
 
     void setRemovalStrategy(Function<Collection<Entity>, Entity> val);
 

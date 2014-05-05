@@ -78,13 +78,6 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
     }
 
     @Override
-    public void waitForServiceUp() {
-        // Increases wait-time by overriding this
-        LOG.info("Waiting for {} up, via {}", this, jmxFeed == null ? "isRunning()" : jmxFeed.getJmxUri());
-        waitForServiceUp(Duration.of(getConfig(TomcatServer.START_TIMEOUT), TimeUnit.SECONDS));
-    }
-
-    @Override
     public Class getDriverInterface() {
         return Tomcat7Driver.class;
     }

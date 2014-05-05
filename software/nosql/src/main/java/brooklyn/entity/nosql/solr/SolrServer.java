@@ -15,6 +15,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
@@ -53,7 +54,7 @@ public interface SolrServer extends SoftwareProcess {
             "solr.core.config", "Map of core names to core configuration archive URL",
             Maps.<String, String>newHashMap());
 
-    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.START_TIMEOUT, 3*60);
+    ConfigKey<Duration> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.START_TIMEOUT, Duration.FIVE_MINUTES);
 
     /* Accessors used from template */
 

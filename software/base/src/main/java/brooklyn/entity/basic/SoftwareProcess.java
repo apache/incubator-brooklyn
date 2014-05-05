@@ -23,7 +23,7 @@ public interface SoftwareProcess extends Entity, Startable {
     public static final AttributeSensor<String> SUBNET_ADDRESS = Attributes.SUBNET_ADDRESS;
 
     @SetFromFlag("startTimeout")
-    public static final ConfigKey<Integer> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
+    public static final ConfigKey<Duration> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
 
     @SetFromFlag("startLatch")
     public static final ConfigKey<Boolean> START_LATCH = BrooklynConfigKeys.START_LATCH;

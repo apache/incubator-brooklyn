@@ -28,18 +28,16 @@ public class Duration implements Comparable<Duration> {
     public static final Duration ONE_HOUR = of(1, TimeUnit.HOURS);
     public static final Duration ONE_DAY = of(1, TimeUnit.DAYS);
 
-    
     private final long nanos;
 
     public Duration(long value, TimeUnit unit) {
-        if (value!=0) 
+        if (value != 0) {
             Preconditions.checkNotNull(unit, "Cannot accept null timeunit (unless value is 0)");
-        else
+        } else {
             unit = TimeUnit.MILLISECONDS;
-        
+        }
         nanos = TimeUnit.NANOSECONDS.convert(value, unit);
     }
-
 
     @Override
     public int compareTo(Duration o) {
@@ -60,10 +58,10 @@ public class Duration implements Comparable<Duration> {
         if (!(o instanceof Duration)) return false;
         return toMilliseconds() == ((Duration)o).toMilliseconds();
     }
-    
+
     @Override
     public int hashCode() {
-        return ((Long)toMilliseconds()).hashCode();
+        return Long.valueOf(toMilliseconds()).hashCode();
     }
 
     /** converts to the given {@link TimeUnit}, using {@link TimeUnit#convert(long, TimeUnit)} which rounds _down_
@@ -90,22 +88,22 @@ public class Duration implements Comparable<Duration> {
     public long toMilliseconds() {
         return toUnit(TimeUnit.MILLISECONDS);
     }
-    
+
     /** as {@link #toMilliseconds()} but rounding away from zero (so 1 nanosecond gets rounded to 1 millisecond);
      * see {@link #toUnitRoundingUp(TimeUnit)}; provided as a convenience on top of {@link #toUnit(TimeUnit, RoundingMode)}
      * as this is a common case (when you want to make sure you wait at least a certain amount of time) */
     public long toMillisecondsRoundingUp() {
         return toUnitRoundingUp(TimeUnit.MILLISECONDS);
     }
-    
+
     public long toNanoseconds() {
         return nanos;
-    }    
-    
+    }
+
     public long toSeconds() {
         return toUnit(TimeUnit.SECONDS);
     }
-    
+
     /** number of nanoseconds of this duration */
     public long nanos() {
         return nanos;
@@ -119,17 +117,17 @@ public class Duration implements Comparable<Duration> {
 
     /** creates new {@link Duration} instance of the given length of time */
     public static Duration seconds(Number n) {
-        return new Duration( (long)(n.doubleValue() * TimeUnit.SECONDS.toNanos(1)), TimeUnit.NANOSECONDS );
+        return new Duration((long) (n.doubleValue() * TimeUnit.SECONDS.toNanos(1)), TimeUnit.NANOSECONDS);
     }
-    
+
     /** creates new {@link Duration} instance of the given length of time */
     public static Duration millis(Number n) {
-        return new Duration( (long)(n.doubleValue() * TimeUnit.MILLISECONDS.toNanos(1)), TimeUnit.NANOSECONDS );
+        return new Duration((long) (n.doubleValue() * TimeUnit.MILLISECONDS.toNanos(1)), TimeUnit.NANOSECONDS);
     }
 
     /** creates new {@link Duration} instance of the given length of time */
     public static Duration nanos(Number n) {
-        return new Duration( n.longValue(), TimeUnit.NANOSECONDS );
+        return new Duration(n.longValue(), TimeUnit.NANOSECONDS);
     }
 
     public static Function<Number, String> millisToStringRounded() { return millisToStringRounded; }
@@ -155,7 +153,7 @@ public class Duration implements Comparable<Duration> {
     /** tries to convert given object to a Duration, parsing strings, treating numbers as millis, etc;
      * throws IAE if not convertible */
     public static Duration of(Object o) {
-        if (o==null) return null;
+        if (o == null) return null;
         if (o instanceof Duration) return (Duration)o;
         if (o instanceof String) return parse((String)o);
         if (o instanceof Number) return millis((Number)o);
@@ -168,26 +166,26 @@ public class Duration implements Comparable<Duration> {
         } catch (Exception e) {
             // probably no such method
         }
-            
+
         throw new IllegalArgumentException("Cannot convert "+o+" (type "+o.getClass()+") to a duration");
     }
 
     public static Duration of(long value, TimeUnit unit) {
         return new Duration(value, unit);
     }
-    
+
     public static Duration max(Duration first, Duration second) {
         return checkNotNull(first, "first").nanos >= checkNotNull(second, "second").nanos ? first : second;
     }
-    
+
     public static Duration min(Duration first, Duration second) {
         return checkNotNull(first, "first").nanos <= checkNotNull(second, "second").nanos ? first : second;
     }
-    
+
     public static Duration untilUtc(long millisSinceEpoch) {
         return millis(millisSinceEpoch - System.currentTimeMillis());
     }
-    
+
     public Duration add(Duration other) {
         return nanos(nanos() + other.nanos());
     }
@@ -207,7 +205,7 @@ public class Duration implements Comparable<Duration> {
     public Duration multiply(double d) {
         return nanos(nanos() * d);
     }
-    
+
     public Duration half() {
         return multiply(0.5);
     }

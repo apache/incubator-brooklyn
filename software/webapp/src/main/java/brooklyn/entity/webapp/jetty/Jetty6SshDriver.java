@@ -30,6 +30,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.text.Strings;
 
 public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver {
 
@@ -37,12 +38,13 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
         super(entity, machine);
     }
 
+    @Override
     protected String getLogFileLocation() {
-        // TODO no wildcard
-        return Os.mergePathsUnix(getRunDir(), "logs/*.stderrout.log");
-        // also, there is .requests.log
+        // TODO no wildcard, also there is .requests.log
+        return Os.mergePathsUnix(getRunDir(), "logs", "*.stderrout.log");
     }
 
+    @Override
     protected String getDeploySubdir() {
        return "webapps";
     }
@@ -73,25 +75,37 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
                         // link to the binary directories; silly that we have to do this but jetty has only one notion of "jetty.home" 
                         // (jetty.run is used only for writing the pid file, not for looking up webapps or even for logging)
                         format("for x in start.jar bin contrib modules lib extras; do ln -s %s/$x $x ; done", getExpandedInstallDir()),
-                        // copy config
-                        format("for x in etc resources; do cp -r %s/$x $x ; done", getExpandedInstallDir()),
-                        // now modify the config file
-                        format("sed -i.bk s/8080/%s/g etc/jetty.xml",getHttpPort()),
-                        format("sed -i.bk s/8443/%s/g etc/jetty.xml",getHttpsPort())
+                        // copy config files across
+                        format("for x in etc resources; do cp -r %s/$x $x ; done", getExpandedInstallDir())
                     )
                 .execute();
+
+
+        // Copy configuration XML files across
+        String destinationBrooklynConfig = Os.mergePathsUnix(getRunDir(), "etc/jetty-brooklyn.xml");
+        copyTemplate("classpath://brooklyn/entity/webapp/jetty/jetty-brooklyn.xml", destinationBrooklynConfig);
+        String customConfigTemplateUrl = getConfigXmlTemplateUrl();
+        if (Strings.isNonEmpty(customConfigTemplateUrl)) {
+            String destinationConfigFile = Os.mergePathsUnix(getRunDir(), "etc/jetty-custom.xml");
+            copyTemplate(customConfigTemplateUrl, destinationConfigFile);
+        }
 
         getEntity().deployInitialWars();
     }
 
+    private String getConfigXmlTemplateUrl() {
+        return getEntity().getConfig(Jetty6Server.CONFIG_XML_TEMPLATE_URL);
+    }
+
     @Override
     public void launch() {
-        Map ports = MutableMap.of("httpPort", getHttpPort(), "jmxPort", getJmxPort());
+        Map ports = MutableMap.of("httpPort", getHttpPort(), "jmxPort", getJmxPort(), "rmiRegistryPort", getRmiRegistryPort());
         Networking.checkPortsValid(ports);
 
         newScript(MutableMap.of(USE_PID_FILE, false), LAUNCHING)
                 .body.append(
-                        "./bin/jetty.sh start etc/jetty.xml etc/jetty-logging.xml etc/jetty-jmx.xml etc/jetty-stats.xml " +
+                        "./bin/jetty.sh start jetty.xml jetty-logging.xml jetty-stats.xml jetty-brooklyn " +
+                                (Strings.isEmpty(getConfigXmlTemplateUrl()) ? "" : "jetty-custom.xml ") +
                                 ">> $RUN_DIR/console 2>&1 < /dev/null",
                         "for i in {1..10} ; do\n" +
                         "    if [ -s "+getLogFileLocation()+" ]; then exit; fi\n" +
@@ -108,6 +122,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
         return newScript(MutableMap.of(USE_PID_FILE, "jetty.pid"), CHECK_RUNNING).execute() == 0;
     }
 
+    @Override
     public void stop() {
         newScript(MutableMap.of(USE_PID_FILE, false), STOPPING)
                 .body.append("./bin/jetty.sh stop")
@@ -140,9 +155,12 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
 
     @Override
     public Map<String, String> getShellEnvironment() {
-        return MutableMap.<String,String>builder()
+        return MutableMap.<String, String>builder()
                 .putAll(super.getShellEnvironment())
                 .put("JETTY_RUN", getRunDir())
+                .put("JETTY_HOME", getRunDir())
+                .put("JETTY_LOGS", Os.mergePathsUnix(getRunDir(), "logs"))
+                .put("JETTY_PORT", getHttpPort().toString())
                 .renameKey("JAVA_OPTS", "JAVA_OPTIONS")
                 .build();
     }

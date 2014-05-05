@@ -15,6 +15,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSens
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
 /**
  * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
  */
@@ -23,7 +24,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx, JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 
     @SetFromFlag("startTimeout")
-    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, 120);
+    ConfigKey<Duration> START_TIMEOUT = SoftwareProcess.START_TIMEOUT;
     
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.7.0");

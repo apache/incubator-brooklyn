@@ -1,3 +1,18 @@
+/*
+ * Copyright 2011-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.webapp.jetty;
 
 import brooklyn.catalog.Catalog;
@@ -24,16 +39,19 @@ public interface Jetty6Server extends JavaWebAppSoftwareProcess, UsesJmx, HasSho
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "6.1.26");
 
-    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, (int)Duration.FIVE_MINUTES.toSeconds());
-    
+    ConfigKey<Duration> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, Duration.FIVE_MINUTES);
+
+    @SetFromFlag("configXmlTemplateUrl")
+    ConfigKey<String> CONFIG_XML_TEMPLATE_URL = ConfigKeys.newStringConfigKey("jetty.configXml.templateUrl", "Extra XML configuration file template URL if required");
+
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "http://dist.codehaus.org/jetty/jetty-${version}/jetty-${version}.zip");
 
-    public static final AttributeSensor<Integer> RESPONSES_4XX_COUNT =
+    AttributeSensor<Integer> RESPONSES_4XX_COUNT =
             Sensors.newIntegerSensor("webapp.responses.4xx", "Responses in the 400's");
 
-    public static final AttributeSensor<Integer> RESPONSES_5XX_COUNT =
+    AttributeSensor<Integer> RESPONSES_5XX_COUNT =
             Sensors.newIntegerSensor("webapp.responses.5xx", "Responses in the 500's");
 
 }

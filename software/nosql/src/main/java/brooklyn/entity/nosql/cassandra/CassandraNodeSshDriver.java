@@ -347,6 +347,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     public Map<String, String> getShellEnvironment() {
         return MutableMap.<String, String>builder()
                 .putAll(super.getShellEnvironment())
+                .put("CASSANDRA_HOME", getRunDir())
                 .put("CASSANDRA_CONF", Os.mergePathsUnix(getRunDir(), "conf"))
                 .renameKey("JAVA_OPTS", "JVM_OPTS")
                 .build();

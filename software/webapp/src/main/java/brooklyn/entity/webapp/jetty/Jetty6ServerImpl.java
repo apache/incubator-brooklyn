@@ -1,3 +1,18 @@
+/*
+ * Copyright 2011-2014 by Cloudsoft Corporation Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package brooklyn.entity.webapp.jetty;
 
 import java.util.concurrent.TimeUnit;
@@ -6,15 +21,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.Enrichers;
-import brooklyn.entity.annotation.Effector;
-import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.java.JavaAppUtils;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
-import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
@@ -83,12 +95,13 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         if (jmxFeedMx != null) jmxFeedMx.stop();
         super.disconnectSensors();
     }
-    
-    @Override
-    public void waitForServiceUp() {
-        // Increases wait-time by overriding this
-        log.info("Waiting for {} up, via {}", this, jmxFeedJetty == null ? "" : jmxFeedJetty.getJmxUri());
-        waitForServiceUp(Duration.of(getConfig(TomcatServer.START_TIMEOUT), TimeUnit.SECONDS));
+
+    public Integer getJmxPort() {
+        if (((Jetty6Driver) getDriver()).isJmxEnabled()) {
+            return getAttribute(UsesJmx.JMX_PORT);
+        } else {
+            return Integer.valueOf(-1);
+        }
     }
 
     @Override
@@ -102,10 +115,14 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     }
     
     @Override
-    @Effector(description = "Deploys the given artifact, from a source URL, to a given deployment filename/context")
-    public void deploy(@EffectorParam(name = "url", description = "URL of WAR file") String url,
-            @EffectorParam(name = "targetName", description = "context path where WAR should be deployed (/ for ROOT)") String targetName) {
+    public void deploy(String url, String targetName) {
         super.deploy(url, targetName);
+        restartIfRunning();
+    }
+
+    @Override
+    public void undeploy(String targetName) {
+        super.undeploy(targetName);
         restartIfRunning();
     }
     
@@ -116,13 +133,6 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
             restart();
         // may need a restart also if deploy effector is done in parallel to starting
         // but note this routine is used by initialDeployWars so just being in starting state is not enough!
-    }
-
-    @Override
-    @Effector(description = "Undeploys the given context/artifact")
-    public void undeploy(@EffectorParam(name = "targetName") String targetName) {
-        super.undeploy(targetName);
-        restartIfRunning();
     }
 
 }

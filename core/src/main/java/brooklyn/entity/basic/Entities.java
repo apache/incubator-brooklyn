@@ -801,10 +801,11 @@ public class Entities {
     }
 
     /** waits until {@link Startable#SERVICE_UP} returns true */
-    public static void waitForServiceUp(final Entity entity, long duration, TimeUnit units) {
+    public static void waitForServiceUp(final Entity entity, Duration timeout) {
         String description = "Waiting for SERVICE_UP on "+entity;
         Tasks.setBlockingDetails(description);
-        if (!Repeater.create(ImmutableMap.of("timeout", units.toMillis(duration), "description", description))
+        if (!Repeater.create(description)
+                .limitTimeTo(timeout)
                 .rethrowException().repeat().every(1, TimeUnit.SECONDS)
                 .until(new Callable<Boolean>() {
                     public Boolean call() {
@@ -816,12 +817,12 @@ public class Entities {
         Tasks.resetBlockingDetails();
         log.debug("Detected SERVICE_UP for software {}", entity);
     }
-    public static void waitForServiceUp(final Entity entity, Duration duration) {
-        waitForServiceUp(entity, duration.toMilliseconds(), TimeUnit.MILLISECONDS);
+    public static void waitForServiceUp(final Entity entity, long duration, TimeUnit units) {
+        waitForServiceUp(entity, Duration.of(duration, units));
     }
     public static void waitForServiceUp(final Entity entity) {
-        Integer timeout = entity.getConfig(BrooklynConfigKeys.START_TIMEOUT);
-        waitForServiceUp(entity, Duration.seconds(timeout));
+        Duration timeout = entity.getConfig(BrooklynConfigKeys.START_TIMEOUT);
+        waitForServiceUp(entity, timeout);
     }
 
 }

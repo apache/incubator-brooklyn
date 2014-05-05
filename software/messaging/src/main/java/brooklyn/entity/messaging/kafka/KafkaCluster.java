@@ -32,6 +32,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
 
 /**
  * Provides Kafka cluster functionality through a group of {@link KafkaBroker brokers} controlled
@@ -56,7 +57,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface KafkaCluster extends Entity, Startable, Resizable, Group  {
 
     @SetFromFlag("startTimeout")
-    ConfigKey<Integer> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
+    ConfigKey<Duration> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
 
     @SetFromFlag("initialSize")
     ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(Cluster.INITIAL_SIZE, 1);

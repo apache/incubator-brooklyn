@@ -246,17 +246,17 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
     
     public void waitForServiceUp() {
-        Integer timeout = getConfig(BrooklynConfigKeys.START_TIMEOUT);
-        waitForServiceUp(timeout, TimeUnit.SECONDS);
+        Duration timeout = getConfig(BrooklynConfigKeys.START_TIMEOUT);
+        waitForServiceUp(timeout);
     }
     public void waitForServiceUp(Duration duration) {
-        waitForServiceUp(duration.toMilliseconds(), TimeUnit.MILLISECONDS);
+        Entities.waitForServiceUp(this, duration);
     }
     public void waitForServiceUp(TimeDuration duration) {
         waitForServiceUp(duration.toMilliseconds(), TimeUnit.MILLISECONDS);
     }
     public void waitForServiceUp(long duration, TimeUnit units) {
-        Entities.waitForServiceUp(this, duration, units);
+        Entities.waitForServiceUp(this, Duration.of(duration, units));
     }
 
     public void checkModifiable() {
@@ -341,7 +341,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	// TODO Find a better way to detect early death of process.
     public void waitForEntityStart() {
         if (log.isDebugEnabled()) log.debug("waiting to ensure {} doesn't abort prematurely", this);
-        Duration startTimeout = Duration.seconds(getConfig(START_TIMEOUT));
+        Duration startTimeout = getConfig(START_TIMEOUT);
         CountdownTimer timer = startTimeout.countdownTimer();
         boolean isRunningResult = false;
         long delay = 100;
