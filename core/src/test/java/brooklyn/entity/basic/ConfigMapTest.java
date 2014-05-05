@@ -85,8 +85,8 @@ public class ConfigMapTest {
 
     @Test
     public void testConfigSubMap() throws Exception {
-        entity.configure(MyBaseEntity.SUPER_KEY_1, "s1");
-        entity.configure(MySubEntity.SUB_KEY_2, "s2");
+        entity.setConfig(MyBaseEntity.SUPER_KEY_1, "s1");
+        entity.setConfig(MySubEntity.SUB_KEY_2, "s2");
         ConfigMap sub = entity.getConfigMap().submap(ConfigPredicates.matchingGlob("sup*"));
         Assert.assertEquals(sub.getConfigRaw(MyBaseEntity.SUPER_KEY_1, true).get(), "s1");
         Assert.assertFalse(sub.getConfigRaw(MySubEntity.SUB_KEY_2, true).isPresent());
