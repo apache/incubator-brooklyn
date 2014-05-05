@@ -59,28 +59,29 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
             newItemWithPeriodicWorkrates(app, containers.get(0), "item"+i, 20);
         }
 
-        assertWorkratesEventually(containers, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER);
+        assertWorkratesEventually(containers, items, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER);
     }
     
     @Test
     public void testConcurrentlyAddContainers() {
         final Queue<MockContainerEntity> containers = new ConcurrentLinkedQueue<MockContainerEntity>();
+        final List<MockItemEntity> items = Lists.newArrayList();
         
         containers.add(newContainer(app, "container-orig", 10, 30));
         
         for (int i = 0; i < NUM_CONTAINERS; i++) {
-            newItemWithPeriodicWorkrates(app, containers.iterator().next(), "item"+i, 20);
+            items.add(newItemWithPeriodicWorkrates(app, containers.iterator().next(), "item"+i, 20));
         }
         for (int i = 0; i < NUM_CONTAINERS-1; i++) {
             final int index = i;
             scheduledExecutor.submit(new Callable<Void>() {
-                public Void call() {
+                @Override public Void call() {
                     containers.add(newContainer(app, "container"+index, 10, 30));
                     return null;
                 }});
         }
 
-        assertWorkratesEventually(containers, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER);
+        assertWorkratesEventually(containers, items, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER);
     }
     
     @Test
@@ -94,12 +95,12 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
         for (int i = 0; i < NUM_CONTAINERS; i++) {
             final int index = i;
             scheduledExecutor.submit(new Callable<Void>() {
-                public Void call() {
+                @Override public Void call() {
                     items.add(newItemWithPeriodicWorkrates(app, containers.get(0), "item"+index, 20));
                     return null;
                 }});
         }
-        assertWorkratesEventually(containers, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER);
+        assertWorkratesEventually(containers, items, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER);
     }
     
     // TODO Got IndexOutOfBoundsException from containers.last()
@@ -115,10 +116,13 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
             items.add(newItemWithPeriodicWorkrates(app, containers.get(i), "item"+i, 20));
         }
         
+        final List<MockContainerEntity> containersToStop = Lists.newArrayList();
         for (int i = 0; i < NUM_CONTAINERS/2; i++) {
-            final MockContainerEntity containerToStop = containers.remove(0);
+            containersToStop.add(containers.remove(0));
+        }
+        for (final MockContainerEntity containerToStop : containersToStop) {
             scheduledExecutor.submit(new Callable<Void>() {
-                public Void call() {
+                @Override public Void call() {
                     try {
                         containerToStop.offloadAndStop(containers.get(containers.size()-1));
                         Entities.unmanage(containerToStop);
@@ -129,7 +133,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
                 }});
         }
         
-        assertWorkratesEventually(containers, Collections.nCopies((int)(NUM_CONTAINERS/2), 40d), WORKRATE_JITTER*2);
+        assertWorkratesEventually(containers, items, Collections.nCopies((int)(NUM_CONTAINERS/2), 40d), WORKRATE_JITTER*2);
     }
     
     @Test(groups="WIP")
@@ -150,7 +154,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
             int indexToStop = (i < NUM_CONTAINERS/2) ? NUM_CONTAINERS : 0; 
             final MockItemEntity itemToStop = items.remove(indexToStop);
             scheduledExecutor.submit(new Callable<Void>() {
-                public Void call() {
+                @Override public Void call() {
                     try {
                         itemToStop.stop();
                         Entities.unmanage(itemToStop);
@@ -161,7 +165,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
                 }});
         }
         
-        assertWorkratesEventually(containers, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER);
+        assertWorkratesEventually(containers, items, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER);
     }
     
     protected MockItemEntity newItemWithPeriodicWorkrates(TestApplication app, MockContainerEntity container, String name, double workrate) {
@@ -174,7 +178,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
         final AtomicReference<Future<?>> futureRef = new AtomicReference<Future<?>>();
         Future<?> future = scheduledExecutor.scheduleAtFixedRate(
                 new Runnable() {
-                    public void run() {
+                    @Override public void run() {
                         if (item.isStopped() && futureRef.get() != null) {
                             futureRef.get().cancel(true);
                             return;

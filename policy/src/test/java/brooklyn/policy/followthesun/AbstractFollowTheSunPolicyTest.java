@@ -19,12 +19,11 @@ import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.policy.loadbalancing.BalanceableContainer;
 import brooklyn.policy.loadbalancing.MockContainerEntity;
 import brooklyn.policy.loadbalancing.MockItemEntity;
 import brooklyn.policy.loadbalancing.MockItemEntityImpl;
@@ -32,13 +31,14 @@ import brooklyn.policy.loadbalancing.Movable;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.reflect.TypeToken;
+import com.google.common.collect.Maps;
 
 public class AbstractFollowTheSunPolicyTest {
     
@@ -49,9 +49,6 @@ public class AbstractFollowTheSunPolicyTest {
     
     protected static final long CONTAINER_STARTUP_DELAY_MS = 100;
     
-    public static final AttributeSensor<Map<Entity, Double>> TEST_METRIC = Sensors.newSensor(
-        new TypeToken<Map<Entity, Double>>() {}, "test.metric", "Dummy workrate for test entities");
-
     protected TestApplication app;
     protected ManagementContext managementContext;
     protected SimulatedLocation loc1;
@@ -68,7 +65,8 @@ public class AbstractFollowTheSunPolicyTest {
         LOG.debug("In AbstractFollowTheSunPolicyTest.setUp()");
 
         MockItemEntityImpl.totalMoveCount.set(0);
-
+        MockItemEntityImpl.lastMoveTime.set(0);
+        
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         managementContext = app.getManagementContext();
         
@@ -85,7 +83,7 @@ public class AbstractFollowTheSunPolicyTest {
         model = new DefaultFollowTheSunModel<Entity, Movable>("pool-model");
         pool = app.createAndManageChild(EntitySpec.create(FollowTheSunPool.class));
         pool.setContents(containerGroup, itemGroup);
-        policy = new FollowTheSunPolicy(TEST_METRIC, model, FollowTheSunParameters.newDefault());
+        policy = new FollowTheSunPolicy(MockItemEntity.ITEM_USAGE_METRIC, model, FollowTheSunParameters.newDefault());
         pool.addPolicy(policy);
         app.start(ImmutableList.of(loc1, loc2));
     }
@@ -95,6 +93,7 @@ public class AbstractFollowTheSunPolicyTest {
         if (pool != null && policy != null) pool.removePolicy(policy);
         if (app != null) Entities.destroyAll(app.getManagementContext());
         MockItemEntityImpl.totalMoveCount.set(0);
+        MockItemEntityImpl.lastMoveTime.set(0);
     }
     
     /**
@@ -131,20 +130,43 @@ public class AbstractFollowTheSunPolicyTest {
             MockContainerEntity container = entry.getKey();
             Collection<MockItemEntity> expectedItems = entry.getValue();
             
-            assertEquals(ImmutableSet.copyOf(container.getBalanceableItems()), ImmutableSet.copyOf(expectedItems));
+            assertEquals(ImmutableSet.copyOf(container.getBalanceableItems()), ImmutableSet.copyOf(expectedItems), errMsg);
         }
     }
 
     protected String verboseDumpToString() {
         Iterable<MockContainerEntity> containers = Iterables.filter(app.getManagementContext().getEntityManager().getEntities(), MockContainerEntity.class);
-        //Collection<MockContainerEntity> containers = app.getManagementContext().getEntities().findAll { it instanceof MockContainerEntity }
-        Iterable<Set<Movable>> itemDistribution = Iterables.transform(containers, new Function<MockContainerEntity, Set<Movable>>() {
-            public Set<Movable> apply(MockContainerEntity input) {
-                return input.getBalanceableItems();
+        Iterable<MockItemEntity> items = Iterables.filter(app.getManagementContext().getEntityManager().getEntities(), MockItemEntity.class);
+        
+        Iterable<Double> containerRates = Iterables.transform(containers, new Function<MockContainerEntity, Double>() {
+            @Override public Double apply(MockContainerEntity input) {
+                return (double) input.getWorkrate();
             }});
+        
+        Iterable<Map<Entity, Double>> containerItemUsages = Iterables.transform(containers, new Function<MockContainerEntity, Map<Entity, Double>>() {
+            @Override public Map<Entity, Double> apply(MockContainerEntity input) {
+                return input.getItemUsage();
+            }});
+        
+        Map<MockContainerEntity, Set<Movable>> itemDistributionByContainer = Maps.newLinkedHashMap();
+        for (MockContainerEntity container : containers) {
+            itemDistributionByContainer.put(container, container.getBalanceableItems());
+        }
+        
+        Map<Movable, BalanceableContainer<?>> itemDistributionByItem = Maps.newLinkedHashMap();
+        for (Movable item : items) {
+            itemDistributionByItem.put(item, item.getAttribute(Movable.CONTAINER));
+        }
+
         String modelItemDistribution = model.itemDistributionToString();
-        return "containers="+containers+"; itemDistribution="+itemDistribution+"; model="+modelItemDistribution+"; "+
-                "totalMoves="+MockItemEntityImpl.totalMoveCount;
+        
+        return "containers="+containers+"; containerRates="+containerRates
+                +"; containerItemUsages="+containerItemUsages
+                +"; itemDistributionByContainer="+itemDistributionByContainer
+                +"; itemDistributionByItem="+itemDistributionByItem
+                +"; model="+modelItemDistribution
+                +"; totalMoves="+MockItemEntityImpl.totalMoveCount
+                +"; lastMoveTime="+Time.makeDateString(MockItemEntityImpl.lastMoveTime.get());
     }
     
     protected MockContainerEntity newContainer(TestApplication app, Location loc, String name) {
@@ -189,7 +211,7 @@ public class AbstractFollowTheSunPolicyTest {
     protected static MockItemEntity newItem(TestApplication app, MockContainerEntity container, String name, Map<? extends Entity, Double> workpattern) {
         MockItemEntity item = newItem(app, container, name);
         if (workpattern != null) {
-            ((EntityLocal)item).setAttribute(TEST_METRIC, (Map) workpattern);
+            ((EntityLocal)item).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, (Map) workpattern);
         }
         return item;
     }

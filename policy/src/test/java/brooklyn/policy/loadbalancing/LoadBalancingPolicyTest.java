@@ -26,7 +26,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item3 = newItem(app, containerA, "3", 10);
         MockItemEntity item4 = newItem(app, containerA, "4", 10);
 
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(40d, 0d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3, item4), 
+                ImmutableList.of(40d, 0d));
     }
     
     @Test
@@ -38,7 +41,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item3 = newItem(app, containerB, "3", 20);
         MockItemEntity item4 = newItem(app, containerB, "4", 20);
 
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(40d, 40d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3, item4), 
+                ImmutableList.of(40d, 40d));
         assertEquals(containerA.getBalanceableItems(), ImmutableSet.of(item1, item2));
         assertEquals(containerB.getBalanceableItems(), ImmutableSet.of(item3, item4));
     }
@@ -54,7 +60,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item3 = newItem(app, containerA, "3", 10);
         MockItemEntity item4 = newItem(app, containerA, "4", 10);
 
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(20d, 20d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3, item4), 
+                ImmutableList.of(20d, 20d));
     }
     
     @Test
@@ -66,7 +75,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item3 = newItem(app, containerB, "3", 20);
         MockItemEntity item4 = newItem(app, containerB, "4", 20);
 
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(40d, 40d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3, item4), 
+                ImmutableList.of(40d, 40d));
     }
     
 //    @Test
@@ -105,7 +117,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item10 = newItem(app, containerA, "10", 10);
 
         // non-deterministic which items will be moved; but can assert how many (given they all have same workrate)
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(50d, 50d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3, item4, item5, item6, item7, item8, item9, item10), 
+                ImmutableList.of(50d, 50d));
         assertEquals(containerA.getBalanceableItems().size(), 5);
         assertEquals(containerB.getBalanceableItems().size(), 5);
     }
@@ -121,7 +136,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         ((EntityLocal)item1).setAttribute(MockItemEntity.TEST_METRIC, 40);
         ((EntityLocal)item2).setAttribute(MockItemEntity.TEST_METRIC, 40);
         
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(40d, 40d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2), 
+                ImmutableList.of(40d, 40d));
     }
     
     // Expect no balancing to occur in hot pool (2 containers over-threshold at 40).
@@ -144,7 +162,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockContainerEntity containerC = newAsyncContainer(app, "C", 10, 30, CONTAINER_STARTUP_DELAY_MS);
         // New container allows hot ones to offload work.
         
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB, containerC), ImmutableList.of(30d, 30d, 20d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB, containerC), 
+                ImmutableList.of(item1, item2, item3, item4, item5, item6, item7, item8), 
+                ImmutableList.of(30d, 30d, 20d));
     }
 
     // On addition of new container, expect no rebalancing to occur as no existing container is hot.
@@ -162,11 +183,17 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item7 = newItem(app, containerB, "7", 10);
         MockItemEntity item8 = newItem(app, containerB, "8", 10);
         
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(40d, 40d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3, item4, item5, item6, item7, item8), 
+                ImmutableList.of(40d, 40d));
         
         MockContainerEntity containerC = newAsyncContainer(app, "C", 10, 50, CONTAINER_STARTUP_DELAY_MS);
 
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB, containerC), ImmutableList.of(40d, 40d, 0d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB, containerC), 
+                ImmutableList.of(item1, item2, item3, item4, item5, item6, item7, item8), 
+                ImmutableList.of(40d, 40d, 0d));
     }
     
     // Expect no balancing to occur in cool pool (2 containers under-threshold at 30).
@@ -183,11 +210,17 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item5 = newItem(app, containerB, "5", 10);
         MockItemEntity item6 = newItem(app, containerB, "6", 10);
         
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(30d, 30d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3, item4, item5, item6), 
+                ImmutableList.of(30d, 30d));
         
         MockItemEntity item7 = newItem(app, containerA, "7", 40);
         
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(50d, 50d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3, item4, item5, item6), 
+                ImmutableList.of(50d, 50d));
     }
     
     // FIXME Failed in build repeatedly (e.g. #1035), but couldn't reproduce locally yet with invocationCount=100
@@ -208,7 +241,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         item5.move(containerA);
         item6.move(containerA);
         
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(30d, 30d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3, item4, item5, item6), 
+                ImmutableList.of(30d, 30d));
     }
 
     @Test
@@ -223,7 +259,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         item1.stop();
         Entities.unmanage(item1);
         
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(20d, 20d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3), 
+                ImmutableList.of(20d, 20d));
     }
 
     @Test
@@ -240,7 +279,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         item3.move(containerA);
         item4.move(containerA);
 
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(40d, 40d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3, item4), 
+                ImmutableList.of(40d, 40d));
     }
     
     @Test
@@ -270,7 +312,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item1 = newLockedItem(app, containerA, "1", 40);
         MockItemEntity item2 = newLockedItem(app, containerA, "2", 40);
 
-        assertWorkratesContinually(ImmutableList.of(containerA, containerB), ImmutableList.of(80d, 0d));
+        assertWorkratesContinually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2), 
+                ImmutableList.of(80d, 0d));
     }
     
     @Test
@@ -282,7 +327,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item2 = newItem(app, containerA, "2", 25);
         MockItemEntity item3 = newItem(app, containerA, "3", 25);
         
-        assertWorkratesEventually(ImmutableList.of(containerA, containerB), ImmutableList.of(40d, 50d));
+        assertWorkratesEventually(
+                ImmutableList.of(containerA, containerB),
+                ImmutableList.of(item1, item2, item3), 
+                ImmutableList.of(40d, 50d));
     }
     
     @Test
@@ -295,7 +343,10 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item2 = newItem(app, containerB, "2", 30);
         MockItemEntity item3 = newItem(app, containerB, "3", 30);
         
-        assertWorkratesContinually(ImmutableList.of(containerA, containerB), ImmutableList.of(50d, 60d));
+        assertWorkratesContinually(
+                ImmutableList.of(containerA, containerB), 
+                ImmutableList.of(item1, item2, item3), 
+                ImmutableList.of(50d, 60d));
     }
     
     @Test

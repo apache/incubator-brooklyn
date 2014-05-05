@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -22,6 +23,7 @@ import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 
@@ -64,6 +66,22 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
         return result;
     }
 
+    @Override
+    public Map<Entity, Double> getItemUsage() {
+        Map<Entity, Double> result = Maps.newLinkedHashMap();
+        for (Entity member : getMembers()) {
+            Map<Entity, Double> memberItemUsage = member.getAttribute(MockItemEntity.ITEM_USAGE_METRIC);
+            if (memberItemUsage != null) {
+                for (Map.Entry<Entity, Double> entry : memberItemUsage.entrySet()) {
+                    double val = (result.containsKey(entry.getKey()) ? result.get(entry.getKey()) : 0d);
+                    val += ((entry.getValue() != null) ? entry.getValue() : 0);
+                    result.put(entry.getKey(), val);
+                }
+            }
+        }
+        return result;
+    }
+    
     @Override
     public void addItem(Entity item) {
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: adding item {} to container {}", item, this);
