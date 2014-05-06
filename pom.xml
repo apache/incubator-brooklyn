@@ -536,6 +536,22 @@
                          </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
+                <!-- Needed for command-line access, e.g mvn apache-rat:rat and mvn apache-rat:check -->
+                <plugin>
+                  <groupId>org.apache.rat</groupId>
+                  <artifactId>apache-rat-plugin</artifactId>
+                  <version>0.10</version>
+                  <configuration>
+                    <!--
+                         If you wish to override this list in the component (child) pom, ensure you use
+                             <excludes combine.children="merge">
+                         so that the child pom entries replace the parent entries
+                     -->
+                    <excludes combine.children="append">
+                      <exclude>.checkstyle</exclude>
+                    </excludes>
+                  </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -1319,6 +1335,26 @@
                     <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
                 </snapshotRepository>
             </distributionManagement>
+        </profile>
+        <profile>
+            <id>rat-check</id>
+            <build>
+                <plugins>
+                    <plugin>
+                      <groupId>org.apache.rat</groupId>
+                      <artifactId>apache-rat-plugin</artifactId>
+                      <executions>
+                        <execution>
+                          <id>rat-check</id>
+                          <phase>verify</phase>
+                          <goals>
+                            <goal>check</goal>
+                          </goals>
+                        </execution>
+                      </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 
