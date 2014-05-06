@@ -35,7 +35,7 @@ public class DeployBlueprintTest extends BrooklynRestApiLauncherTestFixture {
         URI webConsoleUri = URI.create(getBaseUri());
         
         String id = DeployBlueprintEffectorBody.submitPlan(HttpTool.httpClientBuilder().build(), webConsoleUri, 
-            "{ services: [ service_type: \"java:"+BasicApplication.class.getName()+"\" ] }");
+            "{ services: [ serviceType: \"java:"+BasicApplication.class.getName()+"\" ] }");
 
         log.info("got: "+id);
         

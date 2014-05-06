@@ -4,9 +4,6 @@ import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.http.client.HttpClient;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -50,7 +47,7 @@ public class HttpToolIntegrationTest {
         URI baseUri = new URI(httpService.getUrl() + "hello/redirectAbsolute");
 
         HttpClient client = HttpTool.httpClientBuilder().laxRedirect(true).build();
-        HttpPollValue result = HttpTool.httpGet(client, baseUri, ImmutableMap.<String,String>of());
+        HttpToolResponse result = HttpTool.httpGet(client, baseUri, ImmutableMap.<String,String>of());
         assertTrue(new String(result.getContent()).contains("Hello, World"), "val="+new String(result.getContent()));
     }
     
