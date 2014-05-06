@@ -14,11 +14,17 @@ import org.slf4j.LoggerFactory;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsLocationConfig;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
-/** WIP to apply a security group to a jclouds endpoint */
+/** WIP to apply a security group to a jclouds endpoint.
+ * <p>
+ * sections of this code have been used but overall it is not yet in a working state,
+ * but merged May 2014 to make it easier to pick up if and when needed.
+ * (if not needed after several months this may simply be removed.) */
 @Beta
 public class SecurityGroupTool {
 
@@ -28,8 +34,8 @@ public class SecurityGroupTool {
     protected final SecurityGroupDefinition sgDef;
 
     public SecurityGroupTool(JcloudsLocation location, SecurityGroupDefinition sgDef) {
-        this.location = location;
-        this.sgDef = sgDef;
+        this.location = Preconditions.checkNotNull(location);
+        this.sgDef = Preconditions.checkNotNull(sgDef);
     }
     
     public String getName() {
@@ -51,6 +57,8 @@ public class SecurityGroupTool {
             // TODO record that we created it
             // create it
             try {
+                // FIXME this will always fail for providers which need a location, until we set it above
+                // https://github.com/brooklyncentral/brooklyn/pull/1343#discussion_r12275188
                 sg = sgExt.createSecurityGroup(getName(), sgLoc);
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
@@ -69,13 +77,15 @@ public class SecurityGroupTool {
             throw new IllegalStateException("Unable to find or create security group ID for "+getName());
 
         addPermissions(sgExt, sg);
-//        return sg.getId();
     }
     
     protected SecurityGroup findSecurityGroupWithName(SecurityGroupExtension sgExt, String name) {
         Set<SecurityGroup> groups = sgExt.listSecurityGroups();
+        // jclouds appends this sometimes so for portability let's add this
+        String nameAlt = name.startsWith("jclouds#") ? Strings.removeFromStart(name, "jclouds#") : "jclouds#"+name;
         for (SecurityGroup g: groups) {
             if (name.equals(g.getName())) return g;
+            if (nameAlt.equals(g.getName())) return g;
         }
         return null;
     }

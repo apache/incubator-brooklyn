@@ -20,16 +20,16 @@ import com.google.common.annotations.Beta;
 @Beta
 public class SecurityGroupDefinition {
 
-    Callable<String> groupNameFactory = new Callable<String>() { public String call() { return "br-sg-"+Identifiers.makeRandomId(8); } };
-    List<IpPermission> ipPerms = MutableList.of();
+    private Callable<String> groupNameFactory = new Callable<String>() { public String call() { return "br-sg-"+Identifiers.makeRandomId(8); } };
+    private List<IpPermission> ipPerms = MutableList.of();
     
     public void createGroupInAwsRegion(ComputeServiceContext computeServiceContext, String region) {
         AWSEC2Api ec2Client = computeServiceContext.unwrapApi(AWSEC2Api.class);
-        String sgId = ec2Client.getSecurityGroupApi().get().createSecurityGroupInRegionAndReturnId("us-east-1", "br-JBoss-appId123-entId123-uid1234-sg", "security group for XXX");
-        ec2Client.getSecurityGroupApi().get().authorizeSecurityGroupIngressInRegion("us-east-1", sgId, ipPerms);
+        String sgId = ec2Client.getSecurityGroupApi().get().createSecurityGroupInRegionAndReturnId(region, getName(), "Brooklyn-managed security group "+getName());
+        ec2Client.getSecurityGroupApi().get().authorizeSecurityGroupIngressInRegion(region, sgId, ipPerms);
     }
 
-
+    /** allows access to the given port on TCP from within the subnet */
     public SecurityGroupDefinition allowingInternalPort(int port) {
         return allowing(IpPermissions.permit(IpProtocol.TCP).port(port));
     }
@@ -51,8 +51,8 @@ public class SecurityGroupDefinition {
         return allowing(IpPermissions.permit(IpProtocol.TCP).port(port).originatingFromCidrBlock(Cidr.UNIVERSAL.toString()));
     }
     public SecurityGroupDefinition allowingPublicPorts(int port1, int port2, int ...ports) {
-        allowing(IpPermissions.permit(IpProtocol.TCP).port(port1));
-        allowing(IpPermissions.permit(IpProtocol.TCP).port(port2));
+        allowing(IpPermissions.permit(IpProtocol.TCP).port(port1).originatingFromCidrBlock(Cidr.UNIVERSAL.toString()));
+        allowing(IpPermissions.permit(IpProtocol.TCP).port(port2).originatingFromCidrBlock(Cidr.UNIVERSAL.toString()));
         for (int port: ports)
             allowing(IpPermissions.permit(IpProtocol.TCP).port(port).originatingFromCidrBlock(Cidr.UNIVERSAL.toString()));
         return this;
@@ -77,11 +77,6 @@ public class SecurityGroupDefinition {
     public String getName() { 
         try { return groupNameFactory.call(); } 
         catch (Exception e) { throw Exceptions.propagate(e); } 
-    }
-    
-    {
-        new SecurityGroupDefinition().allowingInternalPorts(8097, 8098).allowingInternalPortRange(6000, 7999)
-            .allowingPublicPort(8099);
     }
 
     public Iterable<IpPermission> getPermissions() {
