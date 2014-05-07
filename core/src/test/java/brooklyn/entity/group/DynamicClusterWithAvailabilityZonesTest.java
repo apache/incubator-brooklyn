@@ -173,6 +173,8 @@ public class DynamicClusterWithAvailabilityZonesTest {
         return result;
     }
 
+    // TODO create two variants of this test, one using the Extension as below,
+    // and the other using a MultiLocation, ideally one specified as a string
     public static class SimulatedAvailabilityZoneExtension extends AbstractAvailabilityZoneExtension implements AvailabilityZoneExtension {
         private final SimulatedLocation loc;
         private final List<String> subLocNames;
