@@ -15,9 +15,8 @@ import org.testng.annotations.Test;
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterInMemory;
-import brooklyn.entity.rebind.plane.dto.BasicManagerMemento;
+import brooklyn.entity.rebind.plane.dto.BasicManagerSyncRecord;
 import brooklyn.management.ha.HighAvailabilityManagerImpl.PromotionListener;
-import brooklyn.management.ha.ManagerMemento.HealthStatus;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
@@ -29,7 +28,7 @@ import com.google.common.collect.Lists;
 
 public class HighAvailabilityManagerTest {
 
-    private ManagementPlaneMementoPersisterInMemory persister;
+    private ManagementPlaneSyncRecordPersisterInMemory persister;
     private ManagementContextInternal managementContext;
     private String ownNodeId;
     private HighAvailabilityManagerImpl manager;
@@ -50,7 +49,7 @@ public class HighAvailabilityManagerTest {
         managementContext = new LocalManagementContext();
         managementContext.getRebindManager().setPersister(new BrooklynMementoPersisterInMemory(classLoader));
         ownNodeId = managementContext.getManagementNodeId();
-        persister = new ManagementPlaneMementoPersisterInMemory();
+        persister = new ManagementPlaneSyncRecordPersisterInMemory();
         manager = new HighAvailabilityManagerImpl(managementContext)
                 .setPollPeriod(Duration.of(10, TimeUnit.MILLISECONDS))
                 .setHeartbeatTimeout(Duration.THIRTY_SECONDS)
@@ -70,9 +69,9 @@ public class HighAvailabilityManagerTest {
     // next poll fixes it.
     @Test
     public void testPromotes() throws Exception {
-        persister.delta(ManagementPlaneMementoDeltaImpl.builder()
-                .node(newManagerMemento(ownNodeId, HealthStatus.STANDBY, currentTimeMillis()))
-                .node(newManagerMemento("node1", HealthStatus.MASTER, currentTimeMillis()))
+        persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
+                .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY, currentTimeMillis()))
+                .node(newManagerMemento("node1", ManagementNodeState.MASTER, currentTimeMillis()))
                 .setMaster("node1")
                 .build());
         
@@ -88,9 +87,9 @@ public class HighAvailabilityManagerTest {
 
     @Test(groups="Integration") // because one second wait in succeedsContinually
     public void testDoesNotPromoteIfMasterTimeoutNotExpired() throws Exception {
-        persister.delta(ManagementPlaneMementoDeltaImpl.builder()
-                .node(newManagerMemento(ownNodeId, HealthStatus.STANDBY, currentTimeMillis()))
-                .node(newManagerMemento("node1", HealthStatus.MASTER, currentTimeMillis()))
+        persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
+                .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY, currentTimeMillis()))
+                .node(newManagerMemento("node1", ManagementNodeState.MASTER, currentTimeMillis()))
                 .setMaster("node1")
                 .build());
         
@@ -107,22 +106,22 @@ public class HighAvailabilityManagerTest {
 
     @Test
     public void testGetManagementPlaneStatus() throws Exception {
-        persister.delta(ManagementPlaneMementoDeltaImpl.builder()
-                .node(newManagerMemento("node1", HealthStatus.STANDBY, currentTimeMillis()))
+        persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
+                .node(newManagerMemento("node1", ManagementNodeState.STANDBY, currentTimeMillis()))
                 .build());
         
         manager.start(HighAvailabilityMode.AUTO);
-        ManagementPlaneMemento memento = manager.getManagementPlaneStatus();
+        ManagementPlaneSyncRecord memento = manager.getManagementPlaneSyncState();
         
         // Note can assert timestamp because not "real" time; it's using our own Ticker
         assertEquals(memento.getMasterNodeId(), ownNodeId);
-        assertEquals(memento.getNodes().keySet(), ImmutableSet.of(ownNodeId, "node1"));
-        assertEquals(memento.getNodes().get(ownNodeId).getNodeId(), ownNodeId);
-        assertEquals(memento.getNodes().get(ownNodeId).getStatus(), HealthStatus.MASTER);
-        assertEquals(memento.getNodes().get(ownNodeId).getTimestampUtc(), currentTimeMillis());
-        assertEquals(memento.getNodes().get("node1").getNodeId(), "node1");
-        assertEquals(memento.getNodes().get("node1").getStatus(), HealthStatus.STANDBY);
-        assertEquals(memento.getNodes().get("node1").getTimestampUtc(), currentTimeMillis());
+        assertEquals(memento.getManagementNodes().keySet(), ImmutableSet.of(ownNodeId, "node1"));
+        assertEquals(memento.getManagementNodes().get(ownNodeId).getNodeId(), ownNodeId);
+        assertEquals(memento.getManagementNodes().get(ownNodeId).getStatus(), ManagementNodeState.MASTER);
+        assertEquals(memento.getManagementNodes().get(ownNodeId).getTimestampUtc(), currentTimeMillis());
+        assertEquals(memento.getManagementNodes().get("node1").getNodeId(), "node1");
+        assertEquals(memento.getManagementNodes().get("node1").getStatus(), ManagementNodeState.STANDBY);
+        assertEquals(memento.getManagementNodes().get("node1").getTimestampUtc(), currentTimeMillis());
     }
     
     private long currentTimeMillis() {
@@ -134,8 +133,8 @@ public class HighAvailabilityManagerTest {
         return currentTimeMillis();
     }
     
-    private ManagerMemento newManagerMemento(String nodeId, HealthStatus status, long timestamp) {
-        return BasicManagerMemento.builder().brooklynVersion(BrooklynVersion.get()).nodeId(nodeId).status(status).timestampUtc(timestamp).build();
+    private ManagementNodeSyncRecord newManagerMemento(String nodeId, ManagementNodeState status, long timestamp) {
+        return BasicManagerSyncRecord.builder().brooklynVersion(BrooklynVersion.get()).nodeId(nodeId).status(status).timestampUtc(timestamp).build();
     }
     
     public static class RecordingPromotionListener implements PromotionListener {

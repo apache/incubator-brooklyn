@@ -18,8 +18,7 @@ import brooklyn.entity.rebind.persister.MementoFileWriterSync;
 import brooklyn.entity.rebind.persister.MementoSerializer;
 import brooklyn.entity.rebind.persister.RetryingMementoSerializer;
 import brooklyn.entity.rebind.persister.XmlMementoSerializer;
-import brooklyn.entity.rebind.plane.dto.ManagementPlaneMementoImpl;
-import brooklyn.management.ha.ManagerMemento.HealthStatus;
+import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -52,15 +51,15 @@ import com.google.common.io.Files;
  * @author aled
  */
 @Beta
-public class ManagementPlaneMementoPersisterToMultiFile implements ManagementPlaneMementoPersister {
+public class ManagementPlaneSyncRecordPersisterToMultiFile implements ManagementPlaneSyncRecordPersister {
 
     // TODO Multiple node appending to change.log could cause strange interleaving, or perhaps even data loss?
     // But this file is not critical to functionality.
     
-    // TODO Should ManagementPlaneMementoPersister.Delta be different so can tell what is a significant event,
+    // TODO Should ManagementPlaneSyncRecordPersister.Delta be different so can tell what is a significant event,
     // and thus log it in change.log - currently only subset of significant things being logged.
     
-    private static final Logger LOG = LoggerFactory.getLogger(ManagementPlaneMementoPersisterToMultiFile.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ManagementPlaneSyncRecordPersisterToMultiFile.class);
 
     private static final Duration SHUTDOWN_TIMEOUT = Duration.TEN_SECONDS;
     
@@ -69,7 +68,7 @@ public class ManagementPlaneMementoPersisterToMultiFile implements ManagementPla
     private final File nodesDir;
 
     // TODO Leak if we go through lots of managers; but tiny!
-    private final ConcurrentMap<String, MementoFileWriterSync<ManagerMemento>> nodeWriters = new ConcurrentHashMap<String, MementoFileWriterSync<ManagerMemento>>();
+    private final ConcurrentMap<String, MementoFileWriterSync<ManagementNodeSyncRecord>> nodeWriters = new ConcurrentHashMap<String, MementoFileWriterSync<ManagementNodeSyncRecord>>();
     
     private final MementoFileWriterSync<String> masterWriter;
 
@@ -86,7 +85,7 @@ public class ManagementPlaneMementoPersisterToMultiFile implements ManagementPla
      * @param classLoader ClassLoader to use when deserializing data
      * @param id          Unique identifier, e.g. used for temp file suffix in case multpile concurrent writers
      */
-    public ManagementPlaneMementoPersisterToMultiFile(File dir, ClassLoader classLoader, String id) {
+    public ManagementPlaneSyncRecordPersisterToMultiFile(File dir, ClassLoader classLoader, String id) {
         this.dir = checkNotNull(dir, "dir");
         MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(checkNotNull(classLoader, "classLoader"));
         this.serializer = new RetryingMementoSerializer<Object>(rawSerializer, MAX_SERIALIZATION_ATTEMPTS);
@@ -131,7 +130,7 @@ public class ManagementPlaneMementoPersisterToMultiFile implements ManagementPla
     }
 
     @Override
-    public ManagementPlaneMemento loadMemento() throws IOException {
+    public ManagementPlaneSyncRecord loadSyncRecord() throws IOException {
         if (!running) {
             throw new IllegalStateException("Persister not running; cannot load memento from "+dir);
         }
@@ -141,7 +140,7 @@ public class ManagementPlaneMementoPersisterToMultiFile implements ManagementPla
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        ManagementPlaneMementoImpl.Builder builder = ManagementPlaneMementoImpl.builder();
+        ManagementPlaneSyncRecordImpl.Builder builder = ManagementPlaneSyncRecordImpl.builder();
 
         // Be careful about order: if the master-file says nodeX then nodeX's file must have an up-to-date timestamp.
         // Therefore read master file first, followed by the other node-files.
@@ -162,7 +161,7 @@ public class ManagementPlaneMementoPersisterToMultiFile implements ManagementPla
         File[] nodeFiles = nodesDir.listFiles(fileFilter);
 
         for (File file : nodeFiles) {
-            ManagerMemento memento = (ManagerMemento) serializer.fromString(readFile(file));
+            ManagementNodeSyncRecord memento = (ManagementNodeSyncRecord) serializer.fromString(readFile(file));
             if (memento == null) {
                 LOG.warn("No manager-memento deserialized from file "+file+" (possibly just stopped?); ignoring and continuing");
             } else {
@@ -182,7 +181,7 @@ public class ManagementPlaneMementoPersisterToMultiFile implements ManagementPla
         }
         if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of manager-memento; updating {}", delta);
         
-        for (ManagerMemento m : delta.getNodes()) {
+        for (ManagementNodeSyncRecord m : delta.getNodes()) {
             persist(m);
         }
         for (String id : delta.getRemovedNodeIds()) {
@@ -220,14 +219,14 @@ public class ManagementPlaneMementoPersisterToMultiFile implements ManagementPla
         return Files.asCharSource(file, Charsets.UTF_8).read();
     }
     
-    private void persist(ManagerMemento node) {
-        MementoFileWriterSync<ManagerMemento> writer = getOrCreateNodeWriter(node.getNodeId());
+    private void persist(ManagementNodeSyncRecord node) {
+        MementoFileWriterSync<ManagementNodeSyncRecord> writer = getOrCreateNodeWriter(node.getNodeId());
         boolean fileExists = writer.exists();
         writer.write(node);
         if (!fileExists) {
             changeLogWriter.append(Time.makeDateString()+": created node "+node.getNodeId()+"\n");
         }
-        if (node.getStatus() == HealthStatus.TERMINATED || node.getStatus() == HealthStatus.FAILED) {
+        if (node.getStatus() == ManagementNodeState.TERMINATED || node.getStatus() == ManagementNodeState.FAILED) {
             changeLogWriter.append(Time.makeDateString()+": set node "+node.getNodeId()+" status to "+node.getStatus()+"\n");
         }
     }
@@ -237,10 +236,10 @@ public class ManagementPlaneMementoPersisterToMultiFile implements ManagementPla
         changeLogWriter.append(Time.makeDateString()+": deleted node "+nodeId+"\n");
     }
     
-    private MementoFileWriterSync<ManagerMemento> getOrCreateNodeWriter(String nodeId) {
-        MementoFileWriterSync<ManagerMemento> writer = nodeWriters.get(nodeId);
+    private MementoFileWriterSync<ManagementNodeSyncRecord> getOrCreateNodeWriter(String nodeId) {
+        MementoFileWriterSync<ManagementNodeSyncRecord> writer = nodeWriters.get(nodeId);
         if (writer == null) {
-            nodeWriters.putIfAbsent(nodeId, new MementoFileWriterSync<ManagerMemento>(getFileForNode(nodeId), serializer, tmpSuffix));
+            nodeWriters.putIfAbsent(nodeId, new MementoFileWriterSync<ManagementNodeSyncRecord>(getFileForNode(nodeId), serializer, tmpSuffix));
             writer = nodeWriters.get(nodeId);
         }
         return writer;

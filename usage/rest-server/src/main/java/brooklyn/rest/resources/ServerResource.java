@@ -12,7 +12,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.management.Task;
-import brooklyn.management.ha.ManagementPlaneMemento;
+import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.api.ServerApi;
 import brooklyn.rest.domain.HighAvailabilitySummary;
@@ -67,12 +67,12 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
     @Override
     public String getStatus() {
-        return mgmt().getHighAvailabilityManager().getNodeStatus().toString();
+        return mgmt().getHighAvailabilityManager().getNodeState().toString();
     }
 
     @Override
     public HighAvailabilitySummary getHighAvailability() {
-        ManagementPlaneMemento memento = mgmt().getHighAvailabilityManager().getManagementPlaneStatus();
+        ManagementPlaneSyncRecord memento = mgmt().getHighAvailabilityManager().getManagementPlaneSyncState();
         return HighAvailabilityTransformer.highAvailabilitySummary(mgmt().getManagementNodeId(), memento);
     }
 }

@@ -1,12 +1,10 @@
 package brooklyn.management.ha;
 
-import brooklyn.management.ha.ManagerMemento.HealthStatus;
-
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 
 /**
- * Monitors other management nodes (via the {@link ManagementPlaneMementoPersister}) to detect
+ * Monitors other management nodes (via the {@link ManagementPlaneSyncRecordPersister}) to detect
  * if the current master has failed or stopped. If so, then deterministically chooses a new master.
  * If that master is self, then promotes.
 
@@ -14,7 +12,7 @@ import com.google.common.annotations.VisibleForTesting;
  * 
  * Expected lifecycle of methods calls on this is:
  * <ol>
- *   <li>{@link #setPersister(ManagementPlaneMementoPersister)}
+ *   <li>{@link #setPersister(ManagementPlaneSyncRecordPersister)}
  *   <li>Exactly one of {@link #disabled()} or {@link #start(StartMode)}
  *   <li>Exactly one of {@link #stop()} or {@link #terminate()}
  * </ol>
@@ -24,27 +22,20 @@ import com.google.common.annotations.VisibleForTesting;
 @Beta
 public interface HighAvailabilityManager {
 
-    public static enum NodeStatus {
-        UNINITIALISED,
-        STANDBY,
-        MASTER,
-        TERMINATED;
-    }
-
-    NodeStatus getNodeStatus();
+    ManagementNodeState getNodeState();
     
     /**
      * @param persister
      * @return self
      */
-    HighAvailabilityManager setPersister(ManagementPlaneMementoPersister persister);
+    HighAvailabilityManager setPersister(ManagementPlaneSyncRecordPersister persister);
 
     /**
      * Indicates that HA is disabled: this node will act as the only management node in this management plane,
      * and will not persist HA meta-information (meaning other nodes cannot join). 
      * <p>
-     * Subsequently can expect {@link #getNodeStatus()} to be {@link NodeStatus#MASTER} 
-     * and {@link #getManagementPlaneStatus()} to show just this one node --
+     * Subsequently can expect {@link #getNodeState()} to be {@link ManagementNodeState#MASTER} 
+     * and {@link #getManagementPlaneSyncState()} to show just this one node --
      * as if it were running HA with just one node --
      * but {@link #isRunning()} will return false.
      * <p>
@@ -60,8 +51,8 @@ public interface HighAvailabilityManager {
     /**
      * Starts the monitoring of other nodes (and thus potential promotion of this node from standby to master).
      * <p>
-     * By the time this method returns, then if appropriate this node will already be {@link NodeStatus#MASTER}. 
-     * Otherwise it will be {@link NodeStatus#STANDBY}.
+     * By the time this method returns, then if appropriate this node will already be {@link ManagementNodeState#MASTER}. 
+     * Otherwise it will be {@link ManagementNodeState#STANDBY}.
      * 
      * @throws IllegalStateException if current state of the management-plane doesn't match that desired by {@code startMode} 
      */
@@ -69,7 +60,7 @@ public interface HighAvailabilityManager {
 
     /**
      * Indicates that this node is stopping - first calls {@link #terminated()} to stop monitoring other nodes,
-     * then publishes own status (via {@link ManagementPlaneMementoPersister} of {@link HealthStatus#TERMINATED}.
+     * then publishes own status (via {@link ManagementPlaneSyncRecordPersister} of {@link ManagementNodeState#TERMINATED}.
      */
     void stop();
 
@@ -79,10 +70,13 @@ public interface HighAvailabilityManager {
     void terminate();
 
     /**
-     * Returns a snapshot of the management-plane's status.
+     * Returns a snapshot of the management-plane's current / most-recently-known status.
+     * <p>
+     * This is mainly the nodes and their {@link ManagementNodeSyncRecord} instances, 
+     * as known (for this node) or last read (other nodes).  
      */
-    ManagementPlaneMemento getManagementPlaneStatus();
+    ManagementPlaneSyncRecord getManagementPlaneSyncState();
     
     @VisibleForTesting
-    ManagementPlaneMementoPersister getPersister();
+    ManagementPlaneSyncRecordPersister getPersister();
 }

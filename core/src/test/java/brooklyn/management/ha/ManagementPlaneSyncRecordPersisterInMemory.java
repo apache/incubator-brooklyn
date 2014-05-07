@@ -16,11 +16,11 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-public class ManagementPlaneMementoPersisterInMemory implements ManagementPlaneMementoPersister {
+public class ManagementPlaneSyncRecordPersisterInMemory implements ManagementPlaneSyncRecordPersister {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ManagementPlaneMementoPersisterInMemory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ManagementPlaneSyncRecordPersisterInMemory.class);
 
-    private final MutableManagementPlaneMemento memento = new MutableManagementPlaneMemento();
+    private final MutableManagementPlaneSyncRecord memento = new MutableManagementPlaneSyncRecord();
     
     private volatile boolean running = true;
     
@@ -30,7 +30,7 @@ public class ManagementPlaneMementoPersisterInMemory implements ManagementPlaneM
     }
 
     @Override
-    public synchronized ManagementPlaneMemento loadMemento() throws IOException {
+    public synchronized ManagementPlaneSyncRecord loadSyncRecord() throws IOException {
         if (!running) {
             throw new IllegalStateException("Persister not running; cannot load memento");
         }
@@ -52,7 +52,7 @@ public class ManagementPlaneMementoPersisterInMemory implements ManagementPlaneM
             return;
         }
         
-        for (ManagerMemento m : delta.getNodes()) {
+        for (ManagementNodeSyncRecord m : delta.getNodes()) {
             memento.addNode(m);
         }
         for (String id : delta.getRemovedNodeIds()) {
@@ -72,9 +72,9 @@ public class ManagementPlaneMementoPersisterInMemory implements ManagementPlaneM
         }
     }
 
-    public static class MutableManagementPlaneMemento implements ManagementPlaneMemento {
+    public static class MutableManagementPlaneSyncRecord implements ManagementPlaneSyncRecord {
         private String masterNodeId;
-        private Map<String, ManagerMemento> nodes = Maps.newConcurrentMap();
+        private Map<String, ManagementNodeSyncRecord> managementNodes = Maps.newConcurrentMap();
 
         @Override
         public String getMasterNodeId() {
@@ -82,8 +82,8 @@ public class ManagementPlaneMementoPersisterInMemory implements ManagementPlaneM
         }
 
         @Override
-        public Map<String, ManagerMemento> getNodes() {
-            return nodes;
+        public Map<String, ManagementNodeSyncRecord> getManagementNodes() {
+            return managementNodes;
         }
 
         @Override
@@ -91,30 +91,30 @@ public class ManagementPlaneMementoPersisterInMemory implements ManagementPlaneM
             return toString();
         }
 
-        public ImmutableManagementPlaneMemento snapshot() {
-            return new ImmutableManagementPlaneMemento(masterNodeId, nodes);
+        public ImmutableManagementPlaneSyncRecord snapshot() {
+            return new ImmutableManagementPlaneSyncRecord(masterNodeId, managementNodes);
         }
         
         public void setMasterNodeId(String masterNodeId) {
             this.masterNodeId = masterNodeId;
         }
         
-        public void addNode(ManagerMemento memento) {
-            nodes.put(memento.getNodeId(), memento);
+        public void addNode(ManagementNodeSyncRecord memento) {
+            managementNodes.put(memento.getNodeId(), memento);
         }
         
         public void deleteNode(String nodeId) {
-            nodes.remove(nodeId);
+            managementNodes.remove(nodeId);
         }
     }
     
-    public static class ImmutableManagementPlaneMemento implements ManagementPlaneMemento {
+    public static class ImmutableManagementPlaneSyncRecord implements ManagementPlaneSyncRecord {
         private final String masterNodeId;
-        private final Map<String, ManagerMemento> nodes;
+        private final Map<String, ManagementNodeSyncRecord> managementNodes;
 
-        ImmutableManagementPlaneMemento(String masterNodeId, Map<String, ManagerMemento> nodes) {
+        ImmutableManagementPlaneSyncRecord(String masterNodeId, Map<String, ManagementNodeSyncRecord> nodes) {
             this.masterNodeId = masterNodeId;
-            this.nodes = ImmutableMap.copyOf(nodes);
+            this.managementNodes = ImmutableMap.copyOf(nodes);
         }
         
         @Override
@@ -123,18 +123,18 @@ public class ManagementPlaneMementoPersisterInMemory implements ManagementPlaneM
         }
 
         @Override
-        public Map<String, ManagerMemento> getNodes() {
-            return nodes;
+        public Map<String, ManagementNodeSyncRecord> getManagementNodes() {
+            return managementNodes;
         }
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("master", masterNodeId).add("nodes", nodes.keySet()).toString();
+            return Objects.toStringHelper(this).add("master", masterNodeId).add("nodes", managementNodes.keySet()).toString();
         }
         
         @Override
         public String toVerboseString() {
-            return Objects.toStringHelper(this).add("master", masterNodeId).add("nodes", nodes).toString();
+            return Objects.toStringHelper(this).add("master", masterNodeId).add("nodes", managementNodes).toString();
         }
     }
 }

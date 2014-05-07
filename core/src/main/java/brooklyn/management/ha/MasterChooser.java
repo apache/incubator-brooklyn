@@ -14,5 +14,5 @@ import com.google.common.annotations.Beta;
 @Beta
 public interface MasterChooser {
 
-    ManagerMemento choose(ManagementPlaneMemento memento, Duration heartbeatTimeout, String ownNodeId, long timeNow);
+    ManagementNodeSyncRecord choose(ManagementPlaneSyncRecord memento, Duration heartbeatTimeout, String ownNodeId, long timeNow);
 }

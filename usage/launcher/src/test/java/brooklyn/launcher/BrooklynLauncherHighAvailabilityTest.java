@@ -16,7 +16,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.management.ha.ManagementPlaneMementoPersister;
+import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
@@ -92,7 +92,7 @@ public class BrooklynLauncherHighAvailabilityTest {
         if (stopGracefully) {
             ((ManagementContextInternal)primaryManagementContext).terminate();
         } else {
-            ManagementPlaneMementoPersister planePersister = ((ManagementContextInternal)primaryManagementContext).getHighAvailabilityManager().getPersister();
+            ManagementPlaneSyncRecordPersister planePersister = ((ManagementContextInternal)primaryManagementContext).getHighAvailabilityManager().getPersister();
             planePersister.stop(); // can no longer write heartbeats
             ((ManagementContextInternal)primaryManagementContext).terminate();
         }
@@ -117,7 +117,7 @@ public class BrooklynLauncherHighAvailabilityTest {
         if (stopGracefully) {
             ((ManagementContextInternal)secondaryManagementContext).terminate();
         } else {
-            ManagementPlaneMementoPersister planePersister = ((ManagementContextInternal)secondaryManagementContext).getHighAvailabilityManager().getPersister();
+            ManagementPlaneSyncRecordPersister planePersister = ((ManagementContextInternal)secondaryManagementContext).getHighAvailabilityManager().getPersister();
             planePersister.stop(); // can no longer write heartbeats
             ((ManagementContextInternal)secondaryManagementContext).terminate();
         }

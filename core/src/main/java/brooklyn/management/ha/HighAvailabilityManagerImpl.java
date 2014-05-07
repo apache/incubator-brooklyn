@@ -12,13 +12,12 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.rebind.RebindManager;
-import brooklyn.entity.rebind.plane.dto.BasicManagerMemento;
-import brooklyn.entity.rebind.plane.dto.ManagementPlaneMementoImpl;
-import brooklyn.entity.rebind.plane.dto.ManagementPlaneMementoImpl.Builder;
+import brooklyn.entity.rebind.plane.dto.BasicManagerSyncRecord;
+import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
+import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl.Builder;
 import brooklyn.management.Task;
 import brooklyn.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
-import brooklyn.management.ha.ManagementPlaneMementoPersister.Delta;
-import brooklyn.management.ha.ManagerMemento.HealthStatus;
+import brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -37,8 +36,8 @@ import com.google.common.base.Ticker;
  * the standbys deterministically decide which standby should become master (see {@link MasterChooser}).
  * That standby promotes itself.
  * <p>
- * The management nodes communicate their health/status via the {@link ManagementPlaneMementoPersister}.
- * For example, if using {@link ManagementPlaneMementoPersisterToMultiFile} with a shared NFS mount, 
+ * The management nodes communicate their health/status via the {@link ManagementPlaneSyncRecordPersister}.
+ * For example, if using {@link ManagementPlaneSyncRecordPersisterToMultiFile} with a shared NFS mount, 
  * then each management-node periodically writes its state. This acts as a heartbeat, being read by
  * the other management-nodes.
  * <p>
@@ -81,7 +80,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     private final ManagementContextInternal managementContext;
     private volatile String ownNodeId;
-    private volatile ManagementPlaneMementoPersister persister;
+    private volatile ManagementPlaneSyncRecordPersister persister;
     private volatile PromotionListener promotionListener;
     private volatile MasterChooser masterChooser = new AlphabeticMasterChooser();
     private volatile Duration pollPeriod = Duration.of(5, TimeUnit.SECONDS);
@@ -91,20 +90,20 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private volatile Task<?> pollingTask;
     private volatile boolean disabled;
     private volatile boolean running;
-    private volatile NodeStatus nodeStatus = NodeStatus.UNINITIALISED;
+    private volatile ManagementNodeState nodeState = ManagementNodeState.UNINITIALISED;
 
     public HighAvailabilityManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
     }
 
     @Override
-    public HighAvailabilityManagerImpl setPersister(ManagementPlaneMementoPersister persister) {
+    public HighAvailabilityManagerImpl setPersister(ManagementPlaneSyncRecordPersister persister) {
         this.persister = checkNotNull(persister, "persister");
         return this;
     }
     
     @Override
-    public ManagementPlaneMementoPersister getPersister() {
+    public ManagementPlaneSyncRecordPersister getPersister() {
         return persister;
     }
     
@@ -147,24 +146,24 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         disabled = true;
         running = false;
         ownNodeId = managementContext.getManagementNodeId();
-        nodeStatus = NodeStatus.MASTER;
+        nodeState = ManagementNodeState.MASTER;
     }
 
     @Override
     public void start(HighAvailabilityMode startMode) {
         ownNodeId = managementContext.getManagementNodeId();
-        nodeStatus = NodeStatus.STANDBY;
+        nodeState = ManagementNodeState.STANDBY;
         running = true;
         
         // TODO Small race in that we first check, and then we'll do checkMater() on first poll,
         // so another node could have already become master or terminated in that window.
-        ManagerMemento existingMaster = hasHealthyMaster();
+        ManagementNodeSyncRecord existingMaster = hasHealthyMaster();
         
         switch (startMode) {
         case AUTO:
             // don't care; let's start and see if we promote ourselves
             doPollTask();
-            if (nodeStatus == NodeStatus.STANDBY) {
+            if (nodeState == ManagementNodeState.STANDBY) {
                 LOG.info("Management node (with high availability mode 'auto') started as standby");
             } else {
                 LOG.info("Management node (with high availability mode 'auto') started as master");
@@ -181,7 +180,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         case STANDBY:
             if (existingMaster != null) {
                 doPollTask();
-                LOG.info("Management node (with high availability mode 'standby') started; steatus "+nodeStatus);
+                LOG.info("Management node (with high availability mode 'standby') started; steatus "+nodeState);
             } else {
                 throw new IllegalStateException("No existing master; cannot start as standby");
             }
@@ -210,18 +209,18 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     @Override
     public void terminate() {
         running = false;
-        nodeStatus = NodeStatus.TERMINATED;
+        nodeState = ManagementNodeState.TERMINATED;
         if (pollingTask != null) pollingTask.cancel(true);
     }
     
     @Override
-    public NodeStatus getNodeStatus() {
-        return nodeStatus;
+    public ManagementNodeState getNodeState() {
+        return nodeState;
     }
 
     @Override
-    public ManagementPlaneMemento getManagementPlaneStatus() {
-        return loadMemento();
+    public ManagementPlaneSyncRecord getManagementPlaneSyncState() {
+        return loadManagementPlaneSyncRecord();
     }
 
     @SuppressWarnings("unchecked")
@@ -263,13 +262,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             return;
         }
         
-        ManagerMemento memento = BasicManagerMemento.builder()
+        ManagementNodeSyncRecord memento = BasicManagerSyncRecord.builder()
                 .nodeId(managementContext.getManagementNodeId())
-                .status(toHealthStatus(getNodeStatus()))
+                .status(toNodeStateForPersistence(getNodeState()))
                 .timestampUtc(currentTimeMillis())
                 .build();
 
-        Delta delta = ManagementPlaneMementoDeltaImpl.builder().node(memento).build();
+        Delta delta = ManagementPlaneSyncRecordDeltaImpl.builder().node(memento).build();
         persister.delta(delta);
         if (LOG.isTraceEnabled()) LOG.trace("Published management-node health: {}", memento);
     }
@@ -278,20 +277,20 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      * Publishes (via {@link #persister}) the state of this management node with itself set to master.
      */
     protected synchronized void publishPromotionToMaster() {
-        checkState(getNodeStatus() == NodeStatus.MASTER, "node status must be master on publish, but is %s", getNodeStatus());
+        checkState(getNodeState() == ManagementNodeState.MASTER, "node status must be master on publish, but is %s", getNodeState());
         
         if (persister == null) {
             LOG.info("Cannot publish management-node health as no persister");
             return;
         }
         
-        ManagerMemento memento = BasicManagerMemento.builder()
+        ManagementNodeSyncRecord memento = BasicManagerSyncRecord.builder()
                 .nodeId(managementContext.getManagementNodeId())
-                .status(toHealthStatus(getNodeStatus()))
+                .status(toNodeStateForPersistence(getNodeState()))
                 .timestampUtc(currentTimeMillis())
                 .build();
 
-        Delta delta = ManagementPlaneMementoDeltaImpl.builder()
+        Delta delta = ManagementPlaneSyncRecordDeltaImpl.builder()
                 .node(memento)
                 .setMaster(ownNodeId)
                 .build();
@@ -299,29 +298,25 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         if (LOG.isTraceEnabled()) LOG.trace("Published management-node health: {}", memento);
     }
     
-    protected HealthStatus toHealthStatus(NodeStatus nodeStatus) {
-        switch (nodeStatus) {
-            case MASTER:        return HealthStatus.MASTER;
-            case STANDBY:       return HealthStatus.STANDBY;
-            case TERMINATED:    return HealthStatus.TERMINATED;
-            case UNINITIALISED: return null;
-            default:            throw new IllegalStateException("Unexpected health status for management context "+nodeStatus);
-        }
+    protected ManagementNodeState toNodeStateForPersistence(ManagementNodeState nodeState) {
+        // uninitialized is set as null - TODO confirm that's necessary; nicer if we don't need this method at all
+        if (nodeState == ManagementNodeState.UNINITIALISED) return null;
+        return nodeState;
     }
     
-    protected boolean isHeartbeatOk(ManagerMemento memento, long now) {
+    protected boolean isHeartbeatOk(ManagementNodeSyncRecord memento, long now) {
         long timestamp = memento.getTimestampUtc();
         return (now - timestamp) <= heartbeatTimeout.toMilliseconds();
     }
     
-    protected ManagerMemento hasHealthyMaster() {
+    protected ManagementNodeSyncRecord hasHealthyMaster() {
         long now = currentTimeMillis();
-        ManagementPlaneMemento memento = loadMemento();
+        ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord();
         
         String nodeId = memento.getMasterNodeId();
-        ManagerMemento nodeMemento = (nodeId == null) ? null : memento.getNodes().get(nodeId);
+        ManagementNodeSyncRecord nodeMemento = (nodeId == null) ? null : memento.getManagementNodes().get(nodeId);
         
-        boolean result = nodeMemento != null && nodeMemento.getStatus() == HealthStatus.MASTER
+        boolean result = nodeMemento != null && nodeMemento.getStatus() == ManagementNodeState.MASTER
                 && isHeartbeatOk(nodeMemento, now);
         
         if (LOG.isDebugEnabled()) LOG.debug("Healthy-master check result={}; masterId={}; memento=",
@@ -336,13 +331,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      */
     protected void checkMaster() {
         long now = currentTimeMillis();
-        ManagementPlaneMemento memento = loadMemento();
+        ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord();
         
         String masterNodeId = memento.getMasterNodeId();
-        ManagerMemento masterNodeMemento = memento.getNodes().get(masterNodeId);
-        ManagerMemento ownNodeMemento = memento.getNodes().get(ownNodeId);
+        ManagementNodeSyncRecord masterNodeMemento = memento.getManagementNodes().get(masterNodeId);
+        ManagementNodeSyncRecord ownNodeMemento = memento.getManagementNodes().get(ownNodeId);
         
-        if (masterNodeMemento != null && masterNodeMemento.getStatus() == HealthStatus.MASTER && isHeartbeatOk(masterNodeMemento, now)) {
+        if (masterNodeMemento != null && masterNodeMemento.getStatus() == ManagementNodeState.MASTER && isHeartbeatOk(masterNodeMemento, now)) {
             // master still seems healthy
             if (LOG.isTraceEnabled()) LOG.trace("Existing master healthy: master={}", masterNodeMemento.toVerboseString());
             return;
@@ -397,7 +392,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             }
         }
         try {
-            nodeStatus = NodeStatus.MASTER;
+            nodeState = ManagementNodeState.MASTER;
             publishPromotionToMaster();
             managementContext.getRebindManager().rebind();
             managementContext.getRebindManager().start();
@@ -406,18 +401,18 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
     }
 
-    protected ManagementPlaneMemento loadMemento() {
+    protected ManagementPlaneSyncRecord loadManagementPlaneSyncRecord() {
         if (disabled) {
             // if HA is disabled, then we are the only node - no persistence; just load a memento to describe this node
-            HealthStatus healthStatus = toHealthStatus(getNodeStatus());
-            Builder builder = ManagementPlaneMementoImpl.builder()
-                    .node(BasicManagerMemento.builder()
+            ManagementNodeState healthStatus = toNodeStateForPersistence(getNodeState());
+            Builder builder = ManagementPlaneSyncRecordImpl.builder()
+                    .node(BasicManagerSyncRecord.builder()
                             .brooklynVersion(BrooklynVersion.get())
                             .nodeId(ownNodeId)
                             .status(healthStatus)
                             .timestampUtc(currentTimeMillis())
                             .build());
-            if (healthStatus == HealthStatus.MASTER) {
+            if (healthStatus == ManagementNodeState.MASTER) {
                 builder.masterNodeId(ownNodeId);
             }
             return builder.build();
@@ -427,7 +422,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         Exception lastException = null;
         for (int i = 0; i < maxLoadAttempts; i++) {
             try {
-                return persister.loadMemento();
+                return persister.loadSyncRecord();
             } catch (IOException e) {
                 if (i < (maxLoadAttempts - 1)) {
                     if (LOG.isDebugEnabled()) LOG.debug("Problem loading mangement-plane memento attempt "+(i+1)+"/"+maxLoadAttempts+"; retrying", e);

@@ -7,7 +7,8 @@ import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.management.ha.ManagerMemento;
+import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.management.ha.ManagementNodeSyncRecord;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
@@ -18,7 +19,7 @@ import com.google.common.base.Objects;
  * @author aled
  */
 @JsonAutoDetect(fieldVisibility=Visibility.ANY, getterVisibility=Visibility.NONE)
-public class BasicManagerMemento implements ManagerMemento, Serializable {
+public class BasicManagerSyncRecord implements ManagementNodeSyncRecord, Serializable {
 
     private static final long serialVersionUID = 4918161834047884244L;
 
@@ -30,7 +31,7 @@ public class BasicManagerMemento implements ManagerMemento, Serializable {
         private String brooklynVersion = BrooklynVersion.get();
         protected String nodeId;
         protected URI uri;
-        protected HealthStatus status;
+        protected ManagementNodeState status;
         protected long timestampUtc;
 
         protected Builder self() {
@@ -45,13 +46,13 @@ public class BasicManagerMemento implements ManagerMemento, Serializable {
         public Builder uri(URI val) {
             uri = val; return self();
         }
-        public Builder status(HealthStatus val) {
+        public Builder status(ManagementNodeState val) {
             status = val; return self();
         }
         public Builder timestampUtc(long val) {
             timestampUtc = val; return self();
         }
-        public Builder from(BasicManagerMemento other) {
+        public Builder from(BasicManagerSyncRecord other) {
             nodeId = other.getNodeId();
             brooklynVersion = other.getBrooklynVersion();
             timestampUtc = other.getTimestampUtc();
@@ -59,24 +60,24 @@ public class BasicManagerMemento implements ManagerMemento, Serializable {
             status = other.getStatus();
             return this;
         }
-        public ManagerMemento build() {
-            return new BasicManagerMemento(this);
+        public ManagementNodeSyncRecord build() {
+            return new BasicManagerSyncRecord(this);
         }
     }
     
     private String brooklynVersion;
     private String nodeId;
     private URI uri;
-    private HealthStatus status;
+    private ManagementNodeState status;
     private long timestampUtc;
 
     // for de-serialization
     @SuppressWarnings("unused")
-    private BasicManagerMemento() {
+    private BasicManagerSyncRecord() {
     }
 
     // Trusts the builder to not mess around with mutability concurrently with build().
-    protected BasicManagerMemento(Builder builder) {
+    protected BasicManagerSyncRecord(Builder builder) {
         brooklynVersion = builder.brooklynVersion;
         nodeId = builder.nodeId;
         uri = builder.uri;
@@ -100,7 +101,7 @@ public class BasicManagerMemento implements ManagerMemento, Serializable {
     }
     
     @Override
-    public HealthStatus getStatus() {
+    public ManagementNodeState getStatus() {
         return status;
     }
     

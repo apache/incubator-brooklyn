@@ -35,8 +35,9 @@ import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.management.ha.ManagementPlaneMemento;
-import brooklyn.management.ha.ManagementPlaneMementoPersister;
+import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.management.ha.ManagementPlaneSyncRecord;
+import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.mementos.BrooklynMementoPersister;
 
 public class NonDeploymentManagementContext implements ManagementContextInternal {
@@ -389,7 +390,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
      */
     private class NonDeploymentHighAvailabilityManager implements HighAvailabilityManager {
         @Override
-        public NodeStatus getNodeStatus() {
+        public ManagementNodeState getNodeState() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
@@ -397,7 +398,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
-        public HighAvailabilityManager setPersister(ManagementPlaneMementoPersister persister) {
+        public HighAvailabilityManager setPersister(ManagementPlaneSyncRecordPersister persister) {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
@@ -417,11 +418,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
-        public ManagementPlaneMementoPersister getPersister() {
+        public ManagementPlaneSyncRecordPersister getPersister() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
-        public ManagementPlaneMemento getManagementPlaneStatus() {
+        public ManagementPlaneSyncRecord getManagementPlaneSyncState() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }

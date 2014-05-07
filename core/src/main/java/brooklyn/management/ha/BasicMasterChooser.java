@@ -7,7 +7,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.management.ha.ManagerMemento.HealthStatus;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
@@ -26,31 +25,31 @@ public abstract class BasicMasterChooser implements MasterChooser {
 
     public static class AlphabeticMasterChooser extends BasicMasterChooser {
         @Override
-        public ManagerMemento choose(ManagementPlaneMemento memento, Duration heartbeatTimeout, String ownNodeId, long timeNow) {
-            if (LOG.isDebugEnabled()) LOG.debug("Choosing new master from "+memento.getNodes());
-            Map<String, ManagerMemento> contenders = filterHealthy(memento, heartbeatTimeout, timeNow);
+        public ManagementNodeSyncRecord choose(ManagementPlaneSyncRecord memento, Duration heartbeatTimeout, String ownNodeId, long timeNow) {
+            if (LOG.isDebugEnabled()) LOG.debug("Choosing new master from "+memento.getManagementNodes());
+            Map<String, ManagementNodeSyncRecord> contenders = filterHealthy(memento, heartbeatTimeout, timeNow);
             
             if (contenders.size() > 0) {
                 List<String> contenderIds = Lists.newArrayList(contenders.keySet());
                 Collections.sort(contenderIds);
                 return contenders.get(contenderIds.get(0));
             } else {
-                LOG.info("No valid management-node found for choosing new master: contender="+memento.getNodes());
+                LOG.info("No valid management-node found for choosing new master: contender="+memento.getManagementNodes());
                 return null;
             }
         }
     }
     
     /**
-     * Filters the {@link ManagementPlaneMemento#getNodes()} to only those in an appropriate state, 
+     * Filters the {@link ManagementPlaneSyncRecord#getManagementNodes()} to only those in an appropriate state, 
      * and with heartbeats that have not timed out.
      */
-    protected Map<String, ManagerMemento> filterHealthy(ManagementPlaneMemento memento, Duration heartbeatTimeout, long timeNow) {
+    protected Map<String, ManagementNodeSyncRecord> filterHealthy(ManagementPlaneSyncRecord memento, Duration heartbeatTimeout, long timeNow) {
         long oldestAcceptableTimestamp = (timeNow - heartbeatTimeout.toMilliseconds());
 
-        Map<String, ManagerMemento> contenders = Maps.newLinkedHashMap();
-        for (ManagerMemento contender : memento.getNodes().values()) {
-            boolean statusOk = (contender.getStatus() == HealthStatus.STANDBY || contender.getStatus() == HealthStatus.MASTER);
+        Map<String, ManagementNodeSyncRecord> contenders = Maps.newLinkedHashMap();
+        for (ManagementNodeSyncRecord contender : memento.getManagementNodes().values()) {
+            boolean statusOk = (contender.getStatus() == ManagementNodeState.STANDBY || contender.getStatus() == ManagementNodeState.MASTER);
             boolean heartbeatOk = contender.getTimestampUtc() >= oldestAcceptableTimestamp;
             if (statusOk && heartbeatOk) {
                 contenders.put(contender.getNodeId(), contender);

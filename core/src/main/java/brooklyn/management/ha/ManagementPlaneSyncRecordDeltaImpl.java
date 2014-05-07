@@ -5,7 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
 
-import brooklyn.management.ha.ManagementPlaneMementoPersister.Delta;
+import brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Sets;
@@ -16,21 +16,19 @@ import com.google.common.collect.Sets;
  * @author aled
  */
 @Beta
-public class ManagementPlaneMementoDeltaImpl implements Delta {
-    
-    // TODO Nicer name for this class is needed
+public class ManagementPlaneSyncRecordDeltaImpl implements Delta {
     
     public static Builder builder() {
         return new Builder();
     }
     
     public static class Builder {
-        private Collection<ManagerMemento> nodes = Sets.newLinkedHashSet();
+        private Collection<ManagementNodeSyncRecord> nodes = Sets.newLinkedHashSet();
         private Collection <String> removedNodeIds = Sets.newLinkedHashSet();
         private MasterChange masterChange = MasterChange.NO_CHANGE;
         private String master;
         
-        public Builder node(ManagerMemento node) {
+        public Builder node(ManagementNodeSyncRecord node) {
             nodes.add(checkNotNull(node, "node")); return this;
         }
         public Builder removedNodeId(String id) {
@@ -46,16 +44,16 @@ public class ManagementPlaneMementoDeltaImpl implements Delta {
             return this;
         }
         public Delta build() {
-            return new ManagementPlaneMementoDeltaImpl(this);
+            return new ManagementPlaneSyncRecordDeltaImpl(this);
         }
     }
     
-    private final Collection<ManagerMemento> nodes;
+    private final Collection<ManagementNodeSyncRecord> nodes;
     private final Collection <String> removedNodeIds;
     private final MasterChange masterChange;
     private String masterId;
     
-    ManagementPlaneMementoDeltaImpl(Builder builder) {
+    ManagementPlaneSyncRecordDeltaImpl(Builder builder) {
         nodes = builder.nodes;
         removedNodeIds = builder.removedNodeIds;
         masterChange = builder.masterChange;
@@ -65,7 +63,7 @@ public class ManagementPlaneMementoDeltaImpl implements Delta {
     }
     
     @Override
-    public Collection<ManagerMemento> getNodes() {
+    public Collection<ManagementNodeSyncRecord> getNodes() {
         return nodes;
     }
 

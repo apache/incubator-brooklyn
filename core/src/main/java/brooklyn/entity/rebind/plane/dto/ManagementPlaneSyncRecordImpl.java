@@ -7,15 +7,15 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.management.ha.ManagementPlaneMemento;
-import brooklyn.management.ha.ManagerMemento;
+import brooklyn.management.ha.ManagementPlaneSyncRecord;
+import brooklyn.management.ha.ManagementNodeSyncRecord;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class ManagementPlaneMementoImpl implements ManagementPlaneMemento, Serializable {
+public class ManagementPlaneSyncRecordImpl implements ManagementPlaneSyncRecord, Serializable {
 
     private static final long serialVersionUID = -4207907303446336973L;
 
@@ -25,33 +25,33 @@ public class ManagementPlaneMementoImpl implements ManagementPlaneMemento, Seria
     
     public static class Builder {
         protected String masterNodeId;
-        protected final Set<ManagerMemento> nodes = Sets.newLinkedHashSet();
+        protected final Set<ManagementNodeSyncRecord> nodes = Sets.newLinkedHashSet();
         
         public Builder masterNodeId(String val) {
             masterNodeId = val; return this;
         }
-        public Builder nodes(Iterable<ManagerMemento> vals) {
+        public Builder nodes(Iterable<ManagementNodeSyncRecord> vals) {
             checkState(!Iterables.contains(checkNotNull(vals, "nodes must not be null"), null),  "nodes must not contain null: %s", vals);
             Iterables.addAll(nodes, vals);
             return this;
         }
-        public Builder node(ManagerMemento val) {
+        public Builder node(ManagementNodeSyncRecord val) {
             nodes.add(checkNotNull(val, "node must not be null")); return this;
         }
-        public ManagementPlaneMemento build() {
-            return new ManagementPlaneMementoImpl(this);
+        public ManagementPlaneSyncRecord build() {
+            return new ManagementPlaneSyncRecordImpl(this);
         }
     }
 
     private String masterNodeId;
-    private Map<String, ManagerMemento> nodes;
+    private Map<String, ManagementNodeSyncRecord> managementNodes;
     
-    private ManagementPlaneMementoImpl(Builder builder) {
+    private ManagementPlaneSyncRecordImpl(Builder builder) {
         masterNodeId = builder.masterNodeId;
-        nodes = Maps.newLinkedHashMap();
-        for (ManagerMemento node : builder.nodes) {
-            checkState(!nodes.containsKey(node.getNodeId()), "duplicate nodeId %s", node.getNodeId());
-            nodes.put(node.getNodeId(), node);
+        managementNodes = Maps.newLinkedHashMap();
+        for (ManagementNodeSyncRecord node : builder.nodes) {
+            checkState(!managementNodes.containsKey(node.getNodeId()), "duplicate nodeId %s", node.getNodeId());
+            managementNodes.put(node.getNodeId(), node);
         }
     }
 
@@ -61,15 +61,15 @@ public class ManagementPlaneMementoImpl implements ManagementPlaneMemento, Seria
     }
     
     @Override
-    public Map<String, ManagerMemento> getNodes() {
-        return nodes;
+    public Map<String, ManagementNodeSyncRecord> getManagementNodes() {
+        return managementNodes;
     }
 
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
                 .add("masterNodeId", masterNodeId)
-                .add("nodes", nodes.keySet())
+                .add("nodes", managementNodes.keySet())
                 .toString();
     }
 
