@@ -393,6 +393,10 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
+        public boolean isRunning() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
         public HighAvailabilityManager setPersister(ManagementPlaneMementoPersister persister) {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }

@@ -136,6 +136,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         this.promotionListener = checkNotNull(val, "promotionListener");
         return this;
     }
+    
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
 
     @Override
     public void disabled() {
@@ -219,6 +224,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         return loadMemento();
     }
 
+    @SuppressWarnings("unchecked")
     protected void registerPollTask() {
         final Runnable job = new Runnable() {
             @Override public void run() {

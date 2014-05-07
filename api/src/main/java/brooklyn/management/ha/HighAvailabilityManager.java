@@ -40,13 +40,23 @@ public interface HighAvailabilityManager {
     HighAvailabilityManager setPersister(ManagementPlaneMementoPersister persister);
 
     /**
-     * Indicates that HA is disabled - i.e. this is the only management node in this management plane.
+     * Indicates that HA is disabled: this node will act as the only management node in this management plane,
+     * and will not persist HA meta-information (meaning other nodes cannot join). 
      * <p>
      * Subsequently can expect {@link #getNodeStatus()} to be {@link NodeStatus#MASTER} 
-     * and {@link #getManagementPlaneStatus()} to show just this one node.
+     * and {@link #getManagementPlaneStatus()} to show just this one node --
+     * as if it were running HA with just one node --
+     * but {@link #isRunning()} will return false.
+     * <p>
+     * Currently this method is intended to be called early in the lifecycle,
+     * instead of {@link #start(HighAvailabilityMode)}. It may be an error if
+     * this is called after this HA Manager is started.
      */
     void disabled();
 
+    /** Whether HA mode is operational */
+    boolean isRunning();
+    
     /**
      * Starts the monitoring of other nodes (and thus potential promotion of this node from standby to master).
      * <p>
