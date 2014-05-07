@@ -195,8 +195,12 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     @Override
     public void stop() {
-        boolean wasRunning = (running); // ensure idempotent
-        terminate();
+        boolean wasRunning = running; // ensure idempotent
+        
+        running = false;
+        nodeState = ManagementNodeState.TERMINATED;
+        if (pollingTask != null) pollingTask.cancel(true);
+        
         if (wasRunning) {
             try {
                 publishHealth();
@@ -205,13 +209,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 LOG.error("Problem publishing manager-node health on termination (continuing)", e);
             }
         }
-    }
-    
-    @Override
-    public void terminate() {
-        running = false;
-        nodeState = ManagementNodeState.TERMINATED;
-        if (pollingTask != null) pollingTask.cancel(true);
     }
     
     @Override

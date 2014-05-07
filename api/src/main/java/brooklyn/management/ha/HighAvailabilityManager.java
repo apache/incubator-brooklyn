@@ -59,15 +59,9 @@ public interface HighAvailabilityManager {
     void start(HighAvailabilityMode startMode);
 
     /**
-     * Indicates that this node is stopping - first calls {@link #terminated()} to stop monitoring other nodes,
-     * then publishes own status (via {@link ManagementPlaneSyncRecordPersister} of {@link ManagementNodeState#TERMINATED}.
+     * Stops this node, then publishes own status (via {@link ManagementPlaneSyncRecordPersister} of {@link ManagementNodeState#TERMINATED}.
      */
     void stop();
-
-    /**
-     * Terminates all activity - stops monitoring other nodes, etc. Does not publish that the node is stopping.
-     */
-    void terminate();
 
     /**
      * Returns a snapshot of the management-plane's current / most-recently-known status.

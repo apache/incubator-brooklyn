@@ -7,7 +7,7 @@ public enum HighAvailabilityMode {
     
     /**
      * Means auto-detect whether to be master or standby; if there is already a master then start as standby, 
-     * atherwise start as master.
+     * otherwise start as master.
      */
     AUTO,
     
