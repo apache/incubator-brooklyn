@@ -91,7 +91,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     private final Throwable constructionStackTrace = new Throwable("for construction stacktrace").fillInStackTrace();
     
     private final Map<String, Object> brooklynAdditionalProperties;
-    
+
     /**
      * Creates a LocalManagement with default BrooklynProperties.
      */

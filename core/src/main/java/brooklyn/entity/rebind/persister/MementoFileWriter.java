@@ -13,10 +13,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Objects;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -90,13 +92,19 @@ public class MementoFileWriter<T> {
      */
     @VisibleForTesting
     public void waitForWriteCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+        waitForWriteCompleted(Duration.of(timeout, unit));
+    }
+    
+    @VisibleForTesting
+    public void waitForWriteCompleted(Duration timeout) throws InterruptedException, TimeoutException {
         // Every time we finish writing, we increment a counter. We note the current val, and then
         // wait until we can guarantee that a complete additional write has been done. Not sufficient
         // to wait for `writeCount > origWriteCount` because we might have read the value when it was 
         // almost finished a write.
         
+        long timeoutMillis = timeout.toMilliseconds();
         long startTime = System.currentTimeMillis();
-        long maxEndtime = (timeout > 0) ? (startTime + unit.toMillis(timeout)) : Long.MAX_VALUE;
+        long maxEndtime = (timeoutMillis > 0) ? (startTime + timeoutMillis) : (timeoutMillis < 0) ? startTime : Long.MAX_VALUE;
         long origModCount = modCount.get();
         while (true) {
             if (modCount.get() > (origModCount+1)) {
@@ -110,7 +118,7 @@ public class MementoFileWriter<T> {
             }
             
             if (System.currentTimeMillis() > maxEndtime) {
-                throw new TimeoutException("Timeout waiting for pending complete of rebind-periodic-delta, after "+Time.makeTimeStringRounded(timeout, unit));
+                throw new TimeoutException("Timeout waiting for pending complete of rebind-periodic-delta, after "+Time.makeTimeStringRounded(timeout));
             }
             Thread.sleep(10);
         }
@@ -229,5 +237,10 @@ public class MementoFileWriter<T> {
         tmpFile.delete();
         
         modCount.incrementAndGet();
+    }
+    
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this).add("file", file).toString();
     }
 }

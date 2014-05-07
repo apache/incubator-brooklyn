@@ -208,7 +208,8 @@ public class CliTest {
                 "--bindAddress", "myhostname",
                 "--noConsole", "--noConsoleSecurity", "--noShutdownOnExit", "--stopOnKeyPress", 
                 "--localBrooklynProperties", "/path/to/myprops",
-                "--persist", "rebind", "--persistenceDir", "/path/to/mypersist");
+                "--persist", "rebind", "--persistenceDir", "/path/to/mypersist",
+                "--high-availability", "standby");
         assertTrue(command instanceof LaunchCommand, ""+command);
         String details = command.toString();
         assertTrue(details.contains("app=my.App"), details);   
@@ -223,6 +224,7 @@ public class CliTest {
         assertTrue(details.contains("localBrooklynProperties=/path/to/myprops"), details);
         assertTrue(details.contains("persist=rebind"), details);
         assertTrue(details.contains("persistenceDir=/path/to/mypersist"), details);
+        assertTrue(details.contains("highAvailability=standby"), details);
     }
 
     @Test
@@ -241,6 +243,7 @@ public class CliTest {
         assertTrue(details.contains("localBrooklynProperties=null"), details);
         assertTrue(details.contains("persist=disabled"), details);
         assertTrue(details.contains("persistenceDir=null"), details);
+        assertTrue(details.contains("highAvailability=disabled"), details);
     }
 
     @Test

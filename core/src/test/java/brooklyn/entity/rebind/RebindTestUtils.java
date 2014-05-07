@@ -26,6 +26,7 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.util.javalang.Serializers;
 import brooklyn.util.javalang.Serializers.ObjectReplacer;
+import brooklyn.util.time.Duration;
 
 public class RebindTestUtils {
 
@@ -132,13 +133,14 @@ public class RebindTestUtils {
                 unstarted = new LocalManagementContext();
             }
             BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
-            ((RebindManagerImpl) unstarted.getRebindManager()).setPeriodicPersistPeriod(persistPeriodMillis);
+            ((RebindManagerImpl) unstarted.getRebindManager()).setPeriodicPersistPeriod(Duration.of(persistPeriodMillis, TimeUnit.MILLISECONDS));
             unstarted.getRebindManager().setPersister(newPersister);
             return unstarted;
         }
 
         public LocalManagementContext buildStarted() {
             LocalManagementContext unstarted = buildUnstarted();
+            unstarted.getHighAvailabilityManager().disabled();
             unstarted.getRebindManager().start();
             return unstarted;
         }

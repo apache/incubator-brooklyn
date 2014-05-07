@@ -8,6 +8,7 @@ import java.util.concurrent.TimeoutException;
 import brooklyn.entity.Entity;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.Location;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -33,6 +34,12 @@ public interface BrooklynMementoPersister {
 
     void stop();
 
+    @VisibleForTesting
+    void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException;
+
+    /**
+     * @deprecated since 0.7.0; use {@link #waitForWritesCompleted(Duration)}
+     */
     @VisibleForTesting
     void waitForWritesCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException;
 

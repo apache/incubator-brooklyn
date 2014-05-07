@@ -11,6 +11,9 @@ import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
+import brooklyn.management.ha.HighAvailabilityManager;
+
+import com.google.common.annotations.Beta;
 
 /**
  * This is the entry point for accessing and interacting with a realm of applications and their entities in Brooklyn.
@@ -22,6 +25,13 @@ import brooklyn.location.LocationRegistry;
  */
 public interface ManagementContext {
 
+    // TODO Consider separating out into a ConfigManager for methods like:
+    //  - getConfig()
+    //  - reloadBrooklynProperties();
+    //  - addPropertiesReloadListener
+    //  - removePropertiesReloadListener
+    //  - interface PropertiesReloadListener
+    
     /** 
      * UID for the Brooklyn management plane which this {@link ManagementContext} node is a part of.
      * <p>
@@ -111,7 +121,14 @@ public interface ManagementContext {
      */
     SubscriptionContext getSubscriptionContext(Entity entity);
 
+    @Beta // method may move to an internal interface; brooklyn users should not need to call this directly
     RebindManager getRebindManager();
+
+    /**
+     * @since 0.7.0
+     */
+    @Beta // method may move to an internal interface; brooklyn users should not need to call this directly
+    HighAvailabilityManager getHighAvailabilityManager();
     
     /**
      * Returns the ConfigMap (e.g. BrooklynProperties) applicable to this management context.
