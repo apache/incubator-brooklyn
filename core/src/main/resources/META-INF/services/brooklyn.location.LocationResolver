@@ -4,3 +4,4 @@ brooklyn.location.basic.LocalhostResolver
 brooklyn.location.basic.ByonLocationResolver
 brooklyn.location.basic.SingleMachineLocationResolver
 brooklyn.location.basic.HostLocationResolver
+brooklyn.location.basic.MultiLocationResolver
