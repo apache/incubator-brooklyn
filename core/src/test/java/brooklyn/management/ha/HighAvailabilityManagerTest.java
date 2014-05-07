@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -15,11 +17,12 @@ import org.testng.annotations.Test;
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterInMemory;
-import brooklyn.entity.rebind.plane.dto.BasicManagerSyncRecord;
+import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.management.ha.HighAvailabilityManagerImpl.PromotionListener;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Ticker;
@@ -28,6 +31,8 @@ import com.google.common.collect.Lists;
 
 public class HighAvailabilityManagerTest {
 
+    private static final Logger log = LoggerFactory.getLogger(HighAvailabilityManagerTest.class);
+    
     private ManagementPlaneSyncRecordPersisterInMemory persister;
     private ManagementContextInternal managementContext;
     private String ownNodeId;
@@ -106,8 +111,9 @@ public class HighAvailabilityManagerTest {
 
     @Test
     public void testGetManagementPlaneStatus() throws Exception {
+        // with the name zzzzz this should never get chosen by the alphabetical strategy!
         persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
-                .node(newManagerMemento("node1", ManagementNodeState.STANDBY, currentTimeMillis()))
+                .node(newManagerMemento("zzzzzzz_node1", ManagementNodeState.STANDBY, currentTimeMillis()))
                 .build());
         
         manager.start(HighAvailabilityMode.AUTO);
@@ -115,14 +121,26 @@ public class HighAvailabilityManagerTest {
         
         // Note can assert timestamp because not "real" time; it's using our own Ticker
         assertEquals(memento.getMasterNodeId(), ownNodeId);
-        assertEquals(memento.getManagementNodes().keySet(), ImmutableSet.of(ownNodeId, "node1"));
+        assertEquals(memento.getManagementNodes().keySet(), ImmutableSet.of(ownNodeId, "zzzzzzz_node1"));
         assertEquals(memento.getManagementNodes().get(ownNodeId).getNodeId(), ownNodeId);
         assertEquals(memento.getManagementNodes().get(ownNodeId).getStatus(), ManagementNodeState.MASTER);
         assertEquals(memento.getManagementNodes().get(ownNodeId).getTimestampUtc(), currentTimeMillis());
-        assertEquals(memento.getManagementNodes().get("node1").getNodeId(), "node1");
-        assertEquals(memento.getManagementNodes().get("node1").getStatus(), ManagementNodeState.STANDBY);
-        assertEquals(memento.getManagementNodes().get("node1").getTimestampUtc(), currentTimeMillis());
+        assertEquals(memento.getManagementNodes().get("zzzzzzz_node1").getNodeId(), "zzzzzzz_node1");
+        assertEquals(memento.getManagementNodes().get("zzzzzzz_node1").getStatus(), ManagementNodeState.STANDBY);
+        assertEquals(memento.getManagementNodes().get("zzzzzzz_node1").getTimestampUtc(), currentTimeMillis());
     }
+
+    
+    @Test
+    public void testGetManagementPlaneStatusManyTimes() throws Exception {
+        for (int i=0; i<50; i++) {
+            log.info("ITERATION "+(i+1)+" of "+JavaClassNames.niceClassAndMethod());
+            testGetManagementPlaneStatus();
+            tearDown();
+            setUp();
+        }
+    }
+    
     
     private long currentTimeMillis() {
         return TimeUnit.NANOSECONDS.toMillis(ticker.read());
@@ -134,7 +152,7 @@ public class HighAvailabilityManagerTest {
     }
     
     private ManagementNodeSyncRecord newManagerMemento(String nodeId, ManagementNodeState status, long timestamp) {
-        return BasicManagerSyncRecord.builder().brooklynVersion(BrooklynVersion.get()).nodeId(nodeId).status(status).timestampUtc(timestamp).build();
+        return BasicManagementNodeSyncRecord.builder().brooklynVersion(BrooklynVersion.get()).nodeId(nodeId).status(status).timestampUtc(timestamp).build();
     }
     
     public static class RecordingPromotionListener implements PromotionListener {

@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.rebind.RebindManager;
-import brooklyn.entity.rebind.plane.dto.BasicManagerSyncRecord;
+import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl.Builder;
 import brooklyn.management.Task;
@@ -218,7 +218,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     @Override
     public ManagementPlaneSyncRecord getManagementPlaneSyncState() {
-        return loadManagementPlaneSyncRecord();
+        return loadManagementPlaneSyncRecord(true);
     }
 
     @SuppressWarnings("unchecked")
@@ -260,12 +260,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             return;
         }
         
-        ManagementNodeSyncRecord memento = BasicManagerSyncRecord.builder()
-                .nodeId(managementContext.getManagementNodeId())
-                .status(toNodeStateForPersistence(getNodeState()))
-                .timestampUtc(currentTimeMillis())
-                .build();
-
+        ManagementNodeSyncRecord memento = createManagementNodeSyncRecord();
         Delta delta = ManagementPlaneSyncRecordDeltaImpl.builder().node(memento).build();
         persister.delta(delta);
         if (LOG.isTraceEnabled()) LOG.trace("Published management-node health: {}", memento);
@@ -282,12 +277,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             return;
         }
         
-        ManagementNodeSyncRecord memento = BasicManagerSyncRecord.builder()
-                .nodeId(managementContext.getManagementNodeId())
-                .status(toNodeStateForPersistence(getNodeState()))
-                .timestampUtc(currentTimeMillis())
-                .build();
-
+        ManagementNodeSyncRecord memento = createManagementNodeSyncRecord();
         Delta delta = ManagementPlaneSyncRecordDeltaImpl.builder()
                 .node(memento)
                 .setMaster(ownNodeId)
@@ -309,7 +299,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     
     protected ManagementNodeSyncRecord hasHealthyMaster() {
         long now = currentTimeMillis();
-        ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord();
+        ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord(false);
         
         String nodeId = memento.getMasterNodeId();
         ManagementNodeSyncRecord nodeMemento = (nodeId == null) ? null : memento.getManagementNodes().get(nodeId);
@@ -329,7 +319,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      */
     protected void checkMaster() {
         long now = currentTimeMillis();
-        ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord();
+        ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord(false);
         
         String masterNodeId = memento.getMasterNodeId();
         ManagementNodeSyncRecord masterNodeMemento = memento.getManagementNodes().get(masterNodeId);
@@ -352,7 +342,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             return;
         } else if (ownNodeId.equals(masterNodeId)) {
             // we are supposed to be the master, but seem to be unhealthy!
-            LOG.error("This management node ("+ownNodeId+") supposed to be master but reportedly unhealthy? "
+            LOG.warn("This management node ("+ownNodeId+") supposed to be master but reportedly unhealthy? "
                     + "no-op as expect other node to fix: self="+ownNodeMemento.toVerboseString());
             return;
         }
@@ -361,10 +351,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         String newMasterNodeId = masterChooser.choose(memento, heartbeatTimeout, ownNodeId, now).getNodeId();
         boolean newMasterIsSelf = ownNodeId.equals(newMasterNodeId);
         
-        LOG.warn("Management node master-promotion required: newMaster={}; oldMaster={}; self={}; heartbeatTimeout={}", 
+        LOG.warn("Management node master-promotion required: newMaster={}; oldMaster={}; plane={}, self={}; heartbeatTimeout={}", 
                 new Object[] {
                         (newMasterNodeId == null ? "<none>" : newMasterNodeId),
-                        (masterNodeMemento == null ? masterNodeId+" (no memento)": masterNodeMemento.toVerboseString()), 
+                        (masterNodeMemento == null ? masterNodeId+" (no memento)": masterNodeMemento.toVerboseString()),
+                        memento,
                         ownNodeMemento.toVerboseString(), 
                         heartbeatTimeout
                 });
@@ -399,18 +390,18 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
     }
 
-    protected ManagementPlaneSyncRecord loadManagementPlaneSyncRecord() {
+    /**
+     * @param replaceLocalNodeWithCurrentRecord - if true, the record for this mgmt node will be replaced with the
+     * actual current status known in this JVM (may be more recent than what is on disk);
+     * normally there is no reason to care because data is persisted to disk immediately
+     * after any significant change, but for fringe cases this is perhaps more accurate (perhaps remove in time?)
+     */
+    protected ManagementPlaneSyncRecord loadManagementPlaneSyncRecord(boolean replaceLocalNodeWithCurrentRecord) {
         if (disabled) {
             // if HA is disabled, then we are the only node - no persistence; just load a memento to describe this node
-            ManagementNodeState healthStatus = toNodeStateForPersistence(getNodeState());
             Builder builder = ManagementPlaneSyncRecordImpl.builder()
-                    .node(BasicManagerSyncRecord.builder()
-                            .brooklynVersion(BrooklynVersion.get())
-                            .nodeId(ownNodeId)
-                            .status(healthStatus)
-                            .timestampUtc(currentTimeMillis())
-                            .build());
-            if (healthStatus == ManagementNodeState.MASTER) {
+                .node(createManagementNodeSyncRecord());
+            if (getNodeState() == ManagementNodeState.MASTER) {
                 builder.masterNodeId(ownNodeId);
             }
             return builder.build();
@@ -420,7 +411,19 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         Exception lastException = null;
         for (int i = 0; i < maxLoadAttempts; i++) {
             try {
-                return persister.loadSyncRecord();
+                ManagementPlaneSyncRecord result = persister.loadSyncRecord();
+                
+                if (replaceLocalNodeWithCurrentRecord) {
+                    Builder builder = ManagementPlaneSyncRecordImpl.builder()
+                        .masterNodeId(result.getMasterNodeId())
+                        .nodes(result.getManagementNodes().values())
+                        .node(createManagementNodeSyncRecord());
+                    if (getNodeState() == ManagementNodeState.MASTER) {
+                        builder.masterNodeId(ownNodeId);
+                    }
+                    result = builder.build();
+                }
+                return result;
             } catch (IOException e) {
                 if (i < (maxLoadAttempts - 1)) {
                     if (LOG.isDebugEnabled()) LOG.debug("Problem loading mangement-plane memento attempt "+(i+1)+"/"+maxLoadAttempts+"; retrying", e);
@@ -429,6 +432,15 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             }
         }
         throw new IllegalStateException("Failed to load mangement-plane memento "+maxLoadAttempts+" consecutive times", lastException);
+    }
+
+    protected ManagementNodeSyncRecord createManagementNodeSyncRecord() {
+        return BasicManagementNodeSyncRecord.builder()
+                .brooklynVersion(BrooklynVersion.get())
+                .nodeId(ownNodeId)
+                .status(toNodeStateForPersistence(getNodeState()))
+                .timestampUtc(currentTimeMillis())
+                .build();
     }
     
     /**

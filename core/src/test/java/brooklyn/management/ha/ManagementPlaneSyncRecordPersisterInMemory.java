@@ -30,7 +30,7 @@ public class ManagementPlaneSyncRecordPersisterInMemory implements ManagementPla
     }
 
     @Override
-    public synchronized ManagementPlaneSyncRecord loadSyncRecord() throws IOException {
+    public ManagementPlaneSyncRecord loadSyncRecord() throws IOException {
         if (!running) {
             throw new IllegalStateException("Persister not running; cannot load memento");
         }

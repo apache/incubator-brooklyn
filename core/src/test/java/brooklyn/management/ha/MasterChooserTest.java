@@ -7,7 +7,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.entity.rebind.plane.dto.BasicManagerSyncRecord;
+import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterInMemory.MutableManagementPlaneSyncRecord;
 import brooklyn.util.time.Duration;
@@ -65,6 +65,6 @@ public class MasterChooserTest {
     }
     
     private ManagementNodeSyncRecord newManagerMemento(String nodeId, ManagementNodeState status, long timestamp) {
-        return BasicManagerSyncRecord.builder().brooklynVersion(BrooklynVersion.get()).nodeId(nodeId).status(status).timestampUtc(timestamp).build();
+        return BasicManagementNodeSyncRecord.builder().brooklynVersion(BrooklynVersion.get()).nodeId(nodeId).status(status).timestampUtc(timestamp).build();
     }
 }

@@ -19,7 +19,7 @@ import com.google.common.base.Objects;
  * @author aled
  */
 @JsonAutoDetect(fieldVisibility=Visibility.ANY, getterVisibility=Visibility.NONE)
-public class BasicManagerSyncRecord implements ManagementNodeSyncRecord, Serializable {
+public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, Serializable {
 
     private static final long serialVersionUID = 4918161834047884244L;
 
@@ -52,7 +52,7 @@ public class BasicManagerSyncRecord implements ManagementNodeSyncRecord, Seriali
         public Builder timestampUtc(long val) {
             timestampUtc = val; return self();
         }
-        public Builder from(BasicManagerSyncRecord other) {
+        public Builder from(BasicManagementNodeSyncRecord other) {
             nodeId = other.getNodeId();
             brooklynVersion = other.getBrooklynVersion();
             timestampUtc = other.getTimestampUtc();
@@ -61,7 +61,7 @@ public class BasicManagerSyncRecord implements ManagementNodeSyncRecord, Seriali
             return this;
         }
         public ManagementNodeSyncRecord build() {
-            return new BasicManagerSyncRecord(this);
+            return new BasicManagementNodeSyncRecord(this);
         }
     }
     
@@ -73,11 +73,11 @@ public class BasicManagerSyncRecord implements ManagementNodeSyncRecord, Seriali
 
     // for de-serialization
     @SuppressWarnings("unused")
-    private BasicManagerSyncRecord() {
+    private BasicManagementNodeSyncRecord() {
     }
 
     // Trusts the builder to not mess around with mutability concurrently with build().
-    protected BasicManagerSyncRecord(Builder builder) {
+    protected BasicManagementNodeSyncRecord(Builder builder) {
         brooklynVersion = builder.brooklynVersion;
         nodeId = builder.nodeId;
         uri = builder.uri;

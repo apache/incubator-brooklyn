@@ -5,15 +5,14 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Set;
 
-import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.ManagementNodeSyncRecord;
+import brooklyn.management.ha.ManagementPlaneSyncRecord;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class ManagementPlaneSyncRecordImpl implements ManagementPlaneSyncRecord, Serializable {
 
@@ -25,18 +24,20 @@ public class ManagementPlaneSyncRecordImpl implements ManagementPlaneSyncRecord,
     
     public static class Builder {
         protected String masterNodeId;
-        protected final Set<ManagementNodeSyncRecord> nodes = Sets.newLinkedHashSet();
+        protected final Map<String,ManagementNodeSyncRecord> nodes = MutableMap.of();
         
         public Builder masterNodeId(String val) {
             masterNodeId = val; return this;
         }
         public Builder nodes(Iterable<ManagementNodeSyncRecord> vals) {
             checkState(!Iterables.contains(checkNotNull(vals, "nodes must not be null"), null),  "nodes must not contain null: %s", vals);
-            Iterables.addAll(nodes, vals);
+            for (ManagementNodeSyncRecord val: vals) nodes.put(val.getNodeId(), val);
             return this;
         }
         public Builder node(ManagementNodeSyncRecord val) {
-            nodes.add(checkNotNull(val, "node must not be null")); return this;
+            checkNotNull(val, "node must not be null"); 
+            nodes.put(val.getNodeId(), val);
+            return this;
         }
         public ManagementPlaneSyncRecord build() {
             return new ManagementPlaneSyncRecordImpl(this);
@@ -49,7 +50,7 @@ public class ManagementPlaneSyncRecordImpl implements ManagementPlaneSyncRecord,
     private ManagementPlaneSyncRecordImpl(Builder builder) {
         masterNodeId = builder.masterNodeId;
         managementNodes = Maps.newLinkedHashMap();
-        for (ManagementNodeSyncRecord node : builder.nodes) {
+        for (ManagementNodeSyncRecord node : builder.nodes.values()) {
             checkState(!managementNodes.containsKey(node.getNodeId()), "duplicate nodeId %s", node.getNodeId());
             managementNodes.put(node.getNodeId(), node);
         }
