@@ -36,6 +36,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -335,6 +336,9 @@ public class CliTest {
     }
 
     private void submitCommandAndAssertRunnableSucceeds(final BrooklynCommand command, Runnable runnable) {
+        if (command instanceof LaunchCommand) {
+            ((LaunchCommand)command).useManagementContext(new LocalManagementContextForTests());
+        }
         executor.submit(new Callable<Void>() {
             public Void call() throws Exception {
                 try {
@@ -342,7 +346,7 @@ public class CliTest {
                     command.call();
                     return null;
                 } catch (Throwable t) {
-                    LOG.error("Error executing command", t);
+                    LOG.error("Error executing command: "+t, t);
                     throw Exceptions.propagate(t);
                 }
             }});

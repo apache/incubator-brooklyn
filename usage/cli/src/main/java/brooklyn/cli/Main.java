@@ -286,6 +286,9 @@ public class Main {
                         "standby: will start up as standby - if there is not already a master then fails immediately")
         public String highAvailability = HA_OPTION_AUTO;
 
+        @VisibleForTesting
+        protected ManagementContext explicitManagementContext;
+        
         @Override
         public Void call() throws Exception {
             // Configure launcher
@@ -419,6 +422,13 @@ public class Main {
             }
             return highAvailabilityMode.get();
         }
+        
+        @VisibleForTesting
+        /** forces the launcher to use the given management context, when programmatically invoked;
+         * mainly used when testing to inject a safe (and fast) mgmt context */
+        public void useManagementContext(ManagementContext mgmt) {
+            explicitManagementContext = mgmt;
+        }
 
         protected BrooklynLauncher createLauncher() {
             BrooklynLauncher launcher;
@@ -434,6 +444,9 @@ public class Main {
             if (Strings.isNonEmpty(bindAddress)) {
                 InetAddress ip = Networking.getInetAddressWithFixedName(bindAddress);
                 launcher.bindAddress(ip);
+            }
+            if (explicitManagementContext!=null) {
+                launcher.managementContext(explicitManagementContext);
             }
             return launcher;
         }
