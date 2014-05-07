@@ -16,13 +16,7 @@ import brooklyn.BrooklynVersion;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterInMemory;
 import brooklyn.entity.rebind.plane.dto.BasicManagerMemento;
-import brooklyn.management.ha.HighAvailabilityManager.StartMode;
-import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.management.ha.HighAvailabilityManagerImpl.PromotionListener;
-import brooklyn.management.ha.ManagementPlaneMemento;
-import brooklyn.management.ha.ManagementPlaneMementoDeltaImpl;
-import brooklyn.management.ha.ManagementPlaneMementoPersisterInMemory;
-import brooklyn.management.ha.ManagerMemento;
 import brooklyn.management.ha.ManagerMemento.HealthStatus;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -82,7 +76,7 @@ public class HighAvailabilityManagerTest {
                 .setMaster("node1")
                 .build());
         
-        manager.start(StartMode.AUTO);
+        manager.start(HighAvailabilityMode.AUTO);
         
         // Simulate passage of time; ticker used by this HA-manager so it will "correctly" publish
         // its own heartbeat with the new time; but node1's record is now out-of-date.
@@ -100,7 +94,7 @@ public class HighAvailabilityManagerTest {
                 .setMaster("node1")
                 .build());
         
-        manager.start(StartMode.AUTO);
+        manager.start(HighAvailabilityMode.AUTO);
         
         incrementClock(29, TimeUnit.SECONDS);
         
@@ -117,7 +111,7 @@ public class HighAvailabilityManagerTest {
                 .node(newManagerMemento("node1", HealthStatus.STANDBY, currentTimeMillis()))
                 .build());
         
-        manager.start(StartMode.MASTER);
+        manager.start(HighAvailabilityMode.AUTO);
         ManagementPlaneMemento memento = manager.getManagementPlaneStatus();
         
         // Note can assert timestamp because not "real" time; it's using our own Ticker

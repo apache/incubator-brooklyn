@@ -43,8 +43,8 @@ import brooklyn.location.PortRange;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityManager;
-import brooklyn.management.ha.HighAvailabilityManager.StartMode;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementPlaneMementoPersister;
 import brooklyn.management.ha.ManagementPlaneMementoPersisterToMultiFile;
 import brooklyn.management.internal.LocalManagementContext;
@@ -507,13 +507,17 @@ public class BrooklynLauncher {
             // Let the HA manager decide when rebind needs to be called (based on whether other nodes in plane
             // are already running).
             
-            HighAvailabilityManager.StartMode startMode;
+            HighAvailabilityMode startMode;
             switch (highAvailabilityMode) {
-                case AUTO:     startMode = StartMode.AUTO; break;
-                case MASTER:   startMode = StartMode.MASTER; break;
-                case STANDBY:  startMode = StartMode.STANDBY; break;
-                case DISABLED: throw new IllegalStateException("Unexpected code-branch for high availability mode "+highAvailabilityMode);
-                default:       throw new IllegalStateException("Unexpected high availability mode "+highAvailabilityMode);
+                case AUTO:     
+                case MASTER:
+                case STANDBY:
+                    startMode = highAvailabilityMode;
+                    break;
+                case DISABLED: 
+                    throw new IllegalStateException("Unexpected code-branch for high availability mode "+highAvailabilityMode);
+                default:       
+                    throw new IllegalStateException("Unexpected high availability mode "+highAvailabilityMode);
             }
             
             LOG.info("Management node (with high availability) starting");

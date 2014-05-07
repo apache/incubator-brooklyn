@@ -34,6 +34,7 @@ import brooklyn.management.LocationManager;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.management.ha.HighAvailabilityManager;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementPlaneMemento;
 import brooklyn.management.ha.ManagementPlaneMementoPersister;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -400,7 +401,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
-        public void start(StartMode startMode) {
+        public void start(HighAvailabilityMode startMode) {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override

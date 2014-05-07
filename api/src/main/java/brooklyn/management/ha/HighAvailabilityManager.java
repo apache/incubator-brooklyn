@@ -24,24 +24,6 @@ import com.google.common.annotations.VisibleForTesting;
 @Beta
 public interface HighAvailabilityManager {
 
-    public static enum StartMode {
-        /**
-         * Means auto-detect whether to be master or standby; if there is already a master then start as standby, 
-         * atherwise start as master.
-         */
-        AUTO,
-        
-        /**
-         * Means node must be standby; if there is not already a master then fail fast on startup. 
-         */
-        STANDBY,
-        
-        /**
-         * Means node must be master; if there is already a master then fail fast on startup.
-         */
-        MASTER;
-    }
-
     public static enum NodeStatus {
         UNINITIALISED,
         STANDBY,
@@ -73,7 +55,7 @@ public interface HighAvailabilityManager {
      * 
      * @throws IllegalStateException if current state of the management-plane doesn't match that desired by {@code startMode} 
      */
-    void start(StartMode startMode);
+    void start(HighAvailabilityMode startMode);
 
     /**
      * Indicates that this node is stopping - first calls {@link #terminated()} to stop monitoring other nodes,

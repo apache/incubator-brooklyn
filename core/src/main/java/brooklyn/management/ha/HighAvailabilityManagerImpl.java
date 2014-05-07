@@ -146,7 +146,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
 
     @Override
-    public void start(StartMode startMode) {
+    public void start(HighAvailabilityMode startMode) {
         ownNodeId = managementContext.getManagementNodeId();
         nodeStatus = NodeStatus.STANDBY;
         running = true;

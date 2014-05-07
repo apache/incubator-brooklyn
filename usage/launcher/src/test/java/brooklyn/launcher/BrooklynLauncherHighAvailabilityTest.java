@@ -15,6 +15,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementPlaneMementoPersister;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
