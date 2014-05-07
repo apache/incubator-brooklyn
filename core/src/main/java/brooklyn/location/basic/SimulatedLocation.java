@@ -22,6 +22,8 @@ import com.google.common.collect.Sets;
 
 /** Location for use in dev/test, defining custom start/stop support, and/or tweaking the ports which are permitted to be available
  * (using setPermittedPorts(Iterable))
+ * 
+ * @deprecated since 0.7.0; will be moved to src/test/java
  */
 public class SimulatedLocation extends AbstractLocation implements MachineProvisioningLocation<MachineLocation>, MachineLocation, PortSupplier {
 
