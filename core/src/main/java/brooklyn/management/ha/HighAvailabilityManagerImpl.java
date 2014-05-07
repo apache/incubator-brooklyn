@@ -146,6 +146,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         disabled = true;
         running = false;
         ownNodeId = managementContext.getManagementNodeId();
+        // this is notionally the master, just not running; see javadoc for more info
         nodeState = ManagementNodeState.MASTER;
     }
 
@@ -180,7 +181,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         case STANDBY:
             if (existingMaster != null) {
                 doPollTask();
-                LOG.info("Management node (with high availability mode 'standby') started; steatus "+nodeState);
+                LOG.info("Management node (with high availability mode 'standby') started; status "+nodeState);
             } else {
                 throw new IllegalStateException("No existing master; cannot start as standby");
             }

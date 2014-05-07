@@ -50,6 +50,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+/** Manages the persistence/rebind process.
+ * <p>
+ * Lifecycle is to create an instance of this, set it up (e.g. {@link #setPeriodicPersistPeriod(Duration)}, 
+ * {@link #setPersister(BrooklynMementoPersister)}; however noting that persist period must be set before the persister).
+ * <p>
+ * Usually done for you by the conveniences (such as the launcher). */
 public class RebindManagerImpl implements RebindManager {
 
     // TODO Use ImmediateDeltaChangeListener if the period is set to 0?
@@ -58,8 +64,6 @@ public class RebindManagerImpl implements RebindManager {
     public static final Logger LOG = LoggerFactory.getLogger(RebindManagerImpl.class);
 
     private volatile Duration periodicPersistPeriod = Duration.ONE_SECOND;
-    private volatile Duration failoverPollPeriod = Duration.of(5, TimeUnit.SECONDS);
-    private volatile Duration failoverHeartbeatTimeout = Duration.THIRTY_SECONDS;
     
     private volatile boolean running = false;
     
@@ -79,21 +83,8 @@ public class RebindManagerImpl implements RebindManager {
      * Must be called before setPerister()
      */
     public void setPeriodicPersistPeriod(Duration period) {
+        if (persister!=null) throw new IllegalStateException("Cannot set period after persister is generated.");
         this.periodicPersistPeriod = period;
-    }
-
-    /**
-     * Must be called before setPerister()
-     */
-    public void setFailoverPollPeriod(Duration period) {
-        this.failoverPollPeriod = period;
-    }
-
-    /**
-     * Must be called before setPerister()
-     */
-    public void setFailoverHeartbeatTimeout(Duration period) {
-        this.failoverHeartbeatTimeout = period;
     }
 
     /**
