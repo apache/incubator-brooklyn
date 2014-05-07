@@ -917,7 +917,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }})
             .put(USER_METADATA_MAP, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
-                        t.userMetadata(toMapStringString(v));
+                        if (v != null) {
+                            t.userMetadata(toMapStringString(v));
+                        }
                     }})
             .put(EXTRA_PUBLIC_KEY_DATA_TO_AUTH, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
@@ -2007,7 +2009,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         } else if (v instanceof CharSequence) {
             return KeyValueParser.parseMap(v.toString());
         } else {
-            throw new IllegalArgumentException("Invalid type for Map<String,String>: "+v+" of type "+v.getClass());
+            throw new IllegalArgumentException("Invalid type for Map<String,String>: " + v +
+                    (v != null ? " of type "+v.getClass() : ""));
         }
     }
     
