@@ -5,7 +5,8 @@ services:
   memberSpec:
     $brooklyn:entitySpec:
       type: brooklyn.entity.basic.EmptySoftwareProcess
-      provisioning.properties:
+      name: VM
+      provisioningProperties:
         minRam: 8192
         minCores: 4
         minDisk: 100

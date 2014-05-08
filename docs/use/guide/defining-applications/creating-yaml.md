@@ -62,7 +62,7 @@ although for these you'll supply an `endpoint: https://9.9.9.9:9999/v2.0/`
 
 You can also specify pre-existing servers to use -- "bring-your-own-nodes".
 These can be a global pool or specific to a service.
-Both styles are shown here (with the location specified at the service taking priority):
+Both styles are shown here (though normally only one will be selected, depending on the blueprint):
 
 {% highlight yaml %}
 {% readj example_yaml/simple-appserver-with-location-byon.yaml %}
@@ -87,16 +87,18 @@ Another simple blueprint will just create a VM which you can use, without any so
 
 
 **We've omitted the `location` section here and in many of the examples below;
-add the appropriate choice when you paste your YAML. Note that `provisioning.properties` will be
+add the appropriate choice when you paste your YAML. Note that the `provisioningProperties` will be
 ignored if deploying to `localhost` or `byon` fixed-IP machines.** 
 
 This will create a VM with the specified parameters in your choice of cloud.
-In the GUI (and in the REST API), the IP address is reported as a [sensor]({{ site.url }}/use/guide/defining-applications/basic-concepts.html).
-There are many, many more `provisioning.properties` supported here,
+In the GUI (and in the REST API), the entity is called "VM",
+and the hostname and IP address(es) are reported as [sensors]({{ site.url }}/use/guide/defining-applications/basic-concepts.html).
+There are many more `provisioningProperties` supported here,
 including:
 
 * a `user` to create (if not specified it creates the same username as `brooklyn` is running under) 
-* a `password` for him or a `publicKeyFile` and `privateKeyFile` (defaulting to keys in `~/.ssh/id_rsa{.pub,}` and no password)
+* a `password` for him or a `publicKeyFile` and `privateKeyFile` (defaulting to keys in `~/.ssh/id_rsa{.pub,}` and no password,
+  so if you have keys set up you can immediately ssh in!)
 * `machineCreateAttempts` (for dodgy clouds, and they nearly all fail occasionally!) 
 * and things like `imageId` and `userMetadata` and disk and networking options (e.g. `autoAssignFloatingIp` for private clouds)
 
@@ -231,8 +233,10 @@ Here's an example deploying the same application but with different flavors of t
 {% readj example_yaml/appserver-w-db-other-flavor.yaml %}
 {% endhighlight %}
 
-We've also brought in the `provisioning.properties` from the VM example earlier,
-so that our database has 8GB RAM.
+We've also brought in the `provisioningProperties` from the VM example earlier
+(although here is is specified as a config key, which takes dot notation,
+in contrast to flags which take camel-case) --
+so our database has 8GB RAM.
 Any of those properties, including `imageId` and `user`, can be defined on a per-entity basis.
 
 
@@ -274,13 +278,64 @@ as follows:
 
 ## New Custom Entities
 
+So far we've covered how to configure and compose entities.
+There's a large library of blueprints available, but
+there are also times when you'll want to write your own.
+
+For complex use cases, you can write JVM, but for many common situations,
+some of the highly-configurable blueprints make it easy to write in YAML,
+including `bash` and Chef.
+ 
+
 ### Vanilla Software using `bash`
 
-TODO
+The following blueprint shows how a simple script can be embedded in the YAML
+(the `|` character is special YAML which makes it easier to insert multi-line text):
 
+{% highlight yaml %}
+{% readj example_yaml/bash-date.yaml %}
+{% endhighlight %}
+
+It's just a `sleep` statement, but you get the idea:  it could be any script you want.
+
+<!-- TODO
+If it's a big script, you'll probably prefer to have it live somewhere else.
+You can write a script to download artifacts and then invoke another script, 
+or you can specify an artifact to download and a script to run relative to the root
+(with `start.sh` being the default).
+The following shows the use of `download.url` to do the same thing,
+assuming the script is in `start.sh` in the root of the archive at 
+`/tmp/vanilla-date.tgz`:
+
+{% highlight yaml %}
+{% readj example_yaml/bash-date-file.yaml %}
+{% endhighlight %}
+-->
+
+Because Brooklyn insists on monitoring the process, 
+the one complexity is that the script should
+write the PID of the process to `$PID_FILE`.
+(There are other options, as documented on the Javadoc of the `VanillaSoftwareProcess` class.)
+
+
+<!-- 
+TODO restarter policy
+
+Here, because the backgrounded process will terminate after 60s,
+you'll see the entity come up in Brooklyn (after 3s) but then it will fail after a minute.
+If we pretend that's simulating a real-world failure, we might wish to attach a policy
+which automatically restarts it:   
+
+{% highlight yaml %}
+{% readj example_yaml/bash-date-restarter.yaml %}
+{% endhighlight %}
+-->
+
+<!--
 TODO building up children entities
 
 TODO adding sensors and effectors
+-->
 
 
 ### Using Chef Recipes
@@ -290,9 +345,17 @@ TODO
 
 ### More Information
 
-Plenty of examples exist in the Brooklyn codebase,
+Plenty of examples of YAML exist in the Brooklyn codebase,
 so a good starting point is to [`git clone`]({{ site.url }}/dev/code/index.html) it
 and search for `*.yaml` files therein.
+
+Brooklyn lived as a Java framework for many years before we felt confident
+to make a declarative front-end, so you can do pretty much anything you want to
+by dropping to the JVM. Information on that is available:
+* in the [user guide]({{site.url}}/use/guide/entities/index.html),
+* through a [Maven archetype]({{site.url}}/use/guide/defining-applications/archetype.html),
+* in the [codebase](https://github.com/brooklyncentral/brooklyn),
+* and in plenty of [examples]({{site.url}}/use/examples/index.html).
 
 You can also come talk to us, on IRC (#brooklyncentral on Freenode) or
 any of the usual [hailing frequencies]({{site.url}}/meta/contact.html),

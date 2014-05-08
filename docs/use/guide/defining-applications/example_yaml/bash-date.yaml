@@ -1,0 +1,12 @@
+# simple illustration of VanillaSoftwareProcess which makes it easy to launch arbitrary software on machines
+name: vanilla-bash-date
+location: localhost
+services:
+- type: brooklyn.entity.basic.VanillaSoftwareProcess
+  name: Date1
+  launch.command: |
+    echo utc `date +%s` > DATE
+    echo human `date` >> DATE
+    nohup sleep 60 &
+    echo $! > $PID_FILE
+    sleep 3
