@@ -85,7 +85,7 @@ public abstract class EntityCleanupLongevityTestFixture {
                 LOG.info(msg);
                 if (i>=100 && memUsedNearStart<0) {
                     // set this the first time we've run 100 times (let that create a baseline with classes loaded etc)
-                    memUsedNearStart = -Runtime.getRuntime().freeMemory() + Runtime.getRuntime().totalMemory();
+                    memUsedNearStart = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
                 }
                 last = timer.elapsed(TimeUnit.MILLISECONDS);
             }
@@ -122,7 +122,7 @@ public abstract class EntityCleanupLongevityTestFixture {
 
     protected void assertNoMemoryLeak(long memUsedPreviously) {
         System.gc(); System.gc();
-        long memUsedAfter = -Runtime.getRuntime().freeMemory() + Runtime.getRuntime().totalMemory();
+        long memUsedAfter = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         long memChange = memUsedAfter - memUsedPreviously;
         Assert.assertTrue(memChange < numIterations()*ACCEPTABLE_LEAK_PER_ITERATION + MEMORY_MARGIN_OF_ERROR, "Leaked too much memory: "+Strings.makeJavaSizeString(memChange));
     }

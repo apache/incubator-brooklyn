@@ -14,12 +14,15 @@ import com.google.common.collect.Sets;
 
 public class Enums {
     
-    public static final Function<Enum<?>,String> ENUM_VALUE_NAME_FUNCTION = new Function<Enum<?>,String>() {
-        @Override
-        public String apply(Enum<?> input) {
-            return input.name();
-        }
-    };
+    /** returns a function which given an enum, returns its <code>name()</code> function */
+    public static Function<Enum<?>,String> enumValueNameFunction() {
+        return new Function<Enum<?>,String>() {
+            @Override
+            public String apply(Enum<?> input) {
+                return input.name();
+            }
+        };
+    }
 
     @SuppressWarnings("unchecked")
     private static <T extends Enum<?>> T[] values(Class<T> type) {
@@ -34,7 +37,7 @@ public class Enums {
         checkAllEnumeratedIgnoreCase(JavaClassNames.simpleClassName(type), values(type), explicitValues);
     }
     public static void checkAllEnumeratedIgnoreCase(String contextMessage, Enum<?>[] enumValues, String ...explicitValues) {
-        MutableSet<String> enumValuesNames = MutableSet.copyOf(Iterables.transform(Iterables.transform(Arrays.asList(enumValues), ENUM_VALUE_NAME_FUNCTION), StringFunctions.toLowerCase()));
+        MutableSet<String> enumValuesNames = MutableSet.copyOf(Iterables.transform(Iterables.transform(Arrays.asList(enumValues), enumValueNameFunction()), StringFunctions.toLowerCase()));
         MutableSet<String> explicitValuesSet = MutableSet.copyOf(Iterables.transform(Arrays.asList(explicitValues), StringFunctions.toLowerCase()));
         if (!enumValuesNames.equals(explicitValuesSet) ) {
             throw new IllegalStateException("Not all options for "+contextMessage+" are enumerated; "

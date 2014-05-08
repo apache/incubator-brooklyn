@@ -22,7 +22,6 @@ import brooklyn.management.ha.HighAvailabilityManagerImpl.PromotionListener;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
-import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Ticker;
@@ -31,6 +30,7 @@ import com.google.common.collect.Lists;
 
 public class HighAvailabilityManagerTest {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(HighAvailabilityManagerTest.class);
     
     private ManagementPlaneSyncRecordPersisterInMemory persister;
@@ -102,7 +102,7 @@ public class HighAvailabilityManagerTest {
         
         incrementClock(29, TimeUnit.SECONDS);
         
-        // Expect not to be notified, as 29s < 30s timeout
+        // Expect not to be notified, as 29s < 30s timeout (it's a fake clock so won't hit 30, even waiting 1s below)
         Asserts.succeedsContinually(new Runnable() {
             @Override public void run() {
                 assertTrue(promotionListener.callTimestamps.isEmpty(), "calls="+promotionListener.callTimestamps);
@@ -130,17 +130,10 @@ public class HighAvailabilityManagerTest {
         assertEquals(memento.getManagementNodes().get("zzzzzzz_node1").getTimestampUtc(), currentTimeMillis());
     }
 
-    
-    @Test
+    @Test(groups="Integration", invocationCount=50) //because we have had non-deterministic failures 
     public void testGetManagementPlaneStatusManyTimes() throws Exception {
-        for (int i=0; i<50; i++) {
-            log.info("ITERATION "+(i+1)+" of "+JavaClassNames.niceClassAndMethod());
-            testGetManagementPlaneStatus();
-            tearDown();
-            setUp();
-        }
+        testGetManagementPlaneStatus();
     }
-    
     
     private long currentTimeMillis() {
         return TimeUnit.NANOSECONDS.toMillis(ticker.read());
