@@ -96,7 +96,6 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             Object planRaw = parameters.getStringKey(BLUEPRINT_CAMP_PLAN.getName());
             if (planRaw instanceof String && Strings.isBlank((String)planRaw)) planRaw = null;
             
-//            Map<Object, Object> plan
             String url = parameters.get(BLUEPRINT_TYPE);
             if (url!=null && planRaw!=null)
                 throw new IllegalArgumentException("Cannot supply both plan and url");
@@ -149,18 +148,13 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 throw new IllegalStateException("Invalid response invoking "+uri+": "+e, e);
             }
             Tasks.addTagDynamically(BrooklynTaskTags.tagForStream("http_response", Streams.byteArray(content)));
-            if (!isStatusCodeHealthy(result.getResponseCode())) {
+            if (!HttpTool.isStatusCodeHealthy(result.getResponseCode())) {
                 log.warn("Invalid response invoking "+uri+": response code "+result.getResponseCode()+"\n"+result+": "+new String(content));
-                throw new IllegalStateException("Invalid response invoking "+uri+": response code "+result.getResponseCode()
-//                    +"\n"+result+": "+new String(content)
-                    );
+                throw new IllegalStateException("Invalid response invoking "+uri+": response code "+result.getResponseCode());
             }
             return (String)new Gson().fromJson(new String(content), Map.class).get("entityId");
         }
     }
-    
-    private static boolean isStatusCodeHealthy(int code) { return (code>=200 && code<=299); }
-    
 
     public List<String> getClasspath() {
         List<String> classpath = getConfig(CLASSPATH);

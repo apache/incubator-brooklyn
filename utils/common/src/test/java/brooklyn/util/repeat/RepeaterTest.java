@@ -21,7 +21,6 @@ public class RepeaterTest {
     @Test
     public void sanityTest() {
         new Repeater("Sanity test")
-            .repeat()
             .until(Callables.returning(true))
             .every(Duration.millis(10));
     }
@@ -29,7 +28,6 @@ public class RepeaterTest {
     @Test
     public void sanityTestDescription() {
         new Repeater()
-            .repeat()
             .until(Callables.returning(true))
             .every(Duration.millis(10));
     }
@@ -37,7 +35,6 @@ public class RepeaterTest {
     @Test
     public void sanityTestBuilder() {
         Repeater.create("Sanity test")
-            .repeat()
             .until(Callables.returning(true))
             .every(Duration.millis(10));
     }
@@ -45,7 +42,6 @@ public class RepeaterTest {
     @Test
     public void sanityTestBuilderDescription() {
         Repeater.create()
-            .repeat()
             .until(Callables.returning(true))
             .every(Duration.millis(10));
     }
@@ -126,7 +122,6 @@ public class RepeaterTest {
     @Test
     public void runReturnsTrueIfExitConditionIsTrue() {
         assertTrue(new Repeater("runReturnsTrueIfExitConditionIsTrue")
-            .repeat()
             .every(Duration.millis(1))
             .until(Callables.returning(true))
             .run());
@@ -159,7 +154,6 @@ public class RepeaterTest {
     public void runRespectsTimeLimitAndReturnsFalseIfReached() {
         final long LIMIT = 2000l;
         Repeater repeater = new Repeater("runRespectsTimeLimitAndReturnsFalseIfReached")
-            .repeat()
             .every(Duration.millis(100))
             .until(Callables.returning(false))
             .limitTimeTo(LIMIT, TimeUnit.MILLISECONDS);
@@ -178,7 +172,6 @@ public class RepeaterTest {
     @Test(expectedExceptions = { IllegalStateException.class })
     public void runFailsIfUntilWasNotSet() {
         new Repeater("runFailsIfUntilWasNotSet")
-            .repeat()
             .every(Duration.millis(10))
             .run();
         fail("Expected exception was not thrown");
@@ -187,7 +180,6 @@ public class RepeaterTest {
     @Test(expectedExceptions = { IllegalStateException.class })
     public void runFailsIfEveryWasNotSet() {
         new Repeater("runFailsIfEveryWasNotSet")
-            .repeat()
             .until(Callables.returning(true))
             .run();
         fail("Expected exception was not thrown");
@@ -196,7 +188,6 @@ public class RepeaterTest {
     @Test(expectedExceptions = { UnsupportedOperationException.class })
     public void testRethrowsException() {
         new Repeater("throwRuntimeException")
-            .repeat()
             .every(Duration.millis(10))
             .until(callableThrowingUnsupportedFail())
             .rethrowException()
@@ -209,7 +200,6 @@ public class RepeaterTest {
     public void testNoRethrowsException() {
         try {
 	        boolean result = new Repeater("throwRuntimeException")
-	            .repeat()
 	            .every(Duration.millis(10))
 	            .until(callableThrowingUnsupportedFail())
 	            .limitIterationsTo(2)

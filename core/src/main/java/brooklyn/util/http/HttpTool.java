@@ -303,4 +303,7 @@ public class HttpTool {
             throw Exceptions.propagate(e);
         }
     }
+    
+    public static boolean isStatusCodeHealthy(int code) { return (code>=200 && code<=299); }
+
 }

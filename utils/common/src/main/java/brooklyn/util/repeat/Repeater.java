@@ -56,21 +56,21 @@ import com.google.common.util.concurrent.Callables;
  * </pre>
  */
 public class Repeater {
-    
+
     private static final Logger log = LoggerFactory.getLogger(Repeater.class);
 
     private final String description;
     private Callable<?> body = Callables.returning(null);
     private Callable<Boolean> exitCondition;
-	private Duration period = null;
-	private Duration durationLimit = null;
+    private Duration period = null;
+    private Duration durationLimit = null;
     private int iterationLimit = 0;
     private boolean rethrowException = false;
     private boolean rethrowExceptionImmediately = false;
-	private boolean warnOnUnRethrownException = true;
+    private boolean warnOnUnRethrownException = true;
 
-	public Repeater() {
-	    this(null);
+    public Repeater() {
+        this(null);
     }
 
     /**
@@ -79,7 +79,7 @@ public class Repeater {
      * @param description a description of the operation that will appear in debug logs.
      */
     public Repeater(String description) {
-    	this.description = description != null ? description : "Repeater";
+        this.description = description != null ? description : "Repeater";
     }
 
     public static Repeater create() {
@@ -93,11 +93,13 @@ public class Repeater {
      * Sets the main body of the loop to be a no-op; useful if using {@link #until(Callable)} instead
      * 
      * @return {@literal this} to aid coding in a fluent style.
+     * @deprecated since 0.7.0 this is no-op, as the repeater defaults to repeating nothing, simply remove the call,
+     * using just <code>Repeater.until(...)</code>.
      */
     public Repeater repeat() {
         return repeat(Callables.returning(null));
     }
-    
+
     /**
      * Sets the main body of the loop.
      *
@@ -109,7 +111,7 @@ public class Repeater {
         this.body = (body instanceof Callable) ? (Callable<?>)body : Executors.callable(body);
         return this;
     }
-    
+
     /**
      * Sets the main body of the loop.
      *
@@ -138,11 +140,11 @@ public class Repeater {
      */
     public Repeater every(Duration duration) {
         Preconditions.checkNotNull(duration, "duration must not be null");
-		Preconditions.checkArgument(duration.toMilliseconds()>0, "period must be positive: %s", duration);
-		this.period = duration;
-		return this;
+        Preconditions.checkArgument(duration.toMilliseconds()>0, "period must be positive: %s", duration);
+        this.period = duration;
+        return this;
     }
-    
+
     public Repeater every(groovy.time.Duration duration) {
         return every(Duration.of(duration));
     }
@@ -191,9 +193,9 @@ public class Repeater {
     }
 
     public Repeater suppressWarnings() {
-		this.warnOnUnRethrownException = false;
-		return this;
-	}
+        this.warnOnUnRethrownException = false;
+        return this;
+    }
 
     /**
      * Set the maximum number of iterations.
@@ -227,8 +229,8 @@ public class Repeater {
      */
     public Repeater limitTimeTo(Duration duration) {
         Preconditions.checkNotNull(duration, "duration must not be null");
-		Preconditions.checkArgument(duration.toMilliseconds() > 0, "deadline must be positive: %s", duration);
-		this.durationLimit = duration;
+        Preconditions.checkArgument(duration.toMilliseconds() > 0, "deadline must be positive: %s", duration);
+        this.durationLimit = duration;
         return this;
     }
 
@@ -271,8 +273,8 @@ public class Repeater {
             } else {
                 if (log.isDebugEnabled()) {
                     String msg = String.format("%s: unsatisfied during iteration %s %s", description, iterations,
-                            (iterationLimit > 0 ? "(max "+iterationLimit+" attempts)" : "") + 
-                            (timer.isRunning() ? "("+Time.makeTimeStringRounded(timer.getDurationRemaining())+" remaining)" : ""));
+                        (iterationLimit > 0 ? "(max "+iterationLimit+" attempts)" : "") + 
+                        (timer.isRunning() ? "("+Time.makeTimeStringRounded(timer.getDurationRemaining())+" remaining)" : ""));
                     if (iterations == 1) {
                         log.debug(msg);
                     } else {
@@ -287,8 +289,8 @@ public class Repeater {
                     log.warn("{}: error caught checking condition (rethrowing): {}", description, lastError.getMessage());
                     throw Exceptions.propagate(lastError);
                 }
-				if (warnOnUnRethrownException && lastError != null)
-					log.warn("{}: error caught checking condition: {}", description, lastError.getMessage());
+                if (warnOnUnRethrownException && lastError != null)
+                    log.warn("{}: error caught checking condition: {}", description, lastError.getMessage());
                 return false;
             }
 
@@ -302,7 +304,7 @@ public class Repeater {
                 return false;
             }
 
-			Time.sleep(period);
+            Time.sleep(period);
         }
     }
 }

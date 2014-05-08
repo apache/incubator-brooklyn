@@ -1735,7 +1735,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         Stopwatch stopwatch = Stopwatch.createStarted();
         
         boolean reachable = new Repeater()
-            .repeat()
             .every(1,SECONDS)
             .until(checker)
             .limitTimeTo(delayMs, MILLISECONDS)
