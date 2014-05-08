@@ -1,0 +1,12 @@
+name: simple-appserver-with-location
+location:
+  byon:
+    user: brooklyn
+    privateKeyFile: ~/.ssh/brooklyn.pem
+    hosts:
+    - 192.168.0.18
+    - 192.168.0.19
+services:
+- type: brooklyn.entity.webapp.jboss.JBoss7Server
+  location:
+    byon: { hosts: [ 127.0.0.1 ] }

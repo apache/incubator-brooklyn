@@ -1,0 +1,20 @@
+# simple illustration of VanillaSoftwareProcess which makes it easy to launch arbitrary software on machines
+name: vanilla-bash-date-restarter
+location: localhost
+services:
+- type: brooklyn.entity.basic.VanillaSoftwareProcess
+  name: Date1
+  launch.command: |
+    echo utc `date +%s` > DATE
+    echo human `date` >> DATE
+    nohup sleep 60 &
+    echo $! > $PID_FILE
+    sleep 3
+  brooklyn.policies:
+  - policyType: brooklyn.policy.ha.ServiceRestarter
+    brooklyn.config:
+      # monitor the "service.up" sensor
+      failureSensorToMonitor: $brooklyn:sensor("brooklyn.entity.basic.Attributes", "service.isUp")
+      # by default, 2 failures w/in 3m will cause it to give up;
+      # let's lower that limit so it restarts continually! 
+      failOnRecurringFailuresInThisDuration: 30s
