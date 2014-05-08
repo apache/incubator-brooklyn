@@ -31,7 +31,7 @@ Here's a very simple YAML blueprint plan, to explain the structure:
 * The `services` block takes a list of the typed services we want to deploy.
   This is the meat of the blueprint plan, as you'll see below.
 
-Finally, that clipboard in the corner let's you easily copy-and-paste into the web-console:
+Finally, that clipboard in the corner lets you easily copy-and-paste into the web-console:
 simply [download and launch]({{ site.url }}/use/guide/quickstart/) Brooklyn,
 then in the "Add Application" dialog at the web console
 (usually [http://127.0.0.1:8081/](http://127.0.0.1:8081/). 
@@ -44,7 +44,7 @@ and you can configure https and security, and much more, as described [here](dep
 ### Setting Locations
 
 Brooklyn supports a very wide range of target locations -- localhost is mainly a convenience for testing.
-With deep integration to [Apache jclouds](http://jclouds.org), a very wide range of clouds are supported.
+With deep integration to [Apache jclouds](http://jclouds.org), most well-known clouds and cloud platforms are supported.
 The following example is for Amazon EC2:
 
 {% highlight yaml %}
@@ -73,8 +73,11 @@ YAML supports this, and sometimes that makes more readable plans.
 (Although in this case a simple `location: localhost` is equivalent and even more succinct, but this is a tutorial.)
 
 For more information see the Locations section of the [YAML reference](yaml-reference.html) 
-and in the [User's Guide]({{ site.url }}/use/guide/locations/),
-and the [template brooklyn.properties](/use/guide/quickstart/brooklyn.properties). 
+and in the [User's Guide]({{ site.url }}/use/guide/locations/).
+Another good reference is the [template brooklyn.properties](/use/guide/quickstart/brooklyn.properties),
+which if you install in `~/.brooklyn/brooklyn.properties` and edit with your credentials,  
+allows you to refer to clouds simply as `location: jclouds:aws-ec2:eu-west-1` or
+set up "named locations" you can use as `location: named:my_cloudstack`.
 
 
 ## Configuring VMs
@@ -131,8 +134,8 @@ refer to the Brooklyn DSL and allow a small amount of logic to be embedded
 (if there's a lot of logic, it's recommended to write a blueprint YAML plugin or write the blueprint itself
 as a plugin, in Java or a JVM-supported language).  
 
-In this case we're calling to the `entitySpec` DSL command which will do type-coercion so that the child entry
-is treated as an entity spec when the `memberSpec` is set.
+In this case we want to indicate that the parameter to `memberSpec` is an entity specification
+(`EntitySpec` in the underlying type system); the `entitySpec` DSL command will do this for us.
 The example above thus gives us 5 VMs identical to the one we created in the previous section.
 
 
