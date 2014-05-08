@@ -40,6 +40,7 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
             } else {
                 manager = new LocalManagementContextForTests();
             }
+            manager.getHighAvailabilityManager().disabled();
             BasicLocationRegistry.setupLocationRegistryForTesting(manager);
             
             new BrooklynCampPlatformLauncherNoServer()

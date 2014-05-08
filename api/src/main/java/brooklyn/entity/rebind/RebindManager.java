@@ -25,6 +25,7 @@ public interface RebindManager {
     
     public void setPersister(BrooklynMementoPersister persister);
 
+    @VisibleForTesting
     public BrooklynMementoPersister getPersister();
 
     public List<Application> rebind() throws IOException;

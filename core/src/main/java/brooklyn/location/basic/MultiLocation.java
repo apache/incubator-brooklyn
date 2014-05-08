@@ -25,10 +25,14 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
+/** A location which consists of multiple locations stitched together to form availability zones.
+ * The first location will be used by default, but if an {@link AvailabilityZoneExtension}-aware entity
+ * is used, it may stripe across each of the locations.  See notes at {@link AvailabilityZoneExtension}. */
 public class MultiLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T> {
 
-    // TODO Could have multiLoc.obtain delegate to loc2 if loc1 has no capacity
-
+    private static final long serialVersionUID = 7993091317970457862L;
+    
+    @SuppressWarnings("serial")
     @SetFromFlag("subLocations")
     public static final ConfigKey<List<MachineProvisioningLocation<?>>> SUB_LOCATIONS = ConfigKeys.newConfigKey(
             new TypeToken<List<MachineProvisioningLocation<?>>>() {},
@@ -43,13 +47,17 @@ public class MultiLocation<T extends MachineLocation> extends AbstractLocation i
         AvailabilityZoneExtension azExtension = new AvailabilityZoneExtensionImpl(getManagementContext(), subLocs);
         addExtension(AvailabilityZoneExtension.class, azExtension);
     }
-    
+
+    /** finds (creates) and returns a {@link MachineLocation}; 
+     * currently this only looks at the first sub-location, though that behaviour may change without notice.
+     * (if you want striping across locations, see notes in {@link AvailabilityZoneExtension}.) */
+    // TODO Could have multiLoc.obtain delegate to loc2 if loc1 has no capacity
     @Override
     public T obtain(Map<?, ?> flags) throws NoMachinesAvailableException {
-        MachineProvisioningLocation<?> subLoc = Iterables.get(getRequiredConfig(SUB_LOCATIONS), 0);
-        return (T) subLoc.obtain(flags);
+        return firstSubLoc().obtain(flags);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public MachineProvisioningLocation<T> newSubLocation(Map<?, ?> newFlags) {
         // TODO shouldn't have to copy config bag as it should be inherited (but currently it is not used inherited everywhere; just most places)
@@ -70,6 +78,7 @@ public class MultiLocation<T extends MachineLocation> extends AbstractLocation i
         return Maps.<String,Object>newLinkedHashMap();
     }
 
+    @SuppressWarnings("unchecked")
     protected MachineProvisioningLocation<T> firstSubLoc() {
         return (MachineProvisioningLocation<T>) Iterables.get(getRequiredConfig(SUB_LOCATIONS), 0);
     }

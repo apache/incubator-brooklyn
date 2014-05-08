@@ -10,6 +10,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import brooklyn.rest.apidoc.Apidoc;
+import brooklyn.rest.domain.HighAvailabilitySummary;
 
 import com.google.common.annotations.Beta;
 import com.wordnik.swagger.core.ApiOperation;
@@ -39,5 +40,18 @@ public interface ServerApi {
     @Path("/version")
     @ApiOperation(value = "Return version identifier information for this Brooklyn instance", responseClass = "String", multiValueResponse = false)
     public String getVersion();
+
+    @GET
+    @Path("/status")
+    @ApiOperation(value = "Returns the status of this Brooklyn instance",
+        responseClass = "String",
+        multiValueResponse = false)
+    public String getStatus();
+
+    @GET
+    @Path("/highAvailability")
+    @ApiOperation(value = "Fetches the status of all Brooklyn instances in the management plane",
+        responseClass = "brooklyn.rest.domain.HighAvailabilitySummary")
+    public HighAvailabilitySummary getHighAvailability();
 
 }

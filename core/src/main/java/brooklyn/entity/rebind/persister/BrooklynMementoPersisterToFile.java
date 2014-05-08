@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -32,6 +33,7 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     private final File file;
     private final MementoSerializer<BrooklynMemento> serializer;
     private final Object mutex = new Object();
+
     
     public BrooklynMementoPersisterToFile(File file, ClassLoader classLoader) {
         this.file = file;
@@ -41,6 +43,11 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     @VisibleForTesting
     @Override
     public void waitForWritesCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+    }
+    
+    @VisibleForTesting
+    @Override
+    public void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException {
         // TODO Could wait for concurrent checkpoint/delta, but don't need to for tests
         // because they first wait for checkpoint/delta to have been called by RebindManagerImpl.
         return;

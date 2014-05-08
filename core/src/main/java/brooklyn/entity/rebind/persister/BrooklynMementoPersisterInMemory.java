@@ -18,11 +18,15 @@ import brooklyn.location.basic.LocationInternal;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.os.Os;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 
+/**
+ * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToMultiFile} instead; class be moved to tests
+ */
 public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPersister {
 
     private final ClassLoader classLoader;
@@ -40,6 +44,11 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
     @VisibleForTesting
     @Override
     public void waitForWritesCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+    }
+    
+    @VisibleForTesting
+    @Override
+    public void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException {
         // TODO Could wait for concurrent checkpoint/delta, but don't need to for tests
         // because first waits for checkpoint/delta to have been called by RebindManagerImpl.
         return;

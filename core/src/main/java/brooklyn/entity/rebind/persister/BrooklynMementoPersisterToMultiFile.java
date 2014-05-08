@@ -21,6 +21,7 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -53,6 +54,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     
     private volatile boolean running = true;
 
+
     public BrooklynMementoPersisterToMultiFile(File dir, ClassLoader classLoader) {
         this.dir = checkNotNull(dir, "dir");
         MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(classLoader);
@@ -72,6 +74,10 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         policiesDir = new File(dir, "policies");
         policiesDir.mkdir();
         checkDirIsAccessible(policiesDir);
+
+        File planeDir = new File(dir, "plane");
+        planeDir.mkdir();
+        checkDirIsAccessible(planeDir);
         
         this.executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
         
@@ -91,6 +97,10 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     
     @Override
     public BrooklynMemento loadMemento(LookupContext lookupContext) throws IOException {
+        if (!running) {
+            throw new IllegalStateException("Persister not running; cannot load memento from "+dir);
+        }
+        
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         FileFilter fileFilter = new FileFilter() {
@@ -203,18 +213,23 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     @Override
     @VisibleForTesting
     public void waitForWritesCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+        waitForWritesCompleted(Duration.of(timeout, unit));
+    }
+    
+    public void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException {
         for (MementoFileWriter<?> writer : entityWriters.values()) {
-            writer.waitForWriteCompleted(timeout, unit);
+            writer.waitForWriteCompleted(timeout);
         }
         for (MementoFileWriter<?> writer : locationWriters.values()) {
-            writer.waitForWriteCompleted(timeout, unit);
+            writer.waitForWriteCompleted(timeout);
         }
         for (MementoFileWriter<?> writer : policyWriters.values()) {
-            writer.waitForWriteCompleted(timeout, unit);
+            writer.waitForWriteCompleted(timeout);
         }
     }
 
-    protected void checkDirIsAccessible(File dir) {
+    // TODO Promote somewhere sensible; share code with BrooklynLauncher.checkPersistenceDirAccessible
+    public static void checkDirIsAccessible(File dir) {
         if (!(dir.exists() && dir.isDirectory() && dir.canRead() && dir.canWrite())) {
             throw new IllegalStateException("Invalid directory "+dir+" because "+
                     (!dir.exists() ? "does not exist" :
