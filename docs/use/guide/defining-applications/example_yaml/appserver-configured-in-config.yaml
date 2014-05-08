@@ -1,0 +1,6 @@
+name: appserver-configured-in-config
+services:
+- type: brooklyn.entity.webapp.jboss.JBoss7Server
+  brooklyn.config:
+    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war
+    http.port: 8080

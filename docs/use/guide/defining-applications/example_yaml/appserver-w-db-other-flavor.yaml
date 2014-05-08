@@ -1,0 +1,17 @@
+name: appserver-w-db-other-flavor
+services:
+- type: brooklyn.entity.webapp.tomcat.TomcatServer
+  name: AppServer HelloWorld 
+  brooklyn.config:
+    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war
+    http.port: 8080+
+    java.sysprops: 
+      brooklyn.example.db.url: $brooklyn:formatString("jdbc:%s%s?user=%s\\&password=%s",
+         component("db").attributeWhenReady("datastore.url"), "visitors", "brooklyn", "br00k11n")
+- type: brooklyn.entity.database.mariadb.MariaDbNode
+  id: db
+  name: DB HelloWorld Visitors
+  brooklyn.config:
+    datastore.creation.script.url: https://github.com/brooklyncentral/brooklyn/raw/master/usage/launcher/src/test/resources/visitors-creation-script.sql
+    provisioning.properties:
+      minRam: 8192
