@@ -42,6 +42,11 @@ import brooklyn.location.Location;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityManager;
+import brooklyn.management.ha.HighAvailabilityManagerImpl;
+import brooklyn.management.ha.HighAvailabilityMode;
+import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
+import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToMultiFile;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -101,8 +106,11 @@ public class BrooklynLauncher {
     private Boolean skipSecurityFilter = null;
     private boolean shutdownOnExit = true;
     private PersistMode persistMode = PersistMode.DISABLED;
+    private HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.DISABLED;
     private File persistenceDir;
     private Duration persistPeriod = Duration.ONE_SECOND;
+    private Duration haHeartbeatTimeout = Duration.THIRTY_SECONDS;
+    private Duration haHeartbeatPeriod = Duration.ONE_SECOND;
     
     private volatile BrooklynWebServer webServer;
     private CampPlatform campPlatform;
@@ -319,6 +327,11 @@ public class BrooklynLauncher {
         return this;
     }
     
+    public BrooklynLauncher highAvailabilityMode(HighAvailabilityMode highAvailabilityMode) {
+        this.highAvailabilityMode = highAvailabilityMode;
+        return this;
+    }
+    
     public BrooklynLauncher persistenceDir(String persistenceDir) {
         return persistenceDir(new File(persistenceDir));
     }
@@ -333,6 +346,19 @@ public class BrooklynLauncher {
         return this;
     }
 
+    public BrooklynLauncher haHeartbeatTimeout(Duration val) {
+        this.haHeartbeatTimeout = val;
+        return this;
+    }
+
+    /**
+     * Controls both the frequency of heartbeats, and the frequency of checking the health of other nodes.
+     */
+    public BrooklynLauncher haHeartbeatPeriod(Duration val) {
+        this.haHeartbeatPeriod = val;
+        return this;
+    }
+    
     /**
      * Starts the web server (with web console) and Brooklyn applications, as per the specifications configured. 
      * @return An object containing details of the web server and the management context.
@@ -410,82 +436,154 @@ public class BrooklynLauncher {
     }
 
     protected void initPersistence() {
-        try {
-            if (persistMode == PersistMode.DISABLED) {
-                LOG.info("Persistence disabled");
-                
-            } else {
-                if (persistenceDir == null) {
-                    persistenceDir = new File( BrooklynServerConfig.getPersistenceDir(brooklynProperties) );
-                }
-                String persistencePath = persistenceDir.getAbsolutePath();
-                
+        // Prepare the rebind directory, and initialise the RebindManager as required
+        if (persistMode == PersistMode.DISABLED) {
+            LOG.info("Persistence disabled");
+        } else {
+            if (persistenceDir == null) {
+                persistenceDir = new File( BrooklynServerConfig.getPersistenceDir(brooklynProperties) );
+            }
+            preparePersistenceDir(persistenceDir);
+            
+            RebindManager rebindManager = managementContext.getRebindManager();
+            BrooklynMementoPersister persister = new BrooklynMementoPersisterToMultiFile(persistenceDir, managementContext.getCatalog().getRootClassLoader());
+            ((RebindManagerImpl)rebindManager).setPeriodicPersistPeriod(persistPeriod);
+            rebindManager.setPersister(persister);
+        }
+        
+        // Initialise the HA manager as required
+        if (highAvailabilityMode == HighAvailabilityMode.DISABLED) {
+            LOG.info("High availability disabled");
+        } else {
+            File haDir = new File(persistenceDir, "plane");
+            
+            HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
+            ManagementPlaneSyncRecordPersister persister = new ManagementPlaneSyncRecordPersisterToMultiFile(
+                    haDir, 
+                    managementContext.getCatalog().getRootClassLoader(), 
+                    managementContext.getManagementNodeId());
+            ((HighAvailabilityManagerImpl)haManager).setHeartbeatTimeout(haHeartbeatTimeout);
+            ((HighAvailabilityManagerImpl)haManager).setPollPeriod(haHeartbeatPeriod);
+            haManager.setPersister(persister);
+        }
+        
+        // Now start the HA Manager and the Rebind manager, as required
+        if (highAvailabilityMode == HighAvailabilityMode.DISABLED) {
+            HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
+            haManager.disabled();
+
+            if (persistMode != PersistMode.DISABLED) {
                 boolean rebinding;
                 switch (persistMode) {
                     case CLEAN:
-                        if (persistenceDir.exists()) {
-                            checkPersistenceDirAccessible(persistenceDir);
-                            try {
-                                File old = moveDirectory(persistenceDir);
-                                LOG.info("Clean start using "+persistencePath+"; moved old directory to "+old.getAbsolutePath());
-                            } catch (IOException e) {
-                                throw new FatalConfigurationRuntimeException("Error moving old persistence directory "+persistenceDir.getAbsolutePath(), e);
-                            }
-                        } else {
-                            LOG.info("Clean start using "+persistencePath+"; no pre-existing persisted data");
-                        }
                         rebinding = false;
                         break;
                     case REBIND:
-                        checkPersistenceDirAccessible(persistenceDir);
-                        checkPersistenceDirNonEmpty(persistenceDir);
-                        try {
-                            File backup = backupDirectory(persistenceDir);
-                            LOG.info("Rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
-                        } catch (IOException e) {
-                            throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+persistenceDir.getAbsolutePath(), e);
-                        }
                         rebinding = true;
                         break;
                     case AUTO:
-                        if (persistenceDir.exists()) {
-                            checkPersistenceDirAccessible(persistenceDir);
-                        }
-                        if (persistenceDir.exists() && !isMementoDirEmpty(persistenceDir)) {
-                            try {
-                                File backup = backupDirectory(persistenceDir);
-                                LOG.info("Auto rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
-                            } catch (IOException e) {
-                                throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+persistenceDir.getAbsolutePath(), e);
-                            }
-                            rebinding = true;
-                        } else {
-                            rebinding = false;
-                            LOG.info("Auto fresh using "+persistencePath+"; no pre-existing persisted data");
-                        }
+                        rebinding = (persistenceDir.exists() && !isMementoDirEmpty(persistenceDir));
                         break;
                     default:
                         throw new FatalConfigurationRuntimeException("Unexpected persist mode "+persistMode+"; modified during initialization?!");
                 };
                 
-                if (!persistenceDir.exists()) {
-                    boolean success = persistenceDir.mkdirs();
-                    if (!success) {
-                        throw new FatalConfigurationRuntimeException("Failed to create persistence directory "+persistenceDir);
-                    }
-                }
-    
                 RebindManager rebindManager = managementContext.getRebindManager();
-                BrooklynMementoPersister persister = new BrooklynMementoPersisterToMultiFile(persistenceDir, managementContext.getCatalog().getRootClassLoader());
-                ((RebindManagerImpl)rebindManager).setPeriodicPersistPeriod(persistPeriod);
-                rebindManager.setPersister(persister);
-                
                 if (rebinding) {
+                    LOG.info("Management node (no high availability) rebinding to entities using "+persistenceDir.getAbsolutePath());
+
                     ClassLoader classLoader = managementContext.getCatalog().getRootClassLoader();
-                    rebindManager.rebind(classLoader);
+                    try {
+                        rebindManager.rebind(classLoader);
+                    } catch (IOException e) {
+                        throw Exceptions.propagate(e);
+                    }
+                } else {
+                    LOG.info("Management node (no high availability) starting, no existing entities to rebind in "+persistenceDir.getAbsolutePath());
                 }
                 rebindManager.start();
             }
+        } else {
+            // Let the HA manager decide when rebind needs to be called (based on whether other nodes in plane
+            // are already running).
+            
+            HighAvailabilityMode startMode;
+            switch (highAvailabilityMode) {
+                case AUTO:     
+                case MASTER:
+                case STANDBY:
+                    startMode = highAvailabilityMode;
+                    break;
+                case DISABLED: 
+                    throw new IllegalStateException("Unexpected code-branch for high availability mode "+highAvailabilityMode);
+                default:       
+                    throw new IllegalStateException("Unexpected high availability mode "+highAvailabilityMode);
+            }
+            
+            LOG.info("Management node (with high availability) starting");
+            HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
+            haManager.start(startMode);
+        }
+    }
+
+    /**
+     * Prepares the persistence directory for use (e.g. backing up old dir, checking is non-empty 
+     * or deleting as required, etc).
+     */
+    protected void preparePersistenceDir(File dir) {
+        try {
+            String persistencePath = dir.getAbsolutePath();
+            
+            switch (persistMode) {
+                case CLEAN:
+                    if (dir.exists()) {
+                        checkPersistenceDirAccessible(dir);
+                        try {
+                            File old = moveDirectory(dir);
+                            LOG.info("Persist-clean using "+persistencePath+"; moved old directory to "+old.getAbsolutePath());
+                        } catch (IOException e) {
+                            throw new FatalConfigurationRuntimeException("Error moving old persistence directory "+dir.getAbsolutePath(), e);
+                        }
+                    } else {
+                        LOG.info("Persist-clean using "+persistencePath+"; no pre-existing persisted data");
+                    }
+                    break;
+                case REBIND:
+                    checkPersistenceDirAccessible(dir);
+                    checkPersistenceDirNonEmpty(dir);
+                    try {
+                        File backup = backupDirectory(dir);
+                        LOG.info("Persist-rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
+                    } catch (IOException e) {
+                        throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+dir.getAbsolutePath(), e);
+                    }
+                    break;
+                case AUTO:
+                    if (dir.exists()) {
+                        checkPersistenceDirAccessible(dir);
+                    }
+                    if (dir.exists() && !isMementoDirEmpty(dir)) {
+                        try {
+                            File backup = backupDirectory(dir);
+                            LOG.info("Persist-auto will rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
+                        } catch (IOException e) {
+                            throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+dir.getAbsolutePath(), e);
+                        }
+                    } else {
+                        LOG.info("Persist-auto using fresh "+persistencePath+"; no pre-existing persisted data");
+                    }
+                    break;
+                default:
+                    throw new FatalConfigurationRuntimeException("Unexpected persist mode "+persistMode+"; modified during initialization?!");
+            };
+            
+            if (!dir.exists()) {
+                boolean success = dir.mkdirs();
+                if (!success) {
+                    throw new FatalConfigurationRuntimeException("Failed to create persistence directory "+dir);
+                }
+            }
+
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }

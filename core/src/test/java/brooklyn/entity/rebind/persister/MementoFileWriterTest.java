@@ -5,13 +5,13 @@ import static org.testng.Assert.assertFalse;
 
 import java.io.File;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -20,7 +20,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 public class MementoFileWriterTest {
 
-    private static final long TIMEOUT_MS = 10*1000;
+    private static final Duration TIMEOUT = Duration.TEN_SECONDS;
     
     private File file;
     private ListeningExecutorService executor;
@@ -56,7 +56,7 @@ public class MementoFileWriterTest {
     @Test
     public void testWritesFile() throws Exception {
         writer.write("abc");
-        writer.waitForWriteCompleted(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        writer.waitForWriteCompleted(TIMEOUT);
         
         String fromfile = Files.asCharSource(file, Charsets.UTF_8).read();
         assertEquals(fromfile, "abc");
@@ -64,22 +64,17 @@ public class MementoFileWriterTest {
     
     @Test
     public void testWriteBacklogThenDeleteWillLeaveFileDeleted() throws Exception {
-        // FIXME google for repeat(str, num) when online!
         String big = makeBigString(100000);
         
         writer.write(big);
         writer.write(big);
         writer.delete();
         
-        writer.waitForWriteCompleted(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        writer.waitForWriteCompleted(TIMEOUT);
         assertFalse(file.exists());
     }
     
     private String makeBigString(int size) {
-        StringBuilder result = new StringBuilder(size);
-        for (int i = 0; i < size; i++) {
-            result.append(i % 10);
-        }
-        return result.toString();
+        return com.google.common.base.Strings.repeat("x", size);
     }
 }

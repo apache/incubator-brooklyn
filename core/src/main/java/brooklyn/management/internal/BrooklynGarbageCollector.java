@@ -128,16 +128,19 @@ public class BrooklynGarbageCollector {
 
     public void logUsage(String prefix) {
         if (LOG.isDebugEnabled())
-            LOG.debug(prefix+" - "+"using "+
-                Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
-                Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory; "+
-                "storage: " + storage.getStorageMetrics() + "; " +
-                "tasks: " +
-                executionManager.getNumActiveTasks()+" active, "+
-                executionManager.getNumInMemoryTasks()+" in memory "+
-                "("+executionManager.getNumIncompleteTasks()+" incomplete and "+
-                executionManager.getTotalTasksSubmitted()+" total submitted)"
-                );
+            LOG.debug(prefix+" - using "+getUsageString());
+    }
+    
+    public String getUsageString() {
+        return
+            Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
+            Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory; "+
+            "storage: " + storage.getStorageMetrics() + "; " +
+            "tasks: " +
+            executionManager.getNumActiveTasks()+" active, "+
+            executionManager.getNumInMemoryTasks()+" in memory "+
+            "("+executionManager.getNumIncompleteTasks()+" incomplete and "+
+            executionManager.getTotalTasksSubmitted()+" total submitted)";
     }
     
     public void shutdownNow() {

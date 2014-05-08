@@ -1,6 +1,7 @@
 package brooklyn.internal.storage.impl.inmemory;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -65,4 +66,10 @@ public class InmemoryDatagrid implements DataGrid {
             return ImmutableMap.<String, Object>of("size", maps.size(), "createCount", creationCounter.get());
         }
     }
+
+    @Override
+    public Set<String> getKeys() {
+        return maps.keySet();
+    }
+    
 }

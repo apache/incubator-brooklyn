@@ -40,6 +40,8 @@ import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
+import brooklyn.management.ha.HighAvailabilityManager;
+import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -110,6 +112,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected Iterable<URL> baseClassPathForScanning;
 
     private final RebindManager rebindManager;
+    private final HighAvailabilityManager highAvailabilityManager;
     
     protected volatile BrooklynGarbageCollector gc;
 
@@ -136,11 +139,13 @@ public abstract class AbstractManagementContext implements ManagementContextInte
          
         this.storage = new BrooklynStorageImpl(datagrid);
         this.rebindManager = new RebindManagerImpl(this); // TODO leaking "this" reference; yuck
+        this.highAvailabilityManager = new HighAvailabilityManagerImpl(this); // TODO leaking "this" reference; yuck
     }
 
     @Override
     public void terminate() {
         running = false;
+        highAvailabilityManager.stop();
         rebindManager.stop();
         storage.terminate();
         // Don't unmanage everything; different entities get given their events at different times 
@@ -161,6 +166,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     @Override
     public RebindManager getRebindManager() {
         return rebindManager;
+    }
+
+    @Override
+    public HighAvailabilityManager getHighAvailabilityManager() {
+        return highAvailabilityManager;
     }
 
     @Override
@@ -356,5 +366,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public Iterable<URL> getBaseClassPathForScanning() {
         return baseClassPathForScanning;
     }
-    
+
+    public BrooklynGarbageCollector getGarbageCollector() {
+        return gc;
+    }
 }

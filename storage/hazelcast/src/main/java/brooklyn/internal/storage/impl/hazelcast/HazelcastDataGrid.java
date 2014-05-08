@@ -1,6 +1,8 @@
 package brooklyn.internal.storage.impl.hazelcast;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 import brooklyn.entity.Entity;
@@ -57,6 +59,13 @@ public class HazelcastDataGrid implements DataGrid {
     
     @Override
     public Map<String, Object> getDatagridMetrics() {
+        // TODO would like to have better metrics
         return ImmutableMap.<String,Object>of("name", hz.getName(), "isRunning", hz.getLifecycleService().isRunning());
+    }
+    
+    @Override
+    public Set<String> getKeys() {
+        // TODO would like to have all known keys (for tests)
+        return Collections.emptySet();
     }
 }

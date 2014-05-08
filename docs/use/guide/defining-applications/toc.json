@@ -5,7 +5,11 @@
 { "title": "Common Usage",
   "file":  "{{ site.url }}/use/guide/defining-applications/common-usage.html" },
 { "title": "YAML Blueprints",
-  "file":  "{{ site.url }}/use/guide/defining-applications/yaml.html" },
+  "file":  "{{ site.url }}/use/guide/defining-applications/creating-yaml.html" },
+{ "title": "Deploying YAML",
+  "file":  "{{ site.url }}/use/guide/defining-applications/deploying-yaml.html" },
+{ "title": "YAML Reference",
+  "file":  "{{ site.url }}/use/guide/defining-applications/yaml-reference.html" },
 { "title": "Maven Archetype",
   "file":  "{{ site.url }}/use/guide/defining-applications/archetype.html" }
 ]

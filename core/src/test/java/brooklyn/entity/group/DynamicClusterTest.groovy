@@ -1,5 +1,8 @@
 package brooklyn.entity.group
 
+import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.Lifecycle
+
 import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
@@ -105,6 +108,16 @@ class DynamicClusterTest {
         cluster.start([loc])
         assertEquals(cluster.getLocations().size(), 1)
         assertEquals(cluster.getLocations() as List, [loc])
+    }
+
+    @Test
+    public void testServiceUpAfterStartingWithNoMembers() {
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class))
+                .configure(DynamicCluster.INITIAL_SIZE, 0))
+        cluster.start([loc])
+        assertEquals(cluster.getAttribute(Attributes.SERVICE_STATE), Lifecycle.RUNNING)
+        assertTrue(cluster.getAttribute(Attributes.SERVICE_UP))
     }
 
     @Test

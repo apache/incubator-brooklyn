@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +31,6 @@ import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.mementos.BrooklynMementoPersister.Delta;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -52,6 +50,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+/** Manages the persistence/rebind process.
+ * <p>
+ * Lifecycle is to create an instance of this, set it up (e.g. {@link #setPeriodicPersistPeriod(Duration)}, 
+ * {@link #setPersister(BrooklynMementoPersister)}; however noting that persist period must be set before the persister).
+ * <p>
+ * Usually done for you by the conveniences (such as the launcher). */
 public class RebindManagerImpl implements RebindManager {
 
     // TODO Use ImmediateDeltaChangeListener if the period is set to 0?
@@ -59,7 +63,7 @@ public class RebindManagerImpl implements RebindManager {
     
     public static final Logger LOG = LoggerFactory.getLogger(RebindManagerImpl.class);
 
-    private volatile long periodicPersistPeriod = 1000;
+    private volatile Duration periodicPersistPeriod = Duration.ONE_SECOND;
     
     private volatile boolean running = false;
     
@@ -79,11 +83,15 @@ public class RebindManagerImpl implements RebindManager {
      * Must be called before setPerister()
      */
     public void setPeriodicPersistPeriod(Duration period) {
-        this.periodicPersistPeriod = period.toMilliseconds();
+        if (persister!=null) throw new IllegalStateException("Cannot set period after persister is generated.");
+        this.periodicPersistPeriod = period;
     }
 
+    /**
+     * @deprecated since 0.7.0; use {@link #setPeriodicPersistPeriod(Duration)}
+     */
     public void setPeriodicPersistPeriod(long periodMillis) {
-        this.periodicPersistPeriod = periodMillis;
+        setPeriodicPersistPeriod(Duration.of(periodMillis, TimeUnit.MILLISECONDS));
     }
 
     @Override
@@ -93,7 +101,7 @@ public class RebindManagerImpl implements RebindManager {
         }
         this.persister = checkNotNull(val, "persister");
         
-        this.realChangeListener = new PeriodicDeltaChangeListener(managementContext.getExecutionManager(), persister, periodicPersistPeriod);
+        this.realChangeListener = new PeriodicDeltaChangeListener(managementContext.getExecutionManager(), persister, periodicPersistPeriod.toMilliseconds());
         this.changeListener = new SafeChangeListener(realChangeListener);
         
         if (running) {
@@ -102,6 +110,7 @@ public class RebindManagerImpl implements RebindManager {
     }
 
     @Override
+    @VisibleForTesting
     public BrooklynMementoPersister getPersister() {
         return persister;
     }
@@ -121,10 +130,10 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     @VisibleForTesting
-     public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+    public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
         if (persister == null || !running) return;
         realChangeListener.waitForPendingComplete(timeout, unit);
-        persister.waitForWritesCompleted(timeout, unit);
+        persister.waitForWritesCompleted(Duration.of(timeout, unit));
     }
     
     @Override
@@ -447,45 +456,6 @@ public class RebindManagerImpl implements RebindManager {
         throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
     }
 
-    private static class DeltaImpl implements Delta {
-        Collection<LocationMemento> locations = Collections.emptyList();
-        Collection<EntityMemento> entities = Collections.emptyList();
-        Collection<PolicyMemento> policies = Collections.emptyList();
-        Collection <String> removedLocationIds = Collections.emptyList();
-        Collection <String> removedEntityIds = Collections.emptyList();
-        Collection <String> removedPolicyIds = Collections.emptyList();
-        
-        @Override
-        public Collection<LocationMemento> locations() {
-            return locations;
-        }
-
-        @Override
-        public Collection<EntityMemento> entities() {
-            return entities;
-        }
-
-        @Override
-        public Collection<PolicyMemento> policies() {
-            return policies;
-        }
-
-        @Override
-        public Collection<String> removedLocationIds() {
-            return removedLocationIds;
-        }
-
-        @Override
-        public Collection<String> removedEntityIds() {
-            return removedEntityIds;
-        }
-        
-        @Override
-        public Collection<String> removedPolicyIds() {
-            return removedPolicyIds;
-        }
-    }
-    
     /**
      * Wraps a ChangeListener, to log and never propagate any exceptions that it throws.
      * 

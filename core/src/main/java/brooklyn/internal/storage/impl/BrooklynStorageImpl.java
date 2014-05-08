@@ -99,11 +99,23 @@ public class BrooklynStorageImpl implements BrooklynStorage {
         datagrid.terminate();
     }
     
+    public boolean isMostlyEmpty() {
+        if (!refsMap.isEmpty() || !listsMap.isEmpty()) 
+            return false;
+        // the datagrid may have some standard bookkeeping entries
+        return true;
+    }
+    
     @Override
     public Map<String, Object> getStorageMetrics() {
         return ImmutableMap.of(
                 "datagrid", datagrid.getDatagridMetrics(),
                 "refsMapSize", ""+refsMap.size(),
                 "listsMapSize", ""+listsMap.size());
+    }
+    
+    @Override
+    public String toString() {
+        return super.toString() + getStorageMetrics();
     }
 }

@@ -1,0 +1,26 @@
+name: appserver-policy
+services:
+- type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+  initialSize: 1
+  memberSpec:
+    $brooklyn:entitySpec:
+      type: brooklyn.entity.webapp.jboss.JBoss7Server
+      brooklyn.config:
+        wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war
+        http.port: 8080+
+        java.sysprops: 
+          brooklyn.example.db.url: $brooklyn:formatString("jdbc:%s%s?user=%s\\&password=%s",
+              component("db").attributeWhenReady("datastore.url"), "visitors", "brooklyn", "br00k11n")
+  brooklyn.policies:
+  - policyType: brooklyn.policy.autoscaling.AutoScalerPolicy
+    brooklyn.config:
+      metric: $brooklyn:sensor("brooklyn.entity.webapp.DynamicWebAppCluster", "webapp.reqs.perSec.windowed.perNode")
+      metricLowerBound: 10
+      metricUpperBound: 100
+      minPoolSize: 1
+      maxPoolSize: 5
+- type: brooklyn.entity.database.mysql.MySqlNode
+  id: db
+  name: DB HelloWorld Visitors
+  brooklyn.config:
+    datastore.creation.script.url: https://github.com/brooklyncentral/brooklyn/raw/master/usage/launcher/src/test/resources/visitors-creation-script.sql

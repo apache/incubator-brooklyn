@@ -62,4 +62,10 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
         return (LocalhostMachineProvisioningLocation) getManagementContext().getLocationRegistry().resolve("localhost");
     }
 
+    @Override
+    protected void logApplicationLifecycle(String message) {
+        // for tests, log this at debug so we see test info more
+        log.debug(message+" application "+this);
+    }
+    
 }

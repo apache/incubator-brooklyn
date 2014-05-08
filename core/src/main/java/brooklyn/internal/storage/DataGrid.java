@@ -1,7 +1,10 @@
 package brooklyn.internal.storage;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public interface DataGrid {
 
@@ -23,4 +26,9 @@ public interface DataGrid {
     void terminate();
     
     Map<String, Object> getDatagridMetrics();
+
+    /** Returns snapshot of known keys at this datagrid */
+    @VisibleForTesting
+    Set<String> getKeys();
+    
 }

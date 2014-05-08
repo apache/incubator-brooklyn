@@ -346,7 +346,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }
             sshPoolCache.invalidateAll();
         }
-        if (cleanupTask != null) cleanupTask.cancel(false);
+        if (cleanupTask != null) {
+            cleanupTask.cancel(false);
+            cleanupTask = null;
+        }
     }
 
     @Override
