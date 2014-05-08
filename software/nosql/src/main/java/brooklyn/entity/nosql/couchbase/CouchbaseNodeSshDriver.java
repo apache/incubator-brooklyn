@@ -1,14 +1,12 @@
 package brooklyn.entity.nosql.couchbase;
 
-import static brooklyn.util.ssh.BashCommands.*;
+import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
+import static brooklyn.util.ssh.BashCommands.alternatives;
+import static brooklyn.util.ssh.BashCommands.chainGroup;
+import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
 
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
@@ -19,9 +17,9 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
-public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver implements CouchbaseNodeDriver {
+import com.google.common.collect.ImmutableList;
 
-    private static final Logger LOG = LoggerFactory.getLogger(CouchbaseNodeSshDriver.class);
+public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver implements CouchbaseNodeDriver {
 
     public CouchbaseNodeSshDriver(final CouchbaseNodeImpl entity, final SshMachineLocation machine) {
         super(entity, machine);
@@ -65,9 +63,8 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         String yum = chainGroup(
                 "which yum",
                 sudo("yum install -y pkgconfig"),
-                //FIXME openssl098e wasn't found on CentOS 5.6
-                //sudo("yum install -y openssl098e"),
-                sudo("yum install -y openssl"),
+                // RHEL requires openssl version 098
+                sudo("[ -f /etc/redhat-release ] && (grep -i \"red hat\" /etc/redhat-release && yum install -y openssl098e) || :"),
                 sudo(format("rpm --install %s", saveAs)));
 
         return ImmutableList.<String>builder()

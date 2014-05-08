@@ -20,9 +20,11 @@ public interface CouchbaseCluster extends DynamicCluster {
 
     AttributeSensor<Integer> ACTUAL_CLUSTER_SIZE = Sensors.newIntegerSensor("coucbase.cluster.actualClusterSize", "returns the actual number of nodes in the cluster");
 
+    @SuppressWarnings("serial")
     AttributeSensor<Set<Entity>> COUCHBASE_CLUSTER_UP_NODES = Sensors.newSensor(new TypeToken<Set<Entity>>() {
     }, "couchbase.cluster.clusterEntities", "the set of service up nodes");
 
+    @SuppressWarnings("serial")
     AttributeSensor<List<String>> COUCHBASE_CLUSTER_BUCKETS = Sensors.newSensor(new TypeToken<List<String>>() {
     }, "couchbase.cluster.buckets", "Names of all the buckets the couchbase cluster");
 
