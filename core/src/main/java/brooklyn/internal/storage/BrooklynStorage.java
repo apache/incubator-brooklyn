@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 
 public interface BrooklynStorage {
 
@@ -82,6 +83,14 @@ public interface BrooklynStorage {
      * Terminates the BrooklynStorage.
      */
     void terminate();
+
+    /** asserts that some of the storage containers which should be empty are empty; 
+     * this could do more thorough checks, but as it is it is useful to catch many leaks,
+     * and the things which aren't empty it's much harder to check whether they should be empty!
+     * <p>
+     * not meant for use outwith tests */
+    @VisibleForTesting
+    public boolean isMostlyEmpty();
     
     Map<String, Object> getStorageMetrics();
 }

@@ -366,5 +366,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public Iterable<URL> getBaseClassPathForScanning() {
         return baseClassPathForScanning;
     }
-    
+
+    public BrooklynGarbageCollector getGarbageCollector() {
+        return gc;
+    }
 }
