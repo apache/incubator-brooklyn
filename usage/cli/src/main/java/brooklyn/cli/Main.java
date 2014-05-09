@@ -405,7 +405,7 @@ public class Main {
             Maybe<HighAvailabilityMode> highAvailabilityMode = Enums.valueOfIgnoreCase(HighAvailabilityMode.class, highAvailability);
             if (!highAvailabilityMode.isPresent()) {
                 if (Strings.isBlank(highAvailability)) {
-                    throw new FatalConfigurationRuntimeException("High availability mode mode must not be blank");
+                    throw new FatalConfigurationRuntimeException("High availability mode must not be blank");
                 } else {
                     throw new FatalConfigurationRuntimeException("Illegal highAvailability setting: "+highAvailability);
                 }
