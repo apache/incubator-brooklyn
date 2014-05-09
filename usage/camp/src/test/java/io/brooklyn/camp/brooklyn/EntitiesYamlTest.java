@@ -5,6 +5,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.StringReader;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +22,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicEntity;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
@@ -43,10 +45,31 @@ import com.google.common.collect.Iterables;
 public class EntitiesYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(EnrichersYamlTest.class);
 
-    @SuppressWarnings("unchecked")
+    protected Entity setupAndCheckTestEntityInBasicTemplateWith(String ...extras) throws Exception {
+        Entity app = createAndStartApplication("test-entity-basic-template.yaml", extras);
+        waitForApplicationTasks(app);
+
+        Assert.assertEquals(app.getDisplayName(), "test-entity-basic-template");
+
+        log.info("App started:");
+        Entities.dumpInfo(app);
+        
+        Assert.assertTrue(app.getChildren().iterator().hasNext(), "Expected app to have child entity");
+        Entity entity = app.getChildren().iterator().next();
+        Assert.assertTrue(entity instanceof TestEntity, "Expected TestEntity, found " + entity.getClass());
+        
+        return (TestEntity)entity;
+    }
+    
     @Test
     public void testSingleEntity() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", 
+        setupAndCheckTestEntityInBasicTemplateWith();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testBrooklynConfig() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
             "  brooklyn.config:",
             "    test.confName: Test Entity Name",
             "    test.confMapPlain:",
@@ -61,16 +84,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
             "      ? circle",
             "      ? triangle",
             "    test.confObject: 5");
-        waitForApplicationTasks(app);
-
-        Assert.assertEquals(app.getDisplayName(), "test-entity-basic-template");
-
-        log.info("App started:");
-        Entities.dumpInfo(app);
-        Entity entity = app.getChildren().iterator().next();
-        Assert.assertNotNull(entity, "Expected app to have child entity");
-        Assert.assertTrue(entity instanceof TestEntity, "Expected TestEntity, found " + entity.getClass());
-        TestEntity testEntity = (TestEntity) entity;
+        
         Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Test Entity Name");
         List<String> list = testEntity.getConfig(TestEntity.CONF_LIST_PLAIN);
         Assert.assertEquals(list, ImmutableList.of("dogs", "cats", "badgers"));
@@ -83,36 +97,42 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     }
 
     @Test
-    public void testConfigFromBrooklynConfigFlag() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml",
+    public void testFlagInBrooklynConfig() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
             "  brooklyn.config:",
             "    confName: Foo Bar");
-        waitForApplicationTasks(app);
-
-        log.info("App started:");
-        Entities.dumpInfo(app);
-
-        Entity entity = app.getChildren().iterator().next();
-        Assert.assertNotNull(entity, "Expected app to have child entity");
-        Assert.assertTrue(entity instanceof TestEntity, "Expected TestEntity, found " + entity.getClass());
-        TestEntity testEntity = (TestEntity) entity;
         Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
     }
 
     @Test
-    public void testConfigFromTopLevelFlag() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", 
+    public void testUndeclaredItemInBrooklynConfig() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
+            "  brooklyn.config:",
+            "    test.dynamic.confName: Foo Bar");
+        Assert.assertEquals(testEntity.getConfig(ConfigKeys.newStringConfigKey("test.dynamic.confName")), "Foo Bar");
+    }
+
+    @Test
+    public void testFlagAtRoot() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
             "  confName: Foo Bar");
-        waitForApplicationTasks(app);
-
-        log.info("App started:");
-        Entities.dumpInfo(app);
-
-        Entity entity = app.getChildren().iterator().next();
-        Assert.assertNotNull(entity, "Expected app to have child entity");
-        Assert.assertTrue(entity instanceof TestEntity, "Expected TestEntity, found " + entity.getClass());
-        TestEntity testEntity = (TestEntity) entity;
         Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
+    }
+
+    @Test
+    public void testConfigKeyAtRoot() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
+            "  test.confName: Foo Bar");
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
+    }
+
+    @Test
+    public void testUndeclaredItemAtRootIgnored() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
+            "  test.dynamic.confName: Foo Bar");
+        // should NOT be set (and there should be a warning in the log)
+        String dynamicConfNameValue = testEntity.getConfig(ConfigKeys.newStringConfigKey("test.dynamic.confName"));
+        Assert.assertNull(dynamicConfNameValue);
     }
 
     @SuppressWarnings("unchecked")
@@ -212,7 +232,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(object, ArbitraryClassWithSensor.MY_SENSOR);
     }
     public static class ArbitraryClassWithSensor {
-        public static final AttributeSensor MY_SENSOR = Sensors.newStringSensor("mysensor");
+        public static final AttributeSensor<String> MY_SENSOR = Sensors.newStringSensor("mysensor");
     }
     
     @Test
@@ -462,11 +482,14 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(app.getLocations().size(), 1);
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity entity = app.getChildren().iterator().next();
+        
         Assert.assertEquals(entity.getLocations().size(), 2);
+        Iterator<Location> entityLocationIterator = entity.getLocations().iterator();
+        Assert.assertEquals(entityLocationIterator.next().getDisplayName(), "localhost name");
+        Assert.assertEquals(entityLocationIterator.next().getDisplayName(), "byon name");
+        
         Location appLocation = app.getLocations().iterator().next();
         Assert.assertEquals(appLocation.getDisplayName(), "byon name");
-        Location entityLocation = entity.getLocations().iterator().next();
-        Assert.assertEquals(entityLocation.getDisplayName(), "localhost name");
     }
 
     @Test

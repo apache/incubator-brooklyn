@@ -62,7 +62,9 @@ although for these you'll supply an `endpoint: https://9.9.9.9:9999/v2.0/`
 
 You can also specify pre-existing servers to use -- "bring-your-own-nodes".
 These can be a global pool or specific to a service.
-Both styles are shown here (though normally only one will be selected, depending on the blueprint):
+Both styles are shown here (though normally only one will be selected,
+<!-- TODO see #1377, currently it is *parent* location which is preferred typically --> 
+depending on the blueprint):
 
 {% highlight yaml %}
 {% readj example_yaml/simple-appserver-with-location-byon.yaml %}
