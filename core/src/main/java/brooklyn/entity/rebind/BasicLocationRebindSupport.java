@@ -82,6 +82,7 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
         
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);
+        location.init(); // TODO deprecated calling init; will be deleted
         location.rebind();
         
         doReconsruct(rebindContext, memento);

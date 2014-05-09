@@ -26,7 +26,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
@@ -410,11 +410,20 @@ public class RebindManagerImpl implements RebindManager {
     private Location newLocation(LocationMemento memento, Reflections reflections) {
         String locationId = memento.getId();
         String locationType = checkNotNull(memento.getType(), "locationType of "+locationId);
-        Class<?> locationClazz = reflections.loadClass(locationType);
+        Class<? extends Location> locationClazz = (Class<? extends Location>) reflections.loadClass(locationType);
 
         if (InternalLocationFactory.isNewStyleLocation(managementContext, locationClazz)) {
-            LocationSpec<?> locationSpec = LocationSpec.create((Class)locationClazz).id(locationId);
-            return managementContext.getLocationManager().createLocation(locationSpec);
+            // Not using loationManager.createLocation(LocationSpec) because don't want init() to be called
+            // TODO Need to rationalise this to move code into methods of InternalLocationFactory.
+            //      But note that we'll change all locations to be entities at some point!
+            // See same code approach used in #newEntity(EntityMemento, Reflections)
+            InternalLocationFactory locationFactory = managementContext.getLocationFactory();
+            Location location = locationFactory.constructLocation(locationClazz);
+            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", locationId), location);
+            managementContext.prePreManage(location);
+            ((AbstractLocation)location).setManagementContext(managementContext);
+            
+            return location;
         } else {
             // There are several possibilities for the constructor; find one that works.
             // Prefer passing in the flags because required for Application to set the management context

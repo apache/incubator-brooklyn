@@ -45,6 +45,11 @@ public class LocalLocationManager implements LocationManager {
         locationTypes = storage.getMap("locations");
     }
 
+    public InternalLocationFactory getLocationFactory() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        return locationFactory;
+    }
+
     @Override
     public <T extends Location> T createLocation(LocationSpec<T> spec) {
         try {

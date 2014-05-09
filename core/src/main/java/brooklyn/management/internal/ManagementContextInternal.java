@@ -11,6 +11,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxying.InternalEntityFactory;
+import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
@@ -56,6 +57,8 @@ public interface ManagementContextInternal extends ManagementContext {
     UsageManager getUsageManager();
 
     InternalEntityFactory getEntityFactory();
+    
+    InternalLocationFactory getLocationFactory();
     
     /**
      * Registers an entity that has been created, but that has not yet begun to be managed.
