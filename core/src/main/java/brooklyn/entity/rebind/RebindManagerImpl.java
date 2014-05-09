@@ -211,6 +211,10 @@ public class RebindManagerImpl implements RebindManager {
                 }
             };
             
+            // FIXME dummyLookupContext isn't good enough - we need *all* the interfaces of the entity/location.
+            // So we need to peek inside the list of entities.
+            // Need to add methods such as Map<String, String> persister.loadEntityTypes()
+            
             // Two-phase deserialization. First we deserialize to find all instances (and their types).
             // Then we deserialize so that inter-entity references can be set. During the first phase,
             // any inter-entity reference will get the dummyEntity/dummyLocation.
