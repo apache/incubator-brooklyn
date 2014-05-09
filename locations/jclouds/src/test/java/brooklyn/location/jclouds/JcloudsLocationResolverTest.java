@@ -43,6 +43,13 @@ public class JcloudsLocationResolverTest {
     }
 
     @Test
+    public void testJcloudsTakesDotSeparateProperty() {
+        brooklynProperties.put("brooklyn.location.jclouds.aws-ec2.loginUser.privateKeyFile", "myfile");
+        String file = resolve("jclouds:aws-ec2").getConfig(JcloudsLocation.LOGIN_USER_PRIVATE_KEY_FILE);
+        assertEquals(file, "myfile");
+    }
+
+    @Test
     public void testJcloudsTakesProviderScopedProperties() {
         brooklynProperties.put("brooklyn.location.jclouds.aws-ec2.privateKeyFile", "myprivatekeyfile");
         brooklynProperties.put("brooklyn.location.jclouds.aws-ec2.publicKeyFile", "mypublickeyfile");
