@@ -37,7 +37,6 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        log.warn("saveAs filename is {}", saveAs);
 
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
 
@@ -51,7 +50,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     private List<String> installLinux(List<String> urls, String saveAs) {
 
-        log.info("Installing from package manager couchbase-server version:%s", getVersion());
+        log.info("Installing from package manager couchbase-server version: {}", getVersion());
 
         String apt = chainGroup(
                 "export DEBIAN_FRONTEND=noninteractive",

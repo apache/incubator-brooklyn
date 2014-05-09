@@ -9,10 +9,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
@@ -28,6 +24,9 @@ import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.time.Time;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 
 public class CouchbaseClusterImpl extends DynamicClusterImpl implements CouchbaseCluster {
     private static final Logger log = LoggerFactory.getLogger(CouchbaseClusterImpl.class);
@@ -97,7 +96,6 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     protected void connectSensors() {
         Map<String, Object> flags = MutableMap.<String, Object>builder()
                 .put("name", "Controller targets tracker")
-                .put("sensorsToTrack", ImmutableSet.of(CouchbaseNode.SERVICE_UP))
                 .build();
 
         AbstractMembershipTrackingPolicy serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(flags) {

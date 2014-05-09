@@ -34,10 +34,9 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
         subscribe(this, Attributes.SERVICE_UP, new SensorEventListener<Boolean>() {
             @Override
             public void onEvent(SensorEvent<Boolean> booleanSensorEvent) {
-                if (Boolean.TRUE.equals(booleanSensorEvent)) {
+                if (Boolean.TRUE.equals(booleanSensorEvent.getValue())) {
                     String hostname = getAttribute(HOSTNAME);
                     String webPort = getConfig(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT).iterator().next().toString();
-
                     setAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL, format("http://%s:%s", hostname, webPort));
                 }
             }

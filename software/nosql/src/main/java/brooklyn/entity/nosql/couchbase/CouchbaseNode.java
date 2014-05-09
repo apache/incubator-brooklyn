@@ -1,12 +1,14 @@
 package brooklyn.entity.nosql.couchbase;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.config.render.RendererHints;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -47,9 +49,21 @@ public interface CouchbaseNode extends SoftwareProcess {
     PortAttributeSensorAndConfigKey NODE_DATA_EXCHANGE_PORT_RANGE_START = new PortAttributeSensorAndConfigKey("couchbase.nodeDataExchangePortRangeStart", "Node data exchange Port Range Start", "21100+");
     PortAttributeSensorAndConfigKey NODE_DATA_EXCHANGE_PORT_RANGE_END = new PortAttributeSensorAndConfigKey("couchbase.nodeDataExchangePortRangeEnd", "Node data exchange Port Range End", "21199+");
 
-    AttributeSensor<String> COUCHBASE_WEB_ADMIN_URL = Sensors.newStringSensor("couchbase.webAdminUrl", "The administration console Url for this Couchbase node");
     AttributeSensor<Boolean> IS_PRIMARY_NODE = Sensors.newBooleanSensor("couchbase.isPrimaryNode", "flag to determine if the current couchbase node is the primary node for the cluster");
     AttributeSensor<Boolean> IS_IN_CLUSTER = Sensors.newBooleanSensor("couchbase.isInCluster", "flag to determine if the current couchbase node has been added to a cluster");
+    public static final AttributeSensor<String> COUCHBASE_WEB_ADMIN_URL = WebAppServiceConstants.ROOT_URL; // By using this specific sensor, the value will be shown in the summary tab
+    
+    // this class is added because the ROOT_URL relies on a static initialization which unfortunately
+    // can't be added to
+    // an interface.
+    class RootUrl {
+        public static final AttributeSensor<String> ROOT_URL = Sensors.newStringSensor("webapp.url", "URL");
+
+        static {
+            RendererHints.register(ROOT_URL, new RendererHints.NamedActionWithUrl("Open"));
+            RendererHints.register(COUCHBASE_WEB_ADMIN_URL, new RendererHints.NamedActionWithUrl("Open"));
+        }
+    }
 
     public static final MethodEffector<Void> SERVER_ADD = new MethodEffector<Void>(CouchbaseNode.class, "serverAdd");
     public static final MethodEffector<Void> REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "rebalance");
