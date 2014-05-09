@@ -39,7 +39,6 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
 
@@ -202,14 +201,18 @@ public class HttpTool {
             return (B) this;
         }
         public B headers(Map<String,String> headers) {
-            for (Map.Entry<String,String> entry : headers.entrySet()) {
-                req.addHeader(entry.getKey(), entry.getValue());
+            if (headers!=null) {
+                for (Map.Entry<String,String> entry : headers.entrySet()) {
+                    req.addHeader(entry.getKey(), entry.getValue());
+                }
             }
             return self();
         }
         public B headers(Multimap<String,String> headers) {
-            for (Map.Entry<String,String> entry : headers.entries()) {
-                req.addHeader(entry.getKey(), entry.getValue());
+            if (headers!=null) {
+                for (Map.Entry<String,String> entry : headers.entries()) {
+                    req.addHeader(entry.getKey(), entry.getValue());
+                }
             }
             return self();
         }
@@ -261,38 +264,38 @@ public class HttpTool {
         }
     }
     
-    public static HttpPollValue httpGet(HttpClient httpClient, URI uri, Map<String,String> headers) {
+    public static HttpToolResponse httpGet(HttpClient httpClient, URI uri, Map<String,String> headers) {
         HttpGet req = new HttpGetBuilder(uri).headers(headers).build();
         return execAndConsume(httpClient, req);
     }
     
-    public static HttpPollValue httpPost(HttpClient httpClient, URI uri, Map<String,String> headers, byte[] body) {
+    public static HttpToolResponse httpPost(HttpClient httpClient, URI uri, Map<String,String> headers, byte[] body) {
         HttpPost req = new HttpPostBuilder(uri).headers(headers).body(body).build();
         return execAndConsume(httpClient, req);
     }
 
-    public static HttpPollValue httpPut(HttpClient httpClient, URI uri, Map<String, String> headers, byte[] body) {
+    public static HttpToolResponse httpPut(HttpClient httpClient, URI uri, Map<String, String> headers, byte[] body) {
         HttpPut req = new HttpPutBuilder(uri).headers(headers).body(body).build();
         return execAndConsume(httpClient, req);
     }
 
-    public static HttpPollValue httpDelete(HttpClient httpClient, URI uri, Map<String,String> headers) {
+    public static HttpToolResponse httpDelete(HttpClient httpClient, URI uri, Map<String,String> headers) {
         HttpDelete req = new HttpDeleteBuilder(uri).headers(headers).build();
         return execAndConsume(httpClient, req);
     }
     
-    public static HttpPollValue httpHead(HttpClient httpClient, URI uri, Map<String,String> headers) {
+    public static HttpToolResponse httpHead(HttpClient httpClient, URI uri, Map<String,String> headers) {
         HttpHead req = new HttpHeadBuilder(uri).headers(headers).build();
         return execAndConsume(httpClient, req);
     }
     
-    public static HttpPollValue execAndConsume(HttpClient httpClient, HttpUriRequest req) {
+    public static HttpToolResponse execAndConsume(HttpClient httpClient, HttpUriRequest req) {
         long startTime = System.currentTimeMillis();
         try {
             HttpResponse httpResponse = httpClient.execute(req);
             
             try {
-                return new HttpPollValue(httpResponse, startTime);
+                return new HttpToolResponse(httpResponse, startTime);
             } finally {
                 EntityUtils.consume(httpResponse.getEntity());
             }
@@ -300,4 +303,7 @@ public class HttpTool {
             throw Exceptions.propagate(e);
         }
     }
+    
+    public static boolean isStatusCodeHealthy(int code) { return (code>=200 && code<=299); }
+
 }

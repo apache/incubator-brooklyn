@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,7 +99,7 @@ public class BrooklynComponentTemplateResolver {
             } catch (Exception e) { throw Exceptions.propagate(e); }
         }
 
-        private static String getDeclaredType(String knownServiceType, AbstractResource optionalTemplate, ConfigBag attrs) {
+        private static String getDeclaredType(String knownServiceType, AbstractResource optionalTemplate, @Nullable ConfigBag attrs) {
             String type = knownServiceType;
             if (type==null && optionalTemplate!=null) {
                 type = optionalTemplate.getType();
@@ -109,7 +111,8 @@ public class BrooklynComponentTemplateResolver {
             return type;
         }
         
-        private static String extractServiceTypeAttribute(ConfigBag attrs) {
+        private static String extractServiceTypeAttribute(@Nullable ConfigBag attrs) {
+            if (attrs==null) return null;
             String type;
             type = (String)attrs.getStringKey("serviceType");
             if (type==null) type = (String)attrs.getStringKey("service_type");

@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.URLParamEncoder;
 import brooklyn.util.time.Duration;
 
@@ -17,7 +18,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
-public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConfig<T>> {
+public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollConfig<T>> {
 
     private String method = "GET";
     private String suburl = "";
@@ -27,9 +28,9 @@ public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConf
     private Duration connectionTimeout;
     private Duration socketTimeout;
     
-    public static final Predicate<HttpPollValue> DEFAULT_SUCCESS = new Predicate<HttpPollValue>() {
+    public static final Predicate<HttpToolResponse> DEFAULT_SUCCESS = new Predicate<HttpToolResponse>() {
         @Override
-        public boolean apply(@Nullable HttpPollValue input) {
+        public boolean apply(@Nullable HttpToolResponse input) {
             return input != null && input.getResponseCode() >= 200 && input.getResponseCode() <= 399;
         }};
     

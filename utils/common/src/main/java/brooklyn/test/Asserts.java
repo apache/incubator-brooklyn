@@ -27,6 +27,13 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+/**
+ * TODO should move this to new package brooklyn.util.assertions
+ * and TODO should add a repeating() method which returns an AssertingRepeater extending Repeater
+ * and:
+ * <li> adds support for requireAllIterationsTrue
+ * <li> convenience run methods equivalent to succeedsEventually and succeedsContinually
+ */
 @Beta
 public class Asserts {
 
@@ -230,6 +237,7 @@ public class Asserts {
                         if (result instanceof BooleanWithMessage) 
                             log.warn("Test returned an instance of BooleanWithMessage but useGroovyTruth is not set! " +
                                      "The result of this probably isn't what you intended.");
+                        // FIXME surprising behaviour, "false" result here is acceptable
                         return result;
                     } else {
                         return result;

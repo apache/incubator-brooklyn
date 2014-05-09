@@ -38,7 +38,7 @@ import brooklyn.test.entity.BlockingEntity;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.Repeater;
+import brooklyn.util.repeat.Repeater;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -208,7 +208,6 @@ public class DynamicFabricTest {
         final Task<?> task = fabric.invoke(Startable.START, ImmutableMap.of("locations", locs));
 
         new Repeater("Wait until each task is executing")
-                .repeat()
                 .every(100, TimeUnit.MILLISECONDS)
                 .limitTimeTo(30, TimeUnit.SECONDS)
                 .until(new Callable<Boolean>() {
@@ -224,7 +223,6 @@ public class DynamicFabricTest {
         }
 
         new Repeater("Wait until complete")
-                .repeat()
                 .every(100, TimeUnit.MILLISECONDS)
                 .limitTimeTo(30, TimeUnit.SECONDS)
                 .until(new Callable<Boolean>() {

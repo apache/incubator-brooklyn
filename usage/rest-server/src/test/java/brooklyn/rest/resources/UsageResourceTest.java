@@ -20,7 +20,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.SoftwareProcessEntityTest;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
@@ -38,7 +37,7 @@ import brooklyn.rest.domain.UsageStatistics;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.internal.Repeater;
+import brooklyn.util.repeat.Repeater;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -68,11 +67,6 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         testStartTime = new Date();
     }
 
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
-    
     @Test
     public void testListApplicationUsages() throws Exception {
         // Create an app

@@ -53,7 +53,6 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
     public Propagator() {
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);

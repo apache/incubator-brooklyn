@@ -395,7 +395,7 @@ public class Tasks {
             TaskTags.markInessential(task);
         }
     }
-
+    
     /** causes failures in subtasks of the current task not to fail the parent;
      * no-op if not in a {@link TaskQueueingContext}.
      * <p>
@@ -410,4 +410,10 @@ public class Tasks {
         }
     }
 
+    /** as {@link TaskTags#addTagDynamically(TaskAdaptable, Object)} but for current task, skipping if no current task */
+    public static void addTagDynamically(Object tag) {
+        Task<?> t = Tasks.current();
+        if (t!=null) TaskTags.addTagDynamically(t, tag);
+    }
+    
 }

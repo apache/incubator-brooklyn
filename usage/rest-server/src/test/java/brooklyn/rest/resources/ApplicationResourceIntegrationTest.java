@@ -3,18 +3,12 @@ package brooklyn.rest.resources;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
-import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -26,6 +20,8 @@ import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.SensorSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
+import brooklyn.test.Asserts;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -44,11 +40,6 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
             entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore"))).
             locations(ImmutableSet.of("localhost")).
             build();
-
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
 
     @Test(groups="Integration")
     public void testDeployRedisApplication() throws InterruptedException, TimeoutException {

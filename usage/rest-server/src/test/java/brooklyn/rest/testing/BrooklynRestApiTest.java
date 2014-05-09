@@ -81,4 +81,10 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
             addResource(r);
     }
 
+    /** intended for overriding if you only want certain resources added, or additional ones added */
+    @Override
+    protected void setUpResources() throws Exception {
+        addResources();
+    }
+
 }

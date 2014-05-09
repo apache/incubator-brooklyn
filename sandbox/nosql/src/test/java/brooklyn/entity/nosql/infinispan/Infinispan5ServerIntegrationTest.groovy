@@ -16,9 +16,9 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplicationImpl
-import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 import brooklyn.util.net.Networking
+import brooklyn.util.repeat.Repeater
 
 class Infinispan5ServerIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(Infinispan5ServerIntegrationTest.class)

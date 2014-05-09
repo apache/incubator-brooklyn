@@ -65,11 +65,6 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     private static final String sensorName = "ammphibian.count";
     private static final AttributeSensor<Integer> sensor = Sensors.newIntegerSensor(sensorName);
 
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
-
     /**
      * Sets up the application and entity.
      * <p>

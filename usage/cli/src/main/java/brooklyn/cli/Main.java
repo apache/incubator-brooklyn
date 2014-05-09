@@ -347,7 +347,7 @@ public class Main {
             } catch (Exception e) {
                 // Don't terminate the JVM; leave it as-is until someone explicitly stops it
                 Exceptions.propagateIfFatal(e);
-                log.error("Error launching brooklyn: "+e, e);
+                log.error("Error launching brooklyn: "+Exceptions.collapseText(e), e);
             }
             
             BrooklynServerDetails server = launcher.getServerDetails();
@@ -532,6 +532,7 @@ public class Main {
          * Helper method that gets an instance of a brooklyn {@link AbstractApplication} or an {@link ApplicationBuilder}.
          * Guaranteed to be non-null result of one of those types (throwing exception if app not appropriate).
          */
+        @SuppressWarnings("unchecked")
         protected Object loadApplicationFromClasspathOrParse(ResourceUtils utils, GroovyClassLoader loader, String app)
                 throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
             
@@ -545,14 +546,17 @@ public class Main {
                 tempclazz = loader.parseClass(content);
             }
             final Class<?> clazz = tempclazz;
-
-            // Intantiate an app builder (wrapping app class in ApplicationBuilder, if necessary)
+            
+            // Instantiate an app builder (wrapping app class in ApplicationBuilder, if necessary)
             if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
                 Constructor<?> constructor = clazz.getConstructor();
                 return (ApplicationBuilder) constructor.newInstance();
             } else if (StartableApplication.class.isAssignableFrom(clazz)) {
-                @SuppressWarnings("unchecked")
-                EntitySpec<StartableApplication> appSpec = EntitySpec.create(StartableApplication.class, (Class<? extends StartableApplication>) clazz);
+                EntitySpec<? extends StartableApplication> appSpec;
+                if (tempclazz.isInterface())
+                    appSpec = EntitySpec.create((Class<? extends StartableApplication>) clazz);
+                else
+                    appSpec = EntitySpec.create(StartableApplication.class, (Class<? extends StartableApplication>) clazz);
                 return new ApplicationBuilder(appSpec) {
                     @Override protected void doBuild() {
                     }};
@@ -565,13 +569,11 @@ public class Main {
             } else if (AbstractEntity.class.isAssignableFrom(clazz)) {
                 // TODO Should we really accept any entity type, and just wrap it in an app? That's not documented!
                 return new ApplicationBuilder() {
-                    @SuppressWarnings("unchecked")
                     @Override protected void doBuild() {
-                        addChild(EntitySpec.create(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
+                        addChild(EntitySpec.create(Entity.class).impl((Class<? extends AbstractEntity>)clazz).additionalInterfaces(clazz.getInterfaces()));
                     }};
             } else if (Entity.class.isAssignableFrom(clazz)) {
                 return new ApplicationBuilder() {
-                    @SuppressWarnings("unchecked")
                     @Override protected void doBuild() {
                         addChild(EntitySpec.create((Class<? extends Entity>)clazz));
                     }};

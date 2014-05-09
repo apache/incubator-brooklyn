@@ -7,15 +7,18 @@ import java.io.File;
 import java.net.URI;
 import java.util.List;
 
-import brooklyn.config.BrooklynProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
@@ -26,6 +29,7 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -36,6 +40,8 @@ import com.google.common.io.Files;
 
 public class BrooklynNodeIntegrationTest {
 
+    private static final Logger log = LoggerFactory.getLogger(BrooklynNodeIntegrationTest.class);
+    
     // TODO Need test for copying/setting classpath
 
     private static final File BROOKLYN_PROPERTIES_PATH = new File(System.getProperty("user.home")+"/.brooklyn/brooklyn.properties");
@@ -189,7 +195,7 @@ public class BrooklynNodeIntegrationTest {
         try {
             BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
                     .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
-                    .configure(BrooklynNode.SUGGESTED_RUN_DIR, tempDir.getAbsolutePath())
+                    .configure(BrooklynNode.RUN_DIR, tempDir.getAbsolutePath())
                     .configure(BrooklynNode.CLASSPATH, ImmutableList.of(classpathEntry1.getAbsolutePath(), classpathEntry2.getAbsolutePath()))
                     );
             app.start(locs);
@@ -253,7 +259,7 @@ public class BrooklynNodeIntegrationTest {
     }
 
     @Test(groups="Integration")
-    public void testStartsApp() throws Exception {
+    public void testStartsAppOnStartup() throws Exception {
         BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
                 .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, true)
                 .configure(BrooklynNode.APP, BasicApplicationImpl.class.getName()));
@@ -265,6 +271,27 @@ public class BrooklynNodeIntegrationTest {
         assertEquals(appType, ImmutableList.of(BasicApplication.class.getName()));
     }
 
+    @Test(groups="Integration")
+    public void testStartsAppViaEffector() throws Exception {
+        BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, true));
+        app.start(locs);
+        
+        final String id = brooklynNode.invoke(BrooklynNode.DEPLOY_BLUEPRINT, ConfigBag.newInstance()
+            .configure(DeployBlueprintEffector.BLUEPRINT_TYPE, BasicApplication.class.getName())
+            .getAllConfig()).get();
+        
+        // note there is also a test for this in DeployApplication
+        final URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
+        String apps = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
+        List<String> appType = parseJsonList(apps, ImmutableList.of("spec", "type"), String.class);
+        assertEquals(appType, ImmutableList.of(BasicApplication.class.getName()));
+        
+        HttpTestUtils.assertContentEventuallyMatches(
+            webConsoleUri.toString()+"/v1/applications/"+id+"/entities/"+id+"/sensors/service.state",
+            "\"?(running|RUNNING)\"?");
+    }
+    
     @Test(groups="Integration")
     public void testUsesLocation() throws Exception {
         String brooklynPropertiesContents = "brooklyn.location.named.mynamedloc=localhost:(name=myname)";

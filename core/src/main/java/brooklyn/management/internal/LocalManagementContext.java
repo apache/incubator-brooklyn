@@ -32,10 +32,12 @@ import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.text.Strings;
 
+import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
@@ -67,16 +69,24 @@ public class LocalManagementContext extends AbstractManagementContext {
         }
     }
 
-    
+    /** terminates all (best effort); returns count of sessions closed; if exceptions thrown, returns negative number.
+     * semantics might change, particular in dealing with interminable mgmt contexts. */
     // Note also called reflectively by BrooklynLeakListener
-    public static void terminateAll() {
+    @Beta
+    public static int terminateAll() {
+        int closed=0,dangling=0;
         for (LocalManagementContext context : getInstances()) {
             try {
                 context.terminate();
+                closed++;
             }catch (Throwable t) {
+                Exceptions.propagateIfFatal(t);
                 log.warn("Failed to terminate management context", t);
+                dangling++;
             }
         }
+        if (dangling>0) return -dangling;
+        return closed;
     }
 
     private String managementPlaneId;

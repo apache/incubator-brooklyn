@@ -33,11 +33,6 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
     private final static Logger log = LoggerFactory.getLogger(EntityConfigResourceTest.class);
     private URI application;
 
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
-
     @BeforeClass(alwaysRun = true)
     @Override
     public void setUp() throws Exception {

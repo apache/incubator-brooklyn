@@ -46,11 +46,6 @@ public class DescendantsTest extends BrooklynRestResourceTest {
         locations(ImmutableSet.of("localhost")).
         build();
 
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
-
     @Test
     public void testDescendantsInSimpleDeployedApplication() throws InterruptedException, TimeoutException, JsonGenerationException, JsonMappingException, UniformInterfaceException, ClientHandlerException, IOException {
         ClientResponse response = clientDeploy(simpleSpec);

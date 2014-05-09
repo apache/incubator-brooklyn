@@ -52,8 +52,8 @@ import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.crypto.SslTrustUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.internal.Repeater;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 

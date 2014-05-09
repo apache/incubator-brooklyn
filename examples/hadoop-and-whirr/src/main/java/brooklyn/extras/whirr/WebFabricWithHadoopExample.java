@@ -32,7 +32,6 @@ import brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.Location;
@@ -42,6 +41,7 @@ import brooklyn.management.Task;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.CommandLineUtil;
 import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.task.ParallelTask;
 
 import com.google.common.base.Charsets;
@@ -234,7 +234,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
                 URI updateConfigUri = new URI(e.getAttribute(JBoss7Server.ROOT_URL)+
                         "configure.jsp?key=brooklyn.example.hadoop.site.xml.url&value=file:///tmp/hadoop-site.xml");
                 
-                HttpPollValue result = HttpTool.httpGet(new DefaultHttpClient(), updateConfigUri, ImmutableMap.<String,String>of());
+                HttpToolResponse result = HttpTool.httpGet(new DefaultHttpClient(), updateConfigUri, ImmutableMap.<String,String>of());
                 if (log.isDebugEnabled()) log.debug("http config update for {} got: {}, {}", new Object[] {e, result.getResponseCode(), new String(result.getContent())});
             } catch (Exception err) {
                 log.warn("unable to configure "+e+" for hadoop", err);

@@ -4,15 +4,15 @@ import javax.annotation.Nullable;
 
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.PollConfig;
-import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
+import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 
-public class ZabbixPollConfig<T> extends PollConfig<HttpPollValue, T, ZabbixPollConfig<T>> {
+public class ZabbixPollConfig<T> extends PollConfig<HttpToolResponse, T, ZabbixPollConfig<T>> {
 
     private String itemKey;
 

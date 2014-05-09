@@ -35,9 +35,9 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.file.ArchiveUtils;
+import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 
@@ -88,9 +88,9 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                 .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
                         // Any response from Nginx is good.
                         .checkSuccess(Predicates.alwaysTrue())
-                        .onResult(new Function<HttpPollValue, Boolean>() {
+                        .onResult(new Function<HttpToolResponse, Boolean>() {
                                 @Override
-                                public Boolean apply(HttpPollValue input) {
+                                public Boolean apply(HttpToolResponse input) {
                                     // Accept any nginx response (don't assert specific version), so that sub-classing
                                     // for a custom nginx build is not strict about custom version numbers in headers
                                     List<String> actual = input.getHeaderLists().get("Server");

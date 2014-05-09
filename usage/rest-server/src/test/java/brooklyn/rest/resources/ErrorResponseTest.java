@@ -27,12 +27,6 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
             ImmutableSet.of("localhost")).build();
     private String policyId;
 
-
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
-    
     @BeforeClass(alwaysRun = true)
     @Override
     public void setUp() throws Exception {

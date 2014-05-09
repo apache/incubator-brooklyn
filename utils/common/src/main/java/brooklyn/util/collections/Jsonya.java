@@ -213,9 +213,10 @@ public class Jsonya {
             }
         }
 
-        /** as {@link #put(Object, Object, Object...)} for the kv-pairs in the given map */
+        /** as {@link #put(Object, Object, Object...)} for the kv-pairs in the given map; ignores null for convenience */
         public Navigator<T> put(Map map) {
             map();
+            if (map==null) return this;
             ((Map)focus).putAll((Map)translate(map));
             return this;
         }
@@ -388,6 +389,8 @@ public class Jsonya {
             target.add(translate(item));
         }
         
+        /** Returns JSON serialized output for given focus in the given jsonya;
+         * applies a naive toString for specialized types */
         @Override
         public String toString() {
             return render(get());

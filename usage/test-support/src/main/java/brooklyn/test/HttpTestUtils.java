@@ -11,7 +11,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -30,6 +29,8 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -103,6 +104,11 @@ public class HttpTestUtils {
         }
     }
 
+    public static void assertHealthyStatusCode(int code) {
+        if (code>=200 && code<=299) return;
+        Assert.fail("Wrong status code: "+code);
+    }
+    
     public static int getHttpStatusCode(String url) throws Exception {
         URLConnection connection = connectToUrl(url);
         long startTime = System.currentTimeMillis();
@@ -195,7 +201,7 @@ public class HttpTestUtils {
 
     public static void assertContentContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         try {
-            String contents = DefaultGroovyMethods.getText(new URL(url).openStream());
+            String contents = getContent(url);
             Assert.assertTrue(contents!=null && contents.length()>0);
             for (String text: Lists.asList(phrase, additionalPhrases)) {
                 if (!contents.contains(text)) {
@@ -208,6 +214,10 @@ public class HttpTestUtils {
         }
     }
 
+    public static void assertContentEventuallyContainsText(final String url, final String phrase, final String ...additionalPhrases) {
+        assertContentEventuallyContainsText(MutableMap.of(), url, phrase, additionalPhrases);
+    }
+    
     public static void assertContentEventuallyContainsText(Map flags, final String url, final String phrase, final String ...additionalPhrases) {
         TestUtils.executeUntilSucceeds(new Runnable() {
             public void run() {
@@ -215,10 +225,22 @@ public class HttpTestUtils {
             }
          });
     }
-    public static void assertContentEventuallyContainsText(final String url, final String phrase, final String ...additionalPhrases) {
-        assertContentEventuallyContainsText(Collections.emptyMap(), url, phrase, additionalPhrases);
+    
+    public static void assertContentMatches(String url, String regex) {
+        String contents = getContent(url);
+        Assert.assertNotNull(contents);
+        Assert.assertTrue(contents.matches(regex), "Contents does not match expected regex ("+regex+"): "+contents);
     }
 
+    public static void assertContentEventuallyMatches(final String url, final String regex) {
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                assertContentMatches(url, regex);
+            }
+        });
+    }
+    
     public static String getContent(String url) {
         try {
             return DefaultGroovyMethods.getText(new URL(url).openStream());

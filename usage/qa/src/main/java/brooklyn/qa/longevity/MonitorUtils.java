@@ -20,8 +20,8 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.stream.StreamGobbler;
 
 import com.google.common.base.Objects;
@@ -45,7 +45,7 @@ public class MonitorUtils {
      */
     public static boolean isUrlUp(URL url) {
         try {
-            HttpPollValue result = HttpTool.httpGet(
+            HttpToolResponse result = HttpTool.httpGet(
                     HttpTool.httpClientBuilder().trustAll().build(), 
                     URI.create(url.toString()), 
                     ImmutableMap.<String,String>of());

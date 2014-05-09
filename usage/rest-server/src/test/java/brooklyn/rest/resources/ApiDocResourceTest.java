@@ -27,7 +27,7 @@ public class ApiDocResourceTest extends BrooklynRestResourceTest {
 
     @Override
     protected void setUpResources() throws Exception {
-        addResources();
+        super.setUpResources();
         for (Object o : BrooklynRestApi.getApidocResources()) {
             addResource(o);
         }

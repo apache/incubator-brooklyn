@@ -73,6 +73,12 @@ public abstract class Maybe<T> implements Serializable {
     public abstract boolean isPresent();
     public abstract T get();
     
+    public boolean isAbsent() {
+        return !isPresent(); 
+    }
+    public boolean isAbsentOrNull() {
+        return !isPresentAndNonNull();
+    }
     public boolean isPresentAndNonNull() {
         return isPresent() && get()!=null;
     }
