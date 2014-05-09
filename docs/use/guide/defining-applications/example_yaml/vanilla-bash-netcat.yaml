@@ -1,0 +1,8 @@
+name: Simple Netcat Server Example
+location: localhost
+services:
+- type: brooklyn.entity.basic.VanillaSoftwareProcess
+  name: Simple Netcat Server
+  launch.command: |
+    echo hello | nc -l 4321 &
+    echo $! > $PID_FILE

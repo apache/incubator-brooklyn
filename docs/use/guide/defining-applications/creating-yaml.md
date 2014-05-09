@@ -277,6 +277,8 @@ as follows:
 {% readj example_yaml/appserver-w-policy.yaml %}
 {% endhighlight %}
 
+Use your favorite load-generation tool (`jmeter` is one good example) to send a huge
+volume of requests against the server and see the policies kick in to resize it.
 
 
 ## New Custom Entities
@@ -296,46 +298,53 @@ The following blueprint shows how a simple script can be embedded in the YAML
 (the `|` character is special YAML which makes it easier to insert multi-line text):
 
 {% highlight yaml %}
-{% readj example_yaml/bash-date.yaml %}
+{% readj example_yaml/vanilla-bash-netcat.yaml %}
 {% endhighlight %}
 
-It's just a `sleep` statement, but you get the idea:  it could be any script you want.
+This starts a simple `nc` listener on port 4321 which will respond `hello` to the first
+session which connects to it. Test it by running `telnet localhost 4321`.  
 
-If it's a big script, you'll probably prefer to have it live somewhere else.
-You can write a script to download artifacts and then invoke another script, 
-or you can specify an artifact to download and a script to run relative to the root
-(with `start.sh` being the default).
-The following shows the use of `download.url` to do the same thing,
-assuming the script is in `start.sh` in the root of the archive at 
-`/tmp/vanilla-date.tgz`:
+This is just a simple script, but it shows how any script can be easily embedded here,
+including a script to download and run other artifacts.
+Many artifacts are already packaged such that they can be downloaded and launched 
+with a simple script, and `VanillaSoftwareProcess` can also be used for them. 
+We can specify a `download.url` which downloads artifacts (unpacking TAR, TGZ, and ZIP archives)
+before running `launch.command` relative to where that file is installed (or unpacked),
+with `./start.sh` being the default `launch.command`.
+
+So if we create a file `/tmp/netcat-server.tgz` containing just `start.sh` in the root
+which consists of the two lines in the previous example,
+we can instead write our example as: 
 
 {% highlight yaml %}
-{% readj example_yaml/bash-date-file.yaml %}
+{% readj example_yaml/vanilla-bash-netcat-file.yaml %}
 {% endhighlight %}
 
-Because Brooklyn insists on monitoring the process, 
-the one complexity is that the script should
-write the PID of the process to `$PID_FILE`.
+The one requirement of the script is that it store the process ID (PID) in the file
+pointed to by `$PID_FILE`, hence the second line of the script.
+This is because Brooklyn wants to monitor the services under management. 
 (There are other options, as documented on the Javadoc of the `VanillaSoftwareProcess` class.)
+And indeed, once you've run one `telnet` to the server, you'll see that the 
+service has gone "on fire" in Brooklyn -- because the `nc` process has stopped. 
 
-Here, you'll see the entity come up in Brooklyn after 3s due to the final sleep,
-but after another 57s the backgrounded process whose PID is monitored will terminate.
-The service will then show as "on-fire".
-If we pretend that's simulating a real-world failure, we might wish to attach a policy
-which automatically restarts it:   
+Besides detecting this failure, Brooklyn policies can be added to the YAML to take appropriate 
+action. A simple recovery here might just be to restart the process:
 
 {% highlight yaml %}
-{% readj example_yaml/bash-date-restarter.yaml %}
+{% readj example_yaml/vanilla-bash-netcat-restarter.yaml %}
 {% endhighlight %}
 
-One common pattern in Brooklyn is to compose simple policies.
-In the blueprint above, one policy is triggering a failure sensor
-if the service is down for 10s; the other policy responds to these
-failures by restarting the service.
-With this blueprint, you'll see this show-date-and-sleep "service" 
-fail every minute, but then -- like a phoenix rising from its ashes -- 
-be restarted.
+Autonomic management in Brooklyn often follows the principle that complex behaviours emerge
+from composing simple policies.
+The blueprint above uses one policy to triggering a failure sensor when the service is down,
+and another responds to such failures by restarting the service.
+This makes it easy to configure various aspects, such as to delay to see if the service itself recovers
+(which here we've set to 15 seconds) or to bail out on multiple failures within a time window (which again we are not doing).
+Running with this blueprint, you'll see that the service shows as on fire for 15s after a `telnet`,
+before the policy restarts it. 
 
+This of course is a simple example, but it shows many of the building blocks used in real-world blueprints,
+and how often they can be easily described and combined in Brooklyn YAML blueprints.
 
 <!--
 TODO building up children entities
@@ -354,7 +363,7 @@ TODO
 
 ### More Information
 
-Plenty of examples of YAML exist in the Brooklyn codebase,
+Plenty of examples of blueprints exist in the Brooklyn codebase,
 so a good starting point is to [`git clone`]({{ site.url }}/dev/code/index.html) it
 and search for `*.yaml` files therein.
 
