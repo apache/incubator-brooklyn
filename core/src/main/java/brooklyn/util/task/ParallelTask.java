@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import brooklyn.management.Task;
-import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -54,7 +54,9 @@ public class ParallelTask<T> extends CompoundTask<T> {
         if (exceptions.isEmpty()) {
             return result;
         } else {
-            throw new CompoundRuntimeException(exceptions.size()+" of "+result.size()+" failed", exceptions);
+            if (result.size()==1 && exceptions.size()==1)
+                throw Exceptions.propagate( exceptions.get(0) );
+            throw Exceptions.propagate(exceptions.size()+" of "+result.size()+" parallel child task"+Strings.s(result.size())+" failed", exceptions);
         }
     }
 }
