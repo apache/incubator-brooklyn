@@ -90,13 +90,13 @@ Another simple blueprint will just create a VM which you can use, without any so
 
 
 **We've omitted the `location` section here and in many of the examples below;
-add the appropriate choice when you paste your YAML. Note that the `provisioningProperties` will be
+add the appropriate choice when you paste your YAML. Note that the `provisioning.properties` will be
 ignored if deploying to `localhost` or `byon` fixed-IP machines.** 
 
 This will create a VM with the specified parameters in your choice of cloud.
 In the GUI (and in the REST API), the entity is called "VM",
 and the hostname and IP address(es) are reported as [sensors]({{ site.url }}/use/guide/defining-applications/basic-concepts.html).
-There are many more `provisioningProperties` supported here,
+There are many more `provisioning.properties` supported here,
 including:
 
 * a `user` to create (if not specified it creates the same username as `brooklyn` is running under) 
@@ -236,9 +236,7 @@ Here's an example deploying the same application but with different flavors of t
 {% readj example_yaml/appserver-w-db-other-flavor.yaml %}
 {% endhighlight %}
 
-We've also brought in the `provisioningProperties` from the VM example earlier
-(although here is is specified as a config key, which takes dot notation,
-in contrast to flags which take camel-case) --
+We've also brought in the `provisioning.properties` from the VM example earlier
 so our database has 8GB RAM.
 Any of those properties, including `imageId` and `user`, can be defined on a per-entity basis.
 

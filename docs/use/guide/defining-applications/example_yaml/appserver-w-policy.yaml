@@ -1,4 +1,4 @@
-name: appserver-policy
+name: appserver-w-policy
 services:
 - type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   initialSize: 1

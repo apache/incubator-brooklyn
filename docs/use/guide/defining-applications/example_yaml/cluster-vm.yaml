@@ -1,4 +1,4 @@
-name: simple-appserver-with-location
+name: cluster-vm
 services:
 - type: brooklyn.entity.group.DynamicCluster
   initialSize: 5
@@ -6,7 +6,7 @@ services:
     $brooklyn:entitySpec:
       type: brooklyn.entity.basic.EmptySoftwareProcess
       name: VM
-      provisioningProperties:
+      provisioning.properties:
         minRam: 8192
         minCores: 4
         minDisk: 100
