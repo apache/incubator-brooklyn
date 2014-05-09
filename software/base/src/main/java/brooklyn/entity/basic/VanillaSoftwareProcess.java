@@ -16,7 +16,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
  * <li> a start command to invoke in {@link #LAUNCH_COMMAND}
  * <p>
  * the only constraint is that the start command must write the PID into the file pointed to by the injected environment variable PID_FILE,
- * unless one of the steps below is done.
+ * unless one of the options below is supported.
  * <p>
  * the start command can be a complex bash command, downloading and unpacking files, and/or handling the PID_FILE requirement 
  * (e.g. <code>export MY_PID_FILE=$PID_FILE ; ./my_start.sh</code> or <code>nohup ./start.sh & ; echo $! > $PID_FILE ; sleep 5</code>),
