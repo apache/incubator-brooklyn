@@ -91,9 +91,9 @@ Another simple blueprint will just create a VM which you can use, without any so
 {% endhighlight %}
 
 
-**We've omitted the `location` section here and in many of the examples below;
+*We've omitted the `location` section here and in many of the examples below;
 add the appropriate choice when you paste your YAML. Note that the `provisioning.properties` will be
-ignored if deploying to `localhost` or `byon` fixed-IP machines.** 
+ignored if deploying to `localhost` or `byon` fixed-IP machines.* 
 
 This will create a VM with the specified parameters in your choice of cloud.
 In the GUI (and in the REST API), the entity is called "VM",
@@ -301,7 +301,6 @@ The following blueprint shows how a simple script can be embedded in the YAML
 
 It's just a `sleep` statement, but you get the idea:  it could be any script you want.
 
-<!-- TODO
 If it's a big script, you'll probably prefer to have it live somewhere else.
 You can write a script to download artifacts and then invoke another script, 
 or you can specify an artifact to download and a script to run relative to the root
@@ -313,26 +312,30 @@ assuming the script is in `start.sh` in the root of the archive at
 {% highlight yaml %}
 {% readj example_yaml/bash-date-file.yaml %}
 {% endhighlight %}
--->
 
 Because Brooklyn insists on monitoring the process, 
 the one complexity is that the script should
 write the PID of the process to `$PID_FILE`.
 (There are other options, as documented on the Javadoc of the `VanillaSoftwareProcess` class.)
 
-
-<!-- 
-TODO restarter policy
-
-Here, because the backgrounded process will terminate after 60s,
-you'll see the entity come up in Brooklyn (after 3s) but then it will fail after a minute.
+Here, you'll see the entity come up in Brooklyn after 3s due to the final sleep,
+but after another 57s the backgrounded process whose PID is monitored will terminate.
+The service will then show as "on-fire".
 If we pretend that's simulating a real-world failure, we might wish to attach a policy
 which automatically restarts it:   
 
 {% highlight yaml %}
 {% readj example_yaml/bash-date-restarter.yaml %}
 {% endhighlight %}
--->
+
+One common pattern in Brooklyn is to compose simple policies.
+In the blueprint above, one policy is triggering a failure sensor
+if the service is down for 10s; the other policy responds to these
+failures by restarting the service.
+With this blueprint, you'll see this show-date-and-sleep "service" 
+fail every minute, but then -- like a phoenix rising from its ashes -- 
+be restarted.
+
 
 <!--
 TODO building up children entities
@@ -340,10 +343,13 @@ TODO building up children entities
 TODO adding sensors and effectors
 -->
 
+<!--
 
 ### Using Chef Recipes
 
 TODO
+
+-->
 
 
 ### More Information

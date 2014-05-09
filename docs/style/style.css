@@ -122,12 +122,13 @@ pre {
     font-family: Consolas, Lucida Console, Monaco, monospace;
     background-color:#e8eded;
     padding: 1em;
-    font-size: 12px;
+    font-size: 85%;
     overflow-y: auto; /* horizontal scroll bar if line length is too long */
 }
 code {
     font-family: Consolas, Lucida Console, Monaco, monospace;
-    font-size: 13px;
+    font-size: 85%;
+    line-height: 85%;
 }
-pre code { font-size: 12px; }
+pre code { font-size: 85%; }
 .highlight { background-color:#e8eded; } /* clipboard icon should have the same background color as the code */
