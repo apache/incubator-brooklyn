@@ -33,6 +33,8 @@ public abstract class AbstractYamlTest {
         super();
     }
 
+    protected ManagementContext mgmt() { return brooklynMgmt; }
+    
     @BeforeMethod(alwaysRun = true)
     public void setup() {
         launcher = new BrooklynCampPlatformLauncherNoServer() {

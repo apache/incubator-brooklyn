@@ -8,14 +8,17 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.Beta;
-import com.google.common.base.Preconditions;
-
 import brooklyn.entity.Entity;
 import brooklyn.management.ManagementContext;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.Reflections;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 public abstract class BrooklynYamlTypeLoader {
 
@@ -62,7 +65,7 @@ public abstract class BrooklynYamlTypeLoader {
             return new LoaderFromKey(null, data).prefix(prefix).getTypeName();
         }
         
-        public BrooklynYamlTypeLoader prefix(String prefix) {
+        public LoaderFromKey prefix(String prefix) {
             typeKeyPrefix = prefix;
             return this;
         }
@@ -87,6 +90,54 @@ public abstract class BrooklynYamlTypeLoader {
             if (typeKeyPrefix!=null) return typeKeyPrefix+"_type";
             return "type";
         }
+        
+        /** as {@link #newInstance(Class)} but inferring the type */
+        public Object newInstance() {
+            return newInstance(null);
+        }
+        
+        /** creates a new instance of the type referred to by this description,
+         * as a subtype of the type supplied here, 
+         * inferring a Map from <code>brooklyn.config</code> key.
+         * TODO in future also picking up recognized flags and config keys (those declared on the type).  
+         * <p>
+         * constructs the object using:
+         * <li> a constructor on the class taking a Map
+         * <li> a no-arg constructor, only if the inferred map is empty  
+         **/
+        public <T> T newInstance(@Nullable Class<T> supertype) {
+            Class<? extends T> type = getType(supertype);
+            Map<String, ?> cfg = getConfigMap();
+            Optional<? extends T> result = Reflections.invokeConstructorWithArgs(type, cfg);
+            if (result.isPresent()) 
+                return result.get();
+            if (cfg.isEmpty()) {
+                result = Reflections.invokeConstructorWithArgs(type);
+                if (result.isPresent()) 
+                    return result.get();
+            }
+            throw new IllegalStateException("No known mechanism for constructing type "+type+" in "+factory.contextForLogging);
+        }
+
+        /** finds the map of config for the type specified;
+         * currently only gets <code>brooklyn.config</code>, returning empty map if none,
+         * but TODO in future should support recognized flags and config keys (those declared on the type),
+         * incorporating code in {@link BrooklynEntityMatcher}.
+         */
+        @SuppressWarnings("unchecked")
+        @Nonnull
+        public Map<String,?> getConfigMap() {
+            MutableMap<String,Object> result = MutableMap.of();
+            Object bc = data.getStringKey("brooklyn.config");
+            if (bc!=null) {
+                if (bc instanceof Map)
+                    result.putAll((Map<? extends String, ?>) bc);
+                else
+                    throw new IllegalArgumentException("brooklyn.config key in "+factory.contextForLogging+" should be a map, not "+bc.getClass()+" ("+bc+")");
+            }
+            return result; 
+        }
+
     }
     
     public static class LoaderFromName extends BrooklynYamlTypeLoader {
@@ -135,5 +186,6 @@ public abstract class BrooklynYamlTypeLoader {
                 + "type '"+typeName+"'", e));
         }
     }
+
 
 }

@@ -14,7 +14,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestEnricher;

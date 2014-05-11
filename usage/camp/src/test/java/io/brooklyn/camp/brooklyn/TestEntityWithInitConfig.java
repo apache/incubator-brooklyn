@@ -8,12 +8,9 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.BasicConfigKey;
 
-import com.google.common.reflect.TypeToken;
-
 @ImplementedBy(TestEntityWithInitConfigImpl.class)
 public interface TestEntityWithInitConfig extends Entity, Startable, EntityLocal, EntityInternal {
-    @SuppressWarnings("serial")
-    public static final ConfigKey<Entity> TEST_ENTITY = BasicConfigKey.builder(new TypeToken<Entity>(){})
+    public static final ConfigKey<Entity> TEST_ENTITY = BasicConfigKey.builder(Entity.class)
             .name("test.entity")
             .build();
     public Entity getEntityCachedOnInit();

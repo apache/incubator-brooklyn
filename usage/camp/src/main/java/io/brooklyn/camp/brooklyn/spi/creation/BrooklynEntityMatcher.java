@@ -65,6 +65,9 @@ public class BrooklynEntityMatcher implements PdpMatcher {
             return false;
         }
 
+        // TODO should we build up a new type, BrooklynEntityComponentTemplate here
+        // complete w EntitySpec -- ie merge w BrooklynComponentTemplateResolver ?
+        
         Builder<? extends PlatformComponentTemplate> builder = PlatformComponentTemplate.builder();
         builder.type( type.indexOf(':')==-1 ? "brooklyn:"+type : type );
         
@@ -115,7 +118,6 @@ public class BrooklynEntityMatcher implements PdpMatcher {
                 throw new IllegalArgumentException("brooklyn.policies must be a list of brooklyn policy definitions");
             brooklynPolicies.addAll((List<?>)origBrooklynPolicies);
         }
-        
         if (!brooklynPolicies.isEmpty())
             builder.customAttribute("brooklyn.policies", brooklynPolicies);
         
@@ -126,10 +128,19 @@ public class BrooklynEntityMatcher implements PdpMatcher {
                 throw new IllegalArgumentException("brooklyn.enrichers must be a list of brooklyn enricher definitions");
             brooklynEnrichers.addAll((List<?>)origBrooklynEnrichers);
         }
-        
         if (!brooklynEnrichers.isEmpty())
             builder.customAttribute("brooklyn.enrichers", brooklynEnrichers);
-        
+
+        List<Object> brooklynInitializers = Lists.newArrayList();
+        Object origBrooklynInitializers = attrs.remove("brooklyn.initializers");
+        if (origBrooklynInitializers != null) {
+            if (!(origBrooklynInitializers instanceof List))
+                throw new IllegalArgumentException("brooklyn.initializers must be a list of brooklyn initializer definitions");
+            brooklynInitializers.addAll((List<?>)origBrooklynInitializers);
+        }
+        if (!brooklynInitializers.isEmpty())
+            builder.customAttribute("brooklyn.initializers", brooklynInitializers);
+
         List<Object> brooklynChildren = Lists.newArrayList();
         Object origBrooklynChildren = attrs.remove("brooklyn.children");
         if (origBrooklynChildren != null) {

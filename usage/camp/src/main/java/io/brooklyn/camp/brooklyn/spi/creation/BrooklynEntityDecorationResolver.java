@@ -1,8 +1,11 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
+import io.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeLoader.LoaderFromKey;
+
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
@@ -11,6 +14,13 @@ import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.config.ConfigBag;
 
+import com.google.common.annotations.Beta;
+
+/**
+ * Pattern for resolving "decorations" on service specs / entity specs, such as policies, enrichers, etc.
+ * @since 0.7.0
+ */
+@Beta
 public abstract class BrooklynEntityDecorationResolver<DT> {
 
     public final BrooklynYamlTypeLoader.Factory loader;
@@ -71,13 +81,10 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
 
         @Override
         protected void addDecorationFromJsonMap(Map<?, ?> decorationJson, List<PolicySpec<?>> decorations) {
-            Class<? extends Policy> policyType = loader.from(decorationJson).prefix("policy").getType(Policy.class);
-            PolicySpec<? extends Policy> spec = PolicySpec.create(policyType)
-                // TODO support other keys at the top-level (eg flags, named config keys?)
-                // ideally combining code w other specs 
-                // (might require "configurable" interface because configure call below is specific to PolicySpec)
-                .configure( (Map<?,?>)decorationJson.get("brooklyn.config") );
-            decorations.add(spec);
+            LoaderFromKey decoLoader = loader.from(decorationJson).prefix("policy");
+            // this pattern of creating a spec could be simplified with a "Configurable" superinterface on *Spec  
+            decorations.add(PolicySpec.create(decoLoader.getType(Policy.class))
+                .configure( decoLoader.getConfigMap() ));
         }
     }
 
@@ -98,11 +105,30 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
 
         @Override
         protected void addDecorationFromJsonMap(Map<?, ?> decorationJson, List<EnricherSpec<?>> decorations) {
-            Class<? extends Enricher> EnricherType = loader.from(decorationJson).prefix("enricher").getType(Enricher.class);
-            EnricherSpec<? extends Enricher> spec = EnricherSpec.create(EnricherType)
-                // TODO support other keys at the top-level (eg flags, named config keys?), as above in PolicySpecResolver
-                .configure( (Map<?,?>)decorationJson.get("brooklyn.config") );
-            decorations.add(spec);
+            LoaderFromKey decoLoader = loader.from(decorationJson).prefix("enricher");
+            decorations.add(EnricherSpec.create(decoLoader.getType(Enricher.class))
+                .configure( decoLoader.getConfigMap() ));
+        }
+    }
+    
+    public static class InitializerResolver extends BrooklynEntityDecorationResolver<EntityInitializer> {
+        
+        protected InitializerResolver(BrooklynYamlTypeLoader.Factory loader) { super(loader); }
+        @Override protected String getDecorationKind() { return "Entity initializer"; }
+
+        @Override
+        public void decorate(EntitySpec<?> entitySpec, ConfigBag attrs) {
+            entitySpec.addInitializers(buildListOfTheseDecorationsFromEntityAttributes(attrs));
+        }
+        
+        @Override
+        protected Object getDecorationAttributeJsonValue(ConfigBag attrs) {
+            return attrs.getStringKey("brooklyn.initializers");
+        }
+
+        @Override
+        protected void addDecorationFromJsonMap(Map<?, ?> decorationJson, List<EntityInitializer> decorations) {
+            decorations.add(loader.from(decorationJson).prefix("initializer").newInstance(EntityInitializer.class));
         }
     }
     

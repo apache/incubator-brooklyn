@@ -44,6 +44,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
+/** this converts PlatformComponentTemplate instances whose type is prefixed "brooklyn:"
+ * to Brooklyn EntitySpec instances.
+ * but TODO this should probably be done by {@link BrooklynEntityMatcher} 
+ * so we have a spec by the time we come to instantiate.
+ * (currently privileges "brooklyn.*" key names are checked in both places!)  
+ */
 public class BrooklynComponentTemplateResolver {
 
     final ManagementContext mgmt;
@@ -202,6 +208,7 @@ public class BrooklynComponentTemplateResolver {
     protected <T extends Entity> void decorateSpec(EntitySpec<T> spec) {
         new BrooklynEntityDecorationResolver.PolicySpecResolver(loader).decorate(spec, attrs);
         new BrooklynEntityDecorationResolver.EnricherSpecResolver(loader).decorate(spec, attrs);
+        new BrooklynEntityDecorationResolver.InitializerResolver(loader).decorate(spec, attrs);
         
         configureEntityConfig(spec);
     }
