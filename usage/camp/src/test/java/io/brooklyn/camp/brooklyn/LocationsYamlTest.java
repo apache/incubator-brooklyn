@@ -7,18 +7,23 @@ import static org.testng.Assert.assertTrue;
 import java.io.StringReader;
 import java.util.List;
 
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
+import brooklyn.location.MachineLocation;
+import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.MultiLocation;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-@Test
 public class LocationsYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(LocationsYamlTest.class);
 
@@ -175,6 +180,85 @@ public class LocationsYamlTest extends AbstractYamlTest {
         assertEquals(loc.getDisplayName(), "loc1");
     }
 
+    @Test
+    public void testByonYamlHosts() throws Exception {
+        String yaml = 
+                "locations:\n"+
+                "- byon:\n"+
+                "    user: root\n"+
+                "    privateKeyFile: /tmp/key_file\n"+
+                "    hosts: \n"+
+                "    - 127.0.0.1\n"+
+                "    - brooklyn@127.0.0.2\n"+
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntity\n";
+        
+        Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
+        Entity child = Iterables.getOnlyElement(app.getChildren());
+        FixedListMachineProvisioningLocation<?> loc = (FixedListMachineProvisioningLocation<?>) Iterables.getOnlyElement(child.getLocations());
+        Assert.assertEquals(loc.getChildren().size(), 2);
+        
+        SshMachineLocation l1 = (SshMachineLocation)loc.obtain();
+        assertUserAddress(l1, "root", "127.0.0.1");
+        assertUserAddress((SshMachineLocation)loc.obtain(), "brooklyn", "127.0.0.2");
+        Assert.assertEquals(l1.getConfig(SshMachineLocation.PRIVATE_KEY_FILE), "/tmp/key_file");
+    }
+
+    @Test
+    public void testByonYamlHostsString() throws Exception {
+        String yaml = 
+                "locations:\n"+
+                "- byon:\n"+
+                "    user: root\n"+
+                "    hosts: \"{127.0.{0,127}.{1-2},brooklyn@127.0.0.127}\"\n"+
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntity\n";
+        
+        Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
+        Entity child = Iterables.getOnlyElement(app.getChildren());
+        FixedListMachineProvisioningLocation<?> loc = (FixedListMachineProvisioningLocation<?>) Iterables.getOnlyElement(child.getLocations());
+        Assert.assertEquals(loc.getChildren().size(), 5);
+        
+        assertUserAddress((SshMachineLocation)loc.obtain(), "root", "127.0.0.1");
+        assertUserAddress((SshMachineLocation)loc.obtain(), "root", "127.0.0.2");
+        assertUserAddress((SshMachineLocation)loc.obtain(), "root", "127.0.127.1");
+        assertUserAddress((SshMachineLocation)loc.obtain(), "root", "127.0.127.2");
+        assertUserAddress((SshMachineLocation)loc.obtain(), "brooklyn", "127.0.0.127");
+    }
+
+    @Test
+    public void testMultiByonYaml() throws Exception {
+        String yaml = 
+                "locations:\n"+
+                "- multi:\n"+
+                "   targets:\n"+
+                "   - byon:\n"+
+                "      user: root\n"+
+                "      hosts: 127.0.{0,127}.{1-2}\n"+
+                "   - byon:\n"+
+                "      user: brooklyn\n"+
+                "      hosts:\n"+
+                "      - 127.0.0.127\n"+
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntity\n";
+        
+        Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
+        Entity child = Iterables.getOnlyElement(app.getChildren());
+        MultiLocation<?> loc = (MultiLocation<?>) Iterables.getOnlyElement(child.getLocations());
+        Assert.assertEquals(loc.getSubLocations().size(), 2);
+        
+        assertUserAddress((SshMachineLocation)loc.obtain(), "root", "127.0.0.1");
+        assertUserAddress((SshMachineLocation)loc.obtain(), "root", "127.0.0.2");
+        assertUserAddress((SshMachineLocation)loc.obtain(), "root", "127.0.127.1");
+        assertUserAddress((SshMachineLocation)loc.obtain(), "root", "127.0.127.2");
+        assertUserAddress((SshMachineLocation)loc.obtain(), "brooklyn", "127.0.0.127");
+    }
+
+    public static void assertUserAddress(MachineLocation l, String user, String address) {
+        Assert.assertEquals(l.getAddress().getHostAddress(), address);
+        if (!Strings.isBlank(user)) Assert.assertEquals(((SshMachineLocation)l).getUser(), user);        
+    }
+    
     @Override
     protected Logger getLogger() {
         return log;

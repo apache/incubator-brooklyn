@@ -90,7 +90,8 @@ public class WildcardGlobs {
         }
     }
     /** returns a list with no curly braces in any entries; e.g. given a{,b} gives a and ab; 
-     * quotes and parentheses are kept, but their contents may be excluded from expansion or otherwise treated specially as per the flag */
+     * quotes and parentheses are kept, but their contents may be excluded from expansion or otherwise treated specially as per the flag.
+     * with allowNumericRanges, "{1-3}" is permitted for {1,2,3}. */
     public static List<String> getGlobsAfterBraceExpansion(String pattern, boolean allowNumericRanges, PhraseTreatment quoteTreatment, PhraseTreatment parenthesesTreatment) throws InvalidPatternException {
         List<ExpressionToExpand> patterns = new ArrayList<ExpressionToExpand>();
         List<String> result = new ArrayList<String>();

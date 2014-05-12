@@ -2,12 +2,16 @@ package brooklyn.location.basic;
 
 import static org.testng.Assert.assertTrue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
@@ -19,6 +23,8 @@ import com.google.common.collect.ImmutableMap;
 
 public class MultiLocationTest {
 
+    private static final Logger log = LoggerFactory.getLogger(MultiLocationTest.class);
+    
     private LocalManagementContext managementContext;
     private SshMachineLocation mac1a;
     private SshMachineLocation mac1b;
@@ -75,4 +81,20 @@ public class MultiLocationTest {
         assertTrue(ImmutableList.of(mac1a, mac1b, mac2a, mac2b).contains(obtained));
         multiLoc.release(obtained);
     }
+    
+    @Test
+    public void testObtainsMovesThroughSubLocations() throws Exception {
+        Assert.assertEquals(multiLoc.obtain().getAddress().getHostAddress(), "1.1.1.1");
+        Assert.assertEquals(multiLoc.obtain().getAddress().getHostAddress(), "1.1.1.2");
+        Assert.assertEquals(multiLoc.obtain().getAddress().getHostAddress(), "1.1.1.3");
+        Assert.assertEquals(multiLoc.obtain().getAddress().getHostAddress(), "1.1.1.4");
+        try {
+            multiLoc.obtain();
+            Assert.fail();
+        } catch (NoMachinesAvailableException e) {
+            log.info("Error when no machines available across locations is: "+e);
+            Assert.assertTrue(e.toString().contains("loc1"), "Message should have referred to sub-location message: "+e);
+        }
+    }
+
 }

@@ -6,11 +6,13 @@ import static org.testng.Assert.fail;
 
 import java.net.InetAddress;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.annotation.Nullable;
 
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -18,10 +20,13 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
+import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
@@ -99,6 +104,25 @@ public class MultiLocationResolverTest {
         MultiLocation<SshMachineLocation> loc = resolve("named:mynamed");
         assertEquals(loc.obtain(ImmutableMap.of()).getAddress(), InetAddress.getByName("1.1.1.1"));
     }
+
+    @Test
+    public void testResolvesFromMap() throws NoMachinesAvailableException {
+        Location l = managementContext.getLocationRegistry().resolve("multi", MutableMap.of("targets", 
+            MutableList.of("localhost", MutableMap.of("byon", MutableMap.of("hosts", "127.0.0.127")))));
+        MultiLocation<?> ml = (MultiLocation<?>)l;
+        Iterator<MachineProvisioningLocation<?>> ci = ml.getSubLocations().iterator();
+        
+        l = ci.next();
+        Assert.assertTrue(l instanceof LocalhostMachineProvisioningLocation, "Expected localhost, got "+l);
+        
+        l = ci.next();
+        Assert.assertTrue(l instanceof FixedListMachineProvisioningLocation, "Expected fixed, got "+l);
+        MachineLocation sl = ((FixedListMachineProvisioningLocation<?>)l).obtain();
+        Assert.assertEquals(sl.getAddress().getHostAddress(), "127.0.0.127");
+        
+        Assert.assertFalse(ci.hasNext());
+    }
+
 
     private void assertThrowsNoSuchElement(String val) {
         try {

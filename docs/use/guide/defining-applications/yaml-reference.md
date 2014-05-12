@@ -33,19 +33,31 @@ the entity being defined, with these being the most common:
   
 * `brooklyn.config`: configuration key-value pairs passed to the service entity being created
 
-* `brooklyn.children`: TODO
+* `brooklyn.children`: a list of `ServiceSpecifications` which will be configured as children of this entity
 
-* `brooklyn.policies`: TODO
+* `brooklyn.policies`: a list of policies, each as a map described with their `type` and their `brooklyn.config` as keys
 
-Each entity can define additional key-value pairs, with other keys being passed as flags,
-so consult its documentation or source for more information. 
+* `brooklyn.enrichers`: a list of enrichers, each as a map described with their `type` and their `brooklyn.config` as keys
+
+* `brooklyn.initializers`: a list of `EntityInitializer` instances to be constructed and run against the entity, 
+  each as a map described with their `type` and their `brooklyn.config` as keys.
+  An `EntityInitiailzer` can perform arbitrary customization to an entity whilst it is being constructed,
+  such as adding dynamic sensors and effectors. These classes must expose a public constructor taking
+  a single `Map` where the `brooklyn.config` is passed in.
+
+Entities may accept additional key-value pairs, 
+usually documented on the entity.
+These typically consist of the config keys or flags (indicated by `@SetFromFlag`) declared on the entity class itself.
+Declared flags and config keys may be passed in at the root of the `ServiceSpecification` or in `brooklyn.config`.
+(Undeclared config is only accepted in the `brooklyn.config` map.)
 
 
 ## `LocationSpecification` Elements
 
-TODO - as a string or as a map
+<!-- TODO - expand this, currently it's concise notes -->
 
-in brief it is like this:
+In brief, location specs are supplied as follows, either for the entire application (at the root)
+or for a specific `ServiceSpecification`:
 
     location:
       jclouds:aws-ec2:
@@ -53,20 +65,19 @@ in brief it is like this:
         identity: AKA_YOUR_ACCESS_KEY_ID
         credential: <access-key-hex-digits>
 
-or in many cases it can be in-lined:
+Or in many cases it can be in-lined:
 
     location: localhost
     location: named:my_openstack
     location: aws-ec2:us-west-1
-    
-for the first, you'll need password-less ssh access to localhost.
-for the second, you'll need to define a named location in `brooklyn.properties`,
-using `brooklyn.location.named.my_openstack....` properties.
-for the third, you'll need to have the identity and credentials defined in
-`brooklyn.properties`, using `brooklyn.location.jclouds.aws-ec2....` properties.
-for more information see TODO.
 
-if specifying multiple locations
+For the first immediately, you'll need password-less ssh access to localhost.
+For the second, you'll need to define a named location in `brooklyn.properties`,
+using `brooklyn.location.named.my_openstack....` properties.
+For the third, you'll need to have the identity and credentials defined in
+`brooklyn.properties`, using `brooklyn.location.jclouds.aws-ec2....` properties.
+
+If specifying multiple locations, e.g. for a fabric:
 
     locations:
     - localhost
@@ -77,21 +88,42 @@ if specifying multiple locations
         identity: AKA_YOUR_ACCESS_KEY_ID
         credential: <access-key-hex-digits>
 
-finally, if you have pre-existing nodes, you can use the `byon` provider:
+If you have pre-existing nodes, you can use the `byon` provider, either in this format:
 
     location:
       byon:
         user: root
-        privateKeyFile: ~/.ssh/couchbase.pem
+        privateKeyFile: ~/.ssh/key.pem
         hosts:
-        - 159.253.144.139
-        - 81.95.144.59
-        - 159.253.144.140
         - 81.95.144.58
+        - 81.95.144.59
+        - brooklyn@159.253.144.139
+        - brooklyn@159.253.144.140
 
-TODO with byon, in yaml are ranges supported e.g. `127.0.0.[1-127]`?
+or:
 
-TODO with byon, how do you specify per-host user?
+    location:
+      byon:
+        user: root
+        privateKeyFile: ~/.ssh/key.pem
+        hosts: "{81.95.144.{58,59},brooklyn@159.253.144.{139-140}"
+
+You cannot use glob expansions with the list notation, nor can you specify per-host
+information apart from user within a single `byon` declaration.
+However you can combine locations using `multi`:
+
+    location:
+      multi:
+        targets:
+        - byon:
+            user: root
+            privateKeyFile: ~/.ssh/key.pem
+            hosts:
+            - 81.95.144.58
+            - 81.95.144.59
+        - byon:
+            privateKeyFile: ~/.ssh/brooklyn_key.pem
+            hosts: brooklyn@159.253.144{139-140}
 
 
 ## DSL Commands
@@ -123,13 +155,17 @@ These can be supplied either as strings or as lists and maps in YAML.
 
 ## Some Powerful YAML Entities
 
-TODO - All entities support configuration via YAML, but these entities in particular 
+All entities support configuration via YAML, but these entities in particular 
 have been designed for general purpose use from YAML.  Consult the Javadoc for these
 elements for more information:
 
+* **Vanilla Software** in `VanillaSoftareProcess`: makes it very easy to build entities
+  which use `bash` commands to install and the PID to stop and restart
+* **Chef** in `ChefSoftwareProcess`: makes it easy to use Chef cookbooks to build entities,
+  either with recipes following conventions or with configuration in the `ServiceSpecification`
+  to use artibitrary recipes 
+* `DynamicCluster`: provides resizable clusters given a `memberSpec` set with `$brooklyn.entitySpec(Map)` as described above 
+* `DynamicFabric`: provides a set of homogeneous instances started in different locations,
+  with an effector to `addLocation`, i.e. add a new instance in a given location, at runtime
 
-* Vanilla Software
-* Chef
-* Group and Cluster
-* Fabric
 
