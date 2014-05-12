@@ -51,8 +51,8 @@ public class BasicOsDetails implements OsDetails {
 
     @Override
     public boolean isLinux() {
-        String unices = "centos|debian|fedora|gentoo|linux|rhel|slackware|solaris|suse|ubuntu";
-        return getName() != null && Pattern.matches(unices, getName().toLowerCase());
+        String unices = "(?i)centos|debian|fedora|gentoo|.*linux.*|rhel|slackware|solaris|suse|ubuntu";
+        return getName() != null && Pattern.matches(unices, getName());
     }
 
     @Override
