@@ -1,7 +1,6 @@
 package brooklyn.rest.transform;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -10,9 +9,9 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EffectorSummary;
+import brooklyn.rest.domain.EffectorSummary.ParameterSummary;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -24,9 +23,9 @@ public class EffectorTransformer {
         String entityUri = applicationUri + "/entities/" + entity.getId();
         return new EffectorSummary(effector.getName(), effector.getReturnTypeName(),
                  ImmutableSet.copyOf(Iterables.transform(effector.getParameters(),
-                new Function<ParameterType<?>, EffectorSummary.ParameterSummary>() {
+                new Function<ParameterType<?>, EffectorSummary.ParameterSummary<?>>() {
                     @Override
-                    public EffectorSummary.ParameterSummary apply(@Nullable ParameterType<?> parameterType) {
+                    public EffectorSummary.ParameterSummary<?> apply(@Nullable ParameterType<?> parameterType) {
                         return parameterSummary(parameterType);
                     }
                 })), effector.getDescription(), ImmutableMap.of(
@@ -37,10 +36,10 @@ public class EffectorTransformer {
     }
 
     public static EffectorSummary effectorSummaryForCatalog(Effector<?> effector) {
-        Set<EffectorSummary.ParameterSummary> parameters = ImmutableSet.copyOf(Iterables.transform(effector.getParameters(),
-                new Function<ParameterType<?>, EffectorSummary.ParameterSummary>() {
+        Set<EffectorSummary.ParameterSummary<?>> parameters = ImmutableSet.copyOf(Iterables.transform(effector.getParameters(),
+                new Function<ParameterType<?>, EffectorSummary.ParameterSummary<?>>() {
                     @Override
-                    public EffectorSummary.ParameterSummary apply(ParameterType<?> parameterType) {
+                    public EffectorSummary.ParameterSummary<?> apply(ParameterType<?> parameterType) {
                         return parameterSummary(parameterType);
                     }
                 }));
@@ -48,8 +47,9 @@ public class EffectorTransformer {
                 effector.getReturnTypeName(), parameters, effector.getDescription(), null);
     }
     
-    protected static EffectorSummary.ParameterSummary parameterSummary(ParameterType<?> parameterType) {
-        return new EffectorSummary.ParameterSummary(parameterType.getName(), parameterType.getParameterClassName(), 
+    @SuppressWarnings("unchecked")
+    protected static EffectorSummary.ParameterSummary<?> parameterSummary(ParameterType<?> parameterType) {
+        return new ParameterSummary(parameterType.getName(), parameterType.getParameterClassName(), 
                 parameterType.getDescription(), parameterType.getDefaultValue());
     }
 }

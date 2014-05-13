@@ -17,7 +17,7 @@ public class EffectorSummaryTest {
   final EffectorSummary effectorSummary = new EffectorSummary(
       "stop",
       "void",
-      ImmutableSet.<EffectorSummary.ParameterSummary>of(),
+      ImmutableSet.<EffectorSummary.ParameterSummary<?>>of(),
       "Effector description",
       ImmutableMap.of(
           "self", URI.create("/v1/applications/redis-app/entities/redis-ent/effectors/stop")
