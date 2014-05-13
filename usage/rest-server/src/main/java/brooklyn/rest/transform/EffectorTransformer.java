@@ -1,6 +1,7 @@
 package brooklyn.rest.transform;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -11,6 +12,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EffectorSummary;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -48,6 +50,6 @@ public class EffectorTransformer {
     
     protected static EffectorSummary.ParameterSummary parameterSummary(ParameterType<?> parameterType) {
         return new EffectorSummary.ParameterSummary(parameterType.getName(), parameterType.getParameterClassName(), 
-                parameterType.getDescription(), parameterType.getDefaultValue() == null ? "" : parameterType.getDefaultValue().toString());
+                parameterType.getDescription(), parameterType.getDefaultValue());
     }
 }

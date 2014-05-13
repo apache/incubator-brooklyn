@@ -4,7 +4,6 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
-
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
@@ -13,18 +12,18 @@ import com.google.common.collect.ImmutableMap;
 
 public class EffectorSummary {
 
-  public static class ParameterSummary {
+  public static class ParameterSummary<T> {
     private final String name;
     private final String type;
     @JsonSerialize(include=Inclusion.NON_NULL)
     private final String description;
-    private final String defaultValue;
+    private final T defaultValue;
 
-    public ParameterSummary(
+    public ParameterSummary (
         @JsonProperty("name") String name,
         @JsonProperty("type") String type,
         @JsonProperty("description") String description,
-        @JsonProperty("defaultValue") String defaultValue
+        @JsonProperty("defaultValue") T defaultValue
     ) {
       this.name = name;
       this.type = type;
@@ -44,7 +43,7 @@ public class EffectorSummary {
       return description;
     }
     
-    public String getDefaultValue() {
+    public T getDefaultValue() {
         return defaultValue;
     }
 
