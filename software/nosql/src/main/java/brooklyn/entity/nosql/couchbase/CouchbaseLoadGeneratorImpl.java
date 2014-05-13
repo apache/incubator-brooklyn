@@ -10,4 +10,18 @@ public class CouchbaseLoadGeneratorImpl extends SoftwareProcessImpl implements C
         return CouchbaseLoadGeneratorSshDriver.class;
     }
 
+    @Override
+    public void pillowfight(String targetHostnameAndPort, String bucket, String username, String password, Integer iterations,
+            Integer numItems, String keyPrefix, Integer numThreads, Integer numInstances, Integer randomSeed, Integer ratio,
+            Integer minSize, Integer maxSize) {
+        ((CouchbaseLoadGeneratorDriver)getDriver()).pillowfight(targetHostnameAndPort, bucket, username, password, 
+                iterations, numItems, keyPrefix, numThreads, numInstances, randomSeed, ratio, minSize, maxSize);
+    }
+    
+    @Override
+    protected void connectSensors() {
+        super.connectSensors();
+        connectServiceUpIsRunning();
+    }
+
 }
