@@ -13,6 +13,8 @@ public class BasicOsDetails implements OsDetails {
 
     final String name, arch, version;
     final boolean is64bit;
+    // (?i) forces matches to be case insensitive
+    public static final String UNIX_OS_NAME_PATTERNS = "(?i).*linux.*|centos|debian|fedora|gentoo|rhel|slackware|solaris|suse|ubuntu|coreos";
 
     /** Sets is64Bit according to value of arch parameter. */
     public BasicOsDetails(String name, String arch, String version) {
@@ -51,8 +53,7 @@ public class BasicOsDetails implements OsDetails {
 
     @Override
     public boolean isLinux() {
-        String unices = "centos|debian|fedora|gentoo|linux|rhel|slackware|solaris|suse|ubuntu";
-        return getName() != null && Pattern.matches(unices, getName().toLowerCase());
+        return getName() != null && Pattern.matches(UNIX_OS_NAME_PATTERNS, getName());
     }
 
     @Override
