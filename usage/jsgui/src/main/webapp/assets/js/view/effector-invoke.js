@@ -56,6 +56,7 @@ define([
                         name:param.name,
                         type:param.type,
                         description:param.description?param.description:"",
+                        defaultValue:param.defaultValue
                     }))
                 })
                 var container = this.$("#selector-container")

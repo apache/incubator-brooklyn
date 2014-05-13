@@ -47,6 +47,7 @@ public class EffectorTransformer {
     }
     
     protected static EffectorSummary.ParameterSummary parameterSummary(ParameterType<?> parameterType) {
-        return new EffectorSummary.ParameterSummary(parameterType.getName(), parameterType.getParameterClassName(), parameterType.getDescription());
+        return new EffectorSummary.ParameterSummary(parameterType.getName(), parameterType.getParameterClassName(), 
+                parameterType.getDescription(), parameterType.getDefaultValue() == null ? "" : parameterType.getDefaultValue().toString());
     }
 }

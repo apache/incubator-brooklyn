@@ -18,15 +18,18 @@ public class EffectorSummary {
     private final String type;
     @JsonSerialize(include=Inclusion.NON_NULL)
     private final String description;
+    private final String defaultValue;
 
     public ParameterSummary(
         @JsonProperty("name") String name,
         @JsonProperty("type") String type,
-        @JsonProperty("description") String description
+        @JsonProperty("description") String description,
+        @JsonProperty("defaultValue") String defaultValue
     ) {
       this.name = name;
       this.type = type;
       this.description = description;
+      this.defaultValue = defaultValue;
     }
 
     public String getName() {
@@ -39,6 +42,10 @@ public class EffectorSummary {
 
     public String getDescription() {
       return description;
+    }
+    
+    public String getDefaultValue() {
+        return defaultValue;
     }
 
     @Override
@@ -54,6 +61,8 @@ public class EffectorSummary {
         return false;
       if (type != null ? !type.equals(that.type) : that.type != null)
         return false;
+      if (defaultValue != null ? !type.equals(that.defaultValue) : that.defaultValue != null)
+          return false;
 
       return true;
     }
@@ -63,6 +72,7 @@ public class EffectorSummary {
       int result = name != null ? name.hashCode() : 0;
       result = 31 * result + (type != null ? type.hashCode() : 0);
       result = 31 * result + (description != null ? description.hashCode() : 0);
+      result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
       return result;
     }
 

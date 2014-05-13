@@ -9,7 +9,8 @@ define([
             return {
                 name:"",
                 type:"",
-                description:""
+                description:"",
+                defaultValue:""
             }
         }
     })
