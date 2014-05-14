@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.BrooklynConfigKeys;
@@ -37,7 +38,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.SUGGESTED_VERSION, "0.7.0-SNAPSHOT"); // BROOKLYN_VERSION
 
-    // Takes presidence over downloadUrl, if non-null
+    // Takes precedence over downloadUrl, if non-null
     @SetFromFlag("distroUploadUrl")
     public static final ConfigKey<String> DISTRO_UPLOAD_URL = ConfigKeys.newStringConfigKey(
             "brooklynnode.distro.uploadurl", "URL for uploading the brooklyn distro (retrieved locally and pushed to remote install location)", null);
@@ -51,6 +52,11 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     		    "http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/${version}/brooklyn-dist-${version}-dist.tar.gz"+
     		"</#if>");
 
+    @SetFromFlag("subpathInArchive")
+    ConfigKey<String> SUBPATH_IN_ARCHIVE = ConfigKeys.newStringConfigKey("brooklynnode.download.archive.subpath",
+        "Path to the main directory in the archive being supplied for installation, use '.', "
+        + "defaulting to 'brooklyn-"+BrooklynVersion.INSTANCE.getVersion()+"' if blank", null);
+
     @SetFromFlag("managementUser")
     ConfigKey<String> MANAGEMENT_USER = ConfigKeys.newConfigKey("brooklynnode.managementUser",
             "The user for logging into the brooklyn web-console (also used for health-checks)",
@@ -59,6 +65,11 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     @SetFromFlag("managementPassword")
     ConfigKey<String> MANAGEMENT_PASSWORD =
             ConfigKeys.newStringConfigKey("brooklynnode.managementPassword", "Password for MANAGEMENT_USER.", "password");
+
+    @SetFromFlag("launchScriptPath")
+    ConfigKey<String> LAUNCH_SCRIPT = ConfigKeys.newStringConfigKey("brooklynnode.download.launch.command",
+        "Path to the script to launch Brooklyn / the app relative to the subpath in the archive, defaulting to 'bin/brooklyn'", 
+        "bin/brooklyn");
 
     @SetFromFlag("app")
     public static final BasicAttributeSensorAndConfigKey<String> APP = new BasicAttributeSensorAndConfigKey<String>(

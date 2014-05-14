@@ -38,6 +38,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
+/**
+ * This test needs to able to access the binary artifact in order to run.
+ * For dev versions you can do this by placing the artifact in the repository, e.g. at:
+ * 
+ * file://$HOME/.brooklyn/repository/BrooklynNode/0.7.0-SNAPSHOT/brooklyn-0.7.0-SNAPSHOT-dist.tar.gz (for the appropriate BROOKLYN_VERSION)
+ */
 public class BrooklynNodeIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynNodeIntegrationTest.class);
@@ -294,7 +300,11 @@ public class BrooklynNodeIntegrationTest {
     
     @Test(groups="Integration")
     public void testUsesLocation() throws Exception {
-        String brooklynPropertiesContents = "brooklyn.location.named.mynamedloc=localhost:(name=myname)";
+        String brooklynPropertiesContents = 
+            "brooklyn.location.named.mynamedloc=localhost:(name=myname)\n"+
+            //force lat+long so test will work when offline
+            "brooklyn.location.named.mynamedloc.latitude=123\n"+ 
+            "brooklyn.location.named.mynamedloc.longitude=45.6\n";
         Files.copy(BROOKLYN_PROPERTIES_PATH, BROOKLYN_PROPERTIES_BAK_PATH);
 
         try {
@@ -315,7 +325,7 @@ public class BrooklynNodeIntegrationTest {
             // Find the id of the concrete location instance of the app
             String appsContent = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
             List<String[]> appLocationIds = parseJsonList(appsContent, ImmutableList.of("spec", "locations"), String[].class);
-            String appLocationId = Iterables.getOnlyElement(appLocationIds)[0];
+            String appLocationId = Iterables.getOnlyElement(appLocationIds)[0];  // app.getManagementContext().getLocationRegistry()
 
             // Check that the concrete location is of the required type
             String locatedLocationsContent = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/locations/usage/LocatedLocations");

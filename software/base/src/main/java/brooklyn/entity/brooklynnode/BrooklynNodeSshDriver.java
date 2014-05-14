@@ -21,8 +21,10 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -38,7 +40,8 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
     }
 
     public String getBrooklynHome() {
-        return getInstallDir()+"/brooklyn-"+getVersion();
+        return getRunDir();
+//        return getExpandedInstallDir();
     }
 
     @Override
@@ -51,16 +54,25 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
     }
     
     @Override
+    protected String getInstallLabelExtraSalt() {
+        return Identifiers.makeIdFromHash(Objects.hashCode(entity.getConfig(BrooklynNode.DOWNLOAD_URL), entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL)));
+    }
+    
+    @Override
     public void install() {
         String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
         
         // Need to explicitly give file, because for snapshot URLs you don't get a clean filename from the URL.
         // This filename is used to generate the first URL to try: 
-        // file://$HOME/.brooklyn/repository/BrooklynNode/0.6.0-SNAPSHOT/brooklyn-dist-0.6.0-SNAPSHOT-dist.tar.gz
-        DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", "brooklyn-dist-"+getVersion()+"-dist.tar.gz"));
+        // file://$HOME/.brooklyn/repository/BrooklynNode/0.6.0-SNAPSHOT/brooklyn-0.6.0-SNAPSHOT-dist.tar.gz
+        // (DOWNLOAD_URL overrides this and has a default which comes from maven)
+        DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", "brooklyn-"+getVersion()+"-dist.tar.gz"));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("brooklyn-%s", getVersion())));
+        
+        String subpath = entity.getConfig(BrooklynNode.SUBPATH_IN_ARCHIVE);
+        if (Strings.isBlank(subpath)) subpath = format("brooklyn-%s", getVersion());
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(subpath));
         
         newScript("createInstallDir")
                 .body.append("mkdir -p "+getInstallDir())
@@ -68,6 +80,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                 .execute();
 
         List<String> commands = Lists.newArrayList();
+        // TODO use machine.installTo ... but that only works w a single location currently
         if (uploadUrl != null) {
             // Only upload if not already installed
             boolean exists = newScript("checkIfInstalled")
@@ -95,9 +108,14 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                 .body.append(
                         // workaround for AMP distribution placing everything in the root of this archive, but
                         // brooklyn distribution placing everything in a subdirectory: check to see if subdirectory
-                        // with expect name exists; symlink to same directory if it doesn't
-                        format("[ -d %1$s/brooklyn-%2$s ] || ln -s . %1$s/brooklyn-%2$s", getInstallDir(), getVersion()),
-                        format("cp -R %s/brooklyn-%s/{bin,conf} .", getInstallDir(), getVersion()),
+                        // with expected name exists; symlink to same directory if it doesn't
+                        // FIXME remove when all downstream usages don't use this
+                        format("[ -d %1$s ] || ln -s . %1$s", getExpandedInstallDir(), getExpandedInstallDir()),
+                        
+                        // previously we only copied bin,conf and set BROOKLYN_HOME to the install dir;
+                        // but that does not play nicely if installing dists other than brooklyn
+                        // (such as what is built by our artifact)  
+                        format("cp -R %s/* .", getExpandedInstallDir()),
                         "mkdir -p ./lib/")
                 .execute();
         
@@ -169,7 +187,9 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         String localBrooklynPropertiesPath = processTemplateContents(getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH));
         String bindAddress = getEntity().getAttribute(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS);
 
-        String cmd = "./bin/brooklyn launch";
+        String cmd = entity.getConfig(BrooklynNode.LAUNCH_SCRIPT);
+        if (Strings.isBlank(cmd)) cmd = "./bin/brooklyn";
+        cmd += " launch";
         if (app != null) {
             cmd += " --app "+app;
         }
