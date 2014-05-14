@@ -1,6 +1,5 @@
 package brooklyn.entity.group;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,18 +7,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeToken;
 
 /** abstract class which helps track membership of a group, invoking (empty) methods in this class on MEMBER{ADDED,REMOVED} events, as well as SERVICE_UP {true,false} for those members. */
 public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
@@ -27,18 +32,34 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     
     private Group group;
     
-    @SetFromFlag
-    private Set<Sensor<?>> sensorsToTrack;
+    private Map<String,Map<Sensor<Object>, Object>> entitySensorCache = new ConcurrentHashMap<String, Map<Sensor<Object>, Object>>();
+    
+    @SuppressWarnings("serial")
+    public static final ConfigKey<Set<Sensor<?>>> SENSORS_TO_TRACK = ConfigKeys.newConfigKey(
+            new TypeToken<Set<Sensor<?>>>() {},
+            "sensorsToTrack",
+            "Sensors of members to be monitored (implicitly adds service-up to this list, but that behaviour may be deleted in a subsequent release!)",
+            ImmutableSet.<Sensor<?>>of());
+
+    public static final ConfigKey<Boolean> NOTIFY_ON_DUPLICATES = ConfigKeys.newBooleanConfigKey("notifyOnDuplicates",
+            "Whether to notify listeners when a sensor is published with the same value as last time",
+            true);
     
     public AbstractMembershipTrackingPolicy(Map<?,?> flags) {
         super(flags);
-        if (sensorsToTrack == null)  sensorsToTrack = Sets.newLinkedHashSet();
     }
     
     public AbstractMembershipTrackingPolicy() {
-        this(Collections.emptyMap());
+        super();
     }
 
+    protected Set<Sensor<?>> getSensorsToTrack() {
+        return MutableSet.<Sensor<?>>builder()
+                .addAll(getRequiredConfig(SENSORS_TO_TRACK))
+                .add(Attributes.SERVICE_UP)
+                .buildImmutable();
+    }
+    
     /**
      * Sets the group to be tracked; unsubscribes from any previous group, and subscribes to this group.
      * 
@@ -73,15 +94,11 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
             subscribeToGroup();
         }
     }
-
-    // TODO having "subscribe to changes only" semantics as part of subscription would be much cleaner
-    // than this lightweight map
-    Map<String,Boolean> lastKnownServiceUpCache = new ConcurrentHashMap<String, Boolean>();
     
     protected void subscribeToGroup() {
         Preconditions.checkNotNull(group, "The group cannot be null");
 
-        LOG.debug("Subscribing to group "+group+", for memberAdded, memberRemoved, serviceUp, and {}", sensorsToTrack);
+        LOG.debug("Subscribing to group "+group+", for memberAdded, memberRemoved, serviceUp, and {}", getSensorsToTrack());
         
         subscribe(group, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
@@ -90,21 +107,35 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         });
         subscribe(group, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
-                lastKnownServiceUpCache.remove(event.getSource());
+                entitySensorCache.remove(event.getSource().getId());
                 onEntityEvent(EventType.ENTITY_REMOVED, event.getValue());
             }
         });
-        subscribeToMembers(group, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
-            @Override public void onEvent(SensorEvent<Boolean> event) {
-                if (event.getValue() == lastKnownServiceUpCache.put(event.getSource().getId(), event.getValue()))
-                    // ignore if value has not changed
-                    return;
-                onEntityEvent(EventType.ENTITY_CHANGE, event.getSource());
-            }
-        });
-        for (Sensor<?> sensor : sensorsToTrack) {
+
+        for (Sensor<?> sensor : getSensorsToTrack()) {
             subscribeToMembers(group, sensor, new SensorEventListener<Object>() {
+                boolean hasWarnedOfServiceUp = false;
+                
                 @Override public void onEvent(SensorEvent<Object> event) {
+                    boolean notifyOnDuplicates = getRequiredConfig(NOTIFY_ON_DUPLICATES);
+                    if (Startable.SERVICE_UP.equals(event.getSensor()) && notifyOnDuplicates && !hasWarnedOfServiceUp) {
+                        LOG.warn("Deprecated behaviour: not notifying of duplicate value for service-up in {}, group {}", AbstractMembershipTrackingPolicy.this, group);
+                        hasWarnedOfServiceUp = true;
+                        notifyOnDuplicates = false;
+                    }
+                    
+                    String entityId = event.getSource().getId();
+                    Map<Sensor<Object>, Object> sensorCache = entitySensorCache.get(entityId);
+                    if (sensorCache == null) {
+                        sensorCache = MutableMap.<Sensor<Object>, Object>of();
+                        entitySensorCache.put(entityId, sensorCache);
+                    }
+                    
+                    if (!notifyOnDuplicates && Objects.equal(event.getValue(), sensorCache.put(event.getSensor(), event.getValue()))) {
+                        // ignore if value has not changed
+                        return;
+                    }
+
                     onEntityEvent(EventType.ENTITY_CHANGE, event.getSource());
                 }
             });

@@ -8,6 +8,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class MutableSet<V> extends LinkedHashSet<V> {
@@ -108,6 +109,10 @@ public class MutableSet<V> extends LinkedHashSet<V> {
         
         public MutableSet<V> build() {
           return new MutableSet<V>(result);
+        }
+        
+        public ImmutableSet<V> buildImmutable() {
+            return ImmutableSet.copyOf(result);
         }
     }
     
