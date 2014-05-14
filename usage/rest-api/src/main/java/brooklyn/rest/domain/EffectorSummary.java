@@ -8,6 +8,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
 public class EffectorSummary {
@@ -54,35 +55,29 @@ public class EffectorSummary {
 
       ParameterSummary<?> that = (ParameterSummary<?>) o;
 
-      if (description != null ? !description.equals(that.description) : that.description != null)
-        return false;
-      if (name != null ? !name.equals(that.name) : that.name != null)
-        return false;
-      if (type != null ? !type.equals(that.type) : that.type != null)
-        return false;
-      if (defaultValue != null ? !type.equals(that.defaultValue) : that.defaultValue != null)
-          return false;
+      return Objects.equal(this.name, that.name) &&
+              Objects.equal(this.type, that.type) &&
+              Objects.equal(this.description, that.description) &&
+              Objects.equal(this.defaultValue, that.defaultValue);
 
-      return true;
     }
 
     @Override
     public int hashCode() {
-      int result = name != null ? name.hashCode() : 0;
-      result = 31 * result + (type != null ? type.hashCode() : 0);
-      result = 31 * result + (description != null ? description.hashCode() : 0);
-      result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
-      return result;
+        return Objects.hashCode(name, type, description, defaultValue);
     }
 
     @Override
     public String toString() {
-      return "ParameterSummary{" +
-          "name='" + name + '\'' +
-          ", type='" + type + '\'' +
-          ", description='" + description + '\'' +
-          '}';
+        return Objects.toStringHelper(this)
+                .omitNullValues()
+                .add("name", name)
+                .add("type", type)
+                .add("description", description)
+                .add("defaultValue", defaultValue)
+                .toString();
     }
+    
   }
 
   private final String name;
