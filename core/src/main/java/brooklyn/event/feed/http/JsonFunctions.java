@@ -3,13 +3,16 @@ package brooklyn.event.feed.http;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class JsonFunctions {
@@ -52,7 +55,10 @@ public class JsonFunctions {
             @Override public JsonElement apply(JsonElement input) {
                 JsonElement curr = input;
                 for (String element : elements) {
-                    curr = curr.getAsJsonObject().get(element);
+                    JsonObject jo = curr.getAsJsonObject();
+                    curr = jo.get(element);
+                    if (curr==null) 
+                        throw new NoSuchElementException("No element '"+element+" in JSON, when walking "+Arrays.asList(elements));
                 }
                 return curr;
             }
