@@ -66,7 +66,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         // This filename is used to generate the first URL to try: 
         // file://$HOME/.brooklyn/repository/BrooklynNode/0.6.0-SNAPSHOT/brooklyn-0.6.0-SNAPSHOT-dist.tar.gz
         // (DOWNLOAD_URL overrides this and has a default which comes from maven)
-        DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", "brooklyn-"+getVersion()+"-dist.tar.gz"));
+        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         
@@ -189,7 +189,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
 
         String cmd = entity.getConfig(BrooklynNode.LAUNCH_SCRIPT);
         if (Strings.isBlank(cmd)) cmd = "./bin/brooklyn";
-        cmd += " launch";
+        cmd = "nohup " + cmd + " launch";
         if (app != null) {
             cmd += " --app "+app;
         }
@@ -221,12 +221,14 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         log.info("Starting brooklyn on {} using command {}", getMachine(), cmd);
         
         // relies on brooklyn script creating pid file
-        newScript(ImmutableMap.of("usePidFile", false), LAUNCHING).
+        newScript(ImmutableMap.of("usePidFile", 
+                entity.getConfig(BrooklynNode.LAUNCH_SCRIPT_UPDATES_PID_FILE) ? false : getPidFile()), 
+            LAUNCHING).
             body.append(
                 format("export BROOKLYN_CLASSPATH=%s", getRunDir()+"/lib/\"*\""),
                 format("export BROOKLYN_HOME=%s", getBrooklynHome()),
                 format(cmd)
-        ).execute();
+        ).failOnNonZeroResultCode().execute();
     }
 
     @Override

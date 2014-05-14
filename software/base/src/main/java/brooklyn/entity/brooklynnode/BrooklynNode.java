@@ -67,9 +67,14 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
             ConfigKeys.newStringConfigKey("brooklynnode.managementPassword", "Password for MANAGEMENT_USER.", "password");
 
     @SetFromFlag("launchScriptPath")
-    ConfigKey<String> LAUNCH_SCRIPT = ConfigKeys.newStringConfigKey("brooklynnode.download.launch.command",
+    ConfigKey<String> LAUNCH_SCRIPT = ConfigKeys.newStringConfigKey("brooklynnode.launch.command",
         "Path to the script to launch Brooklyn / the app relative to the subpath in the archive, defaulting to 'bin/brooklyn'", 
         "bin/brooklyn");
+
+    @SetFromFlag("launchScriptUpdatesPidFile")
+    ConfigKey<Boolean> LAUNCH_SCRIPT_UPDATES_PID_FILE = ConfigKeys.newBooleanConfigKey("brooklynnode.launch.command.pid.updated",
+        "Whether the launch script updates the PID file, if not the entity will do so", 
+        true);
 
     @SetFromFlag("app")
     public static final BasicAttributeSensorAndConfigKey<String> APP = new BasicAttributeSensorAndConfigKey<String>(

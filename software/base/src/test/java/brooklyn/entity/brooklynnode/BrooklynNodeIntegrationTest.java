@@ -329,8 +329,8 @@ public class BrooklynNodeIntegrationTest {
 
             // Check that the concrete location is of the required type
             String locatedLocationsContent = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/locations/usage/LocatedLocations");
-            String appLocationName = parseJson(locatedLocationsContent, ImmutableList.of(appLocationId, "name"), String.class);
-            assertEquals(appLocationName, "myname");
+            assertEquals(parseJson(locatedLocationsContent, ImmutableList.of(appLocationId, "name"), String.class), "myname");
+            assertEquals(parseJson(locatedLocationsContent, ImmutableList.of(appLocationId, "longitude"), Double.class), 45.6, 0.00001);
 
         } finally {
             Files.copy(BROOKLYN_PROPERTIES_BAK_PATH, BROOKLYN_PROPERTIES_PATH);
