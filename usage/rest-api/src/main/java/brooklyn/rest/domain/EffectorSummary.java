@@ -4,29 +4,32 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
-
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
 public class EffectorSummary {
 
-  public static class ParameterSummary {
+  public static class ParameterSummary<T> {
     private final String name;
     private final String type;
     @JsonSerialize(include=Inclusion.NON_NULL)
     private final String description;
+    private final T defaultValue;
 
-    public ParameterSummary(
+    public ParameterSummary (
         @JsonProperty("name") String name,
         @JsonProperty("type") String type,
-        @JsonProperty("description") String description
+        @JsonProperty("description") String description,
+        @JsonProperty("defaultValue") T defaultValue
     ) {
       this.name = name;
       this.type = type;
       this.description = description;
+      this.defaultValue = defaultValue;
     }
 
     public String getName() {
@@ -40,45 +43,46 @@ public class EffectorSummary {
     public String getDescription() {
       return description;
     }
+    
+    public T getDefaultValue() {
+        return defaultValue;
+    }
 
     @Override
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
 
-      ParameterSummary that = (ParameterSummary) o;
+      ParameterSummary<?> that = (ParameterSummary<?>) o;
 
-      if (description != null ? !description.equals(that.description) : that.description != null)
-        return false;
-      if (name != null ? !name.equals(that.name) : that.name != null)
-        return false;
-      if (type != null ? !type.equals(that.type) : that.type != null)
-        return false;
+      return Objects.equal(this.name, that.name) &&
+              Objects.equal(this.type, that.type) &&
+              Objects.equal(this.description, that.description) &&
+              Objects.equal(this.defaultValue, that.defaultValue);
 
-      return true;
     }
 
     @Override
     public int hashCode() {
-      int result = name != null ? name.hashCode() : 0;
-      result = 31 * result + (type != null ? type.hashCode() : 0);
-      result = 31 * result + (description != null ? description.hashCode() : 0);
-      return result;
+        return Objects.hashCode(name, type, description, defaultValue);
     }
 
     @Override
     public String toString() {
-      return "ParameterSummary{" +
-          "name='" + name + '\'' +
-          ", type='" + type + '\'' +
-          ", description='" + description + '\'' +
-          '}';
+        return Objects.toStringHelper(this)
+                .omitNullValues()
+                .add("name", name)
+                .add("type", type)
+                .add("description", description)
+                .add("defaultValue", defaultValue)
+                .toString();
     }
+    
   }
 
   private final String name;
   private final String returnType;
-  private final Set<ParameterSummary> parameters;
+  private final Set<ParameterSummary<?>> parameters;
   @JsonSerialize(include=Inclusion.NON_NULL)
   private final String description;
   @JsonSerialize(include=Inclusion.NON_NULL)
@@ -87,7 +91,7 @@ public class EffectorSummary {
   public EffectorSummary(
       @JsonProperty("name") String name,
       @JsonProperty("returnType") String returnType,
-      @JsonProperty("parameters") Set<ParameterSummary> parameters,
+      @JsonProperty("parameters") Set<ParameterSummary<?>> parameters,
       @JsonProperty("description") String description,
       @JsonProperty("links") Map<String, URI> links
   ) {
@@ -110,7 +114,7 @@ public class EffectorSummary {
     return returnType;
   }
 
-  public Set<ParameterSummary> getParameters() {
+  public Set<ParameterSummary<?>> getParameters() {
     return parameters;
   }
 
