@@ -36,7 +36,12 @@ public abstract class ShellAbstractTool implements ShellTool {
     protected final File localTempDir;
 
     public ShellAbstractTool(File localTempDir) {
-        this.localTempDir = localTempDir != null ? localTempDir : new File(Os.tmp(), "tmpssh");
+        if (localTempDir == null) {
+            localTempDir = new File(Os.tmp(), "tmpssh-"+Os.user());
+            if (!localTempDir.exists()) localTempDir.mkdir();
+            Os.deleteOnExitEmptyParentsUpTo(localTempDir, new File(Os.tmp()));
+        }
+        this.localTempDir = localTempDir;
     }
     
     public ShellAbstractTool() {

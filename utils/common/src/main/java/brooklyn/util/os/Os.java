@@ -334,7 +334,7 @@ public class Os {
         try {
             tempFile = File.createTempFile(prefix, suffix, tempDir);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw Throwables.propagate(new IOException("Unable to create temp file in "+tempDir+" of form "+prefix+"-"+suffix, e));
         }
         tempFile.deleteOnExit();
 

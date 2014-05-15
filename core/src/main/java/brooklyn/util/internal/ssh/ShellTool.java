@@ -17,7 +17,7 @@ public interface ShellTool {
     // config which applies to sessions
     
     public static final ConfigKey<File> PROP_LOCAL_TEMP_DIR = newConfigKey("localTempDir", "The directory on the local machine (i.e. running brooklyn) for writing temp files", 
-            new File(Os.tmp(), "brooklyn-ssh-tmp"));
+            new File(Os.tmp(), "brooklyn-"+Os.user()+"-ssh-tmp"));
     
     // config which applies to calls:
     
