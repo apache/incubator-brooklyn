@@ -64,8 +64,11 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
+import brooklyn.util.task.system.SystemTasks;
 import brooklyn.util.time.Duration;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -827,4 +830,15 @@ public class Entities {
         waitForServiceUp(entity, timeout);
     }
 
+    /** convenience for creating and submitted a given shell command against the given mgmt context;
+     * primarily intended for use in the groovy GUI console */
+    @Beta
+    public static ProcessTaskWrapper<Integer> shell(ManagementContext mgmt, String command) {
+        ProcessTaskWrapper<Integer> t = SystemTasks.exec(command).newTask();
+        mgmt.getExecutionManager().submit(t).getUnchecked();
+        System.out.println(t.getStdout());
+        System.err.println(t.getStderr());
+        return t;
+    }
+    
 }

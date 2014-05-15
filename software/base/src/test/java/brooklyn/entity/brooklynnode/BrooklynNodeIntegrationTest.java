@@ -7,8 +7,11 @@ import java.io.File;
 import java.net.URI;
 import java.util.List;
 
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -29,7 +32,11 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Charsets;
@@ -332,6 +339,50 @@ public class BrooklynNodeIntegrationTest {
             String locatedLocationsContent = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/locations/usage/LocatedLocations");
             assertEquals(parseJson(locatedLocationsContent, ImmutableList.of(appLocationId, "name"), String.class), "myname");
             assertEquals(parseJson(locatedLocationsContent, ImmutableList.of(appLocationId, "longitude"), Double.class), 45.6, 0.00001);
+
+        } finally {
+            Files.copy(BROOKLYN_PROPERTIES_BAK_PATH, BROOKLYN_PROPERTIES_PATH);
+        }
+    }
+
+    @Test(groups="Integration")
+    public void testHttps() throws Exception {
+        File BROOKLYN_PROPERTIES_BAK_PATH = new File(BROOKLYN_PROPERTIES_PATH+".test.bak."+Time.makeDateStampString());
+        Files.copy(BROOKLYN_PROPERTIES_PATH, BROOKLYN_PROPERTIES_BAK_PATH);
+        try {
+
+            String adminPassword = "p4ssw0rd";
+            BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
+
+                .configure(BrooklynNode.ENABLED_HTTP_PROTOCOLS, ImmutableList.of("https"))
+                .configure(BrooklynNode.MANAGEMENT_PASSWORD, adminPassword)
+                .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_CONTENTS,
+                    Strings.lines(
+                        "brooklyn.webconsole.security.https.required=true",
+                        "brooklyn.webconsole.security.users=admin",
+                        "brooklyn.webconsole.security.user.admin.password="+adminPassword,
+                        "brooklyn.location.localhost.enabled=false") )
+
+                        //                .configure(BrooklynNode.HTTP_PORT, PortRanges.fromString("45000+"))
+                );
+            app.start(locs);
+
+            URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
+            Assert.assertTrue(webConsoleUri.toString().startsWith("https://"), "web console not https: "+webConsoleUri);
+            Integer httpsPort = brooklynNode.getAttribute(BrooklynNode.HTTPS_PORT);
+            Assert.assertTrue(httpsPort!=null && httpsPort >= 8443 && httpsPort <= 8500);
+            Assert.assertTrue(webConsoleUri.toString().contains(""+httpsPort), "web console not using right https port ("+httpsPort+"): "+webConsoleUri);
+            HttpTestUtils.assertHttpStatusCodeEquals(webConsoleUri.toString(), 401);
+            
+            HttpClient http = HttpTool.httpClientBuilder()
+                .trustAll()
+                .uri(webConsoleUri)
+                .laxRedirect(true)
+                .credentials(new UsernamePasswordCredentials("admin", adminPassword))
+                .build();
+            HttpToolResponse response = HttpTool.httpGet(http, webConsoleUri, MutableMap.<String,String>of());
+            Assert.assertEquals(response.getResponseCode(), 200);
 
         } finally {
             Files.copy(BROOKLYN_PROPERTIES_BAK_PATH, BROOKLYN_PROPERTIES_PATH);

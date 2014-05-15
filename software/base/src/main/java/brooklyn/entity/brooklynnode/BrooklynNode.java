@@ -67,7 +67,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
 
     @SetFromFlag("managementPassword")
     ConfigKey<String> MANAGEMENT_PASSWORD =
-            ConfigKeys.newStringConfigKey("brooklynnode.managementPassword", "Password for MANAGEMENT_USER.", "password");
+            ConfigKeys.newStringConfigKey("brooklynnode.managementPassword", "Password for MANAGEMENT_USER", "password");
 
     /** useful e.g. with {@link BashCommands#generateKeyInDotSshIdRsaIfNotThere() } */
     @SetFromFlag("extraCustomizationScript")

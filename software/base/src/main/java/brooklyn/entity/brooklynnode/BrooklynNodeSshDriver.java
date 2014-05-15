@@ -181,7 +181,8 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         
         String cmd = entity.getConfig(BrooklynNode.EXTRA_CUSTOMIZATION_SCRIPT);
         if (!Strings.isBlank(cmd)) {
-            DynamicTasks.queueIfPossible( SshEffectorTasks.ssh(cmd).summary("Bespoke BrooklynNode customization script") )
+            DynamicTasks.queueIfPossible( SshEffectorTasks.ssh(cmd).summary("Bespoke BrooklynNode customization script")
+                .requiringExitCodeZero() )
                 .orSubmitAndBlock(getEntity());
         }
     }
@@ -190,7 +191,6 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
     public void launch() {
         String app = getEntity().getAttribute(BrooklynNode.APP);
         String locations = getEntity().getAttribute(BrooklynNode.LOCATIONS);
-        Integer httpPort = getEntity().getAttribute(BrooklynNode.HTTP_PORT);
         boolean hasLocalBrooklynProperties = getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_CONTENTS) != null || getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_URI) != null;
         String localBrooklynPropertiesPath = processTemplateContents(getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH));
         String bindAddress = getEntity().getAttribute(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS);
@@ -207,14 +207,23 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         if (hasLocalBrooklynProperties) {
             cmd += " --localBrooklynProperties "+localBrooklynPropertiesPath;
         }
+        Integer webPort = null;
         if (getEntity().isHttpProtocolEnabled("http")) {
-            Networking.checkPortsValid(ImmutableMap.of("httpPort", httpPort));
-            cmd += " --port "+httpPort;
+            webPort = getEntity().getAttribute(BrooklynNode.HTTP_PORT);
+            Networking.checkPortsValid(ImmutableMap.of("webPort", webPort));
+        } else if (getEntity().isHttpProtocolEnabled("https")) {
+            webPort = getEntity().getAttribute(BrooklynNode.HTTPS_PORT);
+            Networking.checkPortsValid(ImmutableMap.of("webPort", webPort));
+        }
+        if (webPort!=null) {
+            cmd += " --port "+webPort;
         } else if (getEntity().getEnabledHttpProtocols().isEmpty()) {
+            // TODO sensors will probably not work in this mode
             cmd += " --noConsole";
         } else {
-            throw new IllegalStateException("Unsupported http protocol: "+getEntity().getEnabledHttpProtocols());
+            throw new IllegalStateException("Unknown http protocol: "+getEntity().getEnabledHttpProtocols());
         }
+        
         if (Strings.isNonEmpty(bindAddress)) {
             cmd += " --bindAddress "+bindAddress;
         }
