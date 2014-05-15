@@ -30,6 +30,7 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -51,7 +52,6 @@ public class BrooklynNodeIntegrationTest {
     // TODO Need test for copying/setting classpath
 
     private static final File BROOKLYN_PROPERTIES_PATH = new File(System.getProperty("user.home")+"/.brooklyn/brooklyn.properties");
-    private static final File BROOKLYN_PROPERTIES_BAK_PATH = new File(BROOKLYN_PROPERTIES_PATH+".test.bak");
 
     private File pseudoBrooklynPropertiesFile;
     private File pseudoBrooklynCatalogFile;
@@ -305,6 +305,7 @@ public class BrooklynNodeIntegrationTest {
             //force lat+long so test will work when offline
             "brooklyn.location.named.mynamedloc.latitude=123\n"+ 
             "brooklyn.location.named.mynamedloc.longitude=45.6\n";
+        File BROOKLYN_PROPERTIES_BAK_PATH = new File(BROOKLYN_PROPERTIES_PATH+".test.bak."+Time.makeDateStampString());
         Files.copy(BROOKLYN_PROPERTIES_PATH, BROOKLYN_PROPERTIES_BAK_PATH);
 
         try {
