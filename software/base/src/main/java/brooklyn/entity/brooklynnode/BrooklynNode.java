@@ -21,19 +21,22 @@ import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
 
 @ImplementedBy(BrooklynNodeImpl.class)
 public interface BrooklynNode extends SoftwareProcess, UsesJava {
 
+    @SuppressWarnings("serial")
     @SetFromFlag("copyToRundir")
-    public static final BasicAttributeSensorAndConfigKey<Map<String,String>> COPY_TO_RUNDIR = new BasicAttributeSensorAndConfigKey(
-            Map.class, "brooklynnode.copytorundir", "URLs of resources to be copied across to the server, giving the path they are to be copied to", MutableMap.of());
+    public static final BasicAttributeSensorAndConfigKey<Map<String,String>> COPY_TO_RUNDIR = new BasicAttributeSensorAndConfigKey<Map<String,String>>(
+            new TypeToken<Map<String,String>>() {}, "brooklynnode.copytorundir", "URLs of resources to be copied across to the server, giving the path they are to be copied to", MutableMap.<String,String>of());
     
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.SUGGESTED_VERSION, "0.7.0-SNAPSHOT"); // BROOKLYN_VERSION
@@ -66,14 +69,20 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     ConfigKey<String> MANAGEMENT_PASSWORD =
             ConfigKeys.newStringConfigKey("brooklynnode.managementPassword", "Password for MANAGEMENT_USER.", "password");
 
-    @SetFromFlag("launchScriptPath")
-    ConfigKey<String> LAUNCH_SCRIPT = ConfigKeys.newStringConfigKey("brooklynnode.launch.command",
+    /** useful e.g. with {@link BashCommands#generateKeyInDotSshIdRsaIfNotThere() } */
+    @SetFromFlag("extraCustomizationScript")
+    ConfigKey<String> EXTRA_CUSTOMIZATION_SCRIPT = ConfigKeys.newStringConfigKey("brooklynnode.customization.extraScript",
+        "Optional additional script commands to run as part of customization; this might e.g. ensure id_rsa is set up",
+        null);
+    
+    @SetFromFlag("launchCommand")
+    ConfigKey<String> LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("brooklynnode.launch.command",
         "Path to the script to launch Brooklyn / the app relative to the subpath in the archive, defaulting to 'bin/brooklyn'", 
         "bin/brooklyn");
 
-    @SetFromFlag("launchScriptUpdatesPidFile")
-    ConfigKey<Boolean> LAUNCH_SCRIPT_UPDATES_PID_FILE = ConfigKeys.newBooleanConfigKey("brooklynnode.launch.command.pid.updated",
-        "Whether the launch script updates the PID file, if not the entity will do so", 
+    @SetFromFlag("launchCommandCreatesPidFile")
+    ConfigKey<Boolean> LAUNCH_COMMAND_CREATES_PID_FILE = ConfigKeys.newBooleanConfigKey("brooklynnode.launch.command.pid.updated",
+        "Whether the launch script creates/updates the PID file, if not the entity will do so", 
         true);
 
     @SetFromFlag("app")

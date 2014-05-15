@@ -5,6 +5,7 @@ package brooklyn.util.text;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -16,6 +17,7 @@ import brooklyn.util.time.Time;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
@@ -168,6 +170,11 @@ public class Strings {
 			app = true;
 		}
 		return out.toString();
+	}
+	
+	/** convenience for joining lines together */
+	public static String lines(String ...lines) {
+	    return Joiner.on("\n").join(Arrays.asList(lines));
 	}
     
     /** replaces all key->value entries from the replacement map in source (non-regex) */

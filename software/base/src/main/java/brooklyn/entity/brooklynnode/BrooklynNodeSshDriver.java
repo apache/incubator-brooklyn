@@ -13,6 +13,7 @@ import java.util.Map;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveBuilder;
@@ -21,6 +22,7 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
@@ -176,6 +178,12 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
 
             ArchiveUtils.deploy(MutableMap.<String, Object>of(), entry, machine, getRunDir(), Os.mergePaths(getRunDir(), "lib"), destFile);
         }
+        
+        String cmd = entity.getConfig(BrooklynNode.EXTRA_CUSTOMIZATION_SCRIPT);
+        if (!Strings.isBlank(cmd)) {
+            DynamicTasks.queueIfPossible( SshEffectorTasks.ssh(cmd).summary("Bespoke BrooklynNode customization script") )
+                .orSubmitAndBlock(getEntity());
+        }
     }
 
     @Override
@@ -187,7 +195,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         String localBrooklynPropertiesPath = processTemplateContents(getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH));
         String bindAddress = getEntity().getAttribute(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS);
 
-        String cmd = entity.getConfig(BrooklynNode.LAUNCH_SCRIPT);
+        String cmd = entity.getConfig(BrooklynNode.LAUNCH_COMMAND);
         if (Strings.isBlank(cmd)) cmd = "./bin/brooklyn";
         cmd = "nohup " + cmd + " launch";
         if (app != null) {
@@ -222,7 +230,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         
         // relies on brooklyn script creating pid file
         newScript(ImmutableMap.of("usePidFile", 
-                entity.getConfig(BrooklynNode.LAUNCH_SCRIPT_UPDATES_PID_FILE) ? false : getPidFile()), 
+                entity.getConfig(BrooklynNode.LAUNCH_COMMAND_CREATES_PID_FILE) ? false : getPidFile()), 
             LAUNCHING).
             body.append(
                 format("export BROOKLYN_CLASSPATH=%s", getRunDir()+"/lib/\"*\""),
