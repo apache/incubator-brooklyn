@@ -3,6 +3,7 @@ package brooklyn.entity.group;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,7 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     
     private Group group;
     
-    private Map<String,Map<Sensor<Object>, Object>> entitySensorCache = new ConcurrentHashMap<String, Map<Sensor<Object>, Object>>();
+    private ConcurrentMap<String,Map<Sensor<Object>, Object>> entitySensorCache = new ConcurrentHashMap<String, Map<Sensor<Object>, Object>>();
     
     @SuppressWarnings("serial")
     public static final ConfigKey<Set<Sensor<?>>> SENSORS_TO_TRACK = ConfigKeys.newConfigKey(
@@ -125,10 +126,12 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
                     }
                     
                     String entityId = event.getSource().getId();
-                    Map<Sensor<Object>, Object> sensorCache = entitySensorCache.get(entityId);
+
+                    Map<Sensor<Object>, Object> newMap = MutableMap.<Sensor<Object>, Object>of();
+                    // NOTE: putIfAbsent returns null if the key is not present, or the *previous* value if present
+                    Map<Sensor<Object>, Object> sensorCache = entitySensorCache.putIfAbsent(entityId, newMap);
                     if (sensorCache == null) {
-                        sensorCache = MutableMap.<Sensor<Object>, Object>of();
-                        entitySensorCache.put(entityId, sensorCache);
+                        sensorCache = newMap;
                     }
                     
                     if (!notifyOnDuplicates && Objects.equal(event.getValue(), sensorCache.put(event.getSensor(), event.getValue()))) {
