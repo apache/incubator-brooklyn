@@ -78,11 +78,11 @@ define([
         defaultRoute:function () {
             this.homePage('auto')
         },
-        
-        applications:new Application.Collection,
-        appTree:new AppTree.Collection,
-        locations:new Location.Collection,
-        
+
+        applications: new Application.Collection,
+        appTree: new AppTree.Collection,
+        locations: new Location.Collection,
+
         homePage:function (trail) {
             var that = this;
             // render the page after we fetch the collection -- no rendering on error

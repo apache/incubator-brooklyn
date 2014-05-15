@@ -224,7 +224,7 @@ define([
             id = this.selectedId
             var $details = $("td.row-expansion#"+id+" .expansion-footer");
             $details.slideUp(100);
-        },
+        }
     });
 
     return ActivitiesView;

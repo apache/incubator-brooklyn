@@ -3,14 +3,17 @@
  */
 
 define([
+    "jquery", "underscore", "backbone",
     "view/viewutils", 
-    "./application-add-wizard", "model/location",
+    "view/application-add-wizard",
+    "view/ha-summary",
+    "model/location",
     "text!tpl/home/applications.html",
     "text!tpl/home/summaries.html",
     "text!tpl/home/app-entry.html",
-    "bootstrap", "underscore", "jquery", "backbone", "brooklyn-utils"
-], function (ViewUtils,
-        AppAddWizard, Location, 
+    "bootstrap", "brooklyn-utils"
+], function ($, _, Backbone, ViewUtils,
+        AppAddWizard, HASummary, Location,
         ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
 
     var HomeView = Backbone.View.extend({
@@ -20,8 +23,6 @@ define([
             'click #reload-brooklyn-properties': 'reloadBrooklynProperties',
             'click .addApplication':'createApplication'
         },
-        
-        summariesView:{},
         
         initialize:function () {
             var that = this
@@ -35,8 +36,6 @@ define([
                 applications:this.collection,
                 locations:this.options.locations
             })
-            this.renderSummaries()
-            
             this.collection.on('reset', this.render, this)
             this.options.locations.on('reset', this.renderSummaries, this)
 
@@ -53,14 +52,7 @@ define([
                 requirejs(["googlemaps"], function (GoogleMaps) {
                     _.defer( function() {
                         log("loading google maps")
-                        var map = GoogleMaps.addMapToCanvas(id[0],
-                                // brooklyn bridge
-//                              40.7063, -73.9971, 14
-                                // edinburgh + atlantic
-//                              55.6, -2.5, 2
-                                // center
-                                0, 0, 1
-                                )
+                        var map = GoogleMaps.addMapToCanvas(id[0], 0, 0, 1);
                         var locatedLocations = new Location.UsageLocated()
                         // googlemaps.js isn't re-loaded during tab-to-tab navigation so we need to reset it each time
                         // the maps is re-drawn to reset the cached set of location markers
@@ -84,23 +76,28 @@ define([
         
         // cleaning code goes here
         beforeClose:function () {
+            this.haSummaryView.close();
             this.collection.off("reset", this.render)
             this.options.locations.off("reset", this.renderSummaries)
-            // iterate over all (sub)views and destroy them
-            _.each(this._appViews, function (value) {
-                value.close()
-            })
+            _.invoke(this._appViews, "close");
             this._appViews = null
         },
 
         render:function () {
-            this.renderSummaries()
-            this.renderCollection()
-            return this
+            this.renderSummaries();
+            this.renderCollection();
+            this.renderHighAvailabilitySummary();
+            return this;
         },
 
         renderSummaries:function () {
             this.$('.home-summaries-row').html(this.summariesView.render().el )
+        },
+
+        renderHighAvailabilitySummary: function() {
+            // The HA view handles updates itself.
+            if (!this.haSummaryView)
+                this.haSummaryView = new HASummary({ el: this.$("#ha-summary") }).render();
         },
         
         renderCollection:function () {
