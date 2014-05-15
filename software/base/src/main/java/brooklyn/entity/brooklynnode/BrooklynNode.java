@@ -74,7 +74,17 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     ConfigKey<String> EXTRA_CUSTOMIZATION_SCRIPT = ConfigKeys.newStringConfigKey("brooklynnode.customization.extraScript",
         "Optional additional script commands to run as part of customization; this might e.g. ensure id_rsa is set up",
         null);
+
+    static enum ExistingFileBehaviour {
+        USE_EXISTING, OVERWRITE, FAIL
+    }
     
+    @SetFromFlag("onExistingProperties")
+    ConfigKey<ExistingFileBehaviour> ON_EXISTING_PROPERTIES_FILE = ConfigKeys.newConfigKey(ExistingFileBehaviour.class,
+        "brooklynnode.properties.file.ifExists",
+        "What to do in the case where brooklyn.properties already exists", 
+        ExistingFileBehaviour.FAIL);
+
     @SetFromFlag("launchCommand")
     ConfigKey<String> LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("brooklynnode.launch.command",
         "Path to the script to launch Brooklyn / the app relative to the subpath in the archive, defaulting to 'bin/brooklyn'", 

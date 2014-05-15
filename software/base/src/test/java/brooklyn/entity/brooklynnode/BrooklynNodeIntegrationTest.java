@@ -22,6 +22,7 @@ import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
+import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
@@ -319,6 +320,7 @@ public class BrooklynNodeIntegrationTest {
             BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
                     .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, true)
                     .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_CONTENTS, brooklynPropertiesContents)
+                    .configure(BrooklynNode.ON_EXISTING_PROPERTIES_FILE, ExistingFileBehaviour.OVERWRITE)
                     .configure(BrooklynNode.APP, BasicApplicationImpl.class.getName())
                     .configure(BrooklynNode.LOCATIONS, "named:mynamedloc"));
             app.start(locs);
@@ -356,6 +358,7 @@ public class BrooklynNodeIntegrationTest {
                 .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
 
                 .configure(BrooklynNode.ENABLED_HTTP_PROTOCOLS, ImmutableList.of("https"))
+                .configure(BrooklynNode.ON_EXISTING_PROPERTIES_FILE, ExistingFileBehaviour.OVERWRITE)
                 .configure(BrooklynNode.MANAGEMENT_PASSWORD, adminPassword)
                 .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_CONTENTS,
                     Strings.lines(

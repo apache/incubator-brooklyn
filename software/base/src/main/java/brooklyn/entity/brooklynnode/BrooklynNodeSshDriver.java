@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -138,7 +139,23 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
 
         // Override the ~/.brooklyn/brooklyn.properties if required
         if (brooklynGlobalPropertiesContents != null || brooklynGlobalPropertiesUri != null) {
-            uploadFileContents(brooklynGlobalPropertiesContents, brooklynGlobalPropertiesUri, brooklynGlobalPropertiesRemotePath);
+            Integer checkExists = DynamicTasks.queue(SshEffectorTasks.ssh("ls \""+brooklynGlobalPropertiesRemotePath+"\"").allowingNonZeroExitCode()).get();
+            boolean doUpload = true;
+            if (checkExists==0) {
+                ExistingFileBehaviour response = entity.getConfig(BrooklynNode.ON_EXISTING_PROPERTIES_FILE);
+                switch (response) {
+                case USE_EXISTING: doUpload = false; break;
+                case OVERWRITE: break;
+                case FAIL: 
+                    throw new IllegalStateException("Properties file "+brooklynCatalogRemotePath+" already exists and "+
+                        BrooklynNode.ON_EXISTING_PROPERTIES_FILE+" response is to fail");
+                default:
+                    throw new IllegalStateException("Properties file "+brooklynCatalogRemotePath+" already exists and "+
+                        BrooklynNode.ON_EXISTING_PROPERTIES_FILE+" response "+response+" is unknown");
+                }
+            }
+            if (doUpload)
+                uploadFileContents(brooklynGlobalPropertiesContents, brooklynGlobalPropertiesUri, brooklynGlobalPropertiesRemotePath);
         }
         
         // Upload a local-brooklyn.properties if required
