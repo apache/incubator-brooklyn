@@ -10,6 +10,7 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class CouchbaseLoadGeneratorSshDriver extends AbstractSoftwareProcessSshDriver implements CouchbaseLoadGeneratorDriver {
 
@@ -21,24 +22,21 @@ public class CouchbaseLoadGeneratorSshDriver extends AbstractSoftwareProcessSshD
     public void install() {
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
         if (osDetails.isLinux()) {
-            String apt = BashCommands.chainGroup(
-                "which apt-get",
-                "export DEBIAN_FRONTEND=noninteractive",
+            String aptSetup = BashCommands.ifExecutableElse0("apt-get", BashCommands.chainGroup(
                 BashCommands.sudo("wget -O/etc/apt/sources.list.d/couchbase.list http://packages.couchbase.com/ubuntu/couchbase-ubuntu1204.list"),
-                "wget -O- http://packages.couchbase.com/ubuntu/couchbase.key | sudo apt-key add - ",
-                BashCommands.sudo("apt-get update"),
-                BashCommands.sudo("apt-get install -y libcouchbase2-libevent libcouchbase-dev libcouchbase2-bin")
-            );
-            String yum = BashCommands.chainGroup(
+                "wget -O- http://packages.couchbase.com/ubuntu/couchbase.key | sudo apt-key add - "
+            ));
+            String yumSetup = BashCommands.ifExecutableElse0("yum",
                 // TODO: 32bit / 64bit
-                "which yum",
-                BashCommands.sudo("wget -O/etc/yum.repos.d/couchbase.repo http://packages.couchbase.com/rpm/couchbase-centos55-x86_64.repo"),
-                BashCommands.ok(BashCommands.sudo("yum check-update")),
-                BashCommands.sudo("yum install -y  libcouchbase2-libevent libcouchbase-devel libcouchbase2-bin")
+                BashCommands.sudo("wget -O/etc/yum.repos.d/couchbase.repo http://packages.couchbase.com/rpm/couchbase-centos55-x86_64.repo")
             );
+            String installPackage = BashCommands.installPackage(ImmutableMap.of(
+                "apt-get", "libcouchbase2-libevent libcouchbase-dev libcouchbase2-bin",
+                "yum", "libcouchbase2-libevent libcouchbase-devel libcouchbase2-bin"
+            ), null);
             List<String> commands = ImmutableList.<String>builder()
                     .add(BashCommands.INSTALL_WGET)
-                    .add(BashCommands.alternatives(apt, yum))
+                    .add(BashCommands.alternatives(aptSetup, yumSetup, installPackage))
                     .build();
             newScript(INSTALLING)
                     .body.append(commands).execute();

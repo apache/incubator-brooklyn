@@ -10,9 +10,12 @@ import brooklyn.entity.proxying.ImplementedBy;
 public interface CouchbaseLoadGenerator extends SoftwareProcess {
     public static final MethodEffector<Void> PILLOWFIGHT = new MethodEffector<Void>(CouchbaseLoadGenerator.class, "pillowfight");
     
-    @Effector(description = "runs cbc pillowfight")
+    /**
+     * NOTE: EffectorParam names match the documentation at http://www.couchbase.com/autodocs/couchbase-c-client-2.1.1/cbc.1.html
+     */
+    @Effector(description = "Runs cbc pillowfight")
     public void pillowfight(
-            @EffectorParam(name = "targetHostnameAndPort", defaultValue="127.0.0.1:8091", 
+            @EffectorParam(name = "host", defaultValue="127.0.0.1:8091", 
                 description = "list of hosts to connect to") String targetHostnameAndPort,
             @EffectorParam(name = "bucket", defaultValue = "default",
                 description = "bucket to use") String bucket,
@@ -22,7 +25,7 @@ public interface CouchbaseLoadGenerator extends SoftwareProcess {
                 description = "number of iterations to run") Integer iterations,
             @EffectorParam(name = "num-items", defaultValue = "1000",
                 description = "number of items to operate on") Integer numItems,
-            @EffectorParam(name = "keyPrefix", description = "prefix for keys") String keyPrefix,
+            @EffectorParam(name = "key-prefix", description = "prefix for keys") String keyPrefix,
             @EffectorParam(name = "num-threads", defaultValue = "1",
                 description = "number of threads to use") Integer numThreads,
             @EffectorParam(name = "num-instances", defaultValue = "1",
