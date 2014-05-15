@@ -13,7 +13,16 @@
         <filter-name>Brooklyn Properties Authentication Filter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
-    
+
+    <filter>
+        <filter-name>Brooklyn HA Master Filter</filter-name>
+        <filter-class>brooklyn.rest.util.HaMasterCheckFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn HA Master Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
 <!-- Brooklyn REST is usu run as a filter so static content can be placed in a webapp
      to which this is added; to run as a servlet directly, replace the filter tags 
      below (after the comment) with the servlet tags (commented out immediately below),

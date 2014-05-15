@@ -38,6 +38,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
+import brooklyn.rest.util.HaMasterCheckFilter;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.ResourceUtils;
@@ -353,6 +354,7 @@ public class BrooklynWebServer {
         if (securityFilterClazz != null) {
             rootContext.addFilter(securityFilterClazz, "/*", EnumSet.allOf(DispatcherType.class));
         }
+        rootContext.addFilter(HaMasterCheckFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         installAsServletFilter(rootContext);
 
         server.setHandler(handlers);
