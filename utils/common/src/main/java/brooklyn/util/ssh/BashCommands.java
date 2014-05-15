@@ -153,7 +153,7 @@ public class BashCommands {
 
     /** generates ~/.ssh/id_rsa if that file does not exist */
     public static String generateKeyInDotSshIdRsaIfNotThere() {
-        return "[ -f ~/.ssh/id_rsa ] || ( mkdir -p ~/.ssh ; chmod 600 ~/.ssh ; ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa )";
+        return "[ -f ~/.ssh/id_rsa ] || ( mkdir -p ~/.ssh ; chmod 700 ~/.ssh ; ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa )";
     }
     
     // TODO a builder would be better than these ifBlahExistsElseBlah methods!
