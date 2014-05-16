@@ -47,6 +47,14 @@ public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollC
         headers = other.headers;
     }
     
+    public static <T> HttpPollConfig<T> forSensor(AttributeSensor<T> sensor) {
+        return new HttpPollConfig<T>(sensor);
+    }
+    
+    public static HttpPollConfig<Void> forMultiple() {
+        return new HttpPollConfig<Void>(PollConfig.NO_SENSOR);
+    }
+    
     public String getSuburl() {
         return suburl;
     }
@@ -137,4 +145,5 @@ public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollC
     public String toString() {
         return "http["+suburl+"]";
     }
+    
 }

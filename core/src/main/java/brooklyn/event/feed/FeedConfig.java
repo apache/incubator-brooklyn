@@ -1,7 +1,10 @@
 package brooklyn.event.feed;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import brooklyn.entity.basic.Entities;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
+import brooklyn.event.feed.http.HttpPollConfig;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -14,8 +17,22 @@ import com.google.common.base.Predicate;
  */
 public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
 
-    /** The onSuccess or onError functions can return this value to indicate that the sensor should not change. */
-    public static final Object UNSET = new Object();
+    /** The onSuccess or onError functions can return this value to indicate that the sensor should not change. 
+     * @deprecated since 0.7.0 use UNCHANGED */
+    public static final Object UNSET = Entities.UNCHANGED;
+    /** The onSuccess or onError functions can return this value to indicate that the sensor should not change. */ 
+    public static final Object UNCHANGED = Entities.UNCHANGED;
+    /** The onSuccess or onError functions can return this value to indicate that the sensor value should be removed
+     * (cf 'null', but useful in dynamic situations) */ 
+    public static final Object REMOVE = Entities.REMOVE;
+    
+    /** Indicates that no sensor is being used here. This sensor is suppressed,
+     * but is useful where you want to use the feeds with custom success/exception/failure functions
+     * which directly set multiple sensors, e.g. dynamically based on the poll response.
+     * <p>
+     * See {@link HttpPollConfig#forMultiple()} and its usages.
+     * (It can work for any poll config, but conveniences have not been supplied for others.)  */
+    public static final AttributeSensor<Void> NO_SENSOR = Sensors.newSensor(Void.class, "brooklyn.no.sensor");
     
     private final AttributeSensor<T> sensor;
     private Function<? super V, T> onsuccess;

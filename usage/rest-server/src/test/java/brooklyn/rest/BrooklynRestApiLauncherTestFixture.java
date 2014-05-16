@@ -51,13 +51,15 @@ public class BrooklynRestApiLauncherTestFixture {
     }
     
     protected String getBaseUri() {
+        return getBaseUri(server);
+    }
+    public static String getBaseUri(Server server) {
         return "http://localhost:"+server.getConnectors()[0].getLocalPort();
     }
     
     public static void forceUseOfDefaultCatalogWithJavaClassPath(Server server) {
         ManagementContext mgmt = getManagementContextFromJettyServerAttributes(server);
         forceUseOfDefaultCatalogWithJavaClassPath(mgmt);
-        
     }
 
     public static void forceUseOfDefaultCatalogWithJavaClassPath(ManagementContext manager) {
