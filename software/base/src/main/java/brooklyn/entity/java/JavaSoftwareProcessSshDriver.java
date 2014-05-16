@@ -21,6 +21,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
@@ -356,9 +357,10 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     
     public void checkJavaHostnameBug() {
         try {
-            ProcessTaskWrapper<Integer> hostnameLen = DynamicTasks.queue(SshEffectorTasks.ssh("hostname -f | wc | awk '{print $3}'")).block();
-            if (hostnameLen.getExitCode()==0 && Strings.isNonBlank(hostnameLen.getStdout())) {
-                Integer len = Integer.parseInt(hostnameLen.getStdout().trim());
+            ProcessTaskWrapper<Integer> hostnameLen = DynamicTasks.queue(SshEffectorTasks.ssh("echo FOREMARKER; hostname -f | wc | awk '{print $3}'; echo AFTMARKER")).block();
+            String stdout = Strings.getFragmentBetween(hostnameLen.getStdout(), "FOREMARKER", "AFTMARKER");
+            if (hostnameLen.getExitCode()==0 && Strings.isNonBlank(stdout)) {
+                Integer len = Integer.parseInt(stdout.trim());
                 if (len > 63) {
                     // likely to cause a java crash due to java bug 7089443 -- set a new short hostname
                     // http://mail.openjdk.java.net/pipermail/net-dev/2012-July/004603.html
@@ -372,7 +374,8 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                 log.debug("Hostname length could not be determined for location "+EffectorTasks.findSshMachine()+"; not doing Java hostname bug check");
             }
         } catch (Exception e) {
-            log.warn("Error checking/fixing Java hostname bug: "+e, e);
+            Exceptions.propagateIfFatal(e);
+            log.warn("Error checking/fixing Java hostname bug (continuing): "+e, e);
         }
     }
     
