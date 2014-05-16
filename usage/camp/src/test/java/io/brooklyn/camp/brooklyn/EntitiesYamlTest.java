@@ -19,6 +19,7 @@ import org.testng.collections.Lists;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicEntity;
@@ -27,14 +28,17 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SameServerEntity;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
+import brooklyn.management.Task;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -603,6 +607,68 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
         TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
         assertTrue(entity.getCallHistory().contains("start"), "history="+entity.getCallHistory());
+    }
+
+    @Test
+    public void testEntityWithInitializer() throws Exception {
+        String yaml =
+                "services:\n"+
+                "- type: "+TestEntity.class.getName()+"\n"+
+                "  brooklyn.initializers: [ { type: "+TestSensorAndEffectorInitializer.class.getName()+" } ]";
+        
+        Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
+        TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
+        
+        Effector<?> hi = entity.getEffector(TestSensorAndEffectorInitializer.EFFECTOR_SAY_HELLO);
+        Assert.assertNotNull(hi);
+        
+        Assert.assertNotNull( entity.getEntityType().getSensor(TestSensorAndEffectorInitializer.SENSOR_HELLO_DEFINED) );
+        Assert.assertNotNull( entity.getEntityType().getSensor(TestSensorAndEffectorInitializer.SENSOR_HELLO_DEFINED_EMITTED) );
+        Assert.assertNull( entity.getEntityType().getSensor(TestSensorAndEffectorInitializer.SENSOR_LAST_HELLO) );
+        
+        Assert.assertNull( entity.getAttribute(Sensors.newStringSensor(TestSensorAndEffectorInitializer.SENSOR_LAST_HELLO)) );
+        Assert.assertNull( entity.getAttribute(Sensors.newStringSensor(TestSensorAndEffectorInitializer.SENSOR_HELLO_DEFINED)) );
+        Assert.assertEquals( entity.getAttribute(Sensors.newStringSensor(TestSensorAndEffectorInitializer.SENSOR_HELLO_DEFINED_EMITTED)),
+            "1");
+        
+        Task<String> saying = entity.invoke(Effectors.effector(String.class, TestSensorAndEffectorInitializer.EFFECTOR_SAY_HELLO).buildAbstract(), 
+            MutableMap.of("name", "Bob"));
+        Assert.assertEquals(saying.get(Duration.TEN_SECONDS), "Hello Bob");
+        Assert.assertEquals( entity.getAttribute(Sensors.newStringSensor(TestSensorAndEffectorInitializer.SENSOR_LAST_HELLO)),
+            "Bob");
+    }
+
+    @Test
+    public void testEntityWithConfigurableInitializerEmpty() throws Exception {
+        String yaml =
+                "services:\n"+
+                "- type: "+TestEntity.class.getName()+"\n"+
+                "  brooklyn.initializers: [ { type: "+TestSensorAndEffectorInitializer.TestConfigurableInitializer.class.getName()+" } ]";
+        
+        Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
+        TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
+        
+        Task<String> saying = entity.invoke(Effectors.effector(String.class, TestSensorAndEffectorInitializer.EFFECTOR_SAY_HELLO).buildAbstract(), 
+            MutableMap.of("name", "Bob"));
+        Assert.assertEquals(saying.get(Duration.TEN_SECONDS), "Hello Bob");
+    }
+
+    @Test
+    public void testEntityWithConfigurableInitializerNonEmpty() throws Exception {
+        String yaml =
+                "services:\n"+
+                "- type: "+TestEntity.class.getName()+"\n"+
+                "  brooklyn.initializers: [ { "
+                  + "type: "+TestSensorAndEffectorInitializer.TestConfigurableInitializer.class.getName()+","
+                  + "brooklyn.config: { "+TestSensorAndEffectorInitializer.TestConfigurableInitializer.HELLO_WORD+": Hey }"
+                  + " } ]";
+        
+        Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
+        TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
+        
+        Task<String> saying = entity.invoke(Effectors.effector(String.class, TestSensorAndEffectorInitializer.EFFECTOR_SAY_HELLO).buildAbstract(), 
+            MutableMap.of("name", "Bob"));
+        Assert.assertEquals(saying.get(Duration.TEN_SECONDS), "Hey Bob");
     }
 
     @Override

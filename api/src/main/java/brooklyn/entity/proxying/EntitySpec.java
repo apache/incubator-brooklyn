@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +27,7 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -256,9 +256,9 @@ public class EntitySpec<T extends Entity> implements Serializable {
         return this;
     }
         
-    public EntitySpec<T> addInitializers(Collection<EntityInitializer> initializer) {
+    public EntitySpec<T> addInitializers(Iterable<? extends EntityInitializer> initializers) {
         checkMutable();
-        entityInitializers.addAll(initializer);
+        Iterables.addAll(entityInitializers, initializers);
         return this;
     }
 

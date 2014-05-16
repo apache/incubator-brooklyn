@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +18,12 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.ManagementContext;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.CompoundRuntimeException;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -42,19 +48,52 @@ public class MultiLocation<T extends MachineLocation> extends AbstractLocation i
     @Override
     public void init() {
         super.init();
-        List<MachineProvisioningLocation<?>> subLocs = getRequiredConfig(SUB_LOCATIONS);
+        List<MachineProvisioningLocation<?>> subLocs = getSubLocations();
         checkState(subLocs.size() >= 1, "sub-locations must not be empty");
         AvailabilityZoneExtension azExtension = new AvailabilityZoneExtensionImpl(getManagementContext(), subLocs);
         addExtension(AvailabilityZoneExtension.class, azExtension);
     }
 
+    public T obtain() throws NoMachinesAvailableException {
+        return obtain(MutableMap.of());
+    }
+    
     /** finds (creates) and returns a {@link MachineLocation}; 
-     * currently this only looks at the first sub-location, though that behaviour may change without notice.
+     * this always tries the first sub-location, moving on the second and subsequent if the first throws {@link NoMachinesAvailableException}.
      * (if you want striping across locations, see notes in {@link AvailabilityZoneExtension}.) */
-    // TODO Could have multiLoc.obtain delegate to loc2 if loc1 has no capacity
+    @SuppressWarnings("unchecked")
     @Override
     public T obtain(Map<?, ?> flags) throws NoMachinesAvailableException {
-        return firstSubLoc().obtain(flags);
+        List<MachineProvisioningLocation<?>> sublocsList = getSubLocations();
+        Iterator<MachineProvisioningLocation<?>> sublocs = sublocsList.iterator();
+        List<NoMachinesAvailableException> errors = MutableList.of();
+        while (sublocs.hasNext()) {
+            try {
+                return (T) sublocs.next().obtain(flags);
+            } catch (NoMachinesAvailableException e) {
+                errors.add(e);
+            }
+        }
+        Exception wrapped;
+        String msg;
+        if (errors.size()>1) {
+            wrapped = new CompoundRuntimeException(errors.size()+" sublocation exceptions, including: "+
+                Exceptions.collapseText(errors.get(0)), errors);
+            msg = Exceptions.collapseText(wrapped);
+        } else if (errors.size()==1) {
+            wrapped = errors.get(0);
+            msg = wrapped.getMessage();
+            if (Strings.isBlank(msg)) msg = wrapped.toString();
+        } else {
+            msg = "no sub-locations set for this multi-location";
+            wrapped = null;
+        }
+        throw new NoMachinesAvailableException("No machines available in any of the "+sublocsList.size()+" location"+Strings.s(sublocsList.size())+
+            " configured here: "+msg, wrapped);
+    }
+
+    public List<MachineProvisioningLocation<?>> getSubLocations() {
+        return getRequiredConfig(SUB_LOCATIONS);
     }
 
     @SuppressWarnings("unchecked")
@@ -67,10 +106,10 @@ public class MultiLocation<T extends MachineLocation> extends AbstractLocation i
                 .configure(newFlags));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void release(T machine) {
-        MachineProvisioningLocation<T> subLoc = firstSubLoc();
-        subLoc.release(machine);
+        ((MachineProvisioningLocation<T>)machine.getParent()).release(machine);
     }
 
     @Override
@@ -80,7 +119,7 @@ public class MultiLocation<T extends MachineLocation> extends AbstractLocation i
 
     @SuppressWarnings("unchecked")
     protected MachineProvisioningLocation<T> firstSubLoc() {
-        return (MachineProvisioningLocation<T>) Iterables.get(getRequiredConfig(SUB_LOCATIONS), 0);
+        return (MachineProvisioningLocation<T>) Iterables.get(getSubLocations(), 0);
     }
 
     protected <K> K getRequiredConfig(ConfigKey<K> key) {
