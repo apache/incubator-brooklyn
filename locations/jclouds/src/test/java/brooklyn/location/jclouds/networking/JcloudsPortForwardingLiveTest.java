@@ -1,4 +1,4 @@
-package brooklyn.location.jclouds;
+package brooklyn.location.jclouds.networking;
 
 import static org.testng.Assert.assertEquals;
 
@@ -12,6 +12,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.location.jclouds.AbstractJcloudsTest;
+import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Cidr;

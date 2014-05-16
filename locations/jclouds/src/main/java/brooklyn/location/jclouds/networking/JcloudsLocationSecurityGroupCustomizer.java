@@ -1,4 +1,4 @@
-package brooklyn.location.jclouds;
+package brooklyn.location.jclouds.networking;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -16,6 +16,15 @@ import org.jclouds.net.domain.IpProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
+import brooklyn.location.geo.UtraceHostGeoLookup;
+import brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
+import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import brooklyn.util.net.Cidr;
+import brooklyn.util.task.Tasks;
+
+import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -28,14 +37,12 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-import brooklyn.entity.Entity;
-import brooklyn.location.geo.UtraceHostGeoLookup;
-import brooklyn.util.net.Cidr;
-import brooklyn.util.task.Tasks;
-
 /**
  * Configures custom security groups on Jclouds locations.
+ * 
+ * TODO this should allow {@link SecurityGroupDefinition} instances to be applied
  */
+@Beta
 public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLocationCustomizer {
 
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsLocationSecurityGroupCustomizer.class);
