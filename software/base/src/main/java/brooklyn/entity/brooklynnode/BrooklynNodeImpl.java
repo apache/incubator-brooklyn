@@ -116,19 +116,20 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             if (!(planRaw instanceof String))
                 throw new IllegalArgumentException("Invalid "+JavaClassNames.simpleClassName(planRaw)+" value for CAMP plan: "+planRaw);
             
+            // now *all* the data is in planRaw; that is what will be submitted
             return (String)planRaw;
         }
         
         protected String submitPlan(String plan) {
-            // now all the data is in planRaw, submit that
+            URI baseUri = Preconditions.checkNotNull(entity().getAttribute(WEB_CONSOLE_URI), "Cannot be invoked until the web console URL is available");
             HttpClientBuilder builder = HttpTool.httpClientBuilder()
                 .trustAll()
-                .laxRedirect(true);
+                .laxRedirect(true)
+                .uri(baseUri);
             if (entity().getConfig(MANAGEMENT_USER)!=null)
                 builder.credentials(new UsernamePasswordCredentials(entity().getConfig(MANAGEMENT_USER), entity().getConfig(MANAGEMENT_PASSWORD)));
             HttpClient client = builder.build();
             
-            URI baseUri = Preconditions.checkNotNull(entity().getAttribute(WEB_CONSOLE_URI), "Cannot be invoked until the web console URL is available");
             return submitPlan(client, baseUri, plan);
         }
 

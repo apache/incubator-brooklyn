@@ -56,6 +56,24 @@ public class Identifiers {
         //Message.message("random id is " + id);
         return new String(id);
     }
+
+    /** creates a short identifier comfortable in java and OS's, given an input hash code
+     * <p>
+     * result is always at least of length 1, shorter if the hash is smaller */ 
+    public static String makeIdFromHash(long d) {
+        StringBuffer result = new StringBuffer();
+        if (d<0) d=-d;
+        // correction for Long.MIN_VALUE
+        if (d<0) d=-(d+1000);
+        
+        result.append(ID_VALID_START_CHARS.charAt((int)(d % (26+26))));
+        d /= (26+26);
+        while (d!=0) {
+            result.append(ID_VALID_NONSTART_CHARS.charAt((int)(d%(26+26+10))));
+            d /= (26+26+10);
+        }
+        return result.toString();
+    }
     
     /** makes a random id string (letters and numbers) of the given length;
      * starts with letter (upper or lower) so can be used as java-id;
@@ -72,6 +90,7 @@ public class Identifiers {
      **/
     public static String makeRandomJavaId(int l) {
             // copied from Monterey util's com.cloudsoftcorp.util.StringUtils.
+            // TODO should share code with makeRandomId, just supplying different char sets (though the char sets in fact are the same..)
 
             //this version is 30-50% faster than the old double-based one, 
             //which computed a random every 3 turns --

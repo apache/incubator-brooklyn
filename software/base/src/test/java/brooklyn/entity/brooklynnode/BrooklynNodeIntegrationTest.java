@@ -7,8 +7,11 @@ import java.io.File;
 import java.net.URI;
 import java.util.List;
 
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -19,6 +22,7 @@ import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
+import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
@@ -29,7 +33,12 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.text.Strings;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -38,6 +47,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
+/**
+ * This test needs to able to access the binary artifact in order to run.
+ * For dev versions you can do this by placing the artifact in the repository, e.g. at:
+ * 
+ * file://$HOME/.brooklyn/repository/BrooklynNode/0.7.0-SNAPSHOT/brooklyn-0.7.0-SNAPSHOT-dist.tar.gz (for the appropriate BROOKLYN_VERSION)
+ */
 public class BrooklynNodeIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynNodeIntegrationTest.class);
@@ -45,7 +60,6 @@ public class BrooklynNodeIntegrationTest {
     // TODO Need test for copying/setting classpath
 
     private static final File BROOKLYN_PROPERTIES_PATH = new File(System.getProperty("user.home")+"/.brooklyn/brooklyn.properties");
-    private static final File BROOKLYN_PROPERTIES_BAK_PATH = new File(BROOKLYN_PROPERTIES_PATH+".test.bak");
 
     private File pseudoBrooklynPropertiesFile;
     private File pseudoBrooklynCatalogFile;
@@ -294,13 +308,19 @@ public class BrooklynNodeIntegrationTest {
     
     @Test(groups="Integration")
     public void testUsesLocation() throws Exception {
-        String brooklynPropertiesContents = "brooklyn.location.named.mynamedloc=localhost:(name=myname)";
+        String brooklynPropertiesContents = 
+            "brooklyn.location.named.mynamedloc=localhost:(name=myname)\n"+
+            //force lat+long so test will work when offline
+            "brooklyn.location.named.mynamedloc.latitude=123\n"+ 
+            "brooklyn.location.named.mynamedloc.longitude=45.6\n";
+        File BROOKLYN_PROPERTIES_BAK_PATH = new File(BROOKLYN_PROPERTIES_PATH+".test.bak."+Time.makeDateStampString());
         Files.copy(BROOKLYN_PROPERTIES_PATH, BROOKLYN_PROPERTIES_BAK_PATH);
 
         try {
             BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
                     .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, true)
                     .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_CONTENTS, brooklynPropertiesContents)
+                    .configure(BrooklynNode.ON_EXISTING_PROPERTIES_FILE, ExistingFileBehaviour.OVERWRITE)
                     .configure(BrooklynNode.APP, BasicApplicationImpl.class.getName())
                     .configure(BrooklynNode.LOCATIONS, "named:mynamedloc"));
             app.start(locs);
@@ -315,12 +335,57 @@ public class BrooklynNodeIntegrationTest {
             // Find the id of the concrete location instance of the app
             String appsContent = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
             List<String[]> appLocationIds = parseJsonList(appsContent, ImmutableList.of("spec", "locations"), String[].class);
-            String appLocationId = Iterables.getOnlyElement(appLocationIds)[0];
+            String appLocationId = Iterables.getOnlyElement(appLocationIds)[0];  // app.getManagementContext().getLocationRegistry()
 
             // Check that the concrete location is of the required type
             String locatedLocationsContent = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/locations/usage/LocatedLocations");
-            String appLocationName = parseJson(locatedLocationsContent, ImmutableList.of(appLocationId, "name"), String.class);
-            assertEquals(appLocationName, "myname");
+            assertEquals(parseJson(locatedLocationsContent, ImmutableList.of(appLocationId, "name"), String.class), "myname");
+            assertEquals(parseJson(locatedLocationsContent, ImmutableList.of(appLocationId, "longitude"), Double.class), 45.6, 0.00001);
+
+        } finally {
+            Files.copy(BROOKLYN_PROPERTIES_BAK_PATH, BROOKLYN_PROPERTIES_PATH);
+        }
+    }
+
+    @Test(groups="Integration")
+    public void testHttps() throws Exception {
+        File BROOKLYN_PROPERTIES_BAK_PATH = new File(BROOKLYN_PROPERTIES_PATH+".test.bak."+Time.makeDateStampString());
+        Files.copy(BROOKLYN_PROPERTIES_PATH, BROOKLYN_PROPERTIES_BAK_PATH);
+        try {
+
+            String adminPassword = "p4ssw0rd";
+            BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
+
+                .configure(BrooklynNode.ENABLED_HTTP_PROTOCOLS, ImmutableList.of("https"))
+                .configure(BrooklynNode.ON_EXISTING_PROPERTIES_FILE, ExistingFileBehaviour.OVERWRITE)
+                .configure(BrooklynNode.MANAGEMENT_PASSWORD, adminPassword)
+                .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_CONTENTS,
+                    Strings.lines(
+                        "brooklyn.webconsole.security.https.required=true",
+                        "brooklyn.webconsole.security.users=admin",
+                        "brooklyn.webconsole.security.user.admin.password="+adminPassword,
+                        "brooklyn.location.localhost.enabled=false") )
+
+                        //                .configure(BrooklynNode.HTTP_PORT, PortRanges.fromString("45000+"))
+                );
+            app.start(locs);
+
+            URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
+            Assert.assertTrue(webConsoleUri.toString().startsWith("https://"), "web console not https: "+webConsoleUri);
+            Integer httpsPort = brooklynNode.getAttribute(BrooklynNode.HTTPS_PORT);
+            Assert.assertTrue(httpsPort!=null && httpsPort >= 8443 && httpsPort <= 8500);
+            Assert.assertTrue(webConsoleUri.toString().contains(""+httpsPort), "web console not using right https port ("+httpsPort+"): "+webConsoleUri);
+            HttpTestUtils.assertHttpStatusCodeEquals(webConsoleUri.toString(), 401);
+            
+            HttpClient http = HttpTool.httpClientBuilder()
+                .trustAll()
+                .uri(webConsoleUri)
+                .laxRedirect(true)
+                .credentials(new UsernamePasswordCredentials("admin", adminPassword))
+                .build();
+            HttpToolResponse response = HttpTool.httpGet(http, webConsoleUri, MutableMap.<String,String>of());
+            Assert.assertEquals(response.getResponseCode(), 200);
 
         } finally {
             Files.copy(BROOKLYN_PROPERTIES_BAK_PATH, BROOKLYN_PROPERTIES_PATH);

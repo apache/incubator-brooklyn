@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.BrooklynConfigKeys;
@@ -20,24 +21,27 @@ import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
 
 @ImplementedBy(BrooklynNodeImpl.class)
 public interface BrooklynNode extends SoftwareProcess, UsesJava {
 
+    @SuppressWarnings("serial")
     @SetFromFlag("copyToRundir")
-    public static final BasicAttributeSensorAndConfigKey<Map<String,String>> COPY_TO_RUNDIR = new BasicAttributeSensorAndConfigKey(
-            Map.class, "brooklynnode.copytorundir", "URLs of resources to be copied across to the server, giving the path they are to be copied to", MutableMap.of());
+    public static final BasicAttributeSensorAndConfigKey<Map<String,String>> COPY_TO_RUNDIR = new BasicAttributeSensorAndConfigKey<Map<String,String>>(
+            new TypeToken<Map<String,String>>() {}, "brooklynnode.copytorundir", "URLs of resources to be copied across to the server, giving the path they are to be copied to", MutableMap.<String,String>of());
     
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.SUGGESTED_VERSION, "0.7.0-SNAPSHOT"); // BROOKLYN_VERSION
 
-    // Takes presidence over downloadUrl, if non-null
+    // Takes precedence over downloadUrl, if non-null
     @SetFromFlag("distroUploadUrl")
     public static final ConfigKey<String> DISTRO_UPLOAD_URL = ConfigKeys.newStringConfigKey(
             "brooklynnode.distro.uploadurl", "URL for uploading the brooklyn distro (retrieved locally and pushed to remote install location)", null);
@@ -51,6 +55,13 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     		    "http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/${version}/brooklyn-dist-${version}-dist.tar.gz"+
     		"</#if>");
 
+    @SetFromFlag("subpathInArchive")
+    ConfigKey<String> SUBPATH_IN_ARCHIVE = ConfigKeys.newStringConfigKey("brooklynnode.download.archive.subpath",
+        "Path to the main directory in the archive being supplied for installation; "
+        + "to use the root of an archive, specify '.'; "
+        + "default value if left blank is the appropriate value for brooklyn,"
+        + "e.g. 'brooklyn-"+BrooklynVersion.INSTANCE.getVersion()+"'", null);
+
     @SetFromFlag("managementUser")
     ConfigKey<String> MANAGEMENT_USER = ConfigKeys.newConfigKey("brooklynnode.managementUser",
             "The user for logging into the brooklyn web-console (also used for health-checks)",
@@ -58,7 +69,33 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
 
     @SetFromFlag("managementPassword")
     ConfigKey<String> MANAGEMENT_PASSWORD =
-            ConfigKeys.newStringConfigKey("brooklynnode.managementPassword", "Password for MANAGEMENT_USER.", "password");
+            ConfigKeys.newStringConfigKey("brooklynnode.managementPassword", "Password for MANAGEMENT_USER", "password");
+
+    /** useful e.g. with {@link BashCommands#generateKeyInDotSshIdRsaIfNotThere() } */
+    @SetFromFlag("extraCustomizationScript")
+    ConfigKey<String> EXTRA_CUSTOMIZATION_SCRIPT = ConfigKeys.newStringConfigKey("brooklynnode.customization.extraScript",
+        "Optional additional script commands to run as part of customization; this might e.g. ensure id_rsa is set up",
+        null);
+
+    static enum ExistingFileBehaviour {
+        USE_EXISTING, OVERWRITE, FAIL
+    }
+    
+    @SetFromFlag("onExistingProperties")
+    ConfigKey<ExistingFileBehaviour> ON_EXISTING_PROPERTIES_FILE = ConfigKeys.newConfigKey(ExistingFileBehaviour.class,
+        "brooklynnode.properties.file.ifExists",
+        "What to do in the case where brooklyn.properties already exists", 
+        ExistingFileBehaviour.FAIL);
+
+    @SetFromFlag("launchCommand")
+    ConfigKey<String> LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("brooklynnode.launch.command",
+        "Path to the script to launch Brooklyn / the app relative to the subpath in the archive, defaulting to 'bin/brooklyn'", 
+        "bin/brooklyn");
+
+    @SetFromFlag("launchCommandCreatesPidFile")
+    ConfigKey<Boolean> LAUNCH_COMMAND_CREATES_PID_FILE = ConfigKeys.newBooleanConfigKey("brooklynnode.launch.command.pid.updated",
+        "Whether the launch script creates/updates the PID file, if not the entity will do so", 
+        true);
 
     @SetFromFlag("app")
     public static final BasicAttributeSensorAndConfigKey<String> APP = new BasicAttributeSensorAndConfigKey<String>(

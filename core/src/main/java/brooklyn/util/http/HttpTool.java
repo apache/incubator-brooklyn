@@ -151,7 +151,7 @@ public class HttpTool {
             if (reuseStrategy != null) {
                 httpClient.setReuseStrategy(reuseStrategy);
             }
-            if (https == Boolean.TRUE) {
+            if (https == Boolean.TRUE || (uri!=null && uri.toString().startsWith("https:"))) {
                 try {
                     if (port == null) {
                         port = (uri != null && uri.getPort() >= 0) ? uri.getPort() : 443;
@@ -184,6 +184,9 @@ public class HttpTool {
                 String hostname = uri.getHost();
                 int port = uri.getPort();
                 httpClient.getCredentialsProvider().setCredentials(new AuthScope(hostname, port), credentials);
+            }
+            if (uri==null && credentials!=null) {
+                LOG.warn("credentials have no effect in builder unless URI for host is specified");
             }
     
             return httpClient;

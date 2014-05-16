@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -65,13 +64,13 @@ public class HttpTestUtils {
         Future<URLConnection> f = executor.submit(new Callable<URLConnection>() {
             public URLConnection call() {
                 try {
-                    URLConnection connection = url.openConnection();
-                    TrustingSslSocketFactory.configure(connection);
                     HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
                         @Override public boolean verify(String s, SSLSession sslSession) {
                             return true;
                         }
                     });
+                    URLConnection connection = url.openConnection();
+                    TrustingSslSocketFactory.configure(connection);
                     connection.connect();
     
                     connection.getContentLength(); // Make sure the connection is made.
@@ -170,20 +169,20 @@ public class HttpTestUtils {
          });
     }
 
-    public static void assertHttpStatusCodeEquals(String url, int... expectedCode) {
+    public static void assertHttpStatusCodeEquals(String url, int... acceptableReturnCodes) {
+        List<Integer> acceptableCodes = Lists.newArrayList();
+        for (int code : acceptableReturnCodes) {
+            acceptableCodes.add((Integer)code);
+        }
         try {
-            List<Integer> acceptableCodes = Lists.newArrayList();
-            for (int code : expectedCode) {
-                acceptableCodes.add((Integer)code);
-            }
             int actualCode = getHttpStatusCode(url);
-            assertTrue(acceptableCodes.contains(actualCode), "code="+actualCode+"; expected="+Arrays.toString(expectedCode)+"; url="+url);
+            assertTrue(acceptableCodes.contains(actualCode), "code="+actualCode+"; expected="+acceptableCodes+"; url="+url);
             
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Interrupted for "+url+" (in assertion that result code is "+expectedCode+")", e);
+            throw new RuntimeException("Interrupted for "+url+" (in assertion that result code is "+acceptableCodes+")", e);
         } catch (Exception e) {
-            throw new IllegalStateException("Server at "+url+" failed to respond (in assertion that result code is "+expectedCode+"): "+e, e);
+            throw new IllegalStateException("Server at "+url+" failed to respond (in assertion that result code is "+acceptableCodes+"): "+e, e);
         }
     }
 

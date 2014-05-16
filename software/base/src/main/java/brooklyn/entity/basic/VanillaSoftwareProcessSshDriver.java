@@ -4,8 +4,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Objects;
-
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -14,6 +12,7 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.text.Identifiers;
 
 public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshDriver implements VanillaSoftwareProcessDriver {
 
@@ -29,7 +28,7 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
         Maybe<Object> url = getEntity().getConfigRaw(SoftwareProcess.DOWNLOAD_URL, true);
         if (url.isAbsent()) return null;
         // TODO a user-friendly hash would be nice, but tricky since we don't want it to be too long or contain path chars
-        return ""+Objects.hashCode( url.get().toString() );
+        return Identifiers.makeIdFromHash( url.get().hashCode() );
     }
     
     @Override

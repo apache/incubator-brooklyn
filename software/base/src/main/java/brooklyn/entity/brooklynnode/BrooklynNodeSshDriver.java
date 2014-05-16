@@ -11,8 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveBuilder;
@@ -21,8 +23,11 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -38,7 +43,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
     }
 
     public String getBrooklynHome() {
-        return getInstallDir()+"/brooklyn-"+getVersion();
+        return getRunDir();
     }
 
     @Override
@@ -51,16 +56,25 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
     }
     
     @Override
+    protected String getInstallLabelExtraSalt() {
+        return Identifiers.makeIdFromHash(Objects.hashCode(entity.getConfig(BrooklynNode.DOWNLOAD_URL), entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL)));
+    }
+    
+    @Override
     public void install() {
         String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
         
         // Need to explicitly give file, because for snapshot URLs you don't get a clean filename from the URL.
         // This filename is used to generate the first URL to try: 
-        // file://$HOME/.brooklyn/repository/BrooklynNode/0.6.0-SNAPSHOT/brooklyn-dist-0.6.0-SNAPSHOT-dist.tar.gz
-        DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", "brooklyn-dist-"+getVersion()+"-dist.tar.gz"));
+        // file://$HOME/.brooklyn/repository/BrooklynNode/0.6.0-SNAPSHOT/brooklyn-0.6.0-SNAPSHOT-dist.tar.gz
+        // (DOWNLOAD_URL overrides this and has a default which comes from maven)
+        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("brooklyn-%s", getVersion())));
+        
+        String subpath = entity.getConfig(BrooklynNode.SUBPATH_IN_ARCHIVE);
+        if (Strings.isBlank(subpath)) subpath = format("brooklyn-%s", getVersion());
+        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(subpath));
         
         newScript("createInstallDir")
                 .body.append("mkdir -p "+getInstallDir())
@@ -68,6 +82,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                 .execute();
 
         List<String> commands = Lists.newArrayList();
+        // TODO use machine.installTo ... but that only works w a single location currently
         if (uploadUrl != null) {
             // Only upload if not already installed
             boolean exists = newScript("checkIfInstalled")
@@ -95,9 +110,14 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                 .body.append(
                         // workaround for AMP distribution placing everything in the root of this archive, but
                         // brooklyn distribution placing everything in a subdirectory: check to see if subdirectory
-                        // with expect name exists; symlink to same directory if it doesn't
-                        format("[ -d %1$s/brooklyn-%2$s ] || ln -s . %1$s/brooklyn-%2$s", getInstallDir(), getVersion()),
-                        format("cp -R %s/brooklyn-%s/{bin,conf} .", getInstallDir(), getVersion()),
+                        // with expected name exists; symlink to same directory if it doesn't
+                        // FIXME remove when all downstream usages don't use this
+                        format("[ -d %1$s ] || ln -s . %1$s", getExpandedInstallDir(), getExpandedInstallDir()),
+                        
+                        // previously we only copied bin,conf and set BROOKLYN_HOME to the install dir;
+                        // but that does not play nicely if installing dists other than brooklyn
+                        // (such as what is built by our artifact)  
+                        format("cp -R %s/* .", getExpandedInstallDir()),
                         "mkdir -p ./lib/")
                 .execute();
         
@@ -118,7 +138,23 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
 
         // Override the ~/.brooklyn/brooklyn.properties if required
         if (brooklynGlobalPropertiesContents != null || brooklynGlobalPropertiesUri != null) {
-            uploadFileContents(brooklynGlobalPropertiesContents, brooklynGlobalPropertiesUri, brooklynGlobalPropertiesRemotePath);
+            Integer checkExists = DynamicTasks.queue(SshEffectorTasks.ssh("ls \""+brooklynGlobalPropertiesRemotePath+"\"").allowingNonZeroExitCode()).get();
+            boolean doUpload = true;
+            if (checkExists==0) {
+                ExistingFileBehaviour response = entity.getConfig(BrooklynNode.ON_EXISTING_PROPERTIES_FILE);
+                switch (response) {
+                case USE_EXISTING: doUpload = false; break;
+                case OVERWRITE: break;
+                case FAIL: 
+                    throw new IllegalStateException("Properties file "+brooklynCatalogRemotePath+" already exists and "+
+                        BrooklynNode.ON_EXISTING_PROPERTIES_FILE+" response is to fail");
+                default:
+                    throw new IllegalStateException("Properties file "+brooklynCatalogRemotePath+" already exists and "+
+                        BrooklynNode.ON_EXISTING_PROPERTIES_FILE+" response "+response+" is unknown");
+                }
+            }
+            if (doUpload)
+                uploadFileContents(brooklynGlobalPropertiesContents, brooklynGlobalPropertiesUri, brooklynGlobalPropertiesRemotePath);
         }
         
         // Upload a local-brooklyn.properties if required
@@ -158,18 +194,26 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
 
             ArchiveUtils.deploy(MutableMap.<String, Object>of(), entry, machine, getRunDir(), Os.mergePaths(getRunDir(), "lib"), destFile);
         }
+        
+        String cmd = entity.getConfig(BrooklynNode.EXTRA_CUSTOMIZATION_SCRIPT);
+        if (!Strings.isBlank(cmd)) {
+            DynamicTasks.queueIfPossible( SshEffectorTasks.ssh(cmd).summary("Bespoke BrooklynNode customization script")
+                .requiringExitCodeZero() )
+                .orSubmitAndBlock(getEntity());
+        }
     }
 
     @Override
     public void launch() {
         String app = getEntity().getAttribute(BrooklynNode.APP);
         String locations = getEntity().getAttribute(BrooklynNode.LOCATIONS);
-        Integer httpPort = getEntity().getAttribute(BrooklynNode.HTTP_PORT);
         boolean hasLocalBrooklynProperties = getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_CONTENTS) != null || getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_URI) != null;
         String localBrooklynPropertiesPath = processTemplateContents(getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH));
         String bindAddress = getEntity().getAttribute(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS);
 
-        String cmd = "./bin/brooklyn launch";
+        String cmd = entity.getConfig(BrooklynNode.LAUNCH_COMMAND);
+        if (Strings.isBlank(cmd)) cmd = "./bin/brooklyn";
+        cmd = "nohup " + cmd + " launch";
         if (app != null) {
             cmd += " --app "+app;
         }
@@ -179,14 +223,24 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         if (hasLocalBrooklynProperties) {
             cmd += " --localBrooklynProperties "+localBrooklynPropertiesPath;
         }
+        Integer webPort = null;
         if (getEntity().isHttpProtocolEnabled("http")) {
-            Networking.checkPortsValid(ImmutableMap.of("httpPort", httpPort));
-            cmd += " --port "+httpPort;
+            webPort = getEntity().getAttribute(BrooklynNode.HTTP_PORT);
+            Networking.checkPortsValid(ImmutableMap.of("webPort", webPort));
+        } else if (getEntity().isHttpProtocolEnabled("https")) {
+            webPort = getEntity().getAttribute(BrooklynNode.HTTPS_PORT);
+            Networking.checkPortsValid(ImmutableMap.of("webPort", webPort));
+        }
+        if (webPort!=null) {
+            cmd += " --port "+webPort;
         } else if (getEntity().getEnabledHttpProtocols().isEmpty()) {
+            // TODO sensors will probably not work in this mode
             cmd += " --noConsole";
         } else {
-            throw new IllegalStateException("Unsupported http protocol: "+getEntity().getEnabledHttpProtocols());
+            throw new IllegalStateException("Unknown web protocol in "+BrooklynNode.ENABLED_HTTP_PROTOCOLS+" "
+                + "("+getEntity().getEnabledHttpProtocols()+"); expecting 'http' or 'https'");
         }
+        
         if (Strings.isNonEmpty(bindAddress)) {
             cmd += " --bindAddress "+bindAddress;
         }
@@ -201,12 +255,14 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         log.info("Starting brooklyn on {} using command {}", getMachine(), cmd);
         
         // relies on brooklyn script creating pid file
-        newScript(ImmutableMap.of("usePidFile", false), LAUNCHING).
+        newScript(ImmutableMap.of("usePidFile", 
+                entity.getConfig(BrooklynNode.LAUNCH_COMMAND_CREATES_PID_FILE) ? false : getPidFile()), 
+            LAUNCHING).
             body.append(
                 format("export BROOKLYN_CLASSPATH=%s", getRunDir()+"/lib/\"*\""),
                 format("export BROOKLYN_HOME=%s", getBrooklynHome()),
                 format(cmd)
-        ).execute();
+        ).failOnNonZeroResultCode().execute();
     }
 
     @Override

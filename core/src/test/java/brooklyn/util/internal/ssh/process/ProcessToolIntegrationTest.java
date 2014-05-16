@@ -47,5 +47,5 @@ public class ProcessToolIntegrationTest extends ShellToolAbstractTest {
         out = execCommands(config, Arrays.asList(LOGIN_SHELL_CHECK), null);
         Assert.assertEquals(out.trim(), "yes, login shell", "out = "+out);
     }
-
+    
 }
