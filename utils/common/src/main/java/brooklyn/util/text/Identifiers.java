@@ -57,10 +57,11 @@ public class Identifiers {
         return new String(id);
     }
 
-    /** creates a short identifier comfortable in java and OS's, given an input hash code */ 
+    /** creates a short identifier comfortable in java and OS's, given an input hash code
+     * <p>
+     * result is always at least of length 1, shorter if the hash is smaller */ 
     public static String makeIdFromHash(long d) {
         StringBuffer result = new StringBuffer();
-        if (d==0) return result.toString();
         if (d<0) d=-d;
         // correction for Long.MIN_VALUE
         if (d<0) d=-(d+1000);

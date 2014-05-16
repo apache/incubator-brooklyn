@@ -27,7 +27,7 @@ public class IdentifiersTest {
         Assert.assertEquals(id2, id3);
         Assert.assertNotEquals(id1, id2);
 
-        Assert.assertEquals(Identifiers.makeIdFromHash(0), "");
+        Assert.assertEquals(Identifiers.makeIdFromHash(0), "A");
         
         String idLong = Identifiers.makeIdFromHash(Long.MAX_VALUE);
         log.info("ID's made from hash, of 'hello' is "+id1+" and of Long.MAX_VALUE is "+idLong);
