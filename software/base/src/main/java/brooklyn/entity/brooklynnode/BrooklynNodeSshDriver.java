@@ -44,7 +44,6 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
 
     public String getBrooklynHome() {
         return getRunDir();
-//        return getExpandedInstallDir();
     }
 
     @Override
@@ -238,7 +237,8 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
             // TODO sensors will probably not work in this mode
             cmd += " --noConsole";
         } else {
-            throw new IllegalStateException("Unknown http protocol: "+getEntity().getEnabledHttpProtocols());
+            throw new IllegalStateException("Unknown web protocol in "+BrooklynNode.ENABLED_HTTP_PROTOCOLS+" "
+                + "("+getEntity().getEnabledHttpProtocols()+"); expecting 'http' or 'https'");
         }
         
         if (Strings.isNonEmpty(bindAddress)) {
