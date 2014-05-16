@@ -1,0 +1,12 @@
+{
+    "links": {},
+    "masterId": "kDp39gAv",
+    "nodes": {
+        "kDp39gAv": {
+            "nodeId": "kDp39gAv",
+            "status": "MASTER",
+            "timestampUtc": 1400257858796
+        }
+    },
+    "ownId": "kDp39gAv"
+}

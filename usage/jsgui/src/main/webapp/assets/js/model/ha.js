@@ -13,6 +13,9 @@ define(["backbone", "brooklyn", "view/viewutils"], function (Backbone, Brooklyn,
             } else {
                 this.callbacks.push(f);
             }
+        },
+        autoUpdate: function() {
+            ViewUtils.fetchModelRepeatedlyWithDelay(this, { doitnow: true });
         }
     });
 
@@ -21,10 +24,6 @@ define(["backbone", "brooklyn", "view/viewutils"], function (Backbone, Brooklyn,
         haStatus.loaded = true;
         _.invoke(haStatus.callbacks, "apply");
         haStatus.callbacks = undefined;
-    });
-
-    ViewUtils.fetchModelRepeatedlyWithDelay(haStatus, {
-        doitnow: true
     });
 
     // Will returning the instance rather than the object be confusing?
