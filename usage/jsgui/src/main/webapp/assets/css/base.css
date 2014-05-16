@@ -1119,7 +1119,7 @@ tr.app-add-wizard-config-entry {
 
 /* swagger */
 
-swagger-ui-container{
+.swagger-ui-container{
     margin-bottom: 3em;
 }
 
@@ -1177,7 +1177,7 @@ swagger-ui-container{
     margin-top: 0.5em;
 }
 #groovy-ui-container div.submit {
-   float: "right";
+   float: right;
 }
 
 #groovy-ui-container .input {
