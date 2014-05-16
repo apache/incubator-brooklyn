@@ -12,6 +12,10 @@
     padding-right: 60px;
 }
 
+#main-content {
+    position: relative;
+}
+
 #application-content {
     margin-top: 40px;
     margin-bottom: 40px;
@@ -1337,4 +1341,34 @@ input[type="file"] {
     position: absolute;
     top: auto;
     z-index: 1;
+}
+
+.ha-standby-overlay {
+    position: absolute;
+    top: 8px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+/* Setting opacity in ha-standby-overlay would also apply it to all of
+the element's children, who probably want to control their opacity separately. */
+.overlay-with-opacity {
+    opacity: 0.9;
+    background-color: white;
+}
+
+.overlay-content {
+    position: absolute;
+    top: 100px;
+    left: 50%;
+    width: 400px;
+    height: 100px;
+    /* margin-left = width / 2 */
+    margin: 0 0 0 -200px;
+    padding: 20px;
+    background-color: #ff938c;
+    border: 7px solid #2d2d2d;
+    border-radius: 10px;
+    color: black;
 }

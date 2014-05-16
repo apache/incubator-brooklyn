@@ -17,6 +17,7 @@ define([
         initialize: function() {
             _.bindAll(this);
             this.updateTimestampCallback = setInterval(this.updateTimestamps, 1000);
+            this.listenTo(ha, "change", this.renderNodeStatus);
         },
         beforeClose: function() {
             clearInterval(this.updateTimestampCallback);
@@ -24,11 +25,13 @@ define([
         },
         render: function() {
             this.$el.html(template());
-            this.listenTo(ha, "change", this.renderNodeStatus);
+            if (ha.loaded) {
+                this.renderNodeStatus();
+            }
             return this;
         },
         renderNodeStatus: function() {
-            var master = ha.get("master"),
+            var master = ha.get("masterId"),
                 self = ha.get("ownId"),
                 nodes = ha.get("nodes"),
                 $target = this.$(".ha-summary-table-body");
