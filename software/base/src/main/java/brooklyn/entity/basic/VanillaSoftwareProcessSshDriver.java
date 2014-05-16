@@ -4,11 +4,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Objects;
+
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 
@@ -20,6 +23,15 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
 
     String downloadedFilename = null;
 
+    /** needed because the download url might be different! */
+    @Override
+    protected String getInstallLabelExtraSalt() {
+        Maybe<Object> url = getEntity().getConfigRaw(SoftwareProcess.DOWNLOAD_URL, true);
+        if (url.isAbsent()) return null;
+        // TODO a user-friendly hash would be nice, but tricky since we don't want it to be too long or contain path chars
+        return ""+Objects.hashCode( url.get().toString() );
+    }
+    
     @Override
     public void install() {
         Maybe<Object> url = getEntity().getConfigRaw(SoftwareProcess.DOWNLOAD_URL, true);
@@ -32,36 +44,34 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
             commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, downloadedFilename));
             commands.addAll(ArchiveUtils.installCommands(downloadedFilename));
 
-            newScript(INSTALLING)
-                    .failOnNonZeroResultCode()
-                    // don't set vars yet -- it resolves dependencies (e.g. DB) which we don't want until we start
-                    .environmentVariablesReset()
-                    .execute();
-                
-            // don't attempt to bail out (the default INSTALLING mode will bail out if BROOKLYN exsits
-            // for the VanillaSoftwareProcess; we could optimize to detect this custom url, but
-            // also its are more likely to change so we probably don't want to do that until we have
-            // a flag to FORCE_REINSTALL or similar...)
-            newScript("installing:"+url.get())
-                    .failOnNonZeroResultCode()
+            int result = newScript(INSTALLING)
+                    .failOnNonZeroResultCode(false)
                     // don't set vars yet -- it resolves dependencies (e.g. DB) which we don't want until we start
                     .environmentVariablesReset()
                     .body.append(commands)
                     .execute();
+            
+            if (result!=0) {
+                // could not install at remote machine; try resolving URL here and copying across
+                for (String urlI: urls) {
+                    result = ArchiveUtils.install(getMachine(), urlI, Urls.mergePaths(getInstallDir(), downloadedFilename));
+                    if (result==0) 
+                        break;
+                }
+                if (result != 0) 
+                    throw new IllegalStateException("Error installing archive: " + downloadedFilename);
+            }
         }
     }
 
     @Override
     public void customize() {
         if (downloadedFilename != null) {
-            int result = ArchiveUtils.install(getMachine(), downloadedFilename, getRunDir());
-            if (result != 0) throw new IllegalStateException("Error installing archive: " + downloadedFilename);
-
             newScript(CUSTOMIZING)
                     .failOnNonZeroResultCode()
                     // don't set vars yet -- it resolves dependencies (e.g. DB) which we don't want until we start
                     .environmentVariablesReset()
-                    .body.append(ArchiveUtils.extractCommands(downloadedFilename, "."))
+                    .body.append(ArchiveUtils.extractCommands(downloadedFilename, getInstallDir()))
                     .execute();
         }
     }

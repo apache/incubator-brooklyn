@@ -1,7 +1,0 @@
-# TODO WIP
-name: vanilla-bash-date-file
-location: localhost
-services:
-- type: brooklyn.entity.basic.VanillaSoftwareProcess
-  name: Date1
-  download.url: file:///tmp/vanilla-date.tgz

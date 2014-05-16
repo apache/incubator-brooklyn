@@ -35,6 +35,8 @@ import brooklyn.util.javalang.StackTraceSimplifier;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.task.ssh.SshTasks;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -265,6 +267,8 @@ public class ArchiveUtils {
         do {
             attemptNum++;
             try {
+                Tasks.setBlockingDetails("Installing "+urlToInstall+" at "+machine);
+                // TODO would be nice to have this in a task (and the things within it!)
                 return machine.installTo(props, urlToInstall, target);
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
@@ -276,6 +280,8 @@ public class ArchiveUtils {
                 }
                 log.warn("Failed to transfer "+urlToInstall+" to "+machine+", not a retryable error so failing: "+e);
                 throw Exceptions.propagate(e);
+            } finally {
+                Tasks.resetBlockingDetails();
             }
         } while (retriesRemaining --> 0);
         throw Exceptions.propagate(lastError);

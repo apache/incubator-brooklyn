@@ -1,0 +1,18 @@
+name: Simple Netcat Server with Restart
+location: localhost
+services:
+- type: brooklyn.entity.basic.VanillaSoftwareProcess
+  name: Simple Netcat Server
+  launch.command: |
+    echo hello | nc -l 4321 &
+    echo $! > $PID_FILE
+  brooklyn.policies:
+  - policyType: brooklyn.policy.ha.ServiceFailureDetector
+    brooklyn.config:
+      # wait 15s after service fails before propagating failure
+      serviceFailedStabilizationDelay: 15s
+  - policyType: brooklyn.policy.ha.ServiceRestarter
+    brooklyn.config:
+      # repeated failures in a time window can cause the restarter to abort,
+      # propagating the failure; a time window of 0 will mean it always restarts!
+      failOnRecurringFailuresInThisDuration: 0

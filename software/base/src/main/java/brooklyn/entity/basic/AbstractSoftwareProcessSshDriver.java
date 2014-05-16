@@ -171,7 +171,11 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
     /** allows subclasses to return extra salt (ie unique hash) 
      * for cases where install dirs need to be distinct e.g. based on extra plugins being placed in the install dir;
-     * {@link #setInstallLabel()} uses entity-type simple name and version already */
+     * {@link #setInstallLabel()} uses entity-type simple name and version already
+     * <p>
+     * this salt should not be too long and must not contain invalid path chars.
+     * a hash code of other relevant info is not a bad choice.
+     **/
     protected String getInstallLabelExtraSalt() {
         return null;
     }

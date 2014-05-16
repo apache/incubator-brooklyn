@@ -162,7 +162,9 @@ public abstract class MachineLifecycleEffectorTasks {
 
         Maybe<MachineLocation> ml = Locations.findUniqueMachineLocation(locations);
         if (ml.isPresent()) return ml.get();
-        
+    
+        if (locations.isEmpty())
+            throw new IllegalArgumentException("No locations specified when starting "+entity());
         if (locations.size() != 1 || Iterables.getOnlyElement(locations)==null)
             throw new IllegalArgumentException("Ambiguous locations detected when starting "+entity()+": "+locations);
         return Iterables.getOnlyElement(locations);

@@ -5,6 +5,7 @@ import static com.google.common.base.Predicates.instanceOf;
 import static com.google.common.base.Throwables.getCausalChain;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -36,7 +37,7 @@ public class Exceptions {
     };
 
     private static List<Class<? extends Throwable>> BORING_PREFIX_THROWABLES = MutableList.copyOf(BORING_THROWABLES)
-        .append(IllegalStateException.class).append(RuntimeException.class)
+        .append(IllegalStateException.class).append(RuntimeException.class).append(CompoundRuntimeException.class)
         .toImmutable();
 
     private static boolean isPrefixBoring(Throwable t) {
@@ -171,6 +172,22 @@ public class Exceptions {
             return ""+t2.getClass();
         }
         return t2.toString();
+    }
+
+    public static RuntimeException propagate(String prefix, Collection<Exception> exceptions) {
+        if (exceptions.size()==1)
+            throw new CompoundRuntimeException(prefix + ": " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
+        if (exceptions.isEmpty())
+            throw new CompoundRuntimeException(prefix, exceptions);
+        throw new CompoundRuntimeException(prefix + ", including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
+    }
+
+    public static RuntimeException propagate(Collection<Exception> exceptions) {
+        if (exceptions.size()==1)
+            throw Exceptions.propagate(exceptions.iterator().next());
+        if (exceptions.isEmpty())
+            throw new CompoundRuntimeException("(empty compound exception)", exceptions);
+        throw new CompoundRuntimeException(exceptions.size()+" errors, including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
     }
 
 }

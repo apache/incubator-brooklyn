@@ -46,7 +46,7 @@ public class ServiceRestarter extends AbstractPolicy {
             Duration.class, 
             "failOnRecurringFailuresInThisDuration", 
             "Reports entity as failed if it fails two or more times in this time window", 
-            Duration.seconds(3*60));
+            Duration.minutes(3));
 
     @SetFromFlag("setOnFireOnFailure")
     public static final ConfigKey<Boolean> SET_ON_FIRE_ON_FAILURE = ConfigKeys.newBooleanConfigKey("setOnFireOnFailure", "", true);

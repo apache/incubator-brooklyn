@@ -1,4 +1,4 @@
-name: simple-appserver-with-location
+name: simple-appserver-with-location-byon
 location:
   byon:
     user: brooklyn
