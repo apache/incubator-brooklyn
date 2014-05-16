@@ -1,5 +1,7 @@
 package brooklyn.management.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Collections;
 import java.util.Map;
 
@@ -33,25 +35,27 @@ public abstract class AbstractSubscriptionManager implements SubscriptionManager
     public static class EntitySensorToken {
         Entity e;
         Sensor<?> s;
+        String sName;
         public EntitySensorToken(Entity e, Sensor<?> s) {
             this.e = e;
             this.s = s;
+            this.sName = (s == null) ? null : checkNotNull(s.getName(), "sensor must have non-null name: %s", s);
         }
         @Override
         public int hashCode() {
-            return Objects.hashCode(e, s);
+            return Objects.hashCode(e, sName);
         }
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
             if (!(obj instanceof EntitySensorToken)) return false;
             if (!Objects.equal(e, ((EntitySensorToken)obj).e)) return false;
-            if (!Objects.equal(s, ((EntitySensorToken)obj).s)) return false;
+            if (!Objects.equal(sName, ((EntitySensorToken)obj).sName)) return false;
             return true;
         }
         @Override
         public String toString() {
-            return (e != null ? e.getId() :  "*")+":"+(s != null ? s.getName() : "*");
+            return (e != null ? e.getId() :  "*")+":"+(s != null ? sName : "*");
         }
     }
     static Object makeEntitySensorToken(Entity e, Sensor<?> s) {
