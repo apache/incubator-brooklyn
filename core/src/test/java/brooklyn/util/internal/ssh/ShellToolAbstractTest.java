@@ -257,10 +257,26 @@ public abstract class ShellToolAbstractTest {
 
     @Test(groups = {"Integration"})
     public void testExecBigConcurrentCommand() throws Exception {
+        runExecBigConcurrentCommand(10, 0L);
+    }
+    
+    // TODO Fails I believe due to synchronization model in SshjTool of calling connect/disconnect.
+    // Even with a retry-count of 4, it still fails because some commands are calling disconnect
+    // while another concurrently executing command expects to be still connected.
+    @Test(groups = {"Integration", "WIP"})
+    public void testExecBigConcurrentCommandWithStaggeredStart() throws Exception {
+        // This test is to vary the concurrency of concurrent actions
+        runExecBigConcurrentCommand(50, 100L);
+    }
+    
+    protected void runExecBigConcurrentCommand(int numCommands, long staggeredDelayBeforeStart) throws Exception {
         ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
         List<ListenableFuture<?>> futures = new ArrayList<ListenableFuture<?>>();
         try {
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < numCommands; i++) {
+                long delay = (long) (Math.random() * staggeredDelayBeforeStart);
+                if (i > 0 && delay >= 0) Time.sleep(delay);
+                
                 futures.add(executor.submit(new Runnable() {
                         public void run() {
                             String bigstring = Strings.repeat("abcdefghij", 1000); // 10KB
