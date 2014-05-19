@@ -75,14 +75,14 @@ public class InternalEntityFactory {
 
     /**
      * Returns true if this is a "new-style" entity (i.e. where not expected to call the constructor to instantiate it).
-     * That means it is an entity with a no-arg constructor, and where there is a mapped for an entity type interface.
+     * That means it is an entity with a no-arg constructor.
      * @param managementContext
      * @param clazz
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static boolean isNewStyleEntity(ManagementContext managementContext, Class<?> clazz) {
         try {
-            return isNewStyleEntity(clazz) && managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)clazz) != null;
+            return isNewStyleEntity(clazz);
         } catch (IllegalArgumentException e) {
             return false;
         }

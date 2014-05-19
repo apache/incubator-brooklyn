@@ -584,6 +584,32 @@ public class RebindEntityTest {
         testRebindWhenPreviousAppDestroyedHasNoApp();
     }
 
+    /**
+     * @deprecated since 0.7; support for rebinding old-style entities is deprecated
+     */
+    @Test
+    public void testHandlesOldStyleEntity() throws Exception {
+        MyOldStyleEntity origE = new MyOldStyleEntity(MutableMap.of("confName", "myval"), origApp);
+        Entities.manage(origE);
+        
+        newApp = rebind();
+
+        MyOldStyleEntity newE = (MyOldStyleEntity) Iterables.find(newApp.getChildren(), EntityPredicates.idEqualTo(origE.getId()));
+        
+        assertEquals(newE.getConfig(MyOldStyleEntity.CONF_NAME), "myval");
+    }
+
+    public static class MyOldStyleEntity extends AbstractEntity {
+        private static final long serialVersionUID = 1L;
+        
+        @SetFromFlag("confName")
+        public static final ConfigKey<String> CONF_NAME = TestEntity.CONF_NAME;
+
+        public MyOldStyleEntity(Map flags, Entity parent) {
+            super(flags, parent);
+        }
+    }
+
     private TestApplication rebind() throws Exception {
         return rebind(true);
     }
