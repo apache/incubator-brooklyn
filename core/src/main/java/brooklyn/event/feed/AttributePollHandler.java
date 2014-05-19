@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.flags.TypeCoercions;
@@ -54,80 +55,74 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         return !config.hasCheckSuccessHandler() || config.getCheckSuccess().apply(val);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void onSuccess(V val) {
         if (lastWasProblem) {
             if (currentProblemLoggedAsWarning) { 
-                log.info("Success (following previous problem) reading "+entity+"->"+sensor);
+                log.info("Success (following previous problem) reading "+getBriefDescription());
             } else {
-                log.debug("Success (following previous problem) reading "+entity+"->"+sensor);
+                log.debug("Success (following previous problem) reading "+getBriefDescription());
             }
             lastWasProblem = false;
             currentProblemStartTime = null;
             currentProblemLoggedAsWarning = false;
         }
         lastSuccessTime = System.currentTimeMillis();
-        if (log.isTraceEnabled()) log.trace("poll for {}->{} got: {}", new Object[] {entity, sensor, val});
+        if (log.isTraceEnabled()) log.trace("poll for {} got: {}", new Object[] {getBriefDescription(), val});
         
         try {
-            Object v = transformValue(val);
-            if (v != PollConfig.UNSET) {
-                entity.setAttribute(sensor, v);
-            }
+            setSensor(transformValueOnSuccess(val));
         } catch (Exception e) {
             if (feed.isConnected()) {
-                log.warn("unable to compute "+entity+"->"+sensor+"; on val="+val, e);
+                log.warn("unable to compute "+getBriefDescription()+"; on val="+val, e);
             } else {
-                if (log.isDebugEnabled()) log.debug("unable to compute "+entity+" ->"+sensor+"; val="+val+" (when inactive)", e);
+                if (log.isDebugEnabled()) log.debug("unable to compute "+getBriefDescription()+"; val="+val+" (when inactive)", e);
             }
         }
     }
 
-    @SuppressWarnings("unchecked")
+    /** allows post-processing, such as applying a success handler; 
+     * default applies the onSuccess handler (which is recommended) */
+    protected Object transformValueOnSuccess(V val) {
+        return config.hasSuccessHandler() ? config.getOnSuccess().apply(val) : val;
+    }
+
     @Override
     public void onFailure(V val) {
         if (!config.hasFailureHandler()) {
-            onException(new Exception("checkSuccess of "+this+" from "+entity+" was false but poller has no failure handler"));
+            onException(new Exception("checkSuccess of "+this+" for "+getBriefDescription()+" was false but poller has no failure handler"));
         } else {
             logProblem("failure", val);
 
             try {
-                Object v = coerce(config.getOnFailure().apply(val));
-                if (v != PollConfig.UNSET) {
-                    entity.setAttribute(sensor, v);
-                }
+                setSensor(config.hasFailureHandler() ? config.getOnFailure().apply((V)val) : val);
             } catch (Exception e) {
                 if (feed.isConnected()) {
-                    log.warn("Error computing " + entity + "->" + sensor + "; val=" + val+": "+ e, e);
+                    log.warn("Error computing " + getBriefDescription() + "; val=" + val+": "+ e, e);
                 } else {
                     if (log.isDebugEnabled())
-                        log.debug("Error computing " + entity + " ->" + sensor + "; val=" + val + " (when inactive)", e);
+                        log.debug("Error computing " + getBriefDescription() + "; val=" + val + " (when inactive)", e);
                 }
             }
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void onException(Exception exception) {
         if (!feed.isConnected()) {
-            if (log.isDebugEnabled()) log.debug("Read of {} from {} gave exception (while not connected or not yet connected): {}", new Object[] {this, entity, exception});
+            if (log.isDebugEnabled()) log.debug("Read of {} in {} gave exception (while not connected or not yet connected): {}", new Object[] {this, getBriefDescription(), exception});
         } else {
             logProblem("exception", exception);
         }
 
         if (config.hasExceptionHandler()) {
             try {
-                Object v = transformError(exception);
-                if (v != PollConfig.UNSET) {
-                    entity.setAttribute(sensor, v);
-                }
+                setSensor( config.getOnException().apply(exception) );
             } catch (Exception e) {
                 if (feed.isConnected()) {
-                    log.warn("unable to compute "+entity+"->"+sensor+"; on exception="+exception, e);
+                    log.warn("unable to compute "+getBriefDescription()+"; on exception="+exception, e);
                 } else {
-                    if (log.isDebugEnabled()) log.debug("unable to compute "+entity+" ->"+sensor+"; exception="+exception+" (when inactive)", e);
+                    if (log.isDebugEnabled()) log.debug("unable to compute "+getBriefDescription()+"; exception="+exception+" (when inactive)", e);
                 }
             }
         }
@@ -136,7 +131,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     protected void logProblem(String type, Object val) {
         if (lastWasProblem && currentProblemLoggedAsWarning) {
             if (log.isDebugEnabled())
-                log.debug("Recurring "+type+" reading " + this + " from " + entity + ": " + val);
+                log.debug("Recurring "+type+" reading " + this + " in " + getBriefDescription() + ": " + val);
         } else {
             long nowTime = System.currentTimeMillis();
             // get a non-volatile value
@@ -148,12 +143,12 @@ public class AttributePollHandler<V> implements PollHandler<V> {
             if (!lastWasProblem) {
                 if (expiryTime <= nowTime) {
                     currentProblemLoggedAsWarning = true;
-                    log.warn("Read of " + entity + "->" + sensor + " gave " + type + ": " + val);
+                    log.warn("Read of " + getBriefDescription() + " gave " + type + ": " + val);
                     if (log.isDebugEnabled() && val instanceof Throwable)
-                        log.debug("Trace for "+type+" reading "+entity+"->"+sensor+": "+val, (Throwable)val);
+                        log.debug("Trace for "+type+" reading "+getBriefDescription()+": "+val, (Throwable)val);
                 } else {
                     if (log.isDebugEnabled())
-                        log.debug("Read of " + entity + "->" + sensor + " gave " + type + 
+                        log.debug("Read of " + getBriefDescription() + " gave " + type + 
                                 " (in grace period)" +
                                 ": " + val);
                 }
@@ -162,52 +157,35 @@ public class AttributePollHandler<V> implements PollHandler<V> {
             } else {
                 if (expiryTime <= nowTime) {
                     currentProblemLoggedAsWarning = true;
-                    log.warn("Read of " + entity + "->" + sensor + " gave " + type + 
-                            " (grace period expired, occurring for "+Duration.millis(nowTime - currentProblemStartTimeCache)+")"+
+                    log.warn("Read of " + getBriefDescription() + " gave " + type + 
+                            " (grace period expired, occurring for "+Duration.millis(nowTime - currentProblemStartTimeCache)+", " +
+                            (config.hasExceptionHandler() ? "" : ", no exception handler set for sensor")+
+                            ")"+
                             ": " + val);
                     if (log.isDebugEnabled() && val instanceof Throwable)
-                        log.debug("Trace for "+type+" reading "+entity+"->"+sensor+": "+val, (Throwable)val);
+                        log.debug("Trace for "+type+" reading "+getBriefDescription()+": "+val, (Throwable)val);
                 } else {
-                    log.debug("Recurring "+type+" reading " + this + " from " + entity + 
+                    log.debug("Recurring "+type+" reading " + this + " for " + getBriefDescription() + 
                             " (still in grace period)" +
                             ": " + val);
                 }
             }
         }
     }
-    
-    /**
-     * Does post-processing on the result of the actual poll, to convert it to the attribute's new value.
-     * Or returns PollConfig.UNSET if the post-processing indicates that the attribute should not be changed.
-     */
-    @SuppressWarnings("unchecked")
-    protected Object transformValue(Object val) {
-        if (config.hasSuccessHandler()) {
-            return coerce(config.getOnSuccess().apply((V)val));
-        } else {
-            return coerce(val);
-        }
-    }
-    
-    /**
-     * Does post-processing on a poll error, to convert it to the attribute's new value.
-     * Or returns PollConfig.UNSET if the post-processing indicates that the attribute should not be changed.
-     */
-    protected Object transformError(Exception error) throws Exception {
-        if (!config.hasExceptionHandler())
-            throw new IllegalStateException("Attribute poll handler has no error handler, but attempted to transform error", error);
-        return coerce(config.getOnException().apply(error));
-    }
 
     @SuppressWarnings("unchecked")
-    private Object coerce(Object v) {
-        if (v != PollConfig.UNSET) {
-            return TypeCoercions.coerce(v, sensor.getType());
+    protected void setSensor(Object v) {
+        if (v == FeedConfig.UNCHANGED) {
+            // nothing
+        } else if (v == FeedConfig.REMOVE) {
+            ((EntityInternal)entity).removeAttribute(sensor);
+        } else if (sensor == FeedConfig.NO_SENSOR) {
+            // nothing
         } else {
-            return v;
+            entity.setAttribute(sensor, TypeCoercions.coerce(v, sensor.getType()));
         }
     }
-    
+
     @Override
     public String toString() {
         return super.toString()+"["+getDescription()+"]";
@@ -218,4 +196,8 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         return sensor.getName()+" @ "+entity.getId()+" <- "+config;
     }
     
+    protected String getBriefDescription() {
+        return ""+entity+"->"+(sensor==FeedConfig.NO_SENSOR ? "(dynamic sensors)" : ""+sensor);
+    }
+        
 }

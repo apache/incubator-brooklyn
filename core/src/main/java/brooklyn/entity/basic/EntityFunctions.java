@@ -1,8 +1,11 @@
 package brooklyn.entity.basic;
 
+import java.util.Map;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
+import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
 
@@ -40,4 +43,50 @@ public class EntityFunctions {
             }
         };
     }
+
+    /** returns a function which sets the given sensors on the entity passed in,
+     * with {@link Entities#UNCHANGED} and {@link Entities#REMOVE} doing those actions. */
+    public static Function<Entity,Void> settingSensorsConstant(final Map<AttributeSensor<?>,Object> values) {
+        return new Function<Entity,Void>() {
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            @Override public Void apply(Entity input) {
+                for (Map.Entry<AttributeSensor<?>,Object> entry : values.entrySet()) {
+                    AttributeSensor sensor = (AttributeSensor)entry.getKey();
+                    Object value = entry.getValue();
+                    if (value==Entities.UNCHANGED) {
+                        // nothing
+                    } else if (value==Entities.REMOVE) {
+                        ((EntityInternal)input).removeAttribute(sensor);
+                    } else {
+                        value = TypeCoercions.coerce(value, sensor.getType());
+                        ((EntityInternal)input).setAttribute(sensor, value);
+                    }
+                }
+                return null;
+            }
+        };
+    }
+
+    /** as {@link #settingSensorsConstant(Map)} but as a {@link Runnable} */
+    public static Runnable settingSensorsConstantRunnable(final Entity entity, final Map<AttributeSensor<?>,Object> values) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                settingSensorsConstant(values).apply(entity);
+            }
+        };
+    }
+
+
+    /** as {@link #settingSensorsConstant(Map)} but creating a {@link Function} which ignores its input,
+     * suitable for use with sensor feeds where the input is ignored */
+    public static <T> Function<T,Void> settingSensorsConstantFunction(final Entity entity, final Map<AttributeSensor<?>,Object> values) {
+        return new Function<T,Void>() {
+            @Override
+            public Void apply(T input) {
+                return settingSensorsConstant(values).apply(entity);
+            }
+        };
+    }
+
 }

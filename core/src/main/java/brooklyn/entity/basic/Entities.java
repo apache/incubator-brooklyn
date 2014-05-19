@@ -102,6 +102,13 @@ public class Entities {
             "access.cert",
             "access.key");
 
+    /** Special object used by some setting methods to indicate that a value should be ignored. 
+     * See specific usages of this field to confirm where. */
+    public static final Object UNCHANGED = new Object();
+    /** Special object used by some setting methods to indicate that a value should be removed. 
+     * See specific usages of this field to confirm where. */
+    public static final Object REMOVE = new Object();
+    
     /**
      * Invokes an {@link Effector} on multiple entities, with the named arguments from the parameters {@link Map}
      * using the context of the provided {@link Entity}.

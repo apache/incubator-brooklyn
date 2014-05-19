@@ -140,10 +140,15 @@ public class HttpToolResponse implements HttpPollValue {
         return content;
     }
 
+    public String getContentAsString() {
+        return new String(getContent());
+    }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(getClass())
                 .add("responseCode", responseCode)
                 .toString();
     }
+
 }

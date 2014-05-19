@@ -316,11 +316,14 @@ public class JmxFeed extends AbstractFeed {
 
         for (final JmxNotificationSubscriptionConfig<?> config : configs) {
             AttributePollHandler<javax.management.Notification> handler = new AttributePollHandler<javax.management.Notification>(config, getEntity(), this) {
-                @Override protected Object transformValue(Object val) {
+                @Override protected Object transformValueOnSuccess(javax.management.Notification val) {
                     if (config.getOnNotification() != null) {
-                        return config.getOnNotification().apply((javax.management.Notification)val);
+                        return config.getOnNotification().apply(val);
                     } else {
-                        return super.transformValue(((javax.management.Notification)val).getUserData());
+                        Object result = super.transformValueOnSuccess(val);
+                        if (result instanceof javax.management.Notification)
+                            return ((javax.management.Notification)result).getUserData();
+                        return result;
                     }
                 }
             };

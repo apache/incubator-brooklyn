@@ -4,6 +4,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.net.URL;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
@@ -15,23 +16,30 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityFunctions;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
+import brooklyn.event.feed.FeedConfig;
+import brooklyn.event.feed.PollConfig;
 import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.http.BetterMockWebServer;
+import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.SocketPolicy;
 
@@ -61,8 +69,8 @@ public class HttpFeedTest {
         server.play();
         baseUrl = server.getUrl("/");
 
-        loc = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        loc = app.newLocalhostProvisioningLocation();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }
@@ -80,10 +88,10 @@ public class HttpFeedTest {
         feed = HttpFeed.builder()
                 .entity(entity)
                 .baseUrl(baseUrl)
-                .poll(new HttpPollConfig<Integer>(SENSOR_INT)
+                .poll(HttpPollConfig.forSensor(SENSOR_INT)
                         .period(100)
                         .onSuccess(HttpValueFunctions.responseCode()))
-                .poll(new HttpPollConfig<String>(SENSOR_STRING)
+                .poll(HttpPollConfig.forSensor(SENSOR_STRING)
                         .period(100)
                         .onSuccess(HttpValueFunctions.stringContentsFunction()))
                 .build();
@@ -239,10 +247,10 @@ public class HttpFeedTest {
         feed = HttpFeed.builder()
                 .entity(entity)
                 .baseUrl(baseUrl)
-                .poll(new HttpPollConfig<Integer>(SENSOR_INT)
+                .poll(HttpPollConfig.forSensor(SENSOR_INT)
                         .period(100)
                         .onSuccess(HttpValueFunctions.responseCode()))
-                .poll(new HttpPollConfig<String>(SENSOR_STRING)
+                .poll(HttpPollConfig.forSensor(SENSOR_STRING)
                         .period(100)
                         .onSuccess(HttpValueFunctions.stringContentsFunction()))
                 .suspended()
@@ -259,15 +267,26 @@ public class HttpFeedTest {
 
 
     @Test(groups="Integration")
-    // marked as integration so it doesn't fail the plain build in environments
-    // with dodgy DNS (ie where "thisdoesnotexistdefinitely" resolves as a host
-    // which happily serves you adverts for your ISP, yielding "success" here)
+    /** marked as integration so it doesn't fail the plain build in environments
+     * with dodgy DNS (ie where "unresolvable_hostname_or_one_with_no_webserver_on_port_80" resolves as a host run by the provider)
+     * <p>
+     * (a surprising number of ISP's do this,
+     * happily serving adverts for your ISP, yielding "success" here,
+     * or timing out, giving null here)
+     * <p>
+     * if you want to make this test work, you can e.g. set it to loopback IP assuming you don't have any servers on port 80,
+     * with the following in /etc/hosts
+     * <p>  
+     * 127.0.0.1  unresolvable_hostname_or_one_with_no_webserver_on_port_80
+    // or some other IP which won't resolve
+     */
     public void testPollsAndParsesHttpErrorResponseWild() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
-                .baseUri("http://thisdoesnotexistdefinitely")
-                .poll(new HttpPollConfig<String>(SENSOR_STRING)
+                .baseUri("http://unresolvable_hostname_or_one_with_no_webserver_on_port_80")
+                .poll(HttpPollConfig.forSensor(SENSOR_STRING)
                         .onSuccess(Functions.constant("success"))
+                        .onFailure(Functions.constant("failure"))
                         .onException(Functions.constant("error")))
                 .build();
         
@@ -288,7 +307,70 @@ public class HttpFeedTest {
         
         assertSensorEventually(SENSOR_STRING, "error", TIMEOUT_MS);
     }
+
+    @Test
+    public void testPollsMulti() throws Exception {
+        newMultiFeed(baseUrl);
+        assertSensorEventually(SENSOR_INT, (Integer)200, TIMEOUT_MS);
+        assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
+    }
+
+    // because takes a wee while
+    @SuppressWarnings("rawtypes")
+    @Test(groups="Integration")
+    public void testPollsMultiClearsOnSubsequentFailure() throws Exception {
+        server = BetterMockWebServer.newInstanceLocalhost();
+        for (int i = 0; i < 10; i++) {
+            server.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setBody("Hello World"));
+        }
+        for (int i = 0; i < 10; i++) {
+            server.enqueue(new MockResponse()
+                    .setResponseCode(401)
+                    .setBody("Unauthorised"));
+        }
+        server.play();
+
+        newMultiFeed(server.getUrl("/"));
+        
+        assertSensorEventually(SENSOR_INT, 200, TIMEOUT_MS);
+        assertSensorEventually(SENSOR_STRING, "Hello World", TIMEOUT_MS);
+        
+        assertSensorEventually(SENSOR_INT, -1, TIMEOUT_MS);
+        assertSensorEventually(SENSOR_STRING, null, TIMEOUT_MS);
+        
+        List<String> attrs = Lists.transform(MutableList.copyOf( ((EntityInternal)entity).getAllAttributes().keySet() ),
+            new Function<AttributeSensor,String>() {
+                @Override public String apply(AttributeSensor input) { return input.getName(); } });
+        Assert.assertTrue(!attrs.contains(SENSOR_STRING.getName()), "attrs contained "+SENSOR_STRING);
+        Assert.assertTrue(!attrs.contains(FeedConfig.NO_SENSOR.getName()), "attrs contained "+FeedConfig.NO_SENSOR);
+        
+        server.shutdown();
+    }
+
+    private void newMultiFeed(URL baseUrl) {
+        feed = HttpFeed.builder()
+                .entity(entity)
+                .baseUrl(baseUrl)
+                
+                .poll(HttpPollConfig.forMultiple()
+                    .onSuccess(new Function<HttpToolResponse,Void>() {
+                        public Void apply(HttpToolResponse response) {
+                            entity.setAttribute(SENSOR_INT, response.getResponseCode());
+                            if (response.getResponseCode()==200)
+                                entity.setAttribute(SENSOR_STRING, response.getContentAsString());
+                            return null;
+                        }
+                    })
+                    .onFailureOrException(EntityFunctions.settingSensorsConstantFunction(entity, MutableMap.<AttributeSensor<?>,Object>of(
+                        SENSOR_INT, -1, 
+                        SENSOR_STRING, PollConfig.REMOVE)))
+                .period(100))
+                .build();
+    }
     
+
     private <T> void assertSensorEventually(final AttributeSensor<T> sensor, final T expectedVal, long timeout) {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", timeout), new Callable<Void>() {
             public Void call() {

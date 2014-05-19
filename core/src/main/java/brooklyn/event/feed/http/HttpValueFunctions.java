@@ -39,8 +39,7 @@ public class HttpValueFunctions {
     public static Function<HttpToolResponse, String> stringContentsFunction() {
         return new Function<HttpToolResponse, String>() {
             @Override public String apply(HttpToolResponse input) {
-                // TODO Charset?
-                return new String(input.getContent());
+                return input.getContentAsString();
             }
         };
     }
