@@ -80,7 +80,6 @@ public class MementosGenerators {
         builder.displayName = entity.getDisplayName();
         builder.type = entity.getClass().getName();
         builder.typeClass = entity.getClass();
-        builder.isTopLevelApp = (entity instanceof Application && entity.getParent() == null);
         builder.typeInfo = entity.getEntityType();
 
         Map<ConfigKey<?>, Object> localConfig = ((EntityInternal)entity).getConfigMap().getLocalConfig();

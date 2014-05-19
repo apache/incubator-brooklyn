@@ -190,7 +190,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     LOG.warn("No entity-memento deserialized from file "+file+"; ignoring and continuing");
                 } else {
                     builder.entity(memento);
-                    if (memento.isTopLevelApp()) {
+                    if (memento.getParent()==null) {
                         builder.applicationId(memento.getId());
                     }
                 }

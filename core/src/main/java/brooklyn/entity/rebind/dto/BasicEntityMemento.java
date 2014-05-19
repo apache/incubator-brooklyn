@@ -44,7 +44,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     }
 
     public static class Builder extends AbstractTreeNodeMemento.Builder<Builder> {
-        protected Boolean isTopLevelApp;
         protected EntityType typeInfo;
         protected Map<ConfigKey, Object> config = Maps.newLinkedHashMap();
         protected Map<String, Object> configUnmatched = Maps.newLinkedHashMap();
@@ -55,7 +54,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         
         public Builder from(EntityMemento other) {
             super.from((TreeNode)other);
-            isTopLevelApp = other.isTopLevelApp();
             typeInfo = other.getTypeInfo();
             displayName = other.getDisplayName();
             config.putAll(other.getConfig());
@@ -71,9 +69,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             return new BasicEntityMemento(this);
         }
     }
-    
-    // TODO can this be inferred?
-    private Boolean isTopLevelApp;
     
     private Map<String, Object> config;
     private List<String> locations;
@@ -105,7 +100,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     protected BasicEntityMemento(Builder builder) {
         super(builder);
         
-        isTopLevelApp = builder.isTopLevelApp==null || builder.isTopLevelApp==(getParent()==null) ? null : builder.isTopLevelApp;
         setTypeInfo(builder.typeInfo);
         locations = toPersistedList(builder.locations);
         policies = toPersistedList(builder.policies);
@@ -206,11 +200,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
                 attributesByKey.put(getAttributeKey(entry.getKey()), entry.getValue());
             }
         }
-    }
-    
-    @Override
-    public boolean isTopLevelApp() {
-        return isTopLevelApp!=null ? isTopLevelApp : getParent()==null;
     }
     
     @Override

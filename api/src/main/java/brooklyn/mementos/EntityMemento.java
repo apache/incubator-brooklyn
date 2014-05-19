@@ -18,8 +18,6 @@ import brooklyn.event.AttributeSensor;
  */
 public interface EntityMemento extends Memento, TreeNode {
 
-    public boolean isTopLevelApp();
-    
     public EntityType getTypeInfo();
     
     public Map<ConfigKey, Object> getConfig();
