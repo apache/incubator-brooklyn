@@ -11,6 +11,7 @@ import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.EntityType;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityTypes;
@@ -44,6 +45,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
 
     public static class Builder extends AbstractTreeNodeMemento.Builder<Builder> {
         protected boolean isTopLevelApp;
+        protected EntityType typeInfo;
         protected Map<ConfigKey, Object> config = Maps.newLinkedHashMap();
         protected Map<String, Object> configUnmatched = Maps.newLinkedHashMap();
         protected Map<AttributeSensor, Object> attributes = Maps.newLinkedHashMap();
@@ -54,6 +56,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         public Builder from(EntityMemento other) {
             super.from((TreeNode)other);
             isTopLevelApp = other.isTopLevelApp();
+            typeInfo = other.getTypeInfo();
             displayName = other.getDisplayName();
             config.putAll(other.getConfig());
             configUnmatched.putAll(other.getConfigUnmatched());
@@ -102,6 +105,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     protected BasicEntityMemento(Builder builder) {
         super(builder);
         isTopLevelApp = builder.isTopLevelApp;
+        setTypeInfo(builder.typeInfo);
         locations = toPersistedList(builder.locations);
         policies = toPersistedList(builder.policies);
         members = toPersistedList(builder.members);
@@ -207,7 +211,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     public boolean isTopLevelApp() {
         return isTopLevelApp;
     }
-
+    
     @Override
     public Map<ConfigKey, Object> getConfig() {
         if (configByKey == null) postDeserialize();
@@ -251,4 +255,21 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
                 .add("policies", getPolicies())
                 .add("locations", getLocations());
     }
+
+    
+    // WORK IN PROGRESS @ahgittin 19 May 2014 --
+    // works but type info is way too large;
+    // disabled to prevent incompatible serialization as this is fixed
+    
+//  private EntityType typeInfo;
+    @Override
+    public EntityType getTypeInfo() {
+//      return typeInfo;
+        return null;
+    }
+    private void setTypeInfo(EntityType typeInfo) {
+// TODO set the field above
+    }
+
+
 }

@@ -49,6 +49,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
 
         // Note that the id should have been set in the constructor; it is immutable
         entity.setDisplayName(memento.getDisplayName());
+        ((EntityInternal)entity).getMutableEntityType().copyAll(memento.getTypeInfo());
 
         for (Map.Entry<ConfigKey, Object> entry : memento.getConfig().entrySet()) {
             try {

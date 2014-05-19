@@ -109,6 +109,18 @@ public class EntityTypeTest {
     @Test
     public void testGetEffector() throws Exception {
         TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        Effector<?> effector = entity2.getEntityType().getEffectorByName("myEffector").get();
+        Effector<?> effector2 = entity2.getEntityType().getEffectorByName("identityEffector").get();
+        assertEquals(effector.getName(), "myEffector");
+        assertTrue(effector.getParameters().isEmpty(), "myEffector should have had no params, but had "+effector.getParameters());
+        assertEquals(effector2.getName(), "identityEffector");
+        assertEquals(effector2.getParameters().size(), 1, "identityEffector should have had one param, but had "+effector2.getParameters());
+        assertEquals(Iterables.getOnlyElement(effector2.getParameters()).getName(), "arg", "identityEffector should have had 'arg' param, but had "+effector2.getParameters());
+    }
+
+    @Test
+    public void testGetEffectorDeprecated() throws Exception {
+        TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         Effector<?> effector = entity2.getEntityType().getEffector("myEffector");
         Effector<?> effector2 = entity2.getEntityType().getEffector("identityEffector", Object.class);
         assertEquals(effector.getName(), "myEffector");

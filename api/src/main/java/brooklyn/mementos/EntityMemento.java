@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.EntityType;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 
@@ -18,6 +19,8 @@ import brooklyn.event.AttributeSensor;
 public interface EntityMemento extends Memento, TreeNode {
 
     public boolean isTopLevelApp();
+    
+    public EntityType getTypeInfo();
     
     public Map<ConfigKey, Object> getConfig();
     

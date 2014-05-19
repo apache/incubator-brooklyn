@@ -81,7 +81,8 @@ public class MementosGenerators {
         builder.type = entity.getClass().getName();
         builder.typeClass = entity.getClass();
         builder.isTopLevelApp = (entity instanceof Application && entity.getParent() == null);
-        
+        builder.typeInfo = entity.getEntityType();
+
         Map<ConfigKey<?>, Object> localConfig = ((EntityInternal)entity).getConfigMap().getLocalConfig();
         for (Map.Entry<ConfigKey<?>, Object> entry : localConfig.entrySet()) {
             ConfigKey<?> key = checkNotNull(entry.getKey(), localConfig);
@@ -144,7 +145,7 @@ public class MementosGenerators {
                 builder.members.add(member.getId()); 
             }
         }
-        
+
         return builder;
     }
     

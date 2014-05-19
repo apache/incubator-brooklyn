@@ -44,9 +44,6 @@ public interface EntityType extends Serializable {
     Set<Effector<?>> getEffectors();
 
     /** @return an effector with the given name, if it exists.
-     * 
-     * in the case of multiple effectors with the given name, any may be returned.
-     * multiple different effectors of the same name is discouraged.
      */
     public Maybe<Effector<?>> getEffectorByName(String name);
         
@@ -54,9 +51,11 @@ public interface EntityType extends Serializable {
      * @return the matching effector on this entity
      * @throws NoSuchElementException If there is no exact match for this signature
      * <p>
-     * as multiple different effectors of the same name is discouraged (and insufficiently tested),
-     * this method may be deprecated in future in favour of {@link #getEffectorByName(String)}.
+     * @deprecated since 0.7.0 use {@link #getEffectorByName(String)};
+     * use of multiple effectors with the same name is not supported by the EntityDynamicType implementation,
+     * so should be discouraged.  overloading can be achieved by inspecting the parameters map. 
      */
+    @Deprecated
     Effector<?> getEffector(String name, Class<?>... parameterTypes);
 
     /**
