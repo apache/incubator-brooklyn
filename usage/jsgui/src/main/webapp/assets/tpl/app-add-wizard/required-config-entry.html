@@ -14,7 +14,7 @@
             element = null;
         for (var i = 0; i < length; i++) {
           element = data.possibleValues[i]; %>
-        <option value="<%= element.value %>"<% if (data.defaultValue == element.value) { %> selected="selected"<% } %>><%= element.description %></option>
+        <option value="<%= element.value %>"><% if (data.defaultValue == element.value) { %> selected="selected"<% } %>><%= element.description %></option>
         <% } %>
       </select>
     <% } else { %>
