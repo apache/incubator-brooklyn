@@ -27,6 +27,7 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.os.Os;
 import brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Function;
@@ -231,6 +232,16 @@ public class ByonLocationResolverTest {
         Assert.assertEquals("/tmp/x", l.getAllConfig(true).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
 
         Assert.assertEquals("/tmp/x", l.getAllConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
+    }
+
+    @Test
+    public void testResolvesLocalTempDir() throws Exception {
+        String localTempDir = Os.mergePaths(Os.tmp(), "testResolvesUsernameAtHost");
+        brooklynProperties.put("brooklyn.location.byon.localTempDir", localTempDir);
+
+        FixedListMachineProvisioningLocation<SshMachineLocation> byon = resolve("byon:(hosts=\"1.1.1.1\")");
+        SshMachineLocation machine = byon.obtain();
+        assertEquals(machine.getConfig(SshMachineLocation.LOCAL_TEMP_DIR), localTempDir);
     }
 
     @Test

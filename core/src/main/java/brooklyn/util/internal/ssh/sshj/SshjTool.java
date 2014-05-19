@@ -59,6 +59,21 @@ import com.google.common.primitives.Ints;
  */
 public class SshjTool extends SshAbstractTool implements SshTool {
 
+    /*
+     * TODO synchronization of connect/disconnect needs revisited!
+     * Saw SshjToolIntegrationTest.testExecBigConcurrentCommand fail with:
+     *     Caused by: java.lang.AssertionError
+     *         at net.schmizz.sshj.SSHClient.auth(SSHClient.java:204)
+     * i.e. another thread had called disconnect just before the failing thread
+     * did SSHClient.auth.
+     * Having multiple threads call connect/disconnect is going to be brittle. With
+     * our retries we can get away with it usually, but it's not good!
+     *
+     * TODO need to upgrade sshj version from 0.8.1 to 0.9, but jclouds 1.7.2 still 
+     * relies on 0.8.1. In 0.9, it fixes the https://github.com/shikhar/sshj/issues/89
+     * so does not throw AssertionError.
+     */
+
     private static final Logger LOG = LoggerFactory.getLogger(SshjTool.class);
 
     protected final int sshTries;
@@ -342,7 +357,21 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 action.clear();
                 if (LOG.isTraceEnabled()) LOG.trace(">> ({}) acquiring {}", toString(), action);
                 Stopwatch perfStopwatch = Stopwatch.createStarted();
-                T returnVal = action.create();
+                
+                T returnVal;
+                try {
+                    returnVal = action.create();
+                } catch (AssertionError e) {
+                    /*
+                     * TODO In net.schmizz.sshj.SSHClient.auth(SSHClient.java:204) throws AssertionError
+                     * if not connected. This can happen if another thread has called disconnect
+                     * concurrently. This is changed in sshj v0.9.0 to instead throw an IllegalStateException.
+                     * 
+                     * For now, we'll retry. See "TODO" at top of class about synchronization.
+                     */
+                    throw new IllegalStateException("Problem in "+toString()+" for "+action, e);
+                }
+                
                 if (LOG.isTraceEnabled()) LOG.trace("<< ({}) acquired {}", toString(), returnVal);
                 if (LOG.isTraceEnabled()) LOG.trace("SSH Performance: {} {} took {}", new Object[] {
                         sshClientConnection.getHostAndPort(), 

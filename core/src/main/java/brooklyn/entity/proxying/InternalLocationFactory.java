@@ -147,7 +147,7 @@ public class InternalLocationFactory {
     /**
      * Constructs a new-style location (fails if no no-arg constructor).
      */
-    private <T extends Location> T constructLocation(Class<T> clazz) {
+    public <T extends Location> T constructLocation(Class<T> clazz) {
         try {
             FactoryConstructionTracker.setConstructing();
             try {

@@ -25,7 +25,9 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
@@ -34,6 +36,7 @@ import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.rebind.RebindLocationTest.MyLocation;
+import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
@@ -252,13 +255,36 @@ public class RebindEntityTest {
         assertEquals(reffer2.obj, newE);
     }
     
+    // Where the same object is referenced from two different fields, using types that do not share a 
+    // super type... then the object will just be deserialized once - at that point it must have *both*
+    // interfaces.
+    @Test(groups="WIP")
+    public void testHandlesReferencingOtherEntityInPojoFieldsOfOtherTypes() throws Exception {
+        MyEntityWithMultipleInterfaces origE = origApp.createAndManageChild(EntitySpec.create(MyEntityWithMultipleInterfaces.class));
+        ReffingEntity reffer = new ReffingEntity();
+        reffer.group = origE;
+        reffer.resizable = origE;
+        origApp.setConfig(TestEntity.CONF_OBJECT, reffer);
+
+        newApp = rebind(false);
+        MyEntityWithMultipleInterfaces newE = (MyEntityWithMultipleInterfaces) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntityWithMultipleInterfaces.class));
+        ReffingEntity newReffer = (ReffingEntity)newApp.getConfig(TestEntity.CONF_OBJECT);
+        
+        assertEquals(newReffer.group, newE);
+        assertEquals(newReffer.resizable, newE);
+    }
+    
     public static class ReffingEntity {
+        public Group group;
+        public Resizable resizable;
         public MyEntity myEntity;
         public Entity entity;
         public Object obj;
         @Override
         public boolean equals(Object o) {
-            return (o instanceof ReffingEntity) && Objects.equal(entity, ((ReffingEntity)o).entity) && Objects.equal(obj, ((ReffingEntity)o).obj);
+            return (o instanceof ReffingEntity) && Objects.equal(entity, ((ReffingEntity)o).entity) 
+                    && Objects.equal(obj, ((ReffingEntity)o).obj) && Objects.equal(group, ((ReffingEntity)o).group)
+                    && Objects.equal(resizable, ((ReffingEntity)o).resizable);
         }
         @Override
         public int hashCode() {
@@ -601,6 +627,28 @@ public class RebindEntityTest {
         }
     }
 
+    @ImplementedBy(MyEntityWithMultipleInterfacesImpl.class)
+    public interface MyEntityWithMultipleInterfaces extends Group, Resizable, EntityLocal {
+        @SetFromFlag("myconfig")
+        public static final ConfigKey<String> MY_CONFIG = new BasicConfigKey<String>(
+                        String.class, "test.myentity.myconfig", "My test config");
+
+        public static final AttributeSensor<String> MY_SENSOR = new BasicAttributeSensor<String>(
+                String.class, "test.myentity.mysensor", "My test sensor");
+    }
+    
+    public static class MyEntityWithMultipleInterfacesImpl extends AbstractGroupImpl implements MyEntityWithMultipleInterfaces {
+        private final Object dummy = new Object(); // so not serializable
+
+        public MyEntityWithMultipleInterfacesImpl() {
+        }
+
+        @Override
+        public Integer resize(Integer desiredSize) {
+            return 0;
+        }
+    }
+    
     // TODO Don't want to extend EntityLocal, but tests want to call app.setAttribute
     @ImplementedBy(MyEntityReffingOthersImpl.class)
     public interface MyEntityReffingOthers extends Entity, EntityLocal {

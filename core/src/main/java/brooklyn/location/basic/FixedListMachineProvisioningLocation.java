@@ -45,7 +45,7 @@ implements MachineProvisioningLocation<T>, Closeable {
     // and getMachines() returns the real sets risking 
     // ConcurrentModificationException in the caller if it iterates over them etc.
     
-    private Object lock;
+    private final Object lock = new Object();
     
     @SetFromFlag
     protected Set<T> machines;
@@ -70,6 +70,7 @@ implements MachineProvisioningLocation<T>, Closeable {
     @Override
     public void init() {
         super.init();
+        
         for (MachineLocation location: machines) {
             // FIXME Bad casting
             Location machine = (Location) location;
@@ -90,12 +91,9 @@ implements MachineProvisioningLocation<T>, Closeable {
 
     @Override
     public void configure(Map properties) {
-        if (lock == null) {
-            lock = new Object();
-            machines = Sets.newLinkedHashSet();
-            inUse = Sets.newLinkedHashSet();
-            pendingRemoval = Sets.newLinkedHashSet();
-        }
+        if (machines == null) machines = Sets.newLinkedHashSet();
+        if (inUse == null) inUse = Sets.newLinkedHashSet();
+        if (pendingRemoval == null) pendingRemoval = Sets.newLinkedHashSet();
         super.configure(properties);
     }
     

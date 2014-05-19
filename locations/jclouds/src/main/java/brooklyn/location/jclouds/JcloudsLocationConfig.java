@@ -145,7 +145,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "customizersSupplierType", "Optional type of a Supplier<Collection<JcloudsLocationCustomizer>> " +
             "(to be class-loaded and constructed with ConfigBag or no-arg constructor)");
 
-    public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
+    public static final ConfigKey<String> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
     
     public static final ConfigKey<Integer> OVERRIDE_RAM = ConfigKeys.newIntegerConfigKey("overrideRam", "Custom ram value");    
     
