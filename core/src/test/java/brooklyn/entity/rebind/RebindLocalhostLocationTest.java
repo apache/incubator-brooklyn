@@ -2,62 +2,38 @@ package brooklyn.entity.rebind;
 
 import static org.testng.Assert.assertEquals;
 
-import java.io.File;
 import java.util.Collections;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 
-public class RebindLocalhostLocationTest {
+public class RebindLocalhostLocationTest extends RebindTestFixtureWithApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(RebindLocalhostLocationTest.class);
 
-    private ClassLoader classLoader = getClass().getClassLoader();
-    private ManagementContext origManagementContext;
-    private TestApplication origApp;
     private LocalhostMachineProvisioningLocation origLoc;
     private SshMachineLocation origChildLoc;
-    private TestApplication newApp;
-    private File mementoDir;
     
     @BeforeMethod(alwaysRun=true)
+
     public void setUp() throws Exception {
-        mementoDir = Files.createTempDir();
-        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), origManagementContext);
+        super.setUp();
         origLoc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
         origChildLoc = origLoc.obtain();
     }
 
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (origManagementContext != null) Entities.destroyAllCatching(origManagementContext);
-        if (newApp != null) Entities.destroyAllCatching(newApp.getManagementContext());
-        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
-    }
-
-    @Test(enabled=false, groups="Integration", invocationCount=100)
-    public void testMachineUsableAfterRebindManyTimes() throws Exception {
-        testMachineUsableAfterRebind();
-    }
-    
-    @Test(groups="Integration", invocationCount=100)
+    /** takes a while, so just doing 10; see comment on {@link RebindSshMachineLocationTest} */
+    @Test(groups="Integration", invocationCount=10)
     public void testMachineUsableAfterRebindRepeatedly() throws Exception {
         try {
             testMachineUsableAfterRebind();
@@ -86,8 +62,4 @@ public class RebindLocalhostLocationTest {
         assertEquals(newChildLoc.execScript(Collections.<String,Object>emptyMap(), "mysummary", ImmutableList.of("true")), 0);
     }
     
-    private TestApplication rebind() throws Exception {
-        RebindTestUtils.waitForPersisted(origApp);
-        return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
-    }
 }

@@ -11,6 +11,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.EntityType;
 import brooklyn.entity.ParameterType;
 import brooklyn.event.Sensor;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -61,6 +62,15 @@ public class EntityTypeSnapshot implements EntityType {
     @Override
     public Set<Effector<?>> getEffectors() {
         return effectors;
+    }
+
+    @Override
+    public Maybe<Effector<?>> getEffectorByName(String name) {
+        for (Effector<?> contender : effectors) {
+            if (name.equals(contender.getName()))
+                return Maybe.<Effector<?>>of(contender);
+        }
+        return Maybe.<Effector<?>>absent("No effector matching '"+name+"'");        
     }
     
     @Override

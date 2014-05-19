@@ -6,6 +6,7 @@ import java.util.Set;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.event.Sensor;
+import brooklyn.util.guava.Maybe;
 
 /**
  * Gives type information for an {@link Entity}. It is an immutable snapshot.
@@ -42,9 +43,19 @@ public interface EntityType extends Serializable {
      */
     Set<Effector<?>> getEffectors();
 
+    /** @return an effector with the given name, if it exists.
+     * 
+     * in the case of multiple effectors with the given name, any may be returned.
+     * multiple different effectors of the same name is discouraged.
+     */
+    public Maybe<Effector<?>> getEffectorByName(String name);
+        
     /**
      * @return the matching effector on this entity
      * @throws NoSuchElementException If there is no exact match for this signature
+     * <p>
+     * as multiple different effectors of the same name is discouraged (and insufficiently tested),
+     * this method may be deprecated in future in favour of {@link #getEffectorByName(String)}.
      */
     Effector<?> getEffector(String name, Class<?>... parameterTypes);
 

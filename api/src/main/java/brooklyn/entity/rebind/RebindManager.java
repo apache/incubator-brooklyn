@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 
 import brooklyn.entity.Application;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -43,6 +44,10 @@ public interface RebindManager {
 
     public void stop();
 
+    /** @deprecated since 0.7.0; use {@link #waitForPendingComplete(Duration)} */
     @VisibleForTesting
+    @Deprecated
     public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException;
+    @VisibleForTesting
+    public void waitForPendingComplete(Duration duration) throws InterruptedException, TimeoutException;
 }

@@ -55,7 +55,7 @@ public class RebindManagerSorterTest {
 
         // already in correct order
         Map<String, EntityMemento> nodes2 = toMementos(ImmutableList.of(app, e1a, e1b));
-        Map<String, EntityMemento> sortedNodes2 = rebindManager.sortParentFirst(nodes);
+        Map<String, EntityMemento> sortedNodes2 = rebindManager.sortParentFirst(nodes2);
         assertOrder(sortedNodes2, ImmutableList.of(app, e1a, e1b));
     }
     
@@ -95,7 +95,15 @@ public class RebindManagerSorterTest {
         assertOrder(sortedNodes, ImmutableList.of(e1a, e1b));
     }
     
-    private void assertOrder(Map<String, ? extends TreeNode> nodes, Iterable<? extends Identifiable>... orders) {
+    @SuppressWarnings("unchecked")
+    private void assertOrder(Map<String, ? extends TreeNode> nodes, Iterable<? extends Identifiable> order) {
+        assertOrders(nodes, order);
+    }
+    @SuppressWarnings("unchecked")
+    private void assertOrder(Map<String, ? extends TreeNode> nodes, Iterable<? extends Identifiable> order1, Iterable<? extends Identifiable> order2) {
+        assertOrders(nodes, order1, order2);
+    }
+    private void assertOrders(Map<String, ? extends TreeNode> nodes, Iterable<? extends Identifiable>... orders) {
         List<String> actualOrder = ImmutableList.copyOf(nodes.keySet());
         String errmsg = "actualOrder="+actualOrder+"; requiredSubOrderings="+Arrays.toString(orders);
         for (Iterable<? extends Identifiable> order : orders) {

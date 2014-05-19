@@ -3,56 +3,37 @@ package brooklyn.entity.rebind;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
-import java.io.File;
 import java.util.Collections;
 
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
-import brooklyn.management.ManagementContext;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 
-public class CheckpointEntityTest {
+public class CheckpointEntityTest extends RebindTestFixtureWithApp {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(CheckpointEntityTest.class);
 
-    private ClassLoader classLoader = getClass().getClassLoader();
-    private ManagementContext origManagementContext;
-    private File mementoDir;
-    private TestApplication origApp;
-    private TestApplication newApp;
     private MyEntity origE;
     
     @BeforeMethod
     public void setUp() throws Exception {
-        mementoDir = Files.createTempDir();
-        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), origManagementContext);
+        super.setUp();
         origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).configure("myconfig", "myval"));
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void tearDown() throws Exception {
-        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
-        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
-        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
 
     @Test
@@ -108,8 +89,4 @@ public class CheckpointEntityTest {
         assertEquals(newE.getAttribute(MyEntity.MY_SENSOR), "mysensorval");
     }
     
-    private TestApplication rebind() throws Exception {
-        RebindTestUtils.waitForPersisted(origApp);
-        return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
-    }
 }

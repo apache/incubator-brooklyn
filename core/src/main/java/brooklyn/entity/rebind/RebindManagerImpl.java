@@ -126,9 +126,14 @@ public class RebindManagerImpl implements RebindManager {
     @Override
     @VisibleForTesting
     public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+        waitForPendingComplete(Duration.of(timeout, unit));
+    }
+    @Override
+    @VisibleForTesting
+    public void waitForPendingComplete(Duration timeout) throws InterruptedException, TimeoutException {
         if (persister == null || !running) return;
-        realChangeListener.waitForPendingComplete(timeout, unit);
-        persister.waitForWritesCompleted(Duration.of(timeout, unit));
+        realChangeListener.waitForPendingComplete(timeout);
+        persister.waitForWritesCompleted(timeout);
     }
     
     @Override

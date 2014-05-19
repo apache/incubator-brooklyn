@@ -40,6 +40,7 @@ import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.util.time.Duration;
 
 public class NonDeploymentManagementContext implements ManagementContextInternal {
 
@@ -386,6 +387,9 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
         @Override
         public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        public void waitForPendingComplete(Duration timeout) throws InterruptedException, TimeoutException {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }
