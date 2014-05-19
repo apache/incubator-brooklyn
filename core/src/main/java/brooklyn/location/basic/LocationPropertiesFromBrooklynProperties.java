@@ -72,9 +72,9 @@ public class LocationPropertiesFromBrooklynProperties {
         // TODO better would be to use BrooklynServerConfig, requiring management passed in
         String brooklynDataDir = (String) source.get(BrooklynServerConfig.getMgmtBaseDir(source));
         if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
-            File f = new File(Os.mergePaths(brooklynDataDir, "tmp", "ssh"));
-            target.putIfAbsentAndNotNull(SshTool.PROP_LOCAL_TEMP_DIR, f);
-            Os.deleteOnExitEmptyParentsUpTo(f, new File(brooklynDataDir));
+            String tempDir = Os.mergePaths(brooklynDataDir, "tmp", "ssh");
+            target.putIfAbsentAndNotNull(SshTool.PROP_LOCAL_TEMP_DIR, tempDir);
+            Os.deleteOnExitEmptyParentsUpTo(new File(tempDir), new File(brooklynDataDir));
         }
     }
     

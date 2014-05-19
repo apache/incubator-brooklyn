@@ -1,6 +1,7 @@
 package brooklyn.util.internal.ssh.process;
 
 import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
+import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +20,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.ShellAbstractTool;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshException;
+import brooklyn.util.os.Os;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.text.Strings;
 
@@ -37,7 +39,7 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
     
     public static final ConfigKey<Boolean> PROP_LOGIN_SHELL = newConfigKey("loginShell", "Causes the commands to be invoked with bash arguments to forcea  login shell", Boolean.FALSE);
 
-    public static final ConfigKey<File> PROP_DIRECTORY = newConfigKey(File.class, "directory", "the working directory, for executing commands", null);
+    public static final ConfigKey<String> PROP_DIRECTORY = newStringConfigKey("directory", "the working directory, for executing commands", null);
     
     public ProcessTool() {
         this(null);
@@ -59,7 +61,8 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
         return new ToolAbstractExecScript(props) {
             public int run() {
                 try {
-                    File directory = getOptionalVal(props, PROP_DIRECTORY);
+                    String directory = getOptionalVal(props, PROP_DIRECTORY);
+                    File directoryDir = (directory != null) ? new File(Os.tidyPath(directory)) : null;
                     
                     String scriptContents = toScript(props, commands, env);
 
@@ -70,7 +73,7 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
 
                     List<String> cmds = buildRunScriptCommand();
                     cmds.add(0, "chmod +x "+scriptPath);
-                    return asInt(execProcesses(cmds, null, directory, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
+                    return asInt(execProcesses(cmds, null, directoryDir, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
                 } catch (IOException e) {
                     throw Throwables.propagate(e);
                 }
@@ -86,8 +89,9 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
         OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
         OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
         String separator = getOptionalVal(props, PROP_SEPARATOR);
-        File directory = getOptionalVal(props, PROP_DIRECTORY);
-        
+        String directory = getOptionalVal(props, PROP_DIRECTORY);
+        File directoryDir = (directory != null) ? new File(Os.tidyPath(directory)) : null;
+
         List<String> allcmds = toCommandSequence(commands, null);
 
         String singlecmd = Joiner.on(separator).join(allcmds);
@@ -96,7 +100,7 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
         }
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command (process): {}", singlecmd);
         
-        return asInt(execProcesses(allcmds, env, directory, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
+        return asInt(execProcesses(allcmds, env, directoryDir, out, err, separator, getOptionalVal(props, PROP_LOGIN_SHELL), this), -1);
     }
 
     /**

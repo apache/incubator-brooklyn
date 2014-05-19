@@ -65,7 +65,7 @@ public class SystemProcessTaskFactory<T extends SystemProcessTaskFactory<T,RET>,
         @Override
         protected ConfigBag getConfigForRunning() {
             ConfigBag result = super.getConfigForRunning();
-            if (directory != null) config.put(ProcessTool.PROP_DIRECTORY, directory);
+            if (directory != null) config.put(ProcessTool.PROP_DIRECTORY, directory.getAbsolutePath());
             if (loginShell != null) config.put(ProcessTool.PROP_LOGIN_SHELL, loginShell);
             return result;
         }

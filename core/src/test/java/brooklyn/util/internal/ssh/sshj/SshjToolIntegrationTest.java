@@ -1,10 +1,12 @@
 package brooklyn.util.internal.ssh.sshj;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.SshToolAbstractIntegrationTest;
+import brooklyn.util.os.Os;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -108,6 +111,35 @@ public class SshjToolIntegrationTest extends SshToolAbstractIntegrationTest {
         }
     }
     
+    @Test(groups = {"Integration"})
+    public void testUsesCustomLocalTempDir() throws Exception {
+        class SshjToolForTest extends SshjTool {
+            public SshjToolForTest(Map<String, ?> map) {
+                super(map);
+            }
+            public File getLocalTempDir() {
+                return localTempDir;
+            }
+        };
+        
+        final SshjToolForTest localtool = new SshjToolForTest(ImmutableMap.<String, Object>of("host", "localhost"));
+        assertNotNull(localtool.getLocalTempDir());
+        assertEquals(localtool.getLocalTempDir(), new File(Os.tidyPath(SshjTool.PROP_LOCAL_TEMP_DIR.getDefaultValue())));
+        
+        String customTempDir = Os.tmp();
+        final SshjToolForTest localtool2 = new SshjToolForTest(ImmutableMap.of(
+                "host", "localhost", 
+                SshjTool.PROP_LOCAL_TEMP_DIR.getName(), customTempDir));
+        assertEquals(localtool2.getLocalTempDir(), new File(customTempDir));
+        
+        String customRelativeTempDir = "~/tmp";
+        final SshjToolForTest localtool3 = new SshjToolForTest(ImmutableMap.of(
+                "host", "localhost", 
+                SshjTool.PROP_LOCAL_TEMP_DIR.getName(), customRelativeTempDir));
+        assertEquals(localtool3.getLocalTempDir(), new File(Os.tidyPath(customRelativeTempDir)));
+    }
+
+
     protected String execShellDirect(List<String> cmds) {
         return execShellDirect(cmds, ImmutableMap.<String,Object>of());
     }

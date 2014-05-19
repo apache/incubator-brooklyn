@@ -1,7 +1,7 @@
 package brooklyn.util.internal.ssh;
 
 import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
-
+import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
 import java.io.File;
 import java.io.OutputStream;
 import java.util.List;
@@ -16,8 +16,10 @@ public interface ShellTool {
 
     // config which applies to sessions
     
-    public static final ConfigKey<File> PROP_LOCAL_TEMP_DIR = newConfigKey("localTempDir", "The directory on the local machine (i.e. running brooklyn) for writing temp files", 
-            new File(Os.tmp(), "brooklyn-"+Os.user()+"-ssh-tmp"));
+    public static final ConfigKey<String> PROP_LOCAL_TEMP_DIR = newStringConfigKey(
+            "localTempDir", 
+            "The directory on the local machine (i.e. running brooklyn) for writing temp files", 
+            Os.mergePaths(Os.tmp(), "brooklyn-"+Os.user()+"-ssh-tmp"));
     
     // config which applies to calls:
     

@@ -8,6 +8,8 @@ import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.util.os.Os;
+
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -67,7 +69,8 @@ public abstract class SshAbstractTool extends ShellAbstractTool implements SshTo
             strictHostKeyChecking = getOptionalVal(props, PROP_STRICT_HOST_KEY_CHECKING);
             allocatePTY = getOptionalVal(props, PROP_ALLOCATE_PTY);
             
-            localTempDir = getOptionalVal(props, PROP_LOCAL_TEMP_DIR);
+            String localTempDirPath = getOptionalVal(props, PROP_LOCAL_TEMP_DIR);
+            localTempDir = (localTempDirPath == null) ? null : new File(Os.tidyPath(localTempDirPath));
             
             return self();
         }
