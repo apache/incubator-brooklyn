@@ -23,7 +23,7 @@ public class EntityTypeSnapshot implements EntityType {
     private static final long serialVersionUID = 4670930188951106009L;
     
     private final String name;
-    private transient String simpleName;
+    private transient volatile String simpleName;
     private final Map<String, ConfigKey<?>> configKeys;
     private final Map<String, Sensor<?>> sensors;
     private final Set<Effector<?>> effectors;

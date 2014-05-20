@@ -104,7 +104,6 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.description = description;
         this.name = checkNotNull(name, "name");
         
-        checkNotNull(type, "type");
         this.type = TypeTokens.getRawTypeIfRaw(checkNotNull(type, "type"));
         this.typeToken = TypeTokens.getTypeTokenIfNotRaw(type);
         
@@ -114,8 +113,8 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
 
     protected BasicConfigKey(Builder<T> builder) {
         this.name = checkNotNull(builder.name, "name");
-        this.typeToken = checkNotNull(builder.type, "type");
-        this.type = typeToken.getRawType();
+        this.type = TypeTokens.getRawTypeIfRaw(checkNotNull(builder.type, "type"));
+        this.typeToken = TypeTokens.getTypeTokenIfNotRaw(builder.type);
         this.description = builder.description;
         this.defaultValue = builder.defaultValue;
         this.reconfigurable = builder.reconfigurable;
@@ -197,7 +196,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     }
     
     protected Object resolveValue(Object v, ExecutionContext exec) throws ExecutionException, InterruptedException {
-        return Tasks.resolveValue(v, type, exec, "config "+name);
+        return Tasks.resolveValue(v, getType(), exec, "config "+name);
     }
 
     /** used to record a key which overwrites another; only needed at disambiguation time 

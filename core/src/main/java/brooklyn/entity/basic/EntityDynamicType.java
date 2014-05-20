@@ -104,17 +104,6 @@ public class EntityDynamicType {
         refreshSnapshot();
     }
     
-    public void copyAll(EntityType type) {
-        if (type==null)
-            return;
-        
-        for (Effector<?> eff: type.getEffectors())
-            effectors.put(eff.getName(), eff);
-        
-        // TODO
-        snapshotValid.set(false);
-    }
-    
     public void setName(String name) {
         if (Strings.isBlank(name)) {
             throw new IllegalArgumentException("Invalid name "+(name == null ? "null" : "'"+name+"'")+"; name must be non-empty and not just white space");

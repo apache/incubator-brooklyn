@@ -101,6 +101,8 @@ public class Tasks {
      * contextMessage (optional) will be displayed in status reports while it waits (e.g. the name of the config key being looked up) */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
+        if (type==null) 
+            throw new NullPointerException("type cannot be null in resolveValue, for '"+v+"'"+(contextMessage!=null ? ", "+contextMessage : ""));
         //if the expected type is a closure or map and that's what we have, we're done (or if it's null);
         //but not allowed to return a future or DeferredSupplier as the resolved value
         if (v==null || (type.isInstance(v) && !Future.class.isInstance(v) && !DeferredSupplier.class.isInstance(v)))
