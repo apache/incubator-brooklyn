@@ -1,5 +1,6 @@
 package brooklyn.rest;
 
+import brooklyn.rest.util.HaMasterCheckFilter;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
@@ -101,19 +102,20 @@ public class BrooklynRestApiLauncher {
         ServletHolder servletHolder = new ServletHolder(new ServletContainer(config));
         context.addServlet(servletHolder, "/*");
         context.setContextPath("/");
-        
-        installBrooklynPropertiesSecurityFilter(context);
-        
+
+        installBrooklynFilters(context);
+
         return startServer(managementContext, context, "programmatic Jersey ServletContainer servlet");
     }
     
-    public static void installBrooklynPropertiesSecurityFilter(ServletContextHandler context) {
+    private static void installBrooklynFilters(ServletContextHandler context) {
         context.addFilter(BrooklynPropertiesSecurityFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+        context.addFilter(HaMasterCheckFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
     }
     
     public static void installAsServletFilter(ServletContextHandler context) {
-        installBrooklynPropertiesSecurityFilter(context);
-        
+        installBrooklynFilters(context);
+
         // now set up the REST servlet resources
         ResourceConfig config = new DefaultResourceConfig();
         // load all our REST API modules, JSON, and Swagger
@@ -171,6 +173,8 @@ public class BrooklynRestApiLauncher {
                 ((BrooklynProperties)mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME, AnyoneSecurityProvider.class.getName());
             }
         }
+        if (mgmt != null)
+            mgmt.getHighAvailabilityManager().disabled();
         InetSocketAddress bindLocation = new InetSocketAddress(
                 secure ? Networking.ANY_NIC : Networking.LOOPBACK, 
                         Networking.nextAvailablePort(FAVOURITE_PORT));

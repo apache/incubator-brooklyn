@@ -1,10 +1,12 @@
 define([
-    'brooklyn', 'underscore', 'jquery', 'backbone', "model/application", "model/app-tree", "model/location",
+    "brooklyn", "underscore", "jquery", "backbone",
+    "model/application", "model/app-tree", "model/location", "model/ha",
     "view/home", "view/application-explorer", "view/catalog", "view/apidoc", "view/script-groovy", 
-    "text!tpl/help/page.html","text!tpl/labs/page.html"
-], function (Brooklyn, _, $, Backbone, Application, AppTree, Location,
+    "text!tpl/help/page.html","text!tpl/labs/page.html", "text!tpl/home/server-not-ha-master.html"
+], function (Brooklyn, _, $, Backbone,
+        Application, AppTree, Location, ha,
         HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView, 
-        HelpHtml, LabsHtml) {
+        HelpHtml, LabsHtml, ServerNotMasterHtml) {
 
     // TODO this initialising - customising the View prototype - should be moved,
     // and perhaps expanded to include other methods from viewutils
@@ -50,6 +52,24 @@ define([
         this._periodicFunctions[uid] = setInterval(periodic, interval)
     }
 
+    // Not just defined as a function on Router because the delay if the HA status
+    // hasn't loaded requires a reference to the function, which we lose if we use
+    // 'this.showView'.
+    var showViewImpl = function (router, selector, view) {
+        // Don't do anything until the HA status has loaded.
+        if (!ha.loaded) {
+            _.delay(showViewImpl, 100, router, selector, view);
+        } else {
+            // close the previous view - does binding clean-up and avoids memory leaks
+            if (router.currentView) {
+                router.currentView.close();
+            }
+            // render the view inside the selector element
+            $(selector).html(view.render().el);
+            router.currentView = view;
+            return view
+        }
+    };
 
     var Router = Backbone.Router.extend({
         routes:{
@@ -66,23 +86,18 @@ define([
             '*path':'defaultRoute'
         },
 
-        showView:function (selector, view) {
-            // close the previous view - does binding clean-up and avoids memory leaks
-            if (this.currentView) this.currentView.close()
-            // render the view inside the selector element
-            $(selector).html(view.render().el)
-            this.currentView = view
-            return view
+        showView: function(selector, view) {
+            showViewImpl(this, selector, view);
         },
-        
-        defaultRoute:function () {
+
+        defaultRoute: function() {
             this.homePage('auto')
         },
-        
-        applications:new Application.Collection,
-        appTree:new AppTree.Collection,
-        locations:new Location.Collection,
-        
+
+        applications: new Application.Collection,
+        appTree: new AppTree.Collection,
+        locations: new Location.Collection,
+
         homePage:function (trail) {
             var that = this;
             // render the page after we fetch the collection -- no rendering on error
@@ -95,9 +110,13 @@ define([
                 var veryFirstViewLoad = !that.currentView;
                 that.showView("#application-content", homeView);
                 // show add application wizard if none already exist and this is the first page load
-                if ( (veryFirstViewLoad && trail=='auto' && that.applications.isEmpty()) ||
+                if ((veryFirstViewLoad && trail=='auto' && that.applications.isEmpty()) ||
                      (trail=='add_application') ) {
-                    homeView.createApplication();
+                    ha.onLoad(function() {
+                        if (ha.isMaster()) {
+                            homeView.createApplication();
+                        }
+                    });
                 }
             }})
         },
@@ -147,6 +166,24 @@ define([
             $(".nav1").removeClass("active")
         }
     })
+
+    var HaStandbyOverlay = Backbone.View.extend({
+        initialize: function() {
+            this.listenTo(ha, "change", this.render);
+        },
+        render: function() {
+            if (!ha.isMaster()) {
+                this.$el.html(ServerNotMasterHtml);
+            } else {
+                this.$el.empty();
+            }
+            return this;
+        },
+        beforeClose: function() {
+            this.stopListening();
+        }
+    });
+    new HaStandbyOverlay({ el: $("#ha-standby-overlay") }).render();
 
     return Router
 })

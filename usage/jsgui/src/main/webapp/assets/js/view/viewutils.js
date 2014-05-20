@@ -370,6 +370,12 @@ define([
             if (!options['period']) options.period = 3000
             ViewUtils.get(view, url, success, options)
         },
+
+        /** As fetchRepeatedlyWithDelay(view, model, options), but without updating a view. */
+        fetchModelRepeatedlyWithDelay: function(model, options) {
+            this.fetchRepeatedlyWithDelay(undefined, model, options);
+        },
+
         /* invokes fetch on the model, associated with the view.
          * automatically closes when view closes, 
          * and fades display and exponentially-backs off on problems.
@@ -389,7 +395,7 @@ define([
          *   error (optional function to invoke on error, before requeueing);
          */
         fetchRepeatedlyWithDelay: function(view, model, options) {
-            if (view.viewIsClosed) return;
+            if (view && view.viewIsClosed) return;
             
             if (!options) options = {}
             if (!options.count) options.count = 1
@@ -400,7 +406,7 @@ define([
 //            log("fetching, count "+options.count+", delay "+period+": "+model.url)
             
             var fetcher = function() {
-                if (view.viewIsClosed) return;
+                if (view && view.viewIsClosed) return;
                 var disabled = (options['enablement'] && !options['enablement']()) 
                     || !BrooklynConfig.refresh
                 if (options.count > 1 && disabled) {
@@ -412,7 +418,7 @@ define([
                 fetchOptions.success = function(modelR,response,optionsR) {
                         var fn = options['success']
                         if (fn) fn(modelR,response,optionsR);
-                        if (view._loadingProblem) {
+                        if (view && view._loadingProblem) {
                             log("fetching view data is back to normal - "+model.url)
                             view._loadingProblem = false;
                             
@@ -428,18 +434,19 @@ define([
                 fetchOptions.error = function(modelR,response,optionsR) {
                         var fn = options['error']
                         if (fn) fn(modelR,response,optionsR);
-                        if (!view._loadingProblem) {
+                        if (view && !view._loadingProblem) {
                             log("error fetching view data from "+model.url+" - is the server reachable?")
                             log(response)
                             view._loadingProblem = true;
                         }
                         // fade the view, on error
-                        var fadeTarget = view.$el;
-                        if ("fadeTarget" in options) {
-                            fadeTarget = options["fadeTarget"]
+                        if (view) {
+                            var fadeTarget = view.$el;
+                            if ("fadeTarget" in options) {
+                                fadeTarget = options["fadeTarget"]
+                            }
+                            if (fadeTarget) ViewUtils.fadeToIndicateInitialLoad(fadeTarget)
                         }
-                        if (fadeTarget) ViewUtils.fadeToIndicateInitialLoad(fadeTarget)
-                        
                         // attempt exponential backoff up to every 15m
                         period *= 2;
                         var max = (options['backoffMaxPeriod'] || 15*60*1000);

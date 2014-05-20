@@ -11,7 +11,7 @@ define([
             expect(round(1, 2)).toBe(1);
             expect(round(1.1, 1)).toBe(1.1);
             expect(round(1.9, 1)).toBe(1.9);
-            expect(round(1.123123, 6)).toBe(1.123123);
+            expect(round(1.123123123, 6)).toBe(1.123123);
             expect(round(-22.222, 3)).toBe(-22.222);
 
             // up
