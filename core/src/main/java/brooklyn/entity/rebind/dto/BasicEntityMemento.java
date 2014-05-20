@@ -80,6 +80,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     private transient Map<String, ConfigKey<?>> staticConfigKeys;
     private Map<String, AttributeSensor<?>> attributeKeys;
     private transient Map<String, Sensor<?>> staticSensorKeys;
+    private List<Effector<?>> effectors;
     
     private transient Map<ConfigKey<?>, Object> configByKey;
     private transient Map<String, Object> configUnmatched;
@@ -217,6 +218,10 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         if (attributesByKey == null) postDeserialize();
         return Collections.unmodifiableMap(attributesByKey);
     }
+
+    public List<Effector<?>> getEffectors() {
+        return fromPersistedList(effectors);
+    }
     
     @Override
     public List<String> getPolicies() {
@@ -242,11 +247,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
                 .add("attributes", Entities.sanitize(getAttributes()))
                 .add("policies", getPolicies())
                 .add("locations", getLocations());
-    }
-
-    private List<Effector<?>> effectors;
-    public List<Effector<?>> getEffectors() {
-        return fromPersistedList(effectors);
     }
 
 }

@@ -52,7 +52,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
     public XmlMementoSerializer(ClassLoader classLoader) {
         this.classLoader = checkNotNull(classLoader, "classLoader");
         
-        // why is this aliased thusly??
+        // old (deprecated in 070? or earlier) single-file persistence uses this keyword; TODO remove soon
         xstream.alias("brooklyn", MutableBrooklynMemento.class);
         
         xstream.alias("entity", BasicEntityMemento.class);
