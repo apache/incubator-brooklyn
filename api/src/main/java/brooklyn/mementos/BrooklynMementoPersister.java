@@ -22,7 +22,9 @@ public interface BrooklynMementoPersister {
         Entity lookupEntity(Class<?> type, String id);
         Location lookupLocation(Class<?> type, String id);
     }
-    
+
+    BrooklynMementoManifest loadMementoManifest() throws IOException;
+
     /**
      * Note that this method is *not* thread safe.
      */

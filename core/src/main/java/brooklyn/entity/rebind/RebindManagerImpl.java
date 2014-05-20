@@ -3,12 +3,8 @@ package brooklyn.entity.rebind;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -21,7 +17,6 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
@@ -30,6 +25,7 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.mementos.EntityMemento;
@@ -38,7 +34,6 @@ import brooklyn.mementos.PolicyMemento;
 import brooklyn.mementos.TreeNode;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
@@ -158,29 +153,6 @@ public class RebindManagerImpl implements RebindManager {
             
             final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
     
-            LookupContext dummyLookupContext = new LookupContext() {
-                @Override public Entity lookupEntity(Class<?> type, String id) {
-                    Set<Class<?>> types = MutableSet.<Class<?>>of(Entity.class, EntityInternal.class, EntityProxy.class);
-                    if (type != null) types.add(type);
-                    return (Entity) newDummy(types);
-                }
-                @Override public Location lookupLocation(Class<?> type, String id) {
-                    Set<Class<?>> types = MutableSet.<Class<?>>of(Location.class, LocationInternal.class);
-                    if (type != null) types.add(type);
-                    return (Location) newDummy(types);
-                }
-                private Object newDummy(Collection<Class<?>> types) {
-                    return java.lang.reflect.Proxy.newProxyInstance(
-                        classLoader,
-                        types.toArray(new Class<?>[types.size()]),
-                        new InvocationHandler() {
-                            @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
-                                return m.invoke(this, args);
-                            }
-                        });
-                }
-            };
-            
             LookupContext realLookupContext = new LookupContext() {
                 private final boolean removeDanglingRefs = true;
                 @Override public Entity lookupEntity(Class<?> type, String id) {
@@ -211,43 +183,45 @@ public class RebindManagerImpl implements RebindManager {
                 }
             };
             
-            // FIXME dummyLookupContext isn't good enough - we need *all* the interfaces of the entity/location.
-            // So we need to peek inside the list of entities.
-            // Need to add methods such as Map<String, String> persister.loadEntityTypes()
-            
-            // Two-phase deserialization. First we deserialize to find all instances (and their types).
-            // Then we deserialize so that inter-entity references can be set. During the first phase,
-            // any inter-entity reference will get the dummyEntity/dummyLocation.
+            // Two-phase deserialization.
+            // First we deserialize just the "manifest" to find all instances (and their types).
+            // Then we deserialize so that inter-entity references can be set.
             //
             // TODO if underlying data-store is changed between first and second phase (e.g. to add an
             // entity), then second phase might try to reconstitute an entity that has not been put in
             // the rebindContext. This should not affect normal production usage, because rebind is run
             // against a data-store that is not being written to by other brooklyn instance(s).
-            BrooklynMemento mementoHeaders = persister.loadMemento(dummyLookupContext);
-    
+            BrooklynMementoManifest mementoManifest = persister.loadMementoManifest();
+            
             // Instantiate locations
-            LOG.info("RebindManager instantiating locations: {}", mementoHeaders.getLocationIds());
-            for (LocationMemento locMemento : mementoHeaders.getLocationMementos().values()) {
-                if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating location {}", locMemento);
+            LOG.info("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToType().keySet());
+            for (Map.Entry<String, String> entry : mementoManifest.getLocationIdToType().entrySet()) {
+                String entityId = entry.getKey();
+                String entityType = entry.getValue();
+                if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating location {}", entityId);
                 
-                Location location = newLocation(locMemento, reflections);
-                locations.put(locMemento.getId(), location);
-                rebindContext.registerLocation(locMemento.getId(), location);
+                Location location = newLocation(entityId, entityType, reflections);
+                locations.put(entityId, location);
+                rebindContext.registerLocation(entityId, location);
             }
             
             // Instantiate entities
-            LOG.info("RebindManager instantiating entities: {}", mementoHeaders.getEntityIds());
-            for (EntityMemento entityMemento : mementoHeaders.getEntityMementos().values()) {
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating entity {}", entityMemento);
+            LOG.info("RebindManager instantiating entities: {}", mementoManifest.getEntityIdToType().keySet());
+            for (Map.Entry<String, String> entry : mementoManifest.getEntityIdToType().entrySet()) {
+                String entityId = entry.getKey();
+                String entityType = entry.getValue();
+                if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating entity {}", entityId);
                 
-                Entity entity = newEntity(entityMemento, reflections);
-                entities.put(entityMemento.getId(), entity);
-                rebindContext.registerEntity(entityMemento.getId(), entity);
+                Entity entity = newEntity(entityId, entityType, reflections);
+                entities.put(entityId, entity);
+                rebindContext.registerEntity(entityId, entity);
             }
             
+            BrooklynMemento memento = persister.loadMemento(realLookupContext);
+            
             // Instantiate policies
-            LOG.info("RebindManager instantiating policies: {}", mementoHeaders.getPolicyIds());
-            for (PolicyMemento policyMemento : mementoHeaders.getPolicyMementos().values()) {
+            LOG.info("RebindManager instantiating policies: {}", memento.getPolicyIds());
+            for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
                 
                 Policy policy = newPolicy(policyMemento, reflections);
@@ -255,8 +229,6 @@ public class RebindManagerImpl implements RebindManager {
                 rebindContext.registerPolicy(policyMemento.getId(), policy);
             }
             
-            BrooklynMemento memento = persister.loadMemento(realLookupContext);
-    
             // Reconstruct locations
             LOG.info("RebindManager reconstructing locations");
             for (LocationMemento locMemento : sortParentFirst(memento.getLocationMementos()).values()) {
@@ -343,11 +315,8 @@ public class RebindManagerImpl implements RebindManager {
         return result;
     }
 
-    private Entity newEntity(EntityMemento memento, Reflections reflections) {
-        String entityId = memento.getId();
-        String entityType = checkNotNull(memento.getType(), "entityType of "+entityId);
+    private Entity newEntity(String entityId, String entityType, Reflections reflections) {
         Class<? extends Entity> entityClazz = (Class<? extends Entity>) reflections.loadClass(entityType);
-        memento.injectTypeClass(entityClazz);
         
         if (InternalEntityFactory.isNewStyleEntity(managementContext, entityClazz)) {
             // Not using entityManager.createEntity(EntitySpec) because don't want init() to be called
@@ -368,8 +337,18 @@ public class RebindManagerImpl implements RebindManager {
             managementContext.prePreManage(entity);
             ((AbstractEntity)entity).setManagementContext(managementContext);
             
-            Class<?> entityInterface = managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)entityClazz);
+            Class<?> entityInterface;
+            List<Class<?>> additionalInterfaces;
+            try {
+                entityInterface = managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)entityClazz);
+                additionalInterfaces = Reflections.getAllInterfaces(entityClazz);
+            } catch (IllegalArgumentException e) {
+                // TODO this can happen if it's an app with no annotation, for example; not nice catching exception
+                entityInterface = Entity.class;
+                additionalInterfaces = Reflections.getAllInterfaces(entityClazz);
+            }
             EntitySpec<Entity> entitySpec = EntitySpec.create((Class)entityInterface)
+                    .additionalInterfaces(additionalInterfaces)
                     .impl((Class)entityClazz)
                     .id(entityId);
 
@@ -378,6 +357,8 @@ public class RebindManagerImpl implements RebindManager {
             return entity;
 
         } else {
+            LOG.warn("Deprecated rebind of entity without no-arg constructor; this may not be supported in future versions: id="+entityId+"; type="+entityType);
+            
             // There are several possibilities for the constructor; find one that works.
             // Prefer passing in the flags because required for Application to set the management context
             // TODO Feels very hacky!
@@ -388,8 +369,6 @@ public class RebindManagerImpl implements RebindManager {
 
             // TODO document the multiple sources of flags, and the reason for setting the mgmt context *and* supplying it as the flag
             // (NB: merge reported conflict as the two things were added separately)
-            flags.putAll(memento.getConfig());
-            flags.putAll(memento.getConfigUnmatched());
             Entity entity = (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
             
             // In case the constructor didn't take the Map arg, then also set it here.
@@ -411,9 +390,7 @@ public class RebindManagerImpl implements RebindManager {
     /**
      * Constructs a new location, passing to its constructor the location id and all of memento.getFlags().
      */
-    private Location newLocation(LocationMemento memento, Reflections reflections) {
-        String locationId = memento.getId();
-        String locationType = checkNotNull(memento.getType(), "locationType of "+locationId);
+    private Location newLocation(String locationId, String locationType, Reflections reflections) {
         Class<? extends Location> locationClazz = (Class<? extends Location>) reflections.loadClass(locationType);
 
         if (InternalLocationFactory.isNewStyleLocation(managementContext, locationClazz)) {
@@ -429,6 +406,8 @@ public class RebindManagerImpl implements RebindManager {
             
             return location;
         } else {
+            LOG.warn("Deprecated rebind of location without no-arg constructor; this may not be supported in future versions: id="+locationId+"; type="+locationType);
+            
             // There are several possibilities for the constructor; find one that works.
             // Prefer passing in the flags because required for Application to set the management context
             // TODO Feels very hacky!
@@ -439,8 +418,9 @@ public class RebindManagerImpl implements RebindManager {
         // note 'used' config keys get marked in BasicLocationRebindSupport
     }
 
+
     /**
-     * Constructs a new location, passing to its constructor the location id and all of memento.getFlags().
+     * Constructs a new policy, passing to its constructor the policy id and all of memento.getFlags().
      */
     private Policy newPolicy(PolicyMemento memento, Reflections reflections) {
         String id = memento.getId();

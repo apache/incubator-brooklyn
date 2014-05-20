@@ -2,6 +2,7 @@ package brooklyn.entity.rebind.persister;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -11,11 +12,24 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
+import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -23,6 +37,7 @@ import brooklyn.mementos.PolicyMemento;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
+import brooklyn.util.xstream.XmlUtil;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -95,6 +110,56 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         }
     }
     
+    @Override
+    public BrooklynMementoManifest loadMementoManifest() throws IOException {
+        if (!running) {
+            throw new IllegalStateException("Persister not running; cannot load memento manifest from "+dir);
+        }
+        
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
+        FileFilter fileFilter = new FileFilter() {
+            @Override public boolean accept(File file) {
+                return !file.getName().endsWith(".tmp");
+            }
+        };
+        File[] entityFiles = entitiesDir.listFiles(fileFilter);
+        File[] locationFiles = locationsDir.listFiles(fileFilter);
+        File[] policyFiles = policiesDir.listFiles(fileFilter);
+
+        LOG.info("Loading memento manifest from {}; {} entities, {} locations, {} policies", 
+                new Object[] {dir, entityFiles.length, locationFiles.length, policyFiles.length});
+        
+        BrooklynMementoManifestImpl.Builder builder = BrooklynMementoManifestImpl.builder();
+        
+        try {
+            for (File file : entityFiles) {
+                String contents = readFile(file);
+                String id = (String) XmlUtil.xpath(contents, "/entity/id");
+                String type = (String) XmlUtil.xpath(contents, "/entity/type");
+                builder.entity(id, type);
+            }
+            for (File file : locationFiles) {
+                String contents = readFile(file);
+                String id = (String) XmlUtil.xpath(contents, "/location/id");
+                String type = (String) XmlUtil.xpath(contents, "/location/type");
+                builder.location(id, type);
+            }
+            for (File file : policyFiles) {
+                String contents = readFile(file);
+                String id = (String) XmlUtil.xpath(contents, "/policy/id");
+                String type = (String) XmlUtil.xpath(contents, "/policy/type");
+                builder.policy(id, type);
+            }
+            
+            if (LOG.isDebugEnabled()) LOG.debug("Loaded memento manifest; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS))); 
+            return builder.build();
+            
+        } finally {
+            serializer.unsetLookupContext();
+        }
+    }
+
     @Override
     public BrooklynMemento loadMemento(LookupContext lookupContext) throws IOException {
         if (!running) {

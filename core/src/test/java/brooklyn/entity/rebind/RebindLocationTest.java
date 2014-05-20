@@ -27,6 +27,7 @@ import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
@@ -193,9 +194,34 @@ public class RebindLocationTest {
         assertEquals(newLoc.myfield, "myval");
     }
 
+    /**
+     * @deprecated since 0.7; support for rebinding old-style locations is deprecated
+     */
+    @Test
+    public void testHandlesOldStyleLocation() throws Exception {
+        MyOldStyleLocation origLoc = new MyOldStyleLocation(ImmutableMap.of("myfield", "myval"));
+        
+        origApp.start(ImmutableList.of(origLoc));
+
+        newApp = rebind();
+        MyOldStyleLocation newLoc = (MyOldStyleLocation) Iterables.get(newApp.getLocations(), 0);
+        assertEquals(newLoc.myfield, "myval");
+    }
+
     private TestApplication rebind() throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
         return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+    }
+    
+    public static class MyOldStyleLocation extends AbstractLocation {
+        private static final long serialVersionUID = 1L;
+        
+        @SetFromFlag
+        String myfield;
+
+        public MyOldStyleLocation(Map flags) {
+            super(flags);
+        }
     }
     
     public static class MyLocation extends AbstractLocation {
@@ -238,6 +264,9 @@ public class RebindLocationTest {
 
         private final Object dummy = new Object(); // so not serializable
 
+        public MyLocationReffingOthers() {
+        }
+        
         public MyLocationReffingOthers(Map flags) {
             super(flags);
         }
